@@ -266,6 +266,7 @@ app.get('/api/dashboard-summary', function(req, res) {
       teamsData?.teams?.filter(t => t.enabled !== false).map(t => t.boardId) || boardsData.boards.map(b => b.id)
     );
 
+    const ROLLING_SPRINT_COUNT = 6;
     const summary = { lastUpdated: boardsData.lastUpdated, boards: {} };
 
     for (const board of boardsData.boards) {
@@ -274,26 +275,46 @@ app.get('/api/dashboard-summary', function(req, res) {
       const boardSprints = readFromStorage(`sprints/board-${board.id}.json`);
       if (!boardSprints?.sprints?.length) continue;
 
-      const activeSprint = boardSprints.sprints.find(s => s.state === 'active');
-      const dashSprint = activeSprint || [...boardSprints.sprints]
+      const closedSprints = [...boardSprints.sprints]
         .filter(s => s.state === 'closed')
-        .sort((a, b) => new Date(b.startDate) - new Date(a.startDate))[0];
+        .sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
 
-      if (!dashSprint) continue;
+      if (closedSprints.length === 0) continue;
 
-      const sprintData = readFromStorage(`sprints/${dashSprint.id}.json`);
-      if (!sprintData) continue;
+      const latestClosed = closedSprints[0];
+      const recentSprints = closedSprints.slice(0, ROLLING_SPRINT_COUNT);
+
+      let totalCommitted = 0;
+      let totalDelivered = 0;
+      let totalScopeChange = 0;
+      let sprintsUsed = 0;
+
+      for (const sprint of recentSprints) {
+        const sd = readFromStorage(`sprints/${sprint.id}.json`);
+        if (!sd) continue;
+        totalCommitted += sd.committed?.totalPoints || 0;
+        totalDelivered += sd.delivered?.totalPoints || 0;
+        totalScopeChange += sd.metrics?.scopeChangeCount || 0;
+        sprintsUsed++;
+      }
 
       summary.boards[board.id] = {
         boardName: board.name,
         sprint: {
-          id: dashSprint.id,
-          name: dashSprint.name,
-          state: dashSprint.state,
-          startDate: dashSprint.startDate,
-          endDate: dashSprint.endDate
+          id: latestClosed.id,
+          name: latestClosed.name,
+          state: latestClosed.state,
+          startDate: latestClosed.startDate,
+          endDate: latestClosed.endDate
         },
-        metrics: sprintData.metrics || {}
+        metrics: {
+          commitmentReliabilityPoints: totalCommitted > 0
+            ? Math.round((totalDelivered / totalCommitted) * 100)
+            : 0,
+          avgVelocityPoints: sprintsUsed > 0 ? Math.round(totalDelivered / sprintsUsed) : 0,
+          avgScopeChange: sprintsUsed > 0 ? +(totalScopeChange / sprintsUsed).toFixed(1) : 0,
+          sprintsUsed
+        }
       };
     }
 

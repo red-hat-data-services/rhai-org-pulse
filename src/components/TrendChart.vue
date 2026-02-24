@@ -34,7 +34,8 @@ const props = defineProps({
   labels: { type: Array, required: true },
   datasets: { type: Array, required: true },
   suggestedMin: { type: Number, default: undefined },
-  suggestedMax: { type: Number, default: undefined }
+  suggestedMax: { type: Number, default: undefined },
+  scales: { type: Object, default: null }
 })
 
 const chartData = computed(() => ({
@@ -63,7 +64,7 @@ const chartOptions = computed(() => ({
       intersect: false
     }
   },
-  scales: {
+  scales: props.scales || {
     x: {
       grid: { display: false },
       ticks: { font: { size: 11 } }

@@ -184,6 +184,40 @@ async function processBoard({ board, hardRefresh, fetchSprints, fetchSprintRepor
   };
 }
 
+const ROLLING_SPRINT_COUNT = 6;
+
+/**
+ * Compute rolling dashboard metrics from recent closed sprint results.
+ * Uses up to N most recent closed sprints.
+ */
+function computeRollingMetrics(sprintResults, count = ROLLING_SPRINT_COUNT) {
+  const closedSprints = sprintResults
+    .filter(r => r.sprint.state === 'closed' || r.sprint.state === 'CLOSED')
+    .sort((a, b) => new Date(b.sprint.completeDate || b.sprint.endDate || 0) - new Date(a.sprint.completeDate || a.sprint.endDate || 0))
+    .slice(0, count);
+
+  let totalCommitted = 0;
+  let totalDelivered = 0;
+  let totalScopeChange = 0;
+
+  for (const sprint of closedSprints) {
+    totalCommitted += sprint.committed?.totalPoints || 0;
+    totalDelivered += sprint.delivered?.totalPoints || 0;
+    totalScopeChange += sprint.metrics?.scopeChangeCount || 0;
+  }
+
+  const n = closedSprints.length;
+
+  return {
+    commitmentReliabilityPoints: totalCommitted > 0
+      ? Math.round((totalDelivered / totalCommitted) * 100)
+      : 0,
+    avgVelocityPoints: n > 0 ? Math.round(totalDelivered / n) : 0,
+    avgScopeChange: n > 0 ? +(totalScopeChange / n).toFixed(1) : 0,
+    sprintsUsed: n
+  };
+}
+
 /**
  * Full refresh: process all enabled boards and generate dashboard summary.
  */
@@ -230,20 +264,28 @@ async function performRefresh({ hardRefresh, fetchBoards, fetchSprints, fetchSpr
     boards: {}
   };
 
-  for (const { board, dashboardSprint, dashboardResult } of boardResults) {
-    if (dashboardSprint && dashboardResult) {
-      dashboardSummary.boards[board.id] = {
-        boardName: board.name,
-        sprint: {
-          id: dashboardSprint.id,
-          name: dashboardSprint.name,
-          state: dashboardSprint.state,
-          startDate: dashboardSprint.startDate,
-          endDate: dashboardSprint.endDate
-        },
-        metrics: dashboardResult.metrics
-      };
-    }
+  for (const { board, sprintResults } of boardResults) {
+    if (sprintResults.length === 0) continue;
+
+    const latestClosed = sprintResults
+      .filter(r => r.sprint.state === 'closed' || r.sprint.state === 'CLOSED')
+      .sort((a, b) => new Date(b.sprint.completeDate || b.sprint.endDate || 0) - new Date(a.sprint.completeDate || a.sprint.endDate || 0))[0];
+
+    if (!latestClosed) continue;
+
+    const rolling = computeRollingMetrics(sprintResults);
+
+    dashboardSummary.boards[board.id] = {
+      boardName: board.name,
+      sprint: {
+        id: latestClosed.sprint.id,
+        name: latestClosed.sprint.name,
+        state: latestClosed.sprint.state,
+        startDate: latestClosed.sprint.startDate,
+        endDate: latestClosed.sprint.endDate
+      },
+      metrics: rolling
+    };
   }
 
   writeStorage('dashboard-summary.json', dashboardSummary);

@@ -15,41 +15,54 @@
     <!-- Summary row -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
       <MetricCard
-        label="Aggregate Velocity"
-        :value="summaryMetrics.totalVelocity"
-        unit="pts"
-        subtitle="Across filtered teams (latest sprint)"
-        tooltip="Sum of delivered story points across all filtered teams for their most recent sprint"
-      />
-      <MetricCard
-        label="Avg Commitment Reliability"
+        label="Avg Reliability"
         :value="summaryMetrics.avgReliability"
         unit="%"
         :colorThresholds="{ good: 80, warn: 60 }"
-        tooltip="Average of each team's commitment reliability (delivered points / committed points * 100)"
+        tooltip="Average of each team's weighted commitment reliability across their last 6 closed sprints (total delivered points / total committed points)"
+      />
+      <MetricCard
+        label="Total Velocity"
+        :value="summaryMetrics.totalVelocity"
+        unit="pts/sprint"
+        tooltip="Sum of all filtered teams' average per-sprint velocity. Represents total organizational output per sprint cycle."
+      />
+      <MetricCard
+        label="Below 80%"
+        :value="summaryMetrics.belowThresholdCount"
+        :subtitle="summaryMetrics.belowThresholdCount === 1 ? 'team below target reliability' : 'teams below target reliability'"
+        :warning="summaryMetrics.belowThresholdCount > 0"
+        tooltip="Number of filtered teams with weighted commitment reliability below 80%. These teams may need attention."
       />
       <MetricCard
         label="Teams"
         :value="filteredBoards.length"
         subtitle="Enabled and filtered"
       />
-      <MetricCard
-        label="Last Updated"
-        :value="lastUpdatedDisplay"
-      />
     </div>
 
     <!-- Aggregate trend chart -->
     <div v-if="aggregateTrendData.length > 0" class="bg-white rounded-lg border border-gray-200 p-5 mb-6">
-      <h3 class="text-sm font-semibold text-gray-700 mb-3">Aggregate Velocity Trend (Monthly)</h3>
+      <h3 class="text-sm font-semibold text-gray-700 mb-3">Aggregate Trend (Monthly)</h3>
       <TrendChart
         :labels="aggregateTrendData.map(d => d.label)"
-        :datasets="[{
-          label: 'Velocity (pts)',
-          data: aggregateTrendData.map(d => d.velocityPoints),
-          borderColor: '#2563eb',
-          backgroundColor: 'rgba(37, 99, 235, 0.1)'
-        }]"
+        :datasets="[
+          {
+            label: 'Velocity (pts)',
+            data: aggregateTrendData.map(d => d.velocityPoints),
+            borderColor: '#2563eb',
+            backgroundColor: 'rgba(37, 99, 235, 0.05)',
+            yAxisID: 'y'
+          },
+          {
+            label: 'Reliability (%)',
+            data: aggregateTrendData.map(d => d.committedPoints > 0 ? Math.round(d.deliveredPoints / d.committedPoints * 100) : null),
+            borderColor: '#16a34a',
+            backgroundColor: 'rgba(22, 163, 74, 0.05)',
+            yAxisID: 'y1'
+          }
+        ]"
+        :scales="trendScales"
       />
     </div>
 
@@ -63,7 +76,7 @@
 
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <TeamCard
-        v-for="board in filteredBoards"
+        v-for="board in sortedBoards"
         :key="board.id"
         :board="board"
         :summaryData="getSummaryForBoard(board.id)"
@@ -103,29 +116,60 @@ const filteredBoards = computed(() => {
 
 const summaryMetrics = computed(() => {
   const boards = props.dashboardSummary?.boards || {}
-  let totalVelocity = 0
   let reliabilitySum = 0
-  let reliabilityCount = 0
+  let totalVelocity = 0
+  let belowThresholdCount = 0
+  let teamCount = 0
 
   for (const board of filteredBoards.value) {
     const data = boards[board.id]
     if (!data?.metrics) continue
-    totalVelocity += data.metrics.velocityPoints || 0
-    if (data.metrics.commitmentReliabilityPoints != null) {
-      reliabilitySum += data.metrics.commitmentReliabilityPoints
-      reliabilityCount++
+    teamCount++
+    reliabilitySum += data.metrics.commitmentReliabilityPoints || 0
+    totalVelocity += data.metrics.avgVelocityPoints || 0
+    if (data.metrics.commitmentReliabilityPoints < 80) {
+      belowThresholdCount++
     }
   }
 
   return {
-    totalVelocity,
-    avgReliability: reliabilityCount > 0 ? Math.round(reliabilitySum / reliabilityCount) : null
+    avgReliability: teamCount > 0 ? Math.round(reliabilitySum / teamCount) : null,
+    totalVelocity: teamCount > 0 ? totalVelocity : null,
+    belowThresholdCount
   }
 })
 
-const lastUpdatedDisplay = computed(() => {
-  if (!props.dashboardSummary?.lastUpdated) return '--'
-  return new Date(props.dashboardSummary.lastUpdated).toLocaleString()
+const trendScales = {
+  x: {
+    grid: { display: false },
+    ticks: { font: { size: 11 } }
+  },
+  y: {
+    type: 'linear',
+    position: 'left',
+    beginAtZero: true,
+    title: { display: true, text: 'Points', font: { size: 11 } },
+    grid: { color: 'rgba(0,0,0,0.05)' },
+    ticks: { font: { size: 11 } }
+  },
+  y1: {
+    type: 'linear',
+    position: 'right',
+    beginAtZero: true,
+    suggestedMax: 120,
+    title: { display: true, text: 'Reliability %', font: { size: 11 } },
+    grid: { drawOnChartArea: false },
+    ticks: { font: { size: 11 } }
+  }
+}
+
+const sortedBoards = computed(() => {
+  const boards = props.dashboardSummary?.boards || {}
+  return [...filteredBoards.value].sort((a, b) => {
+    const aReliability = boards[a.id]?.metrics?.commitmentReliabilityPoints ?? Infinity
+    const bReliability = boards[b.id]?.metrics?.commitmentReliabilityPoints ?? Infinity
+    return aReliability - bReliability
+  })
 })
 
 function getSummaryForBoard(boardId) {

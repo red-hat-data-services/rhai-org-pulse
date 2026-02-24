@@ -5,27 +5,30 @@
   >
     <div class="flex items-center justify-between mb-3">
       <h3 class="font-semibold text-gray-900 truncate">{{ displayName }}</h3>
-      <SprintStatusBadge v-if="latestSprint" :state="latestSprint.state" />
+      <span v-if="metrics" class="text-xs text-gray-400">{{ metrics.sprintsUsed }} sprint avg</span>
     </div>
 
-    <p v-if="latestSprint" class="text-xs text-gray-400 mb-3">{{ latestSprint.name }}</p>
-
-    <div v-if="metrics" class="grid grid-cols-2 gap-3">
+    <div v-if="metrics" class="grid grid-cols-3 gap-3">
       <div>
-        <p class="text-xs text-gray-500">Velocity</p>
-        <p class="text-lg font-bold text-gray-900">{{ metrics.velocityPoints }} <span class="text-xs font-normal text-gray-400">pts</span></p>
-      </div>
-      <div>
-        <p class="text-xs text-gray-500">Reliability</p>
+        <div class="flex items-center gap-1">
+          <p class="text-xs text-gray-500">Reliability</p>
+          <MethodologyInfo text="Weighted commitment reliability across recent sprints: total delivered points / total committed points. Higher is better — 80%+ is strong." />
+        </div>
         <p class="text-lg font-bold" :class="reliabilityColor">{{ metrics.commitmentReliabilityPoints }}%</p>
       </div>
       <div>
-        <p class="text-xs text-gray-500">Scope Change</p>
-        <p class="text-lg font-bold text-gray-900">{{ metrics.scopeChangeCount }}</p>
+        <div class="flex items-center gap-1">
+          <p class="text-xs text-gray-500">Avg Velocity</p>
+          <MethodologyInfo text="Average story points delivered per sprint. Measures how much work the team typically completes each sprint." />
+        </div>
+        <p class="text-lg font-bold text-gray-900">{{ metrics.avgVelocityPoints }} <span class="text-xs font-normal text-gray-400">pts</span></p>
       </div>
-      <div v-if="unestimatedCount > 0">
-        <p class="text-xs text-amber-600">Unestimated</p>
-        <p class="text-lg font-bold text-amber-600">{{ unestimatedCount }}</p>
+      <div>
+        <div class="flex items-center gap-1">
+          <p class="text-xs text-gray-500">Avg Scope Change</p>
+          <MethodologyInfo text="Average number of issues added or removed per sprint after the sprint started. Lower means more stable sprint planning." />
+        </div>
+        <p class="text-lg font-bold text-gray-900">{{ metrics.avgScopeChange }}</p>
       </div>
     </div>
 
@@ -35,7 +38,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import SprintStatusBadge from './SprintStatusBadge.vue'
+import MethodologyInfo from './MethodologyInfo.vue'
 
 const props = defineProps({
   board: { type: Object, required: true },
@@ -48,19 +51,9 @@ const displayName = computed(() =>
   props.board.displayName || props.board.name
 )
 
-const latestSprint = computed(() =>
-  props.summaryData?.sprint || null
-)
-
 const metrics = computed(() =>
   props.summaryData?.metrics || null
 )
-
-const unestimatedCount = computed(() => {
-  if (!props.summaryData) return 0
-  // Will be populated when we have full sprint data
-  return 0
-})
 
 const reliabilityColor = computed(() => {
   const val = metrics.value?.commitmentReliabilityPoints
