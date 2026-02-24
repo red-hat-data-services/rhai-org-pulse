@@ -37,7 +37,20 @@
         <p>Click "Discover Boards" to fetch the board list from Jira.</p>
       </div>
 
-      <div v-else class="divide-y divide-gray-200">
+      <div v-else>
+        <div class="flex items-center gap-3 mb-3 text-sm">
+          <button
+            @click="selectAll"
+            class="text-primary-600 hover:text-primary-800 font-medium"
+          >Select All</button>
+          <span class="text-gray-300">|</span>
+          <button
+            @click="deselectAll"
+            class="text-primary-600 hover:text-primary-800 font-medium"
+          >Deselect All</button>
+          <span class="text-gray-400 ml-2">{{ enabledCount }} of {{ teams.length }} enabled</span>
+        </div>
+        <div class="divide-y divide-gray-200">
         <div
           v-for="team in sortedTeams"
           :key="team.boardId"
@@ -70,6 +83,7 @@
             />
             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
           </label>
+        </div>
         </div>
       </div>
     </div>
@@ -117,9 +131,19 @@ async function loadTeams() {
   }
 }
 
+const enabledCount = computed(() => teams.value.filter(t => t.enabled).length)
+
 function toggleTeam(boardId) {
   const team = teams.value.find(t => t.boardId === boardId)
   if (team) team.enabled = !team.enabled
+}
+
+function selectAll() {
+  teams.value.forEach(t => { t.enabled = true })
+}
+
+function deselectAll() {
+  teams.value.forEach(t => { t.enabled = false })
 }
 
 async function handleSave() {

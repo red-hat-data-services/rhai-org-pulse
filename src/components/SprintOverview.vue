@@ -1,5 +1,33 @@
 <template>
   <div v-if="sprintData" class="space-y-4">
+    <!-- Completion summary banner (closed sprints) -->
+    <div
+      v-if="isClosed"
+      :class="[
+        'rounded-lg border p-5 flex items-center justify-between',
+        reliabilityBannerClass
+      ]"
+    >
+      <div>
+        <p class="text-sm font-medium opacity-80">Sprint Completion</p>
+        <p class="text-3xl font-bold mt-1">{{ sprintData.metrics.commitmentReliabilityPoints }}%</p>
+        <p class="text-sm mt-1 opacity-70">
+          {{ sprintData.delivered.totalPoints }} of {{ sprintData.committed.totalPoints }} committed points delivered
+        </p>
+      </div>
+      <div class="text-right space-y-2">
+        <div class="text-sm">
+          <span class="opacity-70">Velocity</span>
+          <span class="ml-2 font-semibold text-lg">{{ sprintData.metrics.velocityPoints }} pts</span>
+        </div>
+        <div class="text-sm">
+          <span class="opacity-70">Issues</span>
+          <span class="ml-2 font-semibold">{{ sprintData.delivered.issues.length }} / {{ sprintData.committed.issues.length }}</span>
+          <span class="ml-1 opacity-70">({{ sprintData.metrics.commitmentReliabilityCount }}%)</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Committed vs Delivered bars -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <!-- Points bar -->
@@ -115,6 +143,19 @@ const props = defineProps({
 })
 
 defineEmits(['drill-down'])
+
+const isClosed = computed(() => {
+  const state = props.sprintData?.sprint?.state
+  return state === 'closed' || state === 'CLOSED'
+})
+
+const reliabilityBannerClass = computed(() => {
+  const val = props.sprintData?.metrics?.commitmentReliabilityPoints
+  if (val == null) return 'bg-gray-50 border-gray-200 text-gray-800'
+  if (val >= 80) return 'bg-green-50 border-green-200 text-green-900'
+  if (val >= 60) return 'bg-amber-50 border-amber-200 text-amber-900'
+  return 'bg-red-50 border-red-200 text-red-900'
+})
 
 const deliveredWidthPoints = computed(() => {
   if (!props.sprintData || props.sprintData.committed.totalPoints === 0) return '0%'
