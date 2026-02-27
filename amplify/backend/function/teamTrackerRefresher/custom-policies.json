@@ -1,0 +1,14 @@
+[
+  {
+    "Action": ["s3:GetObject", "s3:PutObject"],
+    "Resource": ["arn:aws:s3:::*team-tracker-*/*"]
+  },
+  {
+    "Action": ["s3:ListBucket"],
+    "Resource": ["arn:aws:s3:::*team-tracker-*"]
+  },
+  {
+    "Action": ["ssm:GetParameter"],
+    "Resource": ["arn:aws:ssm:*:*:parameter/team-tracker-app/*/jira-token"]
+  }
+]

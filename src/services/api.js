@@ -180,6 +180,73 @@ export async function deleteAnnotation(sprintId, assignee, annotationId) {
   })
 }
 
+export async function getRefreshStatus() {
+  return apiRequest('/refresh/status')
+}
+
+/**
+ * Poll-based refresh for production (where SSE is not available via API Gateway).
+ * Posts /refresh to invoke the refresher Lambda, then polls /refresh/status until complete.
+ */
+export async function refreshDataPolling({ hardRefresh = false, onProgress, onComplete, onError, signal } = {}) {
+  try {
+    await apiRequest('/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ hardRefresh })
+    })
+  } catch (err) {
+    if (onError) onError(err)
+    throw err
+  }
+
+  const POLL_INTERVAL = 2000
+
+  return new Promise((resolve, reject) => {
+    const poll = async () => {
+      if (signal?.aborted) {
+        reject(new DOMException('Aborted', 'AbortError'))
+        return
+      }
+
+      try {
+        const status = await getRefreshStatus()
+
+        if (status.type === 'complete') {
+          if (onComplete) onComplete(status)
+          resolve(status)
+          return
+        }
+
+        if (status.type === 'error') {
+          const err = new Error(status.message || 'Refresh failed')
+          if (onError) onError(err)
+          reject(err)
+          return
+        }
+
+        // Forward progress events
+        if (onProgress && status.type && status.type !== 'idle' && status.type !== 'started') {
+          onProgress(status)
+        }
+
+        setTimeout(poll, POLL_INTERVAL)
+      } catch (err) {
+        if (onError) onError(err)
+        reject(err)
+      }
+    }
+
+    // Start polling after a short delay to let the Lambda start
+    setTimeout(poll, POLL_INTERVAL)
+  })
+}
+
+export function isProduction() {
+  const endpoint = import.meta.env.VITE_API_ENDPOINT || ''
+  return endpoint && !endpoint.includes('localhost')
+}
+
 export async function getAllowlist() {
   return apiRequest('/allowlist')
 }

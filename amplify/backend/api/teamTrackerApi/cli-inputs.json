@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "paths": {
+    "/boards": {
+      "lambdaFunction": "teamTrackerReader",
+      "permissions": {
+        "setting": "open"
+      }
+    },
+    "/boards/{proxy+}": {
+      "lambdaFunction": "teamTrackerReader",
+      "permissions": {
+        "setting": "open"
+      }
+    },
+    "/sprints/{proxy+}": {
+      "lambdaFunction": "teamTrackerReader",
+      "permissions": {
+        "setting": "open"
+      }
+    },
+    "/teams": {
+      "lambdaFunction": "teamTrackerReader",
+      "permissions": {
+        "setting": "open"
+      }
+    },
+    "/trend": {
+      "lambdaFunction": "teamTrackerReader",
+      "permissions": {
+        "setting": "open"
+      }
+    },
+    "/dashboard-summary": {
+      "lambdaFunction": "teamTrackerReader",
+      "permissions": {
+        "setting": "open"
+      }
+    },
+    "/refresh": {
+      "lambdaFunction": "teamTrackerReader",
+      "permissions": {
+        "setting": "open"
+      }
+    },
+    "/refresh/{proxy+}": {
+      "lambdaFunction": "teamTrackerReader",
+      "permissions": {
+        "setting": "open"
+      }
+    },
+    "/allowlist": {
+      "lambdaFunction": "teamTrackerReader",
+      "permissions": {
+        "setting": "open"
+      }
+    },
+    "/allowlist/{proxy+}": {
+      "lambdaFunction": "teamTrackerReader",
+      "permissions": {
+        "setting": "open"
+      }
+    },
+    "/discover-boards": {
+      "lambdaFunction": "teamTrackerReader",
+      "permissions": {
+        "setting": "open"
+      }
+    }
+  }
+}

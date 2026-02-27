@@ -1,0 +1,11 @@
+{
+  "name": "team-tracker-refresher",
+  "version": "1.0.0",
+  "description": "Team Tracker Refresher Lambda — fetches Jira data and writes to S3",
+  "main": "index.js",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.948.0",
+    "@aws-sdk/client-ssm": "^3.948.0",
+    "node-fetch": "^2.7.0"
+  }
+}

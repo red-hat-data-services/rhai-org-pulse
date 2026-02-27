@@ -1,0 +1,149 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Team Tracker Reader Lambda — serves API routes backed by S3",
+  "Parameters": {
+    "CloudWatchRule": {
+      "Type": "String",
+      "Default": "NONE",
+      "Description": " Schedule Expression"
+    },
+    "deploymentBucketName": {
+      "Type": "String"
+    },
+    "env": {
+      "Type": "String"
+    },
+    "s3Key": {
+      "Type": "String"
+    },
+    "firebaseProjectId": {
+      "Type": "String",
+      "Description": "Firebase project ID for token verification"
+    }
+  },
+  "Conditions": {
+    "ShouldNotCreateEnvResources": {
+      "Fn::Equals": [{ "Ref": "env" }, "NONE"]
+    }
+  },
+  "Resources": {
+    "LambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": { "Ref": "deploymentBucketName" },
+          "S3Key": { "Ref": "s3Key" }
+        },
+        "Handler": "index.handler",
+        "FunctionName": {
+          "Fn::If": [
+            "ShouldNotCreateEnvResources",
+            "teamTrackerReader",
+            {
+              "Fn::Join": [
+                "",
+                ["teamTrackerReader", "-", { "Ref": "env" }]
+              ]
+            }
+          ]
+        },
+        "Environment": {
+          "Variables": {
+            "ENV": { "Ref": "env" },
+            "REGION": { "Ref": "AWS::Region" },
+            "S3_BUCKET": {
+              "Fn::Join": [
+                "",
+                ["acorvin-team-tracker-data-", { "Ref": "env" }]
+              ]
+            },
+            "FIREBASE_PROJECT_ID": { "Ref": "firebaseProjectId" },
+            "ADMIN_EMAILS": ""
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": ["LambdaExecutionRole", "Arn"]
+        },
+        "Runtime": "nodejs18.x",
+        "Timeout": 25,
+        "MemorySize": 256
+      }
+    },
+    "LambdaExecutionRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": {
+          "Fn::If": [
+            "ShouldNotCreateEnvResources",
+            "teamTrackerReaderLambdaRole",
+            {
+              "Fn::Join": [
+                "",
+                [
+                  "teamTrackerReaderLambdaRole",
+                  "-",
+                  { "Ref": "env" }
+                ]
+              ]
+            }
+          ]
+        },
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": { "Service": "lambda.amazonaws.com" },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        }
+      }
+    },
+    "lambdaexecutionpolicy": {
+      "Type": "AWS::IAM::Policy",
+      "DependsOn": ["LambdaExecutionRole"],
+      "Properties": {
+        "PolicyName": "lambda-execution-policy",
+        "Roles": [{ "Ref": "LambdaExecutionRole" }],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "logs:CreateLogGroup",
+                "logs:CreateLogStream",
+                "logs:PutLogEvents"
+              ],
+              "Resource": {
+                "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${LambdaFunction}:log-stream:*"
+              }
+            }
+          ]
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "Name": {
+      "Value": { "Ref": "LambdaFunction" }
+    },
+    "Arn": {
+      "Value": {
+        "Fn::GetAtt": ["LambdaFunction", "Arn"]
+      }
+    },
+    "Region": {
+      "Value": { "Ref": "AWS::Region" }
+    },
+    "LambdaExecutionRole": {
+      "Value": { "Ref": "LambdaExecutionRole" }
+    },
+    "LambdaExecutionRoleArn": {
+      "Value": {
+        "Fn::GetAtt": ["LambdaExecutionRole", "Arn"]
+      }
+    }
+  }
+}

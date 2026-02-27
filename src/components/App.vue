@@ -223,6 +223,8 @@ import { useSavedFilters } from '../composables/useSavedFilters'
 import {
   refreshData as apiRefreshData,
   refreshDataForeground,
+  refreshDataPolling,
+  isProduction,
   getBoards,
   getSprintsForBoard,
   getSprintData,
@@ -451,38 +453,47 @@ export default {
       }
       this.refreshAbortController = new AbortController()
 
+      const progressHandler = (event) => {
+        if (event.type === 'refresh-start') {
+          this.refreshProgress.totalBoards = event.totalBoards
+        } else if (event.type === 'board-start') {
+          this.refreshProgress.currentBoard = event.board
+          this.refreshProgress.totalSprints = 0
+          this.refreshProgress.completedSprints = 0
+          this.refreshProgress.currentSprint = ''
+        } else if (event.type === 'sprint') {
+          this.refreshProgress.currentBoard = event.board
+          this.refreshProgress.totalSprints = event.totalSprints
+          this.refreshProgress.completedSprints = event.sprintIndex + 1
+          this.refreshProgress.currentSprint = event.sprint
+        } else if (event.type === 'board-complete') {
+          this.refreshProgress.completedBoards += 1
+        }
+      }
+
+      const completeHandler = () => {
+        this.isRefreshing = false
+        this.refreshAbortController = null
+        this.loadInitialData()
+      }
+
+      const errorHandler = (error) => {
+        console.error('Foreground refresh error:', error)
+        this.showToast(`Refresh failed: ${error.message}`, 'error')
+        this.isRefreshing = false
+        this.refreshAbortController = null
+      }
+
+      // Use polling in production (API Gateway doesn't support SSE), SSE in local dev
+      const refreshFn = isProduction() ? refreshDataPolling : refreshDataForeground
+
       try {
-        await refreshDataForeground({
+        await refreshFn({
           hardRefresh,
           signal: this.refreshAbortController.signal,
-          onProgress: (event) => {
-            if (event.type === 'refresh-start') {
-              this.refreshProgress.totalBoards = event.totalBoards
-            } else if (event.type === 'board-start') {
-              this.refreshProgress.currentBoard = event.board
-              this.refreshProgress.totalSprints = 0
-              this.refreshProgress.completedSprints = 0
-              this.refreshProgress.currentSprint = ''
-            } else if (event.type === 'sprint') {
-              this.refreshProgress.currentBoard = event.board
-              this.refreshProgress.totalSprints = event.totalSprints
-              this.refreshProgress.completedSprints = event.sprintIndex + 1
-              this.refreshProgress.currentSprint = event.sprint
-            } else if (event.type === 'board-complete') {
-              this.refreshProgress.completedBoards += 1
-            }
-          },
-          onComplete: () => {
-            this.isRefreshing = false
-            this.refreshAbortController = null
-            this.loadInitialData()
-          },
-          onError: (error) => {
-            console.error('Foreground refresh error:', error)
-            this.showToast(`Refresh failed: ${error.message}`, 'error')
-            this.isRefreshing = false
-            this.refreshAbortController = null
-          }
+          onProgress: progressHandler,
+          onComplete: completeHandler,
+          onError: errorHandler
         })
       } catch (error) {
         if (error.name !== 'AbortError') {

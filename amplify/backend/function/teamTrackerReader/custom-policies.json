@@ -1,0 +1,14 @@
+[
+  {
+    "Action": ["s3:GetObject", "s3:PutObject"],
+    "Resource": ["arn:aws:s3:::*team-tracker-*/*"]
+  },
+  {
+    "Action": ["s3:ListBucket"],
+    "Resource": ["arn:aws:s3:::*team-tracker-*"]
+  },
+  {
+    "Action": ["lambda:InvokeFunction"],
+    "Resource": ["arn:aws:lambda:us-east-1:585132637328:function:teamTrackerRefresher-*"]
+  }
+]
