@@ -477,6 +477,14 @@ app.get('/api/trend', function(req, res) {
   }
 });
 
+// ─── Jira Name Resolution Cache ───
+
+let jiraNameCache = readFromStorage('jira-name-map.json') || {};
+
+function persistNameCache() {
+  writeToStorage('jira-name-map.json', jiraNameCache);
+}
+
 // ─── Routes: Roster & Person Metrics ───
 
 function sanitizeFilename(name) {
@@ -518,7 +526,11 @@ app.get('/api/person/:jiraDisplayName/metrics', async function(req, res) {
     }
 
     // Fetch from Jira
-    const metrics = await fetchPersonMetrics(jiraRequest, name);
+    const metrics = await fetchPersonMetrics(jiraRequest, name, { nameCache: jiraNameCache });
+    if (metrics._resolvedName) {
+      persistNameCache();
+      delete metrics._resolvedName;
+    }
     writeToStorage(cachePath, metrics);
     res.json(metrics);
   } catch (error) {
@@ -636,7 +648,10 @@ app.post('/api/roster/refresh', function(req, res) {
         const member = uniqueMembers[i++];
         try {
           console.log(`[roster-refresh] Fetching metrics for ${member.jiraDisplayName} (${++completed}/${uniqueMembers.length})`);
-          const metrics = await fetchPersonMetrics(jiraRequest, member.jiraDisplayName);
+          const metrics = await fetchPersonMetrics(jiraRequest, member.jiraDisplayName, { nameCache: jiraNameCache });
+          if (metrics._resolvedName) {
+            delete metrics._resolvedName;
+          }
           const key = sanitizeFilename(member.jiraDisplayName);
           writeToStorage(`people/${key}.json`, metrics);
         } catch (error) {
@@ -651,6 +666,7 @@ app.post('/api/roster/refresh', function(req, res) {
         workers.push(next());
       }
       await Promise.all(workers);
+      persistNameCache();
       console.log(`[roster-refresh] All teams refresh complete (${uniqueMembers.length} members)`);
     });
   } catch (error) {
@@ -689,7 +705,10 @@ app.post('/api/team/:teamKey/refresh', function(req, res) {
         const member = uniqueMembers[i++];
         try {
           console.log(`[refresh] Fetching metrics for ${member.jiraDisplayName} (${i}/${uniqueMembers.length})`);
-          const metrics = await fetchPersonMetrics(jiraRequest, member.jiraDisplayName);
+          const metrics = await fetchPersonMetrics(jiraRequest, member.jiraDisplayName, { nameCache: jiraNameCache });
+          if (metrics._resolvedName) {
+            delete metrics._resolvedName;
+          }
           const key = sanitizeFilename(member.jiraDisplayName);
           writeToStorage(`people/${key}.json`, metrics);
         } catch (error) {
@@ -703,12 +722,19 @@ app.post('/api/team/:teamKey/refresh', function(req, res) {
         workers.push(next());
       }
       await Promise.all(workers);
+      persistNameCache();
       console.log(`[refresh] Team "${teamKey}" refresh complete`);
     });
   } catch (error) {
     console.error(`Team refresh error (${req.params.teamKey}):`, error);
     res.status(500).json({ error: error.message });
   }
+});
+
+app.delete('/api/jira-name-cache', function(req, res) {
+  jiraNameCache = {};
+  writeToStorage('jira-name-map.json', {});
+  res.json({ success: true });
 });
 
 // ─── Routes: Annotations ───

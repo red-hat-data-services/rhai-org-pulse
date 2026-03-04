@@ -100,22 +100,97 @@ function mapIssue(issue) {
 }
 
 /**
+ * Resolve a roster display name to the actual Jira display name.
+ * Uses a cache to avoid repeated lookups. Falls back to the original name
+ * if no match is found (and does NOT cache failures so we retry next time).
+ */
+async function resolveJiraDisplayName(jiraRequest, rosterName, nameCache) {
+  if (!nameCache) return rosterName;
+
+  if (rosterName in nameCache) {
+    return nameCache[rosterName];
+  }
+
+  const escaped = rosterName.replace(/"/g, '\\"');
+
+  // Step 1: check if the roster name works directly
+  const checkParams = new URLSearchParams({
+    jql: `project = RHOAIENG AND assignee = "${escaped}" AND updated >= -365d`,
+    fields: 'summary',
+    maxResults: '1'
+  });
+  try {
+    const check = await jiraRequest(`/rest/api/2/search?${checkParams}`);
+    if (check.total > 0) {
+      nameCache[rosterName] = rosterName;
+      return rosterName;
+    }
+  } catch (err) {
+    // If the check itself fails, fall through to user search
+  }
+
+  // Step 2: user search by first-initial + last-name
+  const parts = rosterName.trim().split(/\s+/);
+  const lastName = parts[parts.length - 1];
+  const firstInitial = parts[0]?.[0]?.toLowerCase() || '';
+  const username = firstInitial + lastName.toLowerCase();
+
+  const resolved = await tryUserSearch(jiraRequest, username, lastName);
+  if (resolved) {
+    nameCache[rosterName] = resolved;
+    return resolved;
+  }
+
+  // Step 3: fall back to last-name-only search
+  if (username !== lastName.toLowerCase()) {
+    const resolved2 = await tryUserSearch(jiraRequest, lastName.toLowerCase(), lastName);
+    if (resolved2) {
+      nameCache[rosterName] = resolved2;
+      return resolved2;
+    }
+  }
+
+  // All lookups failed — return original name, do NOT cache
+  return rosterName;
+}
+
+async function tryUserSearch(jiraRequest, query, lastName) {
+  try {
+    const users = await jiraRequest(`/rest/api/2/user/search?username=${encodeURIComponent(query)}`);
+    if (!Array.isArray(users) || users.length === 0) return null;
+    if (users.length === 1) return users[0].displayName;
+    // Multiple results — match on last name
+    const match = users.find(u =>
+      u.displayName?.toLowerCase().endsWith(lastName.toLowerCase())
+    );
+    return match?.displayName || null;
+  } catch (err) {
+    return null;
+  }
+}
+
+/**
  * Fetch individual person metrics from Jira.
  *
  * @param {Function} jiraRequest - The authenticated Jira HTTP request function
- * @param {string} jiraDisplayName - Exact Jira display name
+ * @param {string} jiraDisplayName - Exact Jira display name (from roster)
  * @param {object} [options]
  * @param {number} [options.lookbackDays=90] - How far back to look for resolved issues
+ * @param {object} [options.nameCache] - Mutable name resolution cache
  * @returns {Promise<object>} Person metrics object
  */
 async function fetchPersonMetrics(jiraRequest, jiraDisplayName, options = {}) {
   const lookbackDays = options.lookbackDays || 90;
+  const nameCache = options.nameCache || null;
+
+  // Resolve the roster name to the actual Jira display name
+  const resolvedName = await resolveJiraDisplayName(jiraRequest, jiraDisplayName, nameCache);
 
   // Escape the name for JQL (double-quote wrapping handles apostrophes)
-  const escapedName = jiraDisplayName.replace(/"/g, '\\"');
+  const escapedName = resolvedName.replace(/"/g, '\\"');
 
   const resolvedJql = `project = RHOAIENG AND assignee = "${escapedName}" AND resolved >= -${lookbackDays}d AND issuetype in (Story, Bug, Task, Vulnerability, Weakness)`;
-  const inProgressJql = `project = RHOAIENG AND assignee = "${escapedName}" AND status in ("In Progress", "Code Review") AND issuetype in (Story, Bug, Task, Vulnerability, Weakness)`;
+  const inProgressJql = `project = RHOAIENG AND assignee = "${escapedName}" AND status in ("In Progress", "Code Review", "Review", "Coding In Progress", "Testing", "Refinement", "Planning") AND issuetype in (Story, Bug, Task, Vulnerability, Weakness)`;
 
   const [resolvedIssues, inProgressIssues] = await Promise.all([
     fetchAllJqlResults(jiraRequest, resolvedJql, FIELDS, { expand: 'changelog' }),
@@ -150,7 +225,7 @@ async function fetchPersonMetrics(jiraRequest, jiraDisplayName, options = {}) {
       : +sorted[mid].toFixed(1);
   }
 
-  return {
+  const result = {
     jiraDisplayName,
     fetchedAt: new Date().toISOString(),
     lookbackDays,
@@ -169,6 +244,12 @@ async function fetchPersonMetrics(jiraRequest, jiraDisplayName, options = {}) {
       medianDays
     }
   };
+
+  if (resolvedName !== jiraDisplayName) {
+    result._resolvedName = resolvedName;
+  }
+
+  return result;
 }
 
-module.exports = { fetchPersonMetrics, computeCycleTimeDays, findWorkStartDate };
+module.exports = { fetchPersonMetrics, computeCycleTimeDays, findWorkStartDate, resolveJiraDisplayName };
