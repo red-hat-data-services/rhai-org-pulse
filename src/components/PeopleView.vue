@@ -314,7 +314,10 @@ const sortedPeople = computed(() => {
 onMounted(async () => {
   loading.value = true
   try {
-    peopleMetrics.value = await getAllPeopleMetrics()
+    await getAllPeopleMetrics((data) => {
+      peopleMetrics.value = data
+      loading.value = false
+    })
   } catch (err) {
     console.error('Failed to load people metrics:', err)
   } finally {

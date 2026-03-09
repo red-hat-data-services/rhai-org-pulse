@@ -368,7 +368,10 @@ const cycleTimeDatasets = computed(() => {
 async function loadTrends() {
   loading.value = true
   try {
-    trendsData.value = await getTrends()
+    await getTrends((data) => {
+      trendsData.value = data
+      loading.value = false
+    })
   } catch (err) {
     console.error('Failed to load trends:', err)
   } finally {

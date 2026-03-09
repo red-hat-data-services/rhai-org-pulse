@@ -67,11 +67,13 @@ export function useRoster() {
     loading.value = true
     error.value = null
     try {
-      rosterData.value = await getRoster()
-      // Auto-select first org if none selected
-      if (!selectedOrgKey.value && rosterData.value.orgs?.length > 0) {
-        selectedOrgKey.value = rosterData.value.orgs[0].key
-      }
+      await getRoster((data) => {
+        rosterData.value = data
+        if (!selectedOrgKey.value && data.orgs?.length > 0) {
+          selectedOrgKey.value = data.orgs[0].key
+        }
+        loading.value = false
+      })
     } catch (err) {
       error.value = err.message
       console.error('Failed to load roster:', err)

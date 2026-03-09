@@ -2,11 +2,70 @@
  * API Service
  * Handles communication with the backend
  * Automatically includes Firebase ID token in requests
+ * Uses localStorage for stale-while-revalidate caching
  */
 
 import { useAuth } from '../composables/useAuth'
 
 const API_ENDPOINT = import.meta.env.VITE_API_ENDPOINT || '/api'
+const CACHE_PREFIX = 'tt_cache:'
+
+// ─── LocalStorage Cache ───
+
+function cacheGet(key) {
+  try {
+    const raw = localStorage.getItem(CACHE_PREFIX + key)
+    if (!raw) return null
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
+function cacheSet(key, data) {
+  try {
+    localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(data))
+  } catch {
+    // localStorage full — evict oldest cache entries and retry
+    evictOldest()
+    try {
+      localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(data))
+    } catch {
+      // still full, skip caching
+    }
+  }
+}
+
+function cacheDelete(key) {
+  localStorage.removeItem(CACHE_PREFIX + key)
+}
+
+function evictOldest() {
+  const keys = []
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i)
+    if (k.startsWith(CACHE_PREFIX)) keys.push(k)
+  }
+  // Remove first half of cache keys (oldest by insertion order)
+  const toRemove = keys.slice(0, Math.max(1, Math.floor(keys.length / 2)))
+  for (const k of toRemove) {
+    localStorage.removeItem(k)
+  }
+}
+
+/**
+ * Clear all API cache entries from localStorage
+ */
+export function clearApiCache() {
+  const keys = []
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i)
+    if (k.startsWith(CACHE_PREFIX)) keys.push(k)
+  }
+  for (const k of keys) {
+    localStorage.removeItem(k)
+  }
+}
 
 /**
  * Get Firebase ID token for authentication
@@ -65,23 +124,59 @@ async function apiRequest(path, options = {}) {
   return response.json()
 }
 
-// ─── Roster & Person Metrics ───
+/**
+ * Stale-while-revalidate: return cached data immediately via onData callback,
+ * then fetch fresh data and call onData again if it changed.
+ * If no cache exists, fetches and returns normally.
+ */
+async function cachedRequest(cacheKey, path, onData) {
+  const cached = cacheGet(cacheKey)
 
-export async function getRoster() {
-  return apiRequest('/roster')
+  if (cached && onData) {
+    onData(cached)
+  }
+
+  try {
+    const fresh = await apiRequest(path)
+    cacheSet(cacheKey, fresh)
+    if (onData) {
+      onData(fresh)
+    }
+    return fresh
+  } catch (err) {
+    // If we have cached data, swallow network errors silently
+    if (cached) {
+      console.warn(`Using cached data for ${path}:`, err.message)
+      return cached
+    }
+    throw err
+  }
 }
 
-export async function getAllPeopleMetrics() {
-  return apiRequest('/people/metrics')
+// ─── Roster & Person Metrics ───
+
+export async function getRoster(onData) {
+  return cachedRequest('roster', '/roster', onData)
+}
+
+export async function getAllPeopleMetrics(onData) {
+  return cachedRequest('people-metrics', '/people/metrics', onData)
 }
 
 export async function getPersonMetrics(jiraDisplayName, { refresh = false } = {}) {
   const params = refresh ? '?refresh=true' : ''
-  return apiRequest(`/person/${encodeURIComponent(jiraDisplayName)}/metrics${params}`)
+  const cacheKey = `person:${jiraDisplayName}`
+  if (refresh) {
+    cacheDelete(cacheKey)
+    const data = await apiRequest(`/person/${encodeURIComponent(jiraDisplayName)}/metrics${params}`)
+    cacheSet(cacheKey, data)
+    return data
+  }
+  return cachedRequest(cacheKey, `/person/${encodeURIComponent(jiraDisplayName)}/metrics`)
 }
 
-export async function getTeamMetrics(teamKey) {
-  return apiRequest(`/team/${encodeURIComponent(teamKey)}/metrics`)
+export async function getTeamMetrics(teamKey, onData) {
+  return cachedRequest(`team:${teamKey}`, `/team/${encodeURIComponent(teamKey)}/metrics`, onData)
 }
 
 export async function refreshAllMetrics() {
@@ -100,8 +195,8 @@ export async function refreshTeamMetrics(teamKey) {
 
 // ─── GitHub Contributions ───
 
-export async function getGithubContributions() {
-  return apiRequest('/github/contributions')
+export async function getGithubContributions(onData) {
+  return cachedRequest('github-contributions', '/github/contributions', onData)
 }
 
 export async function refreshGithubContribution(username) {
@@ -120,8 +215,8 @@ export async function refreshGithubContributions() {
 
 // ─── Trends ───
 
-export async function getTrends() {
-  return apiRequest('/trends')
+export async function getTrends(onData) {
+  return cachedRequest('trends', '/trends', onData)
 }
 
 export async function refreshTrendsJira() {

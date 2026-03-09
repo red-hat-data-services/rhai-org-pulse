@@ -134,7 +134,9 @@ const showResolvedIssues = ref(false)
 
 async function fetchTeamMetrics() {
   try {
-    teamMetrics.value = await getTeamMetrics(props.team.key)
+    await getTeamMetrics(props.team.key, (data) => {
+      teamMetrics.value = data
+    })
   } catch (error) {
     console.error('Failed to fetch team metrics:', error)
   }

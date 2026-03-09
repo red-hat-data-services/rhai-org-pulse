@@ -19,7 +19,10 @@ export function useGithubStats() {
     if (githubData.value) return
     loading.value = true
     try {
-      githubData.value = await getGithubContributions()
+      await getGithubContributions((data) => {
+        githubData.value = data
+        loading.value = false
+      })
     } catch (err) {
       console.error('Failed to load GitHub stats:', err)
     } finally {
