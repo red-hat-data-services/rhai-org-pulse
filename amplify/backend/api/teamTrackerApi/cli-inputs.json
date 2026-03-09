@@ -35,6 +35,27 @@
       "permissions": {
         "setting": "open"
       }
+    },
+    "/people": {
+      "name": "/people",
+      "lambdaFunction": "teamTrackerReader",
+      "permissions": {
+        "setting": "open"
+      }
+    },
+    "/github": {
+      "name": "/github",
+      "lambdaFunction": "teamTrackerReader",
+      "permissions": {
+        "setting": "open"
+      }
+    },
+    "/trends": {
+      "name": "/trends",
+      "lambdaFunction": "teamTrackerReader",
+      "permissions": {
+        "setting": "open"
+      }
     }
   }
 }
