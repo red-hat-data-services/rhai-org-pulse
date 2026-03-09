@@ -40,5 +40,6 @@ src/amplifyconfiguration.json
 src/aws-exports.js
 output.txt
 
-# Claude Code
-.claude/
+# Claude Code (keep .claude/CLAUDE.md tracked for contributors)
+.claude/*
+!.claude/CLAUDE.md
