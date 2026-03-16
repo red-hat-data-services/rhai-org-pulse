@@ -2,7 +2,7 @@ const fetch = require('node-fetch');
 const { readFromS3, writeToS3 } = require('./s3-storage');
 const { fetchPersonMetrics } = require('./person-metrics');
 
-const JIRA_HOST = process.env.JIRA_HOST || 'https://issues.redhat.com';
+const JIRA_HOST = process.env.JIRA_HOST || 'https://redhat.atlassian.net';
 const CONCURRENCY = 5;
 const CACHE_TTL_MS = 4 * 60 * 60 * 1000; // 4 hours
 
@@ -20,16 +20,25 @@ async function refreshPersonMetrics({ jiraToken, members, force = false }) {
   // Load name resolution cache
   const nameCache = await readFromS3('jira-name-map.json') || {};
 
-  async function jiraRequest(path) {
+  const jiraEmail = process.env.JIRA_EMAIL;
+  const basicAuth = Buffer.from(`${jiraEmail}:${jiraToken}`).toString('base64');
+
+  async function jiraRequest(path, { method = 'GET', body } = {}) {
     const MAX_RETRIES = 3;
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-      const response = await fetch(`${JIRA_HOST}${path}`, {
+      const options = {
+        method,
         headers: {
-          'Authorization': `Bearer ${jiraToken}`,
+          'Authorization': `Basic ${basicAuth}`,
           'Accept': 'application/json'
         }
-      });
+      };
+      if (body) {
+        options.headers['Content-Type'] = 'application/json';
+        options.body = JSON.stringify(body);
+      }
+      const response = await fetch(`${JIRA_HOST}${path}`, options);
 
       if (response.status === 429 && attempt < MAX_RETRIES) {
         const retryAfter = parseInt(response.headers.get('retry-after'), 10);

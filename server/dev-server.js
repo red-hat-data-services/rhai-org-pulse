@@ -60,7 +60,7 @@ if (DEMO_MODE) {
   });
 }
 
-const JIRA_HOST = process.env.JIRA_HOST || 'https://issues.redhat.com';
+const JIRA_HOST = process.env.JIRA_HOST || 'https://redhat.atlassian.net';
 const PORT = process.env.API_PORT || 3001;
 
 // ─── Allowlist seed ───
@@ -127,29 +127,36 @@ app.use(authMiddleware);
 
 // ─── Jira API helpers ───
 
-function getJiraToken() {
+function getJiraAuth() {
   const token = process.env.JIRA_TOKEN;
-  if (!token) {
+  const email = process.env.JIRA_EMAIL;
+  if (!token || !email) {
     throw new Error(
-      'JIRA_TOKEN environment variable is not set.\n' +
-      'Set it in a .env file or pass it directly:\n' +
-      '  JIRA_TOKEN=your-token node server/dev-server.js'
+      'JIRA_TOKEN and JIRA_EMAIL environment variables must be set.\n' +
+      'Set them in a .env file or pass them directly:\n' +
+      '  JIRA_EMAIL=you@redhat.com JIRA_TOKEN=your-api-token node server/dev-server.js'
     );
   }
-  return token;
+  return Buffer.from(`${email}:${token}`).toString('base64');
 }
 
-async function jiraRequest(path) {
-  const token = getJiraToken();
+async function jiraRequest(path, { method = 'GET', body } = {}) {
+  const auth = getJiraAuth();
   const MAX_RETRIES = 3;
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-    const response = await fetch(`${JIRA_HOST}${path}`, {
+    const options = {
+      method,
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Basic ${auth}`,
         'Accept': 'application/json'
       }
-    });
+    };
+    if (body) {
+      options.headers['Content-Type'] = 'application/json';
+      options.body = JSON.stringify(body);
+    }
+    const response = await fetch(`${JIRA_HOST}${path}`, options);
 
     if (response.status === 429 && attempt < MAX_RETRIES) {
       const retryAfter = parseInt(response.headers.get('retry-after'), 10);
@@ -1513,5 +1520,6 @@ app.listen(PORT, function() {
   console.log(`\nTeam Tracker dev server running at http://localhost:${PORT}`);
   console.log(`Jira host: ${JIRA_HOST}`);
   console.log(`Local storage: ./data/`);
-  console.log(`JIRA_TOKEN: ${process.env.JIRA_TOKEN ? 'set' : 'NOT SET (refresh will fail)'}\n`);
+  console.log(`JIRA_TOKEN: ${process.env.JIRA_TOKEN ? 'set' : 'NOT SET (refresh will fail)'}`);
+  console.log(`JIRA_EMAIL: ${process.env.JIRA_EMAIL ? 'set' : 'NOT SET (refresh will fail)'}\n`);
 });

@@ -85,7 +85,8 @@
               "Ref": "firebaseProjectId"
             },
             "ADMIN_EMAILS": "",
-            "JIRA_HOST": "https://issues.redhat.com",
+            "JIRA_HOST": "https://redhat.atlassian.net",
+            "JIRA_EMAIL": "acorvin@redhat.com",
             "JIRA_TOKEN_PARAMETER_NAME": {
               "Fn::Join": [
                 "",

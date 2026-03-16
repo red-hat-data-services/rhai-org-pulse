@@ -164,7 +164,7 @@
               <tr v-for="issue in metrics.resolved.issues" :key="issue.key" class="hover:bg-gray-50">
                 <td class="px-4 py-2 text-sm">
                   <a
-                    :href="`https://issues.redhat.com/browse/${issue.key}`"
+                    :href="`https://redhat.atlassian.net/browse/${issue.key}`"
                     target="_blank"
                     class="text-primary-600 hover:underline"
                   >
@@ -206,7 +206,7 @@
               <tr v-for="issue in metrics.inProgress.issues" :key="issue.key" class="hover:bg-gray-50">
                 <td class="px-4 py-2 text-sm">
                   <a
-                    :href="`https://issues.redhat.com/browse/${issue.key}`"
+                    :href="`https://redhat.atlassian.net/browse/${issue.key}`"
                     target="_blank"
                     class="text-primary-600 hover:underline"
                   >

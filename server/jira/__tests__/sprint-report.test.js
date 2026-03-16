@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { processSprintReport, normalizeIssue, buildCategorySummary, getStoryPoints } from '../sprint-report.js'
 
-const JIRA_HOST = 'https://issues.redhat.com'
+const JIRA_HOST = 'https://redhat.atlassian.net'
 
 function makeRawIssue(overrides = {}) {
   return {
@@ -68,7 +68,7 @@ describe('normalizeIssue', () => {
     expect(issue.effectivePoints).toBe(3)
     expect(issue.isEstimated).toBe(true)
     expect(issue.wasAddedMidSprint).toBe(false)
-    expect(issue.url).toBe('https://issues.redhat.com/browse/RHOAIENG-100')
+    expect(issue.url).toBe('https://redhat.atlassian.net/browse/RHOAIENG-100')
   })
 
   it('defaults unestimated issues to 1 point', () => {

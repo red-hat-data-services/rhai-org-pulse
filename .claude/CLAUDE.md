@@ -24,10 +24,13 @@ The Jira metrics logic exists in three places that must be kept in sync:
 2. `amplify/backend/function/teamTrackerReader/src/person-metrics.js` — Lambda reader
 3. `amplify/backend/function/teamTrackerRefresher/src/person-metrics.js` — Lambda refresher
 
-### Jira Integration
+### Jira Integration (Jira Cloud — redhat.atlassian.net)
+- Auth: Basic auth with `JIRA_EMAIL` + `JIRA_TOKEN` (API token), base64-encoded
 - Uses the Sprint Report API (`/rest/greenhopper/1.0/rapid/charts/sprintreport`) for sprint data (committed vs delivered)
-- Uses standard JQL search for person-level metrics (resolved, in-progress issues)
-- Auto-resolves roster display names to Jira display names via user search API, cached in `data/jira-name-map.json`
+- Uses `/rest/api/3/search/jql` (GET with cursor-based `nextPageToken` pagination) for person-level metrics
+- Auto-resolves roster display names to Jira Cloud accountIds via `/rest/api/2/user/search?query=`, cached in `data/jira-name-map.json` (format: `{ "Name": { accountId, displayName } }`)
+- JQL uses `assignee = "accountId"` (not display names)
+- Story points field: `customfield_10028`
 - Searches across all Jira projects (no project filter)
 
 ### Caching
@@ -55,7 +58,7 @@ Amplify app ID: `d3ofiswnhr3rov`
 
 - `npm run dev:full` — start both Vite and Express servers
 - `npm run dev` — Vite only (frontend)
-- `npm run dev:server` — Express only (backend, requires JIRA_TOKEN in .env)
+- `npm run dev:server` — Express only (backend, requires JIRA_EMAIL and JIRA_TOKEN in .env)
 - `npm test` — run all tests
 - `npm run test:watch` — run tests in watch mode
 

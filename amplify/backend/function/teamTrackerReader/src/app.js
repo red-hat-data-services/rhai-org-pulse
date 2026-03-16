@@ -22,7 +22,7 @@ app.use(function (req, res, next) {
 const lambdaClient = new LambdaClient({ region: process.env.REGION || 'us-east-1' });
 const ssmClient = new SSMClient({ region: process.env.REGION || 'us-east-1' });
 
-const JIRA_HOST = process.env.JIRA_HOST || 'https://issues.redhat.com';
+const JIRA_HOST = process.env.JIRA_HOST || 'https://redhat.atlassian.net';
 const CACHE_TTL_MS = 4 * 60 * 60 * 1000; // 4 hours
 
 // ─── Jira token cache ───
@@ -48,17 +48,25 @@ async function getJiraToken() {
   return cachedJiraToken;
 }
 
-async function jiraRequest(path) {
+async function jiraRequest(path, { method = 'GET', body } = {}) {
   const token = await getJiraToken();
+  const jiraEmail = process.env.JIRA_EMAIL;
+  const basicAuth = Buffer.from(`${jiraEmail}:${token}`).toString('base64');
   const MAX_RETRIES = 3;
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-    const response = await fetch(`${JIRA_HOST}${path}`, {
+    const options = {
+      method,
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Basic ${basicAuth}`,
         'Accept': 'application/json'
       }
-    });
+    };
+    if (body) {
+      options.headers['Content-Type'] = 'application/json';
+      options.body = JSON.stringify(body);
+    }
+    const response = await fetch(`${JIRA_HOST}${path}`, options);
 
     if (response.status === 429 && attempt < MAX_RETRIES) {
       const retryAfter = parseInt(response.headers.get('retry-after'), 10);

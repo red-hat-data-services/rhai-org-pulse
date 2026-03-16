@@ -3,37 +3,43 @@
  *
  * Fetches resolved and in-progress issues for a given Jira display name,
  * then computes aggregate metrics (counts, story points, cycle time).
+ *
+ * Compatible with Jira Cloud (v3 search/jql API with cursor pagination).
  */
 
-const STORY_POINTS_FIELD = process.env.JIRA_STORY_POINTS_FIELD || 'customfield_12310243';
+const STORY_POINTS_FIELD = process.env.JIRA_STORY_POINTS_FIELD || 'customfield_10028';
 
 const FIELDS = `summary,issuetype,status,assignee,resolutiondate,created,components,${STORY_POINTS_FIELD}`;
 
 /**
- * Fetch paginated JQL results (all pages).
+ * Fetch paginated JQL results using the v3 search/jql GET API (all pages).
+ * Uses nextPageToken cursor-based pagination.
  */
 async function fetchAllJqlResults(jiraRequest, jql, fields, { maxResults = 100, expand } = {}) {
   const issues = [];
-  let startAt = 0;
+  let nextPageToken = null;
 
   while (true) {
     const params = new URLSearchParams({
       jql,
       fields,
-      startAt: String(startAt),
       maxResults: String(maxResults)
     });
     if (expand) {
       params.set('expand', expand);
     }
+    if (nextPageToken) {
+      params.set('nextPageToken', nextPageToken);
+    }
 
-    const data = await jiraRequest(`/rest/api/2/search?${params}`);
+    const data = await jiraRequest(`/rest/api/3/search/jql?${params}`);
     if (!data.issues || data.issues.length === 0) break;
 
     issues.push(...data.issues);
-    startAt += data.issues.length;
 
-    if (startAt >= data.total) break;
+    if (data.isLast !== false) break;
+    nextPageToken = data.nextPageToken;
+    if (!nextPageToken) break;
   }
 
   return issues;
@@ -100,71 +106,71 @@ function mapIssue(issue) {
 }
 
 /**
- * Resolve a roster display name to the actual Jira display name.
- * Uses a cache to avoid repeated lookups. Falls back to the original name
+ * Resolve a roster display name to the Jira Cloud accountId.
+ * Uses a cache to avoid repeated lookups. Falls back to null
  * if no match is found (and does NOT cache failures so we retry next time).
+ *
+ * Cache format: { "Display Name": { accountId: "...", displayName: "..." } }
  */
 async function resolveJiraDisplayName(jiraRequest, rosterName, nameCache) {
-  if (!nameCache) return rosterName;
+  if (!nameCache) return { accountId: null, displayName: rosterName };
 
-  if (rosterName in nameCache) {
-    return nameCache[rosterName];
+  const cached = nameCache[rosterName];
+  if (cached && typeof cached === 'object' && cached.accountId) {
+    return cached;
   }
 
-  const escaped = rosterName.replace(/"/g, '\\"');
-
-  // Step 1: check if the roster name works directly
-  const checkParams = new URLSearchParams({
-    jql: `assignee = "${escaped}" AND updated >= -365d`,
-    fields: 'summary',
-    maxResults: '1'
-  });
-  try {
-    const check = await jiraRequest(`/rest/api/2/search?${checkParams}`);
-    if (check.total > 0) {
-      nameCache[rosterName] = rosterName;
-      return rosterName;
-    }
-  } catch (err) {
-    // If the check itself fails, fall through to user search
-  }
-
-  // Step 2: user search by first-initial + last-name
+  // Search by display name parts
   const parts = rosterName.trim().split(/\s+/);
   const lastName = parts[parts.length - 1];
   const firstInitial = parts[0]?.[0]?.toLowerCase() || '';
   const username = firstInitial + lastName.toLowerCase();
 
-  const resolved = await tryUserSearch(jiraRequest, username, lastName);
+  const resolved = await tryUserSearch(jiraRequest, username, rosterName);
   if (resolved) {
     nameCache[rosterName] = resolved;
     return resolved;
   }
 
-  // Step 3: fall back to last-name-only search
+  // Fall back to last-name-only search
   if (username !== lastName.toLowerCase()) {
-    const resolved2 = await tryUserSearch(jiraRequest, lastName.toLowerCase(), lastName);
+    const resolved2 = await tryUserSearch(jiraRequest, lastName.toLowerCase(), rosterName);
     if (resolved2) {
       nameCache[rosterName] = resolved2;
       return resolved2;
     }
   }
 
+  // Try full name search
+  const resolved3 = await tryUserSearch(jiraRequest, rosterName, rosterName);
+  if (resolved3) {
+    nameCache[rosterName] = resolved3;
+    return resolved3;
+  }
+
   // All lookups failed — return original name, do NOT cache
-  return rosterName;
+  return { accountId: null, displayName: rosterName };
 }
 
-async function tryUserSearch(jiraRequest, query, lastName) {
+async function tryUserSearch(jiraRequest, query, rosterName) {
   try {
-    const users = await jiraRequest(`/rest/api/2/user/search?username=${encodeURIComponent(query)}`);
+    const users = await jiraRequest(`/rest/api/2/user/search?query=${encodeURIComponent(query)}`);
     if (!Array.isArray(users) || users.length === 0) return null;
-    if (users.length === 1) return users[0].displayName;
+
+    // Extract last name from roster name for matching
+    const parts = rosterName.trim().split(/\s+/);
+    const lastName = parts[parts.length - 1];
+
+    if (users.length === 1) {
+      return { accountId: users[0].accountId, displayName: users[0].displayName };
+    }
     // Multiple results — match on last name
     const match = users.find(u =>
       u.displayName?.toLowerCase().endsWith(lastName.toLowerCase())
     );
-    return match?.displayName || null;
-  } catch (err) {
+    if (match) return { accountId: match.accountId, displayName: match.displayName };
+    return null;
+  } catch {
     return null;
   }
 }
@@ -183,14 +189,26 @@ async function fetchPersonMetrics(jiraRequest, jiraDisplayName, options = {}) {
   const lookbackDays = options.lookbackDays || 365;
   const nameCache = options.nameCache || null;
 
-  // Resolve the roster name to the actual Jira display name
-  const resolvedName = await resolveJiraDisplayName(jiraRequest, jiraDisplayName, nameCache);
+  // Resolve the roster name to the Jira Cloud accountId
+  const resolved = await resolveJiraDisplayName(jiraRequest, jiraDisplayName, nameCache);
+  const accountId = resolved.accountId;
+  const resolvedDisplayName = resolved.displayName;
 
-  // Escape the name for JQL (double-quote wrapping handles apostrophes)
-  const escapedName = resolvedName.replace(/"/g, '\\"');
+  if (!accountId) {
+    // Cannot query Jira without an accountId on Cloud
+    return {
+      jiraDisplayName,
+      fetchedAt: new Date().toISOString(),
+      lookbackDays,
+      resolved: { count: 0, storyPoints: 0, issues: [] },
+      inProgress: { count: 0, storyPoints: 0, issues: [] },
+      cycleTime: { avgDays: null, medianDays: null },
+      _error: `Could not resolve Jira accountId for "${jiraDisplayName}"`
+    };
+  }
 
-  const resolvedJql = `assignee = "${escapedName}" AND resolved >= -${lookbackDays}d AND issuetype in (Story, Bug, Task, Vulnerability, Weakness)`;
-  const inProgressJql = `assignee = "${escapedName}" AND status in ("In Progress", "Code Review", "Review", "Coding In Progress", "Testing", "Refinement", "Planning") AND issuetype in (Story, Bug, Task, Vulnerability, Weakness)`;
+  const resolvedJql = `assignee = "${accountId}" AND resolved >= -${lookbackDays}d AND issuetype in (Story, Bug, Task, Vulnerability, Weakness)`;
+  const inProgressJql = `assignee = "${accountId}" AND status in ("In Progress", "Code Review", "Review", "Coding In Progress", "Testing", "Refinement", "Planning") AND issuetype in (Story, Bug, Task, Vulnerability, Weakness)`;
 
   const [resolvedIssues, inProgressIssues] = await Promise.all([
     fetchAllJqlResults(jiraRequest, resolvedJql, FIELDS, { expand: 'changelog' }),
@@ -245,8 +263,8 @@ async function fetchPersonMetrics(jiraRequest, jiraDisplayName, options = {}) {
     }
   };
 
-  if (resolvedName !== jiraDisplayName) {
-    result._resolvedName = resolvedName;
+  if (resolvedDisplayName !== jiraDisplayName) {
+    result._resolvedName = resolvedDisplayName;
   }
 
   return result;

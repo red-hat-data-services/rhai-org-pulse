@@ -7,13 +7,21 @@
 
 const TRACKED_TYPES = new Set(['Story', 'Bug', 'Task']);
 
-// Greenhopper API returns typeId (numeric string) instead of typeName
+// Greenhopper API may return typeId (numeric string) instead of typeName.
+// Includes both Data Center and Cloud typeId mappings.
 const TYPE_ID_MAP = {
   '1': 'Bug',
   '3': 'Task',
   '5': 'Sub-task',
   '16': 'Epic',
-  '17': 'Story'
+  '17': 'Story',
+  // Cloud typeIds
+  '10001': 'Story',
+  '10003': 'Task',
+  '10004': 'Bug',
+  '10005': 'Sub-task',
+  '10006': 'Epic',
+  '10014': 'Task'
 };
 
 /**

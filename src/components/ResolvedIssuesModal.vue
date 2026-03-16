@@ -44,7 +44,7 @@
               class="border-b border-gray-100 hover:bg-gray-50"
             >
               <td class="py-2 px-2">
-                <a :href="`https://issues.redhat.com/browse/${issue.key}`" target="_blank" rel="noopener" class="text-primary-600 hover:text-primary-800 font-mono text-xs">
+                <a :href="`https://redhat.atlassian.net/browse/${issue.key}`" target="_blank" rel="noopener" class="text-primary-600 hover:text-primary-800 font-mono text-xs">
                   {{ issue.key }}
                 </a>
               </td>

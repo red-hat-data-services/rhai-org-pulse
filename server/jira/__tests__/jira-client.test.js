@@ -14,7 +14,7 @@ describe('createJiraClient', () => {
 
     const client = createJiraClient({
       jiraRequest,
-      jiraHost: 'https://issues.redhat.com'
+      jiraHost: 'https://redhat.atlassian.net'
     })
 
     return { client, jiraRequest }

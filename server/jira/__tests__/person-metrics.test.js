@@ -169,15 +169,35 @@ describe('computeCycleTimeDays', () => {
 })
 
 describe('fetchPersonMetrics', () => {
+  // Helper to create a mock jiraRequest that handles Cloud API patterns
+  function createMockJiraRequest(handlers = {}) {
+    return vi.fn(async (url) => {
+      // v3 search/jql GET requests
+      if (url.startsWith('/rest/api/3/search/jql')) {
+        const jql = new URL(`https://jira${url}`).searchParams.get('jql') || ''
+        if (handlers.search) return handlers.search(jql)
+        return { issues: [], isLast: true }
+      }
+      // User search
+      if (url.includes('/rest/api/2/user/search')) {
+        if (handlers.userSearch) return handlers.userSearch(url)
+        return []
+      }
+      return { issues: [], isLast: true }
+    })
+  }
+
   it('in-progress query includes all active work statuses', async () => {
     const capturedJqls = []
-    const mockJiraRequest = vi.fn(async (url) => {
-      const jql = new URL(`https://jira${url}`).searchParams.get('jql')
-      capturedJqls.push(jql)
-      return { issues: [], total: 0 }
+    const mockJiraRequest = createMockJiraRequest({
+      search: (jql) => {
+        capturedJqls.push(jql)
+        return { issues: [], isLast: true }
+      },
+      userSearch: () => [{ displayName: 'Test User', accountId: 'abc123' }]
     })
 
-    await fetchPersonMetrics(mockJiraRequest, 'Test User')
+    await fetchPersonMetrics(mockJiraRequest, 'Test User', { nameCache: {} })
 
     const inProgressJql = capturedJqls.find(jql => jql.includes('status in'))
     expect(inProgressJql).toContain('"In Progress"')
@@ -189,105 +209,77 @@ describe('fetchPersonMetrics', () => {
     expect(inProgressJql).toContain('"Planning"')
   })
 
-  it('resolves mismatched display name via user search and caches it', async () => {
+  it('resolves display name to accountId via user search and caches it', async () => {
     const nameCache = {}
-    const mockJiraRequest = vi.fn(async (url) => {
-      if (url.includes('/rest/api/2/search')) {
-        const jql = new URL(`https://jira${url}`).searchParams.get('jql')
-        // Name verification check returns 0 results (name doesn't match)
-        if (jql.includes('updated >= -365d')) {
-          return { issues: [], total: 0 }
-        }
-        return { issues: [], total: 0 }
-      }
-      if (url.includes('/rest/api/2/user/search')) {
-        return [{ displayName: 'Matthew Prahl', name: 'mprahl' }]
-      }
-      return { issues: [], total: 0 }
+    const mockJiraRequest = createMockJiraRequest({
+      userSearch: () => [{ displayName: 'Matthew Prahl', accountId: 'acc-mprahl-123' }]
     })
 
     const result = await fetchPersonMetrics(mockJiraRequest, 'Matt Prahl', { nameCache })
 
-    // Should have cached the mapping
-    expect(nameCache['Matt Prahl']).toBe('Matthew Prahl')
+    // Should have cached the mapping with accountId
+    expect(nameCache['Matt Prahl']).toEqual({
+      accountId: 'acc-mprahl-123',
+      displayName: 'Matthew Prahl'
+    })
     // Response keeps the original roster name
     expect(result.jiraDisplayName).toBe('Matt Prahl')
     // _resolvedName indicates a mapping occurred
     expect(result._resolvedName).toBe('Matthew Prahl')
   })
 
-  it('uses cached name without making API calls', async () => {
-    const nameCache = { 'Matt Prahl': 'Matthew Prahl' }
-    const mockJiraRequest = vi.fn(async () => ({ issues: [], total: 0 }))
+  it('uses cached accountId without making user search API calls', async () => {
+    const nameCache = { 'Matt Prahl': { accountId: 'acc-mprahl-123', displayName: 'Matthew Prahl' } }
+    const mockJiraRequest = createMockJiraRequest()
 
     await fetchPersonMetrics(mockJiraRequest, 'Matt Prahl', { nameCache })
 
-    // Should not have called user search — only the 2 metric queries
-    const searchCalls = mockJiraRequest.mock.calls.filter(c => c[0].includes('/rest/api/2/search'))
+    // Should not have called user search
     const userSearchCalls = mockJiraRequest.mock.calls.filter(c => c[0].includes('/rest/api/2/user/search'))
-    expect(searchCalls.length).toBe(2) // resolved + in-progress
     expect(userSearchCalls.length).toBe(0)
-    // JQL should use the resolved name
-    expect(searchCalls[0][0]).toContain('Matthew+Prahl')
+    // Should have made 2 search calls (resolved + in-progress) using accountId in JQL
+    const searchCalls = mockJiraRequest.mock.calls.filter(c => c[0].startsWith('/rest/api/3/search/jql'))
+    expect(searchCalls.length).toBe(2)
+    expect(searchCalls[0][0]).toContain('acc-mprahl-123')
   })
 
-  it('does not cache when user search returns 0 results', async () => {
+  it('returns empty results when user search returns 0 results', async () => {
     const nameCache = {}
-    const mockJiraRequest = vi.fn(async (url) => {
-      if (url.includes('/rest/api/2/user/search')) {
-        return []
-      }
-      return { issues: [], total: 0 }
+    const mockJiraRequest = createMockJiraRequest({
+      userSearch: () => []
     })
 
-    await fetchPersonMetrics(mockJiraRequest, 'Unknown Person', { nameCache })
+    const result = await fetchPersonMetrics(mockJiraRequest, 'Unknown Person', { nameCache })
 
     expect(nameCache).toEqual({})
+    expect(result._error).toContain('Could not resolve')
+    expect(result.resolved.count).toBe(0)
   })
 
   it('matches on last name when user search returns multiple results', async () => {
     const nameCache = {}
-    const mockJiraRequest = vi.fn(async (url) => {
-      if (url.includes('/rest/api/2/user/search')) {
-        return [
-          { displayName: 'Christopher Smith', name: 'csmith' },
-          { displayName: 'Christopher Prahl', name: 'cprahl' }
-        ]
-      }
-      return { issues: [], total: 0 }
+    const mockJiraRequest = createMockJiraRequest({
+      userSearch: () => [
+        { displayName: 'Christopher Smith', accountId: 'acc-csmith' },
+        { displayName: 'Christopher Prahl', accountId: 'acc-cprahl' }
+      ]
     })
 
     await fetchPersonMetrics(mockJiraRequest, 'Chris Prahl', { nameCache })
 
-    expect(nameCache['Chris Prahl']).toBe('Christopher Prahl')
-  })
-
-  it('skips name resolution when nameCache is not provided', async () => {
-    const mockJiraRequest = vi.fn(async () => ({ issues: [], total: 0 }))
-
-    await fetchPersonMetrics(mockJiraRequest, 'Test User')
-
-    // No user search calls — only the 2 metric queries
-    const userSearchCalls = mockJiraRequest.mock.calls.filter(c => c[0].includes('/rest/api/2/user/search'))
-    expect(userSearchCalls.length).toBe(0)
-  })
-
-  it('caches identity mapping when roster name matches Jira directly', async () => {
-    const nameCache = {}
-    const mockJiraRequest = vi.fn(async (url) => {
-      if (url.includes('/rest/api/2/search')) {
-        const jql = new URL(`https://jira${url}`).searchParams.get('jql')
-        if (jql.includes('updated >= -365d')) {
-          return { issues: [{ key: 'TEST-1' }], total: 1 }
-        }
-      }
-      return { issues: [], total: 0 }
+    expect(nameCache['Chris Prahl']).toEqual({
+      accountId: 'acc-cprahl',
+      displayName: 'Christopher Prahl'
     })
+  })
 
-    const result = await fetchPersonMetrics(mockJiraRequest, 'Alyssa Goins', { nameCache })
+  it('returns empty results when nameCache is not provided (no accountId)', async () => {
+    const mockJiraRequest = createMockJiraRequest()
 
-    expect(nameCache['Alyssa Goins']).toBe('Alyssa Goins')
-    expect(result._resolvedName).toBeUndefined()
+    const result = await fetchPersonMetrics(mockJiraRequest, 'Test User')
+
+    expect(result._error).toContain('Could not resolve')
+    expect(result.resolved.count).toBe(0)
   })
 
   it('includes issues in Review status in inProgress results', async () => {
@@ -297,26 +289,46 @@ describe('fetchPersonMetrics', () => {
         summary: 'Remove MLMD from Pipelines',
         issuetype: { name: 'Story' },
         status: { name: 'Review' },
-        assignee: { displayName: 'Test User' },
+        assignee: { displayName: 'Test User', accountId: 'acc-test' },
         resolutiondate: null,
         created: '2026-01-15T00:00:00.000+0000',
         components: [],
-        customfield_12310243: 3
+        customfield_10028: 3
       }
     }
 
-    const mockJiraRequest = vi.fn(async (url) => {
-      const jql = new URL(`https://jira${url}`).searchParams.get('jql')
-      if (jql.includes('status in')) {
-        return { issues: [reviewIssue], total: 1 }
-      }
-      return { issues: [], total: 0 }
+    const capturedJqls = []
+    const mockJiraRequest = createMockJiraRequest({
+      search: (jql) => {
+        capturedJqls.push(jql)
+        if (jql.includes('status in')) {
+          return { issues: [reviewIssue], isLast: true }
+        }
+        return { issues: [], isLast: true }
+      },
+      userSearch: () => [{ displayName: 'Test User', accountId: 'acc-test' }]
     })
 
-    const result = await fetchPersonMetrics(mockJiraRequest, 'Test User')
+    const result = await fetchPersonMetrics(mockJiraRequest, 'Test User', { nameCache: {} })
 
     expect(result.inProgress.count).toBe(1)
     expect(result.inProgress.issues[0].key).toBe('RHOAIENG-1234')
     expect(result.inProgress.issues[0].status).toBe('Review')
+  })
+
+  it('ignores stale string-format cache entries from Data Center', async () => {
+    // Old cache format stored plain strings; new format stores { accountId, displayName }
+    const nameCache = { 'Matt Prahl': 'Matthew Prahl' }
+    const mockJiraRequest = createMockJiraRequest({
+      userSearch: () => [{ displayName: 'Matthew Prahl', accountId: 'acc-mprahl-123' }]
+    })
+
+    await fetchPersonMetrics(mockJiraRequest, 'Matt Prahl', { nameCache })
+
+    // Should have re-resolved and overwritten with new format
+    expect(nameCache['Matt Prahl']).toEqual({
+      accountId: 'acc-mprahl-123',
+      displayName: 'Matthew Prahl'
+    })
   })
 })
