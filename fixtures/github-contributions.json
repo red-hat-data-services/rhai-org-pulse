@@ -2,52 +2,43 @@
   "users": {
     "bobsmith": {
       "username": "bobsmith",
-      "contributions": 245,
+      "totalContributions": 245,
       "fetchedAt": "2026-03-10T12:00:00.000Z"
     },
     "carolw": {
       "username": "carolw",
-      "contributions": 189,
+      "totalContributions": 189,
       "fetchedAt": "2026-03-10T12:00:00.000Z"
     },
     "davidlee": {
       "username": "davidlee",
-      "contributions": 312,
+      "totalContributions": 312,
       "fetchedAt": "2026-03-10T12:00:00.000Z"
     },
     "emmagarcia": {
       "username": "emmagarcia",
-      "contributions": 156,
+      "totalContributions": 156,
       "fetchedAt": "2026-03-10T12:00:00.000Z"
     },
     "gracekim": {
       "username": "gracekim",
-      "contributions": 278,
+      "totalContributions": 278,
       "fetchedAt": "2026-03-10T12:00:00.000Z"
     },
     "henryw": {
       "username": "henryw",
-      "contributions": 134,
+      "totalContributions": 134,
       "fetchedAt": "2026-03-10T12:00:00.000Z"
     },
-    "irism": {
-      "username": "irism",
-      "contributions": 298,
-      "fetchedAt": "2026-03-10T12:00:00.000Z"
-    },
-    "jackbrown": {
-      "username": "jackbrown",
-      "contributions": 167,
-      "fetchedAt": "2026-03-10T12:00:00.000Z"
-    },
+
     "alicechen": {
       "username": "alicechen",
-      "contributions": 89,
+      "totalContributions": 89,
       "fetchedAt": "2026-03-10T12:00:00.000Z"
     },
     "frankj": {
       "username": "frankj",
-      "contributions": 72,
+      "totalContributions": 72,
       "fetchedAt": "2026-03-10T12:00:00.000Z"
     }
   },
