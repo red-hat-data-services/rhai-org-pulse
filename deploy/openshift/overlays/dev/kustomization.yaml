@@ -8,3 +8,4 @@ resources:
 
 patches:
   - path: route-patch.yaml
+  - path: configmap-patch.yaml

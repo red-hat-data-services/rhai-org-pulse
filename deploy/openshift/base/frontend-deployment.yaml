@@ -27,6 +27,7 @@ spec:
               protocol: TCP
           args:
             - --https-address=:4180
+            - --http-address=
             - --provider=openshift
             - --openshift-service-account=frontend-proxy
             - --upstream=http://localhost:8080

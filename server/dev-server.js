@@ -67,8 +67,7 @@ function seedAllowlist() {
 
   const adminEmails = process.env.ADMIN_EMAILS;
   if (!adminEmails) {
-    console.warn('WARNING: No allowlist.json and ADMIN_EMAILS not set — all API requests will 403');
-    writeToStorage('allowlist.json', { emails: [] });
+    console.log('Allowlist: empty — first authenticated user will be auto-added as admin');
     return;
   }
 
@@ -103,9 +102,13 @@ async function authMiddleware(req, res, next) {
     req.userEmail = (process.env.ADMIN_EMAILS || 'local-dev@redhat.com').split(',')[0].trim().toLowerCase();
   }
 
-  // Check allowlist
+  // Check allowlist — auto-add first authenticated user if empty
   const allowlist = readFromStorage('allowlist.json');
-  if (!allowlist || !allowlist.emails.includes(req.userEmail)) {
+  if (!allowlist || !allowlist.emails || allowlist.emails.length === 0) {
+    const seeded = { emails: [req.userEmail] };
+    writeToStorage('allowlist.json', seeded);
+    console.log(`Allowlist: auto-added first user ${req.userEmail}`);
+  } else if (!allowlist.emails.includes(req.userEmail)) {
     return res.status(403).json({ error: 'Access denied. You are not on the allowlist.' });
   }
 
@@ -600,6 +603,10 @@ function deriveRoster() {
 
 app.get('/api/roster', function(req, res) {
   try {
+    const full = readRosterFull();
+    if (!full) {
+      return res.json({ orgs: [] });
+    }
     const roster = deriveRoster();
     res.json(roster);
   } catch (error) {
