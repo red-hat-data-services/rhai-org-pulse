@@ -1,0 +1,23 @@
+{
+  "id": 6001,
+  "name": "Beta Sprint 5",
+  "committed": {
+    "totalPoints": 21,
+    "issues": [
+      {"key": "DEMO-301", "summary": "Onboarding flow", "type": "Story", "points": 13},
+      {"key": "DEMO-302", "summary": "Fix login issue", "type": "Bug", "points": 8}
+    ]
+  },
+  "delivered": {
+    "totalPoints": 21,
+    "issues": [
+      {"key": "DEMO-301", "summary": "Onboarding flow", "type": "Story", "points": 13, "status": "Done"},
+      {"key": "DEMO-302", "summary": "Fix login issue", "type": "Bug", "points": 8, "status": "Done"}
+    ]
+  },
+  "metrics": {
+    "scopeChangeCount": 0,
+    "addedPoints": 0,
+    "removedPoints": 0
+  }
+}

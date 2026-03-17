@@ -64,74 +64,16 @@ jobs:
 
       - name: Run smoke tests
         run: |
-          set -e
-
           # Port-forward backend (3001) and frontend (8080) in background
           kubectl port-forward -n team-tracker svc/backend 3001:3001 &
-          BACKEND_PF_PID=$!
           kubectl port-forward -n team-tracker svc/team-tracker 8080:8080 &
-          FRONTEND_PF_PID=$!
 
           # Wait for port-forwards to establish
           sleep 5
 
-          echo "=== Test 1: Backend health check ==="
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3001/healthz)
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "FAIL: /healthz returned $HTTP_CODE (expected 200)"
-            exit 1
-          fi
-          echo "PASS: /healthz returned 200"
-
-          echo ""
-          echo "=== Test 2: Backend API — GET /api/teams ==="
-          RESPONSE=$(curl -s http://localhost:3001/api/teams)
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3001/api/teams)
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "FAIL: /api/teams returned $HTTP_CODE (expected 200)"
-            exit 1
-          fi
-          echo "PASS: /api/teams returned 200"
-          echo "Response preview: $(echo "$RESPONSE" | head -c 200)"
-
-          echo ""
-          echo "=== Test 3: Backend API — GET /api/dashboard-summary ==="
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3001/api/dashboard-summary)
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "FAIL: /api/dashboard-summary returned $HTTP_CODE (expected 200)"
-            exit 1
-          fi
-          echo "PASS: /api/dashboard-summary returned 200"
-
-          echo ""
-          echo "=== Test 4: Frontend serves HTML ==="
-          FRONTEND_RESPONSE=$(curl -s http://localhost:8080/)
-          if ! echo "$FRONTEND_RESPONSE" | grep -q "</html>"; then
-            echo "FAIL: Frontend did not return HTML"
-            echo "Response: $(echo "$FRONTEND_RESPONSE" | head -c 500)"
-            exit 1
-          fi
-          echo "PASS: Frontend returned valid HTML"
-
-          echo ""
-          echo "=== Test 5: Frontend proxies API requests ==="
-          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/teams)
-          # This may 502 if nginx isn't configured to proxy to backend — that's ok to note
-          echo "Frontend /api/teams proxy returned: $HTTP_CODE"
-
-          echo ""
-          echo "=== Test 6: Check pod logs for errors ==="
-          BACKEND_ERRORS=$(kubectl logs -n team-tracker deployment/backend 2>&1 | grep -ci "error\|exception\|fatal" || true)
-          FRONTEND_ERRORS=$(kubectl logs -n team-tracker deployment/frontend 2>&1 | grep -ci "error\|exception\|fatal" || true)
-          echo "Backend error count in logs: $BACKEND_ERRORS"
-          echo "Frontend error count in logs: $FRONTEND_ERRORS"
-          # Don't fail on log errors — just report them. Some "error" strings are harmless.
-
-          echo ""
-          echo "=== All smoke tests passed! ==="
-
-          # Cleanup port-forwards
-          kill $BACKEND_PF_PID $FRONTEND_PF_PID 2>/dev/null || true
+          # Run the full smoke test suite
+          BACKEND_URL=http://localhost:3001 FRONTEND_URL=http://localhost:8080 \
+            ./tests/smoke/run.sh
 
       - name: Debug info (on failure)
         if: failure()

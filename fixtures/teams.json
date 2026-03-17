@@ -1,0 +1,25 @@
+{
+  "teams": [
+    {
+      "teamId": "team-alpha",
+      "boardId": 1001,
+      "boardName": "Alpha Sprint Board",
+      "displayName": "Team Alpha",
+      "enabled": true
+    },
+    {
+      "teamId": "team-beta",
+      "boardId": 1002,
+      "boardName": "Beta Sprint Board",
+      "displayName": "Team Beta",
+      "enabled": true
+    },
+    {
+      "teamId": "team-gamma",
+      "boardId": 1003,
+      "boardName": "Gamma Board",
+      "displayName": "Team Gamma",
+      "enabled": false
+    }
+  ]
+}

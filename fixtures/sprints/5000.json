@@ -1,0 +1,28 @@
+{
+  "id": 5000,
+  "name": "Alpha Sprint 9",
+  "committed": {
+    "totalPoints": 34,
+    "issues": [
+      {"key": "DEMO-201", "summary": "API pagination", "type": "Story", "points": 8},
+      {"key": "DEMO-202", "summary": "Fix auth redirect", "type": "Bug", "points": 5},
+      {"key": "DEMO-203", "summary": "Dashboard filters", "type": "Story", "points": 13},
+      {"key": "DEMO-204", "summary": "Update dependencies", "type": "Task", "points": 3},
+      {"key": "DEMO-205", "summary": "Performance tuning", "type": "Story", "points": 5}
+    ]
+  },
+  "delivered": {
+    "totalPoints": 29,
+    "issues": [
+      {"key": "DEMO-201", "summary": "API pagination", "type": "Story", "points": 8, "status": "Done"},
+      {"key": "DEMO-202", "summary": "Fix auth redirect", "type": "Bug", "points": 5, "status": "Done"},
+      {"key": "DEMO-203", "summary": "Dashboard filters", "type": "Story", "points": 13, "status": "Done"},
+      {"key": "DEMO-204", "summary": "Update dependencies", "type": "Task", "points": 3, "status": "Done"}
+    ]
+  },
+  "metrics": {
+    "scopeChangeCount": 2,
+    "addedPoints": 3,
+    "removedPoints": 1
+  }
+}

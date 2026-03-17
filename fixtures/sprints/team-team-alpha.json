@@ -1,0 +1,25 @@
+{
+  "sprints": [
+    {
+      "id": 5001,
+      "name": "Alpha Sprint 10",
+      "state": "active",
+      "startDate": "2026-03-10T00:00:00.000Z",
+      "endDate": "2026-03-24T00:00:00.000Z"
+    },
+    {
+      "id": 5000,
+      "name": "Alpha Sprint 9",
+      "state": "closed",
+      "startDate": "2026-02-24T00:00:00.000Z",
+      "endDate": "2026-03-10T00:00:00.000Z"
+    },
+    {
+      "id": 4999,
+      "name": "Alpha Sprint 8",
+      "state": "closed",
+      "startDate": "2026-02-10T00:00:00.000Z",
+      "endDate": "2026-02-24T00:00:00.000Z"
+    }
+  ]
+}

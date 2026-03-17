@@ -1,0 +1,28 @@
+{
+  "id": 4999,
+  "name": "Alpha Sprint 8",
+  "committed": {
+    "totalPoints": 28,
+    "issues": [
+      {"key": "DEMO-196", "summary": "User settings page", "type": "Story", "points": 8},
+      {"key": "DEMO-197", "summary": "Email notifications", "type": "Story", "points": 13},
+      {"key": "DEMO-198", "summary": "Fix timezone bug", "type": "Bug", "points": 3},
+      {"key": "DEMO-199", "summary": "Docs update", "type": "Task", "points": 2},
+      {"key": "DEMO-200", "summary": "Search improvements", "type": "Story", "points": 2}
+    ]
+  },
+  "delivered": {
+    "totalPoints": 26,
+    "issues": [
+      {"key": "DEMO-196", "summary": "User settings page", "type": "Story", "points": 8, "status": "Done"},
+      {"key": "DEMO-197", "summary": "Email notifications", "type": "Story", "points": 13, "status": "Done"},
+      {"key": "DEMO-198", "summary": "Fix timezone bug", "type": "Bug", "points": 3, "status": "Done"},
+      {"key": "DEMO-200", "summary": "Search improvements", "type": "Story", "points": 2, "status": "Done"}
+    ]
+  },
+  "metrics": {
+    "scopeChangeCount": 1,
+    "addedPoints": 0,
+    "removedPoints": 2
+  }
+}

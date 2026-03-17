@@ -1,0 +1,11 @@
+{
+  "sprints": [
+    {
+      "id": 6001,
+      "name": "Beta Sprint 5",
+      "state": "closed",
+      "startDate": "2026-03-03T00:00:00.000Z",
+      "endDate": "2026-03-17T00:00:00.000Z"
+    }
+  ]
+}
