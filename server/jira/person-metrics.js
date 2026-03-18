@@ -135,7 +135,8 @@ async function resolveJiraDisplayName(jiraRequest, rosterName, nameCache) {
   const firstInitial = parts[0]?.[0]?.toLowerCase() || '';
   const username = firstInitial + lastName.toLowerCase();
 
-  const resolved = await tryUserSearch(jiraRequest, username, lastName);
+  const firstName = parts[0];
+  const resolved = await tryUserSearch(jiraRequest, username, lastName, firstName);
   if (resolved) {
     nameCache[rosterName] = resolved;
     return resolved;
@@ -143,7 +144,7 @@ async function resolveJiraDisplayName(jiraRequest, rosterName, nameCache) {
 
   // Step 3: fall back to last-name-only search
   if (username !== lastName.toLowerCase()) {
-    const resolved2 = await tryUserSearch(jiraRequest, lastName.toLowerCase(), lastName);
+    const resolved2 = await tryUserSearch(jiraRequest, lastName.toLowerCase(), lastName, firstName);
     if (resolved2) {
       nameCache[rosterName] = resolved2;
       return resolved2;
@@ -154,16 +155,28 @@ async function resolveJiraDisplayName(jiraRequest, rosterName, nameCache) {
   return rosterName;
 }
 
-async function tryUserSearch(jiraRequest, query, lastName) {
+async function tryUserSearch(jiraRequest, query, lastName, firstName) {
   try {
     const users = await jiraRequest(`/rest/api/2/user/search?username=${encodeURIComponent(query)}`);
     if (!Array.isArray(users) || users.length === 0) return null;
-    if (users.length === 1) return users[0].displayName;
-    // Multiple results — match on last name
-    const match = users.find(u =>
-      u.displayName?.toLowerCase().endsWith(lastName.toLowerCase())
+
+    // Filter to candidates whose displayName ends with the last name
+    const lastNameLower = lastName.toLowerCase();
+    const lastNameCandidates = users.filter(u =>
+      u.displayName?.toLowerCase().endsWith(lastNameLower)
     );
-    return match?.displayName || null;
+    if (lastNameCandidates.length === 0) return null;
+
+    // Further filter by first name (first word of displayName must match exactly)
+    const firstNameLower = firstName.toLowerCase();
+    const matches = lastNameCandidates.filter(u => {
+      const candidateFirst = u.displayName?.split(/\s+/)[0] || '';
+      return candidateFirst.toLowerCase() === firstNameLower;
+    });
+
+    // Exactly one match — return it. Zero or multiple — refuse to guess
+    if (matches.length === 1) return matches[0].displayName;
+    return null;
   } catch {
     return null;
   }
@@ -247,6 +260,11 @@ async function fetchPersonMetrics(jiraRequest, jiraDisplayName, options = {}) {
 
   if (resolvedName !== jiraDisplayName) {
     result._resolvedName = resolvedName;
+  }
+
+  // Flag when name resolution completely failed (no cache entry was created)
+  if (nameCache && !(jiraDisplayName in nameCache)) {
+    result._nameNotFound = true;
   }
 
   return result;

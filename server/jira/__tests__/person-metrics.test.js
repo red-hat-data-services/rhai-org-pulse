@@ -201,7 +201,8 @@ describe('fetchPersonMetrics', () => {
         return { issues: [], total: 0 }
       }
       if (url.includes('/rest/api/2/user/search')) {
-        return [{ displayName: 'Matthew Prahl', name: 'mprahl' }]
+        // First name "Matt" matches "Matt" — different last-name form but same first name
+        return [{ displayName: 'Matt R. Prahl', name: 'mprahl' }]
       }
       return { issues: [], total: 0 }
     })
@@ -209,11 +210,11 @@ describe('fetchPersonMetrics', () => {
     const result = await fetchPersonMetrics(mockJiraRequest, 'Matt Prahl', { nameCache })
 
     // Should have cached the mapping
-    expect(nameCache['Matt Prahl']).toBe('Matthew Prahl')
+    expect(nameCache['Matt Prahl']).toBe('Matt R. Prahl')
     // Response keeps the original roster name
     expect(result.jiraDisplayName).toBe('Matt Prahl')
     // _resolvedName indicates a mapping occurred
-    expect(result._resolvedName).toBe('Matthew Prahl')
+    expect(result._resolvedName).toBe('Matt R. Prahl')
   })
 
   it('uses cached name without making API calls', async () => {
@@ -245,7 +246,7 @@ describe('fetchPersonMetrics', () => {
     expect(nameCache).toEqual({})
   })
 
-  it('matches on last name when user search returns multiple results', async () => {
+  it('does not match Chris to Christopher (exact first-name match only)', async () => {
     const nameCache = {}
     const mockJiraRequest = vi.fn(async (url) => {
       if (url.includes('/rest/api/2/user/search')) {
@@ -257,9 +258,89 @@ describe('fetchPersonMetrics', () => {
       return { issues: [], total: 0 }
     })
 
-    await fetchPersonMetrics(mockJiraRequest, 'Chris Prahl', { nameCache })
+    const result = await fetchPersonMetrics(mockJiraRequest, 'Chris Prahl', { nameCache })
 
-    expect(nameCache['Chris Prahl']).toBe('Christopher Prahl')
+    expect(nameCache['Chris Prahl']).toBeUndefined()
+    expect(result._nameNotFound).toBe(true)
+  })
+
+  it('does not match when first name differs even with single user-search result', async () => {
+    const nameCache = {}
+    const mockJiraRequest = vi.fn(async (url) => {
+      if (url.includes('/rest/api/2/user/search')) {
+        return [{ displayName: 'Rob Drew', name: 'rdrew' }]
+      }
+      return { issues: [], total: 0 }
+    })
+
+    const result = await fetchPersonMetrics(mockJiraRequest, 'Adam Drew', { nameCache })
+
+    expect(nameCache['Adam Drew']).toBeUndefined()
+    expect(result._nameNotFound).toBe(true)
+  })
+
+  it('picks correct person from multiple results by first name, ignoring middle names', async () => {
+    const nameCache = {}
+    const mockJiraRequest = vi.fn(async (url) => {
+      if (url.includes('/rest/api/2/user/search')) {
+        return [
+          { displayName: 'Artom Lifshitz', name: 'alifshitz' },
+          { displayName: 'David Cohn Lifshitz', name: 'dlifshitz' }
+        ]
+      }
+      return { issues: [], total: 0 }
+    })
+
+    await fetchPersonMetrics(mockJiraRequest, 'David Cohn Lifshitz', { nameCache })
+
+    expect(nameCache['David Cohn Lifshitz']).toBe('David Cohn Lifshitz')
+  })
+
+  it('rejects candidate when first name does not match even with single result', async () => {
+    const nameCache = {}
+    const mockJiraRequest = vi.fn(async (url) => {
+      if (url.includes('/rest/api/2/user/search')) {
+        return [{ displayName: 'Bob Smith', name: 'bsmith' }]
+      }
+      return { issues: [], total: 0 }
+    })
+
+    const result = await fetchPersonMetrics(mockJiraRequest, 'Jane Smith', { nameCache })
+
+    expect(nameCache['Jane Smith']).toBeUndefined()
+    expect(result._nameNotFound).toBe(true)
+  })
+
+  it('sets _nameNotFound when all resolution steps fail', async () => {
+    const nameCache = {}
+    const mockJiraRequest = vi.fn(async (url) => {
+      if (url.includes('/rest/api/2/user/search')) {
+        return []
+      }
+      return { issues: [], total: 0 }
+    })
+
+    const result = await fetchPersonMetrics(mockJiraRequest, 'Unknown Person', { nameCache })
+
+    expect(result._nameNotFound).toBe(true)
+  })
+
+  it('returns null when multiple candidates match the same first name', async () => {
+    const nameCache = {}
+    const mockJiraRequest = vi.fn(async (url) => {
+      if (url.includes('/rest/api/2/user/search')) {
+        return [
+          { displayName: 'John Smith', name: 'jsmith' },
+          { displayName: 'John A. Smith', name: 'jasmith' }
+        ]
+      }
+      return { issues: [], total: 0 }
+    })
+
+    const result = await fetchPersonMetrics(mockJiraRequest, 'John Smith', { nameCache })
+
+    expect(nameCache['John Smith']).toBeUndefined()
+    expect(result._nameNotFound).toBe(true)
   })
 
   it('skips name resolution when nameCache is not provided', async () => {
