@@ -138,7 +138,9 @@
               {{ person.metrics?.avgCycleTimeDays != null ? person.metrics.avgCycleTimeDays + 'd' : '—' }}
             </td>
             <td class="px-4 py-2 text-sm text-gray-500 whitespace-nowrap">
-              {{ person.githubContributions != null ? person.githubContributions : '—' }}
+              <template v-if="person.githubContributions != null">{{ person.githubContributions }}</template>
+              <span v-else-if="person.githubUsername" class="text-gray-300">—</span>
+              <span v-else class="text-gray-300 italic text-xs" title="GitHub username not configured">no GitHub</span>
             </td>
           </tr>
         </tbody>

@@ -49,7 +49,7 @@
           <td class="px-4 py-2 text-sm text-gray-500 whitespace-nowrap">
             <template v-if="getGithubContribCount(member) != null">{{ getGithubContribCount(member) }}</template>
             <span v-else-if="member.githubUsername" class="text-gray-300">—</span>
-            <span v-else class="text-gray-300 italic">—</span>
+            <span v-else class="text-gray-300 italic text-xs" title="GitHub username not configured">no GitHub</span>
           </td>
           <td class="px-4 py-2 text-sm whitespace-nowrap">
             <span

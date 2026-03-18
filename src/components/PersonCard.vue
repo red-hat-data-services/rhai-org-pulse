@@ -32,7 +32,7 @@
         <span class="text-gray-400">GitHub:</span>
         <template v-if="githubContributions != null">{{ githubContributions.totalContributions }} contributions</template>
         <span v-else-if="member.githubUsername" class="text-gray-300">—</span>
-        <span v-else class="text-gray-300 italic">no username</span>
+        <span v-else class="text-gray-300 italic text-xs" title="GitHub username not configured">no GitHub</span>
       </p>
     </div>
   </div>
