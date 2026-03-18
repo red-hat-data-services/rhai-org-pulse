@@ -4,7 +4,9 @@
  * Build org roster from Red Hat LDAP + GitHub validation.
  *
  * Usage:
- *   node scripts/build-org-roster.js
+ *   node scripts/build-org-roster.js              # use all 6 hardcoded org roots
+ *   node scripts/build-org-roster.js fjansen      # scope to fjansen's org only
+ *   node scripts/build-org-roster.js fjansen shgriffi  # multiple roots
  *
  * Requirements:
  *   - VPN connection to ldap.corp.redhat.com
@@ -21,8 +23,8 @@ const LDAP_HOST = 'ldap://ldap.corp.redhat.com'
 const LDAP_BASE = 'dc=redhat,dc=com'
 const LDAP_ATTRS = ['cn', 'uid', 'mail', 'title', 'l', 'co', 'manager', 'rhatGeo', 'rhatLocation', 'rhatOfficeLocation', 'rhatCostCenter', 'rhatSocialUrl']
 
-// The 6 org leaders to traverse under
-const ORG_ROOTS = [
+// The 6 org leaders to traverse under (used when no CLI args are provided)
+const DEFAULT_ORG_ROOTS = [
   { uid: 'tgunders', name: 'Tom Gundersen' },
   { uid: 'shgriffi', name: 'Sherard Griffin' },
   { uid: 'crobson', name: 'Catherine Weeks' },
@@ -30,6 +32,12 @@ const ORG_ROOTS = [
   { uid: 'moromila', name: 'Monica Romila' },
   { uid: 'kaixu', name: 'Kai Xu' }
 ]
+
+// Allow overriding org roots via CLI args (UIDs only; names are looked up from LDAP)
+const cliUids = process.argv.slice(2)
+const ORG_ROOTS = cliUids.length > 0
+  ? cliUids.map(uid => ({ uid, name: uid }))  // names filled in during main()
+  : DEFAULT_ORG_ROOTS
 
 const OUTPUT_PATH = path.join(__dirname, '..', 'data', 'org-roster-full.json')
 
@@ -270,6 +278,15 @@ function tryInferGithubFromOrg(person, odhMembers, odhDetailsCache) {
 
 async function main() {
   console.log('Building org roster from LDAP...\n')
+
+  // If roots were specified via CLI args, resolve their display names from LDAP
+  if (cliUids.length > 0) {
+    for (const root of ORG_ROOTS) {
+      const entry = fetchPerson(root.uid)
+      if (entry) root.name = entry.cn || root.uid
+    }
+    console.log(`Using CLI-specified roots: ${ORG_ROOTS.map(r => `${r.name} (${r.uid})`).join(', ')}`)
+  }
 
   const orgData = {
     generatedAt: new Date().toISOString(),
