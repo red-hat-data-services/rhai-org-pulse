@@ -377,6 +377,7 @@ async function main() {
   console.log(`Still missing: ${finalWithout}`)
 
   // Write output
+  fs.mkdirSync(path.dirname(OUTPUT_PATH), { recursive: true })
   fs.writeFileSync(OUTPUT_PATH, JSON.stringify(orgData, null, 2))
   console.log(`\nWrote ${OUTPUT_PATH}`)
 }

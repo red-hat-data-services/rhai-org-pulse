@@ -171,6 +171,7 @@ function mergeData() {
   }
 
   // Write updated roster
+  fs.mkdirSync(path.dirname(ROSTER_PATH), { recursive: true })
   fs.writeFileSync(ROSTER_PATH, JSON.stringify(roster, null, 2))
   console.log(`\nUpdated ${ROSTER_PATH}`)
 }

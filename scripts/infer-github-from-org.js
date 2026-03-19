@@ -132,6 +132,7 @@ console.log(`\nInferred ${inferredCount} GitHub usernames from ${orgName}`)
 
 if (inferredCount > 0) {
   data.generatedAt = new Date().toISOString()
+  fs.mkdirSync(path.dirname(ROSTER_PATH), { recursive: true })
   fs.writeFileSync(ROSTER_PATH, JSON.stringify(data, null, 2))
   console.log(`Updated ${ROSTER_PATH}`)
 }
