@@ -552,8 +552,8 @@ function deriveRoster() {
 
     for (const person of allMembers) {
       // Split comma-separated team names so multi-team people appear in each team
-      const teamNames = person.jiraTeam
-        ? person.jiraTeam.split(',').map(t => t.trim()).filter(Boolean)
+      const teamNames = person.miroTeam
+        ? person.miroTeam.split(',').map(t => t.trim()).filter(Boolean)
         : ['_unassigned'];
 
       const memberEntry = {

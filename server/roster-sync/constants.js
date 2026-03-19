@@ -17,7 +17,7 @@ const EXCLUDED_TITLES = ['Intern', 'Collaborative Partner', 'Independent Contrac
 const DEFAULT_SHEET_COLUMNS = {
   name: "Associate's Name",
   manager: "Manager's Name",
-  miroTeam: 'Miro Team Name',
+  miroTeam: 'Scrum Team Name (miro)',
   jiraComponent: 'Primary Jira Component',
   jiraTeam: 'Jira Team Name (from Shared Teams View)',
   pm: 'PM',
