@@ -9,7 +9,7 @@
   path: /spec/template/spec/containers
   value:
     - name: nginx
-      image: quay.io/accorvin/team-tracker-frontend:latest
+      image: quay.io/org-pulse/team-tracker-frontend:latest
       imagePullPolicy: Never
       ports:
         - containerPort: 8080

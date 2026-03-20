@@ -28,9 +28,9 @@ patches:
     path: frontend-service-patch.yaml
 
 images:
-  - name: quay.io/accorvin/team-tracker-backend
+  - name: quay.io/org-pulse/team-tracker-backend
     newName: localhost/team-tracker-backend
     newTag: local
-  - name: quay.io/accorvin/team-tracker-frontend
+  - name: quay.io/org-pulse/team-tracker-frontend
     newName: localhost/team-tracker-frontend
     newTag: local
