@@ -62,6 +62,16 @@ function getStoryPoints(issue) {
   return typeof val === 'number' ? val : 0;
 }
 
+/**
+ * Build a JQL project filter clause from an array of project keys.
+ * Returns empty string if no keys are configured (no filtering).
+ */
+function buildProjectFilter(projectKeys) {
+  if (!projectKeys || projectKeys.length === 0) return '';
+  const quoted = projectKeys.map(k => `"${k}"`).join(', ');
+  return ` AND project in (${quoted})`;
+}
+
 const ACTIVE_STATUSES = ['in progress', 'coding in progress', 'code review', 'review', 'testing'];
 
 /**
@@ -228,12 +238,25 @@ async function tryUserSearch(jiraRequest, query, rosterName) {
 }
 
 /**
+ * Compute a stable fingerprint for the project keys config.
+ * Used to detect config changes and force full refresh.
+ */
+function projectKeysFingerprint(projectKeys) {
+  if (!projectKeys || projectKeys.length === 0) return '';
+  return [...projectKeys].sort().join(',');
+}
+
+/**
  * Determine whether a full refresh is needed instead of incremental.
  */
-function needsFullRefresh(existingData) {
+function needsFullRefresh(existingData, projectKeys) {
   if (!existingData) return true;
   if (!existingData.fetchedAt) return true;
   if (existingData.fieldsVersion !== FIELDS_VERSION) return true;
+
+  // Force full refresh if project filter config changed
+  const currentFingerprint = projectKeysFingerprint(projectKeys);
+  if ((existingData.projectKeysFingerprint || '') !== currentFingerprint) return true;
 
   // Force full refresh if last full refresh was too long ago
   const lastFull = existingData.lastFullRefreshAt || existingData.fetchedAt;
@@ -276,7 +299,7 @@ function mergeResolvedIssues(existingIssues, freshIssues, lookbackDays) {
  * Verify that existing cached issues still belong to this person and are still resolved.
  * Returns the set of issue keys that are still valid.
  */
-async function verifyExistingIssues(jiraRequest, accountId, issueKeys) {
+async function verifyExistingIssues(jiraRequest, accountId, issueKeys, projectFilter = '') {
   if (issueKeys.length === 0) return new Set();
 
   // JQL has a limit on IN clause size; batch if needed
@@ -286,7 +309,7 @@ async function verifyExistingIssues(jiraRequest, accountId, issueKeys) {
   for (let i = 0; i < issueKeys.length; i += BATCH_SIZE) {
     const batch = issueKeys.slice(i, i + BATCH_SIZE);
     const keyList = batch.map(k => `"${k}"`).join(', ');
-    const jql = `key in (${keyList}) AND assignee = "${accountId}" AND resolved is not EMPTY`;
+    const jql = `key in (${keyList}) AND assignee = "${accountId}" AND resolved is not EMPTY${projectFilter}`;
 
     try {
       const issues = await fetchAllJqlResults(jiraRequest, jql, 'key');
@@ -339,6 +362,7 @@ function computeAggregates(resolvedMapped) {
  * @param {object} [options.nameCache] - Mutable name resolution cache
  * @param {object} [options.existingData] - Cached person metrics for incremental refresh
  * @param {string} [options.email] - Email address for more reliable Jira user lookup
+ * @param {string[]} [options.projectKeys] - Jira project keys to filter by
  * @returns {Promise<object>} Person metrics object
  */
 async function fetchPersonMetrics(jiraRequest, jiraDisplayName, options = {}) {
@@ -346,6 +370,7 @@ async function fetchPersonMetrics(jiraRequest, jiraDisplayName, options = {}) {
   const nameCache = options.nameCache || null;
   const existingData = options.existingData || null;
   const email = options.email || null;
+  const projectFilter = buildProjectFilter(options.projectKeys);
 
   // Resolve the roster name to the Jira Cloud accountId
   const resolved = await resolveJiraDisplayName(jiraRequest, jiraDisplayName, nameCache, email);
@@ -365,11 +390,12 @@ async function fetchPersonMetrics(jiraRequest, jiraDisplayName, options = {}) {
     };
   }
 
-  const isIncremental = !needsFullRefresh(existingData);
+  const isIncremental = !needsFullRefresh(existingData, options.projectKeys);
   const now = new Date().toISOString();
+  const pkFingerprint = projectKeysFingerprint(options.projectKeys);
 
   // Always fetch in-progress fresh (represents current state)
-  const inProgressJql = `assignee = "${accountId}" AND status in ("In Progress", "Code Review", "Review", "Coding In Progress", "Testing", "Refinement", "Planning") AND issuetype in (Story, Bug, Task, Vulnerability, Weakness)`;
+  const inProgressJql = `assignee = "${accountId}" AND status in ("In Progress", "Code Review", "Review", "Coding In Progress", "Testing", "Refinement", "Planning") AND issuetype in (Story, Bug, Task, Vulnerability, Weakness)${projectFilter}`;
 
   let resolvedMapped;
 
@@ -379,7 +405,7 @@ async function fetchPersonMetrics(jiraRequest, jiraDisplayName, options = {}) {
     sinceDate.setDate(sinceDate.getDate() - 1);
     const sinceDateStr = sinceDate.toISOString().slice(0, 10);
 
-    const resolvedJql = `assignee = "${accountId}" AND resolved >= "${sinceDateStr}" AND issuetype in (Story, Bug, Task, Vulnerability, Weakness)`;
+    const resolvedJql = `assignee = "${accountId}" AND resolved >= "${sinceDateStr}" AND issuetype in (Story, Bug, Task, Vulnerability, Weakness)${projectFilter}`;
 
     const [freshResolvedIssues, inProgressIssues] = await Promise.all([
       fetchAllJqlResults(jiraRequest, resolvedJql, FIELDS, { expand: 'changelog' }),
@@ -400,7 +426,7 @@ async function fetchPersonMetrics(jiraRequest, jiraDisplayName, options = {}) {
     const keysToVerify = existingKeys.filter(k => !freshKeys.has(k));
 
     if (keysToVerify.length > 0) {
-      const validKeys = await verifyExistingIssues(jiraRequest, accountId, keysToVerify);
+      const validKeys = await verifyExistingIssues(jiraRequest, accountId, keysToVerify, projectFilter);
       resolvedMapped = merged.filter(i => freshKeys.has(i.key) || validKeys.has(i.key));
     } else {
       resolvedMapped = merged;
@@ -414,6 +440,7 @@ async function fetchPersonMetrics(jiraRequest, jiraDisplayName, options = {}) {
       jiraDisplayName,
       fetchedAt: now,
       fieldsVersion: FIELDS_VERSION,
+      projectKeysFingerprint: pkFingerprint,
       lastFullRefreshAt: existingData.lastFullRefreshAt || existingData.fetchedAt,
       lookbackDays,
       resolved: {
@@ -438,7 +465,7 @@ async function fetchPersonMetrics(jiraRequest, jiraDisplayName, options = {}) {
   }
 
   // Full refresh
-  const resolvedJql = `assignee = "${accountId}" AND resolved >= -${lookbackDays}d AND issuetype in (Story, Bug, Task, Vulnerability, Weakness)`;
+  const resolvedJql = `assignee = "${accountId}" AND resolved >= -${lookbackDays}d AND issuetype in (Story, Bug, Task, Vulnerability, Weakness)${projectFilter}`;
 
   const [resolvedIssues, inProgressIssues] = await Promise.all([
     fetchAllJqlResults(jiraRequest, resolvedJql, FIELDS, { expand: 'changelog' }),
@@ -458,6 +485,7 @@ async function fetchPersonMetrics(jiraRequest, jiraDisplayName, options = {}) {
     jiraDisplayName,
     fetchedAt: now,
     fieldsVersion: FIELDS_VERSION,
+    projectKeysFingerprint: pkFingerprint,
     lastFullRefreshAt: now,
     lookbackDays,
     resolved: {
@@ -482,6 +510,8 @@ async function fetchPersonMetrics(jiraRequest, jiraDisplayName, options = {}) {
 
 module.exports = {
   fetchPersonMetrics,
+  buildProjectFilter,
+  projectKeysFingerprint,
   computeCycleTimeDays,
   findWorkStartDate,
   resolveJiraDisplayName,

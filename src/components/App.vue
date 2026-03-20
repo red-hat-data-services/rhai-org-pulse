@@ -74,6 +74,13 @@
         @go-settings="navigateToModule('settings')"
       />
 
+      <!-- Stale Data Banner -->
+      <StaleDataBanner
+        v-if="authUser"
+        :config-changed-at="jiraConfigChangedAt"
+        :last-refreshed-at="lastRefreshedAt"
+      />
+
       <!-- Page content -->
       <main class="px-6 lg:px-8 py-6">
         <!-- Dashboard View -->
@@ -159,6 +166,7 @@ import TrendsView from './TrendsView.vue'
 import UserManagement from './UserManagement.vue'
 import SettingsView from './SettingsView.vue'
 import SetupBanner from './SetupBanner.vue'
+import StaleDataBanner from './StaleDataBanner.vue'
 import AppSidebar from './AppSidebar.vue'
 import RefreshModal from './RefreshModal.vue'
 import { computed, ref, onUnmounted } from 'vue'
@@ -184,6 +192,7 @@ export default {
     UserManagement,
     SettingsView,
     SetupBanner,
+    StaleDataBanner,
     AppSidebar,
     RefreshModal
   },
@@ -211,16 +220,20 @@ export default {
       if (hours < 24) return `Updated ${hours} hrs ago`
       return `Updated ${ts.toLocaleDateString()}`
     })
+    const jiraConfigChangedAt = ref(null)
     async function fetchLastRefreshed() {
       try {
-        const { timestamp } = await getLastRefreshed()
-        lastRefreshedAt.value = timestamp
+        const data = await getLastRefreshed()
+        lastRefreshedAt.value = data.timestamp
+        jiraConfigChangedAt.value = data.jiraConfigChangedAt
       } catch { /* ignore */ }
     }
     return {
       authUser,
       authIsAdmin,
       lastRefreshedLabel,
+      lastRefreshedAt,
+      jiraConfigChangedAt,
       fetchLastRefreshed,
       loadRoster,
       loadGithubStats,

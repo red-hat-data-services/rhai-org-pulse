@@ -210,6 +210,20 @@ export async function getRosterSyncStatus() {
   return apiRequest('/admin/roster-sync/status')
 }
 
+// ─── Jira Sync Admin ───
+
+export async function getJiraSyncConfig() {
+  return apiRequest('/admin/jira-sync/config')
+}
+
+export async function saveJiraSyncConfig(data) {
+  return apiRequest('/admin/jira-sync/config', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  })
+}
+
 // ─── Allowlist ───
 
 export async function getAllowlist() {

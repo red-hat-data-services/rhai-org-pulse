@@ -24,6 +24,7 @@ const { fetchGithubData } = require('./github/contributions');
 const { fetchGitlabData } = require('./gitlab/contributions');
 const rosterSync = require('./roster-sync');
 const rosterSyncConfig = require('./roster-sync/config');
+const jiraSyncConfig = require('./jira/config');
 
 if (DEMO_MODE) {
   console.log('Running in DEMO MODE - using fixture data, Jira/GitHub APIs disabled');
@@ -348,6 +349,9 @@ app.post('/api/refresh', requireAdmin, async function(req, res) {
     members = dedupeMembers(allMembers);
   }
 
+  // Load Jira project filter config once for all members
+  const jiraProjectKeys = jiraSyncConfig.getProjectKeys(storageModule);
+
   // Helper: refresh Jira for a list of members
   async function refreshJiraMembers(memberList) {
     if (!sources.jira || DEMO_MODE) return;
@@ -365,7 +369,8 @@ app.post('/api/refresh', requireAdmin, async function(req, res) {
         const metrics = await fetchPersonMetrics(jiraRequest, member.jiraDisplayName, {
           nameCache: jiraNameCache,
           existingData,
-          email: member.email
+          email: member.email,
+          projectKeys: jiraProjectKeys
         });
         if (metrics._resolvedName) delete metrics._resolvedName;
         writeToStorage(`people/${sanitizeFilename(member.jiraDisplayName)}.json`, metrics);
@@ -432,7 +437,8 @@ app.post('/api/refresh', requireAdmin, async function(req, res) {
           const metrics = await fetchPersonMetrics(jiraRequest, member.jiraDisplayName, {
             nameCache: jiraNameCache,
             existingData,
-            email: member.email
+            email: member.email,
+            projectKeys: jiraProjectKeys
           });
           if (metrics._resolvedName) {
             persistNameCache();
@@ -907,7 +913,11 @@ function deriveRoster() {
 
 app.get('/api/last-refreshed', function(req, res) {
   const data = readFromStorage('last-refreshed.json');
-  res.json({ timestamp: data?.timestamp || null });
+  const jiraConfig = jiraSyncConfig.loadConfig(storageModule);
+  res.json({
+    timestamp: data?.timestamp || null,
+    jiraConfigChangedAt: jiraConfig?.lastConfigChangedAt || null
+  });
 });
 
 app.get('/api/roster', function(req, res) {
@@ -986,7 +996,8 @@ app.get('/api/person/:jiraDisplayName/metrics', async function(req, res) {
 
     // Fetch from Jira, fall back to stale cache if Jira is unavailable
     try {
-      const metrics = await fetchPersonMetrics(jiraRequest, name, { nameCache: jiraNameCache, email: personEmail });
+      const projectKeys = jiraSyncConfig.getProjectKeys(storageModule);
+      const metrics = await fetchPersonMetrics(jiraRequest, name, { nameCache: jiraNameCache, email: personEmail, projectKeys });
       if (metrics._resolvedName) {
         persistNameCache();
         delete metrics._resolvedName;
@@ -1515,6 +1526,63 @@ app.get('/api/admin/roster-sync/status', requireAdmin, function(req, res) {
     });
   } catch (error) {
     console.error('Roster-sync status error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ─── Routes: Jira Sync Admin ───
+
+app.get('/api/admin/jira-sync/config', requireAdmin, function(req, res) {
+  try {
+    const config = jiraSyncConfig.loadConfig(storageModule);
+    res.json({ projectKeys: [], ...config });
+  } catch (error) {
+    console.error('Read jira-sync config error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/admin/jira-sync/config', requireAdmin, function(req, res) {
+  try {
+    const { projectKeys } = req.body;
+
+    if (!Array.isArray(projectKeys)) {
+      return res.status(400).json({ error: 'projectKeys must be an array' });
+    }
+
+    // Validate: only non-empty strings, uppercase convention
+    const cleaned = projectKeys
+      .map(k => typeof k === 'string' ? k.trim().toUpperCase() : '')
+      .filter(Boolean);
+
+    // Validate limits
+    if (cleaned.length > 50) {
+      return res.status(400).json({ error: 'Too many project keys (max 50)' });
+    }
+
+    // Validate project key format to prevent JQL injection
+    const validProjectKey = /^[A-Z][A-Z0-9_]{1,19}$/;
+    for (const key of cleaned) {
+      if (!validProjectKey.test(key)) {
+        return res.status(400).json({ error: `Invalid project key format: "${key}". Keys must be 2-20 characters, start with a letter, and contain only uppercase letters, digits, and underscores.` });
+      }
+    }
+
+    // Only update lastConfigChangedAt if project keys actually changed
+    const existing = jiraSyncConfig.loadConfig(storageModule);
+    const existingKeys = (existing?.projectKeys || []).sort().join(',');
+    const newKeys = [...cleaned].sort().join(',');
+    const keysChanged = existingKeys !== newKeys;
+
+    const config = {
+      projectKeys: cleaned,
+      lastConfigChangedAt: keysChanged ? new Date().toISOString() : (existing?.lastConfigChangedAt || null)
+    };
+
+    jiraSyncConfig.saveConfig(storageModule, config);
+    res.json(config);
+  } catch (error) {
+    console.error('Save jira-sync config error:', error);
     res.status(500).json({ error: error.message });
   }
 });

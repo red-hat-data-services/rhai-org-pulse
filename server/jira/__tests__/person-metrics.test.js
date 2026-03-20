@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { computeCycleTimeDays, findWorkStartDate, fetchPersonMetrics, mergeResolvedIssues, needsFullRefresh, FIELDS_VERSION } from '../person-metrics'
+import { buildProjectFilter, projectKeysFingerprint, computeCycleTimeDays, findWorkStartDate, fetchPersonMetrics, mergeResolvedIssues, needsFullRefresh, FIELDS_VERSION } from '../person-metrics'
 
 function makeIssue({ created, resolutiondate, histories }) {
   return {
@@ -377,6 +377,62 @@ describe('needsFullRefresh', () => {
       fieldsVersion: FIELDS_VERSION
     })).toBe(false)
   })
+
+  it('returns true when projectKeys fingerprint changes', () => {
+    const now = new Date().toISOString()
+    expect(needsFullRefresh({
+      fetchedAt: now,
+      fieldsVersion: FIELDS_VERSION,
+      lastFullRefreshAt: now,
+      projectKeysFingerprint: 'RHOAIENG'
+    }, ['RHOAIENG', 'ODH'])).toBe(true)
+  })
+
+  it('returns false when projectKeys fingerprint matches', () => {
+    const now = new Date().toISOString()
+    expect(needsFullRefresh({
+      fetchedAt: now,
+      fieldsVersion: FIELDS_VERSION,
+      lastFullRefreshAt: now,
+      projectKeysFingerprint: 'ODH,RHOAIENG'
+    }, ['RHOAIENG', 'ODH'])).toBe(false)
+  })
+
+  it('returns true when projectKeys added but cached data has none', () => {
+    const now = new Date().toISOString()
+    expect(needsFullRefresh({
+      fetchedAt: now,
+      fieldsVersion: FIELDS_VERSION,
+      lastFullRefreshAt: now
+    }, ['RHOAIENG'])).toBe(true)
+  })
+
+  it('returns false when both current and cached have no projectKeys', () => {
+    const now = new Date().toISOString()
+    expect(needsFullRefresh({
+      fetchedAt: now,
+      fieldsVersion: FIELDS_VERSION,
+      lastFullRefreshAt: now
+    }, [])).toBe(false)
+  })
+})
+
+describe('projectKeysFingerprint', () => {
+  it('returns empty string for null', () => {
+    expect(projectKeysFingerprint(null)).toBe('')
+  })
+
+  it('returns empty string for empty array', () => {
+    expect(projectKeysFingerprint([])).toBe('')
+  })
+
+  it('returns sorted comma-joined string', () => {
+    expect(projectKeysFingerprint(['ODH', 'RHOAIENG'])).toBe('ODH,RHOAIENG')
+  })
+
+  it('sorts keys for stable fingerprint regardless of input order', () => {
+    expect(projectKeysFingerprint(['RHOAIENG', 'ODH'])).toBe(projectKeysFingerprint(['ODH', 'RHOAIENG']))
+  })
 })
 
 describe('mergeResolvedIssues', () => {
@@ -494,5 +550,134 @@ describe('fetchPersonMetrics incremental mode', () => {
     // Should use full lookback query
     const resolvedJql = capturedJqls.find(jql => jql.includes('resolved >='))
     expect(resolvedJql).toContain('-365d')
+  })
+})
+
+describe('buildProjectFilter', () => {
+  it('returns empty string for null', () => {
+    expect(buildProjectFilter(null)).toBe('')
+  })
+
+  it('returns empty string for undefined', () => {
+    expect(buildProjectFilter(undefined)).toBe('')
+  })
+
+  it('returns empty string for empty array', () => {
+    expect(buildProjectFilter([])).toBe('')
+  })
+
+  it('returns correct JQL for single project key', () => {
+    expect(buildProjectFilter(['RHOAIENG'])).toBe(' AND project in ("RHOAIENG")')
+  })
+
+  it('returns correct JQL for multiple project keys', () => {
+    expect(buildProjectFilter(['RHOAIENG', 'ODH'])).toBe(' AND project in ("RHOAIENG", "ODH")')
+  })
+})
+
+describe('fetchPersonMetrics with projectKeys', () => {
+  function createMockJiraRequest(handlers = {}) {
+    return vi.fn(async (url) => {
+      if (url.startsWith('/rest/api/3/search/jql')) {
+        const jql = new URL(`https://jira${url}`).searchParams.get('jql') || ''
+        if (handlers.search) return handlers.search(jql)
+        return { issues: [], isLast: true }
+      }
+      if (url.includes('/rest/api/2/user/search')) {
+        if (handlers.userSearch) return handlers.userSearch(url)
+        return []
+      }
+      return { issues: [], isLast: true }
+    })
+  }
+
+  it('includes project filter in all JQL queries when projectKeys provided', async () => {
+    const capturedJqls = []
+    const mockJiraRequest = createMockJiraRequest({
+      search: (jql) => {
+        capturedJqls.push(jql)
+        return { issues: [], isLast: true }
+      },
+      userSearch: () => [{ displayName: 'Test User', accountId: 'abc123' }]
+    })
+
+    await fetchPersonMetrics(mockJiraRequest, 'Test User', {
+      nameCache: {},
+      projectKeys: ['RHOAIENG', 'ODH']
+    })
+
+    // Both resolved and in-progress JQL queries should include the project filter
+    expect(capturedJqls.length).toBe(2)
+    for (const jql of capturedJqls) {
+      expect(jql).toContain('project in ("RHOAIENG", "ODH")')
+    }
+  })
+
+  it('omits project filter when projectKeys is empty', async () => {
+    const capturedJqls = []
+    const mockJiraRequest = createMockJiraRequest({
+      search: (jql) => {
+        capturedJqls.push(jql)
+        return { issues: [], isLast: true }
+      },
+      userSearch: () => [{ displayName: 'Test User', accountId: 'abc123' }]
+    })
+
+    await fetchPersonMetrics(mockJiraRequest, 'Test User', {
+      nameCache: {},
+      projectKeys: []
+    })
+
+    for (const jql of capturedJqls) {
+      expect(jql).not.toContain('project in')
+    }
+  })
+
+  it('omits project filter when projectKeys not provided', async () => {
+    const capturedJqls = []
+    const mockJiraRequest = createMockJiraRequest({
+      search: (jql) => {
+        capturedJqls.push(jql)
+        return { issues: [], isLast: true }
+      },
+      userSearch: () => [{ displayName: 'Test User', accountId: 'abc123' }]
+    })
+
+    await fetchPersonMetrics(mockJiraRequest, 'Test User', { nameCache: {} })
+
+    for (const jql of capturedJqls) {
+      expect(jql).not.toContain('project in')
+    }
+  })
+
+  it('includes project filter in incremental mode', async () => {
+    const capturedJqls = []
+    const now = new Date()
+    const twoDaysAgo = new Date(now)
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2)
+
+    const mockJiraRequest = createMockJiraRequest({
+      search: (jql) => {
+        capturedJqls.push(jql)
+        return { issues: [], isLast: true }
+      },
+      userSearch: () => [{ displayName: 'Test User', accountId: 'abc123' }]
+    })
+
+    await fetchPersonMetrics(mockJiraRequest, 'Test User', {
+      nameCache: {},
+      projectKeys: ['RHOAIENG'],
+      existingData: {
+        fetchedAt: twoDaysAgo.toISOString(),
+        fieldsVersion: FIELDS_VERSION,
+        lastFullRefreshAt: now.toISOString(),
+        resolved: { count: 0, storyPoints: 0, issues: [] },
+        inProgress: { count: 0, storyPoints: 0, issues: [] }
+      }
+    })
+
+    for (const jql of capturedJqls) {
+      expect(jql).toContain('project in ("RHOAIENG")')
+    }
   })
 })
