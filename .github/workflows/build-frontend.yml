@@ -1,0 +1,79 @@
+name: Build & Push Frontend Image
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'index.html'
+      - 'vite.config.mjs'
+      - 'tailwind.config.mjs'
+      - 'postcss.config.mjs'
+      - 'deploy/frontend.Dockerfile'
+      - 'deploy/nginx.conf'
+      - 'package*.json'
+
+concurrency:
+  group: build-frontend
+  cancel-in-progress: true
+
+env:
+  IMAGE: quay.io/org-pulse/team-tracker-frontend
+
+jobs:
+  test:
+    name: Test & Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+  build-and-push:
+    name: Build, Smoke Test & Push Image
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: |
+          docker build \
+            -f deploy/frontend.Dockerfile \
+            -t ${{ env.IMAGE }}:${{ github.sha }} \
+            .
+
+      - name: Smoke test
+        run: |
+          docker run -d --name frontend-smoke -p 8080:8080 ${{ env.IMAGE }}:${{ github.sha }}
+          sleep 5
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080)
+          docker logs frontend-smoke
+          docker stop frontend-smoke
+          if [ "$STATUS" != "200" ]; then
+            echo "❌ Smoke test failed — nginx returned HTTP $STATUS"
+            exit 1
+          fi
+          echo "✅ Smoke test passed — HTTP 200"
+
+      - name: Login to Quay.io
+        uses: docker/login-action@v3
+        with:
+          registry: quay.io
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_PASSWORD }}
+
+      - name: Push image
+        run: |
+          docker tag ${{ env.IMAGE }}:${{ github.sha }} ${{ env.IMAGE }}:latest
+          docker push ${{ env.IMAGE }}:${{ github.sha }}
+          docker push ${{ env.IMAGE }}:latest
