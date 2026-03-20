@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: quay.io/accorvin/team-tracker-backend:latest
+          image: quay.io/org-pulse/team-tracker-backend:latest
           ports:
             - containerPort: 3001
               protocol: TCP

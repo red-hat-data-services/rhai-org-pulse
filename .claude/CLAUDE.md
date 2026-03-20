@@ -101,8 +101,8 @@ Deployed to OpenShift via ArgoCD. Full deployment guide: `deploy/OPENSHIFT.md`.
 
 | Component | Image | Details |
 |-----------|-------|---------|
-| Frontend | `quay.io/accorvin/team-tracker-frontend` | nginx serving Vue SPA, proxies /api to backend |
-| Backend | `quay.io/accorvin/team-tracker-backend` | Express server with PVC-mounted data directory |
+| Frontend | `quay.io/org-pulse/team-tracker-frontend` | nginx serving Vue SPA, proxies /api to backend |
+| Backend | `quay.io/org-pulse/team-tracker-backend` | Express server with PVC-mounted data directory |
 | OAuth Proxy | `quay.io/openshift/origin-oauth-proxy:4.16` | Sidecar on frontend pod |
 
 Overlays: `deploy/openshift/overlays/dev/` (namespace: `team-tracker`), `deploy/openshift/overlays/preprod/` (namespace: `ambient-code--team-tracker`), and `deploy/openshift/overlays/prod/`.
@@ -112,11 +112,41 @@ Secrets (created manually on cluster, not in git):
 - `frontend-proxy-cookie`: `session_secret`
 - `google-sa-key`: Google service account JSON key (mounted at `/etc/secrets/`)
 
+### CI/CD & Image Strategy
+
+**GitHub Actions workflows** (`.github/workflows/`):
+- **`ci.yml`** — Runs on all PRs and pushes to `main`. Lints, tests, builds, and validates kustomize overlays (kustomize validation only runs when `deploy/` files change). The job name "Test & Build" is the single required status check.
+- **`build-backend.yml`** — Triggers on pushes to `main` when `server/`, `deploy/backend.Dockerfile`, or `package*.json` change. Runs tests, builds and smoke-tests the image, pushes to `quay.io/org-pulse/team-tracker-backend` with both `:<sha>` and `:latest` tags.
+- **`build-frontend.yml`** — Same pattern for frontend, triggered by `src/`, `public/`, `deploy/frontend.Dockerfile`, `deploy/nginx.conf`, etc.
+
+**Automatic prod deployment flow:**
+1. PR merged to `main` → build workflow runs tests, builds image, pushes `quay.io/org-pulse/team-tracker-*:<sha>` + `:latest`
+2. Build workflow creates a follow-up PR updating the prod overlay's image tag via `kustomize edit set image`, then auto-merges it (`gh pr merge --auto --squash`)
+3. ArgoCD (auto-sync) picks up the manifest change and rolls out the new image
+4. A shared `update-prod-image` concurrency group prevents conflicting simultaneous updates from backend and frontend builds
+
+**Image tagging:**
+- Prod overlay pins images to git SHA tags (e.g., `quay.io/org-pulse/team-tracker-backend:abc1234...`), updated automatically by CI
+- Dev and preprod overlays use `:latest`
+
+**ConfigMap changes trigger rollouts** via kustomize `configMapGenerator` — ConfigMap names include a content hash suffix (e.g., `team-tracker-config-5h2f9k`), so any data change produces a new name and triggers a pod rollout automatically.
+
+**Branch protection** uses a GitHub repository ruleset on `main`:
+- Requires PRs (no direct pushes)
+- Requires "Test & Build" status check
+- Admin role has bypass (used by `GH_PAT` secret for CI auto-merge PRs)
+
+**Repo secrets:**
+- `QUAY_USERNAME` / `QUAY_PASSWORD` — Quay.io registry credentials for image push
+- `GH_PAT` — Personal access token with admin bypass, used by CI to create and auto-merge image tag update PRs
+
+**Daily CronJob** (`deploy/openshift/overlays/prod/cronjob-sync-refresh.yaml`): Runs at 6:00 AM UTC, triggers roster sync then full metrics refresh via the backend API.
+
 ### Building images on ARM Macs
 Standard `--platform linux/amd64` builds fail: npm times out under QEMU, esbuild crashes. Workaround: build/install natively, then copy into amd64 base images. See `deploy/OPENSHIFT.md` step 3 for details. This works because the backend has no native Node addons (all pure JS).
 
 ### Dev vs prod
-- **Dev overlay** removes `ADMIN_EMAILS` from the configmap. When empty, the first authenticated user is auto-added to the allowlist.
+- **Dev overlay** clears `ADMIN_EMAILS` via `configMapGenerator` merge behavior. When empty, the first authenticated user is auto-added to the allowlist.
 - **Prod overlay** keeps `ADMIN_EMAILS` to pre-seed the allowlist with known admins.
 
 ### Auth flow (production)

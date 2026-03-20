@@ -9,3 +9,9 @@ resources:
 
 patches:
   - path: route-patch.yaml
+
+images:
+  - name: quay.io/org-pulse/team-tracker-backend
+    newTag: latest
+  - name: quay.io/org-pulse/team-tracker-frontend
+    newTag: latest

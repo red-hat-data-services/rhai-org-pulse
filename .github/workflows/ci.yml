@@ -32,3 +32,23 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Check for deploy changes
+        id: deploy-changes
+        run: |
+          if git diff --name-only ${{ github.event.pull_request.base.sha || 'HEAD~1' }} HEAD | grep -q '^deploy/'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install kustomize
+        if: steps.deploy-changes.outputs.changed == 'true'
+        uses: imranismail/setup-kustomize@v2
+
+      - name: Validate kustomize overlays
+        if: steps.deploy-changes.outputs.changed == 'true'
+        run: |
+          for overlay in deploy/openshift/overlays/*/; do
+            name=$(basename "$overlay")
+            echo "=== Validating overlay: $name ==="
+            kustomize build "$overlay" > /dev/null
+          done

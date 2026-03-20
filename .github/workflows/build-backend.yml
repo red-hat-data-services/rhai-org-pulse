@@ -36,6 +36,8 @@ jobs:
     name: Build, Smoke Test & Push Image
     needs: test
     runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v4
 
@@ -79,3 +81,43 @@ jobs:
           docker tag ${{ env.IMAGE }}:${{ github.sha }} ${{ env.IMAGE }}:latest
           docker push ${{ env.IMAGE }}:${{ github.sha }}
           docker push ${{ env.IMAGE }}:latest
+
+  update-prod-image:
+    name: Update Prod Image Tag
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    concurrency:
+      group: update-prod-image
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Install kustomize
+        uses: imranismail/setup-kustomize@v2
+
+      - name: Update image tag in prod overlay
+        working-directory: deploy/openshift/overlays/prod
+        run: |
+          kustomize edit set image ${{ env.IMAGE }}:${{ github.sha }}
+
+      - name: Validate kustomize build
+        run: kustomize build deploy/openshift/overlays/prod > /dev/null
+
+      - name: Create PR
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          BRANCH="deploy/backend-image-${{ github.sha }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add deploy/openshift/overlays/prod/kustomization.yaml
+          git commit -m "deploy: update backend image to ${{ github.sha }}"
+          git push origin "$BRANCH"
+          gh pr create \
+            --title "deploy: update backend image to ${GITHUB_SHA::7}" \
+            --body "Automated image tag update for \`team-tracker-backend\` to \`${{ github.sha }}\`." \
+            --label automated
+          gh pr merge "$BRANCH" --auto --squash

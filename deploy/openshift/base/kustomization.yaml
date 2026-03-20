@@ -8,5 +8,12 @@ resources:
   - frontend-deployment.yaml
   - frontend-service.yaml
   - frontend-route.yaml
-  - configmap.yaml
   - serviceaccount.yaml
+
+configMapGenerator:
+  - name: team-tracker-config
+    literals:
+      - NODE_ENV=production
+      - API_PORT=3001
+      - JIRA_HOST=https://redhat.atlassian.net
+      - ADMIN_EMAILS=acorvin@redhat.com,acorvin@cluster.local
