@@ -1,0 +1,37 @@
+name: Kustomize Validate
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'deploy/**'
+  push:
+    branches: [main]
+    paths:
+      - 'deploy/**'
+
+jobs:
+  validate:
+    name: Validate Kustomize Overlays
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install kustomize
+        uses: imranismail/setup-kustomize@v2
+
+      - name: Validate overlays
+        run: |
+          EXIT_CODE=0
+          for overlay in deploy/openshift/overlays/*/; do
+            name=$(basename "$overlay")
+            echo "=== Validating overlay: $name ==="
+            if ! kustomize build "$overlay"; then
+              echo "ERROR: $name overlay failed to build"
+              EXIT_CODE=1
+            fi
+            echo ""
+          done
+          exit $EXIT_CODE
