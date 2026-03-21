@@ -92,7 +92,14 @@ async function fetchEventsPaginated(userId, afterDate, beforeDate, rateLimiter) 
     let url = `${GITLAB_BASE_URL}/api/v4/users/${encodeURIComponent(userId)}/events?per_page=100&page=${page}&after=${encodeURIComponent(afterDate)}`;
     if (beforeDate) url += `&before=${encodeURIComponent(beforeDate)}`;
 
-    const res = await fetch(url, { headers: buildHeaders(), timeout: 15000 });
+    let res;
+    try {
+      res = await fetch(url, { headers: buildHeaders(), timeout: 15000 });
+    } catch (err) {
+      // Network error or timeout — treat as server failure to trigger fallback
+      console.warn(`[gitlab] Request failed for user ${userId} (page ${page}): ${err.message}`);
+      return { ok: false };
+    }
 
     if (res.status === 500) {
       return { ok: false };
