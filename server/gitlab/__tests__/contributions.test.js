@@ -1,463 +1,275 @@
 import { describe, it, expect, vi } from 'vitest'
 
-// Replicate mergeMonths for unit testing since it's not exported
-function mergeMonths(existing, fresh, sinceDate) {
-  if (!sinceDate) {
-    return { ...existing, ...fresh }
-  }
+// Replicate generateMonthlyWindows for unit testing since it's not exported
+// (the actual function is exported, but we replicate to test the logic independently)
+function generateMonthlyWindows() {
+  const windows = []
+  const now = new Date()
+  const todayYear = now.getUTCFullYear()
+  const todayMonth = now.getUTCMonth()
+  const todayDate = now.getUTCDate()
 
-  const boundary = sinceDate.slice(0, 7)
-  const merged = {}
-
-  for (const [month, count] of Object.entries(existing)) {
-    if (month < boundary) {
-      merged[month] = count
+  for (let i = 11; i >= 0; i--) {
+    const from = new Date(Date.UTC(todayYear, todayMonth - i, 1))
+    let to
+    if (i === 0) {
+      to = new Date(Date.UTC(todayYear, todayMonth, todayDate + 1))
+    } else {
+      to = new Date(Date.UTC(todayYear, todayMonth - i + 1, 1))
     }
-  }
 
-  for (const [month, count] of Object.entries(fresh)) {
-    merged[month] = count
-  }
-
-  return merged
-}
-
-// Replicate generateMonthlyChunks for unit testing since it's not exported
-function generateMonthlyChunks(afterDate) {
-  const chunks = []
-  const start = new Date(afterDate)
-  const tomorrow = new Date()
-  tomorrow.setDate(tomorrow.getDate() + 1)
-
-  let current = new Date(start)
-
-  while (current < tomorrow) {
-    const next = new Date(current)
-    next.setMonth(next.getMonth() + 1)
-
-    const before = next < tomorrow ? next : tomorrow
-
-    chunks.push({
-      after: current.toISOString().slice(0, 10),
-      before: before.toISOString().slice(0, 10)
+    windows.push({
+      from: from.toISOString().slice(0, 10),
+      to: to.toISOString().slice(0, 10),
+      monthKey: from.toISOString().slice(0, 7)
     })
-
-    current = new Date(before)
   }
 
-  return chunks
+  return windows
 }
 
-// Replicate bucketByMonth (events-based version) for unit testing
-function bucketByMonth(events) {
-  const months = {}
-  for (const event of events) {
-    const monthKey = event.created_at.slice(0, 7)
-    months[monthKey] = (months[monthKey] || 0) + 1
-  }
-  return months
-}
-
-describe('GitLab mergeMonths logic', () => {
-  it('replaces boundary month count instead of adding', () => {
-    const existing = { '2026-01': 10, '2026-02': 5 }
-    const fresh = { '2026-02': 3, '2026-03': 7 }
-    const result = mergeMonths(existing, fresh, '2026-02-15')
-
-    // boundary is 2026-02, so existing 2026-02 is dropped, fresh 2026-02 used
-    expect(result['2026-01']).toBe(10)
-    expect(result['2026-02']).toBe(3)
-    expect(result['2026-03']).toBe(7)
+describe('GitLab generateMonthlyWindows', () => {
+  it('generates 12 monthly windows', () => {
+    const windows = generateMonthlyWindows()
+    expect(windows.length).toBe(12)
   })
 
-  it('replaces all months at or after the boundary', () => {
-    const existing = { '2025-11': 8, '2025-12': 4, '2026-01': 10 }
-    const fresh = { '2025-12': 6, '2026-01': 12 }
-    const result = mergeMonths(existing, fresh, '2025-12-01')
-
-    expect(result['2025-11']).toBe(8)
-    expect(result['2025-12']).toBe(6)
-    expect(result['2026-01']).toBe(12)
-  })
-
-  it('adds counts for months before the boundary from existing', () => {
-    const existing = { '2025-09': 3, '2025-10': 5, '2025-11': 7 }
-    const fresh = { '2025-11': 2 }
-    const result = mergeMonths(existing, fresh, '2025-11-01')
-
-    expect(result['2025-09']).toBe(3)
-    expect(result['2025-10']).toBe(5)
-    expect(result['2025-11']).toBe(2)
-  })
-
-  it('handles null sinceDate by adding all counts', () => {
-    const existing = { '2025-09': 3 }
-    const fresh = { '2025-09': 5, '2025-10': 7 }
-    const result = mergeMonths(existing, fresh, null)
-
-    expect(result['2025-09']).toBe(5)
-    expect(result['2025-10']).toBe(7)
-  })
-
-  it('handles empty existing data', () => {
-    const fresh = { '2026-01': 10, '2026-02': 5 }
-    const result = mergeMonths({}, fresh, '2026-01-01')
-
-    expect(result).toEqual({ '2026-01': 10, '2026-02': 5 })
-  })
-})
-
-describe('GitLab generateMonthlyChunks logic', () => {
-  it('generates correct number of chunks for a known date range', () => {
-    // Use a date ~3 months ago to get roughly 3-4 chunks
-    const threeMonthsAgo = new Date()
-    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3)
-    const afterDate = threeMonthsAgo.toISOString().slice(0, 10)
-
-    const chunks = generateMonthlyChunks(afterDate)
-    // Should produce 3 or 4 chunks depending on exact day
-    expect(chunks.length).toBeGreaterThanOrEqual(3)
-    expect(chunks.length).toBeLessThanOrEqual(4)
-  })
-
-  it('each chunk before equals next chunk after (contiguous)', () => {
-    const sixMonthsAgo = new Date()
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6)
-    const afterDate = sixMonthsAgo.toISOString().slice(0, 10)
-
-    const chunks = generateMonthlyChunks(afterDate)
-    for (let i = 0; i < chunks.length - 1; i++) {
-      expect(chunks[i].before).toBe(chunks[i + 1].after)
+  it('each window has from, to, and monthKey', () => {
+    const windows = generateMonthlyWindows()
+    for (const w of windows) {
+      expect(w.from).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+      expect(w.to).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+      expect(w.monthKey).toMatch(/^\d{4}-\d{2}$/)
     }
   })
 
-  it('handles partial month at start', () => {
-    const partialStart = new Date()
-    partialStart.setMonth(partialStart.getMonth() - 2)
-    partialStart.setDate(15) // mid-month
-    const afterDate = partialStart.toISOString().slice(0, 10)
-
-    const chunks = generateMonthlyChunks(afterDate)
-    expect(chunks.length).toBeGreaterThanOrEqual(2)
-    expect(chunks[0].after).toBe(afterDate)
+  it('windows are contiguous (each to equals next from)', () => {
+    const windows = generateMonthlyWindows()
+    for (let i = 0; i < windows.length - 1; i++) {
+      expect(windows[i].to).toBe(windows[i + 1].from)
+    }
   })
 
-  it('handles very recent afterDate (produces 1 chunk)', () => {
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-    const afterDate = yesterday.toISOString().slice(0, 10)
-
-    const chunks = generateMonthlyChunks(afterDate)
-    expect(chunks.length).toBe(1)
-  })
-})
-
-describe('GitLab bucketByMonth logic (events-based)', () => {
-  it('buckets events by month correctly', () => {
-    const events = [
-      { created_at: '2026-01-05T10:00:00Z' },
-      { created_at: '2026-01-20T14:00:00Z' },
-      { created_at: '2026-01-20T15:00:00Z' },
-      { created_at: '2026-02-10T09:00:00Z' }
-    ]
-    const result = bucketByMonth(events)
-
-    expect(result['2026-01']).toBe(3)
-    expect(result['2026-02']).toBe(1)
+  it('first window starts on the 1st of the month ~12 months ago', () => {
+    const windows = generateMonthlyWindows()
+    expect(windows[0].from).toMatch(/-01$/)
   })
 
-  it('handles empty events array', () => {
-    expect(bucketByMonth([])).toEqual({})
+  it('monthKey matches the from date month', () => {
+    const windows = generateMonthlyWindows()
+    for (const w of windows) {
+      expect(w.monthKey).toBe(w.from.slice(0, 7))
+    }
   })
 })
-
-// ---------------------------------------------------------------------------
-// Integration tests with mocked fetch
-// ---------------------------------------------------------------------------
 
 describe('fetchGitlabData integration', () => {
-  /**
-   * Helper that sets up the mock environment for each test.
-   * We mock node-fetch by replacing it in Node's require cache before
-   * loading contributions.js. This is necessary because vitest's vi.mock
-   * does not intercept native CJS require() calls in CJS modules.
-   *
-   * Returns { fetchGitlabData, mockFetch, cleanup }.
-   */
-  async function setup() {
-    const { createRequire } = await import('module')
-    const cjsRequire = createRequire(import.meta.url)
+  let mockFetch
+  let fetchGitlabData
 
-    const nodeFetchPath = cjsRequire.resolve('node-fetch')
-    const contribPath = cjsRequire.resolve('../contributions.js')
-
-    // Ensure node-fetch is loaded into the cache
-    cjsRequire('node-fetch')
-    const originalExports = cjsRequire.cache[nodeFetchPath].exports
-
-    // Replace node-fetch with our mock
-    const mockFetch = vi.fn()
-    cjsRequire.cache[nodeFetchPath].exports = mockFetch
-
-    // Clear contributions module so it re-requires our mocked node-fetch
-    delete cjsRequire.cache[contribPath]
-
-    // Set env vars before loading the module (it reads them at load time)
-    process.env.GITLAB_TOKEN = 'test-token'
-    process.env.GITLAB_BASE_URL = 'https://gitlab.example.com'
-
-    const { fetchGitlabData } = cjsRequire('../contributions.js')
-
-    function cleanup() {
-      cjsRequire.cache[nodeFetchPath].exports = originalExports
-      delete cjsRequire.cache[contribPath]
-      delete process.env.GITLAB_TOKEN
-      delete process.env.GITLAB_BASE_URL
-    }
-
-    return { fetchGitlabData, mockFetch, cleanup }
-  }
-
-  // Helper to create a mock Response
-  function mockResponse(body, { status = 200, headers = {} } = {}) {
+  function makeGraphQLResponse(nodes, hasNextPage = false, endCursor = null) {
     return {
-      ok: status >= 200 && status < 300,
-      status,
-      headers: {
-        get: (name) => headers[name] || headers[name.toLowerCase()] || null
-      },
-      json: async () => body
+      ok: true,
+      json: async () => ({
+        data: {
+          group: {
+            contributions: {
+              nodes,
+              pageInfo: { hasNextPage, endCursor }
+            }
+          }
+        }
+      })
     }
   }
 
-  it('resolves user ID and fetches events successfully', async () => {
-    const { fetchGitlabData, mockFetch, cleanup } = await setup()
-    try {
-      const events = [
-        { created_at: '2026-02-10T10:00:00Z', action_name: 'pushed to' },
-        { created_at: '2026-02-15T12:00:00Z', action_name: 'pushed to' },
-        { created_at: '2026-03-01T08:00:00Z', action_name: 'opened' }
-      ]
+  function makeErrorResponse(message) {
+    return {
+      ok: true,
+      json: async () => ({
+        errors: [{ message }]
+      })
+    }
+  }
 
-      mockFetch.mockImplementation(async (url) => {
-        if (url.includes('/api/v4/users?username=')) {
-          return mockResponse([{ id: 123 }])
-        }
-        if (url.includes('/api/v4/users/123/events')) {
-          if (url.includes('&page=1&')) {
-            return mockResponse(events)
-          }
-          return mockResponse([])
-        }
-        return mockResponse([], { status: 404 })
+  function setup() {
+    mockFetch = vi.fn()
+
+    // Replace node-fetch in require cache
+    const fetchModulePath = require.resolve('node-fetch')
+    const originalModule = require.cache[fetchModulePath]
+    require.cache[fetchModulePath] = { id: fetchModulePath, exports: mockFetch }
+
+    // Set env vars before loading
+    process.env.GITLAB_TOKEN = 'test-token'
+    process.env.GITLAB_BASE_URL = 'https://gitlab.test'
+
+    // Clear contributions module cache and reload
+    const contribPath = require.resolve('../../gitlab/contributions')
+    delete require.cache[contribPath]
+    const mod = require('../../gitlab/contributions')
+    fetchGitlabData = mod.fetchGitlabData
+
+    // Restore original fetch module for cleanup
+    return { fetchModulePath, originalModule, contribPath }
+  }
+
+  function cleanup(refs) {
+    if (refs.originalModule) {
+      require.cache[refs.fetchModulePath] = refs.originalModule
+    }
+    delete require.cache[refs.contribPath]
+    delete process.env.GITLAB_TOKEN
+    delete process.env.GITLAB_BASE_URL
+  }
+
+  it('fetches contributions from groups and returns correct shape', async () => {
+    const refs = setup()
+    try {
+      // Mock all 12 monthly window queries to return dhellmann with some events
+      mockFetch.mockImplementation(async () => {
+        return makeGraphQLResponse([
+          { user: { username: 'dhellmann' }, totalEvents: 100 },
+          { user: { username: 'otheruser' }, totalEvents: 50 }
+        ])
       })
 
-      const results = await fetchGitlabData(['testuser'], { concurrency: 1 })
+      const results = await fetchGitlabData(['dhellmann'], {
+        gitlabGroups: ['redhat/rhel-ai']
+      })
 
-      expect(results.testuser).not.toBeNull()
-      expect(results.testuser.totalContributions).toBe(3)
-      expect(results.testuser.months['2026-02']).toBe(2)
-      expect(results.testuser.months['2026-03']).toBe(1)
-      expect(results.testuser.fetchedAt).toBeDefined()
-      expect(results.testuser.source).toBe('events')
+      expect(results.dhellmann).toBeTruthy()
+      expect(results.dhellmann.totalContributions).toBe(1200) // 100 * 12 months
+      expect(results.dhellmann.source).toBe('graphql')
+      expect(results.dhellmann.fetchedAt).toBeTruthy()
+      expect(Object.keys(results.dhellmann.months).length).toBe(12)
+
+      // Should not include otheruser (not in requested usernames)
+      expect(results.otheruser).toBeUndefined()
     } finally {
-      cleanup()
+      cleanup(refs)
     }
   })
 
-  it('falls back to monthly chunks on 500', async () => {
-    const { fetchGitlabData, mockFetch, cleanup } = await setup()
+  it('returns zero contributions for users not in any group', async () => {
+    const refs = setup()
     try {
-      const chunkEvents = [
-        { created_at: '2026-01-05T10:00:00Z', action_name: 'pushed to' },
-        { created_at: '2026-02-10T10:00:00Z', action_name: 'pushed to' }
-      ]
-
-      mockFetch.mockImplementation(async (url) => {
-        if (url.includes('/api/v4/users?username=')) {
-          return mockResponse([{ id: 456 }])
-        }
-        if (url.includes('/api/v4/users/456/events')) {
-          // Primary fetch (no "before" param) returns 500
-          if (!url.includes('&before=')) {
-            return mockResponse(null, { status: 500 })
-          }
-          // Chunked requests (with "before" param)
-          if (url.includes('&page=1&')) {
-            const afterMatch = url.match(/after=([^&]+)/)
-            const beforeMatch = url.match(/before=([^&]+)/)
-            if (afterMatch && beforeMatch) {
-              const after = decodeURIComponent(afterMatch[1])
-              const before = decodeURIComponent(beforeMatch[1])
-              const matching = chunkEvents.filter(e => {
-                const d = e.created_at.slice(0, 10)
-                return d > after && d < before
-              })
-              if (matching.length > 0) {
-                return mockResponse(matching)
-              }
-            }
-            return mockResponse([])
-          }
-          return mockResponse([])
-        }
-        return mockResponse([], { status: 404 })
+      mockFetch.mockImplementation(async () => {
+        return makeGraphQLResponse([
+          { user: { username: 'someoneelse' }, totalEvents: 50 }
+        ])
       })
 
-      const results = await fetchGitlabData(['chunkuser'], { concurrency: 1 })
+      const results = await fetchGitlabData(['ghostuser'], {
+        gitlabGroups: ['redhat/rhel-ai']
+      })
 
-      expect(results.chunkuser).not.toBeNull()
-      expect(results.chunkuser.source).toBe('events')
-      expect(results.chunkuser.totalContributions).toBeGreaterThanOrEqual(1)
+      expect(results.ghostuser).toBeTruthy()
+      expect(results.ghostuser.totalContributions).toBe(0)
+      expect(results.ghostuser.months).toEqual({})
     } finally {
-      cleanup()
+      cleanup(refs)
     }
   })
 
-  it('handles 429 with retry', async () => {
-    const { fetchGitlabData, mockFetch, cleanup } = await setup()
+  it('returns null for all users when no groups configured', async () => {
+    const refs = setup()
     try {
-      let eventsCallCount = 0
+      const results = await fetchGitlabData(['testuser'], { gitlabGroups: [] })
 
-      mockFetch.mockImplementation(async (url) => {
-        if (url.includes('/api/v4/users?username=')) {
-          return mockResponse([{ id: 789 }])
-        }
-        if (url.includes('/api/v4/users/789/events')) {
-          eventsCallCount++
-          // First events request returns 429, subsequent calls return 200
-          if (eventsCallCount === 1) {
-            return mockResponse(null, {
-              status: 429,
-              headers: { 'Retry-After': '0' }
-            })
-          }
-          if (url.includes('&page=1&')) {
-            return mockResponse([
-              { created_at: '2026-03-10T10:00:00Z', action_name: 'pushed to' }
-            ])
-          }
-          return mockResponse([])
-        }
-        return mockResponse([], { status: 404 })
-      })
-
-      const results = await fetchGitlabData(['retryuser'], { concurrency: 1 })
-
-      expect(results.retryuser).not.toBeNull()
-      expect(results.retryuser.totalContributions).toBe(1)
-      expect(results.retryuser.source).toBe('events')
+      expect(results.testuser).toBeNull()
+      expect(mockFetch).not.toHaveBeenCalled()
     } finally {
-      cleanup()
-    }
-  })
-
-  it('uses incremental mode only when source is "events"', async () => {
-    const { fetchGitlabData, mockFetch, cleanup } = await setup()
-    try {
-      const fetchedAt = '2026-03-01T00:00:00Z'
-      const capturedUrls = []
-
-      mockFetch.mockImplementation(async (url) => {
-        capturedUrls.push(url)
-        if (url.includes('/api/v4/users?username=')) {
-          return mockResponse([{ id: 100 }])
-        }
-        if (url.includes('/api/v4/users/100/events')) {
-          if (url.includes('&page=1&')) {
-            return mockResponse([
-              { created_at: '2026-03-10T10:00:00Z', action_name: 'pushed to' }
-            ])
-          }
-          return mockResponse([])
-        }
-        return mockResponse([], { status: 404 })
-      })
-
-      // Case 1: existing data with source: "events" — should use fetchedAt as sinceDate
-      await fetchGitlabData(['incuser'], {
-        concurrency: 1,
-        existingData: {
-          incuser: {
-            totalContributions: 5,
-            months: { '2026-02': 5 },
-            fetchedAt,
-            source: 'events'
-          }
-        }
-      })
-
-      const eventsUrlsCase1 = capturedUrls.filter(u => u.includes('/events'))
-      expect(eventsUrlsCase1.some(u => u.includes('after=2026-03-01'))).toBe(true)
-
-      // Reset for case 2
-      capturedUrls.length = 0
-      mockFetch.mockClear()
-
-      mockFetch.mockImplementation(async (url) => {
-        capturedUrls.push(url)
-        if (url.includes('/api/v4/users?username=')) {
-          return mockResponse([{ id: 100 }])
-        }
-        if (url.includes('/api/v4/users/100/events')) {
-          if (url.includes('&page=1&')) {
-            return mockResponse([
-              { created_at: '2026-03-10T10:00:00Z', action_name: 'pushed to' }
-            ])
-          }
-          return mockResponse([])
-        }
-        return mockResponse([], { status: 404 })
-      })
-
-      // Case 2: existing data without source field (calendar-era cache) — full fetch
-      await fetchGitlabData(['incuser'], {
-        concurrency: 1,
-        existingData: {
-          incuser: {
-            totalContributions: 5,
-            months: { '2026-02': 5 },
-            fetchedAt
-            // no source field
-          }
-        }
-      })
-
-      const eventsUrlsCase2 = capturedUrls.filter(u => u.includes('/events'))
-      expect(eventsUrlsCase2.some(u => u.includes('after=2026-03-01'))).toBe(false)
-      expect(eventsUrlsCase2.some(u => u.includes('after=2025-03'))).toBe(true)
-    } finally {
-      cleanup()
-    }
-  })
-
-  it('returns null for unresolvable users', async () => {
-    const { fetchGitlabData, mockFetch, cleanup } = await setup()
-    try {
-      mockFetch.mockImplementation(async (url) => {
-        if (url.includes('/api/v4/users?username=')) {
-          return mockResponse([])
-        }
-        return mockResponse([], { status: 404 })
-      })
-
-      const results = await fetchGitlabData(['ghostuser'], { concurrency: 1 })
-
-      expect(results.ghostuser).toBeNull()
-    } finally {
-      cleanup()
+      cleanup(refs)
     }
   })
 
   it('handles empty usernames array', async () => {
-    const { fetchGitlabData, mockFetch, cleanup } = await setup()
+    const refs = setup()
     try {
-      const results = await fetchGitlabData([])
-
+      mockFetch.mockImplementation(async () => makeGraphQLResponse([]))
+      const results = await fetchGitlabData([], { gitlabGroups: ['some/group'] })
       expect(results).toEqual({})
-      expect(mockFetch).not.toHaveBeenCalled()
     } finally {
-      cleanup()
+      cleanup(refs)
+    }
+  })
+
+  it('aggregates contributions across multiple groups', async () => {
+    const refs = setup()
+    try {
+      mockFetch.mockImplementation(async (url, opts) => {
+        const body = JSON.parse(opts.body)
+        if (body.variables.groupPath === 'group-a') {
+          return makeGraphQLResponse([
+            { user: { username: 'testuser' }, totalEvents: 10 }
+          ])
+        }
+        if (body.variables.groupPath === 'group-b') {
+          return makeGraphQLResponse([
+            { user: { username: 'testuser' }, totalEvents: 20 }
+          ])
+        }
+        return makeGraphQLResponse([])
+      })
+
+      const results = await fetchGitlabData(['testuser'], {
+        gitlabGroups: ['group-a', 'group-b']
+      })
+
+      // 10 + 20 = 30 per month, 12 months = 360
+      expect(results.testuser.totalContributions).toBe(360)
+    } finally {
+      cleanup(refs)
+    }
+  })
+
+  it('handles GraphQL errors gracefully', async () => {
+    const refs = setup()
+    try {
+      mockFetch.mockImplementation(async () => {
+        return makeErrorResponse('The given date range is larger than 93 days')
+      })
+
+      const results = await fetchGitlabData(['testuser'], {
+        gitlabGroups: ['some/group']
+      })
+
+      // Should still return a result with 0 contributions (errors are caught per-window)
+      expect(results.testuser).toBeTruthy()
+      expect(results.testuser.totalContributions).toBe(0)
+    } finally {
+      cleanup(refs)
+    }
+  })
+
+  it('handles pagination within a window', async () => {
+    const refs = setup()
+    try {
+      mockFetch.mockImplementation(async (url, opts) => {
+        const body = JSON.parse(opts.body)
+        if (!body.variables.cursor) {
+          return makeGraphQLResponse(
+            [{ user: { username: 'testuser' }, totalEvents: 5 }],
+            true,
+            'cursor-1'
+          )
+        }
+        // Second page
+        return makeGraphQLResponse(
+          [{ user: { username: 'testuser' }, totalEvents: 3 }],
+          false
+        )
+      })
+
+      const results = await fetchGitlabData(['testuser'], {
+        gitlabGroups: ['some/group']
+      })
+
+      // 5 + 3 = 8 per month from pagination, 12 months = 96
+      expect(results.testuser.totalContributions).toBe(96)
+    } finally {
+      cleanup(refs)
     }
   })
 })

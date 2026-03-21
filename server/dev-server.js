@@ -208,7 +208,6 @@ const GITHUB_CACHE_PATH = 'github-contributions.json';
 const GITHUB_HISTORY_CACHE_PATH = 'github-history.json';
 const GITLAB_CACHE_PATH = 'gitlab-contributions.json';
 const GITLAB_HISTORY_CACHE_PATH = 'gitlab-history.json';
-const GITLAB_USER_ID_CACHE_PATH = 'gitlab-user-ids.json';
 function readGithubCache() {
   return readFromStorage(GITHUB_CACHE_PATH) || { users: {}, fetchedAt: null };
 }
@@ -224,15 +223,6 @@ function readGitlabCache() {
 function readGitlabHistoryCache() {
   return readFromStorage(GITLAB_HISTORY_CACHE_PATH) || { users: {}, fetchedAt: null };
 }
-
-function loadGitlabUserIdCache() {
-  return readFromStorage(GITLAB_USER_ID_CACHE_PATH) || {};
-}
-
-function saveGitlabUserIdCache(cache) {
-  writeToStorage(GITLAB_USER_ID_CACHE_PATH, cache);
-}
-
 
 /**
  * Write single-pass GitHub/GitLab results to both contribution and history caches.
@@ -418,14 +408,10 @@ app.post('/api/refresh', requireAdmin, async function(req, res) {
   async function refreshGitlabUsers(usernames) {
     if (!sources.gitlab || usernames.length === 0) return;
     try {
-      const userIdCache = loadGitlabUserIdCache();
-      const existingCache = force ? {} : readGitlabCache().users;
-      const results = await fetchGitlabData(usernames, {
-        existingData: force ? {} : existingCache,
-        userIdCache
-      });
+      const syncConfig = rosterSyncConfig.loadConfig({ readFromStorage }) || {};
+      const gitlabGroups = syncConfig.gitlabGroups || [];
+      const results = await fetchGitlabData(usernames, { gitlabGroups });
       writeSinglePassResults(results, GITLAB_CACHE_PATH, GITLAB_HISTORY_CACHE_PATH);
-      saveGitlabUserIdCache(userIdCache);
       console.log(`[refresh] GitLab: ${Object.keys(results).length} users processed`);
     } catch (err) {
       console.error('[refresh] GitLab failed:', err.message);
@@ -482,17 +468,13 @@ app.post('/api/refresh', requireAdmin, async function(req, res) {
       // GitLab
       if (sources.gitlab && member.gitlabUsername) {
         promises.push((async () => {
-          const userIdCache = loadGitlabUserIdCache();
-          const existingCache = force ? {} : readGitlabCache().users;
-          const glResults = await fetchGitlabData([member.gitlabUsername], {
-            existingData: force ? {} : existingCache,
-            userIdCache
-          });
+          const syncConfig = rosterSyncConfig.loadConfig({ readFromStorage }) || {};
+          const gitlabGroups = syncConfig.gitlabGroups || [];
+          const glResults = await fetchGitlabData([member.gitlabUsername], { gitlabGroups });
           if (glResults[member.gitlabUsername]) {
             writeSinglePassResults(glResults, GITLAB_CACHE_PATH, GITLAB_HISTORY_CACHE_PATH);
             result.gitlab = glResults[member.gitlabUsername];
           }
-          saveGitlabUserIdCache(userIdCache);
         })());
       }
 

@@ -1,10 +1,9 @@
 /**
- * Fetch GitLab contribution stats via the Events API
- * (/api/v4/users/:id/events).
+ * Fetch GitLab contribution stats via the GraphQL API.
  *
- * Primary strategy: fetch all events since a date in one paginated pass.
- * Fallback: if the API returns HTTP 500 (common for large date ranges),
- * retry with monthly chunks.
+ * Uses the group-level `contributions` query to get pre-aggregated
+ * event counts per user. Queries each configured group in monthly
+ * windows (the API has a 93-day max per query).
  *
  * Uses node-fetch (v2) for HTTP requests.
  */
@@ -13,19 +12,9 @@ const fetch = require('node-fetch');
 
 const GITLAB_BASE_URL = process.env.GITLAB_BASE_URL || 'https://gitlab.com';
 const GITLAB_TOKEN = process.env.GITLAB_TOKEN;
-const MAX_REQUESTS_PER_SEC = GITLAB_TOKEN ? 10 : 1;
-const DEFAULT_CONCURRENCY = 5;
-
-function buildHeaders() {
-  const headers = {};
-  if (GITLAB_TOKEN) {
-    headers['PRIVATE-TOKEN'] = GITLAB_TOKEN;
-  }
-  return headers;
-}
 
 if (!GITLAB_TOKEN) {
-  console.warn('[gitlab] GITLAB_TOKEN not set — only public project contributions will be counted');
+  console.warn('[gitlab] GITLAB_TOKEN not set — GitLab contributions will not be fetched');
 }
 
 function delay(ms) {
@@ -33,293 +22,183 @@ function delay(ms) {
 }
 
 /**
- * Create a shared rate limiter that enforces a maximum request rate.
- * All concurrent workers share a single limiter instance.
+ * Generate monthly date windows for the last year.
+ * Each window: { from: "YYYY-MM-DD", to: "YYYY-MM-DD" }
+ * All windows are <=31 days (well within the 93-day API limit).
  */
-function createRateLimiter(maxPerSecond) {
-  const minIntervalMs = 1000 / maxPerSecond;
-  let lastRequestTime = 0;
-  let pending = Promise.resolve();
+function generateMonthlyWindows() {
+  const windows = [];
+  const now = new Date();
+  const todayYear = now.getUTCFullYear();
+  const todayMonth = now.getUTCMonth();
+  const todayDate = now.getUTCDate();
 
-  return function acquire() {
-    pending = pending.then(async () => {
-      const now = Date.now();
-      const elapsed = now - lastRequestTime;
-      if (elapsed < minIntervalMs) {
-        await delay(minIntervalMs - elapsed);
-      }
-      lastRequestTime = Date.now();
+  for (let i = 11; i >= 0; i--) {
+    const from = new Date(Date.UTC(todayYear, todayMonth - i, 1));
+    let to;
+    if (i === 0) {
+      // Current month: up to tomorrow to include today's events
+      to = new Date(Date.UTC(todayYear, todayMonth, todayDate + 1));
+    } else {
+      // Past months: first of next month
+      to = new Date(Date.UTC(todayYear, todayMonth - i + 1, 1));
+    }
+
+    windows.push({
+      from: from.toISOString().slice(0, 10),
+      to: to.toISOString().slice(0, 10),
+      monthKey: from.toISOString().slice(0, 7)
     });
-    return pending;
-  };
-}
-
-/**
- * Resolve a GitLab username to a numeric user ID.
- * Results are cached in userIdCache (mutated in place).
- */
-async function resolveUserId(username, userIdCache, rateLimiter) {
-  if (userIdCache[username]) return userIdCache[username];
-
-  await rateLimiter();
-  const url = `${GITLAB_BASE_URL}/api/v4/users?username=${encodeURIComponent(username)}`;
-  const res = await fetch(url, { headers: buildHeaders(), timeout: 15000 });
-  if (!res.ok) return null;
-
-  const users = await res.json();
-  if (!Array.isArray(users) || users.length === 0) return null;
-
-  userIdCache[username] = users[0].id;
-  return users[0].id;
-}
-
-/**
- * Fetch events for a user within a date range, paginating through all pages.
- *
- * @param {number} userId
- * @param {string} afterDate - "YYYY-MM-DD" exclusive lower bound
- * @param {string|null} beforeDate - "YYYY-MM-DD" exclusive upper bound, or null
- * @param {Function} rateLimiter
- * @returns {{ ok: boolean, events?: object[] }}
- */
-async function fetchEventsPaginated(userId, afterDate, beforeDate, rateLimiter) {
-  const events = [];
-  let page = 1;
-  const MAX_PAGES = 1000;
-
-  while (page <= MAX_PAGES) {
-    await rateLimiter();
-    let url = `${GITLAB_BASE_URL}/api/v4/users/${encodeURIComponent(userId)}/events?per_page=100&page=${page}&after=${encodeURIComponent(afterDate)}`;
-    if (beforeDate) url += `&before=${encodeURIComponent(beforeDate)}`;
-
-    let res;
-    try {
-      res = await fetch(url, { headers: buildHeaders(), timeout: 15000 });
-    } catch (err) {
-      // Network error or timeout — treat as server failure to trigger fallback
-      console.warn(`[gitlab] Request failed for user ${userId} (page ${page}): ${err.message}`);
-      return { ok: false };
-    }
-
-    if (res.status === 500) {
-      return { ok: false };
-    }
-
-    if (res.status === 429) {
-      const retryAfter = Math.min(parseInt(res.headers.get('Retry-After') || '60', 10), 300);
-      console.log(`[gitlab] Rate limited, waiting ${retryAfter}s...`);
-      await delay(retryAfter * 1000);
-
-      // Retry once
-      await rateLimiter();
-      const retryRes = await fetch(url, { headers: buildHeaders(), timeout: 15000 });
-      if (!retryRes.ok) {
-        // Treat as done
-        break;
-      }
-      const retryData = await retryRes.json();
-      if (!Array.isArray(retryData) || retryData.length === 0) break;
-      events.push(...retryData);
-      page++;
-      continue;
-    }
-
-    if (!res.ok) {
-      // 403, 404, etc. — treat as done
-      break;
-    }
-
-    const data = await res.json();
-    if (!Array.isArray(data) || data.length === 0) break;
-
-    events.push(...data);
-    page++;
   }
 
-  return { ok: true, events };
+  return windows;
+}
+
+const CONTRIBUTIONS_QUERY = `
+  query($groupPath: ID!, $from: String!, $to: String!, $cursor: String) {
+    group(fullPath: $groupPath) {
+      contributions(from: $from, to: $to, after: $cursor) {
+        nodes {
+          user { username }
+          totalEvents
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+`;
+
+/**
+ * Execute a GraphQL query against the GitLab API.
+ */
+async function graphqlRequest(query, variables) {
+  const url = `${GITLAB_BASE_URL}/api/graphql`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${GITLAB_TOKEN}`
+    },
+    body: JSON.stringify({ query, variables }),
+    timeout: 30000
+  });
+
+  if (!res.ok) {
+    throw new Error(`GitLab GraphQL HTTP ${res.status}`);
+  }
+
+  const body = await res.json();
+  if (body.errors && body.errors.length > 0) {
+    throw new Error(`GitLab GraphQL error: ${body.errors[0].message}`);
+  }
+
+  return body.data;
 }
 
 /**
- * Generate contiguous monthly date range chunks from afterDate to today.
- * Each chunk: { after: "YYYY-MM-DD", before: "YYYY-MM-DD" }
- * The last chunk's `before` is tomorrow to avoid missing today's events.
+ * Fetch contribution counts for a single group and time window.
+ * Handles pagination via cursor.
+ * @returns {Object} Map of username -> totalEvents
  */
-function generateMonthlyChunks(afterDate) {
-  const chunks = [];
-  const start = new Date(afterDate);
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
+async function fetchGroupWindowContributions(groupPath, from, to) {
+  const counts = {};
+  let cursor = null;
 
-  let current = new Date(start);
-
-  while (current < tomorrow) {
-    const next = new Date(current);
-    next.setMonth(next.getMonth() + 1);
-
-    const before = next < tomorrow ? next : tomorrow;
-
-    chunks.push({
-      after: current.toISOString().slice(0, 10),
-      before: before.toISOString().slice(0, 10)
+  while (true) {
+    const data = await graphqlRequest(CONTRIBUTIONS_QUERY, {
+      groupPath,
+      from,
+      to,
+      cursor
     });
 
-    current = new Date(before);
-  }
+    const group = data.group;
+    if (!group || !group.contributions) break;
 
-  return chunks;
-}
-
-/**
- * Fetch events in monthly chunks (fallback for 500 errors on large ranges).
- */
-async function fetchEventsChunked(userId, afterDate, rateLimiter) {
-  const chunks = generateMonthlyChunks(afterDate);
-  const allEvents = [];
-
-  for (const chunk of chunks) {
-    const result = await fetchEventsPaginated(userId, chunk.after, chunk.before, rateLimiter);
-    if (!result.ok) {
-      console.warn(`[gitlab] Chunk ${chunk.after}..${chunk.before} returned 500, skipping`);
-      continue;
+    for (const node of group.contributions.nodes) {
+      const username = node.user.username;
+      counts[username] = (counts[username] || 0) + node.totalEvents;
     }
-    allEvents.push(...result.events);
+
+    if (!group.contributions.pageInfo.hasNextPage) break;
+    cursor = group.contributions.pageInfo.endCursor;
+    await delay(100);
   }
 
-  return allEvents;
+  return counts;
 }
 
 /**
- * Orchestrator: try full fetch first, fall back to chunked on 500.
- */
-async function fetchEvents(userId, sinceDate, rateLimiter) {
-  const afterDate = sinceDate
-    || (() => { const d = new Date(); d.setFullYear(d.getFullYear() - 1); return d.toISOString().slice(0, 10); })();
-
-  const result = await fetchEventsPaginated(userId, afterDate, null, rateLimiter);
-  if (result.ok) return result.events;
-
-  console.log(`[gitlab] Full fetch returned 500 for user ${userId}, falling back to monthly chunks`);
-  return fetchEventsChunked(userId, afterDate, rateLimiter);
-}
-
-/**
- * Bucket events by month using event.created_at.
- * @param {object[]} events - array of event objects with created_at field
- * @returns {object} { "YYYY-MM": count }
- */
-function bucketByMonth(events) {
-  const months = {};
-  for (const event of events) {
-    const monthKey = event.created_at.slice(0, 7);
-    months[monthKey] = (months[monthKey] || 0) + 1;
-  }
-  return months;
-}
-
-/**
- * Merge incremental monthly data with existing data.
- * Boundary month (the month containing sinceDate) and newer: replace with fresh.
- * Older months: keep existing counts.
- */
-function mergeMonths(existing, fresh, sinceDate) {
-  if (!sinceDate) {
-    // Full fetch — fresh data replaces everything, but add any existing older months
-    return { ...existing, ...fresh };
-  }
-
-  const boundary = sinceDate.slice(0, 7);
-  const merged = {};
-
-  // Keep existing months that are before the boundary
-  for (const [month, count] of Object.entries(existing)) {
-    if (month < boundary) {
-      merged[month] = count;
-    }
-  }
-
-  // Add all fresh months (boundary and newer)
-  for (const [month, count] of Object.entries(fresh)) {
-    merged[month] = count;
-  }
-
-  return merged;
-}
-
-/**
- * Fetch GitLab data (contributions + history) for a list of usernames.
+ * Fetch GitLab contribution data for a list of usernames using the
+ * group-level GraphQL contributions API.
  *
- * @param {string[]} usernames - GitLab usernames to query
+ * @param {string[]} usernames - GitLab usernames to include in results
  * @param {object} [options]
- * @param {object} [options.existingData] - existing cached data keyed by username
- * @param {object} [options.userIdCache] - mutable cache of username -> numeric ID
- * @param {number} [options.concurrency] - number of concurrent workers (default 5)
+ * @param {string[]} [options.gitlabGroups] - GitLab group paths to query
  * @returns {Object} Map of username -> { totalContributions, months, fetchedAt, source } or null
  */
 async function fetchGitlabData(usernames, options = {}) {
-  const { existingData = {}, userIdCache = {}, concurrency = DEFAULT_CONCURRENCY } = options;
-  const rateLimiter = createRateLimiter(MAX_REQUESTS_PER_SEC);
+  const groups = options.gitlabGroups || [];
 
-  console.log(`[gitlab] Fetching data for ${usernames.length} users (concurrency: ${concurrency})`);
+  if (!GITLAB_TOKEN) {
+    console.warn('[gitlab] No GITLAB_TOKEN set, skipping GitLab contributions');
+    return Object.fromEntries(usernames.map(u => [u, null]));
+  }
 
-  const results = {};
-  let idx = 0;
-  let completed = 0;
+  if (groups.length === 0) {
+    console.warn('[gitlab] No gitlabGroups configured, skipping GitLab contributions');
+    return Object.fromEntries(usernames.map(u => [u, null]));
+  }
 
-  async function worker() {
-    while (idx < usernames.length) {
-      const i = idx++;
-      const username = usernames[i];
+  const usernameSet = new Set(usernames);
+  const windows = generateMonthlyWindows();
 
+  console.log(`[gitlab] Fetching contributions for ${usernames.length} users across ${groups.length} group(s), ${windows.length} monthly windows`);
+
+  // Accumulate monthly counts per username across all groups
+  // { username: { "YYYY-MM": count } }
+  const userMonths = {};
+
+  for (const group of groups) {
+    for (const window of windows) {
       try {
-        const userId = await resolveUserId(username, userIdCache, rateLimiter);
-        if (!userId) {
-          console.log(`[gitlab] ${username}: could not resolve user ID (${++completed}/${usernames.length})`);
-          results[username] = null;
-          continue;
+        const counts = await fetchGroupWindowContributions(group, window.from, window.to);
+
+        for (const [username, total] of Object.entries(counts)) {
+          if (!usernameSet.has(username)) continue;
+          if (!userMonths[username]) userMonths[username] = {};
+          userMonths[username][window.monthKey] = (userMonths[username][window.monthKey] || 0) + total;
         }
 
-        // Determine sinceDate — only use incremental if existing data is from events source
-        let sinceDate = null;
-        const existing = existingData[username];
-        if (existing && existing.fetchedAt && existing.source === 'events') {
-          sinceDate = existing.fetchedAt.slice(0, 10);
-        }
-
-        const events = await fetchEvents(userId, sinceDate, rateLimiter);
-        const freshMonths = bucketByMonth(events);
-
-        let months;
-        if (sinceDate && existing && existing.months) {
-          months = mergeMonths(existing.months, freshMonths, sinceDate);
-        } else {
-          months = freshMonths;
-        }
-
-        const totalContributions = Object.values(months).reduce((a, b) => a + b, 0);
-        results[username] = {
-          totalContributions,
-          months,
-          fetchedAt: new Date().toISOString(),
-          source: 'events'
-        };
-
-        completed++;
-        console.log(`[gitlab] ${username}: ${totalContributions} contributions (${completed}/${usernames.length})`);
+        await delay(200);
       } catch (err) {
-        console.error(`[gitlab] Error fetching ${username}:`, err.message);
-        results[username] = null;
-        completed++;
+        console.error(`[gitlab] Error fetching ${group} ${window.from}..${window.to}: ${err.message}`);
       }
     }
   }
 
-  const workers = [];
-  for (let w = 0; w < Math.min(concurrency, usernames.length); w++) {
-    workers.push(worker());
+  // Build results for all requested usernames
+  const results = {};
+  const now = new Date().toISOString();
+
+  for (const username of usernames) {
+    const months = userMonths[username] || {};
+    const totalContributions = Object.values(months).reduce((a, b) => a + b, 0);
+    results[username] = {
+      totalContributions,
+      months,
+      fetchedAt: now,
+      source: 'graphql'
+    };
   }
-  await Promise.all(workers);
+
+  const withContribs = Object.values(results).filter(r => r.totalContributions > 0).length;
+  console.log(`[gitlab] Done: ${withContribs}/${usernames.length} users had contributions`);
 
   return results;
 }
 
-module.exports = { fetchGitlabData };
+module.exports = { fetchGitlabData, generateMonthlyWindows };
