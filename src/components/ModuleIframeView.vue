@@ -2,7 +2,7 @@
   <div class="relative">
     <!-- Loading state -->
     <div
-      v-if="isLoading"
+      v-if="isSynced && isLoading"
       class="flex items-center justify-center py-16"
     >
       <div class="text-center">
@@ -13,7 +13,7 @@
 
     <!-- Error state -->
     <div
-      v-else-if="hasError"
+      v-if="hasError"
       class="flex items-center justify-center py-16"
     >
       <div class="text-center">
@@ -34,7 +34,7 @@
 
     <!-- Not synced state -->
     <div
-      v-else-if="!isSynced"
+      v-if="!isSynced"
       class="flex items-center justify-center py-16"
     >
       <div class="text-center">
@@ -53,9 +53,10 @@
       </div>
     </div>
 
-    <!-- iframe -->
+    <!-- iframe: always in DOM when synced so @load can fire, hidden while loading -->
     <iframe
-      v-else
+      v-if="isSynced"
+      v-show="!isLoading && !hasError"
       ref="iframeRef"
       :src="iframeSrc"
       :title="moduleName"
