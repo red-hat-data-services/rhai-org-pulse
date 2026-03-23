@@ -114,7 +114,7 @@ function onIframeLoad() {
       `
       doc.head.appendChild(style)
     }
-  } catch (e) {
+  } catch {
     // Cross-origin iframe — skip injection
   }
 }
