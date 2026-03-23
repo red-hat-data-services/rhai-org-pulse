@@ -82,12 +82,27 @@ function createModuleStaticMiddleware(storage) {
       return res.status(200).send(PLACEHOLDER_HTML);
     }
 
+    // Serve index.html with <base> tag injected so absolute paths resolve correctly
+    const requestPath = parts.slice(1).join('/');
+    if (!requestPath || requestPath === 'index.html') {
+      const indexPath = path.join(resolvedRoot, 'index.html');
+      if (fs.existsSync(indexPath)) {
+        let html = fs.readFileSync(indexPath, 'utf8');
+        const baseTag = `<base href="/modules/${slug}/">`;
+        if (!html.includes('<base ')) {
+          html = html.replace('<head>', `<head>\n    ${baseTag}`);
+        }
+        res.setHeader('Content-Type', 'text/html');
+        return res.send(html);
+      }
+    }
+
     // Get or create cached express.static instance
     const cacheKey = getCacheKey(slug, subdirectory);
     let staticHandler = staticCache.get(cacheKey);
     if (!staticHandler) {
       staticHandler = express.static(resolvedRoot, {
-        index: ['index.html'],
+        index: false,
         extensions: ['html'],
         dotfiles: 'deny'
       });
