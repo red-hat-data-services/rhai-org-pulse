@@ -12,7 +12,7 @@
         <img src="/redhat-logo.svg" alt="Red Hat" class="h-8 w-8 flex-shrink-0" />
         <transition name="fade">
           <div v-if="!collapsed" class="overflow-hidden whitespace-nowrap">
-            <h1 class="text-sm font-bold text-gray-900 leading-tight">Team Tracker</h1>
+            <h1 class="text-sm font-bold text-gray-900 leading-tight">Org Pulse</h1>
             <p class="text-xs text-gray-400">AI Engineering</p>
           </div>
         </transition>
@@ -20,40 +20,97 @@
 
       <!-- Navigation -->
       <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        <div v-for="section in navSections" :key="section.label">
+        <div v-for="section in navSections" :key="section.label || section.id">
+          <!-- Section label -->
           <p
             v-if="!collapsed && section.label"
             class="px-3 mb-2 mt-4 first:mt-0 text-[10px] font-semibold uppercase tracking-widest text-gray-400"
           >{{ section.label }}</p>
-          <button
-            v-for="item in section.items"
-            :key="item.id"
-            @click="$emit('navigate', item.id)"
-            class="group relative w-full flex items-center py-2.5 rounded-xl text-sm font-medium transition-all duration-200"
-            :class="[
-              activeModule === item.id
+
+          <!-- Collapsible section header (Team Tracker) -->
+          <template v-if="section.collapsible && !collapsed">
+            <button
+              @click="toggleSection(section.id)"
+              class="group relative w-full flex items-center py-2.5 rounded-xl text-sm font-medium transition-all duration-200 gap-3 px-3"
+              :class="isTeamTrackerActive
                 ? 'bg-gray-900 text-white shadow-sm'
-                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
-              collapsed ? 'justify-center px-0' : 'gap-3 px-3'
-            ]"
-          >
-            <component
-              :is="item.icon"
-              :size="20"
-              :stroke-width="activeModule === item.id ? 2 : 1.7"
-              class="flex-shrink-0"
-            />
-            <transition name="fade">
-              <span v-if="!collapsed" class="truncate">{{ item.label }}</span>
-            </transition>
-            <!-- Collapsed tooltip -->
-            <span
-              v-if="collapsed"
-              class="absolute left-full ml-3 px-2.5 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 shadow-lg"
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'"
+              :aria-expanded="section.expanded"
+              :aria-label="section.items[0]?.label"
             >
-              {{ item.label }}
-            </span>
-          </button>
+              <component
+                :is="section.items[0]?.icon"
+                :size="20"
+                :stroke-width="isTeamTrackerActive ? 2 : 1.7"
+                class="flex-shrink-0"
+              />
+              <span class="truncate flex-1 text-left">{{ section.items[0]?.label }}</span>
+              <component
+                :is="section.expanded ? ChevronDown : ChevronRight"
+                :size="16"
+                class="flex-shrink-0 opacity-50"
+              />
+            </button>
+            <!-- Sub-items when expanded -->
+            <div v-if="section.expanded" class="ml-4 mt-1 space-y-0.5">
+              <button
+                v-for="item in section.items.slice(1)"
+                :key="item.id"
+                @click="$emit('navigate', item.id)"
+                :aria-current="activeModule === item.id ? 'page' : undefined"
+                :aria-label="item.label"
+                class="group relative w-full flex items-center py-2 rounded-lg text-sm font-medium transition-all duration-200 gap-3 px-3"
+                :class="isSubItemActive(item.id)
+                  ? 'bg-gray-100 text-gray-900'
+                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'"
+              >
+                <component
+                  :is="item.icon"
+                  :size="18"
+                  :stroke-width="1.5"
+                  class="flex-shrink-0"
+                />
+                <span class="truncate">{{ item.label }}</span>
+              </button>
+            </div>
+          </template>
+
+          <!-- Regular items (or collapsed mode for collapsible sections) -->
+          <template v-else>
+            <template v-for="item in (section.collapsible ? section.items : section.items)" :key="item.id">
+              <!-- In collapsed mode, show all items including collapsible sub-items -->
+              <button
+                v-if="!section.collapsible || collapsed"
+                @click="$emit('navigate', item.id)"
+                :aria-current="activeModule === item.id || (section.collapsible && isSubItemActive(item.id)) ? 'page' : undefined"
+                :aria-label="item.label"
+                class="group relative w-full flex items-center py-2.5 rounded-xl text-sm font-medium transition-all duration-200"
+                :class="[
+                  isItemActive(item, section)
+                    ? 'bg-gray-900 text-white shadow-sm'
+                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
+                  collapsed ? 'justify-center px-0' : 'gap-3 px-3'
+                ]"
+              >
+                <component
+                  :is="item.icon"
+                  :size="20"
+                  :stroke-width="isItemActive(item, section) ? 2 : 1.7"
+                  class="flex-shrink-0"
+                />
+                <transition name="fade">
+                  <span v-if="!collapsed" class="truncate">{{ item.label }}</span>
+                </transition>
+                <!-- Collapsed tooltip -->
+                <span
+                  v-if="collapsed"
+                  class="absolute left-full ml-3 px-2.5 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 shadow-lg"
+                >
+                  {{ item.label }}
+                </span>
+              </button>
+            </template>
+          </template>
         </div>
       </nav>
 
@@ -108,38 +165,72 @@
 
 <script setup>
 import {
+  Home,
   BarChart3,
   Users,
   TrendingUp,
   FileText,
   Shield,
   Settings,
+  ExternalLink,
+  ChevronDown,
+  ChevronRight,
   ChevronsLeft,
   ChevronsRight
 } from 'lucide-vue-next'
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 const props = defineProps({
   collapsed: Boolean,
   mobileOpen: Boolean,
   activeModule: String,
+  currentView: String,
   user: Object,
-  isAdmin: Boolean
+  isAdmin: Boolean,
+  modules: { type: Array, default: () => [] }
 })
 
 defineEmits(['navigate', 'toggle-collapse', 'close-mobile'])
 
+// Track which collapsible sections are expanded
+const expandedSections = ref({ 'team-tracker': false })
+
+const isTeamTrackerActive = computed(() => {
+  return props.activeModule === 'team-tracker'
+})
+
+// Auto-expand Team Tracker section when it's active
+watch(() => props.activeModule, (newVal) => {
+  if (newVal === 'team-tracker') {
+    expandedSections.value['team-tracker'] = true
+  }
+}, { immediate: true })
+
+function toggleSection(sectionId) {
+  expandedSections.value[sectionId] = !expandedSections.value[sectionId]
+}
+
+const externalModules = computed(() => {
+  return props.modules.filter(m => m.type === 'git-static')
+})
+
 const navSections = computed(() => {
   const sections = [
     {
+      id: 'home',
       label: '',
       items: [
-        { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+        { id: 'home', label: 'Home', icon: Home }
       ]
     },
     {
-      label: 'Team Metrics',
+      id: 'team-tracker',
+      label: '',
+      collapsible: true,
+      expanded: expandedSections.value['team-tracker'],
       items: [
+        { id: 'team-tracker', label: 'Team Tracker', icon: BarChart3 },
+        { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
         { id: 'people', label: 'People', icon: Users },
         { id: 'trends', label: 'Trends', icon: TrendingUp },
         { id: 'reports', label: 'Reports', icon: FileText },
@@ -147,8 +238,22 @@ const navSections = computed(() => {
     }
   ]
 
+  // Dynamic external modules
+  if (externalModules.value.length > 0) {
+    sections.push({
+      id: 'modules',
+      label: 'Modules',
+      items: externalModules.value.map(m => ({
+        id: `modules/${m.slug}`,
+        label: m.name,
+        icon: ExternalLink
+      }))
+    })
+  }
+
   if (props.isAdmin) {
     sections.push({
+      id: 'admin',
       label: 'Admin',
       items: [
         { id: 'user-management', label: 'Users', icon: Shield },
@@ -159,6 +264,23 @@ const navSections = computed(() => {
 
   return sections
 })
+
+function isItemActive(item, section) {
+  if (item.id === 'home') return props.activeModule === 'home'
+  if (section.collapsible && item.id === 'team-tracker') return isTeamTrackerActive.value
+  if (item.id.startsWith('modules/')) {
+    return props.activeModule === `module:${item.id.slice('modules/'.length)}`
+  }
+  return props.activeModule === item.id
+}
+
+function isSubItemActive(itemId) {
+  if (props.activeModule !== 'team-tracker') return false
+  if (itemId === 'dashboard') {
+    return ['dashboard', 'team-roster', 'person-detail'].includes(props.currentView)
+  }
+  return props.currentView === itemId
+}
 
 function getUserInitials(user) {
   if (!user) return '?'

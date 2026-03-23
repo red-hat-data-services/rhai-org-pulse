@@ -32,6 +32,10 @@ spec:
                   BACKEND="http://backend:3001"
                   AUTH_HEADER="X-Forwarded-Email: acorvin@redhat.com"
 
+                  # Step 0: Trigger module content sync
+                  echo "=== Triggering module sync ==="
+                  curl -sf -X POST "$BACKEND/api/admin/modules/sync" -H "$AUTH_HEADER" || echo "Module sync skipped (no modules configured)"
+
                   # Step 1: Trigger roster sync
                   echo "=== Triggering roster sync ==="
                   RESP=$(curl -sf -X POST "$BACKEND/api/admin/roster-sync/trigger" \

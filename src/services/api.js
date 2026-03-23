@@ -240,6 +240,17 @@ export async function saveJiraSyncConfig(data) {
   })
 }
 
+// ─── Modules ───
+
+export async function getModules(onData) {
+  return cachedRequest('modules', '/modules', onData)
+}
+
+// Generic admin API request (not cached)
+export async function apiAdmin(path, options = {}) {
+  return apiRequest(path, options)
+}
+
 // ─── Allowlist ───
 
 export async function getAllowlist() {

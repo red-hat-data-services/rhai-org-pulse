@@ -5,8 +5,10 @@
       :collapsed="sidebarCollapsed"
       :mobile-open="mobileMenuOpen"
       :active-module="activeModule"
+      :current-view="currentView"
       :user="authUser"
       :is-admin="authIsAdmin"
+      :modules="modulesList"
       @navigate="navigateToModule"
       @toggle-collapse="sidebarCollapsed = !sidebarCollapsed"
       @close-mobile="mobileMenuOpen = false"
@@ -36,7 +38,7 @@
           <div class="flex items-center gap-3">
             <!-- Sub-navigation tabs (for dashboard drill-down views) -->
             <nav
-              v-if="activeModule === 'dashboard' && hasSubViews"
+              v-if="activeModule === 'team-tracker' && hasSubViews"
               class="hidden sm:flex items-center gap-1 bg-gray-100 rounded-lg p-1"
             >
               <button
@@ -49,21 +51,35 @@
                   : 'text-gray-500 hover:text-gray-700'"
               >{{ tab.label }}</button>
             </nav>
-            <!-- Last updated + Refresh All -->
-            <span
-              v-if="lastRefreshedLabel"
-              class="hidden md:inline text-xs text-gray-400"
-            >{{ lastRefreshedLabel }}</span>
-            <button
-              v-if="authUser && authIsAdmin"
-              @click="showRefreshModal = true"
-              :disabled="isRefreshing"
-              title="Refresh all metrics"
-              class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+            <!-- Open in new tab for external modules -->
+            <a
+              v-if="currentView === 'module-iframe' && activeModuleSlug"
+              :href="'/modules/' + activeModuleSlug + '/index.html'"
+              target="_blank"
+              rel="noopener"
+              class="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 shadow-sm"
+              title="Open in new tab"
             >
-              <RefreshCw :size="16" :class="{ 'animate-spin': isRefreshing }" />
-              <span class="hidden sm:inline">{{ isRefreshing ? 'Refreshing...' : 'Refresh' }}</span>
-            </button>
+              <ExternalLinkIcon :size="16" />
+              <span class="hidden sm:inline">New tab</span>
+            </a>
+            <!-- Last updated + Refresh All (only for Team Tracker views) -->
+            <template v-if="isTeamTrackerView">
+              <span
+                v-if="lastRefreshedLabel"
+                class="hidden md:inline text-xs text-gray-400"
+              >{{ lastRefreshedLabel }}</span>
+              <button
+                v-if="authUser && authIsAdmin"
+                @click="showRefreshModal = true"
+                :disabled="isRefreshing"
+                title="Refresh all metrics"
+                class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-gray-900 hover:border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-sm"
+              >
+                <RefreshCw :size="16" :class="{ 'animate-spin': isRefreshing }" />
+                <span class="hidden sm:inline">{{ isRefreshing ? 'Refreshing...' : 'Refresh' }}</span>
+              </button>
+            </template>
           </div>
         </div>
       </header>
@@ -76,15 +92,23 @@
 
       <!-- Stale Data Banner -->
       <StaleDataBanner
-        v-if="authUser"
+        v-if="authUser && isTeamTrackerView"
         :config-changed-at="jiraConfigChangedAt"
         :last-refreshed-at="lastRefreshedAt"
       />
 
       <!-- Page content -->
       <main class="px-6 lg:px-8 py-6">
+        <!-- Landing Page -->
+        <LandingPage
+          v-if="currentView === 'landing'"
+          :modules="modulesList"
+          :is-admin="authIsAdmin"
+          @navigate="navigateToModule"
+        />
+
         <!-- Dashboard View -->
-        <template v-if="currentView === 'dashboard'">
+        <template v-else-if="currentView === 'dashboard'">
           <Dashboard
             @select-team="handleSelectTeam"
           />
@@ -118,6 +142,17 @@
         <ReportsView
           v-else-if="currentView === 'reports'"
           @back="navigateToDashboard"
+        />
+
+        <!-- Module iframe View -->
+        <ModuleIframeView
+          v-else-if="currentView === 'module-iframe'"
+          :slug="activeModuleSlug"
+          :module-name="activeModuleConfig?.name || activeModuleSlug"
+          :sync-status="activeModuleConfig?.lastSyncStatus || null"
+          :is-admin="authIsAdmin"
+          @trigger-sync="handleModuleSync"
+          @retry-sync="handleModuleSync"
         />
 
         <!-- User Management View -->
@@ -154,7 +189,7 @@
 </template>
 
 <script>
-import { Menu as MenuIcon, RefreshCw } from 'lucide-vue-next'
+import { Menu as MenuIcon, RefreshCw, ExternalLink as ExternalLinkIcon } from 'lucide-vue-next'
 import Dashboard from './Dashboard.vue'
 import LoadingOverlay from './LoadingOverlay.vue'
 import PersonDetail from './PersonDetail.vue'
@@ -169,11 +204,14 @@ import SetupBanner from './SetupBanner.vue'
 import StaleDataBanner from './StaleDataBanner.vue'
 import AppSidebar from './AppSidebar.vue'
 import RefreshModal from './RefreshModal.vue'
+import LandingPage from './LandingPage.vue'
+import ModuleIframeView from './ModuleIframeView.vue'
 import { computed, ref, onUnmounted } from 'vue'
 import { useAuth } from '../composables/useAuth'
 import { useRoster } from '../composables/useRoster'
 import { useGithubStats } from '../composables/useGithubStats'
 import { useGitlabStats } from '../composables/useGitlabStats'
+import { useModules } from '../composables/useModules'
 import { refreshMetrics, getLastRefreshed } from '../services/api'
 
 export default {
@@ -181,6 +219,7 @@ export default {
   components: {
     MenuIcon,
     RefreshCw,
+    ExternalLinkIcon,
     Dashboard,
     LoadingOverlay,
     PeopleView,
@@ -194,13 +233,16 @@ export default {
     SetupBanner,
     StaleDataBanner,
     AppSidebar,
-    RefreshModal
+    RefreshModal,
+    LandingPage,
+    ModuleIframeView
   },
   setup() {
     const { user: authUser, isAdmin: authIsAdmin } = useAuth()
     const { loadRoster, teams, selectedOrgKey, selectOrg, loading: rosterLoading } = useRoster()
     const { loadGithubStats } = useGithubStats()
     const { loadGitlabStats } = useGitlabStats()
+    const { modulesData, loadModules } = useModules()
     const lastRefreshedAt = ref(null)
     const tick = ref(0)
     const tickTimer = setInterval(() => { tick.value++ }, 30000)
@@ -228,6 +270,11 @@ export default {
         jiraConfigChangedAt.value = data.jiraConfigChangedAt
       } catch { /* ignore */ }
     }
+
+    const modulesList = computed(() => {
+      return modulesData.value?.modules || []
+    })
+
     return {
       authUser,
       authIsAdmin,
@@ -238,6 +285,8 @@ export default {
       loadRoster,
       loadGithubStats,
       loadGitlabStats,
+      loadModules,
+      modulesList,
       rosterLoading,
       rosterTeams: teams,
       selectedOrgKey,
@@ -246,7 +295,8 @@ export default {
   },
   data() {
     return {
-      currentView: 'dashboard',
+      currentView: 'landing',
+      activeModuleSlug: null,
       selectedTeam: null,
       selectedPerson: null,
       isLoading: false,
@@ -264,12 +314,27 @@ export default {
   },
   computed: {
     activeModule() {
-      if (['dashboard', 'team-roster', 'person-detail'].includes(this.currentView)) {
-        return 'dashboard'
+      if (this.currentView === 'landing') return 'home'
+      if (['dashboard', 'team-roster', 'person-detail', 'people', 'trends', 'reports'].includes(this.currentView)) {
+        return 'team-tracker'
+      }
+      if (this.currentView === 'module-iframe') {
+        return `module:${this.activeModuleSlug}`
       }
       return this.currentView
     },
+    isTeamTrackerView() {
+      return ['dashboard', 'team-roster', 'person-detail', 'people', 'trends', 'reports'].includes(this.currentView)
+    },
+    activeModuleConfig() {
+      if (!this.activeModuleSlug || !this.modulesList) return null
+      return this.modulesList.find(m => m.slug === this.activeModuleSlug) || null
+    },
     currentPageTitle() {
+      if (this.currentView === 'landing') return 'Home'
+      if (this.currentView === 'module-iframe') {
+        return this.activeModuleConfig?.name || this.activeModuleSlug || 'Module'
+      }
       const titles = {
         'dashboard': 'Dashboard',
         'team-roster': this.selectedTeam?.displayName || 'Team Roster',
@@ -319,6 +384,7 @@ export default {
           this.loadRoster(),
           this.loadGithubStats(),
           this.loadGitlabStats(),
+          this.loadModules(),
           this.fetchLastRefreshed()
         ])
         this.restoreFromHash()
@@ -331,16 +397,20 @@ export default {
 
     updateHash() {
       let hash = '#/'
-      if (this.currentView === 'team-roster' && this.selectedTeam) {
-        hash = `#/team/${encodeURIComponent(this.selectedTeam.key)}`
+      if (this.currentView === 'dashboard') {
+        hash = '#/team-tracker'
+      } else if (this.currentView === 'team-roster' && this.selectedTeam) {
+        hash = `#/team-tracker/team/${encodeURIComponent(this.selectedTeam.key)}`
       } else if (this.currentView === 'person-detail' && this.selectedTeam && this.selectedPerson) {
-        hash = `#/team/${encodeURIComponent(this.selectedTeam.key)}/person/${encodeURIComponent(this.selectedPerson.jiraDisplayName || this.selectedPerson.name)}`
+        hash = `#/team-tracker/team/${encodeURIComponent(this.selectedTeam.key)}/person/${encodeURIComponent(this.selectedPerson.jiraDisplayName || this.selectedPerson.name)}`
       } else if (this.currentView === 'people') {
-        hash = '#/people'
+        hash = '#/team-tracker/people'
       } else if (this.currentView === 'trends') {
-        hash = '#/trends'
+        hash = '#/team-tracker/trends'
       } else if (this.currentView === 'reports') {
-        hash = '#/reports'
+        hash = '#/team-tracker/reports'
+      } else if (this.currentView === 'module-iframe' && this.activeModuleSlug) {
+        hash = `#/modules/${this.activeModuleSlug}`
       } else if (this.currentView === 'user-management') {
         hash = '#/users'
       } else if (this.currentView === 'settings') {
@@ -355,36 +425,68 @@ export default {
       const hash = window.location.hash || '#/'
       const parts = hash.slice(2).split('/').map(decodeURIComponent)
 
+      // Backward compatibility redirects: old routes -> new #/team-tracker/* routes
       if (parts[0] === 'team' && parts[1]) {
-        const teamKey = parts[1]
-        const orgKey = teamKey.split('::')[0]
-        if (orgKey && this.selectedOrgKey !== orgKey) {
-          this.selectOrg(orgKey)
-        }
-        const team = this.rosterTeams.find(t => t.key === teamKey)
-        if (team) {
-          this.selectedTeam = team
-          if (parts[2] === 'person' && parts[3]) {
-            const personName = parts[3]
-            const person = team.members.find(m => (m.jiraDisplayName || m.name) === personName)
-            if (person) {
-              this.selectedPerson = person
-              this.currentView = 'person-detail'
-              return
-            }
+        const newHash = '#/team-tracker/team/' + encodeURIComponent(parts[1]) +
+          (parts[2] === 'person' && parts[3] ? '/person/' + encodeURIComponent(parts[3]) : '')
+        window.location.replace(newHash)
+        return
+      }
+      if (parts[0] === 'people') {
+        window.location.replace('#/team-tracker/people')
+        return
+      }
+      if (parts[0] === 'trends') {
+        window.location.replace('#/team-tracker/trends')
+        return
+      }
+      if (parts[0] === 'reports') {
+        window.location.replace('#/team-tracker/reports')
+        return
+      }
+
+      // New routes
+      if (parts[0] === 'team-tracker') {
+        if (parts[1] === 'team' && parts[2]) {
+          const teamKey = parts[2]
+          const orgKey = teamKey.split('::')[0]
+          if (orgKey && this.selectedOrgKey !== orgKey) {
+            this.selectOrg(orgKey)
           }
-          this.selectedPerson = null
-          this.currentView = 'team-roster'
+          const team = this.rosterTeams.find(t => t.key === teamKey)
+          if (team) {
+            this.selectedTeam = team
+            if (parts[3] === 'person' && parts[4]) {
+              const personName = parts[4]
+              const person = team.members.find(m => (m.jiraDisplayName || m.name) === personName)
+              if (person) {
+                this.selectedPerson = person
+                this.currentView = 'person-detail'
+                return
+              }
+            }
+            this.selectedPerson = null
+            this.currentView = 'team-roster'
+            return
+          }
+        } else if (parts[1] === 'people') {
+          this.currentView = 'people'
+          return
+        } else if (parts[1] === 'trends') {
+          this.currentView = 'trends'
+          return
+        } else if (parts[1] === 'reports') {
+          this.currentView = 'reports'
           return
         }
-      } else if (parts[0] === 'people') {
-        this.currentView = 'people'
+        // Default team-tracker view = dashboard
+        this.currentView = 'dashboard'
+        this.selectedTeam = null
+        this.selectedPerson = null
         return
-      } else if (parts[0] === 'trends') {
-        this.currentView = 'trends'
-        return
-      } else if (parts[0] === 'reports') {
-        this.currentView = 'reports'
+      } else if (parts[0] === 'modules' && parts[1]) {
+        this.activeModuleSlug = parts[1]
+        this.currentView = 'module-iframe'
         return
       } else if (parts[0] === 'users') {
         this.currentView = 'user-management'
@@ -394,7 +496,9 @@ export default {
         return
       }
 
-      this.currentView = 'dashboard'
+      // Default: landing page
+      this.currentView = 'landing'
+      this.activeModuleSlug = null
       this.selectedTeam = null
       this.selectedPerson = null
     },
@@ -412,8 +516,22 @@ export default {
 
     navigateToModule(moduleId) {
       this.mobileMenuOpen = false
-      if (moduleId === 'dashboard') {
+      if (moduleId === 'home') {
+        this.currentView = 'landing'
+        this.activeModuleSlug = null
+        this.selectedTeam = null
+        this.selectedPerson = null
+        window.location.hash = '#/'
+        return
+      }
+      if (moduleId === 'team-tracker' || moduleId === 'dashboard') {
         this.navigateToDashboard()
+      } else if (moduleId.startsWith('modules/')) {
+        this.activeModuleSlug = moduleId.slice('modules/'.length)
+        this.currentView = 'module-iframe'
+        this.selectedTeam = null
+        this.selectedPerson = null
+        this.updateHash()
       } else {
         this.currentView = moduleId
         this.selectedTeam = null
@@ -452,6 +570,17 @@ export default {
       this.currentView = 'team-roster'
       this.selectedPerson = null
       this.updateHash()
+    },
+
+    handleModuleSync() {
+      if (!this.activeModuleSlug) return
+      fetch(`/api/admin/modules/${encodeURIComponent(this.activeModuleSlug)}/sync`, {
+        method: 'POST'
+      }).then(() => {
+        this.showToast('Sync started')
+      }).catch(() => {
+        this.showToast('Sync failed', 'error')
+      })
     },
 
     async handleRefreshAllConfirm({ force, sources }) {

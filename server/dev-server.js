@@ -25,6 +25,9 @@ const { fetchGitlabData } = require('./gitlab/contributions');
 const rosterSync = require('./roster-sync');
 const rosterSyncConfig = require('./roster-sync/config');
 const jiraSyncConfig = require('./jira/config');
+const modulesConfig = require('./modules/config');
+const gitSync = require('./modules/git-sync');
+const { createModuleStaticMiddleware, invalidateCache: invalidateStaticCache } = require('./modules/static-serve');
 
 if (DEMO_MODE) {
   console.log('Running in DEMO MODE - using fixture data, Jira/GitHub APIs disabled');
@@ -1774,12 +1777,155 @@ app.post('/api/admin/jira-sync/config', requireAdmin, function(req, res) {
   }
 });
 
+// ─── Routes: Modules ───
+
+// Public: list modules (display fields only)
+app.get('/api/modules', function(req, res) {
+  try {
+    const config = modulesConfig.loadModulesConfig(storageModule) || { modules: [] };
+    res.json({ modules: config.modules.map(modulesConfig.sanitizeForPublic) });
+  } catch (error) {
+    console.error('List modules error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Public: get single module (display fields only)
+app.get('/api/modules/:slug', function(req, res) {
+  try {
+    const mod = modulesConfig.getModule(storageModule, req.params.slug);
+    if (!mod) {
+      return res.status(404).json({ error: `Module "${req.params.slug}" not found` });
+    }
+    res.json(modulesConfig.sanitizeForPublic(mod));
+  } catch (error) {
+    console.error('Get module error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: list modules (with git fields, masked tokens)
+app.get('/api/admin/modules', requireAdmin, function(req, res) {
+  try {
+    const config = modulesConfig.loadModulesConfig(storageModule) || { modules: [] };
+    res.json({ modules: config.modules.map(modulesConfig.sanitizeForAdmin) });
+  } catch (error) {
+    console.error('Admin list modules error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: register new module
+app.post('/api/admin/modules', requireAdmin, function(req, res) {
+  try {
+    const result = modulesConfig.addModule(storageModule, req.body);
+    if (result.error) {
+      return res.status(400).json({ error: result.error });
+    }
+    invalidateStaticCache(result.module.slug);
+    res.status(201).json(modulesConfig.sanitizeForAdmin(result.module));
+  } catch (error) {
+    console.error('Add module error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: update module
+app.put('/api/admin/modules/:slug', requireAdmin, function(req, res) {
+  try {
+    const result = modulesConfig.updateModule(storageModule, req.params.slug, req.body);
+    if (result.error) {
+      const status = result.error.includes('not found') ? 404 : 400;
+      return res.status(status).json({ error: result.error });
+    }
+    invalidateStaticCache(req.params.slug);
+    res.json(modulesConfig.sanitizeForAdmin(result.module));
+  } catch (error) {
+    console.error('Update module error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: remove module
+app.delete('/api/admin/modules/:slug', requireAdmin, function(req, res) {
+  try {
+    const result = modulesConfig.removeModule(storageModule, req.params.slug);
+    if (result.error) {
+      const status = result.error.includes('not found') ? 404 : 400;
+      return res.status(status).json({ error: result.error });
+    }
+    invalidateStaticCache(req.params.slug);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Remove module error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: sync one module
+app.post('/api/admin/modules/:slug/sync', requireAdmin, async function(req, res) {
+  try {
+    const mod = modulesConfig.getModule(storageModule, req.params.slug);
+    if (!mod) {
+      return res.status(404).json({ error: `Module "${req.params.slug}" not found` });
+    }
+    if (gitSync.isSyncing(req.params.slug)) {
+      return res.status(409).json({ error: 'Sync already in progress for this module' });
+    }
+    // Start sync in background
+    gitSync.syncModule(storageModule, mod).then(function(result) {
+      invalidateStaticCache(req.params.slug);
+      console.log(`[module-sync] On-demand sync for ${req.params.slug}:`, result.status);
+    }).catch(function(err) {
+      console.error(`[module-sync] On-demand sync error for ${req.params.slug}:`, err.message);
+    });
+    res.json({ status: 'started', slug: req.params.slug });
+  } catch (error) {
+    console.error('Sync module error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: sync all git-static modules
+app.post('/api/admin/modules/sync', requireAdmin, async function(req, res) {
+  try {
+    // Start sync in background
+    gitSync.syncAllModules(storageModule).then(function(result) {
+      for (const r of result.results) {
+        invalidateStaticCache(r.slug);
+      }
+      console.log(`[module-sync] Sync all complete: ${result.results.length} modules`);
+    }).catch(function(err) {
+      console.error('[module-sync] Sync all error:', err.message);
+    });
+    res.json({ status: 'started' });
+  } catch (error) {
+    console.error('Sync all modules error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Admin: get sync status
+app.get('/api/admin/modules/sync/status', requireAdmin, function(req, res) {
+  try {
+    res.json(gitSync.getSyncStatus(storageModule));
+  } catch (error) {
+    console.error('Module sync status error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ─── Static Module Content Serving ───
+
+app.use('/modules', createModuleStaticMiddleware(storageModule));
+
 // CORS preflight
 app.options('/api/{*path}', function(req, res) { res.status(200).end(); });
 
 // ─── Start ───
 
 seedAdminList();
+modulesConfig.seedIfMissing(storageModule);
 
 // Start daily roster sync if configured
 if (!DEMO_MODE && rosterSyncConfig.isConfigured(storageModule)) {
@@ -1787,6 +1933,11 @@ if (!DEMO_MODE && rosterSyncConfig.isConfigured(storageModule)) {
   console.log('Roster sync: daily schedule active');
 } else if (!DEMO_MODE) {
   console.log('Roster sync: not configured (visit Settings to set up)');
+}
+
+// Start daily module sync
+if (!DEMO_MODE) {
+  gitSync.scheduleDaily(storageModule);
 }
 
 app.listen(PORT, function() {
