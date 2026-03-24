@@ -121,10 +121,10 @@
             class="hover:bg-gray-50"
           >
             <td class="px-4 py-2 text-sm whitespace-nowrap">
-              <a
-                :href="`#/team/${encodeURIComponent(person.teamKey)}/person/${encodeURIComponent(person.jiraDisplayName || person.name)}`"
-                class="text-primary-600 hover:text-primary-800 font-medium hover:underline"
-              >{{ person.name }}</a>
+              <button
+                @click="nav.navigateTo('person-detail', { teamKey: person.teamKey, person: person.jiraDisplayName || person.name })"
+                class="text-primary-600 hover:text-primary-800 font-medium hover:underline text-left"
+              >{{ person.name }}</button>
             </td>
             <td class="px-4 py-2 text-sm text-gray-500 whitespace-nowrap">{{ person.orgName }}</td>
             <td class="px-4 py-2 text-sm text-gray-500 whitespace-nowrap">{{ person.teamName || '—' }}</td>
@@ -168,13 +168,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, inject } from 'vue'
 import DynamicFieldBadge from '../components/DynamicFieldBadge.vue'
 import { useRoster } from '@shared/client/composables/useRoster'
 import { useGithubStats } from '@shared/client/composables/useGithubStats'
 import { useGitlabStats } from '@shared/client/composables/useGitlabStats'
 import { getAllPeopleMetrics } from '@shared/client/services/api'
 
+const nav = inject('moduleNav')
 const { orgs, visibleFields, primaryDisplayField } = useRoster()
 const { getContributions } = useGithubStats()
 const { getContributions: getGitlabContributions, loadGitlabStats } = useGitlabStats()
