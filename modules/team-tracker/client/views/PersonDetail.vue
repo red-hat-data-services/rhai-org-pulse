@@ -23,46 +23,69 @@
     <div class="bg-white rounded-lg border border-gray-200 p-5 mb-6">
       <div class="flex items-start justify-between">
         <div>
-          <h2 class="text-xl font-bold text-gray-900 mb-1">{{ person.name }}</h2>
-          <div class="flex items-center gap-2 flex-wrap">
+          <div class="flex items-center gap-3 mb-2">
+            <h2 class="text-xl font-bold text-gray-900">{{ person.name }}</h2>
             <DynamicFieldBadge
               v-if="primaryDisplayField && person.customFields"
               :value="person.customFields[primaryDisplayField]"
             />
-            <span v-if="person.manager" class="text-sm text-gray-500">
-              Mgr: {{ person.manager }}
+          </div>
+          <div class="flex items-center gap-x-4 gap-y-1 flex-wrap text-sm text-gray-500 mb-2">
+            <span v-if="person.manager">
+              <span class="font-medium text-gray-700">Manager:</span> {{ person.manager }}
             </span>
             <template v-if="person.customFields">
               <span
                 v-for="field in nonPrimaryVisibleFields"
                 :key="field.key"
-                class="text-sm text-gray-500"
               >
-                | {{ person.customFields[field.key] || '—' }}
+                <span class="font-medium text-gray-700">{{ field.label }}:</span> {{ person.customFields[field.key] || '—' }}
               </span>
             </template>
+          </div>
+          <div class="flex items-center gap-x-4 gap-y-1 flex-wrap text-sm">
+            <a
+              v-if="jiraProfileUrl"
+              :href="jiraProfileUrl"
+              target="_blank"
+              class="inline-flex items-center gap-1 text-gray-500 hover:text-gray-700 transition-colors"
+              title="Jira Profile"
+            >
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M11.53 2c0 2.4 1.97 4.35 4.35 4.35h1.78v1.7c0 2.4 1.94 4.34 4.34 4.35V2.84a.84.84 0 00-.84-.84H11.53zM6.77 6.8a4.36 4.36 0 004.34 4.34h1.8v1.72a4.36 4.36 0 004.34 4.34V7.63a.84.84 0 00-.83-.83H6.77zM2 11.6a4.35 4.35 0 004.34 4.34h1.8v1.72A4.35 4.35 0 0012.48 22v-9.57a.84.84 0 00-.84-.84H2z"/></svg>
+              {{ person.jiraDisplayName }}
+            </a>
+            <span v-else class="inline-flex items-center gap-1 text-gray-400">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M11.53 2c0 2.4 1.97 4.35 4.35 4.35h1.78v1.7c0 2.4 1.94 4.34 4.34 4.35V2.84a.84.84 0 00-.84-.84H11.53zM6.77 6.8a4.36 4.36 0 004.34 4.34h1.8v1.72a4.36 4.36 0 004.34 4.34V7.63a.84.84 0 00-.83-.83H6.77zM2 11.6a4.35 4.35 0 004.34 4.34h1.8v1.72A4.35 4.35 0 0012.48 22v-9.57a.84.84 0 00-.84-.84H2z"/></svg>
+              unknown
+            </span>
             <a
               v-if="githubProfileUrl"
               :href="githubProfileUrl"
               target="_blank"
-              class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              class="inline-flex items-center gap-1 text-gray-500 hover:text-gray-700 transition-colors"
               title="GitHub Profile"
             >
-              | <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
               {{ person.githubUsername }}
             </a>
-            <span v-else class="text-sm text-gray-400">| GitHub: unknown</span>
+            <span v-else class="inline-flex items-center gap-1 text-gray-400">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+              unknown
+            </span>
             <a
               v-if="gitlabProfileUrl"
               :href="gitlabProfileUrl"
               target="_blank"
-              class="inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              class="inline-flex items-center gap-1 text-gray-500 hover:text-gray-700 transition-colors"
               title="GitLab Profile"
             >
-              | <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M22.65 14.39L12 22.13 1.35 14.39a.84.84 0 01-.3-.94l1.22-3.78 2.44-7.51A.42.42 0 014.82 2a.43.43 0 01.58 0 .42.42 0 01.11.18l2.44 7.49h8.1l2.44-7.49a.42.42 0 01.11-.18.43.43 0 01.58 0 .42.42 0 01.11.18l2.44 7.51L23 13.45a.84.84 0 01-.35.94z"/></svg>
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M22.65 14.39L12 22.13 1.35 14.39a.84.84 0 01-.3-.94l1.22-3.78 2.44-7.51A.42.42 0 014.82 2a.43.43 0 01.58 0 .42.42 0 01.11.18l2.44 7.49h8.1l2.44-7.49a.42.42 0 01.11-.18.43.43 0 01.58 0 .42.42 0 01.11.18l2.44 7.51L23 13.45a.84.84 0 01-.35.94z"/></svg>
               {{ person.gitlabUsername }}
             </a>
-            <span v-else class="text-sm text-gray-400">| GitLab: unknown</span>
+            <span v-else class="inline-flex items-center gap-1 text-gray-400">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M22.65 14.39L12 22.13 1.35 14.39a.84.84 0 01-.3-.94l1.22-3.78 2.44-7.51A.42.42 0 014.82 2a.43.43 0 01.58 0 .42.42 0 01.11.18l2.44 7.49h8.1l2.44-7.49a.42.42 0 01.11-.18.43.43 0 01.58 0 .42.42 0 01.11.18l2.44 7.51L23 13.45a.84.84 0 01-.35.94z"/></svg>
+              unknown
+            </span>
           </div>
           <div v-if="personTeams.length > 1" class="mt-2 flex flex-wrap gap-1">
             <span
@@ -273,11 +296,29 @@ import { getPersonMetrics, refreshMetrics } from '@shared/client/services/api'
 
 const nav = inject('moduleNav')
 
-const { teams: allTeams } = useRoster()
+const { teams: allTeams, selectOrg, orgs } = useRoster()
+
+// Flatten all teams across all orgs for cross-org person lookup
+const allTeamsFlat = computed(() => {
+  const result = []
+  for (const org of orgs.value) {
+    if (!org.teams) continue
+    for (const [teamName, team] of Object.entries(org.teams)) {
+      result.push({
+        key: `${org.key}::${teamName}`,
+        displayName: team.displayName,
+        members: team.members
+      })
+    }
+  }
+  return result
+})
 
 const team = computed(() => {
   const teamKey = nav.params.value?.teamKey
   if (!teamKey) return null
+  const orgKey = teamKey.split('::')[0]
+  if (orgKey) selectOrg(orgKey)
   return allTeams.value.find(t => t.key === teamKey) || null
 })
 
@@ -287,8 +328,8 @@ const person = computed(() => {
   if (team.value) {
     return team.value.members.find(m => (m.jiraDisplayName || m.name) === personName) || null
   }
-  // Search all teams
-  for (const t of allTeams.value) {
+  // Search all teams across all orgs
+  for (const t of allTeamsFlat.value) {
     const found = t.members.find(m => (m.jiraDisplayName || m.name) === personName)
     if (found) return found
   }
@@ -310,6 +351,16 @@ const gitlabContributions = computed(() => person.value ? getGitlabContributions
 const gitlabProfileUrl = computed(() => person.value?.gitlabUsername
   ? `https://gitlab.com/${person.value.gitlabUsername}`
   : null)
+
+const jiraProfileUrl = computed(() => {
+  if (metrics.value?.jiraAccountId) {
+    return `https://redhat.atlassian.net/people/${metrics.value.jiraAccountId}`
+  }
+  if (person.value?.jiraDisplayName) {
+    return `https://redhat.atlassian.net/people/search?q=${encodeURIComponent(person.value.jiraDisplayName)}`
+  }
+  return null
+})
 
 const nonPrimaryVisibleFields = computed(() => {
   return visibleFields.value.filter(f => f.key !== primaryDisplayField.value)

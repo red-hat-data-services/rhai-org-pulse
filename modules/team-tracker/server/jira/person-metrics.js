@@ -439,6 +439,7 @@ async function fetchPersonMetrics(jiraRequest, jiraDisplayName, options = {}) {
 
     const result = {
       jiraDisplayName,
+      jiraAccountId: accountId,
       fetchedAt: now,
       fieldsVersion: FIELDS_VERSION,
       projectKeysFingerprint: pkFingerprint,
@@ -484,6 +485,7 @@ async function fetchPersonMetrics(jiraRequest, jiraDisplayName, options = {}) {
 
   const result = {
     jiraDisplayName,
+    jiraAccountId: accountId,
     fetchedAt: now,
     fieldsVersion: FIELDS_VERSION,
     projectKeysFingerprint: pkFingerprint,

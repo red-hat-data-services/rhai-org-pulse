@@ -8,13 +8,26 @@ const { normalizeNameForMatch } = require('./sheets');
 /**
  * Enrich a single person with Sheets data.
  * Dynamically copies all fields from the sheets entry onto the person object.
+ *
+ * When a person appears in multiple sheets, prefer the entry whose sourceSheet
+ * matches the org display name (the org they belong to in LDAP). This avoids
+ * stale data from a previous org's sheet overriding the current assignment.
  */
-function enrichPerson(person, sheetsMap) {
+function enrichPerson(person, sheetsMap, orgDisplayName) {
   const normalized = normalizeNameForMatch(person.name);
   const ssData = sheetsMap.get(normalized);
   if (!ssData) return;
 
-  const primary = Array.isArray(ssData) ? ssData[0] : ssData;
+  let primary;
+  if (Array.isArray(ssData) && orgDisplayName) {
+    const orgNameLower = orgDisplayName.toLowerCase();
+    const match = ssData.find(e =>
+      e.sourceSheet && e.sourceSheet.toLowerCase().includes(orgNameLower)
+    );
+    primary = match || ssData[0];
+  } else {
+    primary = Array.isArray(ssData) ? ssData[0] : ssData;
+  }
 
   // Copy all fields from sheet data onto the person (except internal fields)
   for (const [key, value] of Object.entries(primary)) {
@@ -23,7 +36,7 @@ function enrichPerson(person, sheetsMap) {
   }
 
   if (Array.isArray(ssData) && ssData.length > 1) {
-    person.additionalAssignments = ssData.slice(1).map(function(e) {
+    person.additionalAssignments = ssData.filter(e => e !== primary).map(function(e) {
       const assignment = {};
       for (const [key, value] of Object.entries(e)) {
         if (key === 'originalName' || key === 'sourceSheet') continue;
@@ -56,9 +69,10 @@ function buildRoster(orgRoots, ldapOrgs, sheetsData, vpInfo) {
 
     // Enrich with Sheets data if available
     if (sheetsData) {
-      enrichPerson(orgData.leader, sheetsData);
+      const orgDisplayName = root.displayName || root.name;
+      enrichPerson(orgData.leader, sheetsData, orgDisplayName);
       for (const member of orgData.members) {
-        enrichPerson(member, sheetsData);
+        enrichPerson(member, sheetsData, orgDisplayName);
       }
     }
 

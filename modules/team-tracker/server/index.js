@@ -954,6 +954,10 @@ module.exports = function registerRoutes(router, context) {
 
       const cached = readFromStorage(cachePath);
       if (cached) {
+        // Enrich with jiraAccountId from name cache if not already present
+        if (!cached.jiraAccountId && jiraNameCache[name]?.accountId) {
+          cached.jiraAccountId = jiraNameCache[name].accountId;
+        }
         return res.json(cached);
       }
       return res.status(404).json({ error: `No cached data for ${name}. Trigger a refresh to fetch data.` });
