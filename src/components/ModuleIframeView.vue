@@ -69,8 +69,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { AlertTriangle, Package } from 'lucide-vue-next'
+import { useTheme } from '../composables/useTheme'
 
 const props = defineProps({
   slug: { type: String, required: true },
@@ -81,22 +82,58 @@ const props = defineProps({
 
 defineEmits(['trigger-sync', 'retry-sync'])
 
+const { isDark } = useTheme()
+
 const iframeRef = ref(null)
 const isLoading = ref(true)
 const hasError = ref(false)
+const iframeReady = ref(false)
 let loadTimeout = null
 
 const isSynced = computed(() => props.syncStatus === 'success')
 
-const iframeSrc = computed(() => `/modules/${props.slug}/index.html`)
+const iframeSrc = computed(() => {
+  const theme = isDark.value ? 'dark' : 'light'
+  return `/modules/${props.slug}/index.html?theme=${theme}`
+})
+
+function syncThemeToIframe() {
+  const iframe = iframeRef.value
+  if (!iframe) return
+
+  const dark = isDark.value
+  const theme = dark ? 'dark' : 'light'
+
+  // postMessage so the module can listen and react
+  try {
+    iframe.contentWindow?.postMessage({ type: 'theme-change', theme, isDark: dark }, '*')
+  } catch { /* cross-origin */ }
+
+  // Direct DOM toggle for Tailwind-based modules
+  try {
+    const doc = iframe.contentDocument
+    if (doc) {
+      doc.documentElement.classList.toggle('dark', dark)
+      doc.documentElement.setAttribute('data-theme', theme)
+    }
+  } catch { /* cross-origin */ }
+}
+
+watch(isDark, () => {
+  if (iframeReady.value) syncThemeToIframe()
+})
 
 function onIframeLoad() {
   isLoading.value = false
   hasError.value = false
+  iframeReady.value = true
   if (loadTimeout) {
     clearTimeout(loadTimeout)
     loadTimeout = null
   }
+
+  // Sync theme on initial load
+  syncThemeToIframe()
 
   // Inject scroll-friendly styles into iframe content so that
   // nav bars and tab lists scroll horizontally instead of overlapping

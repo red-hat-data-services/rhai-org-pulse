@@ -4,6 +4,7 @@ const STORAGE_KEY = 'tt_theme'
 const VALID_MODES = ['light', 'dark', 'system']
 
 const mode = ref(loadMode())
+const isDark = ref(resolveDark(mode.value))
 
 function loadMode() {
   try {
@@ -13,9 +14,13 @@ function loadMode() {
   return 'system'
 }
 
+function resolveDark(m) {
+  return m === 'dark' || (m === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+}
+
 function applyTheme(m) {
-  const isDark = m === 'dark' || (m === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
-  document.documentElement.classList.toggle('dark', isDark)
+  isDark.value = resolveDark(m)
+  document.documentElement.classList.toggle('dark', isDark.value)
 }
 
 // React to OS preference changes when in system mode
@@ -42,6 +47,7 @@ export function useTheme() {
 
   return {
     mode: readonly(mode),
+    isDark: readonly(isDark),
     setMode,
     cycle
   }
