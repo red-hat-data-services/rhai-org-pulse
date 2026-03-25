@@ -292,10 +292,6 @@ module.exports = function registerRoutes(router, context) {
       // People scoped by LDAP orgKey
       const allPeople = getAllPeople(storage);
       const orgKeyToDisplay = buildOrgKeyToDisplayName();
-      const metaData = readFromStorage('org-roster/teams-metadata.json');
-      const allTeamNames = new Set((metaData?.teams || [])
-        .filter(t => isAll || t.org === orgName)
-        .map(t => t.name));
       const orgPeople = isAll ? allPeople : allPeople.filter(function(person) {
         const personOrg = orgKeyToDisplay[person.orgKey] || '';
         return personOrg === orgName;
