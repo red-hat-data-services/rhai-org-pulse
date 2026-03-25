@@ -26,6 +26,21 @@ export function useRoster() {
   })
 
   const teams = computed(() => {
+    // When no org is selected, show all teams across all orgs
+    if (!selectedOrgKey.value) {
+      const allTeams = []
+      for (const org of orgs.value) {
+        if (!org.teams) continue
+        for (const [teamName, team] of Object.entries(org.teams)) {
+          allTeams.push({
+            key: `${org.key}::${teamName}`,
+            displayName: team.displayName,
+            members: team.members
+          })
+        }
+      }
+      return allTeams
+    }
     const org = selectedOrg.value
     if (!org?.teams) return []
     return Object.entries(org.teams).map(([teamName, team]) => ({

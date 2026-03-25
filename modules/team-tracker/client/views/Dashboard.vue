@@ -9,6 +9,15 @@
     <!-- Org Selector -->
     <div v-if="orgs.length > 0" class="flex flex-wrap gap-2 mb-6">
       <button
+        @click="selectOrg(null)"
+        class="px-4 py-2 rounded-lg text-sm font-medium transition-colors border"
+        :class="!selectedOrgKey
+          ? 'bg-primary-600 text-white border-primary-600'
+          : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-primary-300 dark:hover:border-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20'"
+      >
+        All
+      </button>
+      <button
         v-for="org in orgs"
         :key="org.key"
         @click="selectOrg(org.key)"
