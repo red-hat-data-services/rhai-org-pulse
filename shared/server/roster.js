@@ -4,6 +4,8 @@
  * for use by any module that needs roster/people data.
  */
 
+const EXCLUDED_TITLES = ['Intern', 'Collaborative Partner', 'Independent Contractor'];
+
 /**
  * Read the raw org-roster-full.json data.
  * @param {{ readFromStorage: Function }} storage
@@ -24,7 +26,8 @@ function getAllPeople(storage) {
   if (!full || !full.orgs) return [];
   const people = [];
   for (const [orgKey, orgData] of Object.entries(full.orgs)) {
-    const allMembers = [orgData.leader, ...orgData.members];
+    const allMembers = [orgData.leader, ...orgData.members]
+      .filter(p => !EXCLUDED_TITLES.includes(p.title));
     for (const person of allMembers) {
       people.push({ ...person, orgKey });
     }
@@ -42,7 +45,9 @@ function getPeopleByOrg(storage, orgKey) {
   const full = readRosterFull(storage);
   if (!full || !full.orgs || !full.orgs[orgKey]) return [];
   const orgData = full.orgs[orgKey];
-  return [orgData.leader, ...orgData.members].map(p => ({ ...p, orgKey }));
+  return [orgData.leader, ...orgData.members]
+    .filter(p => !EXCLUDED_TITLES.includes(p.title))
+    .map(p => ({ ...p, orgKey }));
 }
 
 /**
@@ -81,6 +86,7 @@ function getTeamRollup(people, fieldName) {
 }
 
 module.exports = {
+  EXCLUDED_TITLES,
   readRosterFull,
   getAllPeople,
   getPeopleByOrg,

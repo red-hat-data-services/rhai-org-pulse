@@ -261,12 +261,8 @@ module.exports = function registerRoutes(router, context) {
       for (const person of allPeople) {
         const personOrg = orgKeyToDisplay[person.orgKey] || '';
         if (!personOrg || !orgMap[personOrg]) continue;
-        const groupingValue = person._teamGrouping || person.miroTeam || '';
-        const teamNames = groupingValue.split(',').map(t => t.trim()).filter(Boolean);
-        if (teamNames.length > 0) {
-          if (!orgPeople[personOrg]) orgPeople[personOrg] = new Set();
-          orgPeople[personOrg].add(person.name);
-        }
+        if (!orgPeople[personOrg]) orgPeople[personOrg] = new Set();
+        orgPeople[personOrg].add(person.name);
       }
       for (const [org, names] of Object.entries(orgPeople)) {
         if (orgMap[org]) orgMap[org].headcount = names.size;
@@ -300,17 +296,9 @@ module.exports = function registerRoutes(router, context) {
       const allTeamNames = new Set((metaData?.teams || [])
         .filter(t => isAll || t.org === orgName)
         .map(t => t.name));
-      const configuredOrgNames = isAll ? new Set(Object.values(orgKeyToDisplay)) : null;
-
-      const orgPeople = allPeople.filter(function(person) {
+      const orgPeople = isAll ? allPeople : allPeople.filter(function(person) {
         const personOrg = orgKeyToDisplay[person.orgKey] || '';
-        if (isAll) {
-          if (!configuredOrgNames.has(personOrg)) return false;
-        } else {
-          if (personOrg !== orgName) return false;
-        }
-        const groupingValue = person._teamGrouping || person.miroTeam || '';
-        return groupingValue.split(',').map(t => t.trim()).some(t => allTeamNames.has(t));
+        return personOrg === orgName;
       });
 
       // Role breakdown

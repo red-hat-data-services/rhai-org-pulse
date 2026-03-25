@@ -49,7 +49,7 @@ Core team owns `shared/` via CODEOWNERS. Changes require core team review.
 | `demoStorage` | `{ readFromStorage, writeToStorage }` — fixture-backed read-only storage for demo mode |
 | `createAuthMiddleware(readFromStorage, writeToStorage)` | Factory returning `{ authMiddleware, requireAdmin, isAdmin, seedAdminList }` |
 | `googleSheets` | `{ getAuth, discoverSheetNames, fetchRawSheet }` — Google Sheets auth and raw data fetching |
-| `roster` | `{ readRosterFull, getAllPeople, getPeopleByOrg, getOrgKeys }` — shared roster data access |
+| `roster` | `{ EXCLUDED_TITLES, readRosterFull, getAllPeople, getPeopleByOrg, getOrgKeys, getTeamRollup }` — shared roster data access (getAllPeople and getPeopleByOrg filter out EXCLUDED_TITLES) |
 
 ## Versioning
 

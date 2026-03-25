@@ -13,7 +13,7 @@ module.exports = function registerRoutes(router, context) {
   const { fetchGitlabData } = require('./gitlab/contributions');
   const rosterSync = require('./roster-sync');
   const rosterSyncConfig = require('./roster-sync/config');
-  const { readRosterFull: sharedReadRosterFull } = require('../../../shared/server/roster');
+  const { readRosterFull: sharedReadRosterFull, EXCLUDED_TITLES } = require('../../../shared/server/roster');
   const jiraSyncConfig = require('./jira/config');
   const { RESERVED_KEYS } = require('./roster-sync/constants');
 
@@ -145,8 +145,6 @@ module.exports = function registerRoutes(router, context) {
     if (Object.keys(fromConfig).length > 0) return fromConfig;
     return {};
   }
-
-  const EXCLUDED_TITLES = ['Intern', 'Collaborative Partner', 'Independent Contractor'];
 
   function deriveRoster() {
     const full = readRosterFull();
