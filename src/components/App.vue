@@ -33,6 +33,7 @@
             </button>
             <div>
               <h2 class="text-lg font-semibold text-gray-900">{{ currentPageTitle }}</h2>
+              <p v-if="activeModule === 'module-iframe' && activeModuleConfig?.description" class="text-sm text-gray-500">{{ activeModuleConfig.description }}</p>
             </div>
           </div>
           <div class="flex items-center gap-3">
