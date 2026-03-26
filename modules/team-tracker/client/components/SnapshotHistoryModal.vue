@@ -59,8 +59,18 @@
               <td class="py-2 px-2 text-right text-gray-700 dark:text-gray-300">
                 {{ metrics(snapshot).avgCycleTimeDays != null ? metrics(snapshot).avgCycleTimeDays + 'd' : '--' }}
               </td>
-              <td class="py-2 px-2 text-right text-gray-700 dark:text-gray-300">{{ metrics(snapshot).githubContributions }}</td>
-              <td class="py-2 px-2 text-right text-gray-700 dark:text-gray-300">{{ metrics(snapshot).gitlabContributions }}</td>
+              <td class="py-2 px-2 text-right text-gray-700 dark:text-gray-300">
+                <template v-if="mode === 'person' && metrics(snapshot).hasGithub === false">
+                  <span class="text-gray-400 dark:text-gray-500 text-xs italic">No GitHub username</span>
+                </template>
+                <template v-else>{{ metrics(snapshot).githubContributions }}</template>
+              </td>
+              <td class="py-2 px-2 text-right text-gray-700 dark:text-gray-300">
+                <template v-if="mode === 'person' && metrics(snapshot).hasGitlab === false">
+                  <span class="text-gray-400 dark:text-gray-500 text-xs italic">No GitLab username</span>
+                </template>
+                <template v-else>{{ metrics(snapshot).gitlabContributions }}</template>
+              </td>
             </tr>
           </tbody>
         </table>
