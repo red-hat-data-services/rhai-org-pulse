@@ -102,9 +102,29 @@ function generateSnapshot(storage, teamKey, team, period, options = {}) {
   let totalGitlab = 0;
   const members = {};
 
+  const periodStartStr = formatDate(period.start);
+  const periodEndStr = formatDate(period.end);
+
   for (const member of uniqueMembers) {
     const key = member.jiraDisplayName.toLowerCase().replace(/[^a-z0-9]/g, '_');
     const cached = readFromStorage(`people/${key}.json`);
+
+    // Filter resolved issues to this period's date range
+    const allIssues = cached?.resolved?.issues || [];
+    const periodIssues = allIssues.filter(issue => {
+      if (!issue.resolutionDate) return false;
+      const rd = issue.resolutionDate.slice(0, 10);
+      return rd >= periodStartStr && rd < periodEndStr;
+    });
+
+    const resolvedCount = periodIssues.length;
+    const resolvedPoints = periodIssues.reduce((sum, i) => sum + (i.storyPoints || 0), 0);
+    const issueCycleTimes = periodIssues
+      .filter(i => i.cycleTimeDays != null)
+      .map(i => i.cycleTimeDays);
+    const avgCycleTimeDays = issueCycleTimes.length > 0
+      ? +(issueCycleTimes.reduce((a, b) => a + b, 0) / issueCycleTimes.length).toFixed(1)
+      : null;
 
     const ghContrib = member.githubUsername
       ? (githubCache.users?.[member.githubUsername]?.totalContributions ?? 0)
@@ -114,23 +134,25 @@ function generateSnapshot(storage, teamKey, team, period, options = {}) {
       : 0;
 
     const memberSnapshot = {
-      resolvedCount: cached?.resolved?.count || 0,
-      resolvedPoints: cached?.resolved?.storyPoints || 0,
+      resolvedCount,
+      resolvedPoints,
       inProgressCount: cached?.inProgress?.count || 0,
-      avgCycleTimeDays: cached?.cycleTime?.avgDays ?? null,
+      avgCycleTimeDays,
       githubContributions: ghContrib,
-      gitlabContributions: glContrib
+      gitlabContributions: glContrib,
+      hasGithub: !!member.githubUsername,
+      hasGitlab: !!member.gitlabUsername
     };
 
     members[member.jiraDisplayName] = memberSnapshot;
 
-    totalResolved += memberSnapshot.resolvedCount;
-    totalPoints += memberSnapshot.resolvedPoints;
+    totalResolved += resolvedCount;
+    totalPoints += resolvedPoints;
     totalInProgress += memberSnapshot.inProgressCount;
     totalGithub += ghContrib;
     totalGitlab += glContrib;
-    if (cached?.cycleTime?.avgDays != null) {
-      cycleTimes.push(cached.cycleTime.avgDays);
+    if (avgCycleTimeDays != null) {
+      cycleTimes.push(avgCycleTimeDays);
     }
   }
 

@@ -48,13 +48,26 @@ const mockTeam = {
 const mockPersonData = {
   'people/alice_smith.json': {
     jiraDisplayName: 'Alice Smith',
-    resolved: { count: 12, storyPoints: 25, issues: [] },
+    resolved: {
+      count: 12, storyPoints: 25,
+      issues: [
+        { key: 'TEST-1', resolutionDate: '2026-01-10', storyPoints: 5, cycleTimeDays: 2.0 },
+        { key: 'TEST-2', resolutionDate: '2026-01-20', storyPoints: 8, cycleTimeDays: 4.0 },
+        { key: 'TEST-3', resolutionDate: '2026-02-15', storyPoints: 12, cycleTimeDays: 5.0 }
+      ]
+    },
     inProgress: { count: 2, storyPoints: 5, issues: [] },
     cycleTime: { avgDays: 3.5, medianDays: 2.0 }
   },
   'people/bob_jones.json': {
     jiraDisplayName: 'Bob Jones',
-    resolved: { count: 8, storyPoints: 15, issues: [] },
+    resolved: {
+      count: 8, storyPoints: 15,
+      issues: [
+        { key: 'TEST-4', resolutionDate: '2026-01-15', storyPoints: 3, cycleTimeDays: 6.0 },
+        { key: 'TEST-5', resolutionDate: '2026-01-25', storyPoints: 5, cycleTimeDays: 4.0 }
+      ]
+    },
     inProgress: { count: 1, storyPoints: 3, issues: [] },
     cycleTime: { avgDays: 5.0, medianDays: 4.0 }
   }
@@ -158,10 +171,10 @@ describe('snapshots', () => {
       expect(snapshot.periodStart).toBe('2026-01-01')
       expect(snapshot.periodEnd).toBe('2026-01-31')
       expect(snapshot.generatedAt).toBeTruthy()
-      expect(snapshot.team.resolvedCount).toBe(20) // 12 + 8
-      expect(snapshot.team.resolvedPoints).toBe(40) // 25 + 15
+      expect(snapshot.team.resolvedCount).toBe(4) // 2 + 2 (only issues in Jan period)
+      expect(snapshot.team.resolvedPoints).toBe(21) // (5+8) + (3+5)
       expect(snapshot.team.inProgressCount).toBe(3) // 2 + 1
-      expect(snapshot.team.avgCycleTimeDays).toBe(4.3) // (3.5 + 5.0) / 2
+      expect(snapshot.team.avgCycleTimeDays).toBe(4.0) // (3.0 + 5.0) / 2
       expect(snapshot.team.githubContributions).toBe(150) // 100 + 50
       expect(snapshot.team.gitlabContributions).toBe(30) // 30 + 0
     })
@@ -176,21 +189,25 @@ describe('snapshots', () => {
       })
 
       expect(snapshot.members['Alice Smith']).toEqual({
-        resolvedCount: 12,
-        resolvedPoints: 25,
+        resolvedCount: 2,
+        resolvedPoints: 13,
         inProgressCount: 2,
-        avgCycleTimeDays: 3.5,
+        avgCycleTimeDays: 3.0,
         githubContributions: 100,
-        gitlabContributions: 30
+        gitlabContributions: 30,
+        hasGithub: true,
+        hasGitlab: true
       })
 
       expect(snapshot.members['Bob Jones']).toEqual({
-        resolvedCount: 8,
-        resolvedPoints: 15,
+        resolvedCount: 2,
+        resolvedPoints: 8,
         inProgressCount: 1,
         avgCycleTimeDays: 5.0,
         githubContributions: 50,
-        gitlabContributions: 0
+        gitlabContributions: 0,
+        hasGithub: true,
+        hasGitlab: false
       })
     })
 
@@ -223,8 +240,8 @@ describe('snapshots', () => {
         gitlabCache: { users: {} }
       })
 
-      // Should count Alice only once
-      expect(snapshot.team.resolvedCount).toBe(12)
+      // Should count Alice only once (2 issues in Jan period)
+      expect(snapshot.team.resolvedCount).toBe(2)
       expect(Object.keys(snapshot.members)).toHaveLength(1)
     })
   })
