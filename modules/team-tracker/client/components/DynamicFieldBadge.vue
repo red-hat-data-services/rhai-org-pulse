@@ -38,6 +38,8 @@ function hashString(str) {
 
 const badgeClass = computed(() => {
   if (!props.value) return 'bg-gray-100 text-gray-800'
-  return PALETTE[hashString(props.value) % PALETTE.length]
+  // Strip leading count (e.g. "3 QE" -> "QE") so the same role always gets the same color
+  const colorKey = props.value.replace(/^\d+\s+/, '')
+  return PALETTE[hashString(colorKey) % PALETTE.length]
 })
 </script>

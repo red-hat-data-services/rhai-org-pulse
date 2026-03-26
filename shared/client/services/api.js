@@ -243,15 +243,15 @@ export async function saveJiraSyncConfig(data) {
 // ─── Snapshots ───
 
 export async function getTeamSnapshots(teamKey) {
-  return apiRequest(`/snapshots/${encodeURIComponent(teamKey)}`)
+  return apiRequest(`/modules/team-tracker/snapshots/${encodeURIComponent(teamKey)}`)
 }
 
 export async function getPersonSnapshots(teamKey, personName) {
-  return apiRequest(`/snapshots/${encodeURIComponent(teamKey)}/${encodeURIComponent(personName)}`)
+  return apiRequest(`/modules/team-tracker/snapshots/${encodeURIComponent(teamKey)}/${encodeURIComponent(personName)}`)
 }
 
 export async function generateSnapshots() {
-  return apiRequest('/snapshots/generate', {
+  return apiRequest('/modules/team-tracker/snapshots/generate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' }
   })

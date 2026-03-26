@@ -165,13 +165,11 @@ import { useAuth } from '@shared/client/composables/useAuth'
 import { refreshMetrics, getTeamMetrics, getTeamSnapshots, getPersonSnapshots } from '@shared/client/services/api'
 
 const nav = inject('moduleNav')
-const { teams: allTeams, selectOrg } = useRoster()
+const { teams: allTeams } = useRoster()
 
 const team = computed(() => {
   const teamKey = nav.params.value?.teamKey
   if (!teamKey) return null
-  const orgKey = teamKey.split('::')[0]
-  if (orgKey) selectOrg(orgKey)
   return allTeams.value.find(t => t.key === teamKey) || null
 })
 

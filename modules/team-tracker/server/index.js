@@ -1527,10 +1527,45 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Routes: Snapshots ───
 
+  function findTeamFromRoster(teamKey) {
+    const roster = deriveRoster();
+    const sepIdx = teamKey.indexOf('::');
+    if (sepIdx !== -1) {
+      const orgKey = teamKey.substring(0, sepIdx);
+      const teamName = teamKey.substring(sepIdx + 2);
+      const org = roster.orgs.find(o => o.key === orgKey);
+      if (org && org.teams[teamName]) return org.teams[teamName];
+    }
+    return null;
+  }
+
+  function generateSnapshotsForTeam(teamKey) {
+    const team = findTeamFromRoster(teamKey);
+    if (!team) return [];
+
+    const periods = [...snapshots.getCompletedPeriods()];
+    const current = snapshots.getCurrentPeriod();
+    if (current) periods.push(current);
+    if (periods.length === 0) return [];
+
+    const results = [];
+    for (const period of periods) {
+      const snapshot = snapshots.generateAndStoreSnapshot(storage, teamKey, team, period);
+      results.push(snapshot);
+    }
+    return results;
+  }
+
+  function getOrGenerateTeamSnapshots(teamKey) {
+    const existing = snapshots.loadTeamSnapshots(storage, teamKey);
+    if (existing.length > 0) return existing;
+    return generateSnapshotsForTeam(teamKey);
+  }
+
   router.get('/snapshots/:teamKey', function(req, res) {
     try {
       const teamKey = decodeURIComponent(req.params.teamKey);
-      const data = snapshots.loadTeamSnapshots(storage, teamKey);
+      const data = getOrGenerateTeamSnapshots(teamKey);
       res.json({ snapshots: data });
     } catch (error) {
       console.error('Read team snapshots error:', error);
@@ -1542,8 +1577,15 @@ module.exports = function registerRoutes(router, context) {
     try {
       const teamKey = decodeURIComponent(req.params.teamKey);
       const personName = decodeURIComponent(req.params.personName);
-      const data = snapshots.loadPersonSnapshots(storage, teamKey, personName);
-      res.json({ snapshots: data });
+      const allSnapshots = getOrGenerateTeamSnapshots(teamKey);
+      // Filter to person
+      const personData = allSnapshots.map(s => ({
+        periodStart: s.periodStart,
+        periodEnd: s.periodEnd,
+        generatedAt: s.generatedAt,
+        metrics: s.members[personName] || null
+      })).filter(s => s.metrics !== null);
+      res.json({ snapshots: personData });
     } catch (error) {
       console.error('Read person snapshots error:', error);
       res.status(500).json({ error: error.message });

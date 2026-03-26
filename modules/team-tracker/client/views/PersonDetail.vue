@@ -157,7 +157,7 @@
     <!-- Metrics content -->
     <template v-else-if="metrics">
       <!-- Metric cards -->
-      <div class="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-6 gap-4 mb-2">
         <MetricCard
           label="Issues Resolved"
           :value="metrics.resolved.count"
@@ -192,6 +192,15 @@
           :subtitle="person.gitlabUsername ? 'Last year' : 'No GitLab username'"
           tooltip="Public contributions via GitLab calendar API."
         />
+      </div>
+
+      <div class="mb-4 pl-1">
+        <button
+          @click="openPersonHistory"
+          class="text-xs text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 font-medium"
+        >
+          View History
+        </button>
       </div>
 
       <!-- Fetched timestamp -->
@@ -280,6 +289,15 @@
         </div>
       </div>
     </template>
+
+    <SnapshotHistoryModal
+      v-if="showSnapshotHistory"
+      :title="snapshotHistoryTitle"
+      :snapshots="snapshotHistoryData"
+      :loading="snapshotHistoryLoading"
+      mode="person"
+      @close="showSnapshotHistory = false"
+    />
     </template>
   </div>
 </template>
@@ -289,10 +307,11 @@ import { ref, computed, onMounted, watch, inject } from 'vue'
 import DynamicFieldBadge from '../components/DynamicFieldBadge.vue'
 import MetricCard from '../components/MetricCard.vue'
 import RefreshModal from '@shared/client/components/RefreshModal.vue'
+import SnapshotHistoryModal from '../components/SnapshotHistoryModal.vue'
 import { useRoster } from '@shared/client/composables/useRoster'
 import { useGithubStats } from '@shared/client/composables/useGithubStats'
 import { useGitlabStats } from '@shared/client/composables/useGitlabStats'
-import { getPersonMetrics, refreshMetrics } from '@shared/client/services/api'
+import { getPersonMetrics, refreshMetrics, getPersonSnapshots } from '@shared/client/services/api'
 
 const nav = inject('moduleNav')
 
@@ -370,8 +389,30 @@ const metrics = ref(null)
 const isLoading = ref(false)
 const error = ref(null)
 const showRefreshModal = ref(false)
+const showSnapshotHistory = ref(false)
+const snapshotHistoryData = ref([])
+const snapshotHistoryLoading = ref(false)
+const snapshotHistoryTitle = ref('')
 
 const personTeams = computed(() => person.value ? getTeamsForPerson(person.value.jiraDisplayName) : [])
+
+async function openPersonHistory() {
+  if (!person.value) return
+  const teamKey = nav.params.value?.teamKey || personTeams.value[0]?.key
+  if (!teamKey) return
+  showSnapshotHistory.value = true
+  snapshotHistoryLoading.value = true
+  snapshotHistoryTitle.value = `${person.value.name} - Metric History`
+  snapshotHistoryData.value = []
+  try {
+    const result = await getPersonSnapshots(teamKey, person.value.jiraDisplayName)
+    snapshotHistoryData.value = result.snapshots || []
+  } catch (err) {
+    console.error('Failed to load person snapshots:', err)
+  } finally {
+    snapshotHistoryLoading.value = false
+  }
+}
 
 async function handleRefreshConfirm({ force, sources }) {
   showRefreshModal.value = false
