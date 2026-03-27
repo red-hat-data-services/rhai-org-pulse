@@ -153,6 +153,7 @@ Secrets (created manually on cluster, not in git):
 **Repo secrets:**
 - `QUAY_USERNAME` / `QUAY_PASSWORD` — Quay.io registry credentials for image push
 - `GH_PAT` — Personal access token with admin bypass, used by CI to create and auto-merge image tag update PRs
+- `GCP_SA_KEY` — GCP service account JSON key for Vertex AI auth (Claude code review)
 
 **Daily CronJob** (`deploy/openshift/overlays/prod/cronjob-sync-refresh.yaml`): Runs at 6:00 AM UTC, triggers roster sync then full metrics refresh via the backend API.
 

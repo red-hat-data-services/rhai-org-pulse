@@ -1,0 +1,66 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+      - 'deploy/openshift/overlays/*/kustomization.yaml'
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number || github.event.issue.number || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  id-token: write  # Required for GCP credential exchange
+
+jobs:
+  claude-review:
+    name: Claude Review
+    timeout-minutes: 10
+    if: |
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.head.repo.full_name == github.repository &&
+       github.event.pull_request.draft != true &&
+       github.actor != 'github-actions[bot]') ||
+      (github.event_name == 'issue_comment' &&
+       github.event.issue.pull_request &&
+       contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Claude Code Review
+        uses: anthropics/claude-code-action@v1
+        continue-on-error: true
+        with:
+          use_vertex: "true"
+          claude_args: "--model claude-4-0-sonnet@20250805"
+          prompt: |
+            Review this PR for:
+            - Code quality and maintainability
+            - Security vulnerabilities (OWASP top 10, injection, XSS, etc.)
+            - Potential bugs and edge cases
+            - Adherence to project conventions (see CLAUDE.md)
+            - Performance concerns
+
+            Be concise. Focus on actionable feedback. Don't nitpick style unless it impacts readability.
+        env:
+          ANTHROPIC_VERTEX_PROJECT_ID: "itpc-gcp-ai-eng-claude"
+          CLOUD_ML_REGION: "us-east5"
