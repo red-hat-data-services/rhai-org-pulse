@@ -282,6 +282,10 @@ app.get('/api/admin/modules/sync/status', requireAdmin, function(req, res) {
   }
 });
 
+// ─── Export: Anonymized test data ───
+
+const { handleExport } = require('./export');
+
 // ─── Built-in Module Discovery ───
 
 const {
@@ -336,6 +340,12 @@ if (ttRouter && enabledSlugs.has('team-tracker')) {
 
 // Step 3: Mount module routers at /api/modules/<slug>/
 mountModuleRouters(app, builtInModules, moduleRouters);
+
+// ─── Export: Anonymized test data download ───
+
+app.get('/api/export/test-data', function(req, res) {
+  handleExport(req, res, storageModule, builtInModules);
+});
 
 // ─── Built-in Module Admin Endpoints ───
 

@@ -18,5 +18,19 @@
     "entry": "./server/index.js"
   },
   "defaultEnabled": true,
-  "requires": []
+  "requires": [],
+  "export": {
+    "customHandler": true,
+    "files": [
+      { "path": "org-roster-full.json", "notes": "Nested VP/orgs/leaders/members" },
+      { "path": "people/*.json", "notes": "Per-person Jira metrics" },
+      { "path": "github-contributions.json", "notes": "GitHub contribution counts" },
+      { "path": "github-history.json", "notes": "Monthly GitHub history" },
+      { "path": "gitlab-contributions.json", "notes": "GitLab contribution counts" },
+      { "path": "gitlab-history.json", "notes": "Monthly GitLab history" },
+      { "path": "snapshots/**/*.json", "notes": "Team snapshots" },
+      { "path": "jira-name-map.json", "notes": "Jira accountId cache" },
+      { "path": "roster-sync-config.json", "notes": "Roster sync configuration" }
+    ]
+  }
 }

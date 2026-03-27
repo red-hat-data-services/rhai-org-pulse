@@ -207,6 +207,50 @@ Disabling a module hides it from the UI immediately but its server routes remain
 
 The daily CronJob (`deploy/openshift/overlays/prod/cronjob-sync-refresh.yaml`) calls the Team Tracker module's API endpoints directly. If Team Tracker is disabled, those endpoints will return 404 and the CronJob will fail silently. Re-enable Team Tracker and restart to restore automatic syncs.
 
+## Export Hook
+
+Modules can participate in the anonymized test data export by declaring an `export` field in `module.json` and providing a custom export handler.
+
+### module.json
+
+```json
+{
+  "export": {
+    "customHandler": true,
+    "files": [
+      { "path": "my-data.json", "notes": "Description of data" }
+    ]
+  }
+}
+```
+
+When `customHandler` is `true`, the orchestrator calls `server/export.js` during export. The `files` array is documentation-only when `customHandler` is `true`.
+
+### server/export.js
+
+```javascript
+module.exports = async function(addFile, storage, mapping) {
+  const data = storage.readFromStorage('my-data.json');
+  if (!data) return;
+
+  // Anonymize PII using the shared mapping
+  const anonymized = { ...data };
+  if (anonymized.userName) {
+    anonymized.userName = mapping.getOrCreateNameMapping(anonymized.userName);
+  }
+
+  // Add to the export tarball
+  addFile('my-data.json', anonymized);
+};
+```
+
+**Parameters:**
+- `addFile(path, jsonData)` — adds a file to the tarball (path relative to `data/` root)
+- `storage` — shared storage layer (`readFromStorage`, `writeToStorage`, `listStorageFiles`)
+- `mapping` — universal PII mapping from `shared/server/anonymize.js` with functions like `getOrCreateNameMapping()`, `anonymizeJiraKey()`, `anonymizeIssueSummary()`, etc.
+
+The validation script (`npm run validate:modules`) checks that `server/export.js` exists when `customHandler` is `true`.
+
 ## PR Checklist
 
 - [ ] `module.json` has all required fields

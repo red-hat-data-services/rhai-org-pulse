@@ -33,3 +33,4 @@ output.txt
 .claude/*
 !.claude/CLAUDE.md
 !.claude/commands/
+data
