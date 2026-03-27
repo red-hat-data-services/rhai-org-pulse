@@ -143,6 +143,36 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── GET /teams ───
 
+  /**
+   * @openapi
+   * /api/modules/org-roster/teams:
+   *   get:
+   *     tags: ['OR: Teams']
+   *     summary: List all teams with metadata
+   *     parameters:
+   *       - in: query
+   *         name: org
+   *         schema:
+   *           type: string
+   *         description: Filter teams by organization name
+   *     responses:
+   *       200:
+   *         description: List of enriched teams
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 teams:
+   *                   type: array
+   *                   items:
+   *                     type: object
+   *                 fetchedAt:
+   *                   type: string
+   *                   nullable: true
+   *       500:
+   *         $ref: '#/components/responses/ServerError'
+   */
   router.get('/teams', function(req, res) {
     try {
       const { teams, fetchedAt } = buildEnrichedTeams(req.query.org);
@@ -164,6 +194,33 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── GET /teams/:teamKey ───
 
+  /**
+   * @openapi
+   * /api/modules/org-roster/teams/{teamKey}:
+   *   get:
+   *     tags: ['OR: Teams']
+   *     summary: Get team detail
+   *     parameters:
+   *       - in: path
+   *         name: teamKey
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Composite team key in org::teamName format
+   *     responses:
+   *       200:
+   *         description: Team detail with enriched metadata
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *       400:
+   *         description: Invalid teamKey format
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   *       500:
+   *         $ref: '#/components/responses/ServerError'
+   */
   router.get('/teams/:teamKey', function(req, res) {
     try {
       const teamKey = decodeURIComponent(req.params.teamKey);
@@ -192,6 +249,36 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── GET /teams/:teamKey/members ───
 
+  /**
+   * @openapi
+   * /api/modules/org-roster/teams/{teamKey}/members:
+   *   get:
+   *     tags: ['OR: Teams']
+   *     summary: Get team members
+   *     parameters:
+   *       - in: path
+   *         name: teamKey
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Composite team key in org::teamName format
+   *     responses:
+   *       200:
+   *         description: List of team members
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 members:
+   *                   type: array
+   *                   items:
+   *                     type: object
+   *       400:
+   *         description: Invalid teamKey format
+   *       500:
+   *         $ref: '#/components/responses/ServerError'
+   */
   router.get('/teams/:teamKey/members', function(req, res) {
     try {
       const teamKey = decodeURIComponent(req.params.teamKey);
@@ -213,6 +300,43 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── GET /people ───
 
+  /**
+   * @openapi
+   * /api/modules/org-roster/people:
+   *   get:
+   *     tags: ['OR: People']
+   *     summary: List people
+   *     parameters:
+   *       - in: query
+   *         name: org
+   *         schema:
+   *           type: string
+   *         description: Filter by organization display name
+   *       - in: query
+   *         name: team
+   *         schema:
+   *           type: string
+   *         description: Filter by team name
+   *       - in: query
+   *         name: status
+   *         schema:
+   *           type: string
+   *         description: Filter by person status (e.g. Confirmed)
+   *     responses:
+   *       200:
+   *         description: Filtered list of people
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 people:
+   *                   type: array
+   *                   items:
+   *                     type: object
+   *       500:
+   *         $ref: '#/components/responses/ServerError'
+   */
   router.get('/people', function(req, res) {
     try {
       const allPeople = getAllPeople(storage);
@@ -241,6 +365,34 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── GET /orgs ───
 
+  /**
+   * @openapi
+   * /api/modules/org-roster/orgs:
+   *   get:
+   *     tags: ['OR: Teams']
+   *     summary: List all organizations
+   *     responses:
+   *       200:
+   *         description: List of organizations with team counts and headcount
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 orgs:
+   *                   type: array
+   *                   items:
+   *                     type: object
+   *                     properties:
+   *                       name:
+   *                         type: string
+   *                       teamCount:
+   *                         type: integer
+   *                       headcount:
+   *                         type: integer
+   *       500:
+   *         $ref: '#/components/responses/ServerError'
+   */
   router.get('/orgs', function(req, res) {
     try {
       const metaData = readFromStorage('org-roster/teams-metadata.json');
@@ -277,6 +429,54 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── GET /orgs/:orgName/summary ───
 
+  /**
+   * @openapi
+   * /api/modules/org-roster/orgs/{orgName}/summary:
+   *   get:
+   *     tags: ['OR: Teams']
+   *     summary: Get org summary with headcount and role breakdown
+   *     parameters:
+   *       - in: path
+   *         name: orgName
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Organization display name, or _all for all orgs
+   *     responses:
+   *       200:
+   *         description: Org summary with headcount, role breakdown, components, and RFE counts
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 org:
+   *                   type: string
+   *                 teamCount:
+   *                   type: integer
+   *                 headcount:
+   *                   type: integer
+   *                 roleBreakdown:
+   *                   type: object
+   *                 roleFteBreakdown:
+   *                   type: object
+   *                 components:
+   *                   type: array
+   *                   items:
+   *                     type: string
+   *                 totalRfeCount:
+   *                   type: integer
+   *                 rfeByComponent:
+   *                   type: object
+   *                 teams:
+   *                   type: array
+   *                   items:
+   *                     type: object
+   *       404:
+   *         $ref: '#/components/responses/NotFound'
+   *       500:
+   *         $ref: '#/components/responses/ServerError'
+   */
   router.get('/orgs/:orgName/summary', function(req, res) {
     try {
       const orgName = decodeURIComponent(req.params.orgName);
@@ -361,6 +561,29 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── GET /components ───
 
+  /**
+   * @openapi
+   * /api/modules/org-roster/components:
+   *   get:
+   *     tags: ['OR: RFE']
+   *     summary: List all components
+   *     responses:
+   *       200:
+   *         description: Map of component names to team names
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 components:
+   *                   type: object
+   *                   additionalProperties:
+   *                     type: array
+   *                     items:
+   *                       type: string
+   *       500:
+   *         $ref: '#/components/responses/ServerError'
+   */
   router.get('/components', function(req, res) {
     try {
       const data = readFromStorage('org-roster/components.json');
@@ -373,6 +596,36 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── GET /rfe-backlog ───
 
+  /**
+   * @openapi
+   * /api/modules/org-roster/rfe-backlog:
+   *   get:
+   *     tags: ['OR: RFE']
+   *     summary: Get RFE backlog data
+   *     parameters:
+   *       - in: query
+   *         name: org
+   *         schema:
+   *           type: string
+   *         description: Filter RFE backlog by organization name
+   *     responses:
+   *       200:
+   *         description: RFE backlog grouped by component and team
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 byComponent:
+   *                   type: object
+   *                 byTeam:
+   *                   type: object
+   *                 fetchedAt:
+   *                   type: string
+   *                   nullable: true
+   *       500:
+   *         $ref: '#/components/responses/ServerError'
+   */
   router.get('/rfe-backlog', function(req, res) {
     try {
       const data = readFromStorage('org-roster/rfe-backlog.json');
@@ -400,6 +653,30 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── GET /sync/status ───
 
+  /**
+   * @openapi
+   * /api/modules/org-roster/sync/status:
+   *   get:
+   *     tags: ['OR: Sync']
+   *     summary: Get sync status
+   *     responses:
+   *       200:
+   *         description: Current sync status
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 lastSyncAt:
+   *                   type: string
+   *                   nullable: true
+   *                 status:
+   *                   type: string
+   *                 syncing:
+   *                   type: boolean
+   *       500:
+   *         $ref: '#/components/responses/ServerError'
+   */
   router.get('/sync/status', function(req, res) {
     try {
       const data = readFromStorage('org-roster/sync-status.json');
@@ -412,6 +689,31 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── POST /sync/trigger ───
 
+  /**
+   * @openapi
+   * /api/modules/org-roster/sync/trigger:
+   *   post:
+   *     tags: ['OR: Sync']
+   *     summary: Trigger full sync (sheets + RFE)
+   *     responses:
+   *       200:
+   *         description: Sync started
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 status:
+   *                   type: string
+   *       400:
+   *         description: No Google Sheet ID configured
+   *       403:
+   *         $ref: '#/components/responses/Forbidden'
+   *       409:
+   *         description: Sync already in progress
+   *       500:
+   *         $ref: '#/components/responses/ServerError'
+   */
   router.post('/sync/trigger', requireAdmin, async function(req, res) {
     if (isSyncInProgress()) {
       return res.status(409).json({ error: 'Sync already in progress' });
@@ -462,6 +764,31 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── POST /sync/sheets/trigger ───
 
+  /**
+   * @openapi
+   * /api/modules/org-roster/sync/sheets/trigger:
+   *   post:
+   *     tags: ['OR: Sync']
+   *     summary: Trigger sheets-only sync
+   *     responses:
+   *       200:
+   *         description: Sync started
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 status:
+   *                   type: string
+   *       400:
+   *         description: No Google Sheet ID configured
+   *       403:
+   *         $ref: '#/components/responses/Forbidden'
+   *       409:
+   *         description: Sync already in progress
+   *       500:
+   *         $ref: '#/components/responses/ServerError'
+   */
   router.post('/sync/sheets/trigger', requireAdmin, async function(req, res) {
     if (isSyncInProgress()) {
       return res.status(409).json({ error: 'Sync already in progress' });
@@ -493,6 +820,31 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── POST /sync/rfe/trigger ───
 
+  /**
+   * @openapi
+   * /api/modules/org-roster/sync/rfe/trigger:
+   *   post:
+   *     tags: ['OR: Sync']
+   *     summary: Trigger RFE backlog refresh
+   *     responses:
+   *       200:
+   *         description: Refresh started or skipped
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 status:
+   *                   type: string
+   *                 message:
+   *                   type: string
+   *       400:
+   *         description: No team data available
+   *       403:
+   *         $ref: '#/components/responses/Forbidden'
+   *       500:
+   *         $ref: '#/components/responses/ServerError'
+   */
   router.post('/sync/rfe/trigger', requireAdmin, async function(req, res) {
     try {
       const { teams } = buildEnrichedTeams();
@@ -524,6 +876,37 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── GET /config ───
 
+  /**
+   * @openapi
+   * /api/modules/org-roster/config:
+   *   get:
+   *     tags: ['OR: Config']
+   *     summary: Get module configuration
+   *     responses:
+   *       200:
+   *         description: Current module configuration
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 teamBoardsTab:
+   *                   type: string
+   *                 componentsTab:
+   *                   type: string
+   *                 jiraProject:
+   *                   type: string
+   *                 rfeIssueType:
+   *                   type: string
+   *                 orgNameMapping:
+   *                   type: object
+   *                 componentMapping:
+   *                   type: object
+   *       403:
+   *         $ref: '#/components/responses/Forbidden'
+   *       500:
+   *         $ref: '#/components/responses/ServerError'
+   */
   router.get('/config', requireAdmin, function(req, res) {
     try {
       res.json(getModuleConfig());
@@ -536,6 +919,31 @@ module.exports = function registerRoutes(router, context) {
   // ─── GET /sheet-orgs ───
   // Lightweight endpoint: fetches org names from the spreadsheet without running a full sync
 
+  /**
+   * @openapi
+   * /api/modules/org-roster/sheet-orgs:
+   *   get:
+   *     tags: ['OR: Config']
+   *     summary: Get org names from spreadsheet
+   *     responses:
+   *       200:
+   *         description: List of org names found in the configured spreadsheet
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 sheetOrgs:
+   *                   type: array
+   *                   items:
+   *                     type: string
+   *       400:
+   *         description: No Google Sheet ID configured
+   *       403:
+   *         $ref: '#/components/responses/Forbidden'
+   *       500:
+   *         $ref: '#/components/responses/ServerError'
+   */
   router.get('/sheet-orgs', requireAdmin, async function(req, res) {
     try {
       const sheetId = getSheetId();
@@ -559,6 +967,27 @@ module.exports = function registerRoutes(router, context) {
   // ─── GET /configured-orgs ───
   // Returns display names of orgs configured in Team Tracker org roots
 
+  /**
+   * @openapi
+   * /api/modules/org-roster/configured-orgs:
+   *   get:
+   *     tags: ['OR: Config']
+   *     summary: Get configured org display names
+   *     responses:
+   *       200:
+   *         description: Sorted list of org display names from Team Tracker config
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 configuredOrgs:
+   *                   type: array
+   *                   items:
+   *                     type: string
+   *       500:
+   *         $ref: '#/components/responses/ServerError'
+   */
   router.get('/configured-orgs', function(req, res) {
     try {
       const displayNames = getOrgDisplayNames(storage);
@@ -573,6 +1002,31 @@ module.exports = function registerRoutes(router, context) {
   // ─── GET /rfe-config ───
   // Returns Jira config needed to build RFE search URLs (public, no admin required)
 
+  /**
+   * @openapi
+   * /api/modules/org-roster/rfe-config:
+   *   get:
+   *     tags: ['OR: Config']
+   *     summary: Get RFE Jira configuration
+   *     responses:
+   *       200:
+   *         description: Jira configuration for RFE search URLs
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 jiraHost:
+   *                   type: string
+   *                 jiraProject:
+   *                   type: string
+   *                 rfeIssueType:
+   *                   type: string
+   *                 componentMapping:
+   *                   type: object
+   *       500:
+   *         $ref: '#/components/responses/ServerError'
+   */
   router.get('/rfe-config', function(req, res) {
     try {
       const config = getModuleConfig();
@@ -591,6 +1045,31 @@ module.exports = function registerRoutes(router, context) {
   // ─── GET /jira-components ───
   // Fetches component names from the configured Jira project
 
+  /**
+   * @openapi
+   * /api/modules/org-roster/jira-components:
+   *   get:
+   *     tags: ['OR: Config']
+   *     summary: Fetch Jira project components
+   *     responses:
+   *       200:
+   *         description: Sorted list of component names from the configured Jira project
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 jiraComponents:
+   *                   type: array
+   *                   items:
+   *                     type: string
+   *       400:
+   *         description: JIRA_TOKEN and JIRA_EMAIL not configured
+   *       403:
+   *         $ref: '#/components/responses/Forbidden'
+   *       500:
+   *         $ref: '#/components/responses/ServerError'
+   */
   router.get('/jira-components', requireAdmin, async function(req, res) {
     try {
       const fetch = require('node-fetch');
@@ -622,6 +1101,48 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── POST /config ───
 
+  /**
+   * @openapi
+   * /api/modules/org-roster/config:
+   *   post:
+   *     tags: ['OR: Config']
+   *     summary: Save module configuration
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               teamBoardsTab:
+   *                 type: string
+   *               componentsTab:
+   *                 type: string
+   *               jiraProject:
+   *                 type: string
+   *               rfeIssueType:
+   *                 type: string
+   *               orgNameMapping:
+   *                 type: object
+   *               componentMapping:
+   *                 type: object
+   *     responses:
+   *       200:
+   *         description: Configuration saved
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 status:
+   *                   type: string
+   *                 config:
+   *                   type: object
+   *       403:
+   *         $ref: '#/components/responses/Forbidden'
+   *       500:
+   *         $ref: '#/components/responses/ServerError'
+   */
   router.post('/config', requireAdmin, function(req, res) {
     try {
       const { teamBoardsTab, componentsTab, jiraProject, rfeIssueType, orgNameMapping, componentMapping } = req.body;

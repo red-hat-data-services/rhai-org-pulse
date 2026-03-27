@@ -49,6 +49,10 @@ jobs:
         if: steps.changes.outputs.app == 'true'
         run: npm test
 
+      - name: Validate OpenAPI spec
+        if: steps.changes.outputs.app == 'true'
+        run: npm run validate:openapi
+
       - name: Build
         if: steps.changes.outputs.app == 'true'
         run: npm run build

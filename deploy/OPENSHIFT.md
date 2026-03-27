@@ -68,30 +68,19 @@ npm run build
 
 # Create a minimal Dockerfile for the pre-built assets
 cat > /tmp/frontend-amd64.Dockerfile <<'EOF'
-FROM nginx:1.27-alpine
-RUN rm /etc/nginx/conf.d/default.conf
-COPY deploy/nginx.conf /etc/nginx/conf.d/default.conf
-COPY dist/ /usr/share/nginx/html/
-RUN chown -R 1001:0 /usr/share/nginx/html && \
-    chmod -R g+rwX /usr/share/nginx/html && \
-    chown -R 1001:0 /var/cache/nginx && \
-    chmod -R g+rwX /var/cache/nginx && \
-    chown -R 1001:0 /var/log/nginx && \
-    chmod -R g+rwX /var/log/nginx && \
-    chown -R 1001:0 /etc/nginx/conf.d && \
-    chmod -R g+rwX /etc/nginx/conf.d && \
-    touch /var/run/nginx.pid && \
-    chown 1001:0 /var/run/nginx.pid && \
-    chmod g+rw /var/run/nginx.pid
+FROM registry.access.redhat.com/ubi9/nginx-124
+COPY deploy/nginx.conf /opt/app-root/etc/nginx.default.d/app.conf
+COPY dist/ /opt/app-root/src/
 USER 1001
 EXPOSE 8080
+CMD ["/usr/libexec/s2i/run"]
 EOF
 
 # Build using a temp context (dist/ is in .dockerignore)
 TMPDIR=$(mktemp -d)
 cp -r dist "$TMPDIR/dist"
 cp -r deploy "$TMPDIR/deploy"
-podman build --platform linux/amd64 -t quay.io/accorvin/team-tracker-frontend:latest \
+podman build --platform linux/amd64 -t quay.io/org-pulse/team-tracker-frontend:latest \
   -f /tmp/frontend-amd64.Dockerfile "$TMPDIR"
 rm -rf "$TMPDIR"
 ```
@@ -106,6 +95,8 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY node_modules/ ./node_modules/
 COPY server/ ./server/
+COPY shared/server/ ./shared/server/
+COPY modules/ ./modules/
 RUN mkdir -p /app/data && chown -R 1001:0 /app/data && chmod -R g+rwX /app/data
 USER 1001
 EXPOSE 3001
@@ -117,8 +108,11 @@ EOF
 TMPDIR=$(mktemp -d)
 cp package.json package-lock.json "$TMPDIR/"
 cp -r server "$TMPDIR/server"
+mkdir -p "$TMPDIR/shared"
+cp -r shared/server "$TMPDIR/shared/server"
+cp -r modules "$TMPDIR/modules"
 cd "$TMPDIR" && npm ci --omit=dev && cd -
-podman build --platform linux/amd64 -t quay.io/accorvin/team-tracker-backend:latest \
+podman build --platform linux/amd64 -t quay.io/org-pulse/team-tracker-backend:latest \
   -f /tmp/backend-amd64.Dockerfile "$TMPDIR"
 rm -rf "$TMPDIR"
 ```
@@ -130,15 +124,15 @@ rm -rf "$TMPDIR"
 Build directly with the standard Dockerfiles:
 
 ```bash
-podman build -t quay.io/accorvin/team-tracker-backend:latest -f deploy/backend.Dockerfile .
-podman build -t quay.io/accorvin/team-tracker-frontend:latest -f deploy/frontend.Dockerfile .
+podman build -t quay.io/org-pulse/team-tracker-backend:latest -f deploy/backend.Dockerfile .
+podman build -t quay.io/org-pulse/team-tracker-frontend:latest -f deploy/frontend.Dockerfile .
 ```
 
 ## 4. Push images
 
 ```bash
-podman push quay.io/accorvin/team-tracker-backend:latest
-podman push quay.io/accorvin/team-tracker-frontend:latest
+podman push quay.io/org-pulse/team-tracker-backend:latest
+podman push quay.io/org-pulse/team-tracker-frontend:latest
 ```
 
 Ensure the repositories are public on quay.io, or configure image pull secrets on the cluster.
@@ -165,11 +159,12 @@ oc get route team-tracker -n team-tracker -o jsonpath='{.spec.host}'
 
 ## Dev vs prod overlays
 
-| Aspect | Dev (`overlays/dev/`) | Prod (`overlays/prod/`) |
-|--------|----------------------|------------------------|
-| Namespace | `team-tracker` | `ambient-code--team-tracker` |
-| `ADMIN_EMAILS` | Unset (first user auto-added to allowlist) | Set to admin email (pre-seeds allowlist) |
-| Route hostname | Auto-generated | Patched to prod hostname |
+| Aspect | Dev (`overlays/dev/`) | Preprod (`overlays/preprod/`) | Prod (`overlays/prod/`) |
+|--------|----------------------|------------------------------|------------------------|
+| Namespace | `team-tracker` | `ambient-code--team-tracker` | `ambient-code--team-tracker` |
+| `ADMIN_EMAILS` | Unset (first user auto-added to allowlist) | Inherits from base | Set to admin email (pre-seeds allowlist) |
+| Route hostname | Auto-generated | Patched to preprod hostname | Patched to prod hostname |
+| Images | `:latest` | `:latest` (inherits from base) | Pinned to git SHA tags |
 
 In dev, when `ADMIN_EMAILS` is empty the first authenticated user is automatically added as admin. This makes it easy for any team member to test without needing their email pre-configured.
 
@@ -179,8 +174,8 @@ Rebuild the affected image(s), push, and restart:
 
 ```bash
 # Rebuild and push (see step 3 for ARM Mac instructions)
-podman push quay.io/accorvin/team-tracker-backend:latest
-podman push quay.io/accorvin/team-tracker-frontend:latest
+podman push quay.io/org-pulse/team-tracker-backend:latest
+podman push quay.io/org-pulse/team-tracker-frontend:latest
 
 # Restart to pull new images
 oc rollout restart deployment/backend deployment/frontend -n team-tracker

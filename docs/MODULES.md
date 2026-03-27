@@ -1,6 +1,6 @@
 # Module Development Guide
 
-This document covers how to create, develop, and contribute built-in modules for Org Pulse.
+This document covers how to create, develop, and contribute built-in modules for Team Tracker.
 
 ## Quick Start
 

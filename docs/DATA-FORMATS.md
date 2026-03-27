@@ -126,6 +126,64 @@ Filename is the person's display name lowercased with non-alphanumeric chars rep
 
 **Important:** Same nested `months` structure as GitHub history.
 
+**Note on `source` field:** In `gitlab-contributions.json`, the `source` field indicates the API used to fetch the data. Currently the only value is `"graphql"` (GitLab GraphQL API).
+
+## Roster Sync Config — `data/roster-sync-config.json`
+
+Stores the configuration for automated roster building. Managed via the Settings UI and the `POST /api/admin/roster-sync/config` endpoint.
+
+```json
+{
+  "orgRoots": [
+    { "uid": "jsmith", "displayName": "Jane Smith" }
+  ],
+  "googleSheetId": "1ABCdef...",
+  "sheetNames": ["Sheet1", "Sheet2"],
+  "githubOrgs": ["my-org"],
+  "gitlabGroups": ["my-group"],
+  "teamStructure": {
+    "nameColumn": "Name",
+    "teamGroupingColumn": "Team",
+    "customFields": [
+      {
+        "key": "focus_area",
+        "columnLabel": "Focus Area",
+        "displayLabel": "Focus Area",
+        "visible": true,
+        "primaryDisplay": false
+      }
+    ]
+  },
+  "lastSyncAt": "2026-03-27T06:00:00.000Z",
+  "lastSyncStatus": "success",
+  "lastSyncError": null
+}
+```
+
+**Notes:**
+- `orgRoots` is required (at least one). Each entry needs `uid` and `displayName`.
+- `googleSheetId`, `sheetNames`, `githubOrgs`, `gitlabGroups` are optional (default to `null` or `[]`).
+- `teamStructure` replaces legacy `fieldMapping`/`customFields` via an in-memory migration on load.
+- `customFields` supports up to 20 entries. At most one can have `primaryDisplay: true`.
+- `lastSyncAt`, `lastSyncStatus`, `lastSyncError` are auto-populated during sync runs.
+
+## Module State — `data/modules-state.json`
+
+Tracks which modules are enabled or disabled. Managed via `POST /api/admin/modules/:slug/enable` and `POST /api/admin/modules/:slug/disable`.
+
+```json
+{
+  "team-tracker": true,
+  "hello": false
+}
+```
+
+**Notes:**
+- Keys are module slugs, values are booleans.
+- An empty object `{}` is valid — modules fall back to their `defaultEnabled` value from `module.json`.
+- Created on first module enable/disable action; may not exist on fresh deployments.
+- At startup, required dependencies are auto-enabled via `reconcileStartupState()`.
+
 ## Snapshots — `data/snapshots/{sanitized-teamKey}/{YYYY-MM-DD}.json`
 
 Team key is sanitized: `::` becomes `--`, special chars become `_`. The filename date is the period end date.

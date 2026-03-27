@@ -51,7 +51,7 @@ jobs:
         continue-on-error: true
         with:
           use_vertex: "true"
-          claude_args: "--model vertex_ai/claude-sonnet-4-6"
+          claude_args: "--model vertex_ai/claude-sonnet-4-5@20250929"
           prompt: |
             Review this PR for:
             - Code quality and maintainability

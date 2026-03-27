@@ -65,15 +65,73 @@ if (DEMO_MODE) {
 
 const { authMiddleware, requireAdmin, isAdmin, seedAdminList } = createAuthMiddleware(readFromStorage, writeToStorage);
 
+// ─── Swagger UI (before auth) ───
+
+const { createOpenApiSpec } = require('./openapi-config');
+const swaggerUi = require('swagger-ui-express');
+const openapiSpec = createOpenApiSpec();
+
+app.get('/api/docs/openapi.json', function(req, res) { res.json(openapiSpec); });
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openapiSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Org Pulse API Docs'
+}));
+
 // ─── Health check (before auth) ───
 
+// Root-level health check — not in Swagger docs because nginx handles /healthz
+// directly in production and it's not reachable through the /api/ proxy.
+// Use /api/healthz instead.
 app.get('/healthz', function(req, res) {
   res.json({ status: 'ok' });
 });
+
+/**
+ * @openapi
+ * /api/healthz:
+ *   get:
+ *     tags: [Health]
+ *     summary: Health check (API prefix)
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: Server is healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: ok
+ */
 app.get('/api/healthz', function(req, res) {
   res.json({ status: 'ok' });
 });
 
+/**
+ * @openapi
+ * /api/whoami:
+ *   get:
+ *     tags: [Auth]
+ *     summary: Get current user info
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: Current user information
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 email:
+ *                   type: string
+ *                   format: email
+ *                 displayName:
+ *                   type: string
+ *                 isAdmin:
+ *                   type: boolean
+ */
 // Whoami endpoint — returns current user info
 app.get('/api/whoami', function(req, res) {
   const email = req.headers['x-forwarded-email'];
@@ -94,6 +152,24 @@ app.use(authMiddleware);
 
 // ─── Routes: Allowlist ───
 
+/**
+ * @openapi
+ * /api/allowlist:
+ *   get:
+ *     tags: [Allowlist]
+ *     summary: Get the email allowlist
+ *     responses:
+ *       200:
+ *         description: List of allowed emails
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AllowlistResponse'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
 app.get('/api/allowlist', requireAdmin, function(req, res) {
   try {
     const data = readFromStorage('allowlist.json') || { emails: [] };
@@ -104,6 +180,47 @@ app.get('/api/allowlist', requireAdmin, function(req, res) {
   }
 });
 
+/**
+ * @openapi
+ * /api/allowlist:
+ *   post:
+ *     tags: [Allowlist]
+ *     summary: Add an email to the allowlist
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: Updated allowlist
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AllowlistResponse'
+ *       400:
+ *         description: Invalid email
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       409:
+ *         description: Email already on allowlist
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
 app.post('/api/allowlist', requireAdmin, function(req, res) {
   try {
     const { email } = req.body;
@@ -130,6 +247,39 @@ app.post('/api/allowlist', requireAdmin, function(req, res) {
   }
 });
 
+/**
+ * @openapi
+ * /api/allowlist/{email}:
+ *   delete:
+ *     tags: [Allowlist]
+ *     summary: Remove an email from the allowlist
+ *     parameters:
+ *       - in: path
+ *         name: email
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: email
+ *     responses:
+ *       200:
+ *         description: Updated allowlist
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AllowlistResponse'
+ *       400:
+ *         description: Cannot remove the last user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
 app.delete('/api/allowlist/:email', requireAdmin, function(req, res) {
   try {
     const email = decodeURIComponent(req.params.email).toLowerCase();
@@ -154,6 +304,27 @@ app.delete('/api/allowlist/:email', requireAdmin, function(req, res) {
 
 // ─── Routes: Git-Static Modules ───
 
+/**
+ * @openapi
+ * /api/modules:
+ *   get:
+ *     tags: [Git-Static Modules]
+ *     summary: List all git-static modules (public fields)
+ *     responses:
+ *       200:
+ *         description: List of modules
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 modules:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
 // Public: list modules (display fields only)
 app.get('/api/modules', function(req, res) {
   try {
@@ -165,6 +336,30 @@ app.get('/api/modules', function(req, res) {
   }
 });
 
+/**
+ * @openapi
+ * /api/modules/{slug}:
+ *   get:
+ *     tags: [Git-Static Modules]
+ *     summary: Get a single git-static module (public fields)
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Module details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
 // Public: get single module (display fields only)
 app.get('/api/modules/:slug', function(req, res) {
   try {
@@ -179,6 +374,29 @@ app.get('/api/modules/:slug', function(req, res) {
   }
 });
 
+/**
+ * @openapi
+ * /api/admin/modules:
+ *   get:
+ *     tags: [Git-Static Modules]
+ *     summary: List all git-static modules (admin, includes git fields)
+ *     responses:
+ *       200:
+ *         description: List of modules with admin details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 modules:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
 // Admin: list modules (with git fields, masked tokens)
 app.get('/api/admin/modules', requireAdmin, function(req, res) {
   try {
@@ -190,6 +408,36 @@ app.get('/api/admin/modules', requireAdmin, function(req, res) {
   }
 });
 
+/**
+ * @openapi
+ * /api/admin/modules:
+ *   post:
+ *     tags: [Git-Static Modules]
+ *     summary: Register a new git-static module
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       201:
+ *         description: Module created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
 // Admin: register new module
 app.post('/api/admin/modules', requireAdmin, function(req, res) {
   try {
@@ -205,6 +453,44 @@ app.post('/api/admin/modules', requireAdmin, function(req, res) {
   }
 });
 
+/**
+ * @openapi
+ * /api/admin/modules/{slug}:
+ *   put:
+ *     tags: [Git-Static Modules]
+ *     summary: Update a git-static module
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Updated module
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
 // Admin: update module
 app.put('/api/admin/modules/:slug', requireAdmin, function(req, res) {
   try {
@@ -221,6 +507,35 @@ app.put('/api/admin/modules/:slug', requireAdmin, function(req, res) {
   }
 });
 
+/**
+ * @openapi
+ * /api/admin/modules/{slug}:
+ *   delete:
+ *     tags: [Git-Static Modules]
+ *     summary: Remove a git-static module
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Module removed
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
 // Admin: remove module
 app.delete('/api/admin/modules/:slug', requireAdmin, function(req, res) {
   try {
@@ -237,6 +552,44 @@ app.delete('/api/admin/modules/:slug', requireAdmin, function(req, res) {
   }
 });
 
+/**
+ * @openapi
+ * /api/admin/modules/{slug}/sync:
+ *   post:
+ *     tags: [Git-Static Modules]
+ *     summary: Trigger sync for a single git-static module
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Sync started
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: started
+ *                 slug:
+ *                   type: string
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       409:
+ *         description: Sync already in progress
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
 // Admin: sync one module
 app.post('/api/admin/modules/:slug/sync', requireAdmin, async function(req, res) {
   try {
@@ -261,6 +614,28 @@ app.post('/api/admin/modules/:slug/sync', requireAdmin, async function(req, res)
   }
 });
 
+/**
+ * @openapi
+ * /api/admin/modules/sync:
+ *   post:
+ *     tags: [Git-Static Modules]
+ *     summary: Trigger sync for all git-static modules
+ *     responses:
+ *       200:
+ *         description: Sync started
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: started
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
 // Admin: sync all git-static modules
 app.post('/api/admin/modules/sync', requireAdmin, async function(req, res) {
   try {
@@ -280,6 +655,24 @@ app.post('/api/admin/modules/sync', requireAdmin, async function(req, res) {
   }
 });
 
+/**
+ * @openapi
+ * /api/admin/modules/sync/status:
+ *   get:
+ *     tags: [Git-Static Modules]
+ *     summary: Get sync status for all git-static modules
+ *     responses:
+ *       200:
+ *         description: Sync status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
 // Admin: get sync status
 app.get('/api/admin/modules/sync/status', requireAdmin, function(req, res) {
   try {
@@ -352,6 +745,23 @@ mountModuleRouters(app, builtInModules, moduleRouters);
 
 // ─── Export: Anonymized test data download ───
 
+/**
+ * @openapi
+ * /api/export/test-data:
+ *   get:
+ *     tags: [Export]
+ *     summary: Download anonymized test data as a tarball
+ *     responses:
+ *       200:
+ *         description: Tarball of anonymized fixture data
+ *         content:
+ *           application/gzip:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
 app.get('/api/export/test-data', function(req, res) {
   handleExport(req, res, storageModule, builtInModules);
 });
@@ -360,6 +770,32 @@ app.get('/api/export/test-data', function(req, res) {
 
 const mustGather = require('./must-gather');
 
+/**
+ * @openapi
+ * /api/must-gather:
+ *   get:
+ *     tags: [Export]
+ *     summary: Download diagnostic must-gather bundle
+ *     parameters:
+ *       - in: query
+ *         name: redact
+ *         schema:
+ *           type: string
+ *           enum: [minimal, aggressive]
+ *           default: minimal
+ *         description: Redaction level for sensitive data
+ *     responses:
+ *       200:
+ *         description: JSON diagnostic bundle
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
 app.get('/api/must-gather', requireAdmin, async function(req, res) {
   try {
     const redact = req.query.redact === 'aggressive' ? 'aggressive' : 'minimal';
@@ -384,6 +820,40 @@ app.get('/api/must-gather', requireAdmin, async function(req, res) {
 
 // ─── Built-in Module Admin Endpoints ───
 
+/**
+ * @openapi
+ * /api/admin/modules/state:
+ *   get:
+ *     tags: [Built-in Modules]
+ *     summary: Get all built-in modules with enable/disable state
+ *     responses:
+ *       200:
+ *         description: Built-in module states
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 modules:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       slug:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                       enabled:
+ *                         type: boolean
+ *                       requiredBy:
+ *                         type: array
+ *                         items:
+ *                           type: string
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
 // Admin: get all built-in modules with state
 app.get('/api/admin/modules/state', requireAdmin, function(req, res) {
   try {
@@ -412,6 +882,43 @@ app.get('/api/admin/modules/state', requireAdmin, function(req, res) {
   }
 });
 
+/**
+ * @openapi
+ * /api/admin/modules/{slug}/enable:
+ *   post:
+ *     tags: [Built-in Modules]
+ *     summary: Enable a built-in module
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Module enabled
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 enabled:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                 autoEnabled:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                 restartRequired:
+ *                   type: boolean
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
 // Admin: enable a built-in module
 app.post('/api/admin/modules/:slug/enable', requireAdmin, function(req, res) {
   try {
@@ -456,6 +963,41 @@ app.post('/api/admin/modules/:slug/enable', requireAdmin, function(req, res) {
   }
 });
 
+/**
+ * @openapi
+ * /api/admin/modules/{slug}/disable:
+ *   post:
+ *     tags: [Built-in Modules]
+ *     summary: Disable a built-in module
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Module disabled
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 disabled:
+ *                   type: string
+ *       400:
+ *         description: Cannot disable - required by other modules
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
 // Admin: disable a built-in module
 app.post('/api/admin/modules/:slug/disable', requireAdmin, function(req, res) {
   try {
@@ -494,6 +1036,27 @@ app.post('/api/admin/modules/:slug/disable', requireAdmin, function(req, res) {
   }
 });
 
+/**
+ * @openapi
+ * /api/built-in-modules/state:
+ *   get:
+ *     tags: [Built-in Modules]
+ *     summary: Get enabled built-in module slugs (public)
+ *     responses:
+ *       200:
+ *         description: List of enabled module slugs
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 enabledSlugs:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
 // Public (auth required): get enabled built-in module slugs
 app.get('/api/built-in-modules/state', function(req, res) {
   try {

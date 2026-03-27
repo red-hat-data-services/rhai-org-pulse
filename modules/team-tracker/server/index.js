@@ -348,10 +348,48 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Routes: Unified Refresh ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/refresh/status:
+   *   get:
+   *     tags: ['TT: Metrics']
+   *     summary: Get refresh status
+   *     responses:
+   *       200:
+   *         description: Current refresh state
+   *       403:
+   *         description: Forbidden — admin access required
+   */
   router.get('/refresh/status', requireAdmin, function(req, res) {
     res.json(refreshState);
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/refresh:
+   *   post:
+   *     tags: ['TT: Metrics']
+   *     summary: Trigger data refresh
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/RefreshRequest'
+   *     responses:
+   *       200:
+   *         description: Refresh started or completed
+   *       400:
+   *         description: Invalid scope or missing parameters
+   *       403:
+   *         description: Forbidden
+   *       404:
+   *         description: Person or team not found
+   *       409:
+   *         description: Refresh already in progress
+   *       500:
+   *         description: Server error
+   */
   router.post('/refresh', async function(req, res) {
     const { scope, name, teamKey, orgKey } = req.body || {};
     const force = req.body?.force === true;
@@ -639,6 +677,16 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Routes: Reader ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/boards:
+   *   get:
+   *     tags: ['TT: Sprints']
+   *     summary: List configured boards
+   *     responses:
+   *       200:
+   *         description: Array of configured sprint boards
+   */
   router.get('/boards', function(req, res) {
     try {
       const teamsData = readFromStorage('teams.json');
@@ -664,6 +712,23 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/boards/{boardId}/sprints:
+   *   get:
+   *     tags: ['TT: Sprints']
+   *     summary: Get sprints for a board
+   *     parameters:
+   *       - in: path
+   *         name: boardId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The board ID
+   *     responses:
+   *       200:
+   *         description: List of sprints for the board
+   */
   router.get('/boards/:boardId/sprints', function(req, res) {
     try {
       const { boardId } = req.params;
@@ -679,6 +744,23 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/boards/{boardId}/trend:
+   *   get:
+   *     tags: ['TT: Sprints']
+   *     summary: Get sprint trend data for a board
+   *     parameters:
+   *       - in: path
+   *         name: boardId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The board ID
+   *     responses:
+   *       200:
+   *         description: Sprint trend data for the board
+   */
   router.get('/boards/:boardId/trend', function(req, res) {
     try {
       const { boardId } = req.params;
@@ -724,6 +806,23 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/sprints/{sprintId}:
+   *   get:
+   *     tags: ['TT: Sprints']
+   *     summary: Get sprint detail
+   *     parameters:
+   *       - in: path
+   *         name: sprintId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The sprint ID
+   *     responses:
+   *       200:
+   *         description: Sprint detail data
+   */
   router.get('/sprints/:sprintId', function(req, res) {
     try {
       const { sprintId } = req.params;
@@ -740,6 +839,16 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/teams:
+   *   get:
+   *     tags: ['TT: Sprints']
+   *     summary: Get sprint board team config
+   *     responses:
+   *       200:
+   *         description: Sprint board team configuration
+   */
   router.get('/teams', function(req, res) {
     try {
       const data = readFromStorage('teams.json');
@@ -753,6 +862,24 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/teams:
+   *   post:
+   *     tags: ['TT: Sprints']
+   *     summary: Save sprint board team config
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *     responses:
+   *       200:
+   *         description: Team config saved
+   *       403:
+   *         description: Forbidden — admin access required
+   */
   router.post('/teams', requireAdmin, function(req, res) {
     try {
       const { teams } = req.body;
@@ -767,6 +894,16 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/dashboard-summary:
+   *   get:
+   *     tags: ['TT: Sprints']
+   *     summary: Get dashboard summary across boards
+   *     responses:
+   *       200:
+   *         description: Dashboard summary data
+   */
   router.get('/dashboard-summary', function(req, res) {
     try {
       const data = readFromStorage('dashboard-summary.json');
@@ -840,6 +977,22 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/trend:
+   *   get:
+   *     tags: ['TT: Sprints']
+   *     summary: Get aggregate trend across boards
+   *     parameters:
+   *       - in: query
+   *         name: boardIds
+   *         schema:
+   *           type: string
+   *         description: Comma-separated board IDs to aggregate
+   *     responses:
+   *       200:
+   *         description: Aggregated trend data
+   */
   router.get('/trend', function(req, res) {
     try {
       const boardIds = (req.query.boardIds || '').split(',').filter(Boolean);
@@ -893,6 +1046,16 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Routes: Roster & Person Metrics ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/last-refreshed:
+   *   get:
+   *     tags: ['TT: Metrics']
+   *     summary: Get last refresh timestamp
+   *     responses:
+   *       200:
+   *         description: Last refresh timestamp and config info
+   */
   router.get('/last-refreshed', function(req, res) {
     const data = readFromStorage('last-refreshed.json');
     const jiraConfig = jiraSyncConfig.loadConfig(storage);
@@ -902,6 +1065,20 @@ module.exports = function registerRoutes(router, context) {
     });
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/roster:
+   *   get:
+   *     tags: ['TT: Roster']
+   *     summary: Get organization roster
+   *     responses:
+   *       200:
+   *         description: Organization roster data
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/RosterResponse'
+   */
   router.get('/roster', function(req, res) {
     try {
       const full = readRosterFull();
@@ -916,6 +1093,16 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/people/metrics:
+   *   get:
+   *     tags: ['TT: Metrics']
+   *     summary: Get bulk people metrics
+   *     responses:
+   *       200:
+   *         description: Metrics for all people
+   */
   router.get('/people/metrics', function(req, res) {
     try {
       const files = listStorageFiles('people');
@@ -945,6 +1132,27 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/person/{jiraDisplayName}/metrics:
+   *   get:
+   *     tags: ['TT: Metrics']
+   *     summary: Get person metrics
+   *     parameters:
+   *       - in: path
+   *         name: jiraDisplayName
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Jira display name of the person
+   *     responses:
+   *       200:
+   *         description: Person metrics data
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/PersonMetrics'
+   */
   router.get('/person/:jiraDisplayName/metrics', async function(req, res) {
     try {
       const name = decodeURIComponent(req.params.jiraDisplayName);
@@ -966,6 +1174,27 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/team/{teamKey}/metrics:
+   *   get:
+   *     tags: ['TT: Metrics']
+   *     summary: Get team metrics
+   *     parameters:
+   *       - in: path
+   *         name: teamKey
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Team key (format orgKey::teamName)
+   *     responses:
+   *       200:
+   *         description: Team metrics data
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/TeamMetrics'
+   */
   router.get('/team/:teamKey/metrics', function(req, res) {
     try {
       const teamKey = decodeURIComponent(req.params.teamKey);
@@ -1065,6 +1294,18 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/jira-name-cache:
+   *   delete:
+   *     tags: ['TT: Admin']
+   *     summary: Clear Jira name resolution cache
+   *     responses:
+   *       200:
+   *         description: Cache cleared successfully
+   *       403:
+   *         description: Forbidden — admin access required
+   */
   router.delete('/jira-name-cache', requireAdmin, function(req, res) {
     jiraNameCache = {};
     writeToStorage('jira-name-map.json', {});
@@ -1073,6 +1314,20 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Routes: GitHub Contributions ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/github/contributions:
+   *   get:
+   *     tags: ['TT: GitHub']
+   *     summary: Get all GitHub contributions
+   *     responses:
+   *       200:
+   *         description: GitHub contribution data for all users
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/GitHubContributions'
+   */
   router.get('/github/contributions', function(req, res) {
     try {
       const cache = readGithubCache();
@@ -1083,6 +1338,23 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/github/contributions/{username}:
+   *   get:
+   *     tags: ['TT: GitHub']
+   *     summary: Get GitHub contributions for a user
+   *     parameters:
+   *       - in: path
+   *         name: username
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: GitHub username
+   *     responses:
+   *       200:
+   *         description: GitHub contribution data for the user
+   */
   router.get('/github/contributions/:username', function(req, res) {
     try {
       const username = decodeURIComponent(req.params.username);
@@ -1097,6 +1369,20 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Routes: GitLab Contributions ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/gitlab/contributions:
+   *   get:
+   *     tags: ['TT: GitLab']
+   *     summary: Get all GitLab contributions
+   *     responses:
+   *       200:
+   *         description: GitLab contribution data for all users
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/GitLabContributions'
+   */
   router.get('/gitlab/contributions', function(req, res) {
     try {
       const cache = readGitlabCache();
@@ -1107,6 +1393,23 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/gitlab/contributions/{username}:
+   *   get:
+   *     tags: ['TT: GitLab']
+   *     summary: Get GitLab contributions for a user
+   *     parameters:
+   *       - in: path
+   *         name: username
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: GitLab username
+   *     responses:
+   *       200:
+   *         description: GitLab contribution data for the user
+   */
   router.get('/gitlab/contributions/:username', function(req, res) {
     try {
       const username = decodeURIComponent(req.params.username);
@@ -1121,6 +1424,16 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Routes: Trends ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/trends:
+   *   get:
+   *     tags: ['TT: Trends']
+   *     summary: Get Jira, GitHub, and GitLab trend data
+   *     responses:
+   *       200:
+   *         description: Combined trend data from all sources
+   */
   router.get('/trends', function(req, res) {
     try {
       const jira = buildJiraTrends();
@@ -1135,6 +1448,23 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Routes: Annotations ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/sprints/{sprintId}/annotations:
+   *   get:
+   *     tags: ['TT: Sprints']
+   *     summary: Get sprint annotations
+   *     parameters:
+   *       - in: path
+   *         name: sprintId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The sprint ID
+   *     responses:
+   *       200:
+   *         description: Annotations for the sprint
+   */
   router.get('/sprints/:sprintId/annotations', function(req, res) {
     try {
       const { sprintId } = req.params;
@@ -1146,6 +1476,37 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/sprints/{sprintId}/annotations:
+   *   put:
+   *     tags: ['TT: Sprints']
+   *     summary: Add a sprint annotation
+   *     parameters:
+   *       - in: path
+   *         name: sprintId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The sprint ID
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required: [assignee, text]
+   *             properties:
+   *               assignee:
+   *                 type: string
+   *               text:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: Annotation created
+   *       400:
+   *         description: Missing assignee or text
+   */
   router.put('/sprints/:sprintId/annotations', function(req, res) {
     try {
       const { sprintId } = req.params;
@@ -1175,6 +1536,39 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/sprints/{sprintId}/annotations/{assignee}/{annotationId}:
+   *   delete:
+   *     tags: ['TT: Sprints']
+   *     summary: Delete a sprint annotation
+   *     parameters:
+   *       - in: path
+   *         name: sprintId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The sprint ID
+   *       - in: path
+   *         name: assignee
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The assignee name
+   *       - in: path
+   *         name: annotationId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The annotation ID
+   *     responses:
+   *       200:
+   *         description: Annotation deleted
+   *       403:
+   *         description: Forbidden — admin access required
+   *       404:
+   *         description: Annotation not found
+   */
   router.delete('/sprints/:sprintId/annotations/:assignee/:annotationId', requireAdmin, function(req, res) {
     try {
       const { sprintId, assignee, annotationId } = req.params;
@@ -1204,6 +1598,16 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Routes: Roster Sync ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/roster-sync/configured:
+   *   get:
+   *     tags: ['TT: Admin']
+   *     summary: Check if roster sync is configured
+   *     responses:
+   *       200:
+   *         description: Configuration status
+   */
   router.get('/roster-sync/configured', function(req, res) {
     try {
       const config = rosterSyncConfig.loadConfig(storage);
@@ -1214,6 +1618,18 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/admin/roster-sync/field-definitions:
+   *   get:
+   *     tags: ['TT: Admin']
+   *     summary: Get roster sync field definitions
+   *     responses:
+   *       200:
+   *         description: Custom field definitions
+   *       403:
+   *         description: Forbidden — admin access required
+   */
   router.get('/admin/roster-sync/field-definitions', requireAdmin, function(req, res) {
     try {
       const config = rosterSyncConfig.loadConfig(storage);
@@ -1224,6 +1640,18 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/admin/roster-sync/config:
+   *   get:
+   *     tags: ['TT: Admin']
+   *     summary: Get roster sync configuration
+   *     responses:
+   *       200:
+   *         description: Roster sync configuration
+   *       403:
+   *         description: Forbidden — admin access required
+   */
   router.get('/admin/roster-sync/config', requireAdmin, function(req, res) {
     try {
       const config = rosterSyncConfig.loadConfig(storage);
@@ -1237,6 +1665,26 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/admin/roster-sync/config:
+   *   post:
+   *     tags: ['TT: Admin']
+   *     summary: Save roster sync configuration
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *     responses:
+   *       200:
+   *         description: Configuration saved
+   *       400:
+   *         description: Invalid configuration
+   *       403:
+   *         description: Forbidden — admin access required
+   */
   router.post('/admin/roster-sync/config', requireAdmin, function(req, res) {
     try {
       const { orgRoots, googleSheetId, sheetNames, githubOrgs, gitlabGroups, teamStructure } = req.body;
@@ -1370,6 +1818,26 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/admin/roster-sync/custom-fields:
+   *   post:
+   *     tags: ['TT: Admin']
+   *     summary: Save roster sync custom fields
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *     responses:
+   *       200:
+   *         description: Custom fields saved
+   *       400:
+   *         description: Invalid custom fields
+   *       403:
+   *         description: Forbidden — admin access required
+   */
   router.post('/admin/roster-sync/custom-fields', requireAdmin, function(req, res) {
     try {
       const { customFields } = req.body;
@@ -1433,6 +1901,20 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/admin/roster-sync/trigger:
+   *   post:
+   *     tags: ['TT: Admin']
+   *     summary: Trigger manual roster sync
+   *     responses:
+   *       200:
+   *         description: Sync started or already running
+   *       400:
+   *         description: Roster sync not configured
+   *       403:
+   *         description: Forbidden — admin access required
+   */
   router.post('/admin/roster-sync/trigger', requireAdmin, function(req, res) {
     try {
       if (rosterSync.isSyncInProgress()) {
@@ -1456,6 +1938,18 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/admin/roster-sync/status:
+   *   get:
+   *     tags: ['TT: Admin']
+   *     summary: Get roster sync status
+   *     responses:
+   *       200:
+   *         description: Current roster sync status
+   *       403:
+   *         description: Forbidden — admin access required
+   */
   router.get('/admin/roster-sync/status', requireAdmin, function(req, res) {
     try {
       const config = rosterSyncConfig.loadConfig(storage);
@@ -1474,6 +1968,18 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Routes: Jira Sync Admin ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/admin/jira-sync/config:
+   *   get:
+   *     tags: ['TT: Admin']
+   *     summary: Get Jira sync configuration
+   *     responses:
+   *       200:
+   *         description: Jira sync configuration
+   *       403:
+   *         description: Forbidden — admin access required
+   */
   router.get('/admin/jira-sync/config', requireAdmin, function(req, res) {
     try {
       const config = jiraSyncConfig.loadConfig(storage);
@@ -1484,6 +1990,26 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/admin/jira-sync/config:
+   *   post:
+   *     tags: ['TT: Admin']
+   *     summary: Save Jira sync configuration
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *     responses:
+   *       200:
+   *         description: Configuration saved
+   *       400:
+   *         description: Invalid configuration
+   *       403:
+   *         description: Forbidden — admin access required
+   */
   router.post('/admin/jira-sync/config', requireAdmin, function(req, res) {
     try {
       const { projectKeys } = req.body;
@@ -1562,6 +2088,23 @@ module.exports = function registerRoutes(router, context) {
     return generateSnapshotsForTeam(teamKey);
   }
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/snapshots/{teamKey}:
+   *   get:
+   *     tags: ['TT: Snapshots']
+   *     summary: Get team snapshots
+   *     parameters:
+   *       - in: path
+   *         name: teamKey
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Team key (format orgKey::teamName)
+   *     responses:
+   *       200:
+   *         description: Array of team snapshots
+   */
   router.get('/snapshots/:teamKey', function(req, res) {
     try {
       const teamKey = decodeURIComponent(req.params.teamKey);
@@ -1573,6 +2116,29 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/snapshots/{teamKey}/{personName}:
+   *   get:
+   *     tags: ['TT: Snapshots']
+   *     summary: Get person snapshots within a team
+   *     parameters:
+   *       - in: path
+   *         name: teamKey
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Team key (format orgKey::teamName)
+   *       - in: path
+   *         name: personName
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Person name
+   *     responses:
+   *       200:
+   *         description: Array of person snapshots
+   */
   router.get('/snapshots/:teamKey/:personName', function(req, res) {
     try {
       const teamKey = decodeURIComponent(req.params.teamKey);
@@ -1592,6 +2158,18 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/snapshots/generate:
+   *   post:
+   *     tags: ['TT: Snapshots']
+   *     summary: Generate snapshots for all teams
+   *     responses:
+   *       200:
+   *         description: Snapshot generation result
+   *       403:
+   *         description: Forbidden — admin access required
+   */
   router.post('/snapshots/generate', requireAdmin, function(req, res) {
     try {
       const roster = deriveRoster();
@@ -1632,6 +2210,18 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/snapshots:
+   *   delete:
+   *     tags: ['TT: Snapshots']
+   *     summary: Delete all snapshots
+   *     responses:
+   *       200:
+   *         description: All snapshots deleted
+   *       403:
+   *         description: Forbidden — admin access required
+   */
   router.delete('/snapshots', requireAdmin, function(req, res) {
     try {
       const result = deleteStorageDirectory('snapshots');

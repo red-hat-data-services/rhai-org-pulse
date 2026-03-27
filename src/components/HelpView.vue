@@ -8,7 +8,7 @@
           <dt class="text-gray-500 dark:text-gray-400">Version</dt>
           <dd class="text-gray-900 dark:text-gray-100 font-mono">{{ buildInfo.version || 'unknown' }}</dd>
           <dt class="text-gray-500 dark:text-gray-400">Git SHA</dt>
-          <dd class="text-gray-900 dark:text-gray-100 font-mono">{{ buildInfo.gitSha || 'dev' }}</dd>
+          <dd class="text-gray-900 dark:text-gray-100 font-mono truncate" :title="buildInfo.gitSha || 'dev'">{{ buildInfo.gitSha || 'dev' }}</dd>
           <dt class="text-gray-500 dark:text-gray-400">Build Date</dt>
           <dd class="text-gray-900 dark:text-gray-100">{{ buildInfo.buildDate || 'N/A' }}</dd>
           <dt class="text-gray-500 dark:text-gray-400">Node.js</dt>

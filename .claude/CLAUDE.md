@@ -53,7 +53,7 @@ npm run dev:full       # Starts Vite (5173) + Express (3001)
 - **Person metrics**: Individual Jira stats stored as `data/people/{name}.json`. Fetched via JQL queries against Jira with 365-day lookback.
 - **GitHub contributions**: `data/github-contributions.json` stores contribution counts per user. `data/github-history.json` stores monthly history. Fetched via GitHub GraphQL API with `GITHUB_TOKEN`.
 - **GitLab contributions**: `data/gitlab-contributions.json` and `data/gitlab-history.json`. Fetched via GitLab REST API (`/api/v4/users/:id/events`) with `GITLAB_TOKEN`.
-- **Snapshots**: Monthly metric snapshots stored in `data/snapshots/{teamKey}/{YYYY-MM-DD}.json`. Generated from person metrics + GitHub/GitLab history. Admin can delete all via Settings > Snapshots.
+- **Snapshots**: Monthly metric snapshots stored in `data/snapshots/{sanitized-teamKey}/{YYYY-MM-DD}.json` (teamKey sanitized: `::` → `--`, special chars → `_`). Generated from person metrics + GitHub/GitLab history. Admin can delete all via Settings > Snapshots.
 - **Trends**: Built dynamically from person metric files by bucketing resolved issues by month, with org/team breakdowns.
 - **Composite keys**: Teams are identified by `orgKey::teamName` (e.g., `shgriffi::Model Serving`).
 - **Data file formats**: See `docs/DATA-FORMATS.md` for the JSON schema of every data file. Demo fixtures in `fixtures/` must always match production format.

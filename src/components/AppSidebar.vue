@@ -132,6 +132,30 @@
           </transition>
         </div>
 
+        <!-- API Docs -->
+        <a
+          href="/api/docs"
+          target="_blank"
+          rel="noopener"
+          class="group relative w-full flex items-center py-2.5 rounded-xl text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-200"
+          :class="collapsed ? 'justify-center px-0' : 'gap-3 px-3'"
+        >
+          <FileCode2
+            :size="20"
+            :stroke-width="1.7"
+            class="flex-shrink-0"
+          />
+          <transition name="fade">
+            <span v-if="!collapsed">API Docs</span>
+          </transition>
+          <span
+            v-if="collapsed"
+            class="absolute left-full ml-3 px-2.5 py-1.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs font-medium rounded-lg whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 shadow-lg"
+          >
+            API Docs
+          </span>
+        </a>
+
         <!-- Help & Debug -->
         <button
           @click="$emit('navigate', 'help')"
@@ -192,6 +216,7 @@ import {
   Users,
   TrendingUp,
   FileText,
+  FileCode2,
   Shield,
   Settings,
   ExternalLink,
