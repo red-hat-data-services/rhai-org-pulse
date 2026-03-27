@@ -1,0 +1,164 @@
+name: Ambient PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  review:
+    name: Ambient Review
+    runs-on: ubuntu-latest
+    # Skip automated deploy PRs from github-actions bot
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.actor != 'github-actions[bot]'
+    steps:
+      - uses: ambient-code/ambient-action@v0.0.2
+        with:
+          api-url: ${{ secrets.AMBIENT_API_URL }}
+          api-token: ${{ secrets.AMBIENT_BOT_TOKEN }}
+          project: rhai-org-pulse
+          timeout: '45'
+          display-name: 'PR Review: ${{ github.event.pull_request.title }} (#${{ github.event.pull_request.number }})'
+          repos: >-
+            [{"url": "https://github.com/accorvin/team-tracker", "branch": "${{ github.head_ref }}", "autoPush": true}]
+          labels: >-
+            {"pr_number": "${{ github.event.pull_request.number }}", "pr_author": "${{ github.event.pull_request.user.login }}", "type": "pr-review"}
+          prompt: |
+            You are reviewing PR #${{ github.event.pull_request.number }} on the team-tracker repo.
+
+            PR title: ${{ github.event.pull_request.title }}
+            PR author: ${{ github.event.pull_request.user.login }}
+            Base branch: ${{ github.base_ref }}
+            Head branch: ${{ github.head_ref }}
+
+            ## Instructions
+
+            Read `CONVENTIONS.md` and `.claude/CLAUDE.md` at the repo root to understand the project's
+            architecture, code style, and patterns. Follow those conventions in all feedback and fixes.
+
+            ## Review Philosophy
+
+            Optimize for VELOCITY. The goal is to ship working, safe code fast — not to achieve perfection.
+            Do not nitpick style preferences, suggest unnecessary refactors, or request changes that don't
+            materially improve the PR. Be concise and actionable.
+
+            ## Review Priorities
+
+            Focus your review on these four areas, in order of importance:
+
+            1. **Security**: Flag any security vulnerabilities (injection, XSS, auth bypass, secret exposure,
+               OWASP top 10). These are blockers.
+            2. **Coherence**: Ensure changes are consistent with what the app does today. Flag anything that
+               would break existing functionality or contradict established patterns.
+            3. **Architecture**: Check that the design is sound — correct module boundaries, proper use of
+               shared vs module code, no circular dependencies, sensible data flow.
+            4. **Correctness**: Look for bugs, logic errors, off-by-one mistakes, unhandled edge cases that
+               would realistically occur, and missing error handling at system boundaries.
+
+            ## Fix-up Commits
+
+            You MAY push fix-up commits directly to the PR branch for:
+            - Linting errors or formatting issues
+            - Missing or outdated documentation (README, code comments for non-obvious logic)
+            - Adding missing test coverage for changed code
+            - Trivial typos
+
+            You MUST NOT push fix-up commits for:
+            - Functional behavior changes
+            - Refactoring code the PR didn't touch
+            - Adding new features or capabilities
+            - Architectural changes
+
+            When pushing fix-up commits, use clear commit messages prefixed with `fixup:` (e.g.,
+            `fixup: add missing test for new endpoint`).
+
+            ## Output
+
+            After reviewing, post a summary comment on the PR with:
+            - A short verdict: approve, request changes, or comment
+            - Any issues found, grouped by priority (security/coherence/architecture/correctness)
+            - A list of any fix-up commits you pushed
+
+            If the PR looks good and you have no substantive feedback, just approve it with a brief note.
+
+  respond:
+    name: Ambient Respond
+    runs-on: ubuntu-latest
+    # Only run on PR comments that start with @ambient, from repo members
+    if: >-
+      github.event_name == 'issue_comment' &&
+      github.event.issue.pull_request &&
+      startsWith(github.event.comment.body, '@ambient') &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+    steps:
+      - name: Get PR details
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_JSON=$(gh api repos/${{ github.repository }}/pulls/${{ github.event.issue.number }})
+          echo "head_ref=$(echo "$PR_JSON" | jq -r .head.ref)" >> "$GITHUB_OUTPUT"
+          echo "title=$(echo "$PR_JSON" | jq -r .title)" >> "$GITHUB_OUTPUT"
+          echo "author=$(echo "$PR_JSON" | jq -r .user.login)" >> "$GITHUB_OUTPUT"
+
+      - uses: ambient-code/ambient-action@v0.0.2
+        with:
+          api-url: ${{ secrets.AMBIENT_API_URL }}
+          api-token: ${{ secrets.AMBIENT_BOT_TOKEN }}
+          project: rhai-org-pulse
+          timeout: '30'
+          display-name: 'PR Comment: #${{ github.event.issue.number }} by ${{ github.event.comment.user.login }}'
+          repos: >-
+            [{"url": "https://github.com/accorvin/team-tracker", "branch": "${{ steps.pr.outputs.head_ref }}", "autoPush": true}]
+          labels: >-
+            {"pr_number": "${{ github.event.issue.number }}", "pr_author": "${{ steps.pr.outputs.author }}", "comment_author": "${{ github.event.comment.user.login }}", "type": "pr-comment"}
+          prompt: |
+            You are responding to a comment on PR #${{ github.event.issue.number }} on the team-tracker repo.
+
+            PR title: ${{ steps.pr.outputs.title }}
+            PR author: ${{ steps.pr.outputs.author }}
+            PR branch: ${{ steps.pr.outputs.head_ref }}
+            Comment author: ${{ github.event.comment.user.login }}
+
+            ## The comment
+
+            ${{ github.event.comment.body }}
+
+            ## Instructions
+
+            Read `CONVENTIONS.md` and `.claude/CLAUDE.md` at the repo root to understand the project's
+            architecture, code style, and patterns.
+
+            Respond to the commenter's question or request. Be concise and helpful. If they're asking
+            about the code, read the relevant files and give a clear answer. If they're asking you to
+            make a change, evaluate whether it falls within the fix-up commit rules below.
+
+            ## Fix-up Commits
+
+            You MAY push fix-up commits directly to the PR branch for:
+            - Linting errors or formatting issues
+            - Missing or outdated documentation
+            - Adding missing test coverage for changed code
+            - Trivial typos
+            - Changes the commenter explicitly requests, as long as they are minor and well-scoped
+
+            You MUST NOT push fix-up commits for:
+            - Substantial functional behavior changes (suggest these but don't implement)
+            - Refactoring code the PR didn't touch
+            - Adding new features or capabilities
+            - Architectural changes
+
+            When pushing fix-up commits, use clear commit messages prefixed with `fixup:`.
+
+            ## Output
+
+            Post a reply comment on the PR answering the question or confirming what you did.
+            If you pushed any commits, list them in the reply.

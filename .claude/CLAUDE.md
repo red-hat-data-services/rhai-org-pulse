@@ -220,6 +220,8 @@ secrets/            # Service account keys (gitignored)
 
 ## Code Style
 
+See `CONVENTIONS.md` at the repo root for the full set of coding and architecture conventions.
+
 - Use `<script setup>` for new Vue components
 - CommonJS (`require`) for server-side code
 - ES modules (`import`) for frontend code
