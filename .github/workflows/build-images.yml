@@ -157,20 +157,19 @@ jobs:
 
       - name: Smoke test
         run: |
-          # Create a network and a dummy backend so nginx can resolve
-          # the "backend" upstream at startup (it crashes without it)
-          docker network create smoke-net
-          docker run -d --network smoke-net --name backend \
-            --expose 3001 nginx:alpine \
-            sh -c "echo 'ok' > /usr/share/nginx/html/index.html && nginx -g 'daemon off;'"
-          docker run -d --network smoke-net --name frontend-smoke \
-            -p 8080:8080 ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+          # Start a dummy backend on the host so nginx can resolve the
+          # "backend" upstream at startup (it crashes without it)
+          python3 -m http.server 3001 &
+          BACKEND_PID=$!
+          docker run -d --network host --add-host=backend:127.0.0.1 \
+            --name frontend-smoke \
+            ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
           echo "Waiting for nginx to be ready..."
           for i in $(seq 1 10); do
             if curl -sf --max-time 2 http://localhost:8080/healthz > /dev/null 2>&1; then
               echo "✅ Smoke test passed — nginx responded on /healthz (attempt $i)"
-              docker stop frontend-smoke backend
-              docker network rm smoke-net
+              docker stop frontend-smoke
+              kill $BACKEND_PID 2>/dev/null
               exit 0
             fi
             echo "  Attempt $i/10 — not ready yet, retrying in 3s..."
@@ -178,8 +177,8 @@ jobs:
           done
           echo "❌ Smoke test failed — nginx never responded"
           docker logs frontend-smoke
-          docker stop frontend-smoke backend
-          docker network rm smoke-net
+          docker stop frontend-smoke
+          kill $BACKEND_PID 2>/dev/null
           exit 1
 
       - name: Login to Quay.io

@@ -1,13 +1,15 @@
-FROM node:20-alpine
+FROM registry.access.redhat.com/ubi9/nodejs-20-minimal
+
+USER 0
 
 WORKDIR /app
 
-RUN apk add --no-cache git ca-certificates
+RUN microdnf install -y git ca-certificates && microdnf clean all
 
 # Trust internal CA for git and Node.js HTTPS connections
-COPY deploy/certs/internal-root-ca.pem /usr/local/share/ca-certificates/internal-root-ca.crt
-RUN update-ca-certificates
-ENV NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/internal-root-ca.crt
+COPY deploy/certs/internal-root-ca.pem /etc/pki/ca-trust/source/anchors/internal-root-ca.pem
+RUN update-ca-trust
+ENV NODE_EXTRA_CA_CERTS=/etc/pki/ca-trust/source/anchors/internal-root-ca.pem
 
 # Install production dependencies only
 COPY package.json package-lock.json ./
