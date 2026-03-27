@@ -12,6 +12,11 @@
  */
 
 const express = require('express');
+const errorBuffer = require('./error-buffer');
+const requestTracker = require('./request-tracker');
+
+// Install error buffer early to capture startup errors
+errorBuffer.install();
 
 // Demo mode: use fixtures instead of data directory
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
@@ -39,6 +44,9 @@ app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   next();
 });
+
+// Request tracker middleware
+app.use(requestTracker.createMiddleware());
 
 // Demo mode: block refresh routes that would call external APIs
 if (DEMO_MODE) {
@@ -289,12 +297,13 @@ const { handleExport } = require('./export');
 // ─── Built-in Module Discovery ───
 
 const {
-  discoverModules, createModuleRouters, mountModuleRouters,
+  discoverModules, createModuleRouters, mountModuleRouters, collectModuleDiagnostics,
   loadModuleState, saveModuleState, getEffectiveState, reconcileStartupState,
   resolveEnableOrder, checkDisableAllowed, computeRequiredBy, wasMountedAtStartup
 } = require('./module-loader');
 const builtInModules = discoverModules();
-const moduleContext = { storage: storageModule, requireAuth: authMiddleware, requireAdmin };
+const diagnosticsRegistry = {};
+const moduleContext = { storage: storageModule, requireAuth: authMiddleware, requireAdmin, registerDiagnostics: null };
 
 // Compute effective enabled state and reconcile dependencies at startup
 const persistedState = loadModuleState(storageModule);
@@ -303,7 +312,7 @@ reconcileStartupState(builtInModules, effectiveState, storageModule);
 const enabledSlugs = new Set(Object.entries(effectiveState).filter(([, v]) => v).map(([k]) => k));
 
 // Step 1: Create module routers only for enabled modules
-const moduleRouters = createModuleRouters(builtInModules, moduleContext, enabledSlugs);
+const moduleRouters = createModuleRouters(builtInModules, moduleContext, enabledSlugs, diagnosticsRegistry);
 
 // Step 2: Register legacy API route forwards BEFORE mounting module routers
 // Only register if team-tracker is enabled at startup
@@ -345,6 +354,32 @@ mountModuleRouters(app, builtInModules, moduleRouters);
 
 app.get('/api/export/test-data', function(req, res) {
   handleExport(req, res, storageModule, builtInModules);
+});
+
+// ─── Must-Gather: Diagnostic data download ───
+
+const mustGather = require('./must-gather');
+
+app.get('/api/must-gather', requireAdmin, async function(req, res) {
+  try {
+    const redact = req.query.redact === 'aggressive' ? 'aggressive' : 'minimal';
+    const bundle = await mustGather.collect({
+      storageModule,
+      builtInModules,
+      enabledSlugs,
+      collectModuleDiagnostics,
+      diagnosticsRegistry,
+      gitSync,
+      redact
+    });
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', 'attachment; filename=must-gather-' + timestamp + '.json');
+    res.json(bundle);
+  } catch (err) {
+    console.error('[must-gather] Collection failed:', err);
+    res.status(500).json({ error: 'Must-gather collection failed: ' + err.message });
+  }
 });
 
 // ─── Built-in Module Admin Endpoints ───

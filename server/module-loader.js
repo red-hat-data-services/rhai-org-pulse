@@ -173,7 +173,7 @@ function computeRequiredBy(allModules) {
 
 // ─── Router Creation ───
 
-function createModuleRouters(modules, context, enabledSlugs) {
+function createModuleRouters(modules, context, enabledSlugs, diagnosticsRegistry) {
   const routers = {}
   for (const mod of modules) {
     if (!mod.server?.entry) continue
@@ -187,6 +187,12 @@ function createModuleRouters(modules, context, enabledSlugs) {
     }
     const router = express.Router()
     try {
+      // Set up per-module diagnostics registration
+      if (diagnosticsRegistry) {
+        context.registerDiagnostics = function(fn) {
+          diagnosticsRegistry[mod.slug] = fn
+        }
+      }
       require(entryPath)(router, context)
       routers[mod.slug] = router
       _mountedAtStartup.add(mod.slug)
@@ -195,7 +201,42 @@ function createModuleRouters(modules, context, enabledSlugs) {
       console.error(`[module-loader] Failed to create router for "${mod.slug}":`, err.message)
     }
   }
+  // Clean up — don't leave a stale registerDiagnostics on the context
+  context.registerDiagnostics = null
   return routers
+}
+
+// ─── Module Diagnostics ───
+
+async function collectModuleDiagnostics(modules, diagnosticsRegistry, enabledSlugs) {
+  const TIMEOUT_MS = 10000
+  const results = {}
+
+  const tasks = modules.map(function(mod) {
+    if (enabledSlugs && !enabledSlugs.has(mod.slug)) {
+      return { slug: mod.slug, promise: Promise.resolve({ enabled: false }) }
+    }
+    const fn = diagnosticsRegistry[mod.slug]
+    if (typeof fn !== 'function') {
+      return { slug: mod.slug, promise: Promise.resolve({ enabled: true, diagnostics: 'not implemented' }) }
+    }
+    const withTimeout = Promise.race([
+      fn(),
+      new Promise(function(_, reject) {
+        setTimeout(function() { reject(new Error('diagnostics timed out after 10s')) }, TIMEOUT_MS)
+      })
+    ]).catch(function(err) {
+      return { error: err.message }
+    })
+    return { slug: mod.slug, promise: withTimeout }
+  })
+
+  const settled = await Promise.all(tasks.map(function(t) { return t.promise }))
+  for (let i = 0; i < tasks.length; i++) {
+    results[tasks[i].slug] = settled[i]
+  }
+
+  return results
 }
 
 function wasMountedAtStartup(slug) {
@@ -214,6 +255,7 @@ module.exports = {
   discoverModules,
   createModuleRouters,
   mountModuleRouters,
+  collectModuleDiagnostics,
   loadModuleState,
   saveModuleState,
   getEffectiveState,

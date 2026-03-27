@@ -219,6 +219,7 @@ function buildMapping(roster) {
     if (emailToFake[value]) return emailToFake[value];
     if (githubToFake[value]) return githubToFake[value];
     if (gitlabToFake[value]) return gitlabToFake[value];
+    if (accountIdToFake[value]) return accountIdToFake[value];
     return value;
   }
 

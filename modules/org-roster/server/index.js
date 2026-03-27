@@ -640,6 +640,169 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  // ─── Diagnostics Hook ───
+
+  if (context.registerDiagnostics) {
+    context.registerDiagnostics(async function() {
+      const config = getModuleConfig();
+      const syncStatus = readFromStorage('org-roster/sync-status.json');
+      const metaData = readFromStorage('org-roster/teams-metadata.json');
+      const compData = readFromStorage('org-roster/components.json');
+      const rfeData = readFromStorage('org-roster/rfe-backlog.json');
+      const rosterData = readFromStorage('org-roster-full.json');
+      const sheetId = getSheetId();
+
+      // Config info
+      const configInfo = {
+        teamBoardsTab: config.teamBoardsTab,
+        componentsTab: config.componentsTab,
+        jiraProject: config.jiraProject,
+        rfeIssueType: config.rfeIssueType,
+        orgNameMappingCount: Object.keys(config.orgNameMapping || {}).length,
+        componentMappingCount: Object.keys(config.componentMapping || {}).length
+      };
+
+      // Sync status
+      const syncInfo = {
+        lastSyncAt: syncStatus?.lastSyncAt || null,
+        status: syncStatus?.status || 'never',
+        error: syncStatus?.error || null,
+        syncInProgress: isSyncInProgress()
+      };
+
+      // Scheduler info
+      const schedulerInfo = {
+        dailySyncScheduled: !DEMO_MODE && !!sheetId,
+        intervalMs: 86400000,
+        startupDelayMs: 300000,
+        dependsOnRosterData: true,
+        rosterDataExists: !!rosterData
+      };
+
+      // Teams metadata
+      const teamsInfo = { exists: false };
+      if (metaData && metaData.teams) {
+        teamsInfo.exists = true;
+        teamsInfo.fetchedAt = metaData.fetchedAt || null;
+        teamsInfo.teamCount = metaData.teams.length;
+        teamsInfo.orgNames = [...new Set(metaData.teams.map(function(t) { return t.org }))].sort();
+        const boardNames = metaData.boardNames || {};
+        let withBoards = 0, withoutBoards = 0, resolvedNames = 0, unresolvedUrls = 0;
+        for (const team of metaData.teams) {
+          if (team.boardUrls && team.boardUrls.length > 0) {
+            withBoards++;
+            for (const url of team.boardUrls) {
+              if (boardNames[url]) resolvedNames++;
+              else unresolvedUrls++;
+            }
+          } else {
+            withoutBoards++;
+          }
+        }
+        teamsInfo.teamsWithBoardUrls = withBoards;
+        teamsInfo.teamsWithoutBoardUrls = withoutBoards;
+        teamsInfo.resolvedBoardNames = resolvedNames;
+        teamsInfo.unresolvedBoardUrls = unresolvedUrls;
+      }
+
+      // Components
+      const componentsInfo = { exists: false };
+      if (compData) {
+        componentsInfo.exists = true;
+        componentsInfo.fetchedAt = compData.fetchedAt || null;
+        const componentMap = compData.components || {};
+        componentsInfo.componentCount = Object.keys(componentMap).length;
+        const teamsWithComps = new Set();
+        for (const teamNames of Object.values(componentMap)) {
+          for (const t of teamNames) teamsWithComps.add(t);
+        }
+        componentsInfo.teamsWithComponents = teamsWithComps.size;
+      }
+
+      // RFE backlog
+      const rfeInfo = { exists: false };
+      if (rfeData) {
+        rfeInfo.exists = true;
+        rfeInfo.fetchedAt = rfeData.fetchedAt || null;
+        const byComp = rfeData.byComponent || {};
+        rfeInfo.totalComponents = Object.keys(byComp).length;
+        let withRfes = 0, withErrors = 0, totalRfeCount = 0, teamCount = 0;
+        for (const val of Object.values(byComp)) {
+          if (val.error) withErrors++;
+          if (val.count > 0) withRfes++;
+          totalRfeCount += val.count || 0;
+        }
+        if (rfeData.byTeam) teamCount = Object.keys(rfeData.byTeam).length;
+        rfeInfo.componentsWithRfes = withRfes;
+        rfeInfo.componentsWithErrors = withErrors;
+        rfeInfo.totalRfeCount = totalRfeCount;
+        rfeInfo.teamCount = teamCount;
+      }
+
+      // Data integrity checks
+      const dataIntegrity = {
+        teamsInMetadataNotInRoster: [],
+        rosterTeamsNotInMetadata: [],
+        componentsWithNoTeam: [],
+        sheetOrgsMissingFromConfig: []
+      };
+
+      if (metaData && rosterData) {
+        const allPeople = getAllPeople(storage);
+        const orgKeyToDisplay = buildOrgKeyToDisplayName();
+        const orgTeamPeopleMap = groupPeopleByOrgTeam(allPeople, orgKeyToDisplay);
+        const rosterCompositeKeys = new Set(Object.keys(orgTeamPeopleMap));
+
+        // Teams in metadata not in roster
+        const metaCompositeKeys = new Set();
+        for (const team of metaData.teams) {
+          const key = team.org + '::' + team.name;
+          metaCompositeKeys.add(key);
+          if (!rosterCompositeKeys.has(key)) {
+            dataIntegrity.teamsInMetadataNotInRoster.push(key);
+          }
+        }
+
+        // Roster teams not in metadata
+        for (const key of rosterCompositeKeys) {
+          if (!metaCompositeKeys.has(key)) {
+            dataIntegrity.rosterTeamsNotInMetadata.push(key);
+          }
+        }
+      }
+
+      // Components with no team
+      if (compData && metaData) {
+        const allTeamNames = new Set(metaData.teams.map(function(t) { return t.name }));
+        for (const [comp, teamNames] of Object.entries(compData.components || {})) {
+          const hasTeam = teamNames.some(function(t) { return allTeamNames.has(t) });
+          if (!hasTeam) dataIntegrity.componentsWithNoTeam.push(comp);
+        }
+      }
+
+      // Sheet orgs missing from config
+      if (metaData) {
+        const configuredOrgs = new Set(Object.values(buildOrgKeyToDisplayName()));
+        const sheetOrgs = [...new Set(metaData.teams.map(function(t) { return t.org }))];
+        for (const org of sheetOrgs) {
+          if (!configuredOrgs.has(org)) {
+            dataIntegrity.sheetOrgsMissingFromConfig.push(org);
+          }
+        }
+      }
+
+      return {
+        config: configInfo,
+        syncStatus: syncInfo,
+        scheduler: schedulerInfo,
+        teamsMetadata: teamsInfo,
+        components: componentsInfo,
+        rfeBacklog: rfeInfo,
+        dataIntegrity
+      };
+    });
+  }
+
   // ─── Schedule daily sync ───
   if (!DEMO_MODE) {
     // Delay startup sync by 5 minutes to avoid overlapping with team-tracker's roster-sync

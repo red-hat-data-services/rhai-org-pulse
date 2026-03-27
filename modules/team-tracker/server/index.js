@@ -1632,6 +1632,176 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  // ─── Diagnostics Hook ───
+
+  if (context.registerDiagnostics) {
+    context.registerDiagnostics(async function() {
+      const jiraProjectKeys = jiraSyncConfig.getProjectKeys(storage);
+      const syncConfig = rosterSyncConfig.loadConfig(storage) || {};
+      const roster = readRosterFull();
+
+      // Jira info
+      const nameCacheEntries = Object.entries(jiraNameCache);
+      const resolvedEntries = nameCacheEntries.filter(function(e) { return e[1]?.accountId });
+      const unresolvedEntries = nameCacheEntries.filter(function(e) { return !e[1]?.accountId });
+      const jira = {
+        configured: !!(process.env.JIRA_TOKEN && process.env.JIRA_EMAIL),
+        host: JIRA_HOST,
+        emailSet: !!process.env.JIRA_EMAIL,
+        tokenSet: !!process.env.JIRA_TOKEN,
+        storyPointsField: 'customfield_10028',
+        projectKeys: jiraProjectKeys,
+        projectKeysFingerprint: jiraProjectKeys.sort().join(','),
+        nameCache: {
+          totalEntries: nameCacheEntries.length,
+          resolvedCount: resolvedEntries.length,
+          unresolvedCount: unresolvedEntries.length,
+          unresolvedNames: unresolvedEntries.map(function(e) { return e[0] })
+        }
+      };
+
+      // Roster sync info
+      const rosterSyncInfo = {
+        configured: rosterSyncConfig.isConfigured(storage),
+        config: {
+          orgRootCount: syncConfig.orgRoots?.length || 0,
+          orgRootUids: (syncConfig.orgRoots || []).map(function(r) { return r.uid }),
+          googleSheetId: syncConfig.googleSheetId || null,
+          hasTeamStructure: !!(syncConfig.teamStructure),
+          teamGroupingColumn: syncConfig.teamStructure?.groupingColumn || null,
+          customFieldCount: syncConfig.teamStructure?.customFields?.length || 0,
+          githubOrgs: syncConfig.githubOrgs || [],
+          gitlabGroups: syncConfig.gitlabGroups || []
+        },
+        lastSyncAt: syncConfig.lastSyncAt || null,
+        lastSyncStatus: syncConfig.lastSyncStatus || null,
+        lastSyncError: syncConfig.lastSyncError || null,
+        syncInProgress: rosterSync.isSyncInProgress()
+      };
+
+      // Roster data health
+      const rosterInfo = { exists: false, orgCount: 0, totalPeople: 0, peopleByOrg: {} };
+      if (roster && roster.orgs) {
+        rosterInfo.exists = true;
+        const orgKeys = Object.keys(roster.orgs);
+        rosterInfo.orgCount = orgKeys.length;
+        let missingGithub = 0, missingGitlab = 0, missingEmail = 0;
+        for (const orgKey of orgKeys) {
+          const org = roster.orgs[orgKey];
+          const members = [org.leader, ...org.members].filter(Boolean);
+          rosterInfo.peopleByOrg[orgKey] = members.length;
+          rosterInfo.totalPeople += members.length;
+          for (const m of members) {
+            if (!m.githubUsername) missingGithub++;
+            if (!m.gitlabUsername) missingGitlab++;
+            if (!m.email) missingEmail++;
+          }
+        }
+        rosterInfo.missingGithubUsernames = missingGithub;
+        rosterInfo.missingGitlabUsernames = missingGitlab;
+        rosterInfo.missingEmails = missingEmail;
+      }
+
+      // Data health: person metrics
+      const personMetrics = { totalFiles: 0, recentlyUpdated: 0, staleFiles: 0, staleThresholdDays: 7 };
+      try {
+        const files = listStorageFiles('people');
+        personMetrics.totalFiles = files.length;
+        const now = Date.now();
+        const staleMs = 7 * 24 * 60 * 60 * 1000;
+        let oldestAt = null, newestAt = null;
+        const nameNotFound = [];
+        let fieldsVersionMismatch = 0;
+
+        for (const file of files) {
+          const data = readFromStorage('people/' + file);
+          if (!data) continue;
+          const fetchedAt = data.fetchedAt ? new Date(data.fetchedAt).getTime() : 0;
+          if (fetchedAt && (now - fetchedAt) > staleMs) {
+            personMetrics.staleFiles++;
+          } else if (fetchedAt) {
+            personMetrics.recentlyUpdated++;
+          }
+          if (!oldestAt || (fetchedAt && fetchedAt < oldestAt)) oldestAt = fetchedAt;
+          if (!newestAt || (fetchedAt && fetchedAt > newestAt)) newestAt = fetchedAt;
+          if (data.nameNotFound) nameNotFound.push(file.replace('.json', ''));
+          if (data.fieldsVersion !== 'v1') fieldsVersionMismatch++;
+        }
+
+        personMetrics.oldestFetchedAt = oldestAt ? new Date(oldestAt).toISOString() : null;
+        personMetrics.newestFetchedAt = newestAt ? new Date(newestAt).toISOString() : null;
+        personMetrics.nameNotFoundCount = nameNotFound.length;
+        personMetrics.nameNotFoundPeople = nameNotFound;
+        personMetrics.fieldsVersionMismatch = fieldsVersionMismatch;
+      } catch { /* ignore */ }
+
+      // Data health: GitHub
+      const githubCache = readGithubCache();
+      const githubHistoryCache = readGithubHistoryCache();
+      const github = {
+        configured: !!process.env.GITHUB_TOKEN,
+        cacheExists: !!(githubCache.fetchedAt),
+        userCount: Object.keys(githubCache.users || {}).length,
+        fetchedAt: githubCache.fetchedAt || null,
+        historyExists: !!(githubHistoryCache.fetchedAt),
+        historyUserCount: Object.keys(githubHistoryCache.users || {}).length,
+        usersWithZeroContributions: Object.values(githubCache.users || {}).filter(function(u) { return (u.totalContributions || 0) === 0 }).length
+      };
+
+      // Data health: GitLab
+      const gitlabCache = readGitlabCache();
+      const gitlabHistoryCache = readGitlabHistoryCache();
+      const gitlab = {
+        configured: !!process.env.GITLAB_TOKEN,
+        baseUrl: process.env.GITLAB_BASE_URL || 'https://gitlab.com',
+        cacheExists: !!(gitlabCache.fetchedAt),
+        userCount: Object.keys(gitlabCache.users || {}).length,
+        fetchedAt: gitlabCache.fetchedAt || null,
+        historyExists: !!(gitlabHistoryCache.fetchedAt),
+        historyUserCount: Object.keys(gitlabHistoryCache.users || {}).length,
+        usersWithZeroContributions: Object.values(gitlabCache.users || {}).filter(function(u) { return (u.totalContributions || 0) === 0 }).length
+      };
+
+      // Data health: snapshots
+      const snapshotsInfo = { teamCount: 0, totalSnapshotFiles: 0, periodsCovered: [], teamsWithGaps: [] };
+      try {
+        const fs = require('fs');
+        const path = require('path');
+        const snapshotsDir = path.join(storage.DATA_DIR, 'snapshots');
+        if (fs.existsSync(snapshotsDir)) {
+          const dirs = fs.readdirSync(snapshotsDir).filter(function(d) {
+            return fs.statSync(path.join(snapshotsDir, d)).isDirectory();
+          });
+          snapshotsInfo.teamCount = dirs.length;
+          const allPeriods = new Set();
+          for (const dir of dirs) {
+            const files = fs.readdirSync(path.join(snapshotsDir, dir)).filter(function(f) { return f.endsWith('.json') });
+            snapshotsInfo.totalSnapshotFiles += files.length;
+            for (const f of files) allPeriods.add(f.replace('.json', ''));
+          }
+          snapshotsInfo.periodsCovered = [...allPeriods].sort();
+        }
+      } catch { /* ignore */ }
+
+      // Last refreshed
+      const lastRefreshed = readFromStorage('last-refreshed.json');
+
+      return {
+        jira,
+        rosterSync: rosterSyncInfo,
+        roster: rosterInfo,
+        dataHealth: {
+          personMetrics,
+          github,
+          gitlab,
+          snapshots: snapshotsInfo,
+          lastRefreshed: lastRefreshed?.timestamp || null
+        },
+        refreshState: { ...refreshState }
+      };
+    });
+  }
+
   // ─── Startup: schedule roster sync ───
 
   if (!DEMO_MODE && rosterSyncConfig.isConfigured(storage)) {

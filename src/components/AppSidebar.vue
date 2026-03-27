@@ -132,51 +132,27 @@
           </transition>
         </div>
 
-        <!-- Export test data -->
+        <!-- Help & Debug -->
         <button
-          @click="showExportModal = true"
+          @click="$emit('navigate', 'help')"
           class="group relative w-full flex items-center py-2.5 rounded-xl text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-200"
           :class="collapsed ? 'justify-center px-0' : 'gap-3 px-3'"
         >
-          <Download
+          <HelpCircle
             :size="20"
             :stroke-width="1.7"
             class="flex-shrink-0"
           />
           <transition name="fade">
-            <span v-if="!collapsed">Export Test Data</span>
+            <span v-if="!collapsed">Help & Debug</span>
           </transition>
           <span
             v-if="collapsed"
             class="absolute left-full ml-3 px-2.5 py-1.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs font-medium rounded-lg whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 shadow-lg"
           >
-            Export Test Data
+            Help & Debug
           </span>
         </button>
-
-        <!-- GitHub link -->
-        <a
-          href="https://github.com/accorvin/team-tracker"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="group relative w-full flex items-center py-2.5 rounded-xl text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-200"
-          :class="collapsed ? 'justify-center px-0' : 'gap-3 px-3'"
-        >
-          <Github
-            :size="20"
-            :stroke-width="1.7"
-            class="flex-shrink-0"
-          />
-          <transition name="fade">
-            <span v-if="!collapsed">GitHub</span>
-          </transition>
-          <span
-            v-if="collapsed"
-            class="absolute left-full ml-3 px-2.5 py-1.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs font-medium rounded-lg whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 shadow-lg"
-          >
-            GitHub
-          </span>
-        </a>
 
         <!-- Collapse toggle -->
         <button
@@ -207,65 +183,6 @@
     />
   </transition>
 
-  <!-- Export test data modal -->
-  <teleport to="body">
-    <transition name="fade">
-      <div
-        v-if="showExportModal"
-        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-        @click.self="showExportModal = false"
-      >
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-lg mx-4">
-          <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Export Anonymized Test Data</h2>
-            <button @click="showExportModal = false" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-              <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          <div class="px-6 py-5 space-y-4">
-            <p class="text-sm text-gray-600 dark:text-gray-400">
-              This will download a <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono">.tgz</code> archive of all production data with personal information (names, emails, usernames) replaced by fake values. Use it for local development and testing.
-            </p>
-
-            <div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 space-y-3">
-              <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">After downloading</p>
-              <ol class="text-sm text-gray-700 dark:text-gray-300 space-y-2 list-decimal list-inside">
-                <li>Extract the archive into your project root:
-                  <code class="block mt-1 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded text-xs font-mono text-gray-800 dark:text-gray-200">tar xzf org-pulse-test-data.tgz -C .</code>
-                </li>
-                <li>This creates a <code class="px-1 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-xs font-mono">data/</code> directory matching the production layout.</li>
-                <li>Start the dev server — it will use the extracted data automatically:
-                  <code class="block mt-1 px-3 py-1.5 bg-gray-100 dark:bg-gray-800 rounded text-xs font-mono text-gray-800 dark:text-gray-200">npm run dev:full</code>
-                </li>
-              </ol>
-            </div>
-
-            <p class="text-xs text-gray-500 dark:text-gray-400">
-              The archive is deterministic — the same source data always produces the same anonymized output. All names, emails, UIDs, and usernames are consistently mapped across files.
-            </p>
-          </div>
-
-          <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
-            <button
-              @click="showExportModal = false"
-              class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600"
-            >
-              Cancel
-            </button>
-            <button
-              @click="downloadTestData"
-              class="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700"
-            >
-              Download
-            </button>
-          </div>
-        </div>
-      </div>
-    </transition>
-  </teleport>
 </template>
 
 <script setup>
@@ -283,8 +200,7 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  Github,
-  Download
+  HelpCircle
 } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 
@@ -413,20 +329,6 @@ function isNavItemActive(item, section) {
     return props.activeViewId === viewId
   }
   return props.activeModule === item.id
-}
-
-const showExportModal = ref(false)
-
-async function downloadTestData() {
-  showExportModal.value = false
-  const res = await fetch('/api/export/test-data')
-  const blob = await res.blob()
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = 'org-pulse-test-data.tgz'
-  a.click()
-  URL.revokeObjectURL(url)
 }
 
 function getUserInitials(user) {

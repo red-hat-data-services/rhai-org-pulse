@@ -251,6 +251,53 @@ module.exports = async function(addFile, storage, mapping) {
 
 The validation script (`npm run validate:modules`) checks that `server/export.js` exists when `customHandler` is `true`.
 
+## Diagnostics Hook
+
+Modules can register a diagnostics hook to include module-specific health data in the must-gather diagnostic bundle (`GET /api/must-gather`). This is optional — modules that don't register a hook are simply skipped.
+
+### Registering Diagnostics
+
+Call `context.registerDiagnostics(fn)` inside your `registerRoutes` function. The callback has access to closure-scoped runtime state:
+
+```javascript
+module.exports = function registerRoutes(router, context) {
+  const { storage } = context
+
+  // Module-local runtime state
+  const refreshState = { running: false }
+
+  // ... route definitions ...
+
+  // Register diagnostics hook (optional)
+  if (context.registerDiagnostics) {
+    context.registerDiagnostics(async function() {
+      return {
+        refreshState,
+        dataExists: !!storage.readFromStorage('my-data.json'),
+        // Include whatever is useful for debugging
+      }
+    })
+  }
+}
+```
+
+### Guidelines
+
+- **Return metadata, not data**: Include counts, timestamps, status flags, and health checks — not full data files
+- **Include data integrity checks**: Missing files, stale caches, configuration mismatches
+- **Keep it fast**: The hook has a 10-second timeout. Avoid expensive operations
+- **No PII in keys**: Put PII in values only — the must-gather redaction system anonymizes values but not the structure
+- **Guard the call**: Always check `if (context.registerDiagnostics)` for backward compatibility
+
+### How It Works
+
+- `context.registerDiagnostics` is set per-module during router creation in `module-loader.js`
+- All registered hooks are called in parallel with a 10-second timeout via `collectModuleDiagnostics()`
+- Errors in one module's hook don't affect others
+- Results appear under `modules.<slug>` in the must-gather bundle
+
+See [Must-Gather Documentation](MUST-GATHER.md) for the full bundle format.
+
 ## PR Checklist
 
 - [ ] `module.json` has all required fields

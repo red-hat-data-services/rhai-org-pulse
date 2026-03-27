@@ -128,6 +128,12 @@
           @toast="({ message, type }) => showToast(message, type)"
         />
 
+        <!-- Help & Debug View -->
+        <HelpView
+          v-else-if="activeModule === 'help'"
+          :is-admin="authIsAdmin"
+        />
+
         <LoadingOverlay v-if="isLoading" />
       </main>
     </div>
@@ -159,6 +165,7 @@ import Toast from '@shared/client/components/Toast.vue'
 import RefreshModal from '@shared/client/components/RefreshModal.vue'
 import UserManagement from './UserManagement.vue'
 import SettingsView from './SettingsView.vue'
+import HelpView from './HelpView.vue'
 import AppSidebar from './AppSidebar.vue'
 import LandingPage from './LandingPage.vue'
 import ModuleIframeView from './ModuleIframeView.vue'
@@ -187,6 +194,7 @@ export default {
     Toast,
     UserManagement,
     SettingsView,
+    HelpView,
     AppSidebar,
     RefreshModal,
     LandingPage,
@@ -335,6 +343,7 @@ export default {
       }
       if (this.activeModule === 'user-management') return 'Users'
       if (this.activeModule === 'settings') return 'Settings'
+      if (this.activeModule === 'help') return 'Help & Debug'
       // Built-in module: find manifest name
       const manifest = this.builtInManifests.find(m => m.slug === this.activeModule)
       if (manifest) return manifest.name
@@ -423,6 +432,10 @@ export default {
       }
       if (parts[0] === 'settings') {
         this.setShellView('settings')
+        return
+      }
+      if (parts[0] === 'help') {
+        this.setShellView('help')
         return
       }
 
@@ -540,6 +553,11 @@ export default {
       if (target === 'settings') {
         this.setShellView('settings')
         window.location.hash = '#/settings'
+        return
+      }
+      if (target === 'help') {
+        this.setShellView('help')
+        window.location.hash = '#/help'
         return
       }
 
