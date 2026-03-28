@@ -8,7 +8,7 @@
  */
 
 const { fetchRawSheet } = require('../../../shared/server/google-sheets');
-const { getOrgDisplayNames } = require('../../team-tracker/server/roster-sync/config');
+const { getOrgDisplayNames } = require('../../../shared/server/roster-sync/config');
 
 /**
  * Parse the "Scrum Team Boards" tab into team metadata objects.

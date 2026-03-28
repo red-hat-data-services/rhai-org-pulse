@@ -4,7 +4,7 @@ const { fetchAllRfeBacklog } = require('./rfe');
 const { isSyncInProgress, setSyncInProgress, scheduleDaily } = require('./scheduler');
 const { getAllPeople, getTeamRollup } = require('../../../shared/server/roster');
 const { fetchRawSheet } = require('../../../shared/server/google-sheets');
-const { getOrgDisplayNames } = require('../../team-tracker/server/roster-sync/config');
+const { getOrgDisplayNames } = require('../../../shared/server/roster-sync/config');
 
 module.exports = function registerRoutes(router, context) {
   const { storage, requireAdmin } = context;

@@ -12,7 +12,7 @@ const LDAP_ATTRS = [
   'rhatCostCenter', 'rhatSocialUrl'
 ];
 
-const { EXCLUDED_TITLES } = require('../../../../shared/server/roster');
+const { EXCLUDED_TITLES } = require('../roster');
 
 /**
  * Build effective column mapping from user-configured custom fields.

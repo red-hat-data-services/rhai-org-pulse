@@ -4,7 +4,7 @@
  */
 
 const { google } = require('googleapis');
-const { getAuth, discoverSheetNames: sharedDiscoverSheetNames } = require('../../../../shared/server/google-sheets');
+const { getAuth, discoverSheetNames: sharedDiscoverSheetNames } = require('../google-sheets');
 const { getEffectiveColumns, getEffectiveColumnsFromTeamStructure } = require('./constants');
 
 function normalizeNameForMatch(name) {

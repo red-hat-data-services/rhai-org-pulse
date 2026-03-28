@@ -11,11 +11,11 @@ module.exports = function registerRoutes(router, context) {
   const { fetchPersonMetrics } = require('./jira/person-metrics');
   const { fetchGithubData } = require('./github/contributions');
   const { fetchGitlabData } = require('./gitlab/contributions');
-  const rosterSync = require('./roster-sync');
-  const rosterSyncConfig = require('./roster-sync/config');
+  const rosterSync = require('../../../shared/server/roster-sync');
+  const rosterSyncConfig = require('../../../shared/server/roster-sync/config');
   const { readRosterFull: sharedReadRosterFull, EXCLUDED_TITLES } = require('../../../shared/server/roster');
   const jiraSyncConfig = require('./jira/config');
-  const { RESERVED_KEYS } = require('./roster-sync/constants');
+  const { RESERVED_KEYS } = require('../../../shared/server/roster-sync/constants');
   const snapshots = require('./snapshots');
 
   // ─── Refresh State Tracker ───

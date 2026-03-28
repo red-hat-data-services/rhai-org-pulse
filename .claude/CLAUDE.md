@@ -58,7 +58,7 @@ npm run dev:full       # Starts Vite (5173) + Express (3001)
 - **Composite keys**: Teams are identified by `orgKey::teamName` (e.g., `shgriffi::Model Serving`).
 - **Data file formats**: See `docs/DATA-FORMATS.md` for the JSON schema of every data file. Demo fixtures in `fixtures/` must always match production format.
 
-### Roster Sync (`modules/team-tracker/server/roster-sync/`)
+### Roster Sync (`shared/server/roster-sync/`)
 Automated roster building that replaces manual scripts:
 - **LDAP** (`ldap.js`): Traverses Red Hat corporate directory from configured org root UIDs. Requires VPN.
   - `ldapjs` v3: `createClient()` is synchronous. Search entries use `entry.attributes` array with `.type` and `.values`.
@@ -186,6 +186,7 @@ shared/
     storage.js      # Filesystem storage abstraction
     demo-storage.js # Fixture-backed storage for demo mode
     auth.js         # Auth middleware (requireAuth, requireAdmin)
+    roster-sync/    # Roster sync engine (LDAP + Google Sheets), config, constants
     index.js        # Barrel export
   API.md            # Stability contract for shared exports
 
@@ -193,7 +194,7 @@ modules/
   team-tracker/     # Main module: delivery metrics, sprint tracking
     module.json     # Module manifest
     client/         # Views, components, composables, utils
-    server/         # Jira, GitHub, GitLab, roster-sync integrations
+    server/         # Jira, GitHub, GitLab integrations
     __tests__/      # Module tests (client/ and server/)
 
 server/

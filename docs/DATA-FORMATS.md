@@ -227,7 +227,7 @@ Team key is sanitized: `::` becomes `--`, special chars become `_`. The filename
 
 ## Roster — `data/org-roster-full.json`
 
-Large file containing the full org/team hierarchy with members. See `modules/team-tracker/server/roster-sync/` for the code that builds it.
+Large file containing the full org/team hierarchy with members. See `shared/server/roster-sync/` for the code that builds it.
 
 ## Allowlist — `data/allowlist.json`
 

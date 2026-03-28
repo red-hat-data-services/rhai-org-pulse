@@ -85,11 +85,14 @@ function getTeamRollup(people, fieldName) {
   return [...values].sort();
 }
 
+const { getOrgDisplayNames } = require('./roster-sync/config');
+
 module.exports = {
   EXCLUDED_TITLES,
   readRosterFull,
   getAllPeople,
   getPeopleByOrg,
   getOrgKeys,
-  getTeamRollup
+  getTeamRollup,
+  getOrgDisplayNames
 };
