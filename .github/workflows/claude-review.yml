@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: claude-review-${{ github.event.pull_request.number || github.event.issue.number || github.run_id }}
+  group: claude-review-${{ github.event_name }}-${{ github.event.pull_request.number || github.event.issue.number || github.run_id }}
   cancel-in-progress: true
 
 permissions:
