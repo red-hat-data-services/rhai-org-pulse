@@ -72,9 +72,6 @@ function handleSelectRFE(rfe) {
       v-if="showHint && rfes.length > 0"
       class="mb-3 flex items-center justify-between gap-2 rounded-md bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 px-3 py-2 text-sm text-primary-700 dark:text-primary-300"
     >
-      v-if="showHint"
-      class="mb-3 flex items-center justify-between gap-2 rounded-md bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 px-3 py-2 text-sm text-primary-700 dark:text-primary-300"
-    >
       <div class="flex items-center gap-2">
         <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
