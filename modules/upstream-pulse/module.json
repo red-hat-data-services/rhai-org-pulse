@@ -1,0 +1,19 @@
+{
+  "name": "Upstream Pulse",
+  "slug": "upstream-pulse",
+  "description": "Upstream open-source contribution insights across GitHub organizations",
+  "icon": "activity",
+  "order": 10,
+  "client": {
+    "entry": "./client/index.js",
+    "navItems": [
+      { "id": "dashboard", "label": "Dashboard", "icon": "BarChart3", "default": true }
+    ],
+    "settingsComponent": "./client/components/UpstreamPulseSettings.vue"
+  },
+  "server": {
+    "entry": "./server/index.js"
+  },
+  "defaultEnabled": false,
+  "requires": []
+}
