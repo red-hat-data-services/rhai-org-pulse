@@ -138,10 +138,12 @@ async function fetchGroupWindowContributions(groupPath, from, to) {
  * @param {string[]} usernames - GitLab usernames to include in results
  * @param {object} [options]
  * @param {string[]} [options.gitlabGroups] - GitLab group paths to query
+ * @param {string[]} [options.gitlabExcludeGroups] - GitLab group paths to exclude (e.g., mirror repos)
  * @returns {Object} Map of username -> { totalContributions, months, fetchedAt, source } or null
  */
 async function fetchGitlabData(usernames, options = {}) {
   const groups = options.gitlabGroups || [];
+  const excludeGroups = options.gitlabExcludeGroups || [];
 
   if (!GITLAB_TOKEN) {
     console.warn('[gitlab] No GITLAB_TOKEN set, skipping GitLab contributions');
@@ -153,16 +155,34 @@ async function fetchGitlabData(usernames, options = {}) {
     return Object.fromEntries(usernames.map(u => [u, null]));
   }
 
+  // Filter out excluded groups
+  const filteredGroups = groups.filter(g => !excludeGroups.includes(g));
+
+  if (excludeGroups.length > 0) {
+    console.log(`[gitlab] Excluding ${excludeGroups.length} group(s): ${excludeGroups.join(', ')}`);
+  }
+
+  if (filteredGroups.length === 0) {
+    console.warn('[gitlab] All configured groups are excluded, skipping GitLab contributions');
+    const now = new Date().toISOString();
+    return Object.fromEntries(usernames.map(u => [u, {
+      totalContributions: 0,
+      months: {},
+      fetchedAt: now,
+      source: 'graphql'
+    }]));
+  }
+
   const usernameSet = new Set(usernames);
   const windows = generateMonthlyWindows();
 
-  console.log(`[gitlab] Fetching contributions for ${usernames.length} users across ${groups.length} group(s), ${windows.length} monthly windows`);
+  console.log(`[gitlab] Fetching contributions for ${usernames.length} users across ${filteredGroups.length} group(s), ${windows.length} monthly windows`);
 
   // Accumulate monthly counts per username across all groups
   // { username: { "YYYY-MM": count } }
   const userMonths = {};
 
-  for (const group of groups) {
+  for (const group of filteredGroups) {
     for (const window of windows) {
       try {
         const counts = await fetchGroupWindowContributions(group, window.from, window.to);

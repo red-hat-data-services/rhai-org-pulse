@@ -491,7 +491,8 @@ module.exports = function registerRoutes(router, context) {
       try {
         const syncConfig = rosterSyncConfig.loadConfig({ readFromStorage }) || {};
         const gitlabGroups = syncConfig.gitlabGroups || [];
-        const results = await fetchGitlabData(usernames, { gitlabGroups });
+        const gitlabExcludeGroups = syncConfig.gitlabExcludeGroups || [];
+        const results = await fetchGitlabData(usernames, { gitlabGroups, gitlabExcludeGroups });
         writeSinglePassResults(results, GITLAB_CACHE_PATH, GITLAB_HISTORY_CACHE_PATH);
         console.log(`[refresh] GitLab: ${Object.keys(results).length} users processed`);
       } catch (err) {
@@ -546,7 +547,8 @@ module.exports = function registerRoutes(router, context) {
           promises.push((async () => {
             const syncConfig = rosterSyncConfig.loadConfig({ readFromStorage }) || {};
             const gitlabGroups = syncConfig.gitlabGroups || [];
-            const glResults = await fetchGitlabData([member.gitlabUsername], { gitlabGroups });
+            const gitlabExcludeGroups = syncConfig.gitlabExcludeGroups || [];
+            const glResults = await fetchGitlabData([member.gitlabUsername], { gitlabGroups, gitlabExcludeGroups });
             if (glResults[member.gitlabUsername]) {
               writeSinglePassResults(glResults, GITLAB_CACHE_PATH, GITLAB_HISTORY_CACHE_PATH);
               result.gitlab = glResults[member.gitlabUsername];

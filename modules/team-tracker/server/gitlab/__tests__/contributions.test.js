@@ -272,4 +272,101 @@ describe('fetchGitlabData integration', () => {
       cleanup(refs)
     }
   })
+
+  it('should skip excluded groups', async () => {
+    const refs = setup()
+    try {
+      const queriedGroups = []
+      mockFetch.mockImplementation(async (url, opts) => {
+        const body = JSON.parse(opts.body)
+        queriedGroups.push(body.variables.groupPath)
+        return makeGraphQLResponse([
+          { user: { username: 'testuser' }, totalEvents: 10 }
+        ])
+      })
+
+      await fetchGitlabData(['testuser'], {
+        gitlabGroups: ['group-a', 'group-b', 'group-c'],
+        gitlabExcludeGroups: ['group-b']
+      })
+
+      // Verify group-b was not queried
+      expect(queriedGroups).not.toContain('group-b')
+      expect(queriedGroups).toContain('group-a')
+      expect(queriedGroups).toContain('group-c')
+    } finally {
+      cleanup(refs)
+    }
+  })
+
+  it('should return empty results when all groups excluded', async () => {
+    const refs = setup()
+    try {
+      const results = await fetchGitlabData(['testuser'], {
+        gitlabGroups: ['group-a', 'group-b'],
+        gitlabExcludeGroups: ['group-a', 'group-b']
+      })
+
+      expect(results.testuser).toEqual({
+        totalContributions: 0,
+        months: {},
+        fetchedAt: expect.any(String),
+        source: 'graphql'
+      })
+      expect(mockFetch).not.toHaveBeenCalled()
+    } finally {
+      cleanup(refs)
+    }
+  })
+
+  it('should work normally with empty exclude list', async () => {
+    const refs = setup()
+    try {
+      mockFetch.mockImplementation(async () => {
+        return makeGraphQLResponse([
+          { user: { username: 'testuser' }, totalEvents: 5 }
+        ])
+      })
+
+      const results = await fetchGitlabData(['testuser'], {
+        gitlabGroups: ['group-a'],
+        gitlabExcludeGroups: []
+      })
+
+      expect(results.testuser.totalContributions).toBe(60) // 5 * 12 months
+    } finally {
+      cleanup(refs)
+    }
+  })
+
+  it('should aggregate only from non-excluded groups', async () => {
+    const refs = setup()
+    try {
+      mockFetch.mockImplementation(async (url, opts) => {
+        const body = JSON.parse(opts.body)
+        if (body.variables.groupPath === 'group-a') {
+          return makeGraphQLResponse([
+            { user: { username: 'testuser' }, totalEvents: 10 }
+          ])
+        }
+        if (body.variables.groupPath === 'group-c') {
+          return makeGraphQLResponse([
+            { user: { username: 'testuser' }, totalEvents: 20 }
+          ])
+        }
+        // group-b should not be called
+        return makeGraphQLResponse([])
+      })
+
+      const results = await fetchGitlabData(['testuser'], {
+        gitlabGroups: ['group-a', 'group-b', 'group-c'],
+        gitlabExcludeGroups: ['group-b']
+      })
+
+      // 10 + 20 = 30 per month (group-b excluded), 12 months = 360
+      expect(results.testuser.totalContributions).toBe(360)
+    } finally {
+      cleanup(refs)
+    }
+  })
 })
