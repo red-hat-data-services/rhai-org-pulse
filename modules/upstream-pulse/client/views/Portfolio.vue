@@ -40,7 +40,7 @@
         <div class="flex items-center justify-between mb-4">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
             Organizations
-            <span class="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1">({{ orgs.length }})</span>
+            <span class="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1">({{ sortedOrgs.length }})</span>
           </h3>
         </div>
 
@@ -260,7 +260,9 @@ watch(searchInput, (val) => {
 watch(pageSize, () => { currentPage.value = 1 })
 
 const sortedOrgs = computed(() =>
-  [...orgs.value].sort((a, b) => (b.contributionCount || 0) - (a.contributionCount || 0))
+  [...orgs.value]
+    .filter(o => (o.contributionCount || 0) > 0 || (o.leadershipCount || 0) > 0 || (o.maintainerCount || 0) > 0 || (o.projectCount || 0) > 0)
+    .sort((a, b) => (b.contributionCount || 0) - (a.contributionCount || 0))
 )
 
 const mergedProjects = computed(() => {
