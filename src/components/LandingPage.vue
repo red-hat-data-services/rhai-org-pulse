@@ -110,7 +110,8 @@ import {
   FileCode2,
   Zap,
   Layout,
-  Network
+  Network,
+  Sparkles
 } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -134,7 +135,8 @@ const iconMap = {
   'zap': Zap,
   'layout': Layout,
   'box': Box,
-  'network': Network
+  'network': Network,
+  'sparkles': Sparkles
 }
 
 function getIcon(iconName) {
