@@ -132,6 +132,11 @@
         </div>
       </section>
 
+      <!-- Contribution Trend -->
+      <section v-if="dashboard.dailyBreakdown?.length" class="mb-8">
+        <ContributionTrendChart :daily-breakdown="dashboard.dailyBreakdown" />
+      </section>
+
       <!-- Top Contributors -->
       <section class="mb-8">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 p-6">
@@ -439,6 +444,7 @@ import { apiRequest } from '@shared/client/services/api'
 import StatCard from '../components/StatCard.vue'
 import ContributionTypeCard from '../components/ContributionTypeCard.vue'
 import LeadershipCard from '../components/LeadershipCard.vue'
+import ContributionTrendChart from '../components/ContributionTrendChart.vue'
 
 const MODULE_API = '/modules/upstream-pulse'
 

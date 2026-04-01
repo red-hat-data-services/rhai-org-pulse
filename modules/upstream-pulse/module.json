@@ -7,7 +7,9 @@
   "client": {
     "entry": "./client/index.js",
     "navItems": [
-      { "id": "dashboard", "label": "Dashboard", "icon": "BarChart3", "default": true }
+      { "id": "dashboard", "label": "Dashboard", "icon": "BarChart3", "default": true },
+      { "id": "insights", "label": "Insights", "icon": "TrendingUp" },
+      { "id": "portfolio", "label": "Portfolio", "icon": "Building2" }
     ],
     "settingsComponent": "./client/components/UpstreamPulseSettings.vue"
   },

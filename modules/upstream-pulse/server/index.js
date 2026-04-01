@@ -16,7 +16,7 @@ async function proxyRequest(path, query = {}) {
   }
 
   const response = await fetch(url.toString(), {
-    timeout: 15000,
+    timeout: 30000,
     headers: { 'Accept': 'application/json' }
   });
 
@@ -104,6 +104,17 @@ module.exports = function registerRoutes(router, context) {
     try {
       const data = await proxyRequest('/api/projects', {
         githubOrg: req.query.githubOrg
+      });
+      res.json(data);
+    } catch (err) {
+      handleProxyError(res, err);
+    }
+  });
+
+  router.get('/orgs', async function(req, res) {
+    try {
+      const data = await proxyRequest('/api/orgs', {
+        days: req.query.days
       });
       res.json(data);
     } catch (err) {
