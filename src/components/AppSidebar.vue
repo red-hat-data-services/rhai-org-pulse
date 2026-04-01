@@ -213,6 +213,7 @@
 import {
   Home,
   BarChart3,
+  Building2,
   Users,
   TrendingUp,
   FileText,
@@ -241,6 +242,7 @@ const ICON_MAP = {
   Settings,
   ExternalLink,
   Network,
+  Building2,
   'bar-chart': BarChart3,
   'sparkles': Sparkles,
   'activity': Activity,

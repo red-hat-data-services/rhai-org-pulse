@@ -25,7 +25,8 @@ describe('upstream-pulse server module', () => {
     expect(paths).toContain('/contributors')
     expect(paths).toContain('/leadership')
     expect(paths).toContain('/projects')
-    expect(paths).toHaveLength(5)
+    expect(paths).toContain('/orgs')
+    expect(paths).toHaveLength(6)
   })
 
   it('registers diagnostics hook when available', () => {
