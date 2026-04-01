@@ -694,9 +694,9 @@ function buildAnalysis(releases, issues, fieldMeta) {
 }
 
 module.exports = function registerRoutes(router, context) {
-  const { storage, requireAdmin } = context
+  const { storage, requireAuth, requireAdmin } = context
 
-  router.get('/analysis', async function(req, res) {
+  router.get('/analysis', requireAuth, async function(req, res) {
     try {
       const releases = await fetchOpenReleases(storage)
       const openReleases = filterUnreleased(releases)

@@ -17,24 +17,29 @@ export const SESSION_CACHE_PREFIX = 'tt_cache:session:'
  * `http://localhost:3001`), `/api` is appended so paths like `/modules/...`
  * resolve to `/api/modules/...` on the backend.
  */
+let _cachedApiBase = null
 export function getApiBase() {
+  if (_cachedApiBase !== null) return _cachedApiBase
   const raw = import.meta.env.VITE_API_ENDPOINT
-  if (raw === undefined || raw === '') return '/api'
+  if (raw === undefined || raw === '') { _cachedApiBase = '/api'; return _cachedApiBase }
   const s = String(raw).trim()
-  if (!s) return '/api'
+  if (!s) { _cachedApiBase = '/api'; return _cachedApiBase }
   if (!/^https?:\/\//i.test(s)) {
-    return s.replace(/\/$/, '') || '/api'
+    _cachedApiBase = s.replace(/\/$/, '') || '/api'
+    return _cachedApiBase
   }
   try {
     const u = new URL(s)
     const p = u.pathname.replace(/\/$/, '') || '/'
     if (p === '/') {
-      return `${u.origin}/api`
+      _cachedApiBase = `${u.origin}/api`
+    } else {
+      _cachedApiBase = s.replace(/\/$/, '')
     }
-    return s.replace(/\/$/, '')
   } catch {
-    return '/api'
+    _cachedApiBase = '/api'
   }
+  return _cachedApiBase
 }
 
 // ─── LocalStorage Cache ───

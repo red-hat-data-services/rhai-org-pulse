@@ -389,7 +389,19 @@ const diagnosticsRegistry = {};
 const moduleContext = { storage: storageModule, requireAuth: authMiddleware, requireAdmin, registerDiagnostics: null };
 
 const persistedState = loadModuleState(storageModule);
-const effectiveState = getEffectiveState(builtInModules, persistedState);
+// Persist defaults for any newly discovered modules at startup (not in GET handlers).
+const startupState = Object.assign({}, persistedState);
+let startupStateChanged = false;
+for (const mod of builtInModules) {
+  if (!Object.prototype.hasOwnProperty.call(startupState, mod.slug)) {
+    startupState[mod.slug] = mod.defaultEnabled !== false;
+    startupStateChanged = true;
+  }
+}
+if (startupStateChanged) {
+  saveModuleState(storageModule, startupState);
+}
+const effectiveState = getEffectiveState(builtInModules, startupState);
 reconcileStartupState(builtInModules, effectiveState, storageModule);
 const enabledSlugs = new Set(Object.entries(effectiveState).filter(([, v]) => v).map(([k]) => k));
 
@@ -1095,25 +1107,8 @@ app.post('/api/admin/modules/:slug/disable', requireAdmin, function(req, res) {
 // Public (auth required): get enabled built-in module slugs
 app.get('/api/built-in-modules/state', function(req, res) {
   try {
-    const discovered = builtInModules;
-    let currentState = loadModuleState(storageModule);
-    if (!currentState || typeof currentState !== 'object' || Array.isArray(currentState)) {
-      currentState = {};
-    }
-    // Persist defaults for newly discovered modules so enabledSlugs stays in sync with Settings
-    const nextState = Object.assign({}, currentState);
-    let changed = false;
-    for (let i = 0; i < discovered.length; i++) {
-      const mod = discovered[i];
-      if (!Object.prototype.hasOwnProperty.call(nextState, mod.slug)) {
-        nextState[mod.slug] = mod.defaultEnabled !== false;
-        changed = true;
-      }
-    }
-    if (changed) {
-      saveModuleState(storageModule, nextState);
-    }
-    const effective = getEffectiveState(discovered, nextState);
+    const currentState = loadModuleState(storageModule);
+    const effective = getEffectiveState(builtInModules, currentState);
     const enabledList = Object.entries(effective)
       .filter(function(entry) { return entry[1]; })
       .map(function(entry) { return entry[0]; });
