@@ -2,10 +2,9 @@
 import { ref, onMounted, inject, computed } from 'vue'
 import { useFeatureTraffic, useVersions } from '../composables/useFeatureTraffic'
 import FeatureTable from '../components/FeatureTable.vue'
-import StatusBadge from '../components/StatusBadge.vue'
 
 const nav = inject('moduleNav')
-const { features, featureCount, fetchedAt, loading, error, loadFeatures } = useFeatureTraffic()
+const { features, fetchedAt, loading, error, loadFeatures } = useFeatureTraffic()
 const { versions, loadVersions } = useVersions()
 
 const statusFilter = ref('')

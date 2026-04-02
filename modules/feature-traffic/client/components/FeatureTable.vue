@@ -1,8 +1,8 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import StatusBadge from './StatusBadge.vue'
 
-const props = defineProps({
+const _props = defineProps({
   features: { type: Array, required: true }
 })
 

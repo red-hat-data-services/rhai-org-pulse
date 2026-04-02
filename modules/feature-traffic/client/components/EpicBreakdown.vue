@@ -8,9 +8,6 @@ defineProps({
 
 const JIRA_BASE = 'https://redhat.atlassian.net/browse/'
 
-function getEpicMetric(key) {
-  return arguments[0]
-}
 </script>
 
 <template>
