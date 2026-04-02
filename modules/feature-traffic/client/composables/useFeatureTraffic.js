@@ -1,7 +1,5 @@
 import { ref } from 'vue'
-import { apiRequest, cachedRequest } from '@shared/client/services/api'
-
-const MODULE_API = '/api/modules/feature-traffic'
+import { apiRequest } from '@shared/client/services/api'
 
 export function useFeatureTraffic() {
   const features = ref([])
@@ -22,14 +20,13 @@ export function useFeatureTraffic() {
     if (filters.sortDir) params.set('sortDir', filters.sortDir)
 
     const qs = params.toString()
-    const url = `${MODULE_API}/features${qs ? '?' + qs : ''}`
+    const url = `/modules/feature-traffic/features${qs ? '?' + qs : ''}`
 
     try {
-      await cachedRequest(url, function(data) {
-        features.value = data.features || []
-        featureCount.value = data.featureCount || 0
-        fetchedAt.value = data.fetchedAt || null
-      })
+      const data = await apiRequest(url.replace(/^\/api/, ''))
+      features.value = data.features || []
+      featureCount.value = data.featureCount || 0
+      fetchedAt.value = data.fetchedAt || null
     } catch (err) {
       error.value = err.message
     } finally {
@@ -50,9 +47,8 @@ export function useFeatureDetail() {
     error.value = null
 
     try {
-      await cachedRequest(`${MODULE_API}/features/${key}`, function(data) {
-        feature.value = data
-      })
+      const data = await apiRequest(`/modules/feature-traffic/features/${key}`)
+      feature.value = data
     } catch (err) {
       error.value = err.message
     } finally {
@@ -68,7 +64,7 @@ export function useVersions() {
 
   async function loadVersions() {
     try {
-      const data = await apiRequest(`${MODULE_API}/versions`)
+      const data = await apiRequest('/modules/feature-traffic/versions')
       versions.value = data.versions || []
     } catch {
       versions.value = []
