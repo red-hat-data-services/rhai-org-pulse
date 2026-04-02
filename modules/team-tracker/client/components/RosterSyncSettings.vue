@@ -162,6 +162,40 @@
           </button>
           <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Requires GITLAB_TOKEN env var.</p>
         </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Exclude GitLab Groups</label>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
+            Skip these groups when fetching contributions (e.g., mirror repositories).
+          </p>
+          <div class="space-y-2 mb-2">
+            <div v-for="(group, idx) in editGitlabExcludeGroups" :key="'gl-exclude-' + idx" class="flex items-center gap-2">
+              <input
+                v-model="editGitlabExcludeGroups[idx]"
+                placeholder="e.g. redhat/rhel-ai/core/mirrors"
+                class="flex-1 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              />
+              <button
+                @click="editGitlabExcludeGroups.splice(idx, 1)"
+                class="p-1 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                title="Remove"
+              >
+                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <button
+            @click="editGitlabExcludeGroups.push('')"
+            class="text-sm text-primary-600 hover:text-primary-700 dark:hover:text-primary-400 font-medium flex items-center gap-1"
+          >
+            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Add excluded group
+          </button>
+        </div>
       </div>
     </div>
 
@@ -200,6 +234,7 @@ const {
 const editRoots = ref([])
 const editGithubOrgs = ref([])
 const editGitlabGroups = ref([])
+const editGitlabExcludeGroups = ref([])
 const saveMessage = ref(null)
 const saveError = ref(false)
 
@@ -212,10 +247,13 @@ function populateForm() {
     editRoots.value = (config.value.orgRoots || []).map(r => ({ ...r }))
     editGithubOrgs.value = [...(config.value.githubOrgs || [])]
     editGitlabGroups.value = [...(config.value.gitlabGroups || [])]
+    // Default to known mirror group if no exclude list exists
+    editGitlabExcludeGroups.value = [...(config.value.gitlabExcludeGroups || ['redhat/rhel-ai/core/mirrors'])]
   } else {
     editRoots.value = [{ uid: '', displayName: '' }]
     editGithubOrgs.value = []
     editGitlabGroups.value = []
+    editGitlabExcludeGroups.value = ['redhat/rhel-ai/core/mirrors']
   }
 }
 
@@ -257,11 +295,13 @@ async function handleSave() {
   try {
     const githubOrgs = editGithubOrgs.value.map(s => s.trim()).filter(Boolean)
     const gitlabGroups = editGitlabGroups.value.map(s => s.trim()).filter(Boolean)
+    const gitlabExcludeGroups = editGitlabExcludeGroups.value.map(s => s.trim()).filter(Boolean)
 
     await saveConfig({
       orgRoots,
       githubOrgs,
-      gitlabGroups
+      gitlabGroups,
+      gitlabExcludeGroups
     })
     saveMessage.value = 'Configuration saved.'
     emit('toast', { message: 'Roster sync configuration saved', type: 'success' })

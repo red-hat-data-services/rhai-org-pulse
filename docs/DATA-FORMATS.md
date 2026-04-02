@@ -141,6 +141,7 @@ Stores the configuration for automated roster building. Managed via the Settings
   "sheetNames": ["Sheet1", "Sheet2"],
   "githubOrgs": ["my-org"],
   "gitlabGroups": ["my-group"],
+  "gitlabExcludeGroups": ["redhat/rhel-ai/core/mirrors"],
   "teamStructure": {
     "nameColumn": "Name",
     "teamGroupingColumn": "Team",
@@ -162,7 +163,8 @@ Stores the configuration for automated roster building. Managed via the Settings
 
 **Notes:**
 - `orgRoots` is required (at least one). Each entry needs `uid` and `displayName`.
-- `googleSheetId`, `sheetNames`, `githubOrgs`, `gitlabGroups` are optional (default to `null` or `[]`).
+- `googleSheetId`, `sheetNames`, `githubOrgs`, `gitlabGroups`, `gitlabExcludeGroups` are optional (default to `null` or `[]`).
+- `gitlabExcludeGroups`: Array of GitLab group paths to skip when fetching contributions. Use for mirror repositories or other groups that should not count toward contribution metrics. Defaults to `["redhat/rhel-ai/core/mirrors"]` when first configured.
 - `teamStructure` replaces legacy `fieldMapping`/`customFields` via an in-memory migration on load.
 - `customFields` supports up to 20 entries. At most one can have `primaryDisplay: true`.
 - `lastSyncAt`, `lastSyncStatus`, `lastSyncError` are auto-populated during sync runs.
