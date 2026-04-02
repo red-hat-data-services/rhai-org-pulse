@@ -1,0 +1,19 @@
+{
+  "name": "Feature Traffic",
+  "slug": "feature-traffic",
+  "description": "Traffic maps showing RHAISTRAT feature delivery across repos and components",
+  "icon": "git-branch",
+  "order": 15,
+  "defaultEnabled": false,
+  "requires": [],
+  "client": {
+    "entry": "./client/index.js",
+    "navItems": [
+      { "id": "overview", "label": "Overview", "icon": "BarChart3", "default": true },
+      { "id": "feature-detail", "label": "Feature", "icon": "GitBranch" }
+    ]
+  },
+  "server": {
+    "entry": "./server/index.js"
+  }
+}
