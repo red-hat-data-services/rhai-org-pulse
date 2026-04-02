@@ -1,0 +1,68 @@
+{
+  "lastUpdated": "2026-03-31T12:00:00Z",
+  "boards": {
+    "101": {
+      "sprint": {
+        "id": 1001,
+        "name": "Notebooks Sprint 15",
+        "state": "active",
+        "startDate": "2026-03-24",
+        "endDate": "2026-04-04"
+      },
+      "summary": {
+        "totalPoints": 42,
+        "estimatedIssueCount": 12,
+        "unestimatedIssueCount": 2,
+        "calculationMode": "points",
+        "buckets": {
+          "tech-debt-quality": { "points": 16, "issueCount": 4, "completedPoints": 8 },
+          "new-features": { "points": 18, "issueCount": 5, "completedPoints": 5 },
+          "learning-enablement": { "points": 5, "issueCount": 2, "completedPoints": 0 },
+          "uncategorized": { "points": 3, "issueCount": 1, "completedPoints": 0 }
+        }
+      }
+    },
+    "102": {
+      "sprint": {
+        "id": 1002,
+        "name": "Model Serving Sprint 22",
+        "state": "active",
+        "startDate": "2026-03-24",
+        "endDate": "2026-04-04"
+      },
+      "summary": {
+        "totalPoints": 38,
+        "estimatedIssueCount": 10,
+        "unestimatedIssueCount": 1,
+        "calculationMode": "points",
+        "buckets": {
+          "tech-debt-quality": { "points": 13, "issueCount": 3, "completedPoints": 5 },
+          "new-features": { "points": 18, "issueCount": 5, "completedPoints": 10 },
+          "learning-enablement": { "points": 4, "issueCount": 1, "completedPoints": 0 },
+          "uncategorized": { "points": 3, "issueCount": 1, "completedPoints": 0 }
+        }
+      }
+    },
+    "103": {
+      "sprint": {
+        "id": 1003,
+        "name": "Platform Sprint 8",
+        "state": "active",
+        "startDate": "2026-03-24",
+        "endDate": "2026-04-04"
+      },
+      "summary": {
+        "totalPoints": 55,
+        "estimatedIssueCount": 15,
+        "unestimatedIssueCount": 3,
+        "calculationMode": "points",
+        "buckets": {
+          "tech-debt-quality": { "points": 25, "issueCount": 7, "completedPoints": 15 },
+          "new-features": { "points": 20, "issueCount": 5, "completedPoints": 8 },
+          "learning-enablement": { "points": 8, "issueCount": 2, "completedPoints": 3 },
+          "uncategorized": { "points": 2, "issueCount": 1, "completedPoints": 0 }
+        }
+      }
+    }
+  }
+}

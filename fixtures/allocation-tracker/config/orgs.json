@@ -1,0 +1,6 @@
+{
+  "orgName": "AI Engineering",
+  "projects": [
+    { "key": "RHOAIENG", "name": "OpenShift AI Engineering", "pillar": "OpenShift AI" }
+  ]
+}
