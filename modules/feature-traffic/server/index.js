@@ -43,7 +43,8 @@ module.exports = function registerRoutes(router, context) {
     }
 
     // Sort
-    const sortBy = req.query.sortBy || 'key';
+    const SORTABLE_FIELDS = ['key', 'summary', 'status', 'health', 'completionPct', 'epicCount', 'issueCount', 'blockerCount'];
+    const sortBy = SORTABLE_FIELDS.includes(req.query.sortBy) ? req.query.sortBy : 'key';
     const sortDir = req.query.sortDir === 'desc' ? -1 : 1;
     features.sort(function(a, b) {
       const aVal = a[sortBy];
