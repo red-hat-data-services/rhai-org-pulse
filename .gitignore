@@ -34,3 +34,9 @@ output.txt
 !.claude/CLAUDE.md
 !.claude/commands/
 data
+
+
+# Local PP files
+rhelai.json
+rhoai.json
+scripts/fetch-releases.sh

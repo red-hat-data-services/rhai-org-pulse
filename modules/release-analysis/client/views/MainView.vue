@@ -206,11 +206,51 @@
                 <thead class="text-left text-gray-600 dark:text-gray-300">
                   <tr>
                     <th class="pr-3 py-1">Team</th>
-                    <th class="pr-3 py-1">Remaining</th>
-                    <th class="pr-3 py-1">Done</th>
-                    <th class="pr-3 py-1">Expected to due</th>
-                    <th class="pr-3 py-1">Required/day</th>
-                    <th class="pr-3 py-1">Available/day</th>
+                    <th class="pr-3 py-1">
+                      <span class="inline-flex items-center gap-1">
+                        Remaining
+                        <button
+                          class="inline-flex items-center justify-center h-4 w-4 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-[10px] font-bold leading-none hover:bg-gray-300 dark:hover:bg-gray-600 cursor-help"
+                          :title="metricInfo.remaining"
+                        >i</button>
+                      </span>
+                    </th>
+                    <th class="pr-3 py-1">
+                      <span class="inline-flex items-center gap-1">
+                        Done
+                        <button
+                          class="inline-flex items-center justify-center h-4 w-4 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-[10px] font-bold leading-none hover:bg-gray-300 dark:hover:bg-gray-600 cursor-help"
+                          :title="metricInfo.done"
+                        >i</button>
+                      </span>
+                    </th>
+                    <th class="pr-3 py-1">
+                      <span class="inline-flex items-center gap-1">
+                        Expected to due
+                        <button
+                          class="inline-flex items-center justify-center h-4 w-4 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-[10px] font-bold leading-none hover:bg-gray-300 dark:hover:bg-gray-600 cursor-help"
+                          :title="metricInfo.expectedToDue"
+                        >i</button>
+                      </span>
+                    </th>
+                    <th class="pr-3 py-1">
+                      <span class="inline-flex items-center gap-1">
+                        Required/day
+                        <button
+                          class="inline-flex items-center justify-center h-4 w-4 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-[10px] font-bold leading-none hover:bg-gray-300 dark:hover:bg-gray-600 cursor-help"
+                          :title="metricInfo.requiredPerDay"
+                        >i</button>
+                      </span>
+                    </th>
+                    <th class="pr-3 py-1">
+                      <span class="inline-flex items-center gap-1">
+                        Available/day
+                        <button
+                          class="inline-flex items-center justify-center h-4 w-4 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-[10px] font-bold leading-none hover:bg-gray-300 dark:hover:bg-gray-600 cursor-help"
+                          :title="metricInfo.availablePerDay"
+                        >i</button>
+                      </span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -288,6 +328,14 @@ const loading = ref(false)
 const error = ref('')
 const analysis = ref(null)
 const activeTab = ref('all')
+
+const metricInfo = {
+  remaining: 'Remaining = Total weighted points (story points or feature weight) for issues in To Do + Doing status. Formula: Σ weight(issue) where status ≠ Done.',
+  done: 'Done = Total weighted points completed for this release within the baseline window. Formula: Σ weight(issue) where status = Done and resolved within this release.',
+  expectedToDue: 'Expected to Due = Projected throughput from now until the due date, based on historical capacity. Formula: (Baseline per month ÷ 30) × Days remaining. Baseline uses P90 or Avg monthly throughput over the trailing window.',
+  requiredPerDay: 'Required/day = The daily throughput rate needed to finish all remaining work by the due date. Formula: Remaining ÷ Days remaining. If days = 0 and work remains, this is ∞.',
+  availablePerDay: 'Available/day = Historical daily throughput capacity for this team. Formula: Baseline per month ÷ 30. Baseline = P90 (or Avg) of monthly completed weighted points over the trailing window (default 180 days).'
+}
 
 const tabs = computed(() => {
   const releases = analysis.value?.releases || []
