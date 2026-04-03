@@ -36,6 +36,7 @@ spec:
             - --cookie-secret-file=/etc/proxy/cookie-secret/session_secret
             - --pass-user-headers=true
             - --email-domain=*
+            - --skip-auth-route=^/api/docs
           volumeMounts:
             - name: proxy-tls
               mountPath: /etc/tls/private
