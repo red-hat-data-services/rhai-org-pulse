@@ -44,12 +44,44 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Checkout PR branch
+      - name: Setup fork PR branch (if applicable)
+        id: fork-setup
         run: |
           PR_NUM=${{ github.event.pull_request.number || github.event.issue.number }}
-          if [ -n "$PR_NUM" ]; then
-            gh pr checkout "$PR_NUM"
+          if [ -z "$PR_NUM" ]; then
+            echo "No PR number, skipping"
+            exit 0
           fi
+
+          # Check if this is a fork PR
+          PR_JSON=$(gh api repos/${{ github.repository }}/pulls/"$PR_NUM" \
+            --jq '{is_fork: (.head.repo.full_name != .base.repo.full_name), head_ref: .head.ref}')
+          IS_FORK=$(echo "$PR_JSON" | jq -r '.is_fork')
+          HEAD_REF=$(echo "$PR_JSON" | jq -r '.head_ref')
+
+          if [ "$IS_FORK" != "true" ]; then
+            echo "Same-repo PR, no special setup needed"
+            exit 0
+          fi
+
+          echo "Fork PR detected (branch: ${HEAD_REF})"
+
+          # The claude-code-action runs `git fetch origin <branchName>` internally,
+          # which fails for fork PRs because the branch only exists on the fork.
+          # Workaround: push the PR head commit to origin under the same branch name
+          # so the action's fetch succeeds. Clean up after the review completes.
+
+          # Safety: check if branch already exists on origin
+          if git ls-remote --exit-code origin "refs/heads/${HEAD_REF}" >/dev/null 2>&1; then
+            echo "::warning::Branch ${HEAD_REF} already exists on origin, skipping fork workaround"
+            exit 0
+          fi
+
+          git fetch origin "refs/pull/${PR_NUM}/head"
+          git push origin "FETCH_HEAD:refs/heads/${HEAD_REF}"
+
+          echo "fork_branch=${HEAD_REF}" >> "$GITHUB_OUTPUT"
+          echo "Pushed fork PR head to origin/${HEAD_REF}"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -144,3 +176,11 @@ jobs:
           CLOUD_ML_REGION: "us-east5"
           CLAUDE_CODE_DISABLE_EXPERIMENTAL_BETAS: "1"
           DISABLE_PROMPT_CACHING: "1"
+
+      - name: Cleanup fork PR branch
+        if: always() && steps.fork-setup.outputs.fork_branch
+        run: |
+          echo "Cleaning up temporary branch: ${{ steps.fork-setup.outputs.fork_branch }}"
+          git push origin --delete "${{ steps.fork-setup.outputs.fork_branch }}" || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
