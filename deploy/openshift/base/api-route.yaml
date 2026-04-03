@@ -13,3 +13,4 @@ spec:
     targetPort: 3001
   tls:
     termination: edge
+    insecureEdgeTerminationPolicy: Redirect

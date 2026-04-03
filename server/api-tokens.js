@@ -191,7 +191,7 @@ function touchLastUsed(tokenId) {
       _saveTokens(tokens);
       _invalidateIndex();
     }
-  });
+  }).catch(err => console.error('touchLastUsed write error:', err));
 }
 
 /**

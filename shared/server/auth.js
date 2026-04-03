@@ -3,6 +3,8 @@
  * Provides authentication and authorization for Express routes.
  */
 
+const crypto = require('crypto');
+
 function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
   const { tokenValidator } = options;
 
@@ -106,7 +108,10 @@ function proxySecretGuard(req, res, next, options = {}) {
   if (req.method === 'GET' && req.path === '/api/built-in-modules/manifests') return next();
 
   const providedSecret = req.headers['x-proxy-secret'];
-  if (providedSecret === expectedSecret) return next();
+  if (providedSecret && providedSecret.length === expectedSecret.length &&
+      crypto.timingSafeEqual(Buffer.from(providedSecret), Buffer.from(expectedSecret))) {
+    return next();
+  }
 
   // Bearer token inline validation: if request has a tt_ token, validate it
   const authHeader = req.headers['authorization'];
