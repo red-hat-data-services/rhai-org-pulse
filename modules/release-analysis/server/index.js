@@ -322,6 +322,9 @@ async function fetchIssuesFromJira(config) {
     'resolutiondate',
     'project',
     'issuetype',
+    'components',
+    'parent',
+    'customfield_10014',
     config.storyPointsField,
     config.featureWeightField
   ]
@@ -545,6 +548,10 @@ function buildAnalysis(releases, issues, fieldMeta, config) {
     }
 
     const issueTypeName = issue.fields?.issuetype?.name || ''
+    const components = (issue.fields?.components || [])
+      .map(c => String(c.name || '').trim())
+      .filter(Boolean)
+    const parentKey = issue.fields?.parent?.key || issue.fields?.customfield_10014 || null
 
     for (const [release, target] of releasesForIssue) {
       release.issues.push({
@@ -556,7 +563,10 @@ function buildAnalysis(releases, issues, fieldMeta, config) {
         statusBucket: bucket,
         weight: unitWeight,
         link,
-        targetVersion: target
+        targetVersion: target,
+        components,
+        resolvedAt: resolvedAt || null,
+        parentKey
       })
 
       if (!release.teams[projectKey]) {
@@ -687,24 +697,259 @@ function buildAnalysis(releases, issues, fieldMeta, config) {
   }
 }
 
+/**
+ * Discovers scrum boards for the configured project keys and finds the most
+ * recently completed sprint to establish a synchronized 2-week window.
+ * Falls back to a calendar-based 14-day window if no sprints are found.
+ */
+async function detectSprintWindow(config) {
+  const FALLBACK_DAYS = 14
+  const now = new Date()
+  const fallback = {
+    startDate: new Date(now.getTime() - FALLBACK_DAYS * 86400000).toISOString().slice(0, 10),
+    endDate: now.toISOString().slice(0, 10),
+    sprintName: null,
+    source: 'calendar'
+  }
+
+  try {
+    const boardIds = []
+    for (const projectKey of config.projectKeys) {
+      const data = await jiraRequest(
+        `/rest/agile/1.0/board?projectKeyOrId=${encodeURIComponent(projectKey)}&type=scrum&maxResults=10`
+      )
+      if (data?.values) {
+        for (const b of data.values) boardIds.push(b.id)
+      }
+    }
+
+    if (!boardIds.length) return fallback
+
+    let latestSprint = null
+    for (const boardId of [...new Set(boardIds)].slice(0, 5)) {
+      try {
+        // Jira returns sprints oldest-first. Probe total count, then
+        // jump to the last page to efficiently get the most recent closed sprints.
+        const pageSize = 50
+        const probe = await jiraRequest(
+          `/rest/agile/1.0/board/${boardId}/sprint?state=closed&startAt=0&maxResults=1`
+        )
+        if (!probe?.values?.length) continue
+        const total = probe.total ?? 0
+        const lastPageStart = Math.max(0, total - pageSize)
+        const lastPage = await jiraRequest(
+          `/rest/agile/1.0/board/${boardId}/sprint?state=closed&startAt=${lastPageStart}&maxResults=${pageSize}`
+        )
+        const candidates = lastPage?.values || []
+        for (const s of candidates) {
+          if (!s.startDate || !s.endDate) continue
+          const endIso = (s.completeDate || s.endDate).slice(0, 10)
+          if (!latestSprint || endIso > latestSprint.endDate) {
+            latestSprint = {
+              startDate: s.startDate.slice(0, 10),
+              endDate: endIso,
+              sprintName: s.name,
+              sprintId: s.id,
+              boardId,
+              source: 'sprint'
+            }
+          }
+        }
+      } catch (err) {
+        console.warn(`[release-analysis] Could not fetch sprints for board ${boardId}: ${err.message}`)
+      }
+    }
+
+    return latestSprint || fallback
+  } catch (err) {
+    console.warn(`[release-analysis] Sprint detection failed, using calendar fallback: ${err.message}`)
+    return fallback
+  }
+}
+
+/**
+ * Fetches all issue keys belonging to a specific sprint.
+ * Used to identify Scrum-tracked issues for differentiated throughput.
+ */
+async function fetchSprintIssueKeys(sprintId) {
+  if (!sprintId) return new Set()
+  try {
+    const issues = await fetchAllJqlResults(
+      jiraRequest,
+      `sprint = ${sprintId}`,
+      'key',
+      { maxResults: 100 }
+    )
+    return new Set((issues || []).map(i => i.key))
+  } catch (err) {
+    console.warn(`[release-analysis] Could not fetch sprint ${sprintId} issues: ${err.message}`)
+    return new Set()
+  }
+}
+
+const DELIVERABLE_TYPES = new Set(['Epic', 'Feature', 'Initiative'])
+
+const VELOCITY_MONTHS = 6
+const VELOCITY_WINDOW_DAYS = 14
+
+const VELOCITY_WORK_TYPES = ['Story', 'Task', 'Bug', 'Spike', 'Sub-task']
+
+/**
+ * Fetches all issues resolved in the past 6 months for the configured projects
+ * and aggregates per-component velocity (average issues per 2-week window).
+ *
+ * Issue type rules:
+ *  - All projects: Story, Task, Bug, Spike, Sub-task
+ *  - Per-project extras via config.velocityExtraJqlByProject (e.g. AIPCC
+ *    Epics with label "package")
+ *
+ * A 50% discount is applied to the raw count to approximate release-supporting work.
+ */
+async function fetchHistoricalComponentVelocity(config) {
+  const weeksBack = Math.ceil((VELOCITY_MONTHS * 30) / 7)
+  const dateClause = `resolutiondate >= -${weeksBack}w AND statusCategory = Done`
+  const typeList = VELOCITY_WORK_TYPES.map(t => `"${t}"`).join(',')
+
+  const extraJqlByProject = config.velocityExtraJqlByProject || {}
+  const activeExtraProjects = config.jiraAllProjects
+    ? Object.keys(extraJqlByProject)
+    : config.projectKeys.filter(k => k in extraJqlByProject)
+  const extraProjectSet = new Set(activeExtraProjects)
+  const regularProjects = config.jiraAllProjects
+    ? null
+    : config.projectKeys.filter(k => !extraProjectSet.has(k))
+
+  const queries = []
+
+  if (regularProjects === null) {
+    queries.push({
+      jql: `issuetype in (${typeList}) AND ${dateClause} ORDER BY resolutiondate DESC`,
+      fields: 'components,resolutiondate,project'
+    })
+  } else if (regularProjects.length) {
+    queries.push({
+      jql: `project in (${regularProjects.join(',')}) AND issuetype in (${typeList}) AND ${dateClause} ORDER BY resolutiondate DESC`,
+      fields: 'components,resolutiondate,project'
+    })
+  }
+
+  for (const projKey of activeExtraProjects) {
+    queries.push({
+      jql: `project = ${projKey} AND issuetype in (${typeList}) AND ${dateClause} ORDER BY resolutiondate DESC`,
+      fields: 'components,resolutiondate,project'
+    })
+    queries.push({
+      jql: `project = ${projKey} AND ${extraJqlByProject[projKey]} AND ${dateClause} ORDER BY resolutiondate DESC`,
+      fields: 'components,resolutiondate,project'
+    })
+  }
+
+  let allIssues = []
+  const seenKeys = new Set()
+  try {
+    const results = await Promise.all(
+      queries.map(q => fetchAllJqlResults(jiraRequest, q.jql, q.fields, { maxResults: 100 }))
+    )
+    for (const batch of results) {
+      for (const issue of (batch || [])) {
+        if (!seenKeys.has(issue.key)) {
+          seenKeys.add(issue.key)
+          allIssues.push(issue)
+        }
+      }
+    }
+  } catch (err) {
+    console.warn(`[release-analysis] Historical velocity fetch failed: ${err.message}`)
+    return {}
+  }
+
+  const totalDays = weeksBack * 7
+  const numWindows = totalDays / VELOCITY_WINDOW_DAYS
+
+  const compCounts = {}
+  for (const issue of allIssues) {
+    const components = (issue.fields?.components || [])
+      .map(c => String(c.name || '').trim())
+      .filter(Boolean)
+    if (!components.length) components.push('(No component)')
+    for (const comp of components) {
+      compCounts[comp] = (compCounts[comp] || 0) + 1
+    }
+  }
+
+  const discountFactor = config.velocityDiscountFactor ?? 0.5
+  const velocity = {}
+  for (const [comp, count] of Object.entries(compCounts)) {
+    velocity[comp] = {
+      resolved6m: count,
+      windows: Math.round(numWindows * 10) / 10,
+      velocity: Math.round(((count * discountFactor) / numWindows) * 10) / 10
+    }
+  }
+  return velocity
+}
+
+/**
+ * For each deliverable key (epic/feature/initiative), queries Jira for child
+ * issues via "Epic Link" JQL and resolves the parent from `parent.key` or
+ * `customfield_10014` (Epic Link field).
+ * Returns { KEY: { total, done, remaining } }.
+ */
+async function fetchDeliverableChildrenCounts(deliverableKeys) {
+  const counts = {}
+  for (const k of deliverableKeys) counts[k] = { total: 0, done: 0, remaining: 0 }
+  if (!deliverableKeys.length) return counts
+
+  const batchSize = 40
+  for (let i = 0; i < deliverableKeys.length; i += batchSize) {
+    const batch = deliverableKeys.slice(i, i + batchSize)
+    const keysStr = batch.join(', ')
+    const jql = `"Epic Link" in (${keysStr}) ORDER BY key ASC`
+    try {
+      const children = await fetchAllJqlResults(
+        jiraRequest, jql,
+        'status,parent,customfield_10014',
+        { maxResults: 100 }
+      )
+      for (const child of (children || [])) {
+        const parentKey =
+          child.fields?.parent?.key ||
+          child.fields?.customfield_10014 ||
+          null
+        if (!parentKey || !counts[parentKey]) continue
+        counts[parentKey].total++
+        const cat = child.fields?.status?.statusCategory?.key
+        if (cat === 'done') counts[parentKey].done++
+        else counts[parentKey].remaining++
+      }
+    } catch (err) {
+      console.warn(`[release-analysis] Could not fetch children for deliverables batch ${i}: ${err.message}`)
+    }
+  }
+  return counts
+}
+
 async function runFullAnalysis(storage, config) {
   const releases = await fetchOpenReleases(storage, config)
   const openReleases = filterUnreleased(releases)
-  if (!openReleases.length) {
-    throw new Error('No unreleased open releases available. Configure Product Pages Releases URL or upload a release cache.')
-  }
 
   let issues = []
   let fieldMeta = { id: null, name: '', schemaCustom: '' }
   let jiraWarning = null
   let jiraReleases = []
+  let sprintWindow = null
+  let componentVelocity = {}
   try {
-    const [jiraResult, unreleasedJiraFixVersionData] = await Promise.all([
+    const [jiraResult, unreleasedJiraFixVersionData, detectedWindow, historicalVelocity] = await Promise.all([
       fetchIssuesFromJira(config),
-      fetchUnreleasedJiraFixVersions(config)
+      fetchUnreleasedJiraFixVersions(config),
+      detectSprintWindow(config),
+      fetchHistoricalComponentVelocity(config)
     ])
+    sprintWindow = detectedWindow
     issues = jiraResult.issues
     fieldMeta = jiraResult.fieldMeta
+    componentVelocity = historicalVelocity
     jiraReleases = unreleasedJiraFixVersionData.releases
     if (unreleasedJiraFixVersionData.warnings.length) {
       jiraWarning = unreleasedJiraFixVersionData.warnings.join(' | ')
@@ -726,7 +971,60 @@ async function runFullAnalysis(storage, config) {
   }
   const analysisOpenReleases = filterUnreleased(analysisReleases)
 
+  if (!analysisOpenReleases.length) {
+    throw new Error(
+      'No unreleased open releases found. Ensure Jira Fix Versions exist for your projects, ' +
+      'or configure Product Pages product shortnames in Release Analysis settings.'
+    )
+  }
+
   const result = buildAnalysis(analysisOpenReleases, issues, fieldMeta, config)
+  result.sprintWindow = sprintWindow || {
+    startDate: new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10),
+    endDate: new Date().toISOString().slice(0, 10),
+    sprintName: null,
+    source: 'calendar'
+  }
+
+  // Fetch sprint member issue keys for Scrum vs Kanban differentiation
+  const sprintId = sprintWindow?.sprintId || null
+  let sprintIssueKeys = []
+  if (sprintId) {
+    try {
+      const keySet = await fetchSprintIssueKeys(sprintId)
+      sprintIssueKeys = [...keySet]
+    } catch (err) {
+      console.warn(`[release-analysis] Sprint issue key fetch failed: ${err.message}`)
+    }
+  }
+  result.sprintWindow.sprintIssueKeys = sprintIssueKeys
+  result.componentVelocity = componentVelocity
+
+  // Enrich deliverables (epic/feature/initiative) with child issue counts
+  const deliverableKeys = new Set()
+  for (const release of result.releases) {
+    for (const issue of release.issues) {
+      if (DELIVERABLE_TYPES.has(issue.issueType)) deliverableKeys.add(issue.key)
+    }
+  }
+  if (deliverableKeys.size > 0) {
+    try {
+      const childCounts = await fetchDeliverableChildrenCounts([...deliverableKeys])
+      for (const release of result.releases) {
+        for (const issue of release.issues) {
+          const cc = childCounts[issue.key]
+          if (cc && cc.total > 0) {
+            issue.childrenTotal = cc.total
+            issue.childrenDone = cc.done
+            issue.childrenRemaining = cc.remaining
+          }
+        }
+      }
+    } catch (err) {
+      console.warn(`[release-analysis] Deliverable children enrichment failed: ${err.message}`)
+    }
+  }
+
   if (jiraWarning) result.warning = jiraWarning
 
   const d = result.targetVersionDiagnostics

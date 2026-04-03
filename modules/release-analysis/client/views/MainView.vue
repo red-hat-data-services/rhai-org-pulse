@@ -10,7 +10,7 @@
       <button
         class="px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
         :disabled="loading"
-        @click="loadAnalysis"
+        @click="refreshAnalysis"
       >
         {{ loading ? 'Refreshing...' : 'Refresh' }}
       </button>
@@ -206,11 +206,51 @@
                 <thead class="text-left text-gray-600 dark:text-gray-300">
                   <tr>
                     <th class="pr-3 py-1">Team</th>
-                    <th class="pr-3 py-1">Remaining</th>
-                    <th class="pr-3 py-1">Done</th>
-                    <th class="pr-3 py-1">Expected to due</th>
-                    <th class="pr-3 py-1">Required/day</th>
-                    <th class="pr-3 py-1">Available/day</th>
+                    <th class="pr-3 py-1">
+                      <span class="inline-flex items-center gap-1">
+                        Remaining
+                        <button
+                          class="inline-flex items-center justify-center h-4 w-4 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-[10px] font-bold leading-none hover:bg-gray-300 dark:hover:bg-gray-600 cursor-help"
+                          :title="metricInfo.remaining"
+                        >i</button>
+                      </span>
+                    </th>
+                    <th class="pr-3 py-1">
+                      <span class="inline-flex items-center gap-1">
+                        Done
+                        <button
+                          class="inline-flex items-center justify-center h-4 w-4 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-[10px] font-bold leading-none hover:bg-gray-300 dark:hover:bg-gray-600 cursor-help"
+                          :title="metricInfo.done"
+                        >i</button>
+                      </span>
+                    </th>
+                    <th class="pr-3 py-1">
+                      <span class="inline-flex items-center gap-1">
+                        Expected to due
+                        <button
+                          class="inline-flex items-center justify-center h-4 w-4 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-[10px] font-bold leading-none hover:bg-gray-300 dark:hover:bg-gray-600 cursor-help"
+                          :title="metricInfo.expectedToDue"
+                        >i</button>
+                      </span>
+                    </th>
+                    <th class="pr-3 py-1">
+                      <span class="inline-flex items-center gap-1">
+                        Required/day
+                        <button
+                          class="inline-flex items-center justify-center h-4 w-4 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-[10px] font-bold leading-none hover:bg-gray-300 dark:hover:bg-gray-600 cursor-help"
+                          :title="metricInfo.requiredPerDay"
+                        >i</button>
+                      </span>
+                    </th>
+                    <th class="pr-3 py-1">
+                      <span class="inline-flex items-center gap-1">
+                        Available/day
+                        <button
+                          class="inline-flex items-center justify-center h-4 w-4 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-[10px] font-bold leading-none hover:bg-gray-300 dark:hover:bg-gray-600 cursor-help"
+                          :title="metricInfo.availablePerDay"
+                        >i</button>
+                      </span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -278,16 +318,20 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
-import { apiRequest, SESSION_CACHE_PREFIX } from '@shared/client/services/api'
+import { computed, ref } from 'vue'
+import { useReleaseAnalysis } from '../composables/useReleaseAnalysis'
 
-/** Session-only; aligned with `tt_cache:` naming (localStorage uses tt_cache: for apiRequest caches). */
-const ANALYSIS_CACHE_KEY = `${SESSION_CACHE_PREFIX}release-analysis:analysis-v4`
+const { loading, error, analysis, refreshAnalysis } = useReleaseAnalysis()
 
-const loading = ref(false)
-const error = ref('')
-const analysis = ref(null)
 const activeTab = ref('all')
+
+const metricInfo = {
+  remaining: 'Remaining = Total weighted points (story points or feature weight) for issues in To Do + Doing status. Formula: Σ weight(issue) where status ≠ Done.',
+  done: 'Done = Total weighted points completed for this release within the baseline window. Formula: Σ weight(issue) where status = Done and resolved within this release.',
+  expectedToDue: 'Expected to Due = Projected throughput from now until the due date, based on historical capacity. Formula: (Baseline per month ÷ 30) × Days remaining. Baseline uses P90 or Avg monthly throughput over the trailing window.',
+  requiredPerDay: 'Required/day = The daily throughput rate needed to finish all remaining work by the due date. Formula: Remaining ÷ Days remaining. If days = 0 and work remains, this is ∞.',
+  availablePerDay: 'Available/day = Historical daily throughput capacity for this team. Formula: Baseline per month ÷ 30. Baseline = P90 (or Avg) of monthly completed weighted points over the trailing window (default 180 days).'
+}
 
 const tabs = computed(() => {
   const releases = analysis.value?.releases || []
@@ -320,28 +364,6 @@ const riskLegendText = computed(() => {
     `Green: at most ${g} open issue(s) per day of runway; yellow: above ${g} and at most ${y}/day; red: above ${y}/day or past due. Grey: no issues in scope.`
   )
 })
-
-function readAnalysisCache() {
-  if (typeof sessionStorage === 'undefined') return null
-  try {
-    const raw = sessionStorage.getItem(ANALYSIS_CACHE_KEY)
-    if (!raw) return null
-    const data = JSON.parse(raw)
-    if (!data || typeof data !== 'object' || !Array.isArray(data.releases)) return null
-    return data
-  } catch {
-    return null
-  }
-}
-
-function writeAnalysisCache(data) {
-  if (typeof sessionStorage === 'undefined' || !data) return
-  try {
-    sessionStorage.setItem(ANALYSIS_CACHE_KEY, JSON.stringify(data))
-  } catch {
-    // quota or private mode — ignore
-  }
-}
 
 function releaseTeamsList(release) {
   if (!release?.teams) return []
@@ -420,26 +442,5 @@ function releaseRiskTitle(release) {
   return 'Schedule risk from open issue count (to do + in progress) vs days to due date.'
 }
 
-async function loadAnalysis() {
-  loading.value = true
-  error.value = ''
-  try {
-    const data = await apiRequest('/modules/release-analysis/analysis')
-    analysis.value = data
-    writeAnalysisCache(data)
-  } catch (err) {
-    error.value = err.message || 'Failed to load release analysis'
-  } finally {
-    loading.value = false
-  }
-}
 
-onMounted(() => {
-  const cached = readAnalysisCache()
-  if (cached) {
-    analysis.value = cached
-    return
-  }
-  loadAnalysis()
-})
 </script>
