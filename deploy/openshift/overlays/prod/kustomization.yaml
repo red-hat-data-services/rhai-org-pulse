@@ -7,6 +7,12 @@ resources:
 - ../../base
 - cronjob-sync-refresh.yaml
 
+configMapGenerator:
+- name: team-tracker-config
+  behavior: merge
+  literals:
+  - API_PUBLIC_URL=https://api-team-tracker.apps.int.spoke.prod.us-west-2.aws.paas.redhat.com
+
 patches:
 - path: route-patch.yaml
 - path: api-route-patch.yaml

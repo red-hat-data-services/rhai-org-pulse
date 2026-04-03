@@ -9,19 +9,22 @@ function createOpenApiSpec() {
         version: '1.0.0',
         description:
           'API for the AI Platform Org Pulse application.\n\n' +
-          '**Authentication:** In production, all routes (except health checks and docs) are ' +
-          'authenticated via an OpenShift OAuth proxy that sets `X-Forwarded-Email` and ' +
-          '`X-Forwarded-User` headers. In local dev, auth is bypassed and the first ' +
-          '`ADMIN_EMAILS` entry is used.\n\n' +
+          '**Authentication:** Use a Bearer token (`tt_` prefix) for API access — ' +
+          'generate one from the web UI at Settings → API Tokens. When using tokens, ' +
+          'send requests to the **API server** (first entry in the server list above), ' +
+          'not the main application URL which requires browser-based OAuth.\n\n' +
           '**Legacy path aliases:** Many Org Pulse module routes are also accessible at ' +
           'legacy paths (e.g., `/api/roster` forwards to `/api/modules/team-tracker/roster`). ' +
           'These aliases are not documented separately.\n\n' +
           '**Demo mode:** When `DEMO_MODE=true`, all POST refresh endpoints return a ' +
           'stub response and external API calls are disabled.'
       },
-      servers: [
-        { url: '/', description: 'Application root' }
-      ],
+      servers: process.env.API_PUBLIC_URL
+        ? [
+            { url: process.env.API_PUBLIC_URL, description: 'API server' },
+            { url: '/', description: 'Application root' }
+          ]
+        : [{ url: '/', description: 'Application root' }],
       tags: [
         { name: 'Health', description: 'Health check endpoints' },
         { name: 'Auth', description: 'Authentication, user info, and API tokens' },
