@@ -321,7 +321,7 @@
 import { computed, ref } from 'vue'
 import { useReleaseAnalysis } from '../composables/useReleaseAnalysis'
 
-const { loading, error, analysis, loadAnalysis, refreshAnalysis } = useReleaseAnalysis()
+const { loading, error, analysis, refreshAnalysis } = useReleaseAnalysis()
 
 const activeTab = ref('all')
 
