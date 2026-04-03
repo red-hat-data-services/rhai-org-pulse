@@ -178,7 +178,7 @@
             </div>
 
             <div v-if="group.hasSubTeams" class="ml-6 mt-2 space-y-2 border-l-2 border-gray-200 pl-4">
-              <div v-for="(entry, entryIndex) in group.entries" :key="entry._index" data-testid="sub-team-row" class="flex items-center justify-between py-1.5">
+              <div v-for="entry in group.entries" :key="entry._index" data-testid="sub-team-row" class="flex items-center justify-between py-1.5">
                 <div class="flex items-center gap-3 flex-1">
                   <div class="flex items-center gap-2">
                     <span class="text-xs text-gray-500">Name:</span>
@@ -219,6 +219,7 @@ import { getTeams, saveTeams, saveProjects, discoverBoards, getProjects } from '
 const emit = defineEmits(['saved'])
 
 // Load projects from API on mount (settings panel is standalone)
+const loadedOrgName = ref('')
 const localProjects = ref([])
 const originalProjectKeys = ref(new Set())
 
@@ -241,6 +242,7 @@ const saveValidationError = ref('')
 onMounted(async () => {
   try {
     const orgConfig = await getProjects()
+    loadedOrgName.value = orgConfig.orgName || ''
     localProjects.value = (orgConfig.projects || []).map(p => ({ ...p }))
     originalProjectKeys.value = new Set(localProjects.value.map(p => p.key))
     selectedProjectKey.value = localProjects.value.length > 0 ? localProjects.value[0].key : 'RHOAIENG'
@@ -339,7 +341,7 @@ function deleteProject(index) {
 async function handleSaveProjects() {
   isSaving.value = true
   try {
-    await saveProjects({ orgName: 'AI Engineering', projects: localProjects.value })
+    await saveProjects({ orgName: loadedOrgName.value, projects: localProjects.value })
     const newProjects = localProjects.value.filter(p => !originalProjectKeys.value.has(p.key))
     for (const project of newProjects) {
       await discoverBoards(project.key)
@@ -348,6 +350,7 @@ async function handleSaveProjects() {
     emit('saved')
   } catch (error) {
     console.error('Failed to save projects:', error)
+    window.alert('Failed to save projects. Please try again.')
   } finally {
     isSaving.value = false
   }

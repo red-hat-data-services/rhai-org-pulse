@@ -256,7 +256,7 @@ async function processBoard({ board, hardRefresh, fetchSprints, fetchSprintIssue
  * Process a kanban board: fetch board config, filter JQL, issues by date range,
  * classify, and create a synthetic sprint.
  */
-async function processKanbanBoard({ board, fetchBoardConfiguration, fetchFilterJql, fetchIssuesByJql, readStorage, writeStorage }) {
+async function processKanbanBoard({ board, fetchBoardConfiguration, fetchFilterJql, fetchIssuesByJql, _readStorage, writeStorage }) {
   const calculationMode = board.calculationMode || 'points';
   const teamKey = board.teamId || `kanban-${board.id}`;
   console.log(`Processing kanban board: ${board.name} (${board.id})`);

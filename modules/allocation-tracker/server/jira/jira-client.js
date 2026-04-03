@@ -122,6 +122,9 @@ function createJiraClient({ jiraRequest, jiraHost }) {
    */
   async function fetchBoardConfiguration(boardId) {
     const data = await jiraRequest(`/rest/agile/1.0/board/${boardId}/configuration`);
+    if (!data.filter?.id) {
+      throw new Error(`Board ${boardId} has no filter configured`);
+    }
     return { filterId: data.filter.id };
   }
 

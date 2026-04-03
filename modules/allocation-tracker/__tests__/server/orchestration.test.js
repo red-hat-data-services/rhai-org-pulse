@@ -353,7 +353,7 @@ describe('performRefresh', () => {
       })
     });
 
-    const result = await performRefresh({ ...deps, hardRefresh: false });
+    await performRefresh({ ...deps, hardRefresh: false });
 
     // Sprint index should use teamId key
     const indexCall = deps.writeStorage.mock.calls.find(c => c[0] === 'sprints/team-1_alpha.json');
@@ -381,7 +381,7 @@ describe('performRefresh', () => {
       })
     });
 
-    const result = await performRefresh({ ...deps, hardRefresh: false });
+    await performRefresh({ ...deps, hardRefresh: false });
 
     // Dashboard summary should use string boardId as key
     const dashCall = deps.writeStorage.mock.calls.find(c => c[0] === 'dashboard-summary.json');
@@ -873,7 +873,7 @@ describe('processKanbanBoard', () => {
       ])
     });
 
-    const result = await processKanbanBoard(deps);
+    await processKanbanBoard(deps);
 
     expect(deps.fetchBoardConfiguration).toHaveBeenCalledWith(10);
     expect(deps.fetchFilterJql).toHaveBeenCalledWith('555');
@@ -1127,7 +1127,7 @@ describe('performRefresh with kanban', () => {
       })
     });
 
-    const result = await performRefresh({ ...deps, hardRefresh: false });
+    await performRefresh({ ...deps, hardRefresh: false });
 
     const dashCall = deps.writeStorage.mock.calls.find(c => c[0] === 'dashboard-summary.json');
     expect(dashCall).toBeDefined();

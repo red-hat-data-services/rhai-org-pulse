@@ -22,16 +22,7 @@ module.exports = function registerRoutes(router, context) {
    */
   function isPathSafeString(val) {
     if (typeof val !== 'string') return false;
-    return !/[\/\\]|\.\./.test(val);
-  }
-
-  /** Strip internal details from error messages for client responses. */
-  function sanitizeErrorMessage(msg) {
-    if (typeof msg !== 'string') return 'Internal server error';
-    // Remove URLs, stack traces, Jira API details
-    return msg.replace(/https?:\/\/[^\s]+/g, '[redacted]')
-              .replace(/at\s+.+\(.+\)/g, '')
-              .substring(0, 200);
+    return !/[/\\]|\.\./.test(val);
   }
 
   const REFRESH_COOLDOWN_MS = 60_000;
@@ -44,8 +35,7 @@ module.exports = function registerRoutes(router, context) {
   const jiraClient = createJiraClient({ jiraRequest, jiraHost: JIRA_HOST });
 
   // Import orchestration and classification
-  const { discoverBoards, performRefresh, performMultiProjectRefresh, processBoard, processKanbanBoard } = require('./jira/orchestration');
-  const { buildProjectSummary, buildOrgSummary } = require('./jira/classification');
+  const { discoverBoards, processBoard, processKanbanBoard } = require('./jira/orchestration');
   const { getStoragePrefix, createPrefixedStorage } = require('./jira/config');
 
   // ─── Storage helpers ───

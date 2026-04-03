@@ -32,7 +32,6 @@ const {
 const hash = window.location.hash
 const params = new URLSearchParams(hash.split('?')[1] || '')
 const boardId = params.get('boardId')
-const projectKey = params.get('project')
 
 onMounted(async () => {
   // If no team loaded, load from URL params

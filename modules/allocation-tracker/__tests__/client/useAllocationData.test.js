@@ -22,8 +22,7 @@ import {
   getProjectSummary,
   getBoards,
   getSprintsForBoard,
-  getSprintIssues,
-  refreshData
+  getSprintIssues
 } from '../../client/services/api.js'
 
 describe('useAllocationData', () => {

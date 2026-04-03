@@ -28,7 +28,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useModuleLink } from '@shared/client'
 import ProjectDetail from '../components/ProjectDetail.vue'
 import FilterEditorModal from '../components/FilterEditor.vue'

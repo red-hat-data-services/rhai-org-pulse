@@ -20,7 +20,7 @@ describe('createPrefixedStorage', () => {
     const readStorage = vi.fn().mockReturnValue({ some: 'data' });
     const writeStorage = vi.fn();
 
-    const { read, write } = createPrefixedStorage('data/RHOAIENG/', readStorage, writeStorage);
+    const { read } = createPrefixedStorage('data/RHOAIENG/', readStorage, writeStorage);
 
     const result = read('boards.json');
 
@@ -32,7 +32,7 @@ describe('createPrefixedStorage', () => {
     const readStorage = vi.fn();
     const writeStorage = vi.fn();
 
-    const { read, write } = createPrefixedStorage('data/RHOAIENG/', readStorage, writeStorage);
+    const { write } = createPrefixedStorage('data/RHOAIENG/', readStorage, writeStorage);
 
     write('teams.json', { teams: [] });
 
