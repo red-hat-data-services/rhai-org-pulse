@@ -124,65 +124,60 @@
 
       <!-- Footer -->
       <div class="px-3 py-3 border-t border-gray-100 dark:border-gray-700 space-y-1">
-        <!-- User -->
-        <div
-          v-if="user"
-          class="flex items-center py-2 rounded-xl"
-          :class="collapsed ? 'justify-center px-0' : 'gap-3 px-3'"
-        >
-          <div class="h-8 w-8 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-xs flex-shrink-0">
-            {{ getUserInitials(user) }}
-          </div>
-          <transition name="fade">
-            <div v-if="!collapsed" class="overflow-hidden min-w-0">
-              <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{{ user.displayName || user.email }}</p>
-              <p class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ user.email }}</p>
-            </div>
-          </transition>
-        </div>
-
-        <!-- Help (popover with API Docs + Help & Debug) -->
-        <div class="relative" ref="helpContainer">
+        <!-- User (clickable with popover) -->
+        <div v-if="user" class="relative" ref="userContainer">
           <button
-            @click="helpOpen = !helpOpen"
-            class="group relative w-full flex items-center py-2.5 rounded-xl text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-200"
-            :class="collapsed ? 'justify-center px-0' : 'gap-3 px-3'"
+            @click="userMenuOpen = !userMenuOpen"
+            class="group relative w-full flex items-center py-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+            :class="[
+              collapsed ? 'justify-center px-0' : 'gap-3 px-3',
+              activeModule === 'api-tokens' ? 'bg-gray-100 dark:bg-gray-700' : ''
+            ]"
           >
-            <HelpCircle
-              :size="20"
-              :stroke-width="1.7"
-              class="flex-shrink-0"
-            />
+            <div class="h-8 w-8 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-xs flex-shrink-0">
+              {{ getUserInitials(user) }}
+            </div>
             <transition name="fade">
-              <span v-if="!collapsed">Help</span>
+              <div v-if="!collapsed" class="overflow-hidden min-w-0 text-left">
+                <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{{ user.displayName || user.email }}</p>
+                <p class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ user.email }}</p>
+              </div>
             </transition>
             <span
               v-if="collapsed"
               class="absolute left-full ml-3 px-2.5 py-1.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs font-medium rounded-lg whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 shadow-lg"
             >
-              Help
+              {{ user.displayName || user.email }}
             </span>
           </button>
 
-          <!-- Popover -->
+          <!-- User menu popover -->
           <transition name="fade">
             <div
-              v-if="helpOpen"
+              v-if="userMenuOpen"
               class="absolute bottom-full mb-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg py-1 min-w-[180px] z-40"
               :class="collapsed ? 'left-full ml-2' : 'left-0'"
             >
+              <button
+                @click="userMenuOpen = false; $emit('navigate', 'api-tokens')"
+                class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+              >
+                <KeyRound :size="18" :stroke-width="1.7" class="flex-shrink-0" />
+                API Tokens
+              </button>
+              <div class="my-1 border-t border-gray-100 dark:border-gray-700" />
               <a
                 href="/api/docs"
                 target="_blank"
                 rel="noopener"
-                @click="helpOpen = false"
+                @click="userMenuOpen = false"
                 class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
               >
                 <FileCode2 :size="18" :stroke-width="1.7" class="flex-shrink-0" />
                 API Docs
               </a>
               <button
-                @click="helpOpen = false; $emit('navigate', 'help')"
+                @click="userMenuOpen = false; $emit('navigate', 'help')"
                 class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
               >
                 <Wrench :size="18" :stroke-width="1.7" class="flex-shrink-0" />
@@ -224,11 +219,11 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  HelpCircle,
   ChartCandlestick,
   Sparkles,
   Activity,
-  Wrench
+  Wrench,
+  KeyRound
 } from 'lucide-vue-next'
 import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 
@@ -267,13 +262,13 @@ const props = defineProps({
 defineEmits(['navigate', 'toggle-collapse', 'close-mobile'])
 
 const expandedSections = ref({})
-const helpOpen = ref(false)
-const helpContainer = ref(null)
+const userMenuOpen = ref(false)
+const userContainer = ref(null)
 
 // Close help popover on outside click
 function onClickOutside(e) {
-  if (helpContainer.value && !helpContainer.value.contains(e.target)) {
-    helpOpen.value = false
+  if (userContainer.value && !userContainer.value.contains(e.target)) {
+    userMenuOpen.value = false
   }
 }
 

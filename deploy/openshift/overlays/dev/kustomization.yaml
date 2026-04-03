@@ -8,6 +8,7 @@ resources:
 
 patches:
   - path: route-patch.yaml
+  - path: api-route-patch.yaml
 
 configMapGenerator:
   - name: team-tracker-config

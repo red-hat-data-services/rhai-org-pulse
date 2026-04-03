@@ -8,6 +8,7 @@ resources:
   - frontend-deployment.yaml
   - frontend-service.yaml
   - frontend-route.yaml
+  - api-route.yaml
   - serviceaccount.yaml
 
 configMapGenerator:

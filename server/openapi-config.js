@@ -24,7 +24,7 @@ function createOpenApiSpec() {
       ],
       tags: [
         { name: 'Health', description: 'Health check endpoints' },
-        { name: 'Auth', description: 'Authentication and user info' },
+        { name: 'Auth', description: 'Authentication, user info, and API tokens' },
         { name: 'Allowlist', description: 'Email allowlist management (admin)' },
         { name: 'Git-Static Modules', description: 'Git-static module management' },
         { name: 'Built-in Modules', description: 'Built-in module state management' },
@@ -50,6 +50,11 @@ function createOpenApiSpec() {
             in: 'header',
             name: 'X-Forwarded-Email',
             description: 'Email address set by the OpenShift OAuth proxy'
+          },
+          bearerToken: {
+            type: 'http',
+            scheme: 'bearer',
+            description: 'API token (prefix: tt_). Generate at /api-tokens.'
           }
         },
         schemas: {
@@ -235,6 +240,18 @@ function createOpenApiSpec() {
               }
             }
           },
+          ApiToken: {
+            type: 'object',
+            properties: {
+              id: { type: 'string', format: 'uuid' },
+              name: { type: 'string' },
+              tokenPrefix: { type: 'string', example: 'tt_a1b2c3d4' },
+              ownerEmail: { type: 'string', format: 'email' },
+              createdAt: { type: 'string', format: 'date-time' },
+              expiresAt: { type: 'string', format: 'date-time', nullable: true },
+              lastUsedAt: { type: 'string', format: 'date-time', nullable: true }
+            }
+          },
           AllowlistResponse: {
             type: 'object',
             properties: {
@@ -270,7 +287,7 @@ function createOpenApiSpec() {
           }
         }
       },
-      security: [{ forwardedEmail: [] }]
+      security: [{ forwardedEmail: [] }, { bearerToken: [] }]
     },
     apis: ['server/dev-server.js', 'modules/*/server/index.js']
   };

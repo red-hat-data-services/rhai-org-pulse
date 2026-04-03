@@ -23,6 +23,7 @@ const DEMO_MODE = process.env.DEMO_MODE === 'true';
 const storageModule = DEMO_MODE ? require('../shared/server/demo-storage') : require('../shared/server/storage');
 const { readFromStorage, writeToStorage } = storageModule;
 const { createAuthMiddleware, proxySecretGuard } = require('../shared/server/auth');
+const apiTokens = require('./api-tokens');
 
 const modulesConfig = require('./modules/config');
 const gitSync = require('./modules/git-sync');
@@ -48,6 +49,9 @@ if (DEMO_MODE) {
   console.log('Running in DEMO MODE - using fixture data, Jira/GitHub APIs disabled');
 }
 
+// Initialize API token store
+apiTokens.init(storageModule);
+
 const PORT = process.env.API_PORT || 3001;
 
 const app = express();
@@ -65,7 +69,10 @@ app.use(function(req, res, next) {
 app.use(requestTracker.createMiddleware());
 
 // Proxy secret guard — validates X-Proxy-Secret header when PROXY_AUTH_SECRET is set
-app.use(proxySecretGuard);
+// Inject tokenValidator for inline Bearer token validation (defense in depth)
+app.use(function(req, res, next) {
+  proxySecretGuard(req, res, next, { tokenValidator: apiTokens });
+});
 
 // Demo mode: block refresh routes that would call external APIs
 if (DEMO_MODE) {
@@ -76,13 +83,22 @@ if (DEMO_MODE) {
         message: 'Refresh disabled in demo mode - using fixture data'
       });
     }
+    // Demo mode: block token creation with explicit error
+    if (req.method === 'POST' && req.path === '/api/tokens') {
+      return res.status(403).json({
+        status: 'skipped',
+        message: 'Token creation disabled in demo mode'
+      });
+    }
     next();
   });
 }
 
 // ─── Auth (from shared package) ───
 
-const { authMiddleware, requireAdmin, isAdmin, seedAdminList } = createAuthMiddleware(readFromStorage, writeToStorage);
+const { authMiddleware, requireAdmin, seedAdminList } = createAuthMiddleware(readFromStorage, writeToStorage, {
+  tokenValidator: apiTokens
+});
 
 // ─── Swagger UI (before auth) ───
 
@@ -129,45 +145,6 @@ app.get('/api/healthz', function(req, res) {
 });
 
 /**
- * @openapi
- * /api/whoami:
- *   get:
- *     tags: [Auth]
- *     summary: Get current user info
- *     security: []
- *     responses:
- *       200:
- *         description: Current user information
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 email:
- *                   type: string
- *                   format: email
- *                 displayName:
- *                   type: string
- *                 isAdmin:
- *                   type: boolean
- */
-// Whoami endpoint — returns current user info
-app.get('/api/whoami', function(req, res) {
-  const email = req.headers['x-forwarded-email'];
-  const user = req.headers['x-forwarded-user'];
-  const preferred = req.headers['x-forwarded-preferred-username'];
-  const displayName = preferred || user || email;
-  console.log(`[auth] /api/whoami headers: x-forwarded-email="${email}" x-forwarded-user="${user}" x-forwarded-preferred-username="${preferred}"`);
-  if (email) {
-    res.json({ email, displayName, isAdmin: isAdmin(email.toLowerCase()) });
-  } else {
-    // Local dev fallback
-    const devEmail = (process.env.ADMIN_EMAILS || 'local-dev@redhat.com').split(',')[0].trim();
-    res.json({ email: devEmail, displayName: devEmail.split('@')[0], isAdmin: isAdmin(devEmail.toLowerCase()) });
-  }
-});
-
-/**
  * Built-in module manifests — intentionally public (no auth, no proxy secret).
  * Payload is low-sensitivity (names, icons, slugs, client entry paths); same class of info as bundled import.meta.glob.
  * Registered before authMiddleware so the shell can list modules on first paint without a session.
@@ -194,6 +171,249 @@ app.get('/api/built-in-modules/manifests', function(req, res) {
 });
 
 app.use(authMiddleware);
+
+// ─── Routes: Whoami (after authMiddleware so token auth works) ───
+
+/**
+ * @openapi
+ * /api/whoami:
+ *   get:
+ *     tags: [Auth]
+ *     summary: Get current user info
+ *     responses:
+ *       200:
+ *         description: Current user information
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 email:
+ *                   type: string
+ *                   format: email
+ *                 displayName:
+ *                   type: string
+ *                 isAdmin:
+ *                   type: boolean
+ *                 authMethod:
+ *                   type: string
+ *                   enum: [token, proxy, local-dev]
+ */
+app.get('/api/whoami', function(req, res) {
+  // For proxy-authenticated users, try to get display name from headers
+  let displayName = req.userEmail;
+  if (req.authMethod !== 'token') {
+    const preferred = req.headers['x-forwarded-preferred-username'];
+    const user = req.headers['x-forwarded-user'];
+    const email = req.headers['x-forwarded-email'];
+    displayName = preferred || user || email || req.userEmail;
+  }
+  res.json({
+    email: req.userEmail,
+    displayName,
+    isAdmin: req.isAdmin,
+    authMethod: req.authMethod || (req.headers['x-forwarded-email'] ? 'proxy' : 'local-dev')
+  });
+});
+
+// ─── Routes: API Tokens ───
+
+/**
+ * @openapi
+ * /api/tokens:
+ *   get:
+ *     tags: [Auth]
+ *     summary: List current user's API tokens
+ *     responses:
+ *       200:
+ *         description: List of tokens (metadata only)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 tokens:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/ApiToken'
+ */
+app.get('/api/tokens', function(req, res) {
+  try {
+    const tokens = apiTokens.listUserTokens(req.userEmail);
+    res.json({ tokens });
+  } catch (error) {
+    console.error('List tokens error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * @openapi
+ * /api/tokens:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Create a new API token
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name]
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 maxLength: 100
+ *               expiresIn:
+ *                 type: string
+ *                 enum: [30d, 90d, 1y]
+ *                 nullable: true
+ *     responses:
+ *       201:
+ *         description: Token created (raw token shown only once)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                 id:
+ *                   type: string
+ *                 name:
+ *                   type: string
+ *                 expiresAt:
+ *                   type: string
+ *                   nullable: true
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+app.post('/api/tokens', async function(req, res) {
+  try {
+    const { name, expiresIn } = req.body;
+
+    // Validate name
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+      return res.status(400).json({ error: 'Token name is required' });
+    }
+    if (name.length > 100) {
+      return res.status(400).json({ error: 'Token name must be 100 characters or fewer' });
+    }
+
+    // Validate expiresIn
+    if (expiresIn !== undefined && expiresIn !== null && !['30d', '90d', '1y'].includes(expiresIn)) {
+      return res.status(400).json({ error: 'expiresIn must be one of: 30d, 90d, 1y, or null' });
+    }
+
+    const result = await apiTokens.createToken(req.userEmail, name.trim(), expiresIn || null);
+    res.status(201).json(result);
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ error: error.message });
+    }
+    console.error('Create token error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * @openapi
+ * /api/tokens/{id}:
+ *   delete:
+ *     tags: [Auth]
+ *     summary: Revoke own API token
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Token revoked
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ */
+app.delete('/api/tokens/:id', async function(req, res) {
+  try {
+    const revoked = await apiTokens.revokeToken(req.params.id, req.userEmail);
+    if (!revoked) {
+      return res.status(404).json({ error: 'Token not found' });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Revoke token error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * @openapi
+ * /api/admin/tokens:
+ *   get:
+ *     tags: [Auth]
+ *     summary: List all API tokens (admin)
+ *     responses:
+ *       200:
+ *         description: All tokens (metadata only)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 tokens:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/ApiToken'
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ */
+app.get('/api/admin/tokens', requireAdmin, function(req, res) {
+  try {
+    const tokens = apiTokens.listAllTokens();
+    res.json({ tokens });
+  } catch (error) {
+    console.error('Admin list tokens error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * @openapi
+ * /api/admin/tokens/{id}:
+ *   delete:
+ *     tags: [Auth]
+ *     summary: Revoke any API token (admin)
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Token revoked
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ */
+app.delete('/api/admin/tokens/:id', requireAdmin, async function(req, res) {
+  try {
+    const revoked = await apiTokens.adminRevokeToken(req.params.id);
+    if (!revoked) {
+      return res.status(404).json({ error: 'Token not found' });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Admin revoke token error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // ─── Routes: Allowlist ───
 

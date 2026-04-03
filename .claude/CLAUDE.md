@@ -258,7 +258,9 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 
 **GET:**
 - `/api/healthz` — health check (no auth)
-- `/api/whoami` — current user info
+- `/api/whoami` — current user info (supports both proxy and token auth)
+- `/api/tokens` — list current user's API tokens
+- `/api/admin/tokens` — list all API tokens (admin)
 - `/api/roster` — org/team structure with members
 - `/api/team/:teamKey/metrics` — team member metrics (teamKey = `orgKey::teamName`)
 - `/api/person/:name/metrics` — individual person metrics
@@ -272,6 +274,8 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/modules/release-analysis/product-pages/products` — Product Pages product list for autocomplete (admin, includes authStatus)
 
 **POST:**
+- `/api/tokens` — create a new API token (returns raw token once)
+
 - `/api/roster/refresh` — refresh all person metrics from Jira
 - `/api/team/:teamKey/refresh` — refresh metrics for one team
 - `/api/person/:name/metrics?refresh=true` — refresh single person
@@ -288,6 +292,8 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/modules/team-tracker/snapshots/generate` — generate snapshots for all teams (admin)
 
 **DELETE:**
+- `/api/tokens/:id` — revoke own API token
+- `/api/admin/tokens/:id` — revoke any API token (admin)
 - `/api/modules/team-tracker/snapshots` — delete all stored snapshots (admin)
 
 **GET (snapshots):**

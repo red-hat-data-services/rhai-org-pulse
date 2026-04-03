@@ -114,6 +114,13 @@
           @retry-sync="handleModuleSync"
         />
 
+        <!-- API Tokens View -->
+        <ApiTokensView
+          v-else-if="activeModule === 'api-tokens'"
+          :is-admin="authIsAdmin"
+          @toast="({ message, type }) => showToast(message, type)"
+        />
+
         <!-- Settings View -->
         <SettingsView
           v-else-if="activeModule === 'settings'"
@@ -159,6 +166,7 @@ import Toast from '@shared/client/components/Toast.vue'
 import RefreshModal from '@shared/client/components/RefreshModal.vue'
 import SettingsView from './SettingsView.vue'
 import HelpView from './HelpView.vue'
+import ApiTokensView from './ApiTokensView.vue'
 import AppSidebar from './AppSidebar.vue'
 import LandingPage from './LandingPage.vue'
 import ModuleIframeView from './ModuleIframeView.vue'
@@ -187,6 +195,7 @@ export default {
     Toast,
     SettingsView,
     HelpView,
+    ApiTokensView,
     AppSidebar,
     RefreshModal,
     LandingPage,
@@ -364,6 +373,7 @@ export default {
       if (this.activeModule === 'module-iframe') {
         return this.activeModuleConfig?.name || this.activeModuleSlug || 'Module'
       }
+      if (this.activeModule === 'api-tokens') return 'API Tokens'
       if (this.activeModule === 'settings') return 'Settings'
       if (this.activeModule === 'help') return 'Help & Debug'
       // Built-in module: find manifest name
@@ -452,6 +462,10 @@ export default {
       if (parts[0] === 'users') {
         // Redirect legacy #/users to #/settings?tab=users
         window.location.replace('#/settings?tab=users')
+        return
+      }
+      if (parts[0] === 'api-tokens') {
+        this.setShellView('api-tokens')
         return
       }
       if (parts[0] === 'settings') {
@@ -570,6 +584,11 @@ export default {
       }
 
       // Shell routes
+      if (target === 'api-tokens') {
+        this.setShellView('api-tokens')
+        window.location.hash = '#/api-tokens'
+        return
+      }
       if (target === 'settings') {
         this.settingsInitialTab = null
         this.setShellView('settings')

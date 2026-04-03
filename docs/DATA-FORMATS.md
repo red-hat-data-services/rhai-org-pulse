@@ -330,6 +330,35 @@ Admin-configurable settings for the Release Analysis module.
 
 ---
 
+## API Tokens — `data/api-tokens.json`
+
+Stores hashed API tokens for bearer-token authentication. Created on first token creation.
+
+```json
+{
+  "tokens": [
+    {
+      "id": "uuid-v4",
+      "name": "My CI script",
+      "tokenHash": "sha256-hex-of-full-token",
+      "tokenPrefix": "tt_a1b2c3d4",
+      "ownerEmail": "user@redhat.com",
+      "createdAt": "2026-04-03T12:00:00Z",
+      "expiresAt": "2026-07-03T12:00:00Z",
+      "lastUsedAt": "2026-04-03T14:30:00Z"
+    }
+  ]
+}
+```
+
+**Notes:**
+- Raw tokens are never stored — only SHA-256 hashes.
+- `tokenPrefix` stores the first 11 characters (e.g., `tt_a1b2c3d4`) for identification.
+- `expiresAt` is `null` for non-expiring tokens.
+- `lastUsedAt` is `null` until first use, then updated (throttled to once per 60 seconds).
+
+---
+
 ## Fixture Rules
 
 The `fixtures/` directory provides read-only demo data used when `DEMO_MODE=true`. These rules prevent data format drift:

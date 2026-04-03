@@ -10,6 +10,7 @@ resources:
 patches:
   # Remove OpenShift-specific resources
   - path: remove-route.yaml
+  - path: remove-api-route.yaml
   - path: remove-oauth-serviceaccount.yaml
   # Strip OAuth proxy from frontend deployment
   - target:
