@@ -1,17 +1,5 @@
 <template>
   <div class="max-w-2xl">
-    <div class="flex items-center gap-3 mb-6">
-      <button
-        @click="$emit('back')"
-        class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
-      >
-        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-        </svg>
-      </button>
-      <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Manage Admins</h2>
-    </div>
-
     <!-- Add user form -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
       <form @submit.prevent="handleAdd" class="flex gap-3">
@@ -108,7 +96,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useAllowlist } from '@shared/client/composables/useAllowlist'
 import { useAuth } from '@shared/client/composables/useAuth'
 
-const emit = defineEmits(['back', 'toast'])
+const emit = defineEmits(['toast'])
 
 const { emails, loading, fetchAllowlist, addUser, removeUser } = useAllowlist()
 const { user } = useAuth()

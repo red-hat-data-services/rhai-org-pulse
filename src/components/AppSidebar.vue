@@ -3,6 +3,15 @@
     class="fixed top-0 left-0 h-screen z-30 flex flex-col transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)]"
     :class="collapsed ? 'w-[72px]' : 'w-[260px]'"
   >
+    <!-- Collapse/Expand toggle (floating outside sidebar) -->
+    <button
+      @click="$emit('toggle-collapse')"
+      class="absolute top-7 -right-3.5 z-10 h-7 w-7 flex items-center justify-center rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300 shadow-sm transition-colors duration-200"
+      :title="collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
+    >
+      <component :is="collapsed ? ChevronRight : ChevronLeft" :size="14" :stroke-width="2" />
+    </button>
+
     <div class="flex flex-col h-full m-2.5 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border border-gray-200/60 dark:border-gray-700/60 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_16px_rgba(0,0,0,0.03)] overflow-hidden">
       <!-- Header -->
       <div
@@ -11,7 +20,7 @@
       >
         <img src="/redhat-logo.svg" alt="Red Hat" class="h-8 w-8 flex-shrink-0" />
         <transition name="fade">
-          <div v-if="!collapsed" class="overflow-hidden whitespace-nowrap">
+          <div v-if="!collapsed" class="overflow-hidden whitespace-nowrap flex-1">
             <h1 class="text-sm font-bold text-gray-900 dark:text-gray-100 leading-tight">Org Pulse</h1>
             <p class="text-xs text-gray-400 dark:text-gray-500">AI Engineering</p>
           </div>
@@ -132,68 +141,57 @@
           </transition>
         </div>
 
-        <!-- API Docs -->
-        <a
-          href="/api/docs"
-          target="_blank"
-          rel="noopener"
-          class="group relative w-full flex items-center py-2.5 rounded-xl text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-200"
-          :class="collapsed ? 'justify-center px-0' : 'gap-3 px-3'"
-        >
-          <FileCode2
-            :size="20"
-            :stroke-width="1.7"
-            class="flex-shrink-0"
-          />
-          <transition name="fade">
-            <span v-if="!collapsed">API Docs</span>
-          </transition>
-          <span
-            v-if="collapsed"
-            class="absolute left-full ml-3 px-2.5 py-1.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs font-medium rounded-lg whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 shadow-lg"
+        <!-- Help (popover with API Docs + Help & Debug) -->
+        <div class="relative" ref="helpContainer">
+          <button
+            @click="helpOpen = !helpOpen"
+            class="group relative w-full flex items-center py-2.5 rounded-xl text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-200"
+            :class="collapsed ? 'justify-center px-0' : 'gap-3 px-3'"
           >
-            API Docs
-          </span>
-        </a>
+            <HelpCircle
+              :size="20"
+              :stroke-width="1.7"
+              class="flex-shrink-0"
+            />
+            <transition name="fade">
+              <span v-if="!collapsed">Help</span>
+            </transition>
+            <span
+              v-if="collapsed"
+              class="absolute left-full ml-3 px-2.5 py-1.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs font-medium rounded-lg whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 shadow-lg"
+            >
+              Help
+            </span>
+          </button>
 
-        <!-- Help & Debug -->
-        <button
-          @click="$emit('navigate', 'help')"
-          class="group relative w-full flex items-center py-2.5 rounded-xl text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-200"
-          :class="collapsed ? 'justify-center px-0' : 'gap-3 px-3'"
-        >
-          <HelpCircle
-            :size="20"
-            :stroke-width="1.7"
-            class="flex-shrink-0"
-          />
+          <!-- Popover -->
           <transition name="fade">
-            <span v-if="!collapsed">Help & Debug</span>
+            <div
+              v-if="helpOpen"
+              class="absolute bottom-full mb-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg py-1 min-w-[180px] z-40"
+              :class="collapsed ? 'left-full ml-2' : 'left-0'"
+            >
+              <a
+                href="/api/docs"
+                target="_blank"
+                rel="noopener"
+                @click="helpOpen = false"
+                class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+              >
+                <FileCode2 :size="18" :stroke-width="1.7" class="flex-shrink-0" />
+                API Docs
+              </a>
+              <button
+                @click="helpOpen = false; $emit('navigate', 'help')"
+                class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+              >
+                <Wrench :size="18" :stroke-width="1.7" class="flex-shrink-0" />
+                Help & Debug
+              </button>
+            </div>
           </transition>
-          <span
-            v-if="collapsed"
-            class="absolute left-full ml-3 px-2.5 py-1.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs font-medium rounded-lg whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 shadow-lg"
-          >
-            Help & Debug
-          </span>
-        </button>
+        </div>
 
-        <!-- Collapse toggle -->
-        <button
-          @click="$emit('toggle-collapse')"
-          class="w-full flex items-center py-2.5 rounded-xl text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 transition-colors duration-200"
-          :class="collapsed ? 'justify-center px-0' : 'gap-3 px-3'"
-        >
-          <component
-            :is="collapsed ? ChevronsRight : ChevronsLeft"
-            :size="20"
-            :stroke-width="1.7"
-            class="flex-shrink-0"
-          />
-          <transition name="fade">
-            <span v-if="!collapsed">Collapse</span>
-          </transition>
-        </button>
       </div>
     </div>
   </aside>
@@ -224,15 +222,15 @@ import {
   Network,
   Layers,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
   HelpCircle,
   ChartCandlestick,
   Sparkles,
-  Activity
+  Activity,
+  Wrench
 } from 'lucide-vue-next'
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 
 const ICON_MAP = {
   BarChart3,
@@ -269,6 +267,23 @@ const props = defineProps({
 defineEmits(['navigate', 'toggle-collapse', 'close-mobile'])
 
 const expandedSections = ref({})
+const helpOpen = ref(false)
+const helpContainer = ref(null)
+
+// Close help popover on outside click
+function onClickOutside(e) {
+  if (helpContainer.value && !helpContainer.value.contains(e.target)) {
+    helpOpen.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', onClickOutside)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onClickOutside)
+})
 
 // Auto-expand active module section
 watch(() => props.activeModule, (newVal) => {
@@ -336,7 +351,6 @@ const navSections = computed(() => {
       id: 'admin',
       label: 'Admin',
       items: [
-        { id: 'user-management', label: 'Users', icon: Shield },
         { id: 'settings', label: 'Settings', icon: Settings },
       ]
     })

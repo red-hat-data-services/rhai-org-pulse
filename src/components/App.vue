@@ -114,17 +114,11 @@
           @retry-sync="handleModuleSync"
         />
 
-        <!-- User Management View -->
-        <UserManagement
-          v-else-if="activeModule === 'user-management'"
-          @back="navigateHome"
-          @toast="({ message, type }) => showToast(message, type)"
-        />
-
         <!-- Settings View -->
         <SettingsView
           v-else-if="activeModule === 'settings'"
           :built-in-manifests="builtInManifests"
+          :initial-tab="settingsInitialTab"
           @toast="({ message, type }) => showToast(message, type)"
         />
 
@@ -163,7 +157,6 @@ import { Menu as MenuIcon, RefreshCw, ExternalLink as ExternalLinkIcon, Sun as S
 import LoadingOverlay from '@shared/client/components/LoadingOverlay.vue'
 import Toast from '@shared/client/components/Toast.vue'
 import RefreshModal from '@shared/client/components/RefreshModal.vue'
-import UserManagement from './UserManagement.vue'
 import SettingsView from './SettingsView.vue'
 import HelpView from './HelpView.vue'
 import AppSidebar from './AppSidebar.vue'
@@ -192,7 +185,6 @@ export default {
     InfoIcon,
     LoadingOverlay,
     Toast,
-    UserManagement,
     SettingsView,
     HelpView,
     AppSidebar,
@@ -354,6 +346,7 @@ export default {
       showRefreshModal: false,
       sidebarCollapsed: false,
       mobileMenuOpen: false,
+      settingsInitialTab: null,
       toasts: []
     }
   },
@@ -371,7 +364,6 @@ export default {
       if (this.activeModule === 'module-iframe') {
         return this.activeModuleConfig?.name || this.activeModuleSlug || 'Module'
       }
-      if (this.activeModule === 'user-management') return 'Users'
       if (this.activeModule === 'settings') return 'Settings'
       if (this.activeModule === 'help') return 'Help & Debug'
       // Built-in module: find manifest name
@@ -458,10 +450,12 @@ export default {
 
       // Shell routes
       if (parts[0] === 'users') {
-        this.setShellView('user-management')
+        // Redirect legacy #/users to #/settings?tab=users
+        window.location.replace('#/settings?tab=users')
         return
       }
       if (parts[0] === 'settings') {
+        this.settingsInitialTab = params.tab || null
         this.setShellView('settings')
         return
       }
@@ -576,12 +570,8 @@ export default {
       }
 
       // Shell routes
-      if (target === 'user-management') {
-        this.setShellView('user-management')
-        window.location.hash = '#/users'
-        return
-      }
       if (target === 'settings') {
+        this.settingsInitialTab = null
         this.setShellView('settings')
         window.location.hash = '#/settings'
         return
