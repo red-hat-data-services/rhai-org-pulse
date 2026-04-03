@@ -330,8 +330,6 @@ import { computed, onMounted, ref, reactive } from 'vue'
 import { apiRequest, SESSION_CACHE_PREFIX } from '@shared/client/services/api'
 
 const ANALYSIS_CACHE_KEY = `${SESSION_CACHE_PREFIX}release-analysis:analysis-v6`
-const FALLBACK_WINDOW_DAYS = 14
-
 const STRATEGIC_TYPES = new Set(['feature', 'initiative', 'spike'])
 
 const loading = ref(false)
@@ -343,6 +341,7 @@ const expandedComponents = reactive(new Set())
 const expandedStrategic = reactive(new Set())
 
 function normalizeType(t) { return (t || '').toLowerCase().trim() }
+
 
 const releaseTabs = computed(() => {
   const releases = analysis.value?.releases || []
@@ -356,29 +355,6 @@ const releaseTabs = computed(() => {
 const selectedRelease = computed(() => {
   if (!analysis.value?.releases) return null
   return analysis.value.releases.find(r => r.releaseNumber === activeRelease.value) || null
-})
-
-const sprintWindow = computed(() => {
-  const sw = analysis.value?.sprintWindow
-  if (sw?.startDate && sw?.endDate) {
-    return {
-      start: new Date(`${sw.startDate}T00:00:00Z`),
-      end: new Date(`${sw.endDate}T23:59:59Z`),
-      windowDays: Math.max(1, Math.ceil(
-        (new Date(sw.endDate) - new Date(sw.startDate)) / 86400000
-      )),
-      sprintName: sw.sprintName || null,
-      source: sw.source || 'calendar'
-    }
-  }
-  const now = new Date()
-  return {
-    start: new Date(now.getTime() - FALLBACK_WINDOW_DAYS * 86400000),
-    end: now,
-    windowDays: FALLBACK_WINDOW_DAYS,
-    sprintName: null,
-    source: 'calendar'
-  }
 })
 
 const FORECAST_WINDOW = 14
@@ -640,13 +616,11 @@ function pct(part, total) {
 
 function confidenceBadgeClass(level) {
   if (level === 'High') return 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
-  if (level === 'At Risk') return 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
   return 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300'
 }
 
 function confidenceDotClass(level) {
   if (level === 'High') return 'bg-emerald-500'
-  if (level === 'At Risk') return 'bg-amber-500'
   return 'bg-red-500'
 }
 
@@ -680,12 +654,6 @@ function childProgressColor(counts) {
 }
 
 // ── Formatting ──
-
-function formatDate(iso) {
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return String(iso)
-  return d.toLocaleDateString()
-}
 
 function formatDateTime(iso) {
   const d = new Date(iso)

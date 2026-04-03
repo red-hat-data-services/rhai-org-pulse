@@ -35,7 +35,6 @@ output.txt
 !.claude/commands/
 data
 
-
 # Local PP files
 rhelai.json
 rhoai.json
