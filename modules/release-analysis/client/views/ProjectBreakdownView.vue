@@ -326,19 +326,26 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, reactive } from 'vue'
-import { apiRequest, SESSION_CACHE_PREFIX } from '@shared/client/services/api'
+import { computed, ref, reactive } from 'vue'
+import { useReleaseAnalysis } from '../composables/useReleaseAnalysis'
 
-const ANALYSIS_CACHE_KEY = `${SESSION_CACHE_PREFIX}release-analysis:analysis-v6`
+const FALLBACK_WINDOW_DAYS = 14
+
 const STRATEGIC_TYPES = new Set(['feature', 'initiative', 'spike'])
 
-const loading = ref(false)
-const error = ref('')
-const analysis = ref(null)
 const activeRelease = ref('')
 const expandedProjects = reactive(new Set())
 const expandedComponents = reactive(new Set())
 const expandedStrategic = reactive(new Set())
+
+function initActiveRelease() {
+  const tabs = releaseTabs.value
+  if (tabs.length && !activeRelease.value) activeRelease.value = tabs[0].key
+}
+
+const { loading, error, analysis, refreshAnalysis } = useReleaseAnalysis({
+  onLoaded: initActiveRelease
+})
 
 function normalizeType(t) { return (t || '').toLowerCase().trim() }
 
@@ -661,62 +668,5 @@ function formatDateTime(iso) {
   return d.toLocaleString()
 }
 
-// ── Caching ──
 
-function readAnalysisCache() {
-  if (typeof sessionStorage === 'undefined') return null
-  try {
-    const raw = sessionStorage.getItem(ANALYSIS_CACHE_KEY)
-    if (!raw) return null
-    const data = JSON.parse(raw)
-    if (!data || typeof data !== 'object' || !Array.isArray(data.releases)) return null
-    return data
-  } catch { return null }
-}
-
-function writeAnalysisCache(data) {
-  if (typeof sessionStorage === 'undefined' || !data) return
-  try { sessionStorage.setItem(ANALYSIS_CACHE_KEY, JSON.stringify(data)) } catch { /* quota */ }
-}
-
-function clearAnalysisCache() {
-  if (typeof sessionStorage === 'undefined') return
-  try { sessionStorage.removeItem(ANALYSIS_CACHE_KEY) } catch { /* noop */ }
-}
-
-function initActiveRelease() {
-  const tabs = releaseTabs.value
-  if (tabs.length && !activeRelease.value) activeRelease.value = tabs[0].key
-}
-
-async function loadAnalysis(forceRefresh = false) {
-  loading.value = true
-  error.value = ''
-  try {
-    const url = forceRefresh ? '/modules/release-analysis/analysis?refresh=true' : '/modules/release-analysis/analysis'
-    const data = await apiRequest(url)
-    analysis.value = data
-    writeAnalysisCache(data)
-    initActiveRelease()
-  } catch (err) {
-    error.value = err.message || 'Failed to load release analysis'
-  } finally {
-    loading.value = false
-  }
-}
-
-function refreshAnalysis() {
-  clearAnalysisCache()
-  loadAnalysis(true)
-}
-
-onMounted(() => {
-  const cached = readAnalysisCache()
-  if (cached) {
-    analysis.value = cached
-    initActiveRelease()
-    return
-  }
-  loadAnalysis()
-})
 </script>

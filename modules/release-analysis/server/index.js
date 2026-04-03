@@ -800,7 +800,8 @@ const VELOCITY_WORK_TYPES = ['Story', 'Task', 'Bug', 'Spike', 'Sub-task']
  *
  * Issue type rules:
  *  - All projects: Story, Task, Bug, Spike, Sub-task
- *  - AIPCC only:   also Epics that carry the label "package"
+ *  - Per-project extras via config.velocityExtraJqlByProject (e.g. AIPCC
+ *    Epics with label "package")
  *
  * A 50% discount is applied to the raw count to approximate release-supporting work.
  */
@@ -809,34 +810,36 @@ async function fetchHistoricalComponentVelocity(config) {
   const dateClause = `resolutiondate >= -${weeksBack}w AND statusCategory = Done`
   const typeList = VELOCITY_WORK_TYPES.map(t => `"${t}"`).join(',')
 
-  const hasAipcc = config.jiraAllProjects || config.projectKeys.includes('AIPCC')
-  const nonAipccProjects = config.jiraAllProjects
+  const extraJqlByProject = config.velocityExtraJqlByProject || {}
+  const activeExtraProjects = config.jiraAllProjects
+    ? Object.keys(extraJqlByProject)
+    : config.projectKeys.filter(k => k in extraJqlByProject)
+  const extraProjectSet = new Set(activeExtraProjects)
+  const regularProjects = config.jiraAllProjects
     ? null
-    : config.projectKeys.filter(k => k !== 'AIPCC')
+    : config.projectKeys.filter(k => !extraProjectSet.has(k))
 
   const queries = []
 
-  if (nonAipccProjects === null) {
-    // jiraAllProjects mode — fetch work-item types across all projects, then
-    // separately fetch AIPCC Epics with label "package"
+  if (regularProjects === null) {
     queries.push({
       jql: `issuetype in (${typeList}) AND ${dateClause} ORDER BY resolutiondate DESC`,
       fields: 'components,resolutiondate,project'
     })
-  } else if (nonAipccProjects.length) {
+  } else if (regularProjects.length) {
     queries.push({
-      jql: `project in (${nonAipccProjects.join(',')}) AND issuetype in (${typeList}) AND ${dateClause} ORDER BY resolutiondate DESC`,
+      jql: `project in (${regularProjects.join(',')}) AND issuetype in (${typeList}) AND ${dateClause} ORDER BY resolutiondate DESC`,
       fields: 'components,resolutiondate,project'
     })
   }
 
-  if (hasAipcc) {
+  for (const projKey of activeExtraProjects) {
     queries.push({
-      jql: `project = AIPCC AND issuetype in (${typeList}) AND ${dateClause} ORDER BY resolutiondate DESC`,
+      jql: `project = ${projKey} AND issuetype in (${typeList}) AND ${dateClause} ORDER BY resolutiondate DESC`,
       fields: 'components,resolutiondate,project'
     })
     queries.push({
-      jql: `project = AIPCC AND issuetype = Epic AND labels = package AND ${dateClause} ORDER BY resolutiondate DESC`,
+      jql: `project = ${projKey} AND ${extraJqlByProject[projKey]} AND ${dateClause} ORDER BY resolutiondate DESC`,
       fields: 'components,resolutiondate,project'
     })
   }
@@ -874,12 +877,13 @@ async function fetchHistoricalComponentVelocity(config) {
     }
   }
 
+  const discountFactor = config.velocityDiscountFactor ?? 0.5
   const velocity = {}
   for (const [comp, count] of Object.entries(compCounts)) {
     velocity[comp] = {
       resolved6m: count,
       windows: Math.round(numWindows * 10) / 10,
-      velocity: Math.round(((count * 0.5) / numWindows) * 10) / 10
+      velocity: Math.round(((count * discountFactor) / numWindows) * 10) / 10
     }
   }
   return velocity

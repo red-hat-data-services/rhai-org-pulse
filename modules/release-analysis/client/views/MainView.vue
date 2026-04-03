@@ -318,15 +318,11 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
-import { apiRequest, SESSION_CACHE_PREFIX } from '@shared/client/services/api'
+import { computed, ref } from 'vue'
+import { useReleaseAnalysis } from '../composables/useReleaseAnalysis'
 
-/** Session-only; aligned with `tt_cache:` naming (localStorage uses tt_cache: for apiRequest caches). */
-const ANALYSIS_CACHE_KEY = `${SESSION_CACHE_PREFIX}release-analysis:analysis-v4`
+const { loading, error, analysis, loadAnalysis } = useReleaseAnalysis()
 
-const loading = ref(false)
-const error = ref('')
-const analysis = ref(null)
 const activeTab = ref('all')
 
 const metricInfo = {
@@ -368,28 +364,6 @@ const riskLegendText = computed(() => {
     `Green: at most ${g} open issue(s) per day of runway; yellow: above ${g} and at most ${y}/day; red: above ${y}/day or past due. Grey: no issues in scope.`
   )
 })
-
-function readAnalysisCache() {
-  if (typeof sessionStorage === 'undefined') return null
-  try {
-    const raw = sessionStorage.getItem(ANALYSIS_CACHE_KEY)
-    if (!raw) return null
-    const data = JSON.parse(raw)
-    if (!data || typeof data !== 'object' || !Array.isArray(data.releases)) return null
-    return data
-  } catch {
-    return null
-  }
-}
-
-function writeAnalysisCache(data) {
-  if (typeof sessionStorage === 'undefined' || !data) return
-  try {
-    sessionStorage.setItem(ANALYSIS_CACHE_KEY, JSON.stringify(data))
-  } catch {
-    // quota or private mode — ignore
-  }
-}
 
 function releaseTeamsList(release) {
   if (!release?.teams) return []
@@ -468,26 +442,5 @@ function releaseRiskTitle(release) {
   return 'Schedule risk from open issue count (to do + in progress) vs days to due date.'
 }
 
-async function loadAnalysis() {
-  loading.value = true
-  error.value = ''
-  try {
-    const data = await apiRequest('/modules/release-analysis/analysis')
-    analysis.value = data
-    writeAnalysisCache(data)
-  } catch (err) {
-    error.value = err.message || 'Failed to load release analysis'
-  } finally {
-    loading.value = false
-  }
-}
 
-onMounted(() => {
-  const cached = readAnalysisCache()
-  if (cached) {
-    analysis.value = cached
-    return
-  }
-  loadAnalysis()
-})
 </script>
