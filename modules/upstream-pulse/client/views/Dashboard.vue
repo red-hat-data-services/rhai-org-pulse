@@ -214,7 +214,17 @@
       <!-- Top Projects -->
       <section v-if="topProjects.length" id="section-projects" class="mb-8">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Top Projects</h3>
+          <div class="flex items-center gap-2.5">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Top Projects</h3>
+            <button
+              v-if="isAdmin"
+              @click="showAddProject = true"
+              class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-800/40 border border-blue-200 dark:border-blue-800 rounded-md transition-colors"
+            >
+              <PlusIcon :size="13" :stroke-width="2.5" />
+              Add
+            </button>
+          </div>
           <button
             v-if="topProjects.length > 6"
             @click="nav.navigateTo('portfolio')"
@@ -522,6 +532,13 @@
 
       </div><!-- /refetch dim wrapper -->
     </template>
+
+    <AddProjectModal
+      :open="showAddProject"
+      @close="showAddProject = false"
+      @created="onProjectCreated"
+      @navigate="({ view, params }) => nav.navigateTo(view, params)"
+    />
   </div>
 </template>
 
@@ -539,20 +556,25 @@ import {
   GitPullRequest as GitPullRequestIcon,
   Layers as LayersIcon,
   MessageSquare as MessageSquareIcon,
+  Plus as PlusIcon,
   ShieldCheck as ShieldCheckIcon,
   TrendingUp as TrendingUpIcon,
   Users as UsersIcon,
 } from 'lucide-vue-next'
 import { apiRequest } from '@shared/client/services/api'
+import { useAuth } from '@shared/client/composables/useAuth'
 import StatCard from '../components/StatCard.vue'
 import ContributionTypeCard from '../components/ContributionTypeCard.vue'
 import LeadershipCard from '../components/LeadershipCard.vue'
 import ContributionTrendChart from '../components/ContributionTrendChart.vue'
 import OrgActivityCard from '../components/OrgActivityCard.vue'
 import ProjectCard from '../components/ProjectCard.vue'
+import AddProjectModal from '../components/AddProjectModal.vue'
 import { StatCardSkeleton, ContributionCardSkeleton, OrgCardSkeleton, ProjectCardSkeleton, ContributorRowSkeleton } from '../components/SkeletonLoaders.vue'
 
 const nav = inject('moduleNav')
+const { isAdmin } = useAuth()
+const showAddProject = ref(false)
 const MODULE_API = '/modules/upstream-pulse'
 
 const periodOptions = [
@@ -769,6 +791,10 @@ async function loadData() {
   } finally {
     loading.value = false
   }
+}
+
+function onProjectCreated() {
+  loadData()
 }
 
 watch(selectedDays, () => loadData())
