@@ -1,0 +1,125 @@
+---
+description: Conventions for the upstream-pulse module — a Vue 3 port of the standalone React app
+globs: modules/upstream-pulse/**
+alwaysApply: false
+---
+
+# Upstream Pulse Module
+
+This module is a **Vue 3 re-implementation** of the [standalone Upstream Pulse app](https://github.com/dpanshug/upstream-pulse). It has no database or workers — it proxies read-only requests to the standalone's Fastify API via `server/index.js`.
+
+## Source of Truth
+
+The standalone app defines what this module should do. Before building a feature:
+
+1. Find the React page/component in [`frontend/src/pages/`](https://github.com/dpanshug/upstream-pulse/tree/main/frontend/src/pages) and [`frontend/src/components/`](https://github.com/dpanshug/upstream-pulse/tree/main/frontend/src/components)
+2. Find the API endpoint it calls in [`backend/src/app.ts`](https://github.com/dpanshug/upstream-pulse/blob/main/backend/src/app.ts) or [`backend/src/modules/api/routes/metrics.ts`](https://github.com/dpanshug/upstream-pulse/blob/main/backend/src/modules/api/routes/metrics.ts)
+3. Check if `server/index.js` already proxies that endpoint — if not, add a proxy route
+4. Translate the React component to Vue 3 following the patterns below
+
+To see what's already ported vs missing, compare:
+- **Standalone routes:** [`App.tsx`](https://github.com/dpanshug/upstream-pulse/blob/main/frontend/src/App.tsx) (route table)
+- **Module routes:** `client/index.js` (route map)
+
+## Architecture
+
+```
+Browser → Team Tracker API (/api/modules/upstream-pulse/*)
+         → server/index.js (Express proxy + 3-min cache)
+         → Standalone Upstream Pulse Fastify API
+```
+
+- `UPSTREAM_PULSE_API_URL` env var sets the upstream base URL
+- Proxy is read-only GET requests; admin/mutation endpoints are not proxied
+- Module is `defaultEnabled: false` — must be enabled in Settings > Modules
+
+## Key Differences from Standalone
+
+- **Dark mode:** The standalone is light-only. This module supports dark mode — every element needs `dark:` Tailwind variants (e.g. `bg-white dark:bg-gray-800`, `text-gray-900 dark:text-gray-100`).
+- **Charts:** Standalone uses Recharts (React). This module uses **Chart.js** via `vue-chartjs` (`Line`, `Doughnut` from `vue-chartjs`).
+- **Data fetching:** Standalone uses TanStack Query. This module uses `apiRequest()` from `@shared/client/services/api` with manual state management (see pattern below).
+- **Routing:** Standalone uses React Router (`useParams`, `useNavigate`). This module uses `inject('moduleNav')` — `.params.value`, `.navigateTo()`, `.goBack()`.
+- **Icons:** Standalone uses `lucide-react`. This module uses `lucide-vue-next` with `Icon` suffix aliases: `import { Activity as ActivityIcon } from 'lucide-vue-next'`.
+
+## Data Fetching Pattern
+
+Every view follows this pattern:
+
+```javascript
+import { apiRequest } from '@shared/client/services/api'
+
+const MODULE_API = '/modules/upstream-pulse'
+
+const loading = ref(true)
+const error = ref(null)
+const connectionError = ref(null)  // separate state for 502/unreachable
+
+async function loadData() {
+  loading.value = true
+  error.value = null
+  connectionError.value = null
+  try {
+    const [data1, data2] = await Promise.all([
+      apiRequest(`${MODULE_API}/dashboard?days=${selectedDays.value}`),
+      apiRequest(`${MODULE_API}/contributors?days=${selectedDays.value}&limit=10`),
+    ])
+    // assign to refs...
+  } catch (err) {
+    if (err.status === 502 || err.message?.includes('unreachable') || err.message?.includes('ECONNREFUSED')) {
+      connectionError.value = err.message
+    } else {
+      error.value = err.message
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+watch(selectedDays, () => loadData())
+onMounted(() => loadData())
+```
+
+`apiRequest` prepends `/api` to paths, so `MODULE_API + '/dashboard'` resolves to `/api/modules/upstream-pulse/dashboard`.
+
+## View States
+
+Every view renders four states in this order:
+1. `v-if="loading && !data"` — skeleton loaders from `../components/SkeletonLoaders.vue`
+2. `v-else-if="connectionError"` — amber "unreachable" banner
+3. `v-else-if="error"` — red error banner
+4. `v-else` — actual content
+
+## Adding a New Proxy Route
+
+In `server/index.js`, follow the existing pattern:
+
+```javascript
+router.get('/new-endpoint', async function(req, res) {
+  try {
+    const data = await proxyRequest('/api/upstream-path', {
+      days: req.query.days
+    });
+    res.json(data);
+  } catch (err) {
+    handleProxyError(res, err);
+  }
+});
+```
+
+## Adding a New View
+
+1. Create `client/views/NewView.vue` (`<script setup>` + Composition API)
+2. Register in `client/index.js`: `'view-id': defineAsyncComponent(() => import('./views/NewView.vue'))`
+3. If it needs a sidebar entry, add to `module.json` `navItems`
+4. If it's a detail view (no sidebar), navigate via `nav.navigateTo('view-id', { id })`
+
+## Imports
+
+```javascript
+import { apiRequest } from '@shared/client/services/api'       // API calls
+import { StatCardSkeleton } from '../components/SkeletonLoaders.vue' // named exports
+import StatCard from '../components/StatCard.vue'                // default exports
+import { Activity as ActivityIcon } from 'lucide-vue-next'      // icons
+```
+
+Do **not** import from other modules or from the standalone app's code.
