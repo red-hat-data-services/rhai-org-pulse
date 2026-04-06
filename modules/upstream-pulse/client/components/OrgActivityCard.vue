@@ -1,16 +1,17 @@
 <template>
   <div
-    class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 p-5 hover:shadow-md hover:border-gray-200 dark:hover:border-gray-600 transition-all duration-200"
+    class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 p-5 hover:shadow-md hover:border-gray-200 dark:hover:border-gray-600 transition-all duration-200 group/card"
     :class="{ 'cursor-pointer': clickable }"
     @click="$emit('click')"
   >
-    <!-- Row 1: Name + engagement badge -->
+    <!-- Row 1: Name + engagement badge + hover chevron -->
     <div class="flex items-start justify-between mb-3">
       <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">{{ orgName }}</h3>
-      <span
-        class="text-[11px] font-semibold px-2 py-0.5 rounded-full border whitespace-nowrap ml-2 shrink-0"
-        :class="statusClasses"
-      >{{ statusLabel }}</span>
+      <ChevronRightIcon
+        v-if="clickable"
+        :size="16"
+        class="shrink-0 ml-2 text-gray-300 dark:text-gray-600 opacity-0 group-hover/card:opacity-100 transition-opacity duration-200"
+      />
     </div>
 
     <!-- Row 2: Contribution count + trend -->
@@ -68,7 +69,8 @@ import { computed } from 'vue'
 import {
   Users as UsersIcon,
   Crown as CrownIcon,
-  Shield as ShieldIcon
+  Shield as ShieldIcon,
+  ChevronRight as ChevronRightIcon,
 } from 'lucide-vue-next'
 
 defineEmits(['click'])
@@ -107,16 +109,4 @@ const trendClasses = computed(() => {
   return 'text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700/50'
 })
 
-function getEngagementStatus(leadership, maintainers, total) {
-  const hasGovernance = leadership > 0 || maintainers > 0
-  const highGovernance = leadership >= 3 || maintainers >= 5
-  if (total === 0 && !hasGovernance) return { label: 'New Entrant', classes: 'text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600' }
-  if (highGovernance) return { label: 'Established Leader', classes: 'text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' }
-  if (hasGovernance) return { label: 'Core Contributor', classes: 'text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800' }
-  return { label: 'Active', classes: 'text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600' }
-}
-
-const status = computed(() => getEngagementStatus(props.leadershipCount, props.maintainerCount, props.teamContributions))
-const statusLabel = computed(() => status.value.label)
-const statusClasses = computed(() => status.value.classes)
 </script>

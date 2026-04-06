@@ -29,6 +29,7 @@ export default defineConfig({
           if (accept.includes('application/javascript') ||
               req.url.includes('?import') ||
               req.url.includes('?t=') ||
+              req.url.includes('.vue?') ||
               req.url.endsWith('.json') ||
               req.url.endsWith('.js') ||
               req.url.endsWith('.vue')) {
