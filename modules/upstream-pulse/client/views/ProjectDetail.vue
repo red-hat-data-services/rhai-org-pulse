@@ -1,0 +1,517 @@
+<template>
+  <div>
+    <!-- Breadcrumb -->
+    <nav class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-4">
+      <button @click="nav.navigateTo('portfolio')" class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Portfolio</button>
+      <template v-if="fromOrg">
+        <ChevronRightIcon :size="14" class="text-gray-400 dark:text-gray-500" />
+        <button @click="nav.navigateTo('org-detail', { org: fromOrg })" class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">{{ orgDisplayName }}</button>
+      </template>
+      <ChevronRightIcon :size="14" class="text-gray-400 dark:text-gray-500" />
+      <span class="text-gray-900 dark:text-gray-100 font-medium">{{ projectName }}</span>
+    </nav>
+
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
+      <div>
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ projectName }}</h2>
+        <a
+          v-if="projectInfo?.githubOrg && projectInfo?.githubRepo"
+          :href="`https://github.com/${projectInfo.githubOrg}/${projectInfo.githubRepo}`"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1 mt-0.5"
+        >
+          {{ projectInfo.githubOrg }}/{{ projectInfo.githubRepo }}
+          <ExternalLinkIcon :size="12" />
+        </a>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+          <button
+            v-for="opt in periodOptions"
+            :key="opt.value"
+            @click="selectedDays = opt.value"
+            class="px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200"
+            :class="selectedDays === opt.value
+              ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'"
+          >
+            {{ opt.label }}
+          </button>
+        </div>
+        <div v-if="dashboard?.summary" class="hidden lg:flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-lg">
+          <CalendarIcon :size="14" />
+          <span>{{ periodLabel }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div v-if="loading" class="flex flex-col items-center justify-center py-24">
+      <div class="animate-spin rounded-full h-10 w-10 border-2 border-gray-200 dark:border-gray-700 border-t-primary-600 mb-4"></div>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Loading project data...</p>
+    </div>
+
+    <!-- Unreachable -->
+    <div v-else-if="connectionError" class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-10 text-center">
+      <div class="w-14 h-14 mx-auto mb-4 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center">
+        <ActivityIcon :size="28" class="text-amber-500" />
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Upstream Pulse is unreachable</h3>
+      <p class="text-sm text-gray-600 dark:text-gray-400 mb-4 max-w-md mx-auto">{{ connectionError }}</p>
+    </div>
+
+    <!-- Error -->
+    <div v-else-if="error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
+      <div class="w-12 h-12 mx-auto mb-3 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+        <AlertCircleIcon :size="24" class="text-red-500" />
+      </div>
+      <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1">Error loading project</h3>
+      <p class="text-sm text-red-700 dark:text-red-400">{{ error }}</p>
+    </div>
+
+    <!-- Content -->
+    <template v-else-if="dashboard">
+      <!-- Summary Stats -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <StatCard
+          label="Team Contributions"
+          :value="dashboard.contributions?.all?.team || 0"
+          :trend="dashboard.trends?.contributions"
+          :icon="GitCommitIcon"
+        />
+        <StatCard
+          label="Team's Share"
+          :value="formatPercent(dashboard.contributions?.all?.teamPercent)"
+          suffix="%"
+          :sub-value="`${(dashboard.contributions?.all?.team || 0).toLocaleString()} of ${(dashboard.contributions?.all?.total || 0).toLocaleString()}`"
+          :icon="TrendingUpIcon"
+        />
+        <StatCard
+          label="Active Contributors"
+          :value="dashboard.summary.activeContributors"
+          :trend="dashboard.trends?.activeContributors"
+          :icon="UsersIcon"
+        />
+        <StatCard
+          label="Total Activity"
+          :value="dashboard.contributions?.all?.total || 0"
+          :icon="ActivityIcon"
+        />
+      </div>
+
+      <!-- Contribution Breakdown -->
+      <section class="mb-8">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Contribution Breakdown</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">Team vs Total contributions by type</p>
+        </div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <ContributionTypeCard
+            label="Commits"
+            :icon="GitCommitIcon"
+            color="text-blue-600 dark:text-blue-400"
+            bgColor="bg-blue-50 dark:bg-blue-900/20"
+            barColor="bg-blue-600"
+            :team="dashboard.contributions?.commits?.team || 0"
+            :total="dashboard.contributions?.commits?.total || 0"
+            :percent="dashboard.contributions?.commits?.teamPercent || 0"
+          />
+          <ContributionTypeCard
+            label="Pull Requests"
+            :icon="GitPullRequestIcon"
+            color="text-purple-600 dark:text-purple-400"
+            bgColor="bg-purple-50 dark:bg-purple-900/20"
+            barColor="bg-purple-600"
+            :team="dashboard.contributions?.pullRequests?.team || 0"
+            :total="dashboard.contributions?.pullRequests?.total || 0"
+            :percent="dashboard.contributions?.pullRequests?.teamPercent || 0"
+          />
+          <ContributionTypeCard
+            label="Code Reviews"
+            :icon="MessageSquareIcon"
+            color="text-green-600 dark:text-green-400"
+            bgColor="bg-green-50 dark:bg-green-900/20"
+            barColor="bg-green-600"
+            :team="dashboard.contributions?.reviews?.team || 0"
+            :total="dashboard.contributions?.reviews?.total || 0"
+            :percent="dashboard.contributions?.reviews?.teamPercent || 0"
+          />
+          <ContributionTypeCard
+            label="Issues"
+            :icon="AlertCircleIcon"
+            color="text-orange-600 dark:text-orange-400"
+            bgColor="bg-orange-50 dark:bg-orange-900/20"
+            barColor="bg-orange-500"
+            :team="dashboard.contributions?.issues?.team || 0"
+            :total="dashboard.contributions?.issues?.total || 0"
+            :percent="dashboard.contributions?.issues?.teamPercent || 0"
+          />
+        </div>
+      </section>
+
+      <!-- Contribution Trend -->
+      <section v-if="dashboard.dailyBreakdown?.length" class="mb-8">
+        <ContributionTrendChart :daily-breakdown="dashboard.dailyBreakdown" />
+      </section>
+
+      <!-- Team Leadership -->
+      <section v-if="leadership" class="mb-8">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Team Leadership</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">Team maintainership in this project</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <LeadershipCard
+            label="Approvers"
+            :icon="ShieldCheckIcon"
+            color="text-blue-600 dark:text-blue-400"
+            bgColor="bg-blue-50 dark:bg-blue-900/20"
+            barColor="bg-blue-600"
+            :team="leadership.summary?.teamApprovers || 0"
+            :total="leadership.summary?.totalApprovers || 0"
+            :percent="leadership.summary?.approverPercent || 0"
+            :percentThreshold="10"
+          />
+          <LeadershipCard
+            label="Reviewers"
+            :icon="EyeIcon"
+            color="text-green-600 dark:text-green-400"
+            bgColor="bg-green-50 dark:bg-green-900/20"
+            barColor="bg-green-600"
+            :team="leadership.summary?.teamReviewers || 0"
+            :total="leadership.summary?.totalReviewers || 0"
+            :percent="leadership.summary?.reviewerPercent || 0"
+            :percentThreshold="5"
+          />
+        </div>
+
+        <!-- Top maintainers -->
+        <div v-if="rankedMembers.length" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 p-6">
+          <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4">Maintainers</h3>
+          <div class="space-y-1">
+            <div
+              v-for="(member, i) in visibleMembers"
+              :key="member.id"
+              class="flex items-center gap-4 py-3 border-b border-gray-50 dark:border-gray-700/30 last:border-0"
+            >
+              <span class="w-6 text-center text-sm font-medium text-gray-400 dark:text-gray-500 tabular-nums">{{ i + 1 }}</span>
+              <img
+                v-if="member.githubUsername"
+                :src="`https://github.com/${member.githubUsername}.png?size=80`"
+                :alt="member.name"
+                class="w-10 h-10 rounded-full shrink-0"
+              />
+              <div v-else class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-sm font-medium text-gray-500 dark:text-gray-400 shrink-0">
+                {{ (member.name || member.githubUsername || '?').charAt(0).toUpperCase() }}
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="font-medium text-gray-900 dark:text-gray-100 truncate">{{ member.name || member.githubUsername }}</p>
+                <a
+                  v-if="member.githubUsername"
+                  :href="'https://github.com/' + member.githubUsername"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 inline-flex items-center gap-1"
+                >
+                  @{{ member.githubUsername }}
+                  <ExternalLinkIcon :size="12" />
+                </a>
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0">
+                <span
+                  v-if="memberHasRole(member, 'Approver')"
+                  class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400"
+                >Approver</span>
+                <span
+                  v-if="memberHasRole(member, 'Reviewer')"
+                  class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400"
+                >Reviewer</span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            v-if="rankedMembers.length > 5"
+            @click="membersExpanded = !membersExpanded"
+            class="flex items-center gap-1.5 mx-auto mt-4 px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
+          >
+            <template v-if="membersExpanded">
+              Show Less
+              <ChevronUpIcon :size="16" />
+            </template>
+            <template v-else>
+              View All ({{ Math.min(rankedMembers.length, 10) }})
+              <ChevronDownIcon :size="16" />
+            </template>
+          </button>
+        </div>
+      </section>
+
+      <!-- Top Contributors -->
+      <section class="mb-8">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 p-6">
+          <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4">Top Contributors</h3>
+
+          <div v-if="!contributors.length" class="text-sm text-gray-500 dark:text-gray-400 py-8 text-center">
+            No contributor data available
+          </div>
+
+          <div v-else>
+            <div class="space-y-1">
+              <div
+                v-for="(c, i) in visibleContributors"
+                :key="c.id || i"
+                class="group"
+              >
+                <div class="flex items-center gap-4 py-3 border-b border-gray-50 dark:border-gray-700/30 last:border-0">
+                  <span class="w-6 text-center text-sm font-medium text-gray-400 dark:text-gray-500 tabular-nums">{{ i + 1 }}</span>
+                  <img
+                    v-if="c.avatarUrl || c.githubUsername"
+                    :src="c.avatarUrl || `https://github.com/${c.githubUsername}.png?size=80`"
+                    :alt="c.name"
+                    class="w-10 h-10 rounded-full shrink-0"
+                  />
+                  <div v-else class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center text-sm font-medium text-gray-500 dark:text-gray-400 shrink-0">
+                    {{ (c.name || c.githubUsername || '?').charAt(0).toUpperCase() }}
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-medium text-gray-900 dark:text-gray-100 truncate">{{ c.name || c.githubUsername }}</p>
+                    <a
+                      v-if="c.githubUsername"
+                      :href="'https://github.com/' + c.githubUsername"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1"
+                    >
+                      @{{ c.githubUsername }}
+                      <ExternalLinkIcon :size="12" />
+                    </a>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <p class="font-bold text-gray-900 dark:text-gray-100 tabular-nums">{{ getTotal(c).toLocaleString() }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">contributions</p>
+                  </div>
+                </div>
+                <div class="hidden group-hover:block pl-16 pr-4 pb-3">
+                  <div class="grid grid-cols-4 gap-2 text-center text-xs">
+                    <div>
+                      <p class="font-medium text-gray-900 dark:text-gray-100 tabular-nums">{{ getField(c, 'commits') }}</p>
+                      <p class="text-gray-500 dark:text-gray-400">Commits</p>
+                    </div>
+                    <div>
+                      <p class="font-medium text-gray-900 dark:text-gray-100 tabular-nums">{{ getField(c, 'prs') }}</p>
+                      <p class="text-gray-500 dark:text-gray-400">PRs</p>
+                    </div>
+                    <div>
+                      <p class="font-medium text-gray-900 dark:text-gray-100 tabular-nums">{{ getField(c, 'reviews') }}</p>
+                      <p class="text-gray-500 dark:text-gray-400">Reviews</p>
+                    </div>
+                    <div>
+                      <p class="font-medium text-gray-900 dark:text-gray-100 tabular-nums">{{ getField(c, 'issues') }}</p>
+                      <p class="text-gray-500 dark:text-gray-400">Issues</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button
+              v-if="contributors.length > 5"
+              @click="contributorsExpanded = !contributorsExpanded"
+              class="flex items-center gap-1.5 mx-auto mt-4 px-4 py-2 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg transition-colors"
+            >
+              <template v-if="contributorsExpanded">
+                Show Less
+                <ChevronUpIcon :size="16" />
+              </template>
+              <template v-else>
+                View All ({{ contributors.length }})
+                <ChevronDownIcon :size="16" />
+              </template>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Impact Banner -->
+      <section class="mb-8">
+        <div class="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-700 dark:to-blue-800 rounded-xl p-6 text-white">
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <p class="text-blue-100 text-sm">{{ projectName }} — Team Impact</p>
+              <p class="text-3xl font-bold">
+                {{ (dashboard.contributions?.all?.team || 0).toLocaleString() }} contributions
+              </p>
+              <p class="text-blue-200 mt-1">
+                {{ formatPercent(dashboard.contributions?.all?.teamPercent) }}% of all project activity
+              </p>
+            </div>
+            <div class="flex gap-6">
+              <div class="text-center">
+                <p class="text-2xl font-bold">{{ (dashboard.contributions?.commits?.team || 0).toLocaleString() }}</p>
+                <p class="text-blue-200 text-sm">Commits</p>
+              </div>
+              <div class="text-center">
+                <p class="text-2xl font-bold">{{ (dashboard.contributions?.pullRequests?.team || 0).toLocaleString() }}</p>
+                <p class="text-blue-200 text-sm">PRs</p>
+              </div>
+              <div class="text-center">
+                <p class="text-2xl font-bold">{{ (dashboard.contributions?.reviews?.team || 0).toLocaleString() }}</p>
+                <p class="text-blue-200 text-sm">Reviews</p>
+              </div>
+              <div class="text-center">
+                <p class="text-2xl font-bold">{{ (dashboard.contributions?.issues?.team || 0).toLocaleString() }}</p>
+                <p class="text-blue-200 text-sm">Issues</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </template>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, watch, onMounted, inject } from 'vue'
+import {
+  Activity as ActivityIcon,
+  AlertCircle as AlertCircleIcon,
+  Calendar as CalendarIcon,
+  ChevronDown as ChevronDownIcon,
+  ChevronRight as ChevronRightIcon,
+  ChevronUp as ChevronUpIcon,
+  ExternalLink as ExternalLinkIcon,
+  Eye as EyeIcon,
+  GitCommit as GitCommitIcon,
+  GitPullRequest as GitPullRequestIcon,
+  MessageSquare as MessageSquareIcon,
+  ShieldCheck as ShieldCheckIcon,
+  TrendingUp as TrendingUpIcon,
+  Users as UsersIcon,
+} from 'lucide-vue-next'
+import { apiRequest } from '@shared/client/services/api'
+import StatCard from '../components/StatCard.vue'
+import ContributionTypeCard from '../components/ContributionTypeCard.vue'
+import LeadershipCard from '../components/LeadershipCard.vue'
+import ContributionTrendChart from '../components/ContributionTrendChart.vue'
+
+const nav = inject('moduleNav')
+
+const MODULE_API = '/modules/upstream-pulse'
+
+const periodOptions = [
+  { label: '30d', value: '30' },
+  { label: '60d', value: '60' },
+  { label: '90d', value: '90' },
+  { label: 'All', value: '0' },
+]
+
+const projectId = computed(() => nav.params.value?.projectId || '')
+const fromOrg = computed(() => nav.params.value?.org || '')
+
+const selectedDays = ref('30')
+const loading = ref(true)
+const error = ref(null)
+const connectionError = ref(null)
+const dashboard = ref(null)
+const contributors = ref([])
+const contributorsExpanded = ref(false)
+const leadership = ref(null)
+const membersExpanded = ref(false)
+const projectInfo = ref(null)
+const orgDisplayName = ref(nav.params.value?.org || '')
+
+const projectName = computed(() => projectInfo.value?.name || 'Project')
+
+const visibleContributors = computed(() => {
+  if (contributorsExpanded.value) return contributors.value
+  return contributors.value.slice(0, 5)
+})
+
+const periodLabel = computed(() => {
+  if (!dashboard.value?.summary) return ''
+  const { periodStart, periodEnd } = dashboard.value.summary
+  if (periodStart === 'All time') return 'All time'
+  return `${periodStart} – ${periodEnd}`
+})
+
+function formatPercent(val) {
+  if (val == null) return '0'
+  return Number(val).toFixed(1)
+}
+
+function getTotal(c) {
+  return c.total ?? c.contributions?.total ?? 0
+}
+
+function getField(c, field) {
+  const fieldMap = { commits: 'commits', prs: 'pullRequests', reviews: 'reviews', issues: 'issues' }
+  return c[fieldMap[field]] ?? c.contributions?.[field] ?? 0
+}
+
+function memberHasRole(member, roleType) {
+  return member.roles?.some(r => r.role === roleType)
+}
+
+const rankedMembers = computed(() => {
+  if (!leadership.value?.members) return []
+  return [...leadership.value.members].sort((a, b) => (b.roles?.length || 0) - (a.roles?.length || 0))
+})
+
+const visibleMembers = computed(() => {
+  if (membersExpanded.value) return rankedMembers.value.slice(0, 10)
+  return rankedMembers.value.slice(0, 5)
+})
+
+async function loadData() {
+  loading.value = true
+  error.value = null
+  connectionError.value = null
+  const pid = projectId.value
+  if (!pid) {
+    error.value = 'No project specified'
+    loading.value = false
+    return
+  }
+
+  try {
+    const [dashData, contribData, leaderData, projectsData] = await Promise.all([
+      apiRequest(`${MODULE_API}/dashboard?days=${selectedDays.value}&projectId=${encodeURIComponent(pid)}`),
+      apiRequest(`${MODULE_API}/contributors?days=${selectedDays.value}&limit=10&projectId=${encodeURIComponent(pid)}`),
+      apiRequest(`${MODULE_API}/leadership`).catch(() => null),
+      apiRequest(`${MODULE_API}/projects`),
+    ])
+
+    dashboard.value = dashData
+    contributors.value = contribData.contributors || dashData.topContributors || []
+    leadership.value = leaderData
+
+    const match = projectsData.projects?.find(p => p.id === pid)
+    projectInfo.value = match || null
+
+    if (fromOrg.value && !orgDisplayName.value) {
+      try {
+        const orgsData = await apiRequest(`${MODULE_API}/orgs?days=0`)
+        const orgMatch = orgsData.orgs?.find(o => o.githubOrg === fromOrg.value)
+        orgDisplayName.value = orgMatch?.name || fromOrg.value
+      } catch {
+        orgDisplayName.value = fromOrg.value
+      }
+    }
+  } catch (err) {
+    if (err.status === 502 || err.message?.includes('unreachable') || err.message?.includes('ECONNREFUSED')) {
+      connectionError.value = err.message
+    } else {
+      error.value = err.message
+    }
+  } finally {
+    loading.value = false
+  }
+}
+
+watch(selectedDays, () => loadData())
+onMounted(() => loadData())
+</script>

@@ -63,6 +63,8 @@
             :maintainer-count="org.maintainerCount || 0"
             :project-count="org.projectCount || 0"
             :show-trend="selectedDays !== '0'"
+            :clickable="true"
+            @click="nav.navigateTo('org-detail', { org: org.githubOrg })"
           />
         </div>
       </section>
@@ -119,7 +121,8 @@
               <tr
                 v-for="project in paginatedProjects"
                 :key="project.id"
-                class="group hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                class="group hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
+                @click="nav.navigateTo('project-detail', { projectId: project.id })"
               >
                 <td class="px-6 py-4">
                   <div class="min-w-0">
@@ -204,7 +207,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, inject } from 'vue'
 import {
   Search as SearchIcon,
   Folder as FolderIcon,
@@ -215,6 +218,8 @@ import {
 } from 'lucide-vue-next'
 import { apiRequest } from '@shared/client/services/api'
 import OrgActivityCard from '../components/OrgActivityCard.vue'
+
+const nav = inject('moduleNav')
 
 const MODULE_API = '/modules/upstream-pulse'
 
@@ -234,7 +239,7 @@ const columns = [
   { label: 'Team Contributions', field: 'teamContributions', align: 'right' }
 ]
 
-const selectedDays = ref('0')
+const selectedDays = ref('30')
 const loading = ref(true)
 const error = ref(null)
 const orgs = ref([])
@@ -329,17 +334,19 @@ async function loadData() {
   loading.value = true
   error.value = null
   try {
-    const [orgsData, projectsData, dashData] = await Promise.all([
+    const [orgsData, projectsData] = await Promise.all([
       apiRequest(`${MODULE_API}/orgs?days=${selectedDays.value}`),
       apiRequest(`${MODULE_API}/projects`),
-      apiRequest(`${MODULE_API}/dashboard?days=${selectedDays.value}`)
     ])
     orgs.value = orgsData.orgs || []
     projects.value = projectsData.projects || []
-    topProjects.value = dashData.topProjects || []
+    loading.value = false
+
+    apiRequest(`${MODULE_API}/dashboard?days=${selectedDays.value}`)
+      .then(dashData => { topProjects.value = dashData.topProjects || [] })
+      .catch(() => {})
   } catch (err) {
     error.value = err.message
-  } finally {
     loading.value = false
   }
 }

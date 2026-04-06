@@ -1,12 +1,31 @@
 const fetch = require('node-fetch');
 
 const DEFAULT_BASE_URL = 'http://backend.ambient-code--upstream-pulse.svc.cluster.local:3000';
+const PROXY_TIMEOUT = 90_000;
+const CACHE_TTL = 3 * 60 * 1000;
+
+const responseCache = new Map();
 
 function getBaseUrl() {
   return (process.env.UPSTREAM_PULSE_API_URL || DEFAULT_BASE_URL).replace(/\/+$/, '');
 }
 
+function getCacheKey(path, query) {
+  const sorted = Object.entries(query)
+    .filter(([, v]) => v !== undefined && v !== null && v !== '')
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([k, v]) => `${k}=${v}`)
+    .join('&');
+  return `${path}?${sorted}`;
+}
+
 async function proxyRequest(path, query = {}) {
+  const cacheKey = getCacheKey(path, query);
+  const cached = responseCache.get(cacheKey);
+  if (cached && Date.now() - cached.ts < CACHE_TTL) {
+    return cached.data;
+  }
+
   const base = getBaseUrl();
   const url = new URL(path, base);
   for (const [key, value] of Object.entries(query)) {
@@ -16,7 +35,7 @@ async function proxyRequest(path, query = {}) {
   }
 
   const response = await fetch(url.toString(), {
-    timeout: 30000,
+    timeout: PROXY_TIMEOUT,
     headers: { 'Accept': 'application/json' }
   });
 
@@ -27,7 +46,15 @@ async function proxyRequest(path, query = {}) {
     throw err;
   }
 
-  return response.json();
+  const data = await response.json();
+  responseCache.set(cacheKey, { data, ts: Date.now() });
+
+  if (responseCache.size > 100) {
+    const oldest = [...responseCache.entries()].sort((a, b) => a[1].ts - b[1].ts);
+    for (let i = 0; i < 20; i++) responseCache.delete(oldest[i][0]);
+  }
+
+  return data;
 }
 
 async function checkConnection() {

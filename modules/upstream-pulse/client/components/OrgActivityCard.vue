@@ -1,5 +1,9 @@
 <template>
-  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 p-5 hover:shadow-md hover:border-gray-200 dark:hover:border-gray-600 transition-all duration-200">
+  <div
+    class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 p-5 hover:shadow-md hover:border-gray-200 dark:hover:border-gray-600 transition-all duration-200"
+    :class="{ 'cursor-pointer': clickable }"
+    @click="$emit('click')"
+  >
     <!-- Row 1: Name + engagement badge -->
     <div class="flex items-start justify-between mb-3">
       <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">{{ orgName }}</h3>
@@ -67,6 +71,8 @@ import {
   Shield as ShieldIcon
 } from 'lucide-vue-next'
 
+defineEmits(['click'])
+
 const props = defineProps({
   orgName: { type: String, default: '' },
   teamContributions: { type: Number, default: 0 },
@@ -77,7 +83,8 @@ const props = defineProps({
   leadershipCount: { type: Number, default: 0 },
   maintainerCount: { type: Number, default: 0 },
   projectCount: { type: Number, default: 0 },
-  showTrend: { type: Boolean, default: false }
+  showTrend: { type: Boolean, default: false },
+  clickable: { type: Boolean, default: false }
 })
 
 const teamShareLabel = computed(() => Number(props.teamSharePercent).toFixed(1))
