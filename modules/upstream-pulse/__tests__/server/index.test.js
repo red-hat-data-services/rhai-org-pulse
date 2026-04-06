@@ -12,10 +12,10 @@ describe('upstream-pulse server module', () => {
   it('registers expected GET routes', () => {
     const registered = []
     const router = {
-      get: vi.fn((path, _handler) => registered.push({ method: 'get', path })),
+      get: vi.fn((...args) => registered.push({ method: 'get', path: args[0] })),
       post: vi.fn(),
     }
-    const context = { registerDiagnostics: vi.fn() }
+    const context = { registerDiagnostics: vi.fn(), requireAdmin: vi.fn() }
 
     registerRoutes(router, context)
 
@@ -26,12 +26,36 @@ describe('upstream-pulse server module', () => {
     expect(paths).toContain('/leadership')
     expect(paths).toContain('/projects')
     expect(paths).toContain('/orgs')
-    expect(paths).toHaveLength(6)
+    expect(paths).toContain('/project-jobs')
+    expect(paths).toContain('/repo-info')
+    expect(paths).toHaveLength(8)
+  })
+
+  it('registers admin POST route for projects', () => {
+    const postCalls = []
+    const router = {
+      get: vi.fn(),
+      post: vi.fn((...args) => postCalls.push({ path: args[0] })),
+    }
+    const requireAdmin = vi.fn()
+    registerRoutes(router, { registerDiagnostics: vi.fn(), requireAdmin })
+
+    expect(postCalls).toHaveLength(1)
+    expect(postCalls[0].path).toBe('/projects')
+    expect(router.post).toHaveBeenCalledWith('/projects', requireAdmin, expect.any(Function))
+  })
+
+  it('gates repo-info behind requireAdmin', () => {
+    const router = { get: vi.fn(), post: vi.fn() }
+    const requireAdmin = vi.fn()
+    registerRoutes(router, { registerDiagnostics: vi.fn(), requireAdmin })
+
+    expect(router.get).toHaveBeenCalledWith('/repo-info', requireAdmin, expect.any(Function))
   })
 
   it('registers diagnostics hook when available', () => {
     const router = { get: vi.fn(), post: vi.fn() }
-    const context = { registerDiagnostics: vi.fn() }
+    const context = { registerDiagnostics: vi.fn(), requireAdmin: vi.fn() }
 
     registerRoutes(router, context)
     expect(context.registerDiagnostics).toHaveBeenCalledWith(expect.any(Function))
@@ -39,14 +63,8 @@ describe('upstream-pulse server module', () => {
 
   it('does not fail when registerDiagnostics is absent', () => {
     const router = { get: vi.fn(), post: vi.fn() }
-    const context = {}
+    const context = { requireAdmin: vi.fn() }
 
     expect(() => registerRoutes(router, context)).not.toThrow()
-  })
-
-  it('does not register any POST routes', () => {
-    const router = { get: vi.fn(), post: vi.fn() }
-    registerRoutes(router, { registerDiagnostics: vi.fn() })
-    expect(router.post).not.toHaveBeenCalled()
   })
 })

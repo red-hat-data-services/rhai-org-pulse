@@ -98,14 +98,24 @@
             Projects
             <span class="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1">({{ filteredProjects.length }})</span>
           </h3>
-          <div class="relative max-w-xs w-full">
-            <SearchIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
-            <input
-              v-model="searchInput"
-              type="text"
-              placeholder="Search by name, org, or repo..."
-              class="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
-            />
+          <div class="flex items-center gap-2.5">
+            <div class="relative max-w-xs w-full">
+              <SearchIcon class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
+              <input
+                v-model="searchInput"
+                type="text"
+                placeholder="Search by name, org, or repo..."
+                class="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+              />
+            </div>
+            <button
+              v-if="isAdmin"
+              @click="showAddProject = true"
+              class="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 active:bg-blue-800 rounded-lg shadow-sm transition-colors whitespace-nowrap"
+            >
+              <PlusIcon :size="16" />
+              Add Project
+            </button>
           </div>
         </div>
 
@@ -225,6 +235,13 @@
         </div>
       </section>
     </template>
+
+    <AddProjectModal
+      :open="showAddProject"
+      @close="showAddProject = false"
+      @created="onProjectCreated"
+      @navigate="({ view, params }) => nav.navigateTo(view, params)"
+    />
   </div>
 </template>
 
@@ -236,13 +253,18 @@ import {
   Building2 as Building2Icon,
   ExternalLink as ExternalLinkIcon,
   ChevronLeft as ChevronLeftIcon,
-  ChevronRight as ChevronRightIcon
+  ChevronRight as ChevronRightIcon,
+  Plus as PlusIcon,
 } from 'lucide-vue-next'
 import { apiRequest } from '@shared/client/services/api'
+import { useAuth } from '@shared/client/composables/useAuth'
 import OrgActivityCard from '../components/OrgActivityCard.vue'
+import AddProjectModal from '../components/AddProjectModal.vue'
 import { OrgCardSkeleton, TableRowSkeleton } from '../components/SkeletonLoaders.vue'
 
 const nav = inject('moduleNav')
+const { isAdmin } = useAuth()
+const showAddProject = ref(false)
 
 const MODULE_API = '/modules/upstream-pulse'
 
@@ -372,6 +394,10 @@ async function loadData() {
     error.value = err.message
     loading.value = false
   }
+}
+
+function onProjectCreated() {
+  loadData()
 }
 
 watch(selectedDays, () => loadData())

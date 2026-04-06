@@ -47,8 +47,62 @@
       </div>
     </div>
 
-    <!-- Loading skeleton -->
-    <div v-if="loading">
+    <!-- Collection progress banner -->
+    <div v-if="showJobsBanner" class="mb-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 overflow-hidden">
+      <div class="px-5 py-4">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-start gap-3 min-w-0">
+            <div v-if="hasActiveJobs" class="mt-0.5 w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
+              <Loader2Icon class="w-4 h-4 text-blue-600 dark:text-blue-400 animate-spin" />
+            </div>
+            <div v-else class="mt-0.5 w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
+              <CheckCircle2Icon class="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div class="min-w-0">
+              <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
+                {{ hasActiveJobs ? 'Data collection in progress' : 'Collection complete' }}
+              </p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                {{ hasActiveJobs
+                  ? 'Gathering contribution history from GitHub. This may take a few minutes for repos with extensive history.'
+                  : 'All background jobs for this project have finished.' }}
+              </p>
+            </div>
+          </div>
+          <button
+            v-if="!hasActiveJobs"
+            @click="jobsBannerDismissed = true"
+            class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors shrink-0"
+          >
+            <XCircleIcon class="w-4 h-4" />
+          </button>
+        </div>
+
+        <!-- Job status list -->
+        <div class="mt-3 ml-11 space-y-1.5">
+          <div
+            v-for="job in projectJobs"
+            :key="job.id"
+            class="flex items-center gap-2 text-xs"
+          >
+            <Loader2Icon v-if="RUNNING_STATUSES.has(job.status)" class="w-3 h-3 text-blue-500 animate-spin shrink-0" />
+            <CheckCircle2Icon v-else-if="job.status === 'completed'" class="w-3 h-3 text-emerald-500 shrink-0" />
+            <XCircleIcon v-else-if="job.status === 'failed'" class="w-3 h-3 text-red-500 shrink-0" />
+            <div v-else class="w-3 h-3 rounded-full border-2 border-gray-300 dark:border-gray-500 shrink-0"></div>
+            <span class="font-medium text-gray-700 dark:text-gray-300">{{ jobLabel(job.jobType) }}</span>
+            <span :class="jobStatusClass(job.status)">
+              {{ RUNNING_STATUSES.has(job.status) ? 'running' : job.status }}
+            </span>
+            <span v-if="job.recordsProcessed && job.status === 'completed'" class="text-gray-400 dark:text-gray-500">
+              — {{ job.recordsProcessed.toLocaleString() }} records
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading skeleton (initial load only) -->
+    <div v-if="loading && !dashboard">
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCardSkeleton v-for="i in 4" :key="'ss'+i" />
       </div>
@@ -81,6 +135,7 @@
 
     <!-- Content -->
     <template v-else-if="dashboard">
+      <div class="transition-opacity duration-300" :class="{ 'opacity-40 pointer-events-none': loading }">
       <!-- Summary Stats -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
@@ -378,16 +433,18 @@
           </div>
         </div>
       </section>
+      </div><!-- /refetch dim wrapper -->
     </template>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, inject } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, inject } from 'vue'
 import {
   Activity as ActivityIcon,
   AlertCircle as AlertCircleIcon,
   Calendar as CalendarIcon,
+  CheckCircle2 as CheckCircle2Icon,
   ChevronDown as ChevronDownIcon,
   ChevronRight as ChevronRightIcon,
   ChevronUp as ChevronUpIcon,
@@ -395,10 +452,12 @@ import {
   Eye as EyeIcon,
   GitCommit as GitCommitIcon,
   GitPullRequest as GitPullRequestIcon,
+  Loader2 as Loader2Icon,
   MessageSquare as MessageSquareIcon,
   ShieldCheck as ShieldCheckIcon,
   TrendingUp as TrendingUpIcon,
   Users as UsersIcon,
+  XCircle as XCircleIcon,
 } from 'lucide-vue-next'
 import { apiRequest } from '@shared/client/services/api'
 import { StatCardSkeleton, ContributionCardSkeleton, ContributorRowSkeleton } from '../components/SkeletonLoaders.vue'
@@ -434,6 +493,59 @@ const projectInfo = ref(null)
 const orgDisplayName = ref('')
 
 const projectName = computed(() => projectInfo.value?.name || 'Project')
+
+const projectJobs = ref([])
+const jobsBannerDismissed = ref(false)
+let jobPollTimer = null
+
+const RUNNING_STATUSES = new Set(['active', 'running', 'pending', 'waiting'])
+const activeJobs = computed(() =>
+  projectJobs.value.filter(j => RUNNING_STATUSES.has(j.status))
+)
+const hasActiveJobs = computed(() => activeJobs.value.length > 0)
+const showJobsBanner = computed(() => projectJobs.value.length > 0 && !jobsBannerDismissed.value)
+
+const JOB_TYPE_LABELS = {
+  sync: 'Contribution Collection',
+  full_sync: 'Full Collection',
+  governance_refresh: 'Governance Scan',
+  leadership_refresh: 'Leadership Refresh',
+}
+
+function jobLabel(jobType) {
+  return JOB_TYPE_LABELS[jobType] || jobType
+}
+
+function jobStatusClass(status) {
+  if (status === 'completed') return 'text-emerald-600 dark:text-emerald-400'
+  if (status === 'failed') return 'text-red-600 dark:text-red-400'
+  if (RUNNING_STATUSES.has(status)) return 'text-blue-600 dark:text-blue-400'
+  return 'text-gray-500 dark:text-gray-400'
+}
+
+async function loadProjectJobs() {
+  const pid = projectId.value
+  if (!pid) return
+  try {
+    const data = await apiRequest(`${MODULE_API}/project-jobs?projectId=${encodeURIComponent(pid)}`)
+    projectJobs.value = data.jobs || []
+    if (hasActiveJobs.value) {
+      scheduleJobPoll()
+    }
+  } catch {
+    // Non-critical — don't surface errors for job polling
+  }
+}
+
+function scheduleJobPoll() {
+  clearTimeout(jobPollTimer)
+  jobPollTimer = setTimeout(async () => {
+    await loadProjectJobs()
+    if (hasActiveJobs.value) {
+      loadData()
+    }
+  }, 8000)
+}
 
 const visibleContributors = computed(() => {
   if (contributorsExpanded.value) return contributors.value
@@ -522,5 +634,11 @@ async function loadData() {
 }
 
 watch(selectedDays, () => loadData())
-onMounted(() => loadData())
+onMounted(() => {
+  loadData()
+  loadProjectJobs()
+})
+onBeforeUnmount(() => {
+  clearTimeout(jobPollTimer)
+})
 </script>
