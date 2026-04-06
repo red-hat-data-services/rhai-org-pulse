@@ -81,12 +81,14 @@ import ReportsMetricSelector from '../components/ReportsMetricSelector.vue'
 import ReportsChartTypeSelector from '../components/ReportsChartTypeSelector.vue'
 import { useRoster } from '@shared/client/composables/useRoster'
 import { useGithubStats } from '@shared/client/composables/useGithubStats'
+import { useGitlabStats } from '@shared/client/composables/useGitlabStats'
 import { getTeamMetrics } from '@shared/client/services/api'
 
 const _nav = inject('moduleNav')
 
 const { orgs, teams, selectedOrgKey, selectOrg } = useRoster()
 const { getContributions } = useGithubStats()
+const { getContributions: getGitlabContributions } = useGitlabStats()
 
 const selectedTeamKeys = ref([])
 const selectedMetrics = ref([])
@@ -127,6 +129,16 @@ const METRIC_DEFS = {
   },
   githubPerMember: {
     label: 'Avg GitHub Contributions per Member (1yr)',
+    unit: '',
+    extract: null // handled specially in generate()
+  },
+  gitlabContributions: {
+    label: 'GitLab Contributions (1yr)',
+    unit: '',
+    extract: null // handled specially in generate()
+  },
+  gitlabPerMember: {
+    label: 'Avg GitLab Contributions per Member (1yr)',
     unit: '',
     extract: null // handled specially in generate()
   }
@@ -197,6 +209,39 @@ async function generate() {
             if (!team?.members) return 0
             return team.members.reduce((sum, m) => {
               const c = m.githubUsername ? getContributions(m.githubUsername) : null
+              return sum + (c?.totalContributions ?? 0)
+            }, 0)
+          })
+        })
+      } else if (metricKey === 'gitlabPerMember') {
+        newCharts.push({
+          metricKey,
+          title: def.label,
+          unit: '',
+          labels: activeKeys.map(k => teamLookup[k]?.displayName ?? k),
+          data: activeKeys.map(k => {
+            const team = teamLookup[k]
+            if (!team?.members?.length) return 0
+            const configured = team.members.filter(m => m.gitlabUsername)
+            if (configured.length === 0) return 0
+            const total = configured.reduce((sum, m) => {
+              const c = getGitlabContributions(m.gitlabUsername)
+              return sum + (c?.totalContributions ?? 0)
+            }, 0)
+            return Math.round((total / configured.length) * 10) / 10
+          })
+        })
+      } else if (metricKey === 'gitlabContributions') {
+        newCharts.push({
+          metricKey,
+          title: def.label,
+          unit: def.unit,
+          labels: activeKeys.map(k => teamLookup[k]?.displayName ?? k),
+          data: activeKeys.map(k => {
+            const team = teamLookup[k]
+            if (!team?.members) return 0
+            return team.members.reduce((sum, m) => {
+              const c = m.gitlabUsername ? getGitlabContributions(m.gitlabUsername) : null
               return sum + (c?.totalContributions ?? 0)
             }, 0)
           })

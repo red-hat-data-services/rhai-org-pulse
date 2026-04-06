@@ -95,7 +95,7 @@
     <!-- No data -->
     <div v-else-if="!trendsData" class="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center text-gray-400 dark:text-gray-500">
       <p class="text-lg mb-2">No trend data available</p>
-      <p class="text-sm">Click "Refresh Data (365d)" to fetch historical data from Jira and GitHub.</p>
+      <p class="text-sm">Click "Refresh Data (365d)" to fetch historical data from Jira, GitHub, and GitLab.</p>
     </div>
 
     <!-- Charts -->
@@ -113,6 +113,14 @@
           :labels="displayLabels"
           :datasets="githubDatasets"
           title="GitHub Contributions"
+        />
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+        <TrendChart
+          :labels="displayLabels"
+          :datasets="gitlabDatasets"
+          title="GitLab Contributions"
         />
       </div>
 
@@ -234,6 +242,16 @@ const monthLabels = computed(() => {
     }
   }
 
+  if (trendsData.value.gitlab?.users) {
+    for (const userData of Object.values(trendsData.value.gitlab.users)) {
+      if (userData?.months) {
+        for (const month of Object.keys(userData.months)) {
+          allMonths.add(month)
+        }
+      }
+    }
+  }
+
   const now = new Date()
   const cutoff = new Date(now.getFullYear(), now.getMonth() - 11, 1)
   const cutoffKey = `${cutoff.getFullYear()}-${String(cutoff.getMonth() + 1).padStart(2, '0')}`
@@ -324,6 +342,51 @@ const githubDatasets = computed(() => {
   return seriesConfig.value.map(series => ({
     label: series.label,
     data: labels.map(m => getGithubValue(m.key, series))
+  }))
+})
+
+const gitlabUserLookup = computed(() => {
+  const lookup = {}
+  for (const org of orgs.value) {
+    if (!org.teams) continue
+    for (const [teamName, team] of Object.entries(org.teams)) {
+      for (const member of team.members) {
+        if (member.gitlabUsername) {
+          lookup[member.gitlabUsername] = {
+            orgKey: org.key,
+            teamKey: `${org.key}::${teamName}`
+          }
+        }
+      }
+    }
+  }
+  return lookup
+})
+
+function getGitlabValue(monthKey, series) {
+  const gitlab = trendsData.value?.gitlab
+  if (!gitlab?.users) return 0
+  const lookup = gitlabUserLookup.value
+
+  let total = 0
+  for (const [username, userData] of Object.entries(gitlab.users)) {
+    if (!userData?.months) continue
+    const info = lookup[username]
+    if (series.type === 'org' && info?.orgKey !== series.key) continue
+    if (series.type === 'team' && info?.teamKey !== series.key) continue
+    if (series.type === 'orgs-aggregate' && !series.key.includes(info?.orgKey)) continue
+    if (series.type === 'teams-aggregate' && !series.key.includes(info?.teamKey)) continue
+    total += userData.months[monthKey] || 0
+  }
+  return total
+}
+
+const gitlabDatasets = computed(() => {
+  const labels = monthLabels.value
+  if (labels.length === 0) return []
+  return seriesConfig.value.map(series => ({
+    label: series.label,
+    data: labels.map(m => getGitlabValue(m.key, series))
   }))
 })
 
