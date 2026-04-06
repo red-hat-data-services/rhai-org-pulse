@@ -1,34 +1,13 @@
 <template>
   <div>
     <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
-      <div>
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h2>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Overview of your team's open source impact</p>
-      </div>
-      <div class="flex items-center gap-3">
-        <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
-          <button
-            v-for="opt in periodOptions"
-            :key="opt.value"
-            @click="selectedDays = opt.value"
-            class="px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200"
-            :class="selectedDays === opt.value
-              ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'"
-          >
-            {{ opt.label }}
-          </button>
-        </div>
-        <div v-if="dashboard?.summary" class="hidden lg:flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-lg">
-          <CalendarIcon :size="14" />
-          <span>{{ periodLabel }}</span>
-        </div>
-      </div>
+    <div class="mb-4">
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Overview of your team's open source impact</p>
     </div>
 
-    <!-- Loading -->
-    <div v-if="loading" class="flex flex-col items-center justify-center py-24">
+    <!-- Loading (only on initial load — period changes keep showing stale data) -->
+    <div v-if="loading && !dashboard" class="flex flex-col items-center justify-center py-24">
       <div class="animate-spin rounded-full h-10 w-10 border-2 border-gray-200 dark:border-gray-700 border-t-primary-600 mb-4"></div>
       <p class="text-sm text-gray-500 dark:text-gray-400">Loading dashboard...</p>
     </div>
@@ -52,10 +31,54 @@
       <p class="text-sm text-red-700 dark:text-red-400">{{ error }}</p>
     </div>
 
+    <!-- Fallback: no state matched -->
+    <div v-else-if="!dashboard" class="flex flex-col items-center justify-center py-24">
+      <div class="animate-spin rounded-full h-10 w-10 border-2 border-gray-200 dark:border-gray-700 border-t-primary-600 mb-4"></div>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Loading dashboard...</p>
+    </div>
+
     <!-- Dashboard content -->
-    <template v-else-if="dashboard">
+    <template v-else>
+      <!-- Floating sticky navigation -->
+      <div class="sticky top-16 z-[9] -mx-6 lg:-mx-8 px-6 lg:px-8 pt-2 pb-5 bg-gray-50 dark:bg-gray-900">
+        <nav class="relative flex items-center justify-between bg-white dark:bg-gray-800 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.04),0_4px_16px_-2px_rgba(0,0,0,0.08)] dark:shadow-[0_1px_2px_rgba(0,0,0,0.2),0_4px_16px_-2px_rgba(0,0,0,0.35)] ring-1 ring-gray-950/[0.05] dark:ring-white/[0.08] px-2.5 py-2 overflow-hidden">
+          <div v-if="loading" class="absolute inset-x-0 bottom-0 h-[3px] bg-blue-100/50 dark:bg-blue-900/30">
+            <div class="h-full w-2/5 bg-blue-500 rounded-full shadow-[0_0_8px_2px_rgba(59,130,246,0.5)] animate-[slideRight_1.2s_ease-in-out_infinite]"></div>
+          </div>
+          <div class="flex items-center gap-1 overflow-x-auto min-w-0">
+            <button
+              v-for="s in sections"
+              :key="s.id"
+              @click="scrollToSection(s.id)"
+              class="px-3.5 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200"
+              :class="activeSection === s.id
+                ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 shadow-sm'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700/50'"
+            >{{ s.label }}</button>
+          </div>
+          <div class="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-3 shrink-0"></div>
+          <div class="flex items-center gap-2.5 shrink-0">
+            <div class="flex items-center gap-0.5 bg-gray-100 dark:bg-gray-700/60 rounded-lg p-0.5">
+              <button
+                v-for="opt in periodOptions"
+                :key="opt.value"
+                @click="selectedDays = opt.value"
+                class="px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-all duration-200"
+                :class="selectedDays === opt.value
+                  ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
+              >{{ opt.label }}</button>
+            </div>
+            <div v-if="periodLabel" class="hidden xl:flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-750/40 pl-2 pr-2.5 py-1 rounded-lg">
+              <CalendarIcon :size="12" />
+              <span>{{ periodLabel }}</span>
+            </div>
+          </div>
+        </nav>
+      </div>
+
       <!-- Summary Stats -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div id="section-overview" class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
           label="Team Contributions"
           :value="dashboard.contributions?.all?.team || 0"
@@ -137,8 +160,66 @@
         <ContributionTrendChart :daily-breakdown="dashboard.dailyBreakdown" />
       </section>
 
+      <!-- Top Organizations -->
+      <section v-if="orgActivity.length" id="section-organizations" class="mb-8">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Top Organizations</h3>
+          <button
+            @click="nav.navigateTo('portfolio')"
+            class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium transition-colors"
+          >
+            View all organizations &rarr;
+          </button>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <OrgActivityCard
+            v-for="activity in orgActivity"
+            :key="activity.org"
+            :org-name="activity.orgName"
+            :team-contributions="activity.total || 0"
+            :total-contributions="activity.totalContributions || 0"
+            :team-share-percent="activity.teamSharePercent || 0"
+            :percent-change="activity.percentChange || 0"
+            :active-team-members="activity.activeTeamMembers || 0"
+            :leadership-count="activity.leadershipCount || 0"
+            :maintainer-count="activity.maintainerCount || 0"
+            :show-trend="selectedDays !== '0'"
+            :clickable="true"
+            @click="nav.navigateTo('org-detail', { org: activity.org })"
+          />
+        </div>
+      </section>
+
+      <!-- Top Projects -->
+      <section v-if="topProjects.length" id="section-projects" class="mb-8">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Top Projects</h3>
+          <button
+            v-if="topProjects.length > 6"
+            @click="nav.navigateTo('portfolio')"
+            class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium transition-colors"
+          >
+            View all {{ topProjects.length }} projects &rarr;
+          </button>
+          <p v-else class="text-sm text-gray-500 dark:text-gray-400">{{ topProjects.length }} tracked projects</p>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <ProjectCard
+            v-for="project in topProjects.slice(0, 6)"
+            :key="project.id"
+            :name="project.name"
+            :github-org="project.githubOrg"
+            :github-repo="project.githubRepo"
+            :contributions="project.contributions"
+            :active-contributors="project.activeContributors || 0"
+            :clickable="true"
+            @click="nav.navigateTo('project-detail', { projectId: project.id })"
+          />
+        </div>
+      </section>
+
       <!-- Top Contributors -->
-      <section class="mb-8">
+      <section id="section-contributors" class="mb-8">
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 p-6">
           <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4">Top Contributors</h3>
 
@@ -227,7 +308,7 @@
       </section>
 
       <!-- Team Leadership -->
-      <section class="mb-8">
+      <section id="section-leadership" class="mb-8">
         <div class="flex items-center justify-between mb-6">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Team Leadership</h3>
           <p class="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">Team influence in upstream governance</p>
@@ -423,7 +504,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, inject } from 'vue'
 import {
   Activity as ActivityIcon,
   AlertCircle as AlertCircleIcon,
@@ -445,7 +526,10 @@ import StatCard from '../components/StatCard.vue'
 import ContributionTypeCard from '../components/ContributionTypeCard.vue'
 import LeadershipCard from '../components/LeadershipCard.vue'
 import ContributionTrendChart from '../components/ContributionTrendChart.vue'
+import OrgActivityCard from '../components/OrgActivityCard.vue'
+import ProjectCard from '../components/ProjectCard.vue'
 
+const nav = inject('moduleNav')
 const MODULE_API = '/modules/upstream-pulse'
 
 const periodOptions = [
@@ -462,8 +546,11 @@ const connectionError = ref(null)
 const dashboard = ref(null)
 const contributors = ref([])
 const contributorsExpanded = ref(false)
+const orgActivity = ref([])
+const topProjects = ref([])
 const leadership = ref(null)
 const membersExpanded = ref(false)
+const activeSection = ref('overview')
 
 const visibleContributors = computed(() => {
   if (contributorsExpanded.value) return contributors.value
@@ -476,6 +563,42 @@ const periodLabel = computed(() => {
   if (periodStart === 'All time') return 'All time'
   return `${periodStart} – ${periodEnd}`
 })
+
+const sections = computed(() => {
+  const s = [{ id: 'overview', label: 'Overview' }]
+  if (orgActivity.value.length) s.push({ id: 'organizations', label: 'Organizations' })
+  if (topProjects.value.length) s.push({ id: 'projects', label: 'Projects' })
+  s.push({ id: 'contributors', label: 'Contributors' })
+  s.push({ id: 'leadership', label: 'Leadership' })
+  return s
+})
+
+const SCROLL_OFFSET = 140
+
+function scrollToSection(id) {
+  const el = document.getElementById(`section-${id}`)
+  if (!el) return
+  const top = el.getBoundingClientRect().top + window.scrollY - SCROLL_OFFSET
+  window.scrollTo({ top, behavior: 'smooth' })
+}
+
+let scrollTicking = false
+function onScrollSpy() {
+  if (scrollTicking) return
+  scrollTicking = true
+  requestAnimationFrame(() => {
+    scrollTicking = false
+    const ids = sections.value.map(s => s.id)
+    for (let i = ids.length - 1; i >= 0; i--) {
+      const el = document.getElementById(`section-${ids[i]}`)
+      if (el && el.getBoundingClientRect().top <= SCROLL_OFFSET + 20) {
+        activeSection.value = ids[i]
+        return
+      }
+    }
+    if (ids.length) activeSection.value = ids[0]
+  })
+}
 
 function formatPercent(val) {
   if (val == null) return '0'
@@ -611,12 +734,14 @@ async function loadData() {
 
     dashboard.value = dashData
     contributors.value = contribData.contributors || dashData.topContributors || []
+    orgActivity.value = dashData.orgActivity || []
+    topProjects.value = dashData.topProjects || []
     leadership.value = leaderData
   } catch (err) {
     if (err.status === 502 || err.message?.includes('unreachable') || err.message?.includes('ECONNREFUSED')) {
-      connectionError.value = err.message
+      connectionError.value = err.message || 'Unable to connect to Upstream Pulse'
     } else {
-      error.value = err.message
+      error.value = err.message || 'An unexpected error occurred'
     }
   } finally {
     loading.value = false
@@ -624,5 +749,20 @@ async function loadData() {
 }
 
 watch(selectedDays, () => loadData())
-onMounted(() => loadData())
+
+onMounted(() => {
+  window.addEventListener('scroll', onScrollSpy, { passive: true })
+  loadData()
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', onScrollSpy)
+})
 </script>
+
+<style scoped>
+@keyframes slideRight {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
+}
+</style>
