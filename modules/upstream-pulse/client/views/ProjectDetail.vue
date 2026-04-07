@@ -226,28 +226,19 @@
           <p class="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">Team maintainership in this project</p>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+        <div class="grid grid-cols-1 gap-4 mb-4" :class="governanceCards.length > 1 ? 'sm:grid-cols-2' : ''">
           <LeadershipCard
-            label="Approvers"
-            :icon="ShieldCheckIcon"
-            color="text-blue-600 dark:text-blue-400"
-            bgColor="bg-blue-50 dark:bg-blue-900/20"
-            barColor="bg-blue-600"
-            :team="leadership.summary?.teamApprovers || 0"
-            :total="leadership.summary?.totalApprovers || 0"
-            :percent="leadership.summary?.approverPercent || 0"
-            :percentThreshold="10"
-          />
-          <LeadershipCard
-            label="Reviewers"
-            :icon="EyeIcon"
-            color="text-green-600 dark:text-green-400"
-            bgColor="bg-green-50 dark:bg-green-900/20"
-            barColor="bg-green-600"
-            :team="leadership.summary?.teamReviewers || 0"
-            :total="leadership.summary?.totalReviewers || 0"
-            :percent="leadership.summary?.reviewerPercent || 0"
-            :percentThreshold="5"
+            v-for="card in governanceCards"
+            :key="card.positionType"
+            :label="card.label"
+            :icon="card.positionType === 'reviewer' ? EyeIcon : ShieldCheckIcon"
+            :color="card.positionType === 'reviewer' ? 'text-green-600 dark:text-green-400' : 'text-blue-600 dark:text-blue-400'"
+            :bgColor="card.positionType === 'reviewer' ? 'bg-green-50 dark:bg-green-900/20' : 'bg-blue-50 dark:bg-blue-900/20'"
+            :barColor="card.positionType === 'reviewer' ? 'bg-green-600' : 'bg-blue-600'"
+            :team="card.team"
+            :total="card.total"
+            :percent="card.total > 0 ? (card.team / card.total) * 100 : 0"
+            :percentThreshold="card.positionType === 'reviewer' ? 5 : 10"
           />
         </div>
 
@@ -285,13 +276,13 @@
               </div>
               <div class="flex items-center gap-1.5 shrink-0">
                 <span
-                  v-if="memberHasRole(member, 'Approver')"
-                  class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400"
-                >Approver</span>
-                <span
-                  v-if="memberHasRole(member, 'Reviewer')"
-                  class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400"
-                >Reviewer</span>
+                  v-for="role in uniqueRoles(member)"
+                  :key="role"
+                  class="text-[11px] font-medium px-2 py-0.5 rounded-full"
+                  :class="role === 'Reviewer'
+                    ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                    : 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'"
+                >{{ role }}</span>
               </div>
             </div>
           </div>
@@ -465,6 +456,7 @@ import StatCard from '../components/StatCard.vue'
 import ContributionTypeCard from '../components/ContributionTypeCard.vue'
 import LeadershipCard from '../components/LeadershipCard.vue'
 import ContributionTrendChart from '../components/ContributionTrendChart.vue'
+import { useGovernanceCards, uniqueRoles } from '../composables/useGovernanceCards.js'
 
 const nav = inject('moduleNav')
 
@@ -573,9 +565,7 @@ function getField(c, field) {
   return c[fieldMap[field]] ?? c.contributions?.[field] ?? 0
 }
 
-function memberHasRole(member, roleType) {
-  return member.roles?.some(r => r.role === roleType)
-}
+const { governanceCards } = useGovernanceCards(leadership)
 
 const rankedMembers = computed(() => {
   if (!leadership.value?.members) return []

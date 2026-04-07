@@ -237,39 +237,19 @@
         <div v-if="leadership">
           <h4 class="text-base font-semibold text-gray-700 dark:text-gray-300 mb-3">Code Maintainership</h4>
 
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          <div class="grid grid-cols-1 gap-4 mb-4" :class="orgGovernanceCards.length >= 3 ? 'sm:grid-cols-3' : orgGovernanceCards.length === 2 ? 'sm:grid-cols-2' : ''">
             <LeadershipCard
-              label="Approvers"
-              :icon="ShieldCheckIcon"
-              color="text-blue-600 dark:text-blue-400"
-              bgColor="bg-blue-50 dark:bg-blue-900/20"
-              barColor="bg-blue-600"
-              :team="leadership.summary?.teamApprovers || 0"
-              :total="leadership.summary?.totalApprovers || 0"
-              :percent="leadership.summary?.approverPercent || 0"
-              :percentThreshold="10"
-            />
-            <LeadershipCard
-              label="Reviewers"
-              :icon="EyeIcon"
-              color="text-green-600 dark:text-green-400"
-              bgColor="bg-green-50 dark:bg-green-900/20"
-              barColor="bg-green-600"
-              :team="leadership.summary?.teamReviewers || 0"
-              :total="leadership.summary?.totalReviewers || 0"
-              :percent="leadership.summary?.reviewerPercent || 0"
-              :percentThreshold="5"
-            />
-            <LeadershipCard
-              label="Project Coverage"
-              :icon="LayersIcon"
-              color="text-purple-600 dark:text-purple-400"
-              bgColor="bg-purple-50 dark:bg-purple-900/20"
-              barColor="bg-purple-600"
-              :team="leadership.summary?.projectsWithTeamLeadership || 0"
-              :total="dashboard.summary?.trackedProjects || '?'"
-              :percent="projectCoveragePercent"
-              :percentThreshold="50"
+              v-for="card in orgGovernanceCards"
+              :key="card.positionType"
+              :label="card.label"
+              :icon="card.positionType === 'reviewer' ? EyeIcon : card.positionType === 'coverage' ? LayersIcon : ShieldCheckIcon"
+              :color="card.positionType === 'reviewer' ? 'text-green-600 dark:text-green-400' : card.positionType === 'coverage' ? 'text-purple-600 dark:text-purple-400' : 'text-blue-600 dark:text-blue-400'"
+              :bgColor="card.positionType === 'reviewer' ? 'bg-green-50 dark:bg-green-900/20' : card.positionType === 'coverage' ? 'bg-purple-50 dark:bg-purple-900/20' : 'bg-blue-50 dark:bg-blue-900/20'"
+              :barColor="card.positionType === 'reviewer' ? 'bg-green-600' : card.positionType === 'coverage' ? 'bg-purple-600' : 'bg-blue-600'"
+              :team="card.team"
+              :total="card.total"
+              :percent="card.percent"
+              :percentThreshold="card.percentThreshold"
             />
           </div>
 
@@ -307,13 +287,13 @@
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
                   <span
-                    v-if="memberHasRole(member, 'Approver')"
-                    class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400"
-                  >Approver</span>
-                  <span
-                    v-if="memberHasRole(member, 'Reviewer')"
-                    class="text-[11px] font-medium px-2 py-0.5 rounded-full bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400"
-                  >Reviewer</span>
+                    v-for="role in uniqueRoles(member)"
+                    :key="role"
+                    class="text-[11px] font-medium px-2 py-0.5 rounded-full"
+                    :class="role === 'Reviewer'
+                      ? 'bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
+                      : 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400'"
+                  >{{ role }}</span>
                 </div>
                 <div class="text-right shrink-0 w-16">
                   <p class="font-bold text-gray-900 dark:text-gray-100 tabular-nums">{{ uniqueProjectCount(member) }}</p>
@@ -489,6 +469,7 @@ import ContributionTypeCard from '../components/ContributionTypeCard.vue'
 import LeadershipCard from '../components/LeadershipCard.vue'
 import ContributionTrendChart from '../components/ContributionTrendChart.vue'
 import ImpactBanner from '../components/ImpactBanner.vue'
+import { useGovernanceCards, uniqueRoles } from '../composables/useGovernanceCards.js'
 
 const nav = inject('moduleNav')
 
@@ -542,9 +523,6 @@ function getField(c, field) {
   return c[fieldMap[field]] ?? c.contributions?.[field] ?? 0
 }
 
-function memberHasRole(member, roleType) {
-  return member.roles?.some(r => r.role === roleType)
-}
 
 function uniqueProjectCount(member) {
   if (!member.roles?.length) return 0
@@ -645,6 +623,8 @@ const projectCoveragePercent = computed(() => {
   const total = dashboard.value.summary.trackedProjects || 1
   return Math.min((covered / total) * 100, 100)
 })
+
+const { governanceCards: orgGovernanceCards } = useGovernanceCards(leadership, dashboard, projectCoveragePercent)
 
 async function loadData() {
   loading.value = true
