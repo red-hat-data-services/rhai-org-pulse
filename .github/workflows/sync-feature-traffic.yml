@@ -1,0 +1,108 @@
+name: Sync Feature Traffic Data
+
+on:
+  schedule:
+    # 12:30 UTC = 8:30 AM EDT / 7:30 AM EST
+    - cron: '30 12 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: sync-feature-traffic
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    name: Sync Feature Traffic Data
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Find latest successful build job
+        id: find-job
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          PROJECT="redhat%2Frhel-ai%2Fagentic-ci%2Ffeature-traffic"
+          RESPONSE=$(curl -sf --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \
+            "https://gitlab.com/api/v4/projects/${PROJECT}/jobs?scope=success&per_page=20")
+
+          # Find the latest fetch-traffic job with artifacts
+          JOB_ID=$(echo "$RESPONSE" | jq -r '
+            [.[] | select(.name == "fetch-traffic" and .artifacts_file != null)] |
+            first | .id // empty
+          ')
+
+          if [ -z "$JOB_ID" ]; then
+            echo "::error::No successful fetch-traffic job with artifacts found"
+            exit 1
+          fi
+
+          CREATED_AT=$(echo "$RESPONSE" | jq -r ".[] | select(.id == ${JOB_ID}) | .created_at")
+          echo "job_id=${JOB_ID}" >> "$GITHUB_OUTPUT"
+          echo "created_at=${CREATED_AT}" >> "$GITHUB_OUTPUT"
+          echo "Found job ${JOB_ID} from ${CREATED_AT}"
+
+      - name: Download artifacts
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+        run: |
+          PROJECT="redhat%2Frhel-ai%2Fagentic-ci%2Ffeature-traffic"
+          JOB_ID="${{ steps.find-job.outputs.job_id }}"
+
+          curl -sfL --header "PRIVATE-TOKEN: ${GITLAB_TOKEN}" \
+            -o /tmp/artifacts.zip \
+            "https://gitlab.com/api/v4/projects/${PROJECT}/jobs/${JOB_ID}/artifacts"
+
+          echo "Downloaded $(stat -c%s /tmp/artifacts.zip) bytes"
+
+      - name: Extract and update fixture data
+        run: |
+          # Clean existing data
+          rm -rf fixtures/modules/feature-traffic-data/latest
+
+          # Extract artifacts (CI outputs to output/ directory)
+          mkdir -p fixtures/modules/feature-traffic-data/latest
+          unzip -o /tmp/artifacts.zip -d /tmp/feature-traffic-extract
+          cp -r /tmp/feature-traffic-extract/output/* fixtures/modules/feature-traffic-data/latest/
+
+          # Verify
+          FEATURE_COUNT=$(ls fixtures/modules/feature-traffic-data/latest/features/ | wc -l)
+          echo "Extracted ${FEATURE_COUNT} feature files"
+
+          if [ ! -f fixtures/modules/feature-traffic-data/latest/index.json ]; then
+            echo "::error::index.json not found in artifacts"
+            exit 1
+          fi
+
+      - name: Check for changes
+        id: changes
+        run: |
+          git diff --quiet fixtures/modules/feature-traffic-data/ && echo "changed=false" >> "$GITHUB_OUTPUT" || echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add fixtures/modules/feature-traffic-data/
+          git commit -m "chore: sync feature-traffic fixture data (${{ steps.find-job.outputs.created_at }})"
+          git push
+
+      - name: Summary
+        if: always()
+        run: |
+          if [ "${{ steps.changes.outputs.changed }}" = "true" ]; then
+            echo "### Feature Traffic Data Synced" >> "$GITHUB_STEP_SUMMARY"
+            echo "- **Source job:** ${{ steps.find-job.outputs.job_id }}" >> "$GITHUB_STEP_SUMMARY"
+            echo "- **Built at:** ${{ steps.find-job.outputs.created_at }}" >> "$GITHUB_STEP_SUMMARY"
+            FEATURE_COUNT=$(ls fixtures/modules/feature-traffic-data/latest/features/ | wc -l)
+            echo "- **Features:** ${FEATURE_COUNT}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### No Changes" >> "$GITHUB_STEP_SUMMARY"
+            echo "Feature traffic data is already up to date." >> "$GITHUB_STEP_SUMMARY"
+          fi
