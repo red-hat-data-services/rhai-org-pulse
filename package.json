@@ -19,6 +19,7 @@
     "adm-zip": "^0.5.17",
     "chart.js": "^4.4.7",
     "express": "^5.2.1",
+    "https-proxy-agent": "^7.0.6",
     "googleapis": "^171.4.0",
     "ldapjs": "^3.0.7",
     "lucide-vue-next": "^0.577.0",
