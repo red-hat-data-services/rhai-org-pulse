@@ -39,7 +39,7 @@
       </div>
 
       <!-- Release selector -->
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3 flex-wrap">
         <label for="release-select" class="text-sm font-medium text-gray-700 dark:text-gray-300 shrink-0">Release</label>
         <select
           id="release-select"
@@ -50,9 +50,16 @@
             {{ tab.label }} ({{ tab.issueCount }} issues)
           </option>
         </select>
-        <span v-if="selectedRelease" class="text-xs text-gray-500 dark:text-gray-400 shrink-0">
-          {{ selectedRelease.daysRemaining }}d remaining
-        </span>
+        <div v-if="selectedRelease" class="flex items-center gap-2 shrink-0">
+          <span v-if="selectedRelease.codeFreezeDate" class="inline-flex items-center gap-1.5 rounded-full border border-blue-200 dark:border-blue-700/50 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 text-xs font-medium text-blue-700 dark:text-blue-300">
+            <span class="h-1.5 w-1.5 rounded-full bg-blue-500" />
+            Code Freeze: {{ formatDueDate(selectedRelease.codeFreezeDate) }}
+          </span>
+          <span class="inline-flex items-center gap-1.5 rounded-full border border-purple-200 dark:border-purple-700/50 bg-purple-50 dark:bg-purple-900/30 px-3 py-1 text-xs font-medium text-purple-700 dark:text-purple-300">
+            <span class="h-1.5 w-1.5 rounded-full bg-purple-500" />
+            Release: {{ formatDueDate(selectedRelease.dueDate) }}
+          </span>
+        </div>
       </div>
 
       <div v-if="!projectGroups.length" class="text-sm text-gray-500 dark:text-gray-400">
@@ -321,13 +328,108 @@
           </div>
         </div>
       </div>
+
+      <!-- Monte Carlo Forecast -->
+      <div
+        v-if="releaseMonteCarloInputs"
+        class="rounded-xl border border-gray-200/80 dark:border-gray-700/80 bg-white dark:bg-gray-900/40 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_12px_rgba(0,0,0,0.04)] overflow-hidden"
+      >
+        <div class="flex items-center justify-between gap-3 px-4 py-3">
+          <button
+            class="flex items-center gap-2.5 text-left hover:opacity-80 transition-opacity"
+            @click="showMonteCarlo = !showMonteCarlo"
+          >
+            <span class="text-gray-400 dark:text-gray-500 transition-transform text-xs" :class="{ 'rotate-90': showMonteCarlo }">▸</span>
+            <span class="font-semibold text-gray-900 dark:text-gray-100 text-sm">Forecasting using Monte Carlo Simulation</span>
+            <span class="text-xs text-gray-500 dark:text-gray-400">
+              {{ releaseMonteCarloInputs.notDoneCount }} remaining · {{ releaseMonteCarloInputs.totalVelocity }} issues/14d throughput
+            </span>
+          </button>
+
+          <!-- Target Date Toggle -->
+          <div class="flex items-center shrink-0" @click.stop>
+            <div class="inline-flex rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 p-0.5">
+              <div class="relative group/cf">
+                <button
+                  class="px-3 py-1 rounded-md text-xs font-medium transition-all duration-150"
+                  :disabled="!hasCodeFreezeDate"
+                  :class="!hasCodeFreezeDate
+                    ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                    : monteCarloTarget === 'codeFreeze'
+                      ? 'bg-white dark:bg-gray-700 text-blue-700 dark:text-blue-300 shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-600/60'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+                  @click="monteCarloTarget = 'codeFreeze'"
+                >
+                  Code Freeze
+                </button>
+                <div v-if="!hasCodeFreezeDate" class="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover/cf:flex z-10">
+                  <div class="whitespace-nowrap rounded-md bg-gray-900 dark:bg-gray-700 px-2.5 py-1.5 text-[11px] font-medium text-white shadow-lg">
+                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-gray-900 dark:border-b-gray-700" />
+                    No code freeze date available
+                  </div>
+                </div>
+              </div>
+              <div class="relative group/ga">
+                <button
+                  class="px-3 py-1 rounded-md text-xs font-medium transition-all duration-150"
+                  :disabled="!hasGaDate"
+                  :class="!hasGaDate
+                    ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                    : monteCarloTarget === 'ga'
+                      ? 'bg-white dark:bg-gray-700 text-purple-700 dark:text-purple-300 shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-600/60'
+                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+                  @click="monteCarloTarget = 'ga'"
+                >
+                  GA
+                </button>
+                <div v-if="!hasGaDate" class="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover/ga:flex z-10">
+                  <div class="whitespace-nowrap rounded-md bg-gray-900 dark:bg-gray-700 px-2.5 py-1.5 text-[11px] font-medium text-white shadow-lg">
+                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-gray-900 dark:border-b-gray-700" />
+                    No GA date available
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-if="showMonteCarlo" class="px-4 pb-4 border-t border-gray-100 dark:border-gray-800">
+          <div class="mt-3 mb-4 rounded-lg bg-gray-50/80 dark:bg-gray-800/40 border border-gray-200/60 dark:border-gray-700/40 px-4 py-3 text-xs text-gray-600 dark:text-gray-400 leading-relaxed space-y-1.5">
+            <p>
+              This forecast runs <span class="font-semibold text-gray-700 dark:text-gray-300">1,000 Monte Carlo simulations</span> to probabilistically predict when all remaining work for this release will be completed.
+            </p>
+            <p>
+              <span class="font-medium text-gray-700 dark:text-gray-300">Inputs:</span>
+              <span class="font-semibold text-gray-700 dark:text-gray-300">{{ releaseMonteCarloInputs.notDoneCount }}</span> not-done issues (To-Do + In-Progress) as the scope, and the aggregated historical
+              <span class="font-semibold text-gray-700 dark:text-gray-300">{{ releaseMonteCarloInputs.totalVelocity }} issues / 14 days</span> throughput from contributing component teams as the delivery rate, measured against the
+              <template v-if="releaseMonteCarloInputs.activeTarget === 'codeFreeze'">
+                code freeze date of <span class="font-semibold text-gray-700 dark:text-gray-300">{{ formatDueDate(releaseMonteCarloInputs.codeFreezeDate) }}</span>
+                (GA: {{ formatDueDate(releaseMonteCarloInputs.releaseDate) }}).
+              </template>
+              <template v-else>
+                GA date of <span class="font-semibold text-gray-700 dark:text-gray-300">{{ formatDueDate(releaseMonteCarloInputs.releaseDate) }}</span><template v-if="releaseMonteCarloInputs.codeFreezeDate">
+                (code freeze: {{ formatDueDate(releaseMonteCarloInputs.codeFreezeDate) }})</template>.
+              </template>
+            </p>
+            <p>
+              Each iteration samples a random completion timeline using the throughput rate with natural variance (Gamma distribution), producing a distribution of likely finish dates. The histogram below shows how often each date range appeared, and the confidence markers indicate when delivery is statistically likely.
+            </p>
+          </div>
+          <MonteCarloChart
+            :not-done-count="releaseMonteCarloInputs.notDoneCount"
+            :velocity="releaseMonteCarloInputs.totalVelocity"
+            :due-date="releaseMonteCarloInputs.dueDate"
+            :deadline-label="releaseMonteCarloInputs.activeTarget === 'codeFreeze' ? 'Code Freeze' : 'GA'"
+          />
+        </div>
+      </div>
     </template>
   </div>
 </template>
 
 <script setup>
-import { computed, ref, reactive } from 'vue'
+import { computed, ref, reactive, watch } from 'vue'
 import { useReleaseAnalysis } from '../composables/useReleaseAnalysis'
+import MonteCarloChart from '../components/MonteCarloChart.vue'
 
 const STRATEGIC_TYPES = new Set(['feature', 'initiative', 'spike'])
 
@@ -361,6 +463,74 @@ const selectedRelease = computed(() => {
   if (!analysis.value?.releases) return null
   return analysis.value.releases.find(r => r.releaseNumber === activeRelease.value) || null
 })
+
+const showMonteCarlo = ref(true)
+const monteCarloTarget = ref('codeFreeze')
+
+// Reset target when release changes — prefer code freeze when available
+watch(selectedRelease, (release) => {
+  if (release?.codeFreezeDate) monteCarloTarget.value = 'codeFreeze'
+  else if (release?.dueDate) monteCarloTarget.value = 'ga'
+})
+
+const hasCodeFreezeDate = computed(() => !!selectedRelease.value?.codeFreezeDate)
+const hasGaDate = computed(() => !!selectedRelease.value?.dueDate)
+
+const releaseMonteCarloInputs = computed(() => {
+  const release = selectedRelease.value
+  if (!release?.issues?.length) return null
+
+  const cfDate = release.codeFreezeDate || null
+  const gaDate = release.dueDate || null
+
+  let activeTarget = monteCarloTarget.value
+  if (activeTarget === 'codeFreeze' && !cfDate) activeTarget = 'ga'
+  if (activeTarget === 'ga' && !gaDate) activeTarget = 'codeFreeze'
+
+  const deadline = activeTarget === 'codeFreeze' ? cfDate : gaDate
+  if (!deadline) return null
+
+  let notDoneCount = 0
+  const componentNames = new Set()
+
+  for (const issue of release.issues) {
+    if (issue.statusBucket !== 'done') notDoneCount++
+    const comps = issue.components?.length ? issue.components : ['(No component)']
+    for (const c of comps) componentNames.add(c)
+  }
+
+  const totalVelocity = lookupHistoricalVelocity([...componentNames])
+
+  return {
+    notDoneCount,
+    totalVelocity,
+    dueDate: deadline,
+    releaseDate: gaDate,
+    codeFreezeDate: cfDate,
+    activeTarget
+  }
+})
+
+/**
+ * Computes calendar days from today to the given ISO date string.
+ * Returns 0 if the date is in the past or invalid.
+ */
+function daysUntil(isoDate) {
+  if (!isoDate) return 0
+  const target = new Date(isoDate + 'T00:00:00')
+  if (isNaN(target.getTime())) return 0
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return Math.max(0, Math.ceil((target - today) / (1000 * 60 * 60 * 24)))
+}
+
+/**
+ * Returns the effective deadline date for the Component Breakdown tab.
+ * Uses codeFreezeDate when available, otherwise falls back to dueDate.
+ */
+function effectiveDeadline(release) {
+  return release?.codeFreezeDate || release?.dueDate || null
+}
 
 const FORECAST_WINDOW = 14
 
@@ -461,7 +631,7 @@ const projectGroups = computed(() => {
   const release = selectedRelease.value
   if (!release?.issues?.length) return []
 
-  const daysRemaining = release.daysRemaining ?? 0
+  const daysRemaining = daysUntil(effectiveDeadline(release))
 
   // Global index: which issue keys are strategic items in this release?
   const strategicMap = {}
@@ -664,6 +834,12 @@ function formatDateTime(iso) {
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return iso
   return d.toLocaleString()
+}
+
+function formatDueDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00')
+  if (Number.isNaN(d.getTime())) return dateStr
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 

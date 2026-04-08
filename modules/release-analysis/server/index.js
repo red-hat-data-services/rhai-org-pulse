@@ -272,7 +272,8 @@ async function fetchOpenReleases(storage, config) {
       .map(r => ({
         productName: r.productName || r.product_name || r.product || r.product_shortname || '',
         releaseNumber: r.releaseNumber || r.release_number || r.name || '',
-        dueDate: toIsoDate(r.dueDate || r.due_date || r.gaDate || r.ga_date || r.date_finish || r.date_start)
+        dueDate: toIsoDate(r.dueDate || r.due_date || r.gaDate || r.ga_date || r.date_finish || r.date_start),
+        codeFreezeDate: toIsoDate(r.codeFreezeDate || r.code_freeze_date || r.codeFreeze || r.code_freeze) || null
       }))
       .filter(r => r.productName && r.releaseNumber && r.dueDate)
     storage.writeToStorage('release-analysis/product-pages-releases-cache.json', {
@@ -421,7 +422,8 @@ async function fetchUnreleasedJiraFixVersions(config) {
   const releases = [...releaseMap.values()].map(r => ({
     productName: `${r.productName} (${[...r._projects].sort().join(', ')})`,
     releaseNumber: r.releaseNumber,
-    dueDate: r.dueDate
+    dueDate: r.dueDate,
+    codeFreezeDate: r.codeFreezeDate || null
   }))
   return { releases, warnings }
 }
@@ -436,7 +438,8 @@ function enrichJiraReleasesWithProductPages(jiraReleases, productPagesReleases) 
     return {
       productName: match?.productName || r.productName,
       releaseNumber: r.releaseNumber,
-      dueDate: r.dueDate || match?.dueDate || null
+      dueDate: r.dueDate || match?.dueDate || null,
+      codeFreezeDate: match?.codeFreezeDate || r.codeFreezeDate || null
     }
   })
 }
@@ -463,6 +466,7 @@ function buildAnalysis(releases, issues, fieldMeta, config) {
       productName: r.productName,
       releaseNumber: r.releaseNumber,
       dueDate: r.dueDate,
+      codeFreezeDate: r.codeFreezeDate || null,
       teams: {},
       issues: [],
       /**
@@ -1190,7 +1194,8 @@ module.exports = function registerRoutes(router, context) {
       const normalized = releases.map(r => ({
         productName: r.productName,
         releaseNumber: r.releaseNumber,
-        dueDate: toIsoDate(r.dueDate)
+        dueDate: toIsoDate(r.dueDate),
+        codeFreezeDate: toIsoDate(r.codeFreezeDate) || null
       })).filter(r => r.productName && r.releaseNumber && r.dueDate)
 
       if (normalized.length === 0) {
