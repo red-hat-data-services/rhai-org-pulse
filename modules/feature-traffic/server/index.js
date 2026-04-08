@@ -77,8 +77,8 @@ module.exports = function registerRoutes(router, context) {
   router.get('/features/:key', function(req, res) {
     const key = req.params.key.toUpperCase();
 
-    // Validate key format
-    if (!/^RHAISTRAT-\d+$/.test(key)) {
+    // Validate key format (RHAISTRAT in production, TEST* in demo mode)
+    if (!/^[A-Z][A-Z0-9]+-\d+$/.test(key)) {
       return res.status(400).json({ error: 'Invalid feature key format' });
     }
 
