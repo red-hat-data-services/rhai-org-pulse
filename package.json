@@ -16,6 +16,7 @@
     "prepare": "husky || true"
   },
   "dependencies": {
+    "adm-zip": "^0.5.17",
     "chart.js": "^4.4.7",
     "express": "^5.2.1",
     "googleapis": "^171.4.0",

@@ -29,6 +29,7 @@ npm run dev:full       # Starts Vite (5173) + Express (3001)
 | `PRODUCT_PAGES_CLIENT_ID` | OAuth client ID for Product Pages (production). Mutually exclusive with `PRODUCT_PAGES_TOKEN`. |
 | `PRODUCT_PAGES_CLIENT_SECRET` | OAuth client secret for Product Pages (production). Used with `PRODUCT_PAGES_CLIENT_ID`. |
 | `PRODUCT_PAGES_TOKEN` | Personal bearer token for Product Pages (local dev fallback). Used when OAuth env vars are not set. |
+| `FEATURE_TRAFFIC_GITLAB_TOKEN` | GitLab PAT with `read_api` scope for feature-traffic pipeline. Overrides `GITLAB_TOKEN` for CI artifact fetching. |
 | `DEMO_MODE` / `VITE_DEMO_MODE` | Set both to `true` to run with fixture data (no credentials needed) |
 
 ### Commands
@@ -127,7 +128,7 @@ Deployed to OpenShift via ArgoCD. Full deployment guide: `deploy/OPENSHIFT.md`.
 Overlays: `deploy/openshift/overlays/dev/` (namespace: `team-tracker`), `deploy/openshift/overlays/preprod/` (namespace: `ambient-code--team-tracker`), and `deploy/openshift/overlays/prod/`.
 
 Secrets (created manually on cluster, not in git):
-- `team-tracker-secrets`: `JIRA_EMAIL`, `JIRA_TOKEN`, `GITHUB_TOKEN` (optional), `GITLAB_TOKEN` (optional)
+- `team-tracker-secrets`: `JIRA_EMAIL`, `JIRA_TOKEN`, `GITHUB_TOKEN` (optional), `GITLAB_TOKEN` (optional), `FEATURE_TRAFFIC_GITLAB_TOKEN` (optional)
 - `frontend-proxy-cookie`: `session_secret`
 - `google-sa-key`: Google service account JSON key (mounted at `/etc/secrets/`)
 
@@ -272,6 +273,11 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/admin/roster-sync/config` — roster sync configuration
 - `/api/admin/roster-sync/status` — sync status (running/last result)
 - `/api/modules/release-analysis/product-pages/products` — Product Pages product list for autocomplete (admin, includes authStatus)
+- `/api/modules/feature-traffic/features` — list features with filters (status, version, health, sort)
+- `/api/modules/feature-traffic/features/:key` — full feature detail
+- `/api/modules/feature-traffic/versions` — unique fix versions
+- `/api/modules/feature-traffic/status` — data freshness, sync info, staleness warning
+- `/api/modules/feature-traffic/config` — fetch configuration (admin)
 
 **POST:**
 - `/api/tokens` — create a new API token (returns raw token once)
@@ -290,6 +296,8 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/admin/roster-sync/trigger` — trigger manual roster sync
 - `/api/allowlist` — update authorized email list
 - `/api/modules/team-tracker/snapshots/generate` — generate snapshots for all teams (admin)
+- `/api/modules/feature-traffic/refresh` — trigger manual data refresh from GitLab CI (admin)
+- `/api/modules/feature-traffic/config` — save fetch configuration (admin)
 
 **DELETE:**
 - `/api/tokens/:id` — revoke own API token

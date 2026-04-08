@@ -41,6 +41,14 @@ oc patch secret team-tracker-secrets \
   --type merge \
   -p "{\"stringData\":{\"GITLAB_TOKEN\":\"$(tr -d '\n' < ~/.your-gitlab-token)\"}}"
 
+# Optional: Feature Traffic GitLab token (for CI artifact fetching)
+# Only needed if the feature-traffic pipeline project requires a different token than GITLAB_TOKEN
+# Use a PAT with read_api scope
+oc patch secret team-tracker-secrets \
+  -n team-tracker \
+  --type merge \
+  -p "{\"stringData\":{\"FEATURE_TRAFFIC_GITLAB_TOKEN\":\"$(tr -d '\n' < ~/.your-ft-gitlab-token)\"}}"
+
 # Required: OAuth proxy cookie secret
 oc create secret generic frontend-proxy-cookie \
   -n team-tracker \

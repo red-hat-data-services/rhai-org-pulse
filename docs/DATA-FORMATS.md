@@ -359,6 +359,101 @@ Stores hashed API tokens for bearer-token authentication. Created on first token
 
 ---
 
+## Feature Traffic — Index (`data/feature-traffic/index.json`)
+
+Summary index of all tracked features, produced by the GitLab CI pipeline.
+
+```json
+{
+  "fetchedAt": "2026-04-08T06:00:00Z",
+  "schemaVersion": "1.0",
+  "featureCount": 42,
+  "features": [
+    {
+      "key": "RHAISTRAT-123",
+      "summary": "Implement model serving autoscaling",
+      "status": "In Progress",
+      "health": "green",
+      "completionPct": 75,
+      "epicCount": 5,
+      "issueCount": 30,
+      "blockerCount": 1,
+      "fixVersions": ["RHOAI 2.16", "RHOAI 2.17"]
+    }
+  ]
+}
+```
+
+## Feature Traffic — Feature Detail (`data/feature-traffic/features/{KEY}.json`)
+
+Per-feature detail file with epic breakdown.
+
+```json
+{
+  "key": "RHAISTRAT-123",
+  "summary": "Implement model serving autoscaling",
+  "status": "In Progress",
+  "health": "green",
+  "completionPct": 75,
+  "epicCount": 5,
+  "issueCount": 30,
+  "blockerCount": 1,
+  "fixVersions": ["RHOAI 2.16"],
+  "epics": [
+    {
+      "key": "RHOAIENG-456",
+      "summary": "Epic: Autoscaling backend",
+      "status": "In Progress",
+      "assignee": "Alice Smith",
+      "accountId": "5e41b8c03df51b0c937390ec"
+    }
+  ]
+}
+```
+
+## Feature Traffic — Config (`data/feature-traffic/config.json`)
+
+Admin-configurable settings for GitLab CI artifact fetching.
+
+```json
+{
+  "gitlabBaseUrl": "https://gitlab.com",
+  "projectPath": "redhat/rhel-ai/agentic-ci/feature-traffic",
+  "jobName": "fetch-traffic",
+  "branch": "main",
+  "artifactPath": "output",
+  "refreshIntervalHours": 12,
+  "enabled": false
+}
+```
+
+**Notes:**
+- `enabled` defaults to `false`. Module does nothing until an admin enables it in Settings.
+- `artifactPath` is the directory prefix stripped from zip entry paths (e.g., `output/index.json` becomes `index.json`).
+
+## Feature Traffic — Last Fetch (`data/feature-traffic/last-fetch.json`)
+
+Metadata from the most recent fetch attempt.
+
+```json
+{
+  "status": "success",
+  "timestamp": "2026-04-08T06:00:12Z",
+  "duration": 3400,
+  "fileCount": 43,
+  "warnings": []
+}
+```
+
+**Notes:**
+- `status` is one of: `"success"`, `"error"`, `"artifact_expired"`
+- `duration` is in milliseconds
+- `warnings` is only present when there were non-fatal issues (e.g., unparseable JSON files)
+- On error: `{ "status": "error", "message": "...", "timestamp": "..." }`
+- On artifact expiration: `{ "status": "artifact_expired", "message": "...", "timestamp": "..." }`
+
+---
+
 ## Fixture Rules
 
 The `fixtures/` directory provides read-only demo data used when `DEMO_MODE=true`. These rules prevent data format drift:

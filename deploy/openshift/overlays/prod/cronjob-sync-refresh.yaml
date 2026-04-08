@@ -159,6 +159,11 @@ spec:
                     echo "WARNING: Allocation Tracker refresh timed out (non-fatal, continuing)"
                   fi
 
+                  # Step 5: Trigger Feature Traffic refresh
+                  echo "=== Triggering Feature Traffic refresh ==="
+                  curl -sf -X POST "$BACKEND/api/modules/feature-traffic/refresh" \
+                    -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" || echo "Feature Traffic refresh skipped"
+
                   echo "=== Sync and refresh completed successfully ==="
               resources:
                 requests:

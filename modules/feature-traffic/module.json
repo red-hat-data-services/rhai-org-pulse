@@ -11,9 +11,17 @@
     "navItems": [
       { "id": "overview", "label": "Overview", "icon": "BarChart3", "default": true },
       { "id": "feature-detail", "label": "Feature", "icon": "GitBranch" }
-    ]
+    ],
+    "settingsComponent": "./client/components/FeatureTrafficSettings.vue"
   },
   "server": {
     "entry": "./server/index.js"
+  },
+  "export": {
+    "customHandler": true,
+    "files": [
+      { "path": "feature-traffic/index.json", "notes": "Feature index with summary metrics" },
+      { "path": "feature-traffic/features/*.json", "notes": "Per-feature detail files" }
+    ]
   }
 }

@@ -63,6 +63,12 @@ spec:
                   name: team-tracker-secrets
                   key: PRODUCT_PAGES_CLIENT_SECRET
                   optional: true
+            - name: FEATURE_TRAFFIC_GITLAB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: team-tracker-secrets
+                  key: FEATURE_TRAFFIC_GITLAB_TOKEN
+                  optional: true
             - name: PROXY_AUTH_SECRET
               valueFrom:
                 secretKeyRef:

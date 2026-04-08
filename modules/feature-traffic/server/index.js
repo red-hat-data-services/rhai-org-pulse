@@ -1,12 +1,23 @@
+const {
+  getToken,
+  getTokenSource,
+  loadConfig,
+  manualRefresh,
+  onConfigSave,
+  initScheduler
+} = require('./scheduler');
+
+const DATA_PREFIX = 'feature-traffic';
+
 module.exports = function registerRoutes(router, context) {
   const { storage } = context;
-
-  // Data lives in data/modules/feature-traffic-data/ (synced via git-static)
-  const DATA_PREFIX = 'modules/feature-traffic-data/latest';
 
   function readDataFile(relativePath) {
     return storage.readFromStorage(`${DATA_PREFIX}/${relativePath}`);
   }
+
+  // Initialize scheduler on module load
+  initScheduler(storage);
 
   // GET /features — list all features with summary metrics
   router.get('/features', function(req, res) {
@@ -16,7 +27,7 @@ module.exports = function registerRoutes(router, context) {
         fetchedAt: null,
         featureCount: 0,
         features: [],
-        message: 'No data available. Ensure the feature-traffic-data git-static module is configured and synced.'
+        message: 'No data available. Configure GitLab CI integration in Settings to fetch feature traffic data.'
       });
     }
 
@@ -82,13 +93,45 @@ module.exports = function registerRoutes(router, context) {
   // GET /status — data freshness and sync info
   router.get('/status', function(req, res) {
     const index = readDataFile('index.json');
-    res.json({
+    const lastFetch = readDataFile('last-fetch.json');
+    const config = loadConfig(storage);
+    const token = getToken();
+
+    const result = {
       dataAvailable: !!index,
       fetchedAt: index?.fetchedAt || null,
       schemaVersion: index?.schemaVersion || null,
       featureCount: index?.featureCount || 0,
-      dataSource: 'git-static module: feature-traffic-data'
-    });
+      dataSource: config.projectPath
+        ? `gitlab-ci (${config.projectPath})`
+        : 'gitlab-ci',
+      configured: config.enabled && !!token,
+      tokenSource: getTokenSource()
+    };
+
+    if (lastFetch) {
+      result.lastFetch = lastFetch;
+    }
+
+    // Staleness warning: data >48h old
+    if (lastFetch?.timestamp) {
+      const ageMs = Date.now() - new Date(lastFetch.timestamp).getTime();
+      const ageHours = ageMs / (1000 * 60 * 60);
+      if (ageHours > 48) {
+        result.staleWarning = true;
+        const ageDays = Math.floor(ageHours / 24);
+        result.dataAge = ageDays === 1 ? '1 day' : `${ageDays} days`;
+      }
+    }
+
+    // Next scheduled fetch estimate
+    if (config.enabled && token && config.refreshIntervalHours > 0) {
+      const lastTs = lastFetch?.timestamp ? new Date(lastFetch.timestamp).getTime() : Date.now();
+      const nextFetch = new Date(lastTs + config.refreshIntervalHours * 60 * 60 * 1000);
+      result.nextScheduledFetch = nextFetch.toISOString();
+    }
+
+    res.json(result);
   });
 
   // GET /versions — list unique fix versions across all features
@@ -108,15 +151,51 @@ module.exports = function registerRoutes(router, context) {
     res.json({ versions: [...versions].sort() });
   });
 
+  // POST /refresh — trigger manual data refresh (admin only)
+  router.post('/refresh', context.requireAdmin, async function(req, res) {
+    try {
+      const result = await manualRefresh(storage);
+      if (result.httpStatus === 429) {
+        return res.status(429).json({ status: result.status, retryAfter: result.retryAfter });
+      }
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ status: 'error', message: err.message });
+    }
+  });
+
+  // GET /config — get current fetch configuration (admin only)
+  router.get('/config', context.requireAdmin, function(req, res) {
+    const config = loadConfig(storage);
+    res.json({
+      ...config,
+      tokenConfigured: !!getToken(),
+      tokenSource: getTokenSource()
+    });
+  });
+
+  // POST /config — save fetch configuration (admin only)
+  router.post('/config', context.requireAdmin, async function(req, res) {
+    try {
+      const result = await onConfigSave(storage, req.body);
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ status: 'error', message: err.message });
+    }
+  });
+
   // Diagnostics
   if (context.registerDiagnostics) {
     context.registerDiagnostics(async function() {
       const index = readDataFile('index.json');
+      const lastFetch = readDataFile('last-fetch.json');
       return {
         dataAvailable: !!index,
         featureCount: index?.featureCount || 0,
         fetchedAt: index?.fetchedAt || null,
-        schemaVersion: index?.schemaVersion || null
+        schemaVersion: index?.schemaVersion || null,
+        lastFetchStatus: lastFetch?.status || null,
+        configured: loadConfig(storage).enabled && !!getToken()
       };
     });
   }
