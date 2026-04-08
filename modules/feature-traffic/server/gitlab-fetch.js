@@ -39,7 +39,8 @@ async function fetchArtifacts(storage, config, token) {
   const startTime = Date.now();
 
   const response = await _fetch(url, {
-    headers: { 'Authorization': `Bearer ${token}` }
+    headers: { 'Authorization': `Bearer ${token}` },
+    timeout: 30000
   });
 
   if (!response.ok) {

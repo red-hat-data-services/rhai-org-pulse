@@ -180,7 +180,10 @@ module.exports = function registerRoutes(router, context) {
       const result = await onConfigSave(storage, req.body);
       res.json(result);
     } catch (err) {
-      res.status(500).json({ status: 'error', message: err.message });
+      const status = err.message && (
+        err.message.includes('must be') || err.message.includes('must start')
+      ) ? 400 : 500;
+      res.status(status).json({ status: 'error', message: err.message });
     }
   });
 

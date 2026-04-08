@@ -199,7 +199,7 @@ describe('feature-traffic routes', () => {
         body: { gitlabBaseUrl: 'http://internal-service.svc.cluster.local' }
       }, res)
 
-      expect(res._status).toBe(500)
+      expect(res._status).toBe(400)
       expect(res._json.message).toContain('https://')
 
       stopScheduler()
@@ -213,15 +213,15 @@ describe('feature-traffic routes', () => {
 
       const res1 = makeRes()
       await handler({ body: { refreshIntervalHours: 0 } }, res1)
-      expect(res1._status).toBe(500)
+      expect(res1._status).toBe(400)
 
       const res2 = makeRes()
       await handler({ body: { refreshIntervalHours: 999 } }, res2)
-      expect(res2._status).toBe(500)
+      expect(res2._status).toBe(400)
 
       const res3 = makeRes()
       await handler({ body: { refreshIntervalHours: 'abc' } }, res3)
-      expect(res3._status).toBe(500)
+      expect(res3._status).toBe(400)
 
       stopScheduler()
     })
@@ -233,7 +233,7 @@ describe('feature-traffic routes', () => {
       const handler = r._routes.post['/config'].at(-1)
       const res = makeRes()
       await handler({ body: { projectPath: 123 } }, res)
-      expect(res._status).toBe(500)
+      expect(res._status).toBe(400)
       expect(res._json.message).toContain('projectPath')
 
       stopScheduler()
@@ -246,7 +246,7 @@ describe('feature-traffic routes', () => {
       const handler = r._routes.post['/config'].at(-1)
       const res = makeRes()
       await handler({ body: { enabled: 'yes' } }, res)
-      expect(res._status).toBe(500)
+      expect(res._status).toBe(400)
       expect(res._json.message).toContain('enabled')
 
       stopScheduler()
