@@ -198,13 +198,14 @@ const histogram = computed(() => {
   const binCount = Math.max(1, Math.ceil((lastBin - firstBin) / binSize))
 
   const bins = []
+  const today = getToday()
   for (let i = 0; i < binCount; i++) {
     const dayStart = firstBin + i * binSize
     bins.push({
       dayStart,
       dayEnd: dayStart + binSize,
       count: 0,
-      label: formatShortDate(addDays(getToday(), dayStart + Math.floor(binSize / 2)))
+      label: formatShortDate(addDays(today, dayStart + Math.floor(binSize / 2)))
     })
   }
 

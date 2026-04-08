@@ -427,7 +427,7 @@
 </template>
 
 <script setup>
-import { computed, ref, reactive } from 'vue'
+import { computed, ref, reactive, watch } from 'vue'
 import { useReleaseAnalysis } from '../composables/useReleaseAnalysis'
 import MonteCarloChart from '../components/MonteCarloChart.vue'
 
@@ -466,6 +466,12 @@ const selectedRelease = computed(() => {
 
 const showMonteCarlo = ref(true)
 const monteCarloTarget = ref('codeFreeze')
+
+// Reset target when release changes — prefer code freeze when available
+watch(selectedRelease, (release) => {
+  if (release?.codeFreezeDate) monteCarloTarget.value = 'codeFreeze'
+  else if (release?.dueDate) monteCarloTarget.value = 'ga'
+})
 
 const hasCodeFreezeDate = computed(() => !!selectedRelease.value?.codeFreezeDate)
 const hasGaDate = computed(() => !!selectedRelease.value?.dueDate)
