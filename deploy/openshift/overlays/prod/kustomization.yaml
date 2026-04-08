@@ -8,10 +8,10 @@ resources:
 - cronjob-sync-refresh.yaml
 
 configMapGenerator:
-- name: team-tracker-config
-  behavior: merge
+- behavior: merge
   literals:
   - API_PUBLIC_URL=https://api-team-tracker.apps.int.spoke.prod.us-west-2.aws.paas.redhat.com
+  name: team-tracker-config
 
 patches:
 - path: route-patch.yaml
@@ -19,6 +19,6 @@ patches:
 
 images:
 - name: quay.io/org-pulse/team-tracker-backend
-  newTag: bba3ffc825a840004ca706d5b3eacd9bfe8f685d
+  newTag: 0b1654e4f39826f29ada96f32b6641ff1456a160
 - name: quay.io/org-pulse/team-tracker-frontend
   newTag: 0e507261347cfb7953f7ddf1538ace9675a1cb35
