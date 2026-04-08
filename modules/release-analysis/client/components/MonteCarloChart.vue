@@ -5,35 +5,45 @@
     </div>
 
     <template v-else>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div class="rounded-lg border px-4 py-3" :class="pCardClass">
-          <p class="text-[11px] font-medium uppercase tracking-wider mb-1" :class="pLabelClass">
-            Probability at {{ props.deadlineLabel }}
-          </p>
-          <p class="text-2xl font-bold tabular-nums" :class="pValueClass">{{ sim.pAtDeadline }}%</p>
-          <p class="text-xs mt-0.5" :class="pSubClass">{{ formatDate(props.dueDate) }}</p>
-        </div>
-
-        <div class="rounded-lg border border-amber-200 dark:border-amber-700/50 bg-amber-50/60 dark:bg-amber-900/20 px-4 py-3">
-          <p class="text-[11px] font-medium uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-1">85% Confidence</p>
-          <p class="text-2xl font-bold text-amber-700 dark:text-amber-300 tabular-nums">{{ formatDate(sim.p85Date) }}</p>
-          <p class="text-xs text-amber-500/80 dark:text-amber-500/60 mt-0.5">{{ daysLabel(sim.p85Days) }}</p>
-        </div>
-
-        <div class="rounded-lg border border-teal-200 dark:border-teal-700/50 bg-teal-50/60 dark:bg-teal-900/20 px-4 py-3">
-          <p class="text-[11px] font-medium uppercase tracking-wider text-teal-600 dark:text-teal-400 mb-1">95% Confidence</p>
-          <p class="text-2xl font-bold text-teal-700 dark:text-teal-300 tabular-nums">{{ formatDate(sim.p95Date) }}</p>
-          <p class="text-xs text-teal-500/80 dark:text-teal-500/60 mt-0.5">{{ daysLabel(sim.p95Days) }}</p>
-        </div>
+      <div v-if="!sim" class="flex items-center justify-center py-8">
+        <svg class="animate-spin h-5 w-5 text-indigo-400 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+        </svg>
+        <span class="text-sm text-gray-400 dark:text-gray-500">Running simulation…</span>
       </div>
 
-      <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/60 p-3" style="height: 320px;">
-        <Bar :data="chartData" :options="chartOptions" :plugins="[markerPlugin]" />
-      </div>
+      <template v-else>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="rounded-lg border px-4 py-3" :class="pCardClass">
+            <p class="text-[11px] font-medium uppercase tracking-wider mb-1" :class="pLabelClass">
+              Probability at {{ props.deadlineLabel }}
+            </p>
+            <p class="text-2xl font-bold tabular-nums" :class="pValueClass">{{ sim.pAtDeadline }}%</p>
+            <p class="text-xs mt-0.5" :class="pSubClass">{{ formatDate(props.dueDate) }}</p>
+          </div>
 
-      <p class="text-[10px] text-gray-400 dark:text-gray-500 text-center">
-        {{ ITERATIONS.toLocaleString() }} Monte Carlo simulations · Throughput: {{ props.velocity }} issues / 14d · Remaining: {{ props.notDoneCount }} issues
-      </p>
+          <div class="rounded-lg border border-amber-200 dark:border-amber-700/50 bg-amber-50/60 dark:bg-amber-900/20 px-4 py-3">
+            <p class="text-[11px] font-medium uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-1">85% Confidence</p>
+            <p class="text-2xl font-bold text-amber-700 dark:text-amber-300 tabular-nums">{{ formatDate(sim.p85Date) }}</p>
+            <p class="text-xs text-amber-500/80 dark:text-amber-500/60 mt-0.5">{{ daysLabel(sim.p85Days) }}</p>
+          </div>
+
+          <div class="rounded-lg border border-teal-200 dark:border-teal-700/50 bg-teal-50/60 dark:bg-teal-900/20 px-4 py-3">
+            <p class="text-[11px] font-medium uppercase tracking-wider text-teal-600 dark:text-teal-400 mb-1">95% Confidence</p>
+            <p class="text-2xl font-bold text-teal-700 dark:text-teal-300 tabular-nums">{{ formatDate(sim.p95Date) }}</p>
+            <p class="text-xs text-teal-500/80 dark:text-teal-500/60 mt-0.5">{{ daysLabel(sim.p95Days) }}</p>
+          </div>
+        </div>
+
+        <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/60 p-3" style="height: 320px;">
+          <Bar :data="chartData" :options="chartOptions" :plugins="[markerPlugin]" />
+        </div>
+
+        <p class="text-[10px] text-gray-400 dark:text-gray-500 text-center">
+          {{ ITERATIONS.toLocaleString() }} Monte Carlo simulations · Throughput: {{ props.velocity }} issues / 14d · Remaining: {{ props.notDoneCount }} issues
+        </p>
+      </template>
     </template>
   </div>
 </template>
