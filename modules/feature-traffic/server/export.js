@@ -25,7 +25,8 @@ module.exports = async function featureTrafficExport(addFile, storage, mapping) 
     const feature = readFromStorage(`${DATA_PREFIX}/features/${fileName}`);
     if (!feature) continue;
     const anonymized = anonymizeFeatureDetail(feature, mapping);
-    addFile(`${DATA_PREFIX}/features/${fileName}`, anonymized);
+    const anonymizedFileName = anonymized.key ? `${anonymized.key}.json` : fileName;
+    addFile(`${DATA_PREFIX}/features/${anonymizedFileName}`, anonymized);
   }
 };
 

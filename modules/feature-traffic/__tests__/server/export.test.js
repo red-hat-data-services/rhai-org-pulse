@@ -76,7 +76,7 @@ describe('featureTrafficExport', () => {
 
     await featureTrafficExport(addFile, storage, mapping)
 
-    const featureFile = files.find(f => f.path === 'feature-traffic/features/RHAISTRAT-1.json')
+    const featureFile = files.find(f => f.path.startsWith('feature-traffic/features/') && f.path !== 'feature-traffic/features/RHAISTRAT-1.json')
     expect(featureFile).toBeDefined()
     expect(featureFile.data.key).not.toBe('RHAISTRAT-1')
     expect(featureFile.data.epics[0].key).not.toBe('EPIC-1')
