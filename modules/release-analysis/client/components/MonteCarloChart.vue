@@ -39,7 +39,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, shallowRef, watch, onUnmounted } from 'vue'
 import { Bar } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -140,8 +140,11 @@ const noSimReason = computed(() => {
   return 'Missing release due date.'
 })
 
-const sim = computed(() => {
-  if (!canSimulate.value) return null
+const sim = shallowRef(null)
+let pendingIdleId = null
+
+function runSimulation() {
+  if (!canSimulate.value) { sim.value = null; return }
 
   const scale = 14 / props.velocity
   const n = props.notDoneCount
@@ -162,7 +165,7 @@ const sim = computed(() => {
   const p85Days = completionDays[Math.ceil(ITERATIONS * 0.85) - 1]
   const p95Days = completionDays[Math.ceil(ITERATIONS * 0.95) - 1]
 
-  return {
+  sim.value = {
     completionDays,
     pAtDeadline,
     daysToDeadline,
@@ -173,7 +176,25 @@ const sim = computed(() => {
     minDays: completionDays[0],
     maxDays: completionDays[ITERATIONS - 1]
   }
-})
+}
+
+const scheduleIdle = typeof requestIdleCallback === 'function'
+  ? (fn) => requestIdleCallback(fn)
+  : (fn) => setTimeout(fn, 0)
+const cancelIdle = typeof cancelIdleCallback === 'function'
+  ? (id) => cancelIdleCallback(id)
+  : (id) => clearTimeout(id)
+
+watch(
+  () => [props.notDoneCount, props.velocity, props.dueDate],
+  () => {
+    if (pendingIdleId != null) cancelIdle(pendingIdleId)
+    pendingIdleId = scheduleIdle(() => { pendingIdleId = null; runSimulation() })
+  },
+  { immediate: true }
+)
+
+onUnmounted(() => { if (pendingIdleId != null) cancelIdle(pendingIdleId) })
 
 // ── Histogram binning ──
 
