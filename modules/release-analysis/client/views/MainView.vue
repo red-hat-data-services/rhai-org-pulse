@@ -46,18 +46,125 @@
           <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mt-2 max-w-3xl">
             {{ riskLegendText }}
           </p>
-          <div class="flex gap-1 mt-4 border-b border-gray-200 dark:border-gray-700">
-            <button
-              v-for="tab in tabs"
-              :key="tab.key"
-              class="px-4 py-2 text-sm font-medium transition-colors -mb-px"
-              :class="activeTab === tab.key
-                ? 'border-b-2 border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100'
-                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-b-2 hover:border-gray-300 dark:hover:border-gray-600'"
-              @click="activeTab = tab.key"
-            >
-              {{ tab.label }}
-            </button>
+          <div class="flex flex-wrap items-center gap-3 mt-4">
+            <div
+              v-if="productDropdownOpen || versionDropdownOpen"
+              class="fixed inset-0 z-10"
+              @click="productDropdownOpen = false; versionDropdownOpen = false"
+            />
+
+            <!-- Product Filter -->
+            <div class="relative z-20">
+              <button
+                class="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors"
+                :class="selectedProducts.size
+                  ? 'border-indigo-300 dark:border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
+                  : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                @click="productDropdownOpen = !productDropdownOpen; versionDropdownOpen = false"
+              >
+                <svg class="h-4 w-4 shrink-0 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                </svg>
+                <span>Product</span>
+                <span
+                  v-if="selectedProducts.size"
+                  class="inline-flex items-center justify-center h-5 min-w-[1.25rem] rounded-full bg-indigo-600 dark:bg-indigo-500 text-white text-[10px] font-bold px-1.5"
+                >{{ selectedProducts.size }}</span>
+                <svg class="h-3.5 w-3.5 text-gray-400 transition-transform" :class="{ 'rotate-180': productDropdownOpen }" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                </svg>
+              </button>
+              <div
+                v-if="productDropdownOpen"
+                class="absolute left-0 top-full mt-1.5 w-56 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg ring-1 ring-black/5 dark:ring-white/5 overflow-hidden"
+              >
+                <div class="flex items-center justify-between px-3 py-2 border-b border-gray-100 dark:border-gray-800">
+                  <span class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Products</span>
+                  <button
+                    v-if="selectedProducts.size"
+                    class="text-[11px] font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300"
+                    @click="selectedProducts.clear()"
+                  >Clear All</button>
+                </div>
+                <div class="max-h-52 overflow-y-auto py-1">
+                  <label
+                    v-for="product in visibleProducts"
+                    :key="product"
+                    class="flex items-center gap-2.5 px-3 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      :checked="selectedProducts.has(product)"
+                      class="h-3.5 w-3.5 rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500"
+                      @change="toggleProduct(product)"
+                    />
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300 uppercase">{{ product }}</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Version Filter -->
+            <div class="relative z-20">
+              <button
+                class="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors"
+                :class="selectedVersions.size
+                  ? 'border-violet-300 dark:border-violet-600 bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300'
+                  : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
+                @click="versionDropdownOpen = !versionDropdownOpen; productDropdownOpen = false"
+              >
+                <svg class="h-4 w-4 shrink-0 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" />
+                </svg>
+                <span>Version</span>
+                <span
+                  v-if="selectedVersions.size"
+                  class="inline-flex items-center justify-center h-5 min-w-[1.25rem] rounded-full bg-violet-600 dark:bg-violet-500 text-white text-[10px] font-bold px-1.5"
+                >{{ selectedVersions.size }}</span>
+                <svg class="h-3.5 w-3.5 text-gray-400 transition-transform" :class="{ 'rotate-180': versionDropdownOpen }" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+                </svg>
+              </button>
+              <div
+                v-if="versionDropdownOpen"
+                class="absolute left-0 top-full mt-1.5 w-56 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg ring-1 ring-black/5 dark:ring-white/5 overflow-hidden"
+              >
+                <div class="flex items-center justify-between px-3 py-2 border-b border-gray-100 dark:border-gray-800">
+                  <span class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Versions</span>
+                  <button
+                    v-if="selectedVersions.size"
+                    class="text-[11px] font-medium text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-300"
+                    @click="selectedVersions.clear()"
+                  >Clear All</button>
+                </div>
+                <div class="max-h-52 overflow-y-auto py-1">
+                  <label
+                    v-for="version in visibleVersions"
+                    :key="version"
+                    class="flex items-center gap-2.5 px-3 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors"
+                  >
+                    <input
+                      type="checkbox"
+                      :checked="selectedVersions.has(version)"
+                      class="h-3.5 w-3.5 rounded border-gray-300 dark:border-gray-600 text-violet-600 focus:ring-violet-500"
+                      @change="toggleVersion(version)"
+                    />
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ version }}</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Active filter pills + summary -->
+            <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+              <span>{{ filteredReleases.length }} of {{ allReleases.length }} releases</span>
+              <button
+                v-if="selectedProducts.size || selectedVersions.size"
+                class="text-xs font-medium text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                @click="selectedProducts.clear(); selectedVersions.clear()"
+              >Reset filters</button>
+            </div>
           </div>
         </div>
 
@@ -311,6 +418,92 @@
               </table>
             </div>
           </details>
+
+          <details
+            v-if="getMonteCarloInputs(release)"
+            class="group rounded-lg border border-gray-200 dark:border-gray-700 open:bg-gray-50/50 dark:open:bg-gray-800/30"
+          >
+            <summary class="cursor-pointer select-none px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 list-none flex items-center gap-2">
+              <span class="text-gray-400 group-open:rotate-90 transition-transform">▸</span>
+              <span>Forecasting using Monte Carlo Simulation</span>
+              <span class="text-xs font-normal text-gray-500 dark:text-gray-400">
+                {{ getMonteCarloInputs(release).notDoneCount }} remaining · {{ getMonteCarloInputs(release).totalVelocity }} issues/14d throughput
+              </span>
+            </summary>
+            <div class="px-3 pb-3 border-t border-gray-100 dark:border-gray-800">
+              <div class="flex items-center justify-between gap-3 mt-3 mb-3">
+                <div class="inline-flex rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 p-0.5">
+                  <div class="relative group/cf">
+                    <button
+                      class="px-3 py-1 rounded-md text-xs font-medium transition-all duration-150"
+                      :disabled="!release.codeFreezeDate"
+                      :class="!release.codeFreezeDate
+                        ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                        : getMcTarget(release.releaseNumber) === 'codeFreeze'
+                          ? 'bg-white dark:bg-gray-700 text-blue-700 dark:text-blue-300 shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-600/60'
+                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+                      @click="setMcTarget(release.releaseNumber, 'codeFreeze')"
+                    >
+                      Code Freeze
+                    </button>
+                    <div v-if="!release.codeFreezeDate" class="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover/cf:flex z-10">
+                      <div class="whitespace-nowrap rounded-md bg-gray-900 dark:bg-gray-700 px-2.5 py-1.5 text-[11px] font-medium text-white shadow-lg">
+                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-gray-900 dark:border-b-gray-700" />
+                        No code freeze date available
+                      </div>
+                    </div>
+                  </div>
+                  <div class="relative group/ga">
+                    <button
+                      class="px-3 py-1 rounded-md text-xs font-medium transition-all duration-150"
+                      :disabled="!release.dueDate"
+                      :class="!release.dueDate
+                        ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                        : getMcTarget(release.releaseNumber) === 'ga'
+                          ? 'bg-white dark:bg-gray-700 text-purple-700 dark:text-purple-300 shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-600/60'
+                          : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+                      @click="setMcTarget(release.releaseNumber, 'ga')"
+                    >
+                      GA
+                    </button>
+                    <div v-if="!release.dueDate" class="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover/ga:flex z-10">
+                      <div class="whitespace-nowrap rounded-md bg-gray-900 dark:bg-gray-700 px-2.5 py-1.5 text-[11px] font-medium text-white shadow-lg">
+                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-gray-900 dark:border-b-gray-700" />
+                        No GA date available
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="mb-4 rounded-lg bg-gray-50/80 dark:bg-gray-800/40 border border-gray-200/60 dark:border-gray-700/40 px-4 py-3 text-xs text-gray-600 dark:text-gray-400 leading-relaxed space-y-1.5">
+                <p>
+                  This forecast runs <span class="font-semibold text-gray-700 dark:text-gray-300">1,000 Monte Carlo simulations</span> to probabilistically predict when all remaining work for this release will be completed.
+                </p>
+                <p>
+                  <span class="font-medium text-gray-700 dark:text-gray-300">Inputs:</span>
+                  <span class="font-semibold text-gray-700 dark:text-gray-300">{{ getMonteCarloInputs(release).notDoneCount }}</span> not-done issues (To-Do + In-Progress) as the scope, and the aggregated historical
+                  <span class="font-semibold text-gray-700 dark:text-gray-300">{{ getMonteCarloInputs(release).totalVelocity }} issues / 14 days</span> throughput from contributing component teams as the delivery rate, measured against the
+                  <template v-if="getMonteCarloInputs(release).activeTarget === 'codeFreeze'">
+                    code freeze date of <span class="font-semibold text-gray-700 dark:text-gray-300">{{ formatDueDate(getMonteCarloInputs(release).codeFreezeDate) }}</span>
+                    (GA: {{ formatDueDate(getMonteCarloInputs(release).releaseDate) }}).
+                  </template>
+                  <template v-else>
+                    GA date of <span class="font-semibold text-gray-700 dark:text-gray-300">{{ formatDueDate(getMonteCarloInputs(release).releaseDate) }}</span><template v-if="getMonteCarloInputs(release).codeFreezeDate">
+                    (code freeze: {{ formatDueDate(getMonteCarloInputs(release).codeFreezeDate) }})</template>.
+                  </template>
+                </p>
+                <p>
+                  Each iteration samples a random completion timeline using the throughput rate with natural variance (Gamma distribution), producing a distribution of likely finish dates. The histogram below shows how often each date range appeared, and the confidence markers indicate when delivery is statistically likely.
+                </p>
+              </div>
+              <MonteCarloChart
+                :not-done-count="getMonteCarloInputs(release).notDoneCount"
+                :velocity="getMonteCarloInputs(release).totalVelocity"
+                :due-date="getMonteCarloInputs(release).dueDate"
+                :deadline-label="getMonteCarloInputs(release).activeTarget === 'codeFreeze' ? 'Code Freeze' : 'GA'"
+              />
+            </div>
+          </details>
         </article>
       </section>
     </template>
@@ -318,12 +511,156 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, reactive, watch } from 'vue'
 import { useReleaseAnalysis } from '../composables/useReleaseAnalysis'
+import MonteCarloChart from '../components/MonteCarloChart.vue'
 
 const { loading, error, analysis, refreshAnalysis } = useReleaseAnalysis()
 
-const activeTab = ref('all')
+// ── Monte Carlo state ──
+
+const mcTargets = reactive({})
+
+function getMcTarget(releaseNum) {
+  return mcTargets[releaseNum] || 'codeFreeze'
+}
+
+function setMcTarget(releaseNum, target) {
+  mcTargets[releaseNum] = target
+}
+
+function lookupHistoricalVelocity(componentNames) {
+  const cv = analysis.value?.componentVelocity || {}
+  let total = 0
+  const seen = new Set()
+  for (const name of componentNames) {
+    if (seen.has(name)) continue
+    seen.add(name)
+    const entry = cv[name]
+    if (entry) total += entry.velocity
+  }
+  return Math.round(total * 10) / 10
+}
+
+function getMonteCarloInputs(release) {
+  const issues = releaseIssues(release)
+  if (!issues.length) return null
+
+  const cfDate = release.codeFreezeDate || null
+  const gaDate = release.dueDate || null
+
+  let activeTarget = getMcTarget(release.releaseNumber)
+  if (activeTarget === 'codeFreeze' && !cfDate) activeTarget = 'ga'
+  if (activeTarget === 'ga' && !gaDate) activeTarget = 'codeFreeze'
+
+  const deadline = activeTarget === 'codeFreeze' ? cfDate : gaDate
+  if (!deadline) return null
+
+  let notDoneCount = 0
+  const componentNames = new Set()
+  for (const issue of issues) {
+    if (issue.statusBucket !== 'done') notDoneCount++
+    const comps = issue.components?.length ? issue.components : ['(No component)']
+    for (const c of comps) componentNames.add(c)
+  }
+
+  const totalVelocity = lookupHistoricalVelocity([...componentNames])
+
+  return {
+    notDoneCount,
+    totalVelocity,
+    dueDate: deadline,
+    releaseDate: gaDate,
+    codeFreezeDate: cfDate,
+    activeTarget
+  }
+}
+
+function formatDueDate(dateStr) {
+  const d = new Date(dateStr + 'T00:00:00')
+  if (isNaN(d.getTime())) return '—'
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+// ── Dual-filter state ──
+
+function extractProduct(releaseNumber) {
+  const s = (releaseNumber || '').toLowerCase()
+  const dash = s.indexOf('-')
+  return dash > 0 ? s.slice(0, dash) : s
+}
+
+function extractVersion(releaseNumber) {
+  const s = releaseNumber || ''
+  const dash = s.indexOf('-')
+  return dash > 0 ? s.slice(dash + 1) : s
+}
+
+const selectedProducts = reactive(new Set())
+const selectedVersions = reactive(new Set())
+const productDropdownOpen = ref(false)
+const versionDropdownOpen = ref(false)
+
+const allReleases = computed(() => analysis.value?.releases || [])
+
+const allProducts = computed(() =>
+  [...new Set(allReleases.value.map(r => extractProduct(r.releaseNumber)).filter(Boolean))].sort()
+)
+
+const allVersions = computed(() =>
+  [...new Set(allReleases.value.map(r => extractVersion(r.releaseNumber)).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+)
+
+const visibleProducts = computed(() => {
+  if (!selectedVersions.size) return allProducts.value
+  return [...new Set(
+    allReleases.value
+      .filter(r => selectedVersions.has(extractVersion(r.releaseNumber)))
+      .map(r => extractProduct(r.releaseNumber))
+      .filter(Boolean)
+  )].sort()
+})
+
+const visibleVersions = computed(() => {
+  if (!selectedProducts.size) return allVersions.value
+  return [...new Set(
+    allReleases.value
+      .filter(r => selectedProducts.has(extractProduct(r.releaseNumber)))
+      .map(r => extractVersion(r.releaseNumber))
+      .filter(Boolean)
+  )].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+})
+
+watch(visibleProducts, (available) => {
+  for (const p of [...selectedProducts]) {
+    if (!available.includes(p)) selectedProducts.delete(p)
+  }
+})
+
+watch(visibleVersions, (available) => {
+  for (const v of [...selectedVersions]) {
+    if (!available.includes(v)) selectedVersions.delete(v)
+  }
+})
+
+function toggleProduct(product) {
+  if (selectedProducts.has(product)) selectedProducts.delete(product)
+  else selectedProducts.add(product)
+}
+
+function toggleVersion(version) {
+  if (selectedVersions.has(version)) selectedVersions.delete(version)
+  else selectedVersions.add(version)
+}
+
+const filteredReleases = computed(() => {
+  return allReleases.value.filter(r => {
+    if (selectedProducts.size && !selectedProducts.has(extractProduct(r.releaseNumber))) return false
+    if (selectedVersions.size && !selectedVersions.has(extractVersion(r.releaseNumber))) return false
+    return true
+  })
+})
 
 const metricInfo = {
   remaining: 'Remaining = Total weighted points (story points or feature weight) for issues in To Do + Doing status. Formula: Σ weight(issue) where status ≠ Done.',
@@ -332,28 +669,6 @@ const metricInfo = {
   requiredPerDay: 'Required/day = The daily throughput rate needed to finish all remaining work by the due date. Formula: Remaining ÷ Days remaining. If days = 0 and work remains, this is ∞.',
   availablePerDay: 'Available/day = Historical daily throughput capacity for this team. Formula: Baseline per month ÷ 30. Baseline = P90 (or Avg) of monthly completed weighted points over the trailing window (default 180 days).'
 }
-
-const tabs = computed(() => {
-  const releases = analysis.value?.releases || []
-  const products = [...new Set(releases.map(r => {
-    const num = (r.releaseNumber || '').toLowerCase()
-    const dash = num.indexOf('-')
-    return dash > 0 ? num.slice(0, dash) : num
-  }).filter(Boolean))]
-  products.sort()
-  return [
-    { key: 'all', label: 'All' },
-    ...products.map(p => ({ key: p, label: p }))
-  ]
-})
-
-const filteredReleases = computed(() => {
-  if (!analysis.value?.releases) return []
-  if (activeTab.value === 'all') return analysis.value.releases
-  return analysis.value.releases.filter(r =>
-    (r.releaseNumber || '').toLowerCase().startsWith(activeTab.value)
-  )
-})
 
 const riskLegendText = computed(() => {
   const a = analysis.value

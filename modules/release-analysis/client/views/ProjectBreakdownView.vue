@@ -38,41 +38,171 @@
         </p>
       </div>
 
-      <!-- Release selector -->
-      <div class="flex items-center gap-3 flex-wrap">
-        <label for="release-select" class="text-sm font-medium text-gray-700 dark:text-gray-300 shrink-0">Release</label>
-        <select
-          id="release-select"
-          v-model="activeRelease"
-          class="block w-full max-w-md rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:focus:border-blue-400 dark:focus:ring-blue-400 appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%236b7280%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.23%207.21a.75.75%200%20011.06.02L10%2011.168l3.71-3.938a.75.75%200%20111.08%201.04l-4.25%204.5a.75.75%200%2001-1.08%200l-4.25-4.5a.75.75%200%2001.02-1.06z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E')] bg-[length:1.25rem] bg-[right_0.5rem_center] bg-no-repeat pr-9"
-        >
-          <option v-for="tab in releaseTabs" :key="tab.key" :value="tab.key">
-            {{ tab.label }} ({{ tab.issueCount }} issues)
-          </option>
-        </select>
-        <div v-if="selectedRelease" class="flex items-center gap-2 shrink-0">
-          <span v-if="selectedRelease.codeFreezeDate" class="inline-flex items-center gap-1.5 rounded-full border border-blue-200 dark:border-blue-700/50 bg-blue-50 dark:bg-blue-900/30 px-3 py-1 text-xs font-medium text-blue-700 dark:text-blue-300">
-            <span class="h-1.5 w-1.5 rounded-full bg-blue-500" />
-            Code Freeze: {{ formatDueDate(selectedRelease.codeFreezeDate) }}
-          </span>
-          <span class="inline-flex items-center gap-1.5 rounded-full border border-purple-200 dark:border-purple-700/50 bg-purple-50 dark:bg-purple-900/30 px-3 py-1 text-xs font-medium text-purple-700 dark:text-purple-300">
-            <span class="h-1.5 w-1.5 rounded-full bg-purple-500" />
-            Release: {{ formatDueDate(selectedRelease.dueDate) }}
+      <!-- Filters + Release selector -->
+      <div class="flex flex-wrap items-center gap-3">
+        <div
+          v-if="productDropdownOpen || versionDropdownOpen"
+          class="fixed inset-0 z-10"
+          @click="productDropdownOpen = false; versionDropdownOpen = false"
+        />
+
+        <!-- Product Filter -->
+        <div class="relative z-20">
+          <button
+            class="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors"
+            :class="selectedProducts.size
+              ? 'border-indigo-300 dark:border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
+              : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
+            @click="productDropdownOpen = !productDropdownOpen; versionDropdownOpen = false"
+          >
+            <svg class="h-4 w-4 shrink-0 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+            </svg>
+            <span>Product</span>
+            <span
+              v-if="selectedProducts.size"
+              class="inline-flex items-center justify-center h-5 min-w-[1.25rem] rounded-full bg-indigo-600 dark:bg-indigo-500 text-white text-[10px] font-bold px-1.5"
+            >{{ selectedProducts.size }}</span>
+            <svg class="h-3.5 w-3.5 text-gray-400 transition-transform" :class="{ 'rotate-180': productDropdownOpen }" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+            </svg>
+          </button>
+          <div
+            v-if="productDropdownOpen"
+            class="absolute left-0 top-full mt-1.5 w-56 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg ring-1 ring-black/5 dark:ring-white/5 overflow-hidden"
+          >
+            <div class="flex items-center justify-between px-3 py-2 border-b border-gray-100 dark:border-gray-800">
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Products</span>
+              <button
+                v-if="selectedProducts.size"
+                class="text-[11px] font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300"
+                @click="selectedProducts.clear()"
+              >Clear All</button>
+            </div>
+            <div class="max-h-52 overflow-y-auto py-1">
+              <label
+                v-for="product in visibleProducts"
+                :key="product"
+                class="flex items-center gap-2.5 px-3 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors"
+              >
+                <input
+                  type="checkbox"
+                  :checked="selectedProducts.has(product)"
+                  class="h-3.5 w-3.5 rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500"
+                  @change="toggleProduct(product)"
+                />
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300 uppercase">{{ product }}</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Version Filter -->
+        <div class="relative z-20">
+          <button
+            class="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors"
+            :class="selectedVersions.size
+              ? 'border-violet-300 dark:border-violet-600 bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300'
+              : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
+            @click="versionDropdownOpen = !versionDropdownOpen; productDropdownOpen = false"
+          >
+            <svg class="h-4 w-4 shrink-0 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" />
+            </svg>
+            <span>Version</span>
+            <span
+              v-if="selectedVersions.size"
+              class="inline-flex items-center justify-center h-5 min-w-[1.25rem] rounded-full bg-violet-600 dark:bg-violet-500 text-white text-[10px] font-bold px-1.5"
+            >{{ selectedVersions.size }}</span>
+            <svg class="h-3.5 w-3.5 text-gray-400 transition-transform" :class="{ 'rotate-180': versionDropdownOpen }" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
+            </svg>
+          </button>
+          <div
+            v-if="versionDropdownOpen"
+            class="absolute left-0 top-full mt-1.5 w-56 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg ring-1 ring-black/5 dark:ring-white/5 overflow-hidden"
+          >
+            <div class="flex items-center justify-between px-3 py-2 border-b border-gray-100 dark:border-gray-800">
+              <span class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Versions</span>
+              <button
+                v-if="selectedVersions.size"
+                class="text-[11px] font-medium text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-300"
+                @click="selectedVersions.clear()"
+              >Clear All</button>
+            </div>
+            <div class="max-h-52 overflow-y-auto py-1">
+              <label
+                v-for="version in visibleVersions"
+                :key="version"
+                class="flex items-center gap-2.5 px-3 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors"
+              >
+                <input
+                  type="checkbox"
+                  :checked="selectedVersions.has(version)"
+                  class="h-3.5 w-3.5 rounded border-gray-300 dark:border-gray-600 text-violet-600 focus:ring-violet-500"
+                  @change="toggleVersion(version)"
+                />
+                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ version }}</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+          <span>{{ filteredReleaseTabs.length }} of {{ releaseTabs.length }} releases</span>
+          <button
+            v-if="selectedProducts.size || selectedVersions.size"
+            class="text-xs font-medium text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+            @click="selectedProducts.clear(); selectedVersions.clear()"
+          >Reset filters</button>
+        </div>
+
+      </div>
+
+      <div v-if="!filteredReleases.length" class="text-sm text-gray-500 dark:text-gray-400">
+        No releases match the current filters.
+      </div>
+
+      <article
+        v-for="release in filteredReleases"
+        :key="release.releaseNumber"
+        class="rounded-xl border border-gray-200/80 dark:border-gray-700/80 bg-white dark:bg-gray-900/40 p-4 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_12px_rgba(0,0,0,0.04)] flex flex-col gap-4"
+      >
+        <!-- Release header -->
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-3">
+          <div class="flex items-center gap-3 min-w-0">
+            <p class="font-bold text-gray-900 dark:text-gray-100 text-base">{{ release.releaseNumber }}</p>
+            <span
+              v-if="release.codeFreezeDate"
+              class="inline-flex items-center gap-1.5 rounded-full border border-pink-200 dark:border-pink-700/50 bg-pink-50 dark:bg-pink-900/30 px-2.5 py-1 text-[11px] font-medium text-pink-700 dark:text-pink-300 shadow-sm"
+            >
+              <svg class="h-3.5 w-3.5 text-pink-500 dark:text-pink-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clip-rule="evenodd" /></svg>
+              Code Freeze · {{ formatDueDate(release.codeFreezeDate) }}
+            </span>
+            <span
+              class="inline-flex items-center gap-1.5 rounded-full border border-purple-200 dark:border-purple-700/50 bg-purple-50 dark:bg-purple-900/30 px-2.5 py-1 text-[11px] font-medium text-purple-700 dark:text-purple-300 shadow-sm"
+            >
+              <svg class="h-3.5 w-3.5 text-purple-500 dark:text-purple-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clip-rule="evenodd" /></svg>
+              Release · {{ formatDueDate(release.dueDate) }}
+            </span>
+          </div>
+          <span class="text-xs text-gray-500 dark:text-gray-400 shrink-0">
+            {{ release.issues?.length || 0 }} issues
           </span>
         </div>
-      </div>
 
-      <div v-if="!projectGroups.length" class="text-sm text-gray-500 dark:text-gray-400">
-        No issues found for the selected release.
-      </div>
+        <div v-if="!buildProjectGroups(release).length" class="text-sm text-gray-500 dark:text-gray-400">
+          No issues found for this release.
+        </div>
 
-      <!-- ═══ LAYER 1 — Project ═══ -->
-      <div class="space-y-3">
-        <div
-          v-for="project in projectGroups"
-          :key="project.projectKey"
-          class="rounded-xl border border-gray-200/80 dark:border-gray-700/80 bg-white dark:bg-gray-900/40 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_12px_rgba(0,0,0,0.04)] overflow-hidden"
-        >
+        <!-- ═══ LAYER 1 — Project ═══ -->
+        <div class="space-y-3">
+          <div
+            v-for="project in buildProjectGroups(release)"
+            :key="`${release.releaseNumber}::${project.projectKey}`"
+            class="rounded-xl border border-gray-200/80 dark:border-gray-700/80 bg-gray-50/50 dark:bg-gray-800/30 overflow-hidden"
+          >
           <button
             class="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-gray-50/60 dark:hover:bg-gray-800/40 transition-colors"
             @click="toggleProject(project.projectKey)"
@@ -325,103 +455,11 @@
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Monte Carlo Forecast -->
-      <div
-        v-if="releaseMonteCarloInputs"
-        class="rounded-xl border border-gray-200/80 dark:border-gray-700/80 bg-white dark:bg-gray-900/40 shadow-[0_1px_3px_rgba(0,0,0,0.06),0_4px_12px_rgba(0,0,0,0.04)] overflow-hidden"
-      >
-        <div class="flex items-center justify-between gap-3 px-4 py-3">
-          <button
-            class="flex items-center gap-2.5 text-left hover:opacity-80 transition-opacity"
-            @click="showMonteCarlo = !showMonteCarlo"
-          >
-            <span class="text-gray-400 dark:text-gray-500 transition-transform text-xs" :class="{ 'rotate-90': showMonteCarlo }">▸</span>
-            <span class="font-semibold text-gray-900 dark:text-gray-100 text-sm">Forecasting using Monte Carlo Simulation</span>
-            <span class="text-xs text-gray-500 dark:text-gray-400">
-              {{ releaseMonteCarloInputs.notDoneCount }} remaining · {{ releaseMonteCarloInputs.totalVelocity }} issues/14d throughput
-            </span>
-          </button>
-
-          <!-- Target Date Toggle -->
-          <div class="flex items-center shrink-0" @click.stop>
-            <div class="inline-flex rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 p-0.5">
-              <div class="relative group/cf">
-                <button
-                  class="px-3 py-1 rounded-md text-xs font-medium transition-all duration-150"
-                  :disabled="!hasCodeFreezeDate"
-                  :class="!hasCodeFreezeDate
-                    ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
-                    : monteCarloTarget === 'codeFreeze'
-                      ? 'bg-white dark:bg-gray-700 text-blue-700 dark:text-blue-300 shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-600/60'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
-                  @click="monteCarloTarget = 'codeFreeze'"
-                >
-                  Code Freeze
-                </button>
-                <div v-if="!hasCodeFreezeDate" class="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover/cf:flex z-10">
-                  <div class="whitespace-nowrap rounded-md bg-gray-900 dark:bg-gray-700 px-2.5 py-1.5 text-[11px] font-medium text-white shadow-lg">
-                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-gray-900 dark:border-b-gray-700" />
-                    No code freeze date available
-                  </div>
-                </div>
-              </div>
-              <div class="relative group/ga">
-                <button
-                  class="px-3 py-1 rounded-md text-xs font-medium transition-all duration-150"
-                  :disabled="!hasGaDate"
-                  :class="!hasGaDate
-                    ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
-                    : monteCarloTarget === 'ga'
-                      ? 'bg-white dark:bg-gray-700 text-purple-700 dark:text-purple-300 shadow-sm ring-1 ring-gray-200/60 dark:ring-gray-600/60'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
-                  @click="monteCarloTarget = 'ga'"
-                >
-                  GA
-                </button>
-                <div v-if="!hasGaDate" class="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-2 hidden group-hover/ga:flex z-10">
-                  <div class="whitespace-nowrap rounded-md bg-gray-900 dark:bg-gray-700 px-2.5 py-1.5 text-[11px] font-medium text-white shadow-lg">
-                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-gray-900 dark:border-b-gray-700" />
-                    No GA date available
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
-        <div v-if="showMonteCarlo" class="px-4 pb-4 border-t border-gray-100 dark:border-gray-800">
-          <div class="mt-3 mb-4 rounded-lg bg-gray-50/80 dark:bg-gray-800/40 border border-gray-200/60 dark:border-gray-700/40 px-4 py-3 text-xs text-gray-600 dark:text-gray-400 leading-relaxed space-y-1.5">
-            <p>
-              This forecast runs <span class="font-semibold text-gray-700 dark:text-gray-300">1,000 Monte Carlo simulations</span> to probabilistically predict when all remaining work for this release will be completed.
-            </p>
-            <p>
-              <span class="font-medium text-gray-700 dark:text-gray-300">Inputs:</span>
-              <span class="font-semibold text-gray-700 dark:text-gray-300">{{ releaseMonteCarloInputs.notDoneCount }}</span> not-done issues (To-Do + In-Progress) as the scope, and the aggregated historical
-              <span class="font-semibold text-gray-700 dark:text-gray-300">{{ releaseMonteCarloInputs.totalVelocity }} issues / 14 days</span> throughput from contributing component teams as the delivery rate, measured against the
-              <template v-if="releaseMonteCarloInputs.activeTarget === 'codeFreeze'">
-                code freeze date of <span class="font-semibold text-gray-700 dark:text-gray-300">{{ formatDueDate(releaseMonteCarloInputs.codeFreezeDate) }}</span>
-                (GA: {{ formatDueDate(releaseMonteCarloInputs.releaseDate) }}).
-              </template>
-              <template v-else>
-                GA date of <span class="font-semibold text-gray-700 dark:text-gray-300">{{ formatDueDate(releaseMonteCarloInputs.releaseDate) }}</span><template v-if="releaseMonteCarloInputs.codeFreezeDate">
-                (code freeze: {{ formatDueDate(releaseMonteCarloInputs.codeFreezeDate) }})</template>.
-              </template>
-            </p>
-            <p>
-              Each iteration samples a random completion timeline using the throughput rate with natural variance (Gamma distribution), producing a distribution of likely finish dates. The histogram below shows how often each date range appeared, and the confidence markers indicate when delivery is statistically likely.
-            </p>
-          </div>
-          <MonteCarloChart
-            :not-done-count="releaseMonteCarloInputs.notDoneCount"
-            :velocity="releaseMonteCarloInputs.totalVelocity"
-            :due-date="releaseMonteCarloInputs.dueDate"
-            :deadline-label="releaseMonteCarloInputs.activeTarget === 'codeFreeze' ? 'Code Freeze' : 'GA'"
-          />
-        </div>
-      </div>
+      </article>
+
     </template>
   </div>
 </template>
@@ -429,26 +467,35 @@
 <script setup>
 import { computed, ref, reactive, watch } from 'vue'
 import { useReleaseAnalysis } from '../composables/useReleaseAnalysis'
-import MonteCarloChart from '../components/MonteCarloChart.vue'
 
 const STRATEGIC_TYPES = new Set(['feature', 'initiative', 'spike'])
 
-const activeRelease = ref('')
 const expandedProjects = reactive(new Set())
 const expandedComponents = reactive(new Set())
 const expandedStrategic = reactive(new Set())
 
-function initActiveRelease() {
-  const tabs = releaseTabs.value
-  if (tabs.length && !activeRelease.value) activeRelease.value = tabs[0].key
-}
-
-const { loading, error, analysis, refreshAnalysis } = useReleaseAnalysis({
-  onLoaded: initActiveRelease
-})
+const { loading, error, analysis, refreshAnalysis } = useReleaseAnalysis()
 
 function normalizeType(t) { return (t || '').toLowerCase().trim() }
 
+// ── Dual-filter state ──
+
+function extractProduct(releaseNumber) {
+  const s = (releaseNumber || '').toLowerCase()
+  const dash = s.indexOf('-')
+  return dash > 0 ? s.slice(0, dash) : s
+}
+
+function extractVersion(releaseNumber) {
+  const s = releaseNumber || ''
+  const dash = s.indexOf('-')
+  return dash > 0 ? s.slice(dash + 1) : s
+}
+
+const selectedProducts = reactive(new Set())
+const selectedVersions = reactive(new Set())
+const productDropdownOpen = ref(false)
+const versionDropdownOpen = ref(false)
 
 const releaseTabs = computed(() => {
   const releases = analysis.value?.releases || []
@@ -459,56 +506,72 @@ const releaseTabs = computed(() => {
   }))
 })
 
-const selectedRelease = computed(() => {
-  if (!analysis.value?.releases) return null
-  return analysis.value.releases.find(r => r.releaseNumber === activeRelease.value) || null
+const allProducts = computed(() =>
+  [...new Set(releaseTabs.value.map(r => extractProduct(r.key)).filter(Boolean))].sort()
+)
+
+const allVersions = computed(() =>
+  [...new Set(releaseTabs.value.map(r => extractVersion(r.key)).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+)
+
+const visibleProducts = computed(() => {
+  if (!selectedVersions.size) return allProducts.value
+  return [...new Set(
+    releaseTabs.value
+      .filter(r => selectedVersions.has(extractVersion(r.key)))
+      .map(r => extractProduct(r.key))
+      .filter(Boolean)
+  )].sort()
 })
 
-const showMonteCarlo = ref(true)
-const monteCarloTarget = ref('codeFreeze')
-
-// Reset target when release changes — prefer code freeze when available
-watch(selectedRelease, (release) => {
-  if (release?.codeFreezeDate) monteCarloTarget.value = 'codeFreeze'
-  else if (release?.dueDate) monteCarloTarget.value = 'ga'
+const visibleVersions = computed(() => {
+  if (!selectedProducts.size) return allVersions.value
+  return [...new Set(
+    releaseTabs.value
+      .filter(r => selectedProducts.has(extractProduct(r.key)))
+      .map(r => extractVersion(r.key))
+      .filter(Boolean)
+  )].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
 })
 
-const hasCodeFreezeDate = computed(() => !!selectedRelease.value?.codeFreezeDate)
-const hasGaDate = computed(() => !!selectedRelease.value?.dueDate)
-
-const releaseMonteCarloInputs = computed(() => {
-  const release = selectedRelease.value
-  if (!release?.issues?.length) return null
-
-  const cfDate = release.codeFreezeDate || null
-  const gaDate = release.dueDate || null
-
-  let activeTarget = monteCarloTarget.value
-  if (activeTarget === 'codeFreeze' && !cfDate) activeTarget = 'ga'
-  if (activeTarget === 'ga' && !gaDate) activeTarget = 'codeFreeze'
-
-  const deadline = activeTarget === 'codeFreeze' ? cfDate : gaDate
-  if (!deadline) return null
-
-  let notDoneCount = 0
-  const componentNames = new Set()
-
-  for (const issue of release.issues) {
-    if (issue.statusBucket !== 'done') notDoneCount++
-    const comps = issue.components?.length ? issue.components : ['(No component)']
-    for (const c of comps) componentNames.add(c)
+watch(visibleProducts, (available) => {
+  for (const p of [...selectedProducts]) {
+    if (!available.includes(p)) selectedProducts.delete(p)
   }
+})
 
-  const totalVelocity = lookupHistoricalVelocity([...componentNames])
-
-  return {
-    notDoneCount,
-    totalVelocity,
-    dueDate: deadline,
-    releaseDate: gaDate,
-    codeFreezeDate: cfDate,
-    activeTarget
+watch(visibleVersions, (available) => {
+  for (const v of [...selectedVersions]) {
+    if (!available.includes(v)) selectedVersions.delete(v)
   }
+})
+
+function toggleProduct(product) {
+  if (selectedProducts.has(product)) selectedProducts.delete(product)
+  else selectedProducts.add(product)
+}
+
+function toggleVersion(version) {
+  if (selectedVersions.has(version)) selectedVersions.delete(version)
+  else selectedVersions.add(version)
+}
+
+const filteredReleaseTabs = computed(() => {
+  return releaseTabs.value.filter(r => {
+    if (selectedProducts.size && !selectedProducts.has(extractProduct(r.key))) return false
+    if (selectedVersions.size && !selectedVersions.has(extractVersion(r.key))) return false
+    return true
+  })
+})
+
+const filteredReleases = computed(() => {
+  const releases = analysis.value?.releases || []
+  return releases.filter(r => {
+    if (selectedProducts.size && !selectedProducts.has(extractProduct(r.releaseNumber))) return false
+    if (selectedVersions.size && !selectedVersions.has(extractVersion(r.releaseNumber))) return false
+    return true
+  })
 })
 
 /**
@@ -627,8 +690,7 @@ function countByBucket(issues) {
  *       Layer 4 — Tactical children of the strategic item
  *     + "Other items" for unlinked issues
  */
-const projectGroups = computed(() => {
-  const release = selectedRelease.value
+function buildProjectGroups(release) {
   if (!release?.issues?.length) return []
 
   const daysRemaining = daysUntil(effectiveDeadline(release))
@@ -738,7 +800,7 @@ const projectGroups = computed(() => {
       }
     })
     .sort((a, b) => a.projectKey.localeCompare(b.projectKey))
-})
+}
 
 // ── Expand / collapse ──
 
