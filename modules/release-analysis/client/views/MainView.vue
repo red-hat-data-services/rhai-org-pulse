@@ -46,126 +46,18 @@
           <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed mt-2 max-w-3xl">
             {{ riskLegendText }}
           </p>
-          <div class="flex flex-wrap items-center gap-3 mt-4">
-            <div
-              v-if="productDropdownOpen || versionDropdownOpen"
-              class="fixed inset-0 z-10"
-              @click="productDropdownOpen = false; versionDropdownOpen = false"
-            />
-
-            <!-- Product Filter -->
-            <div class="relative z-20">
-              <button
-                class="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors"
-                :class="selectedProducts.size
-                  ? 'border-indigo-300 dark:border-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300'
-                  : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                @click="productDropdownOpen = !productDropdownOpen; versionDropdownOpen = false"
-              >
-                <svg class="h-4 w-4 shrink-0 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
-                </svg>
-                <span>Product</span>
-                <span
-                  v-if="selectedProducts.size"
-                  class="inline-flex items-center justify-center h-5 min-w-[1.25rem] rounded-full bg-indigo-600 dark:bg-indigo-500 text-white text-[10px] font-bold px-1.5"
-                >{{ selectedProducts.size }}</span>
-                <svg class="h-3.5 w-3.5 text-gray-400 transition-transform" :class="{ 'rotate-180': productDropdownOpen }" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-                </svg>
-              </button>
-              <div
-                v-if="productDropdownOpen"
-                class="absolute left-0 top-full mt-1.5 w-56 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg ring-1 ring-black/5 dark:ring-white/5 overflow-hidden"
-              >
-                <div class="flex items-center justify-between px-3 py-2 border-b border-gray-100 dark:border-gray-800">
-                  <span class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Products</span>
-                  <button
-                    v-if="selectedProducts.size"
-                    class="text-[11px] font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300"
-                    @click="selectedProducts.clear()"
-                  >Clear All</button>
-                </div>
-                <div class="max-h-52 overflow-y-auto py-1">
-                  <label
-                    v-for="product in visibleProducts"
-                    :key="product"
-                    class="flex items-center gap-2.5 px-3 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors"
-                  >
-                    <input
-                      type="checkbox"
-                      :checked="selectedProducts.has(product)"
-                      class="h-3.5 w-3.5 rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500"
-                      @change="toggleProduct(product)"
-                    />
-                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300 uppercase">{{ product }}</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <!-- Version Filter -->
-            <div class="relative z-20">
-              <button
-                class="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors"
-                :class="selectedVersions.size
-                  ? 'border-violet-300 dark:border-violet-600 bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-300'
-                  : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'"
-                @click="versionDropdownOpen = !versionDropdownOpen; productDropdownOpen = false"
-              >
-                <svg class="h-4 w-4 shrink-0 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" />
-                </svg>
-                <span>Version</span>
-                <span
-                  v-if="selectedVersions.size"
-                  class="inline-flex items-center justify-center h-5 min-w-[1.25rem] rounded-full bg-violet-600 dark:bg-violet-500 text-white text-[10px] font-bold px-1.5"
-                >{{ selectedVersions.size }}</span>
-                <svg class="h-3.5 w-3.5 text-gray-400 transition-transform" :class="{ 'rotate-180': versionDropdownOpen }" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
-                </svg>
-              </button>
-              <div
-                v-if="versionDropdownOpen"
-                class="absolute left-0 top-full mt-1.5 w-56 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg ring-1 ring-black/5 dark:ring-white/5 overflow-hidden"
-              >
-                <div class="flex items-center justify-between px-3 py-2 border-b border-gray-100 dark:border-gray-800">
-                  <span class="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">Versions</span>
-                  <button
-                    v-if="selectedVersions.size"
-                    class="text-[11px] font-medium text-violet-600 dark:text-violet-400 hover:text-violet-800 dark:hover:text-violet-300"
-                    @click="selectedVersions.clear()"
-                  >Clear All</button>
-                </div>
-                <div class="max-h-52 overflow-y-auto py-1">
-                  <label
-                    v-for="version in visibleVersions"
-                    :key="version"
-                    class="flex items-center gap-2.5 px-3 py-2 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors"
-                  >
-                    <input
-                      type="checkbox"
-                      :checked="selectedVersions.has(version)"
-                      class="h-3.5 w-3.5 rounded border-gray-300 dark:border-gray-600 text-violet-600 focus:ring-violet-500"
-                      @change="toggleVersion(version)"
-                    />
-                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ version }}</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <!-- Active filter pills + summary -->
-            <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-              <span>{{ filteredReleases.length }} of {{ allReleases.length }} releases</span>
-              <button
-                v-if="selectedProducts.size || selectedVersions.size"
-                class="text-xs font-medium text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                @click="selectedProducts.clear(); selectedVersions.clear()"
-              >Reset filters</button>
-            </div>
-          </div>
+          <ReleaseFilterBar
+            class="mt-4"
+            :selected-products="selectedProducts"
+            :selected-versions="selectedVersions"
+            :visible-products="visibleProducts"
+            :visible-versions="visibleVersions"
+            :filtered-count="filteredReleases.length"
+            :total-count="allReleases.length"
+            :toggle-product="toggleProduct"
+            :toggle-version="toggleVersion"
+            :reset-filters="resetFilters"
+          />
         </div>
 
         <div v-if="!filteredReleases.length" class="text-sm text-gray-500 dark:text-gray-400">
@@ -424,14 +316,14 @@
           </details>
 
           <details
-            v-if="getMonteCarloInputs(release)"
+            v-if="mcInputsMap.get(release.releaseNumber)"
             class="group rounded-lg border border-gray-200 dark:border-gray-700 open:bg-gray-50/50 dark:open:bg-gray-800/30"
           >
             <summary class="cursor-pointer select-none px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 list-none flex items-center gap-2">
               <span class="text-gray-400 group-open:rotate-90 transition-transform">▸</span>
               <span>Forecasting using Monte Carlo Simulation</span>
               <span class="text-xs font-normal text-gray-500 dark:text-gray-400">
-                {{ getMonteCarloInputs(release).notDoneCount }} remaining · {{ getMonteCarloInputs(release).totalVelocity }} issues/14d throughput
+                {{ mcInputsMap.get(release.releaseNumber).notDoneCount }} remaining · {{ mcInputsMap.get(release.releaseNumber).totalVelocity }} issues/14d throughput
               </span>
             </summary>
             <div class="px-3 pb-3 border-t border-gray-100 dark:border-gray-800">
@@ -485,15 +377,15 @@
                 </p>
                 <p>
                   <span class="font-medium text-gray-700 dark:text-gray-300">Inputs:</span>
-                  <span class="font-semibold text-gray-700 dark:text-gray-300">{{ getMonteCarloInputs(release).notDoneCount }}</span> not-done issues (To-Do + In-Progress) as the scope, and the aggregated historical
-                  <span class="font-semibold text-gray-700 dark:text-gray-300">{{ getMonteCarloInputs(release).totalVelocity }} issues / 14 days</span> throughput from contributing component teams as the delivery rate, measured against the
-                  <template v-if="getMonteCarloInputs(release).activeTarget === 'codeFreeze'">
-                    code freeze date of <span class="font-semibold text-gray-700 dark:text-gray-300">{{ formatDueDate(getMonteCarloInputs(release).codeFreezeDate) }}</span>
-                    (GA: {{ formatDueDate(getMonteCarloInputs(release).releaseDate) }}).
+                  <span class="font-semibold text-gray-700 dark:text-gray-300">{{ mcInputsMap.get(release.releaseNumber).notDoneCount }}</span> not-done issues (To-Do + In-Progress) as the scope, and the aggregated historical
+                  <span class="font-semibold text-gray-700 dark:text-gray-300">{{ mcInputsMap.get(release.releaseNumber).totalVelocity }} issues / 14 days</span> throughput from contributing component teams as the delivery rate, measured against the
+                  <template v-if="mcInputsMap.get(release.releaseNumber).activeTarget === 'codeFreeze'">
+                    code freeze date of <span class="font-semibold text-gray-700 dark:text-gray-300">{{ formatDueDate(mcInputsMap.get(release.releaseNumber).codeFreezeDate) }}</span>
+                    (GA: {{ formatDueDate(mcInputsMap.get(release.releaseNumber).releaseDate) }}).
                   </template>
                   <template v-else>
-                    GA date of <span class="font-semibold text-gray-700 dark:text-gray-300">{{ formatDueDate(getMonteCarloInputs(release).releaseDate) }}</span><template v-if="getMonteCarloInputs(release).codeFreezeDate">
-                    (code freeze: {{ formatDueDate(getMonteCarloInputs(release).codeFreezeDate) }})</template>.
+                    GA date of <span class="font-semibold text-gray-700 dark:text-gray-300">{{ formatDueDate(mcInputsMap.get(release.releaseNumber).releaseDate) }}</span><template v-if="mcInputsMap.get(release.releaseNumber).codeFreezeDate">
+                    (code freeze: {{ formatDueDate(mcInputsMap.get(release.releaseNumber).codeFreezeDate) }})</template>.
                   </template>
                 </p>
                 <p>
@@ -501,10 +393,10 @@
                 </p>
               </div>
               <MonteCarloChart
-                :not-done-count="getMonteCarloInputs(release).notDoneCount"
-                :velocity="getMonteCarloInputs(release).totalVelocity"
-                :due-date="getMonteCarloInputs(release).dueDate"
-                :deadline-label="getMonteCarloInputs(release).activeTarget === 'codeFreeze' ? 'Code Freeze' : 'GA'"
+                :not-done-count="mcInputsMap.get(release.releaseNumber).notDoneCount"
+                :velocity="mcInputsMap.get(release.releaseNumber).totalVelocity"
+                :due-date="mcInputsMap.get(release.releaseNumber).dueDate"
+                :deadline-label="mcInputsMap.get(release.releaseNumber).activeTarget === 'codeFreeze' ? 'Code Freeze' : 'GA'"
               />
             </div>
           </details>
@@ -515,11 +407,26 @@
 </template>
 
 <script setup>
-import { computed, ref, reactive, watch } from 'vue'
+import { computed, reactive } from 'vue'
 import { useReleaseAnalysis } from '../composables/useReleaseAnalysis'
+import { useReleaseFilter } from '../composables/useReleaseFilter'
 import MonteCarloChart from '../components/MonteCarloChart.vue'
+import ReleaseFilterBar from '../components/ReleaseFilterBar.vue'
 
 const { loading, error, analysis, refreshAnalysis } = useReleaseAnalysis()
+
+const allReleases = computed(() => analysis.value?.releases || [])
+
+const {
+  selectedProducts,
+  selectedVersions,
+  visibleProducts,
+  visibleVersions,
+  filteredReleases,
+  toggleProduct,
+  toggleVersion,
+  resetFilters
+} = useReleaseFilter(allReleases)
 
 // ── Monte Carlo state ──
 
@@ -586,84 +493,13 @@ function formatDueDate(dateStr) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-// ── Dual-filter state ──
-
-function extractProduct(releaseNumber) {
-  const s = (releaseNumber || '').toLowerCase()
-  const dash = s.indexOf('-')
-  return dash > 0 ? s.slice(0, dash) : s
-}
-
-function extractVersion(releaseNumber) {
-  const s = releaseNumber || ''
-  const dash = s.indexOf('-')
-  return dash > 0 ? s.slice(dash + 1) : s
-}
-
-const selectedProducts = reactive(new Set())
-const selectedVersions = reactive(new Set())
-const productDropdownOpen = ref(false)
-const versionDropdownOpen = ref(false)
-
-const allReleases = computed(() => analysis.value?.releases || [])
-
-const allProducts = computed(() =>
-  [...new Set(allReleases.value.map(r => extractProduct(r.releaseNumber)).filter(Boolean))].sort()
-)
-
-const allVersions = computed(() =>
-  [...new Set(allReleases.value.map(r => extractVersion(r.releaseNumber)).filter(Boolean))]
-    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
-)
-
-const visibleProducts = computed(() => {
-  if (!selectedVersions.size) return allProducts.value
-  return [...new Set(
-    allReleases.value
-      .filter(r => selectedVersions.has(extractVersion(r.releaseNumber)))
-      .map(r => extractProduct(r.releaseNumber))
-      .filter(Boolean)
-  )].sort()
-})
-
-const visibleVersions = computed(() => {
-  if (!selectedProducts.size) return allVersions.value
-  return [...new Set(
-    allReleases.value
-      .filter(r => selectedProducts.has(extractProduct(r.releaseNumber)))
-      .map(r => extractVersion(r.releaseNumber))
-      .filter(Boolean)
-  )].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
-})
-
-watch(visibleProducts, (available) => {
-  for (const p of [...selectedProducts]) {
-    if (!available.includes(p)) selectedProducts.delete(p)
+const mcInputsMap = computed(() => {
+  const map = new Map()
+  for (const r of filteredReleases.value) {
+    const inputs = getMonteCarloInputs(r)
+    if (inputs) map.set(r.releaseNumber, inputs)
   }
-})
-
-watch(visibleVersions, (available) => {
-  for (const v of [...selectedVersions]) {
-    if (!available.includes(v)) selectedVersions.delete(v)
-  }
-})
-
-function toggleProduct(product) {
-  if (selectedProducts.has(product)) selectedProducts.delete(product)
-  else selectedProducts.add(product)
-}
-
-function toggleVersion(version) {
-  if (selectedVersions.has(version)) selectedVersions.delete(version)
-  else selectedVersions.add(version)
-}
-
-const filteredReleases = computed(() => {
-  return allReleases.value.filter(r => {
-    if (selectedProducts.size && !selectedProducts.has(extractProduct(r.releaseNumber))) return false
-    if (selectedVersions.size && !selectedVersions.has(extractVersion(r.releaseNumber))) return false
-    return true
-  })
+  return map
 })
 
 const metricInfo = {
