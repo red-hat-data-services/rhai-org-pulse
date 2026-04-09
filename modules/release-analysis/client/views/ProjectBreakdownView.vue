@@ -97,10 +97,10 @@
           >
           <button
             class="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-gray-50/60 dark:hover:bg-gray-800/40 transition-colors"
-            @click="toggleProject(project.projectKey)"
+            @click="toggleProject(release.releaseNumber, project.projectKey)"
           >
             <div class="flex items-center gap-3 min-w-0">
-              <span class="text-gray-400 dark:text-gray-500 transition-transform text-xs" :class="{ 'rotate-90': expandedProjects.has(project.projectKey) }">▸</span>
+              <span class="text-gray-400 dark:text-gray-500 transition-transform text-xs" :class="{ 'rotate-90': isProjectExpanded(release.releaseNumber, project.projectKey) }">▸</span>
               <span class="font-semibold text-gray-900 dark:text-gray-100 text-sm uppercase tracking-wide">{{ project.projectKey }}</span>
               <span class="text-xs text-gray-500 dark:text-gray-400">{{ project.allIssues.length }} issue{{ project.allIssues.length !== 1 ? 's' : '' }}</span>
               <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold" :class="confidenceBadgeClass(project.forecast.level)">
@@ -123,7 +123,7 @@
           </button>
 
           <!-- Expanded project → confidence detail strip + component list -->
-          <div v-if="expandedProjects.has(project.projectKey)" class="border-t border-gray-100 dark:border-gray-800">
+          <div v-if="isProjectExpanded(release.releaseNumber, project.projectKey)" class="border-t border-gray-100 dark:border-gray-800">
 
             <!-- Project-level capacity forecast -->
             <div class="px-4 py-2.5 pl-10 bg-gray-50/60 dark:bg-gray-800/30 border-b border-gray-100 dark:border-gray-800">
@@ -179,10 +179,10 @@
             >
               <button
                 class="w-full flex items-center justify-between gap-3 px-4 py-2.5 pl-10 text-left hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors"
-                @click="toggleComponent(project.projectKey, comp.name)"
+                @click="toggleComponent(release.releaseNumber, project.projectKey, comp.name)"
               >
                 <div class="flex items-center gap-2.5 min-w-0 flex-wrap">
-                  <span class="text-gray-400 dark:text-gray-500 transition-transform text-[10px]" :class="{ 'rotate-90': isComponentExpanded(project.projectKey, comp.name) }">▸</span>
+                  <span class="text-gray-400 dark:text-gray-500 transition-transform text-[10px]" :class="{ 'rotate-90': isComponentExpanded(release.releaseNumber, project.projectKey, comp.name) }">▸</span>
                   <span class="font-medium text-gray-700 dark:text-gray-300 text-sm">{{ comp.name }}</span>
                   <span class="text-xs text-gray-400 dark:text-gray-500">{{ comp.allIssues.length }} issue{{ comp.allIssues.length !== 1 ? 's' : '' }}</span>
                   <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold" :class="confidenceBadgeClass(comp.forecast.level)">
@@ -198,7 +198,7 @@
               </button>
 
               <!-- Expanded component content -->
-              <div v-if="isComponentExpanded(project.projectKey, comp.name)" class="pl-10 pb-2">
+              <div v-if="isComponentExpanded(release.releaseNumber, project.projectKey, comp.name)" class="pl-10 pb-2">
 
                 <!-- Component-level capacity forecast -->
                 <div class="mx-4 mt-2 mb-2 rounded-lg bg-gray-50/80 dark:bg-gray-800/40 border border-gray-200/60 dark:border-gray-700/40 px-4 py-2.5">
@@ -243,10 +243,10 @@
                 >
                   <button
                     class="w-full flex items-center justify-between gap-3 px-4 py-2 pl-6 text-left hover:bg-gray-50/40 dark:hover:bg-gray-800/20 transition-colors"
-                    @click="toggleStrategic(project.projectKey, comp.name, si.key)"
+                    @click="toggleStrategic(release.releaseNumber, project.projectKey, comp.name, si.key)"
                   >
                     <div class="flex items-center gap-2 min-w-0 flex-wrap">
-                      <span class="text-gray-400 dark:text-gray-500 transition-transform text-[10px]" :class="{ 'rotate-90': isStrategicExpanded(project.projectKey, comp.name, si.key) }">▸</span>
+                      <span class="text-gray-400 dark:text-gray-500 transition-transform text-[10px]" :class="{ 'rotate-90': isStrategicExpanded(release.releaseNumber, project.projectKey, comp.name, si.key) }">▸</span>
                       <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase tracking-wider" :class="issueTypePillClass(si.issueType)">{{ si.issueType }}</span>
                       <a :href="si.link" target="_blank" rel="noopener" class="text-blue-600 dark:text-blue-400 hover:underline text-xs font-medium" @click.stop>{{ si.key }}</a>
                       <span class="text-xs text-gray-700 dark:text-gray-300 truncate">{{ si.summary }}</span>
@@ -263,7 +263,7 @@
                   </button>
 
                   <!-- ═══ LAYER 4 — Tactical children ═══ -->
-                  <div v-if="isStrategicExpanded(project.projectKey, comp.name, si.key) && si.children.length" class="px-4 pb-2 pl-12">
+                  <div v-if="isStrategicExpanded(release.releaseNumber, project.projectKey, comp.name, si.key) && si.children.length" class="px-4 pb-2 pl-12">
                     <div class="overflow-x-auto rounded-lg border border-gray-200/80 dark:border-gray-700/80">
                       <table class="min-w-full text-sm">
                         <thead class="bg-gray-50 dark:bg-gray-800/60 text-left text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
@@ -292,7 +292,7 @@
                       </table>
                     </div>
                   </div>
-                  <div v-else-if="isStrategicExpanded(project.projectKey, comp.name, si.key) && !si.children.length" class="px-4 pb-2 pl-12">
+                  <div v-else-if="isStrategicExpanded(release.releaseNumber, project.projectKey, comp.name, si.key) && !si.children.length" class="px-4 pb-2 pl-12">
                     <p class="text-[10px] text-gray-400 dark:text-gray-500 italic">No child issues in this release.</p>
                   </div>
                 </div>
@@ -301,10 +301,10 @@
                 <div v-if="comp.otherItems.length" class="border-t border-gray-100/60 dark:border-gray-800/60">
                   <button
                     class="w-full flex items-center justify-between gap-3 px-4 py-2 pl-6 text-left hover:bg-gray-50/40 dark:hover:bg-gray-800/20 transition-colors"
-                    @click="toggleStrategic(project.projectKey, comp.name, '__other__')"
+                    @click="toggleStrategic(release.releaseNumber, project.projectKey, comp.name, '__other__')"
                   >
                     <div class="flex items-center gap-2 min-w-0">
-                      <span class="text-gray-400 dark:text-gray-500 transition-transform text-[10px]" :class="{ 'rotate-90': isStrategicExpanded(project.projectKey, comp.name, '__other__') }">▸</span>
+                      <span class="text-gray-400 dark:text-gray-500 transition-transform text-[10px]" :class="{ 'rotate-90': isStrategicExpanded(release.releaseNumber, project.projectKey, comp.name, '__other__') }">▸</span>
                       <span class="font-medium text-gray-500 dark:text-gray-400 text-xs italic">Other items</span>
                       <span class="text-[10px] text-gray-400 dark:text-gray-500">{{ comp.otherItems.length }}</span>
                     </div>
@@ -315,7 +315,7 @@
                     </div>
                   </button>
 
-                  <div v-if="isStrategicExpanded(project.projectKey, comp.name, '__other__')" class="px-4 pb-2 pl-12">
+                  <div v-if="isStrategicExpanded(release.releaseNumber, project.projectKey, comp.name, '__other__')" class="px-4 pb-2 pl-12">
                     <div class="overflow-x-auto rounded-lg border border-gray-200/80 dark:border-gray-700/80">
                       <table class="min-w-full text-sm">
                         <thead class="bg-gray-50 dark:bg-gray-800/60 text-left text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
@@ -624,21 +624,28 @@ function buildProjectGroups(release) {
 
 // ── Expand / collapse ──
 
-function toggleProject(projectKey) {
-  if (expandedProjects.has(projectKey)) {
-    expandedProjects.delete(projectKey)
-    const prefix = `${projectKey}::`
+function projectId(releaseNumber, projectKey) { return `${releaseNumber}::${projectKey}` }
+
+function isProjectExpanded(releaseNumber, projectKey) {
+  return expandedProjects.has(projectId(releaseNumber, projectKey))
+}
+
+function toggleProject(releaseNumber, projectKey) {
+  const key = projectId(releaseNumber, projectKey)
+  if (expandedProjects.has(key)) {
+    expandedProjects.delete(key)
+    const prefix = `${key}::`
     for (const k of [...expandedComponents]) { if (k.startsWith(prefix)) expandedComponents.delete(k) }
     for (const k of [...expandedStrategic]) { if (k.startsWith(prefix)) expandedStrategic.delete(k) }
   } else {
-    expandedProjects.add(projectKey)
+    expandedProjects.add(key)
   }
 }
 
-function componentId(projectKey, compName) { return `${projectKey}::${compName}` }
+function componentId(releaseNumber, projectKey, compName) { return `${releaseNumber}::${projectKey}::${compName}` }
 
-function toggleComponent(projectKey, compName) {
-  const k = componentId(projectKey, compName)
+function toggleComponent(releaseNumber, projectKey, compName) {
+  const k = componentId(releaseNumber, projectKey, compName)
   if (expandedComponents.has(k)) {
     expandedComponents.delete(k)
     const prefix = `${k}::`
@@ -648,20 +655,20 @@ function toggleComponent(projectKey, compName) {
   }
 }
 
-function isComponentExpanded(projectKey, compName) {
-  return expandedComponents.has(componentId(projectKey, compName))
+function isComponentExpanded(releaseNumber, projectKey, compName) {
+  return expandedComponents.has(componentId(releaseNumber, projectKey, compName))
 }
 
-function strategicKey(projectKey, compName, itemKey) { return `${projectKey}::${compName}::${itemKey}` }
+function strategicKey(releaseNumber, projectKey, compName, itemKey) { return `${releaseNumber}::${projectKey}::${compName}::${itemKey}` }
 
-function toggleStrategic(projectKey, compName, itemKey) {
-  const k = strategicKey(projectKey, compName, itemKey)
+function toggleStrategic(releaseNumber, projectKey, compName, itemKey) {
+  const k = strategicKey(releaseNumber, projectKey, compName, itemKey)
   if (expandedStrategic.has(k)) expandedStrategic.delete(k)
   else expandedStrategic.add(k)
 }
 
-function isStrategicExpanded(projectKey, compName, itemKey) {
-  return expandedStrategic.has(strategicKey(projectKey, compName, itemKey))
+function isStrategicExpanded(releaseNumber, projectKey, compName, itemKey) {
+  return expandedStrategic.has(strategicKey(releaseNumber, projectKey, compName, itemKey))
 }
 
 // ── Styling helpers ──
