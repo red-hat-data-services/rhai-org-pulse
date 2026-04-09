@@ -1,0 +1,111 @@
+{
+  "key": "TEST1-1172",
+  "summary": "Improve error handling",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Jen Albertson",
+    "accountId": "70121:a7baa8da-bffe-460e-8f2b-33e45da6b87a"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "llm-d",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "llm-d",
+    "UXD",
+    "vLLM"
+  ],
+  "created": "2026-01-27T13:05:01.281+0000",
+  "updated": "2026-03-26T17:45:05.049+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Dashboard - Red - 2026-02-05 "
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Unsure the ask"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-963",
+      "linkedSummary": "Provide Distributed Inference with llm-d on xKS Phase 1- Dev Preview 1",
+      "linkedStatus": "Release Pending"
+    },
+    {
+      "type": "Informs",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1002",
+      "linkedSummary": "Consumer-Focused MaaS Portal (LiteMaaS) for Endpoint Consumption, Token Management, and Usage Monitoring",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1056",
+      "linkedSummary": "Red Hat AI Inference UI MVP",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Cloners",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1405",
+      "linkedSummary": "CLONE - Red Hat AI Inference UI MVP",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

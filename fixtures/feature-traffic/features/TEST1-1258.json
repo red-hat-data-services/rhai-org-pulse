@@ -1,0 +1,56 @@
+{
+  "key": "TEST1-1258",
+  "summary": "Optimize database queries",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Adysen Rothman",
+    "accountId": "712020:98117d7a-0c0f-4353-90b9-04395ed37db7"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "requires_architecture_review",
+    "tech-reviewed",
+    "ux-debt"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "AI Hub"
+  ],
+  "created": "2026-03-02T22:04:08.256+0000",
+  "updated": "2026-03-23T19:26:50.122+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1051",
+      "linkedSummary": "Ability to retrieve PRIVATE models from Hugging Face",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

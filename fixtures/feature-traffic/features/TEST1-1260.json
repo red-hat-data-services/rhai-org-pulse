@@ -1,0 +1,79 @@
+{
+  "key": "TEST1-1260",
+  "summary": "Update error messages",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Eder Ignatowicz",
+    "accountId": "70121:8665986b-a71f-433a-ac17-6cdf48859866"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "confidence-red",
+    "crimson",
+    "mcp",
+    "playground",
+    "tech-reviewed"
+  ],
+  "components": [
+    "Agentic",
+    "Gen AI Studio"
+  ],
+  "created": "2026-03-03T13:23:22.626+0000",
+  "updated": "2026-03-30T03:11:05.798+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1084",
+      "linkedSummary": "Dev Preview - MCP Catalog – Enterprise Control of MCP Assets",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1084",
+      "linkedSummary": "Dev Preview - MCP Catalog – Enterprise Control of MCP Assets",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1302",
+      "linkedSummary": "Gen AI Studio Playground: Merge Global + Namespace MCP Servers ",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Informs",
+      "direction": "outward",
+      "linkedKey": "RHOAIUX-1825",
+      "linkedSummary": "Update MCP panel to cover MCP namespace vs global ",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

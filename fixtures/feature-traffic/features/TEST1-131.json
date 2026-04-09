@@ -1,0 +1,70 @@
+{
+  "key": "TEST1-131",
+  "summary": "Improve error handling",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Kyle Walker",
+    "accountId": "70121:0a335fc9-f349-4ce1-9fad-de9f02b9273d"
+  },
+  "fixVersions": [],
+  "labels": [
+    "GPU-as-a-Service",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "Training",
+    "Training Hub",
+    "UXD"
+  ],
+  "created": "2025-10-20T13:51:41.255+0000",
+  "updated": "2026-03-03T08:56:12.164+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1168",
+      "linkedSummary": "GPU-as-a-Service Observability",
+      "linkedStatus": "Refinement"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-703",
+      "linkedSummary": "Workload Metrics (was: Distributed Workload Dashboard)",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Informs",
+      "direction": "outward",
+      "linkedKey": "RHOAIUX-1271",
+      "linkedSummary": "Workload Metrics page UX",
+      "linkedStatus": "To Do"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

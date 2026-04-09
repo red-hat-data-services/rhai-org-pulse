@@ -1,0 +1,590 @@
+{
+  "key": "TEST1-297",
+  "summary": "Add unit tests for service",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Andrew Ballantyne",
+    "accountId": "5fdb88f09edf280075ce339d"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "3.4-committed",
+    "Approved-RFE",
+    "dashboard-zaffre-scrum",
+    "llm-d",
+    "needs-uxd",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "AI Platform DevOps",
+    "DevOps",
+    "Documentation",
+    "llm-d",
+    "Model Serving",
+    "UXD"
+  ],
+  "created": "2025-11-21T16:12:43.101+0000",
+  "updated": "2026-04-07T21:00:58.887+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Dashboard - Red - "
+          },
+          {
+            "type": "date",
+            "attrs": {
+              "timestamp": "1775520000000"
+            }
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Coding not complete – working to wrap this up asap"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "We are working on our plan of action (email sent to stakeholders)"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Model Serving - Green - 2026-03-17"
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Discovery server PR merged in odh-model-controller incubating"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Waiting on ODH and RHOAI Konflux onboarding"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Informs",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1188",
+      "linkedSummary": "YAML Viewer in llm-d model serving UX",
+      "linkedStatus": "Release Pending"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-42026",
+      "linkedSummary": "MaaS to Support for Multiple Shared Gateways in OCP-4.20 for LLMs deployed using LLM-D Well Lit Paths",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Duplicate",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-38615",
+      "linkedSummary": "Improve UX: Discover and create Gateway(s) for llmisvc model deployments through UI ",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Triggers",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-37916",
+      "linkedSummary": "llm-d: deployed model shows failed in UI, always?",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Triggers",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-38629",
+      "linkedSummary": "Improve llm-d / LLMInferenceService UX",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-883",
+      "linkedSummary": "llm-d: Improve UX: Discover and create Gateway(s) for llm-d / llmisvc model deployments through UI",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Blocks",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-38615",
+      "linkedSummary": "Improve UX: Discover and create Gateway(s) for llmisvc model deployments through UI ",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-51588",
+      "linkedSummary": "LLMInferenceService Gateway discover API",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-53945",
+      "linkedSummary": "RHOAI Konflux Onboarding [odh-model-serving-api]",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-53839",
+      "linkedSummary": "ODH Konflux CI Build Onboarding [odh-model-serving-api]",
+      "linkedStatus": "Resolved"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-50711",
+      "parentKey": "RHAISTRAT-297",
+      "summary": "Add logging for debugging",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Person 220",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-area-model-serving",
+        "dashboard-zaffre-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-24T19:35:11.719+0000",
+      "updated": "2026-03-27T20:31:47.490+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50712",
+          "parentKey": "RHOAIENG-50711",
+          "summary": "Epic Signoffs",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Emily Samoylov",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "template"
+          ],
+          "storyPoints": 1,
+          "created": "2026-02-24T19:37:02.686+0000",
+          "updated": "2026-04-08T00:15:38.777+0000",
+          "resolutionDate": "2026-04-08T00:15:38.729+0000"
+        },
+        {
+          "key": "RHOAIENG-50717",
+          "parentKey": "RHOAIENG-50711",
+          "summary": "QA Verification for this Feature",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-epic-verification"
+          ],
+          "storyPoints": 2,
+          "created": "2026-02-24T19:37:37.106+0000",
+          "updated": "2026-03-23T13:14:54.698+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51476",
+          "parentKey": "RHOAIENG-50711",
+          "summary": "Add gateway select dropdown for LLMInferenceService",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Emily Samoylov",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-serving"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-02T14:43:42.414+0000",
+          "updated": "2026-04-07T19:18:17.907+0000",
+          "resolutionDate": "2026-04-07T19:18:17.831+0000"
+        },
+        {
+          "key": "RHOAIENG-51477",
+          "parentKey": "RHOAIENG-50711",
+          "summary": "Show gateway options outside of Project in dropdown",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-serving"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-02T14:45:05.447+0000",
+          "updated": "2026-03-25T20:20:37.229+0000",
+          "resolutionDate": "2026-03-11T15:24:12.057+0000"
+        },
+        {
+          "key": "RHOAIENG-52341",
+          "parentKey": "RHOAIENG-50711",
+          "summary": "Add view Gateway role",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-serving"
+          ],
+          "storyPoints": 1,
+          "created": "2026-03-09T14:10:41.086+0000",
+          "updated": "2026-03-09T16:08:48.266+0000",
+          "resolutionDate": "2026-03-09T16:08:48.240+0000"
+        },
+        {
+          "key": "RHOAIENG-52388",
+          "parentKey": "RHOAIENG-50711",
+          "summary": "Setup Serving Service - Gateway Discovery",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Emily Samoylov",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-serving"
+          ],
+          "storyPoints": 1,
+          "created": "2026-03-09T17:52:15.850+0000",
+          "updated": "2026-04-03T14:00:51.345+0000",
+          "resolutionDate": "2026-04-03T14:00:51.322+0000"
+        },
+        {
+          "key": "RHOAIENG-55025",
+          "parentKey": "RHOAIENG-50711",
+          "summary": "Make MaaS interact with Gateway field",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Emily Samoylov",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-serving"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-24T19:58:38.925+0000",
+          "updated": "2026-04-08T00:12:12.237+0000",
+          "resolutionDate": "2026-04-08T00:12:12.201+0000"
+        },
+        {
+          "key": "RHOAIENG-57078",
+          "parentKey": "RHOAIENG-50711",
+          "summary": "Gateway Field - Feature signoff - GA",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Blocker",
+          "assignee": "Emily Samoylov",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-serving",
+            "signoff"
+          ],
+          "storyPoints": 0,
+          "created": "2026-04-08T00:13:20.229+0000",
+          "updated": "2026-04-08T01:18:44.140+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-51588",
+      "parentKey": "RHAISTRAT-297",
+      "summary": "Add pagination support",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 144",
+      "components": [
+        "llm-d",
+        "Model Serving"
+      ],
+      "labels": [],
+      "storyPoints": 5,
+      "created": "2026-03-03T11:44:40.537+0000",
+      "updated": "2026-03-19T13:27:52.322+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-51603",
+          "parentKey": "RHOAIENG-51588",
+          "summary": "LLMInferenceService Gateway discover API",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Pierangelo Di Pilato",
+          "components": [
+            "llm-d",
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-03-03T14:55:06.173+0000",
+          "updated": "2026-03-17T21:39:15.012+0000",
+          "resolutionDate": "2026-03-17T21:38:31.615+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-53839",
+      "parentKey": "RHAISTRAT-297",
+      "summary": "Update API endpoint",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Former Member 5",
+      "components": [
+        "DevOps"
+      ],
+      "labels": [
+        "devops-onboarding"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-17T12:13:45.146+0000",
+      "updated": "2026-03-31T09:50:03.598+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-53945",
+      "parentKey": "RHAISTRAT-297",
+      "summary": "Update access controls",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Critical",
+      "assignee": "Person 346",
+      "components": [
+        "DevOps"
+      ],
+      "labels": [
+        "devops-onboarding",
+        "triaged"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-17T15:03:49.840+0000",
+      "updated": "2026-04-07T11:31:38.079+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-56525",
+      "parentKey": "RHAISTRAT-297",
+      "summary": "Update configuration settings",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": "Former Member 6",
+      "components": [
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-04-02T09:35:40.501+0000",
+      "updated": "2026-04-02T09:36:31.878+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-56527",
+          "parentKey": "RHOAIENG-56525",
+          "summary": "[ccs] Draft RN to announce create Gateway(s) for llm-d / llmisvc through UI - GA 3.4",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Shumaila Yaseen",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-04-02T09:37:24.817+0000",
+          "updated": "2026-04-02T09:40:29.915+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 5,
+    "totalIssues": 10,
+    "issuesByStatus": {
+      "Closed": 6,
+      "Backlog": 1,
+      "Resolved": 1,
+      "In Progress": 1,
+      "New": 1
+    },
+    "issuesByCategory": {
+      "Done": 7,
+      "In Progress": 1,
+      "To Do": 2
+    },
+    "totalStoryPoints": 19,
+    "storyPointsDone": 15,
+    "completionPct": 70,
+    "staleCount": 0,
+    "unassignedCount": 1,
+    "blockerCount": 1,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-50711",
+        "summary": "LLMd Gateway discovery UI",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Emily Samoylov",
+        "totalIssues": 8,
+        "doneIssues": 6,
+        "progressPct": 75,
+        "storyPoints": 12,
+        "storyPointsDone": 10,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-51588",
+        "summary": "LLMInferenceService Gateway discover API",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Pierangelo Di Pilato",
+        "totalIssues": 1,
+        "doneIssues": 1,
+        "progressPct": 100,
+        "storyPoints": 5,
+        "storyPointsDone": 5,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-53839",
+        "summary": "ODH Konflux CI Build Onboarding [odh-model-serving-api]",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Peter Keappock",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-53945",
+        "summary": "RHOAI Konflux Onboarding [odh-model-serving-api]",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Waldemar Znoinski",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-56525",
+        "summary": "[ccs Epic] Document how to create Gateway(s) for llm-d / llmisvc through UI - GA 3.4",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Shumaila Yaseen",
+        "totalIssues": 1,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 2,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

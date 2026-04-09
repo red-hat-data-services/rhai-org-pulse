@@ -1,0 +1,1253 @@
+{
+  "key": "TEST1-1201",
+  "summary": "Fix sorting order",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Roy Nissim",
+    "accountId": "712020:3e6483d7-a7f9-4847-950f-102899cadf8f"
+  },
+  "fixVersions": [
+    "rhoai-3.4"
+  ],
+  "labels": [
+    "3.4-committed",
+    "MaaS",
+    "dashboard-zaffre-scrum"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "Model as a Service"
+  ],
+  "created": "2026-02-11T15:17:16.063+0000",
+  "updated": "2026-04-07T20:49:09.499+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Dashboard - Green - "
+          },
+          {
+            "type": "date",
+            "attrs": {
+              "timestamp": "1775520000000"
+            }
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Dealing with some of the finer details – testing is on-going"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "MaaS - Green - 2026-03-19"
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Functionality is in"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1130",
+      "linkedSummary": "MaaS Subscription Model Redesign",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIUX-1583",
+      "linkedSummary": "3.4 API Key Management UX",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-52087",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1201] - [GA] MaaS API Key Self-Service",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-3191",
+      "linkedSummary": "[ccs Epic] Documentation support for MaaS - Catch-all Epic for 3.4 GA",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Causality",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-54005",
+      "linkedSummary": "Generate MaaS Token Endpoint Removed - breaks Gen AI Studio Playground",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1360",
+      "linkedSummary": "List Available Subscriptions to \"View Endpoint\" in AI Asset Endpoint",
+      "linkedStatus": "Release Pending"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-46002",
+      "parentKey": "RHAISTRAT-1201",
+      "summary": "Add pagination support",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Critical",
+      "assignee": "Person 217",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-area-maas",
+        "dashboard-zaffre-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-01-16T20:55:43.128+0000",
+      "updated": "2026-03-19T13:41:11.770+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-38755",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "Create an E2E test for MaaS Admin tiers capabilities",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Sri Sai Sowjanya Darna",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 5,
+          "created": "2025-11-12T20:32:54.973+0000",
+          "updated": "2026-02-25T13:50:02.218+0000",
+          "resolutionDate": "2026-02-25T13:50:02.194+0000"
+        },
+        {
+          "key": "RHOAIENG-40548",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "[Stretch] Add business logic to maas BFF for getting token data",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Edgar Hernandez Garcia",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 3,
+          "created": "2025-12-01T13:52:27.616+0000",
+          "updated": "2026-02-09T14:23:29.861+0000",
+          "resolutionDate": "2026-02-09T14:23:29.824+0000"
+        },
+        {
+          "key": "RHOAIENG-40559",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "[Stretch] Add create API Key modal",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Ashley McEntee",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 2,
+          "created": "2025-12-01T14:01:40.207+0000",
+          "updated": "2026-01-30T15:05:20.398+0000",
+          "resolutionDate": "2026-01-30T15:05:20.365+0000"
+        },
+        {
+          "key": "RHOAIENG-40574",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "[Stretch] Add tiers dropdown input for MaaS checkbox in model deployment wizard ",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Emily Samoylov",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas",
+            "dashboard-area-model-serving"
+          ],
+          "storyPoints": 2,
+          "created": "2025-12-01T14:46:14.596+0000",
+          "updated": "2026-02-04T14:53:58.374+0000",
+          "resolutionDate": "2026-01-28T16:27:34.972+0000"
+        },
+        {
+          "key": "RHOAIENG-46003",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "Create an e2e test for the MaaS API Keys capabilities",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Sri Sai Sowjanya Darna",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 3,
+          "created": "2026-01-16T20:59:39.504+0000",
+          "updated": "2026-03-23T13:05:38.631+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-46005",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "Create tests for the MaaS BFF",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Katelynn Perry",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 3,
+          "created": "2026-01-16T21:00:20.201+0000",
+          "updated": "2026-02-05T21:10:08.807+0000",
+          "resolutionDate": "2026-02-05T21:10:08.785+0000"
+        },
+        {
+          "key": "RHOAIENG-46300",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "QA Verification for API Keys UI work",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 2,
+          "created": "2026-01-19T17:03:34.642+0000",
+          "updated": "2026-03-23T13:05:38.452+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-46512",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "Epic Signoffs",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Griffin Sullivan",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "template"
+          ],
+          "storyPoints": 1,
+          "created": "2026-01-20T14:38:36.548+0000",
+          "updated": "2026-04-06T13:54:57.834+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-46639",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "Create Tiers - Groups show hardcoded list of values. ",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Griffin Sullivan",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas",
+            "dashboard-zaffre-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-21T02:38:59.553+0000",
+          "updated": "2026-02-25T16:07:01.028+0000",
+          "resolutionDate": "2026-02-25T16:07:00.983+0000"
+        },
+        {
+          "key": "RHOAIENG-46992",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "Edit Limits - Uncheck Token and Request limits in Edit Tiers doesn't update.",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Katelynn Perry",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas",
+            "dashboard-zaffre-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-22T19:56:38.132+0000",
+          "updated": "2026-02-27T00:40:09.925+0000",
+          "resolutionDate": "2026-02-04T15:56:45.062+0000"
+        },
+        {
+          "key": "RHOAIENG-47146",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "MaaS Tier Details page shows empty dash when no rate limits",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Griffin Sullivan",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-23T14:10:49.425+0000",
+          "updated": "2026-02-06T19:49:03.027+0000",
+          "resolutionDate": "2026-02-06T19:49:02.987+0000"
+        },
+        {
+          "key": "RHOAIENG-47450",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "Show MaaS details on Wizard Summary",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Katelynn Perry",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas",
+            "dashboard-area-model-serving"
+          ],
+          "storyPoints": 2,
+          "created": "2026-01-26T14:42:37.753+0000",
+          "updated": "2026-02-06T13:34:39.010+0000",
+          "resolutionDate": "2026-02-06T13:34:38.990+0000"
+        },
+        {
+          "key": "RHOAIENG-48786",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "Setting: Tiers nav item is visible for users",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Griffin Sullivan",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas",
+            "dashboard-zaffre-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-05T15:48:45.772+0000",
+          "updated": "2026-02-20T00:35:51.743+0000",
+          "resolutionDate": "2026-02-19T19:39:01.360+0000"
+        },
+        {
+          "key": "RHOAIENG-49860",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "Finish tying up the BFF and UI for MaaS API Keys",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Griffin Sullivan",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 1,
+          "created": "2026-02-16T14:28:57.087+0000",
+          "updated": "2026-03-02T20:55:14.148+0000",
+          "resolutionDate": "2026-03-02T20:55:14.109+0000"
+        },
+        {
+          "key": "RHOAIENG-51804",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "Add filtering and pagination to API Keys table",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Katelynn Perry",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-04T15:58:19.606+0000",
+          "updated": "2026-03-26T12:02:48.376+0000",
+          "resolutionDate": "2026-03-26T12:02:48.297+0000"
+        },
+        {
+          "key": "RHOAIENG-51805",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "Revoke single key in API Keys table",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Katelynn Perry",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-04T15:58:28.544+0000",
+          "updated": "2026-03-18T20:52:54.442+0000",
+          "resolutionDate": "2026-03-18T20:52:54.412+0000"
+        },
+        {
+          "key": "RHOAIENG-51806",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "Change expiration date picker in API Key create modal to a dropdown",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Claudia Alphonse",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-04T15:58:43.540+0000",
+          "updated": "2026-03-25T20:54:30.334+0000",
+          "resolutionDate": "2026-03-25T20:54:30.307+0000"
+        },
+        {
+          "key": "RHOAIENG-51807",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "Admin - list all API Keys",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Katelynn Perry",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-04T15:58:50.959+0000",
+          "updated": "2026-03-27T13:46:23.699+0000",
+          "resolutionDate": "2026-03-27T13:46:23.676+0000"
+        },
+        {
+          "key": "RHOAIENG-51808",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "[MVP-2] Revoke all of my keys for API Keys",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Dipanshu Gupta",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 1,
+          "created": "2026-03-04T15:59:05.666+0000",
+          "updated": "2026-03-23T06:19:14.951+0000",
+          "resolutionDate": "2026-03-23T06:19:14.891+0000"
+        },
+        {
+          "key": "RHOAIENG-51809",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "[MVP-2] Admin - revoke all API Keys for a user",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Dipanshu Gupta",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-04T15:59:12.008+0000",
+          "updated": "2026-04-01T15:12:13.900+0000",
+          "resolutionDate": "2026-04-01T15:12:13.872+0000"
+        },
+        {
+          "key": "RHOAIENG-51810",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "Update OpenAPI spec to account for API Keys changes in 3.4",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Wen Liang",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-04T15:59:18.304+0000",
+          "updated": "2026-03-16T14:46:40.065+0000",
+          "resolutionDate": "2026-03-16T14:46:40.040+0000"
+        },
+        {
+          "key": "RHOAIENG-51811",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "Update API Keys mocks in BFF",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Griffin Sullivan",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 5,
+          "created": "2026-03-04T15:59:29.798+0000",
+          "updated": "2026-03-18T13:15:05.093+0000",
+          "resolutionDate": "2026-03-18T13:15:05.061+0000"
+        },
+        {
+          "key": "RHOAIENG-51812",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "Update API Keys passthrough API in BFF",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Wen Liang",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 5,
+          "created": "2026-03-04T15:59:39.023+0000",
+          "updated": "2026-04-06T13:16:31.977+0000",
+          "resolutionDate": "2026-04-06T13:16:31.951+0000"
+        },
+        {
+          "key": "RHOAIENG-51813",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "[Stretch] View API Key page",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Minor",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-04T15:59:47.081+0000",
+          "updated": "2026-03-23T13:13:36.377+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54959",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "Add Subscription values to the Create API Key Modal",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Claudia Alphonse",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas",
+            "ready-for-grooming",
+            "zaffre-triaged"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-24T12:00:19.778+0000",
+          "updated": "2026-04-02T12:51:13.030+0000",
+          "resolutionDate": "2026-04-02T12:51:13.000+0000"
+        },
+        {
+          "key": "RHOAIENG-54966",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "Add Subscription column to the API Keys table",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Dipanshu Gupta",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas",
+            "ready-for-grooming",
+            "zaffre-triaged"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-24T12:09:20.090+0000",
+          "updated": "2026-04-06T08:45:26.589+0000",
+          "resolutionDate": "2026-04-06T08:45:26.560+0000"
+        },
+        {
+          "key": "RHOAIENG-56982",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "UX Fix for Signoff -Default API Keys table to show only Active keys on page load",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Katelynn Perry",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 1,
+          "created": "2026-04-07T14:12:50.570+0000",
+          "updated": "2026-04-07T18:27:59.199+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-57056",
+          "parentKey": "RHOAIENG-46002",
+          "summary": "API Keys UX-ism - Don't show Owner column for User",
+          "type": "Bug",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 0,
+          "created": "2026-04-07T20:33:11.401+0000",
+          "updated": "2026-04-07T20:36:53.401+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-48333",
+      "parentKey": "RHAISTRAT-1201",
+      "summary": "Refactor data handling code",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": null,
+      "components": [
+        "Model as a Service"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-02T16:15:09.169+0000",
+      "updated": "2026-03-23T21:47:58.482+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-48509",
+          "parentKey": "RHOAIENG-48333",
+          "summary": "Investigate API Key Management Architecture for Permanent API Keys",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Ishita Sequeira",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-02-03T14:58:40.376+0000",
+          "updated": "2026-03-09T01:46:54.730+0000",
+          "resolutionDate": "2026-02-27T19:26:31.492+0000"
+        },
+        {
+          "key": "RHOAIENG-49656",
+          "parentKey": "RHOAIENG-48333",
+          "summary": "POC for API Key Management",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Ishita Sequeira",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-12T13:27:51.798+0000",
+          "updated": "2026-03-06T14:14:51.320+0000",
+          "resolutionDate": "2026-03-06T14:14:51.293+0000"
+        },
+        {
+          "key": "RHOAIENG-50685",
+          "parentKey": "RHOAIENG-48333",
+          "summary": "Add happy path E2E Test",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-24T14:09:32.943+0000",
+          "updated": "2026-03-16T18:13:27.982+0000",
+          "resolutionDate": "2026-03-16T18:13:27.962+0000"
+        },
+        {
+          "key": "RHOAIENG-51162",
+          "parentKey": "RHOAIENG-48333",
+          "summary": "Migrate to sqlc based Database Layer",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Ishita Sequeira",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-26T13:41:03.419+0000",
+          "updated": "2026-03-06T14:16:05.691+0000",
+          "resolutionDate": "2026-03-06T14:16:05.672+0000"
+        },
+        {
+          "key": "RHOAIENG-51163",
+          "parentKey": "RHOAIENG-48333",
+          "summary": "Implement Tier-Based Authorization",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Ishita Sequeira",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-26T13:45:15.212+0000",
+          "updated": "2026-02-26T14:53:08.633+0000",
+          "resolutionDate": "2026-02-26T14:39:37.244+0000"
+        },
+        {
+          "key": "RHOAIENG-51168",
+          "parentKey": "RHOAIENG-48333",
+          "summary": "Update from Tier-based to Group-Based Authorization",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Ishita Sequeira",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-02-26T14:27:45.616+0000",
+          "updated": "2026-03-06T14:17:23.226+0000",
+          "resolutionDate": "2026-03-06T14:17:23.210+0000"
+        },
+        {
+          "key": "RHOAIENG-51169",
+          "parentKey": "RHOAIENG-48333",
+          "summary": "Add versioning v2 for new API Key endpoints",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Ishita Sequeira",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-26T14:30:08.629+0000",
+          "updated": "2026-02-26T14:40:14.872+0000",
+          "resolutionDate": "2026-02-26T14:40:14.842+0000"
+        },
+        {
+          "key": "RHOAIENG-51170",
+          "parentKey": "RHOAIENG-48333",
+          "summary": "Add API Key Expiration Support",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Ishita Sequeira",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-02-26T14:32:15.695+0000",
+          "updated": "2026-03-10T14:14:33.251+0000",
+          "resolutionDate": "2026-03-10T14:14:33.214+0000"
+        },
+        {
+          "key": "RHOAIENG-51171",
+          "parentKey": "RHOAIENG-48333",
+          "summary": "Implement Pagination for List Endpoint",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Ishita Sequeira",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-02-26T14:34:10.046+0000",
+          "updated": "2026-03-06T14:15:36.635+0000",
+          "resolutionDate": "2026-03-06T14:15:36.616+0000"
+        },
+        {
+          "key": "RHOAIENG-51172",
+          "parentKey": "RHOAIENG-48333",
+          "summary": "Add Admin Use Cases to API Key endpoints",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Ishita Sequeira",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-26T14:35:11.313+0000",
+          "updated": "2026-03-10T14:16:16.975+0000",
+          "resolutionDate": "2026-03-10T13:49:26.615+0000"
+        },
+        {
+          "key": "RHOAIENG-51173",
+          "parentKey": "RHOAIENG-48333",
+          "summary": "Remove ServiceAccount Token System and Consolidate API Endpoints Back to V1 Version",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Ishita Sequeira",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 8,
+          "created": "2026-02-26T14:37:54.802+0000",
+          "updated": "2026-03-09T01:47:16.593+0000",
+          "resolutionDate": "2026-03-06T14:14:38.950+0000"
+        },
+        {
+          "key": "RHOAIENG-51553",
+          "parentKey": "RHOAIENG-48333",
+          "summary": "Use Minted Token in Smoke Tests",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Ishita Sequeira",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-02T21:24:09.625+0000",
+          "updated": "2026-03-20T12:26:19.411+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51554",
+          "parentKey": "RHOAIENG-48333",
+          "summary": "Support OIDC/Kubernetes Tokens for GET /v1/models (If Possible)",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Jim Rhyness",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-02T21:25:24.574+0000",
+          "updated": "2026-04-07T18:32:24.259+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51784",
+          "parentKey": "RHOAIENG-48333",
+          "summary": "Add apiKeys.maxExpiration field to ModelsAsService CR in opendatahub-operator",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Ishita Sequeira",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-03-04T13:22:18.749+0000",
+          "updated": "2026-03-10T00:56:34.609+0000",
+          "resolutionDate": "2026-03-10T00:56:34.575+0000"
+        },
+        {
+          "key": "RHOAIENG-51950",
+          "parentKey": "RHOAIENG-48333",
+          "summary": "use pbkdf2 for maas api key hash storage",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Ishita Sequeira",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-04T20:54:27.931+0000",
+          "updated": "2026-04-01T13:58:56.803+0000",
+          "resolutionDate": "2026-04-01T13:58:56.777+0000"
+        },
+        {
+          "key": "RHOAIENG-52044",
+          "parentKey": "RHOAIENG-48333",
+          "summary": "Allow custom PostgreSQL connection in deploy script",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Yuriy Teodorovych",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-05T16:43:09.095+0000",
+          "updated": "2026-04-02T15:29:27.147+0000",
+          "resolutionDate": "2026-04-02T15:29:27.116+0000"
+        },
+        {
+          "key": "RHOAIENG-52470",
+          "parentKey": "RHOAIENG-48333",
+          "summary": "Add token validation in prow_run_smoke_test.sh",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Ishita Sequeira",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-03-10T14:12:53.857+0000",
+          "updated": "2026-03-12T15:21:49.231+0000",
+          "resolutionDate": "2026-03-12T15:21:49.196+0000"
+        },
+        {
+          "key": "RHOAIENG-52970",
+          "parentKey": "RHOAIENG-48333",
+          "summary": "Integrate MaaS with centralized PostgreSQL instance",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Lindani Phiri",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-12T18:05:17.235+0000",
+          "updated": "2026-03-12T18:17:17.316+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-53480",
+          "parentKey": "RHOAIENG-48333",
+          "summary": "Surface Missing maas-db-config Secret in ModelsAsService CR Status",
+          "type": "Story",
+          "status": "Testing",
+          "statusCategory": "In Progress",
+          "priority": "Blocker",
+          "assignee": "Yuriy Teodorovych",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-16T13:56:05.841+0000",
+          "updated": "2026-04-07T18:02:11.093+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54005",
+          "parentKey": "RHOAIENG-48333",
+          "summary": "Generate MaaS Token Endpoint Removed - breaks Gen AI Studio Playground",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Ishita Sequeira",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-17T19:44:37.814+0000",
+          "updated": "2026-03-23T13:46:44.934+0000",
+          "resolutionDate": "2026-03-23T13:46:44.905+0000"
+        },
+        {
+          "key": "RHOAIENG-54010",
+          "parentKey": "RHOAIENG-48333",
+          "summary": "Exclude ephemeral tokens from API key search results by default",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Ishita Sequeira",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-17T20:18:26.069+0000",
+          "updated": "2026-03-23T17:28:19.790+0000",
+          "resolutionDate": "2026-03-23T17:28:19.760+0000"
+        },
+        {
+          "key": "RHOAIENG-54410",
+          "parentKey": "RHOAIENG-48333",
+          "summary": "API Key Search Does Not Return Username Field",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chaitanya Kulkarni",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-19T19:14:18.358+0000",
+          "updated": "2026-03-26T02:35:43.879+0000",
+          "resolutionDate": "2026-03-26T02:35:43.855+0000"
+        },
+        {
+          "key": "RHOAIENG-54414",
+          "parentKey": "RHOAIENG-48333",
+          "summary": "Ephemeral API Key Cleanup Endpoint and CronJob",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Wen Liang",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-19T19:34:09.116+0000",
+          "updated": "2026-03-29T14:30:36.656+0000",
+          "resolutionDate": "2026-03-29T14:30:36.626+0000"
+        },
+        {
+          "key": "RHOAIENG-54600",
+          "parentKey": "RHOAIENG-48333",
+          "summary": "Replace Auth CR group enumeration with SAR-based admin check in maas-api",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Ishita Sequeira",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T21:02:21.493+0000",
+          "updated": "2026-03-26T00:55:52.227+0000",
+          "resolutionDate": "2026-03-26T00:55:52.202+0000"
+        },
+        {
+          "key": "RHOAIENG-54975",
+          "parentKey": "RHOAIENG-48333",
+          "summary": " SAR Admin Check Caching",
+          "type": "Story",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-24T13:32:38.258+0000",
+          "updated": "2026-03-24T14:05:50.504+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 2,
+    "totalIssues": 53,
+    "issuesByStatus": {
+      "Resolved": 14,
+      "Closed": 28,
+      "Backlog": 4,
+      "Review": 2,
+      "In Progress": 1,
+      "New": 3,
+      "Testing": 1
+    },
+    "issuesByCategory": {
+      "Done": 42,
+      "In Progress": 4,
+      "To Do": 7
+    },
+    "totalStoryPoints": 103,
+    "storyPointsDone": 93,
+    "completionPct": 79,
+    "staleCount": 1,
+    "unassignedCount": 4,
+    "blockerCount": 10,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-46002",
+        "summary": "Dashboard MaaS API Keys and Quality Hardening",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Griffin Sullivan",
+        "totalIssues": 28,
+        "doneIssues": 22,
+        "progressPct": 79,
+        "storyPoints": 59,
+        "storyPointsDone": 49,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-48333",
+        "summary": "API Key Management for MaaS",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": null,
+        "totalIssues": 25,
+        "doneIssues": 20,
+        "progressPct": 80,
+        "storyPoints": 44,
+        "storyPointsDone": 44,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

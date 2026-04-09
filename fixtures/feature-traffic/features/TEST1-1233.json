@@ -1,0 +1,237 @@
+{
+  "key": "TEST1-1233",
+  "summary": "Update API endpoint",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Rob Geada",
+    "accountId": "5e258328a7b9540e76f44821"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "aicp-team-crucible",
+    "confidence-yellow",
+    "needs-tech-review"
+  ],
+  "components": [
+    "AI Core Platform",
+    "AI Safety"
+  ],
+  "created": "2026-02-23T09:33:11.586+0000",
+  "updated": "2026-04-07T10:33:58.810+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1269",
+      "linkedSummary": "Platform-Level Safety Enforcement for AI Agent Tool Calls",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-536",
+      "linkedSummary": "Enable Feature Flags for TrustyAI Components in DataScienceCluster",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1382",
+      "linkedSummary": "Add trajectory rails to NeMo Guardrails that detect suspicious patterns across sequences of agent tool calls",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1380",
+      "linkedSummary": "Emit structured OTEL spans for every guardrail decision at the MCP Gateway for compliance audit trails and safety monitoring",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1383",
+      "linkedSummary": "Add action rails, intent-alignment rails, and budget rails to NeMo Guardrails for validating agent tool calls before execution",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1285",
+      "linkedSummary": " [DP] Provide Integration knobs for Guardrails with the MCP Gateway via the Trusty AI Operator",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-50654",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1233] - [DP] Provide Integration knobs for Guardrails with the MCP Gateway via the Trusty AI Operator",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "CONNLINK-751",
+      "linkedSummary": "AI Guardrails Integration for MCP",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Cloners",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1440",
+      "linkedSummary": "[TP] Expand MCP Gateway Guardrails Integration",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-50507",
+      "parentKey": "RHAISTRAT-1233",
+      "summary": "Update notification system",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Person 161",
+      "components": [
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-23T09:37:18.087+0000",
+      "updated": "2026-04-07T07:51:24.174+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50519",
+          "parentKey": "RHOAIENG-50507",
+          "summary": "Create separate overlays for different components in the TrustyAI operator",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Rob Geada",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-23T10:58:24.410+0000",
+          "updated": "2026-04-02T09:13:35.033+0000",
+          "resolutionDate": "2026-04-02T08:46:45.071+0000"
+        },
+        {
+          "key": "RHOAIENG-50520",
+          "parentKey": "RHOAIENG-50507",
+          "summary": "TrustyAI Guardrails-Only Mode: Work with platform team to create guardrails-only flag in the DSC",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Christina Xu",
+          "components": [
+            "AI Core Platform",
+            "AI Safety"
+          ],
+          "labels": [
+            "aicp-team-crucible"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-23T10:59:13.426+0000",
+          "updated": "2026-04-03T14:04:04.663+0000",
+          "resolutionDate": "2026-04-03T14:04:04.579+0000"
+        },
+        {
+          "key": "RHOAIENG-50538",
+          "parentKey": "RHOAIENG-50507",
+          "summary": "Add standalone predictive model support to NeMo-Guardrails",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Rob Geada",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-23T12:13:08.261+0000",
+          "updated": "2026-02-26T14:25:33.428+0000",
+          "resolutionDate": "2026-02-26T14:25:33.407+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-53244",
+      "parentKey": "RHAISTRAT-1233",
+      "summary": "Update API endpoint",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Person 167",
+      "components": [
+        "AI Safety"
+      ],
+      "labels": [
+        "needs-qe"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-13T09:45:34.353+0000",
+      "updated": "2026-04-07T08:04:45.990+0000",
+      "issues": []
+    }
+  ],
+  "metrics": {
+    "totalEpics": 2,
+    "totalIssues": 3,
+    "issuesByStatus": {
+      "Resolved": 2,
+      "Closed": 1
+    },
+    "issuesByCategory": {
+      "Done": 3,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 100,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 2,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-50507",
+        "summary": "Create Standalone Guardrails Deployment mode for TrustyAI Operator",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Rob Geada",
+        "totalIssues": 3,
+        "doneIssues": 3,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-53244",
+        "summary": "QE: Test the splitting of the TrustyAI operator into subcomponents",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Shelton Cyril",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

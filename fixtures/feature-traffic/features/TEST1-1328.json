@@ -1,0 +1,82 @@
+{
+  "key": "TEST1-1328",
+  "summary": "Fix memory leak",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Rishabh Saini",
+    "accountId": "62b083999abb660ab149aeb6"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "Approved-RFE",
+    "WXAI-alignment",
+    "llm-d"
+  ],
+  "components": [
+    "Documentation",
+    "llm-d",
+    "Model Serving"
+  ],
+  "created": "2026-03-18T16:14:10.469+0000",
+  "updated": "2026-03-19T21:34:19.408+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": []
+  },
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1327",
+      "linkedSummary": "llm-d: Priority-Based Routing & SLO Enforcement for Mixed Workloads - TP (3.4 Stable)",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "AIPCC-8903",
+      "linkedSummary": "AIPCC Feature[DP]: Python Package Enablement for llm-d SLO-Aware Routing",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-984",
+      "linkedSummary": "llm-d: Priority-Based Traffic Management & SLO Enforcement for Mixed Workloads",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RFE-9017",
+      "linkedSummary": "Support for Kubernetes Gateway API v1.5 in OpenShift 4.20: Red Hat AI ( Distributed Inference with llm-d)",
+      "linkedStatus": "Backlog"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

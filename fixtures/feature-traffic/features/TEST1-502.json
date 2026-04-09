@@ -1,0 +1,54 @@
+{
+  "key": "TEST1-502",
+  "summary": "Add input validation",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "Explainability"
+  ],
+  "created": "2024-02-13T16:43:05.999+0000",
+  "updated": "2025-11-25T21:43:06.125+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-130",
+      "linkedSummary": "Migrate TrustyAIService to Python and Implement Core Functionality",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-412",
+      "linkedSummary": "Clarify supportability of TrustyAI's LMEval Tasks ",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

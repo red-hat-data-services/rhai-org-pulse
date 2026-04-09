@@ -1,0 +1,66 @@
+{
+  "key": "TEST1-955",
+  "summary": "Add health check endpoint",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Anish Asthana",
+    "accountId": "70121:fcaeccc6-4cc5-4dc0-81e0-3fdf5a709419"
+  },
+  "fixVersions": [],
+  "labels": [
+    "llm-d"
+  ],
+  "components": [
+    "llm-d"
+  ],
+  "created": "2025-12-04T19:18:00.650+0000",
+  "updated": "2025-12-04T19:18:03.958+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1004",
+      "linkedSummary": "llm-d: Distributed MoE Serving",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "OCPSTRAT-1786",
+      "linkedSummary": "Gang Scheduling for OpenShift",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "OCPSTRAT-1786",
+      "linkedSummary": "Gang Scheduling for OpenShift",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

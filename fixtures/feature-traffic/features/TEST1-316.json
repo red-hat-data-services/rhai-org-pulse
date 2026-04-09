@@ -1,0 +1,101 @@
+{
+  "key": "TEST1-316",
+  "summary": "Add monitoring metrics",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Kezia Cook",
+    "accountId": "62867943d9ddcc006e9ec0b3"
+  },
+  "fixVersions": [],
+  "labels": [
+    "field-request"
+  ],
+  "components": [
+    "Notebook Server"
+  ],
+  "created": "2024-06-07T19:31:52.160+0000",
+  "updated": "2025-12-05T14:31:50.079+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-827",
+      "linkedSummary": "[GA]Create Connections API",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-346",
+      "linkedSummary": "Data Connections need to support more than just Object Storage",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Informs",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-23410",
+      "linkedSummary": "Mount OCI Connection into Workbench pod auth file",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-514",
+      "linkedSummary": "Inject default configurations in Notebook CR on workbench creation",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Incorporates",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-352",
+      "linkedSummary": "Better experience starting a git repository",
+      "linkedStatus": "Backlog"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-352",
+      "linkedSummary": "Better experience starting a git repository",
+      "linkedStatus": "Backlog"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-438",
+      "linkedSummary": "Persisting Git credentials in IDEs",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Account",
+      "direction": "outward",
+      "linkedKey": "CIPOE-148887",
+      "linkedSummary": "TURK HAVA YOLLARI ANONIM ORTAKLIGI",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

@@ -1,0 +1,126 @@
+{
+  "key": "TEST1-1182",
+  "summary": "Add caching mechanism",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "assignee": {
+    "displayName": "Adriel Paredes",
+    "accountId": "557058:8123280f-6f48-4b0f-8728-019c7db73f87"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "ide_scrum:indigo",
+    "needs-uxd",
+    "nse_workflow:strat",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "AI Core Platform",
+    "AI Hub",
+    "Documentation",
+    "Fine Tuning",
+    "Notebook Server",
+    "UXD"
+  ],
+  "created": "2026-02-03T00:37:05.133+0000",
+  "updated": "2026-04-08T03:24:55.462+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "RED as of 03/04",
+            "marks": [
+              {
+                "type": "textColor",
+                "attrs": {
+                  "color": "#ff0000"
+                }
+              },
+              {
+                "type": "strong"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": ": 3.3 migration has consumed all my teams and staff engineers time to refine and work on this Strat. Many engineers were required to work on 3.3 giving us no time to work more on the refinement. Once 3.3 migration is complete, we will refine and estimate if it can be done for 3.5 release (meaning, EA1,EA2, or GA)"
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1123",
+      "linkedSummary": "Expanding AI Hub in RHOAI ",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-749",
+      "linkedSummary": "Improving In-Workbench Access to Example Notebooks",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1115",
+      "linkedSummary": "Introduce a “Customize” Entry Point in the Model Catalog for Example-Driven Model Adaptation & Discoverability of Model Customization ",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Discovery - Connected",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1500",
+      "linkedSummary": "Quickstart Launcher & Catalog",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Account",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1153",
+      "linkedSummary": "Launchable Learning Resources in OpenShift AI",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-57034",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1182] “Customize” Entry Point in the Model Catalog",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

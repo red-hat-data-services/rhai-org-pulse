@@ -1,0 +1,133 @@
+{
+  "key": "TEST1-301",
+  "summary": "Implement retry logic",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Anish Asthana",
+    "accountId": "70121:fcaeccc6-4cc5-4dc0-81e0-3fdf5a709419"
+  },
+  "fixVersions": [],
+  "labels": [
+    "Approved-RFE",
+    "Observability",
+    "llm-d",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "llm-d",
+    "Model Serving",
+    "UXD",
+    "vLLM"
+  ],
+  "created": "2025-11-21T16:16:00.455+0000",
+  "updated": "2026-04-07T08:08:32.980+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-192",
+      "linkedSummary": "llm-d: Dynamic LoRA Adapter Loading & Basic Intelligent Routing",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-54775",
+      "parentKey": "RHAISTRAT-301",
+      "summary": "Update configuration settings",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Person 152",
+      "components": [
+        "llm-d",
+        "Model Serving"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-23T16:37:17.516+0000",
+      "updated": "2026-04-06T16:43:02.071+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-54776",
+          "parentKey": "RHOAIENG-54775",
+          "summary": "Implemenet and create unit tests for static LoRA adapters in Upstream Kserve",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Andres Llausas",
+          "components": [
+            "llm-d",
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-03-23T16:41:36.568+0000",
+          "updated": "2026-04-07T13:43:19.561+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54778",
+          "parentKey": "RHOAIENG-54775",
+          "summary": "Add python e2e tests for static LoRA adapters",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Andres Llausas",
+          "components": [
+            "llm-d",
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-03-23T16:44:36.944+0000",
+          "updated": "2026-04-07T13:43:19.246+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 2,
+    "issuesByStatus": {
+      "Review": 2
+    },
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 2,
+      "To Do": 0
+    },
+    "totalStoryPoints": 4,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-54775",
+        "summary": "Enable Static LoRA Adapters in Upstream Kserve",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Andres Llausas",
+        "totalIssues": 2,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 4,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

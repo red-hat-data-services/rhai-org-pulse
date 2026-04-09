@@ -1,0 +1,713 @@
+{
+  "key": "TEST1-693",
+  "summary": "Update notification system",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Normal",
+  "assignee": {
+    "displayName": "Rui Vieira",
+    "accountId": "70121:5a9a760a-598b-49c2-af0e-60c52f76c598"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "Documentation",
+    "Explainability"
+  ],
+  "created": "2024-06-05T06:41:01.874+0000",
+  "updated": "2025-11-25T21:51:00.048+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-130",
+      "linkedSummary": "Migrate TrustyAIService to Python and Implement Core Functionality",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-12481",
+      "linkedSummary": "[ccs] Clean up Trusty related release note section",
+      "linkedStatus": "Resolved"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-4461",
+      "parentKey": "RHAISTRAT-693",
+      "summary": "Add monitoring metrics",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 162",
+      "components": [
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2024-03-13T09:11:41.602+0000",
+      "updated": "2024-11-18T11:52:16.024+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-4462",
+          "parentKey": "RHOAIENG-4461",
+          "summary": "Create mock gRPC server for explainer testing",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "mlserving-xai-service"
+          ],
+          "storyPoints": 3,
+          "created": "2024-03-13T09:14:39.355+0000",
+          "updated": "2026-03-15T12:29:35.072+0000",
+          "resolutionDate": "2024-03-14T10:41:21.376+0000"
+        },
+        {
+          "key": "RHOAIENG-4463",
+          "parentKey": "RHOAIENG-4461",
+          "summary": "Ability to use custom tensor names from explainers",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "mlserving-xai-service"
+          ],
+          "storyPoints": 5,
+          "created": "2024-03-13T09:17:17.294+0000",
+          "updated": "2026-03-15T12:29:34.165+0000",
+          "resolutionDate": "2024-03-14T10:41:33.246+0000"
+        },
+        {
+          "key": "RHOAIENG-4483",
+          "parentKey": "RHOAIENG-4461",
+          "summary": "Exclude explainer inferences from bias calculations",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "mlserving-xai-service"
+          ],
+          "storyPoints": 3,
+          "created": "2024-03-13T22:09:39.347+0000",
+          "updated": "2024-05-01T12:36:34.515+0000",
+          "resolutionDate": "2024-05-01T12:36:34.493+0000"
+        },
+        {
+          "key": "RHOAIENG-4584",
+          "parentKey": "RHOAIENG-4461",
+          "summary": "Better gRPC channel management",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "mlserving-xai-service"
+          ],
+          "storyPoints": 3,
+          "created": "2024-03-18T23:05:26.721+0000",
+          "updated": "2024-05-01T12:36:43.698+0000",
+          "resolutionDate": "2024-05-01T12:36:43.688+0000"
+        },
+        {
+          "key": "RHOAIENG-4701",
+          "parentKey": "RHOAIENG-4461",
+          "summary": "Parse [1,1] tensors as [1]",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "mlserving-xai-service"
+          ],
+          "storyPoints": 3,
+          "created": "2024-03-20T15:52:47.491+0000",
+          "updated": "2026-03-15T12:29:30.374+0000",
+          "resolutionDate": "2024-05-01T12:36:45.087+0000"
+        },
+        {
+          "key": "RHOAIENG-4756",
+          "parentKey": "RHOAIENG-4461",
+          "summary": "Service data batches for metrics calculations should account for synthetic data in its size",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "mlserving-xai-service"
+          ],
+          "storyPoints": 3,
+          "created": "2024-03-22T08:45:39.450+0000",
+          "updated": "2024-05-01T12:36:47.094+0000",
+          "resolutionDate": "2024-05-01T12:36:47.086+0000"
+        },
+        {
+          "key": "RHOAIENG-4761",
+          "parentKey": "RHOAIENG-4461",
+          "summary": "Fix internal data being read whole when reading dataframe in batches",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "mlserving-xai-service"
+          ],
+          "storyPoints": 3,
+          "created": "2024-03-22T11:31:33.763+0000",
+          "updated": "2024-05-01T12:36:48.283+0000",
+          "resolutionDate": "2024-05-01T12:36:48.271+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-7559",
+      "parentKey": "RHAISTRAT-693",
+      "summary": "Refactor data handling code",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Normal",
+      "assignee": "Person 162",
+      "components": [
+        "AI Safety"
+      ],
+      "labels": [
+        "mlserving-xai-service"
+      ],
+      "storyPoints": 0,
+      "created": "2024-05-23T12:28:10.780+0000",
+      "updated": "2024-11-18T11:54:18.476+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-953",
+          "parentKey": "RHOAIENG-7559",
+          "summary": "Add unit tests covering Dataframe's internal data index consistency",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2023-12-14T10:16:55.002+0000",
+          "updated": "2026-03-15T09:55:12.051+0000",
+          "resolutionDate": "2025-11-11T16:51:17.944+0000"
+        },
+        {
+          "key": "RHOAIENG-9007",
+          "parentKey": "RHOAIENG-7559",
+          "summary": "Add prediction id endpoint to the TrustyAI service",
+          "type": "Story",
+          "status": "Testing",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "mlserving-xai-service"
+          ],
+          "storyPoints": 5,
+          "created": "2024-06-24T15:33:51.075+0000",
+          "updated": "2026-03-15T15:27:06.887+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-9080",
+          "parentKey": "RHOAIENG-7559",
+          "summary": "Add test/validation models for the TrustyAI explainers",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "mlserving-xai-core"
+          ],
+          "storyPoints": 5,
+          "created": "2024-06-26T08:11:12.110+0000",
+          "updated": "2026-03-15T15:27:05.971+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-9417",
+          "parentKey": "RHOAIENG-7559",
+          "summary": "Standardise output names across different connectors",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "mlserving-xai-service"
+          ],
+          "storyPoints": 2,
+          "created": "2024-07-03T07:54:05.051+0000",
+          "updated": "2026-03-15T09:53:44.633+0000",
+          "resolutionDate": "2024-07-25T16:07:05.435+0000"
+        },
+        {
+          "key": "RHOAIENG-9421",
+          "parentKey": "RHOAIENG-7559",
+          "summary": "Add ability to configure explainers via REST API",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "mlserving-xai-service"
+          ],
+          "storyPoints": 3,
+          "created": "2024-07-03T09:30:50.274+0000",
+          "updated": "2026-03-15T12:28:28.104+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-9639",
+          "parentKey": "RHOAIENG-7559",
+          "summary": "Adapt TrustyAI service connectors to TSSaliency time-series schemas",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "mlserving-xai-core"
+          ],
+          "storyPoints": 3,
+          "created": "2024-07-08T16:35:28.427+0000",
+          "updated": "2026-03-15T12:28:26.240+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-9640",
+          "parentKey": "RHOAIENG-7559",
+          "summary": "Add TSSaliency configuration to request payloads",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "mlserving-xai-service"
+          ],
+          "storyPoints": 1,
+          "created": "2024-07-08T16:36:50.716+0000",
+          "updated": "2026-03-15T05:46:10.412+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-9641",
+          "parentKey": "RHOAIENG-7559",
+          "summary": "Import inference ids as time-series for TSSaliency",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "mlserving-xai-service"
+          ],
+          "storyPoints": 3,
+          "created": "2024-07-08T16:37:58.087+0000",
+          "updated": "2026-03-15T12:28:25.301+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-10005",
+          "parentKey": "RHOAIENG-7559",
+          "summary": "Restrict explainers model locations to the same namespace as service",
+          "type": "Bug",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "mlserving-xai-service"
+          ],
+          "storyPoints": 2,
+          "created": "2024-07-17T07:52:50.638+0000",
+          "updated": "2026-03-15T09:53:33.698+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-10112",
+          "parentKey": "RHOAIENG-7559",
+          "summary": "Enable timeout protection against long-running explanations",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "mlserving-xai-service"
+          ],
+          "storyPoints": 2,
+          "created": "2024-07-18T17:06:28.294+0000",
+          "updated": "2026-03-15T09:53:30.922+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-10505",
+          "parentKey": "RHOAIENG-7559",
+          "summary": "Limit number of concurrent request to gRPC for explainers",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "mlserving-xai-operator"
+          ],
+          "storyPoints": 2,
+          "created": "2024-07-28T17:10:46.609+0000",
+          "updated": "2026-03-15T09:53:22.646+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-10547",
+          "parentKey": "RHOAIENG-7559",
+          "summary": "Prediction inputs for inference id outside batch size window might not be available",
+          "type": "Bug",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "mlserving-xai-service"
+          ],
+          "storyPoints": 2,
+          "created": "2024-07-29T13:09:29.795+0000",
+          "updated": "2026-03-15T09:53:21.754+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-10552",
+          "parentKey": "RHOAIENG-7559",
+          "summary": "Inference id endpoint should return all ids, not just the latest",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "RC1",
+            "mlserving-xai-service"
+          ],
+          "storyPoints": 2,
+          "created": "2024-07-29T13:24:07.725+0000",
+          "updated": "2026-03-15T09:53:20.818+0000",
+          "resolutionDate": "2024-08-14T12:58:49.942+0000"
+        },
+        {
+          "key": "RHOAIENG-10876",
+          "parentKey": "RHOAIENG-7559",
+          "summary": "TrustyAI explainers gRPC inference requests not using TLS",
+          "type": "Bug",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Blocker",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "found_in_nightly",
+            "mlserving-xai-service"
+          ],
+          "storyPoints": 0,
+          "created": "2024-08-05T08:12:43.449+0000",
+          "updated": "2026-02-13T21:29:41.827+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-10984",
+          "parentKey": "RHOAIENG-7559",
+          "summary": "Disable explainability endpoint from RHOAI",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "RC2",
+            "mlserving-xai-service"
+          ],
+          "storyPoints": 1,
+          "created": "2024-08-06T14:12:22.836+0000",
+          "updated": "2026-03-15T05:42:11.431+0000",
+          "resolutionDate": "2024-08-20T07:38:02.441+0000"
+        },
+        {
+          "key": "RHOAIENG-11229",
+          "parentKey": "RHOAIENG-7559",
+          "summary": "Remove arbitrary model server endpoint from payloads",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "RC1",
+            "enhancement",
+            "mlserving-xai-service"
+          ],
+          "storyPoints": 3,
+          "created": "2024-08-12T12:18:34.745+0000",
+          "updated": "2026-03-15T12:27:50.982+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-11230",
+          "parentKey": "RHOAIENG-7559",
+          "summary": "[Validation] Remove arbitrary model server endpoint from payloads",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Critical",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "mlserving-xai-service",
+            "mlserving-xai-testing"
+          ],
+          "storyPoints": 0,
+          "created": "2024-08-12T12:19:06.565+0000",
+          "updated": "2025-04-24T14:36:19.268+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-15917",
+          "parentKey": "RHOAIENG-7559",
+          "summary": "Write ADR for new service's explainability architecture",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2024-11-18T11:54:18.080+0000",
+          "updated": "2026-03-15T12:26:46.491+0000",
+          "resolutionDate": "2025-06-05T13:19:55.694+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-8511",
+      "parentKey": "RHAISTRAT-693",
+      "summary": "Implement webhook handler",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Former Member 21",
+      "components": [
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2024-06-13T08:51:07.941+0000",
+      "updated": "2024-10-17T17:22:36.726+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-9809",
+          "parentKey": "RHOAIENG-8511",
+          "summary": "[ccs] Document AI Explainers (upstream)",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Amy Duquette",
+          "components": [
+            "AI Safety",
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 8,
+          "created": "2024-07-12T14:42:25.885+0000",
+          "updated": "2024-09-20T12:39:28.068+0000",
+          "resolutionDate": "2024-08-28T08:51:29.271+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-9628",
+      "parentKey": "RHAISTRAT-693",
+      "summary": "Implement feature for module",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Person 330",
+      "components": [
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2024-07-08T13:42:36.229+0000",
+      "updated": "2024-10-21T09:25:15.647+0000",
+      "issues": []
+    }
+  ],
+  "metrics": {
+    "totalEpics": 4,
+    "totalIssues": 26,
+    "issuesByStatus": {
+      "Closed": 10,
+      "Resolved": 3,
+      "Testing": 1,
+      "In Progress": 3,
+      "Review": 8,
+      "New": 1
+    },
+    "issuesByCategory": {
+      "Done": 13,
+      "In Progress": 12,
+      "To Do": 1
+    },
+    "totalStoryPoints": 72,
+    "storyPointsDone": 41,
+    "completionPct": 50,
+    "staleCount": 12,
+    "unassignedCount": 0,
+    "blockerCount": 5,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-4461",
+        "summary": "Service explainability",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Rui Vieira",
+        "totalIssues": 7,
+        "doneIssues": 7,
+        "progressPct": 100,
+        "storyPoints": 23,
+        "storyPointsDone": 23,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-7559",
+        "summary": "TrustyAI Backend Explainers",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Rui Vieira",
+        "totalIssues": 18,
+        "doneIssues": 5,
+        "progressPct": 28,
+        "storyPoints": 41,
+        "storyPointsDone": 10,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-8511",
+        "summary": "[ccs Epic] Document AI Explainability",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Amy Duquette",
+        "totalIssues": 1,
+        "doneIssues": 1,
+        "progressPct": 100,
+        "storyPoints": 8,
+        "storyPointsDone": 8,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-9628",
+        "summary": "Test Model Explainers",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Neha Chopra",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

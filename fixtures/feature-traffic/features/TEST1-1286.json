@@ -1,0 +1,53 @@
+{
+  "key": "TEST1-1286",
+  "summary": "Add health check endpoint",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Ali Maredia",
+    "accountId": "5aba8737f4b3dd2a74573cf7"
+  },
+  "fixVersions": [],
+  "labels": [
+    "needs-refinement",
+    "rhoai-3.5"
+  ],
+  "components": [
+    "Data Processing"
+  ],
+  "created": "2026-03-10T15:42:31.080+0000",
+  "updated": "2026-04-03T18:47:04.483+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1265",
+      "linkedSummary": "Kubeflow Spark Operator - Tech Preview",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

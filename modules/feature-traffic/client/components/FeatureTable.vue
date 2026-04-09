@@ -44,39 +44,39 @@ const columns = [
   <div class="overflow-x-auto">
     <table class="w-full text-sm">
       <thead>
-        <tr class="border-b border-gray-700">
+        <tr class="border-b border-gray-200 dark:border-gray-700">
           <th
             v-for="col in columns"
             :key="col.key"
-            class="px-3 py-2 text-left text-gray-400 font-medium cursor-pointer hover:text-white select-none"
+            class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium cursor-pointer hover:text-gray-900 dark:hover:text-white select-none"
             @click="toggleSort(col.key)"
           >
             {{ col.label }}{{ sortIcon(col.key) }}
           </th>
-          <th class="px-3 py-2 text-left text-gray-400 font-medium">Version</th>
+          <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium">Version</th>
         </tr>
       </thead>
       <tbody>
         <tr
           v-for="f in features"
           :key="f.key"
-          class="border-b border-gray-800 hover:bg-gray-800/50 cursor-pointer transition-colors"
+          class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors"
           @click="$emit('select', f.key)"
         >
           <td class="px-3 py-2">
             <a
               :href="JIRA_BASE + f.key"
-              class="text-blue-400 hover:underline font-mono text-xs"
+              class="text-primary-600 dark:text-blue-400 hover:underline font-mono text-xs"
               @click.stop
               target="_blank"
             >{{ f.key }}</a>
           </td>
-          <td class="px-3 py-2 text-white max-w-xs truncate">{{ f.summary }}</td>
+          <td class="px-3 py-2 text-gray-900 dark:text-gray-100 max-w-xs truncate">{{ f.summary }}</td>
           <td class="px-3 py-2"><StatusBadge :status="f.status" /></td>
           <td class="px-3 py-2"><StatusBadge :health="f.health">{{ f.health }}</StatusBadge></td>
           <td class="px-3 py-2">
             <div class="flex items-center gap-2">
-              <div class="w-16 h-2 bg-gray-700 rounded-full overflow-hidden">
+              <div class="w-16 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                 <div
                   class="h-full rounded-full transition-all"
                   :class="{
@@ -87,20 +87,20 @@ const columns = [
                   :style="{ width: f.completionPct + '%' }"
                 />
               </div>
-              <span class="text-gray-400 text-xs">{{ f.completionPct }}%</span>
+              <span class="text-gray-500 dark:text-gray-400 text-xs">{{ f.completionPct }}%</span>
             </div>
           </td>
-          <td class="px-3 py-2 text-gray-300">{{ f.epicCount }}</td>
-          <td class="px-3 py-2 text-gray-300">{{ f.issueCount }}</td>
+          <td class="px-3 py-2 text-gray-700 dark:text-gray-300">{{ f.epicCount }}</td>
+          <td class="px-3 py-2 text-gray-700 dark:text-gray-300">{{ f.issueCount }}</td>
           <td class="px-3 py-2">
-            <span v-if="f.blockerCount > 0" class="text-red-400 font-medium">{{ f.blockerCount }}</span>
-            <span v-else class="text-gray-600">0</span>
+            <span v-if="f.blockerCount > 0" class="text-red-600 dark:text-red-400 font-medium">{{ f.blockerCount }}</span>
+            <span v-else class="text-gray-400 dark:text-gray-600">0</span>
           </td>
           <td class="px-3 py-2">
             <span
               v-for="v in (f.fixVersions || []).slice(0, 2)"
               :key="v"
-              class="inline-block px-1.5 py-0.5 rounded bg-gray-700 text-gray-300 text-xs mr-1"
+              class="inline-block px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs mr-1"
             >{{ v }}</span>
           </td>
         </tr>

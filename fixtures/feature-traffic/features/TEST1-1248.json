@@ -1,0 +1,55 @@
+{
+  "key": "TEST1-1248",
+  "summary": "Add logging for debugging",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Matt Leader",
+    "accountId": "5f4d000e347294003e9f1f90"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "confidence-yellow",
+    "needs-tech-review"
+  ],
+  "components": [
+    "AAET DevOps",
+    "Llama Stack Core"
+  ],
+  "created": "2026-02-27T10:12:59.474+0000",
+  "updated": "2026-04-03T17:29:47.016+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-928",
+      "linkedSummary": "[QE] Create a CI-level tracking of downstream Llama Stack performance",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

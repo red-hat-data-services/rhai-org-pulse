@@ -1,0 +1,1668 @@
+{
+  "key": "TEST1-1112",
+  "summary": "Update documentation",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Danny Pierce",
+    "accountId": "712020:f6a72143-e1ad-4089-b050-1c4b9a926b3b"
+  },
+  "fixVersions": [
+    "rhoai-3.4"
+  ],
+  "labels": [
+    "3.4-candidate",
+    "3.4-committed",
+    "dashboard-crimson-scrum",
+    "dashboard-razzmatazz-scrum",
+    "must-do",
+    "needs-documentation",
+    "playground",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "Documentation",
+    "Gen AI Studio",
+    "UXD"
+  ],
+  "created": "2026-01-12T19:45:53.300+0000",
+  "updated": "2026-04-07T15:24:26.795+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "March 31st Update",
+            "marks": [
+              {
+                "type": "strong"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Full Core functionality was demo’d in the Crimson Show & Tell"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Read, Create & Update functionality to real ML flow instance on cluster"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "UI Behaviour implemented"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Pending User feedback once cluster is released"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Working on test hardening and event tracking"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1102",
+      "linkedSummary": "Gen AI studio - 3.4 (Summit) Deliverables",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-150",
+      "linkedSummary": "Prompt Engineering & Management  - Embed MLFlow UI ",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1137",
+      "linkedSummary": "Prompt Management integration in gen AI studio playground",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Incorporates",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-45105",
+      "linkedSummary": "Spike: Validate Prompt Management (MLflow) integration in Gen AI Studio",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-51963",
+      "linkedSummary": "3.4 Release Feature Implementation Alignment",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-51115",
+      "linkedSummary": "[ccs Epic] Document enhancements to the GenAI Playground experience - 3.4",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1528",
+      "linkedSummary": "MLFlow Prompt Template Integration in gen AI studio",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-4140",
+      "linkedSummary": "[ccs Epic] Document prompt management in the GenAI Studio playground",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-47880",
+      "parentKey": "RHAISTRAT-1112",
+      "summary": "Fix data migration",
+      "status": "Review",
+      "statusCategory": "In Progress",
+      "priority": "Critical",
+      "assignee": "Person 211",
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-01-28T09:57:54.778+0000",
+      "updated": "2026-03-31T13:30:41.391+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-47775",
+          "parentKey": "RHOAIENG-47880",
+          "summary": "[UI] Update Prompts Tab with final UX Design",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-27T19:30:26.514+0000",
+          "updated": "2026-03-31T12:07:00.847+0000",
+          "resolutionDate": "2026-03-31T12:07:00.807+0000"
+        },
+        {
+          "key": "RHOAIENG-49809",
+          "parentKey": "RHOAIENG-47880",
+          "summary": "[BFF] Integrate mlflow-go sdk on Gen AI studio",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Eder Ignatowicz",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-15T17:33:56.008+0000",
+          "updated": "2026-03-04T00:37:50.439+0000",
+          "resolutionDate": "2026-02-17T23:37:18.008+0000"
+        },
+        {
+          "key": "RHOAIENG-49817",
+          "parentKey": "RHOAIENG-47880",
+          "summary": "[BFF] MLflow Prompt CRUD Endpoints",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Eder Ignatowicz",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-15T18:26:44.282+0000",
+          "updated": "2026-02-19T21:41:56.640+0000",
+          "resolutionDate": "2026-02-19T21:41:56.605+0000"
+        },
+        {
+          "key": "RHOAIENG-49818",
+          "parentKey": "RHOAIENG-47880",
+          "summary": "Install MLFlow Operator in Crimson cluster",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-15T18:47:15.914+0000",
+          "updated": "2026-03-30T11:04:03.926+0000",
+          "resolutionDate": "2026-03-30T11:04:03.899+0000"
+        },
+        {
+          "key": "RHOAIENG-49819",
+          "parentKey": "RHOAIENG-47880",
+          "summary": "Refactor MLFlow SDK client from Singleton to Stateless (namespace isolation)",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Eder Ignatowicz",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-15T18:48:38.448+0000",
+          "updated": "2026-03-05T17:49:58.841+0000",
+          "resolutionDate": "2026-03-05T17:49:58.803+0000"
+        },
+        {
+          "key": "RHOAIENG-49904",
+          "parentKey": "RHOAIENG-47880",
+          "summary": "Integrate BFF with real mlflow instance",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-16T15:47:08.426+0000",
+          "updated": "2026-03-25T12:21:18.041+0000",
+          "resolutionDate": "2026-03-25T12:21:18.016+0000"
+        },
+        {
+          "key": "RHOAIENG-56097",
+          "parentKey": "RHOAIENG-47880",
+          "summary": "RHAISTRAT-1112 Feature signoff - TP",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Blocker",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum",
+            "signoff"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-31T09:19:28.586+0000",
+          "updated": "2026-04-01T15:00:30.407+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-47881",
+      "parentKey": "RHAISTRAT-1112",
+      "summary": "Update error messages",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 195",
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-01-28T10:01:41.787+0000",
+      "updated": "2026-02-24T14:29:40.288+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-49808",
+          "parentKey": "RHOAIENG-47881",
+          "summary": "mlflow sdk - repository init",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Eder Ignatowicz",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 1,
+          "created": "2026-02-15T17:31:16.844+0000",
+          "updated": "2026-03-04T00:37:52.831+0000",
+          "resolutionDate": "2026-02-15T17:39:05.522+0000"
+        },
+        {
+          "key": "RHOAIENG-49810",
+          "parentKey": "RHOAIENG-47881",
+          "summary": "Go SDK for Prompt Registry",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Eder Ignatowicz",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 5,
+          "created": "2026-02-15T17:40:18.650+0000",
+          "updated": "2026-03-04T00:37:48.286+0000",
+          "resolutionDate": "2026-02-15T17:40:49.596+0000"
+        },
+        {
+          "key": "RHOAIENG-49811",
+          "parentKey": "RHOAIENG-47881",
+          "summary": "Chat prompt support",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Eder Ignatowicz",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-15T17:41:28.207+0000",
+          "updated": "2026-03-04T00:37:46.058+0000",
+          "resolutionDate": "2026-02-15T17:41:53.265+0000"
+        },
+        {
+          "key": "RHOAIENG-49812",
+          "parentKey": "RHOAIENG-47881",
+          "summary": "Delete operations",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Eder Ignatowicz",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 1,
+          "created": "2026-02-15T17:43:26.024+0000",
+          "updated": "2026-03-04T00:37:43.865+0000",
+          "resolutionDate": "2026-02-15T17:43:54.534+0000"
+        },
+        {
+          "key": "RHOAIENG-49813",
+          "parentKey": "RHOAIENG-47881",
+          "summary": "SDK CI and GHA",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Eder Ignatowicz",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2026-02-15T17:45:09.926+0000",
+          "updated": "2026-03-04T00:37:41.514+0000",
+          "resolutionDate": "2026-02-15T17:45:57.477+0000"
+        },
+        {
+          "key": "RHOAIENG-49814",
+          "parentKey": "RHOAIENG-47881",
+          "summary": "SDK performance optimizations",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Eder Ignatowicz",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2026-02-15T17:47:46.305+0000",
+          "updated": "2026-03-04T00:37:39.210+0000",
+          "resolutionDate": "2026-02-15T17:48:15.849+0000"
+        },
+        {
+          "key": "RHOAIENG-49815",
+          "parentKey": "RHOAIENG-47881",
+          "summary": "PostgreSQL integration tests ",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Eder Ignatowicz",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 1,
+          "created": "2026-02-15T17:59:07.088+0000",
+          "updated": "2026-03-04T00:37:37.028+0000",
+          "resolutionDate": "2026-02-15T17:59:43.926+0000"
+        },
+        {
+          "key": "RHOAIENG-49816",
+          "parentKey": "RHOAIENG-47881",
+          "summary": "bump MLflow to 3.9.0 and add midstream support",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Eder Ignatowicz",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2026-02-15T18:04:25.481+0000",
+          "updated": "2026-03-04T00:37:34.778+0000",
+          "resolutionDate": "2026-02-18T19:45:48.505+0000"
+        },
+        {
+          "key": "RHOAIENG-49858",
+          "parentKey": "RHOAIENG-47881",
+          "summary": "Add WithHeaders for custom HTTP headers and workspace isolation",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Eder Ignatowicz",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2026-02-16T14:20:46.056+0000",
+          "updated": "2026-03-04T00:37:32.569+0000",
+          "resolutionDate": "2026-02-18T19:45:41.958+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-50150",
+      "parentKey": "RHAISTRAT-1112",
+      "summary": "Implement retry logic",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 211",
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-18T17:10:59.030+0000",
+      "updated": "2026-03-25T11:55:02.247+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50151",
+          "parentKey": "RHOAIENG-50150",
+          "summary": "T004 - Add \"Load prompt\" link to Prompt tab header",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-18T17:11:25.823+0000",
+          "updated": "2026-03-16T15:25:30.194+0000",
+          "resolutionDate": "2026-03-16T15:25:30.169+0000"
+        },
+        {
+          "key": "RHOAIENG-50255",
+          "parentKey": "RHOAIENG-50150",
+          "summary": "T001 - Validate Prompt Registry API contract with Razzmatazz team",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:07:26.380+0000",
+          "updated": "2026-03-03T20:16:27.035+0000",
+          "resolutionDate": "2026-02-19T12:09:34.280+0000"
+        },
+        {
+          "key": "RHOAIENG-50256",
+          "parentKey": "RHOAIENG-50150",
+          "summary": "T002 - Implement API client for Prompt Registry",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:08:20.913+0000",
+          "updated": "2026-03-03T20:16:25.338+0000",
+          "resolutionDate": "2026-02-19T12:10:09.950+0000"
+        },
+        {
+          "key": "RHOAIENG-50257",
+          "parentKey": "RHOAIENG-50150",
+          "summary": "T003 - Create shared prompt state management",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:08:39.830+0000",
+          "updated": "2026-03-16T15:25:38.817+0000",
+          "resolutionDate": "2026-03-16T15:25:38.794+0000"
+        },
+        {
+          "key": "RHOAIENG-50258",
+          "parentKey": "RHOAIENG-50150",
+          "summary": "T005 - Implement Load Prompt modal shell",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:09:38.799+0000",
+          "updated": "2026-03-16T15:26:11.667+0000",
+          "resolutionDate": "2026-03-16T15:26:11.646+0000"
+        },
+        {
+          "key": "RHOAIENG-50259",
+          "parentKey": "RHOAIENG-50150",
+          "summary": "T006 - Display paginated prompt table",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:10:00.017+0000",
+          "updated": "2026-03-16T15:26:15.977+0000",
+          "resolutionDate": "2026-03-16T15:26:15.951+0000"
+        },
+        {
+          "key": "RHOAIENG-50260",
+          "parentKey": "RHOAIENG-50150",
+          "summary": "T007 - Implement pagination controls",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:10:11.302+0000",
+          "updated": "2026-03-03T20:23:18.035+0000",
+          "resolutionDate": "2026-03-02T12:21:58.770+0000"
+        },
+        {
+          "key": "RHOAIENG-50261",
+          "parentKey": "RHOAIENG-50150",
+          "summary": "T008 - Add name filter with API search",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:10:15.069+0000",
+          "updated": "2026-03-16T15:26:20.409+0000",
+          "resolutionDate": "2026-03-16T15:26:20.387+0000"
+        },
+        {
+          "key": "RHOAIENG-50262",
+          "parentKey": "RHOAIENG-50150",
+          "summary": "T009 - Implement preview sidebar on row selection",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:10:18.449+0000",
+          "updated": "2026-03-16T15:26:26.196+0000",
+          "resolutionDate": "2026-03-16T15:26:26.174+0000"
+        },
+        {
+          "key": "RHOAIENG-50263",
+          "parentKey": "RHOAIENG-50150",
+          "summary": "T010 - Add version dropdown to preview sidebar",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:10:21.756+0000",
+          "updated": "2026-03-16T15:26:30.524+0000",
+          "resolutionDate": "2026-03-16T15:26:30.501+0000"
+        },
+        {
+          "key": "RHOAIENG-50264",
+          "parentKey": "RHOAIENG-50150",
+          "summary": "T011 - Implement \"Load in playground\" action",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:10:25.083+0000",
+          "updated": "2026-03-16T15:26:34.949+0000",
+          "resolutionDate": "2026-03-16T15:26:34.922+0000"
+        },
+        {
+          "key": "RHOAIENG-50265",
+          "parentKey": "RHOAIENG-50150",
+          "summary": "T012 - Handle cancel and close",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:10:28.523+0000",
+          "updated": "2026-03-16T15:26:39.180+0000",
+          "resolutionDate": "2026-03-16T15:26:39.158+0000"
+        },
+        {
+          "key": "RHOAIENG-50269",
+          "parentKey": "RHOAIENG-50150",
+          "summary": "T016 - Handle Prompt Registry API unavailable",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:10:51.631+0000",
+          "updated": "2026-03-16T15:26:42.452+0000",
+          "resolutionDate": "2026-03-16T15:26:42.428+0000"
+        },
+        {
+          "key": "RHOAIENG-50270",
+          "parentKey": "RHOAIENG-50150",
+          "summary": "T017 - Handle MLFlow prompts with user/assistant roles",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:10:54.348+0000",
+          "updated": "2026-03-23T18:46:47.520+0000",
+          "resolutionDate": "2026-03-23T18:46:47.434+0000"
+        },
+        {
+          "key": "RHOAIENG-50271",
+          "parentKey": "RHOAIENG-50150",
+          "summary": "T018 - Handle legacy \"text\" prompts",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:10:57.735+0000",
+          "updated": "2026-03-23T18:46:55.488+0000",
+          "resolutionDate": "2026-03-23T18:46:55.437+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-50272",
+      "parentKey": "RHAISTRAT-1112",
+      "summary": "Refactor data handling code",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 211",
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-19T12:11:19.348+0000",
+      "updated": "2026-03-23T18:46:11.987+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50273",
+          "parentKey": "RHOAIENG-50272",
+          "summary": "T019 - Display provenance indicator for loaded prompts",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:11:34.846+0000",
+          "updated": "2026-03-23T18:44:51.576+0000",
+          "resolutionDate": "2026-03-23T18:44:51.549+0000"
+        },
+        {
+          "key": "RHOAIENG-50274",
+          "parentKey": "RHOAIENG-50272",
+          "summary": "T020 - Set loaded prompt to read-only by default",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:11:38.380+0000",
+          "updated": "2026-03-03T20:23:30.648+0000",
+          "resolutionDate": "2026-03-03T15:49:10.491+0000"
+        },
+        {
+          "key": "RHOAIENG-50275",
+          "parentKey": "RHOAIENG-50272",
+          "summary": "T021 - Add \"Edit\" and \"Clear\" buttons",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:11:42.438+0000",
+          "updated": "2026-03-03T20:23:32.506+0000",
+          "resolutionDate": "2026-03-03T15:48:54.523+0000"
+        },
+        {
+          "key": "RHOAIENG-50276",
+          "parentKey": "RHOAIENG-50272",
+          "summary": "T022 - Implement \"Edit\" button to enter edit mode",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:11:45.746+0000",
+          "updated": "2026-03-03T20:23:36.065+0000",
+          "resolutionDate": "2026-03-02T17:13:15.760+0000"
+        },
+        {
+          "key": "RHOAIENG-50277",
+          "parentKey": "RHOAIENG-50272",
+          "summary": "T023 - Enable edit mode",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:11:48.709+0000",
+          "updated": "2026-03-23T18:45:14.641+0000",
+          "resolutionDate": "2026-03-23T18:45:14.609+0000"
+        },
+        {
+          "key": "RHOAIENG-50278",
+          "parentKey": "RHOAIENG-50272",
+          "summary": "T024 - Show \"Unsaved changes\" indicator when content modified",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:11:51.556+0000",
+          "updated": "2026-03-03T20:23:16.003+0000",
+          "resolutionDate": "2026-03-03T15:49:24.086+0000"
+        },
+        {
+          "key": "RHOAIENG-50279",
+          "parentKey": "RHOAIENG-50272",
+          "summary": "T025 - Show confirmation input when discarding unsaved changes",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:12:03.822+0000",
+          "updated": "2026-03-30T12:39:56.850+0000",
+          "resolutionDate": "2026-03-30T12:39:56.829+0000"
+        },
+        {
+          "key": "RHOAIENG-50280",
+          "parentKey": "RHOAIENG-50272",
+          "summary": "T026 - Implement \"Clear\" action",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:12:06.945+0000",
+          "updated": "2026-03-03T20:23:27.026+0000",
+          "resolutionDate": "2026-03-03T15:49:36.605+0000"
+        },
+        {
+          "key": "RHOAIENG-50297",
+          "parentKey": "RHOAIENG-50272",
+          "summary": "T040 - Add \"Revert\" button when unsaved changes exist",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:14:00.771+0000",
+          "updated": "2026-03-18T22:18:39.836+0000",
+          "resolutionDate": "2026-03-18T16:59:57.140+0000"
+        },
+        {
+          "key": "RHOAIENG-50298",
+          "parentKey": "RHOAIENG-50272",
+          "summary": "T041 - Implement client-side revert action",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:14:04.225+0000",
+          "updated": "2026-03-23T18:45:03.596+0000",
+          "resolutionDate": "2026-03-23T18:45:03.573+0000"
+        },
+        {
+          "key": "RHOAIENG-50299",
+          "parentKey": "RHOAIENG-50272",
+          "summary": "T042 - Update state after revert",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:14:07.707+0000",
+          "updated": "2026-03-18T22:18:31.345+0000",
+          "resolutionDate": "2026-03-18T16:59:34.011+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-50284",
+      "parentKey": "RHAISTRAT-1112",
+      "summary": "Add logging for debugging",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 211",
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-19T12:12:37.172+0000",
+      "updated": "2026-03-30T11:04:30.641+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50285",
+          "parentKey": "RHOAIENG-50284",
+          "summary": "T030 - Add \"Save\" button to prompt area",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:12:51.339+0000",
+          "updated": "2026-03-18T22:18:46.253+0000",
+          "resolutionDate": "2026-03-18T17:03:28.687+0000"
+        },
+        {
+          "key": "RHOAIENG-50286",
+          "parentKey": "RHOAIENG-50284",
+          "summary": "T031 - Implement Save Prompt modal with relevant inputs",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:12:54.652+0000",
+          "updated": "2026-03-23T18:44:38.510+0000",
+          "resolutionDate": "2026-03-23T18:44:38.489+0000"
+        },
+        {
+          "key": "RHOAIENG-50287",
+          "parentKey": "RHOAIENG-50284",
+          "summary": "T032 - Add Name field with timestamp default",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:12:57.730+0000",
+          "updated": "2026-03-03T20:23:28.831+0000",
+          "resolutionDate": "2026-03-03T15:38:19.934+0000"
+        },
+        {
+          "key": "RHOAIENG-50288",
+          "parentKey": "RHOAIENG-50284",
+          "summary": "T033 - Add Prompt section with role dropdown",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:13:00.608+0000",
+          "updated": "2026-03-03T20:23:23.490+0000",
+          "resolutionDate": "2026-03-03T15:36:10.849+0000"
+        },
+        {
+          "key": "RHOAIENG-50289",
+          "parentKey": "RHOAIENG-50284",
+          "summary": "T034 - Add Commit message field",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:13:03.869+0000",
+          "updated": "2026-03-03T20:23:25.230+0000",
+          "resolutionDate": "2026-03-03T15:37:52.211+0000"
+        },
+        {
+          "key": "RHOAIENG-50290",
+          "parentKey": "RHOAIENG-50284",
+          "summary": "T035 - Handle save for new/local prompts",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:13:06.868+0000",
+          "updated": "2026-03-23T18:44:33.169+0000",
+          "resolutionDate": "2026-03-23T18:44:33.115+0000"
+        },
+        {
+          "key": "RHOAIENG-50291",
+          "parentKey": "RHOAIENG-50284",
+          "summary": "T036 - Handle save for existing registry prompts",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Divyanshi Gupta",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2026-02-19T12:13:19.589+0000",
+          "updated": "2026-03-26T04:12:03.680+0000",
+          "resolutionDate": "2026-03-26T04:12:03.657+0000"
+        },
+        {
+          "key": "RHOAIENG-50294",
+          "parentKey": "RHOAIENG-50284",
+          "summary": "T039 - Handle API errors during save",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Divyanshi Gupta",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2026-02-19T12:13:29.530+0000",
+          "updated": "2026-03-26T04:12:20.935+0000",
+          "resolutionDate": "2026-03-26T04:12:20.870+0000"
+        },
+        {
+          "key": "RHOAIENG-55238",
+          "parentKey": "RHOAIENG-50284",
+          "summary": "Preserve non-system messages (user, assistant) when saving new prompt versions",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Divyanshi Gupta",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 1,
+          "created": "2026-03-26T05:49:03.611+0000",
+          "updated": "2026-03-26T13:33:05.655+0000",
+          "resolutionDate": "2026-03-26T13:33:05.633+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-50296",
+      "parentKey": "RHAISTRAT-1112",
+      "summary": "Fix validation issue",
+      "status": "Backlog",
+      "statusCategory": "To Do",
+      "priority": "Minor",
+      "assignee": "Person 211",
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-19T12:13:45.968+0000",
+      "updated": "2026-03-18T22:11:08.387+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50283",
+          "parentKey": "RHOAIENG-50296",
+          "summary": "T029 - Handle very long prompts",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T12:12:17.594+0000",
+          "updated": "2026-04-01T14:58:37.760+0000",
+          "resolutionDate": "2026-03-31T10:40:27.771+0000"
+        },
+        {
+          "key": "RHOAIENG-50293",
+          "parentKey": "RHOAIENG-50296",
+          "summary": "T038 - Validate and handle name conflicts",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Divyanshi Gupta",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2026-02-19T12:13:26.147+0000",
+          "updated": "2026-04-01T14:58:37.661+0000",
+          "resolutionDate": "2026-03-26T04:12:15.271+0000"
+        },
+        {
+          "key": "RHOAIENG-54334",
+          "parentKey": "RHOAIENG-50296",
+          "summary": "Add usage tracking to prompt management feature",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-19T12:41:54.042+0000",
+          "updated": "2026-04-07T13:33:56.678+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54938",
+          "parentKey": "RHOAIENG-50296",
+          "summary": "Update placeholder name to be something generic like 'New Prompt' rather than timestamp",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-24T10:34:16.709+0000",
+          "updated": "2026-03-24T17:26:26.228+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55013",
+          "parentKey": "RHOAIENG-50296",
+          "summary": "Move feature from dev flag to tech preview",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Divyanshi Gupta",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-24T17:26:16.231+0000",
+          "updated": "2026-03-31T13:15:13.543+0000",
+          "resolutionDate": "2026-03-31T13:15:13.518+0000"
+        },
+        {
+          "key": "RHOAIENG-55155",
+          "parentKey": "RHOAIENG-50296",
+          "summary": "Inconsistent saved state when navigating back to the playground",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-25T14:08:13.329+0000",
+          "updated": "2026-04-01T14:59:07.296+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55456",
+          "parentKey": "RHOAIENG-50296",
+          "summary": "Commit message isnt pre filled when creating new prompt version",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T11:05:03.783+0000",
+          "updated": "2026-03-26T11:33:27.723+0000",
+          "resolutionDate": "2026-03-26T11:33:27.700+0000"
+        },
+        {
+          "key": "RHOAIENG-55466",
+          "parentKey": "RHOAIENG-50296",
+          "summary": "Feature Pre demo snag list",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-26T12:25:53.859+0000",
+          "updated": "2026-03-30T11:04:45.704+0000",
+          "resolutionDate": "2026-03-30T11:04:45.679+0000"
+        },
+        {
+          "key": "RHOAIENG-55481",
+          "parentKey": "RHOAIENG-50296",
+          "summary": "Prompt management displays incorrect prompt name and version when using chat comparison",
+          "type": "Bug",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-26T13:16:16.893+0000",
+          "updated": "2026-04-01T16:09:58.450+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 6,
+    "totalIssues": 60,
+    "issuesByStatus": {
+      "Closed": 17,
+      "Resolved": 38,
+      "In Progress": 1,
+      "New": 2,
+      "Review": 1,
+      "Backlog": 1
+    },
+    "issuesByCategory": {
+      "Done": 55,
+      "In Progress": 2,
+      "To Do": 3
+    },
+    "totalStoryPoints": 43,
+    "storyPointsDone": 43,
+    "completionPct": 92,
+    "staleCount": 0,
+    "unassignedCount": 2,
+    "blockerCount": 3,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-47880",
+        "summary": "Integrate Prompt Management in the GenAI Playground",
+        "status": "Review",
+        "statusCategory": "In Progress",
+        "assignee": "Danny Pierce",
+        "totalIssues": 7,
+        "doneIssues": 6,
+        "progressPct": 86,
+        "storyPoints": 15,
+        "storyPointsDone": 15,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-47881",
+        "summary": "Create mlflow-go sdk and create APIs for Prompt management",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Eder Ignatowicz",
+        "totalIssues": 9,
+        "doneIssues": 9,
+        "progressPct": 100,
+        "storyPoints": 19,
+        "storyPointsDone": 19,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-50150",
+        "summary": "Load Prompt Modal - Browse and load governed prompts in Playground",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Danny Pierce",
+        "totalIssues": 15,
+        "doneIssues": 15,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-50272",
+        "summary": "Prompt State & Editing - Track provenance and enable safe editing",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Danny Pierce",
+        "totalIssues": 11,
+        "doneIssues": 11,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-50284",
+        "summary": "Save Prompt - Persist prompts to registry with versioning",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Danny Pierce",
+        "totalIssues": 9,
+        "doneIssues": 9,
+        "progressPct": 100,
+        "storyPoints": 5,
+        "storyPointsDone": 5,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-50296",
+        "summary": "Prompt management follow up stories",
+        "status": "Backlog",
+        "statusCategory": "To Do",
+        "assignee": "Danny Pierce",
+        "totalIssues": 9,
+        "doneIssues": 5,
+        "progressPct": 56,
+        "storyPoints": 4,
+        "storyPointsDone": 4,
+        "health": "YELLOW"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

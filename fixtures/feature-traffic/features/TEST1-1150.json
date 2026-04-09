@@ -1,0 +1,1911 @@
+{
+  "key": "TEST1-1150",
+  "summary": "Update access controls",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "David Tam",
+    "accountId": "712020:7c27708d-5dea-459a-a695-d0cfc6e36a1b"
+  },
+  "fixVersions": [
+    "rhoai-3.4"
+  ],
+  "labels": [
+    "3.4-candidate",
+    "3.4-committed",
+    "aicp-team-crucible",
+    "dashboard-purple-scrum",
+    "tech-reviewed",
+    "watsonx.ai"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "RAG",
+    "UXD"
+  ],
+  "created": "2026-01-22T14:44:27.003+0000",
+  "updated": "2026-04-03T21:49:20.216+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1177",
+      "linkedSummary": "AutoRAG Jupyter Notebook Experience",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1176",
+      "linkedSummary": "[Feat] AutoRAG backend delivery (Core Engine and KFP Integration)",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-857",
+      "linkedSummary": "AutoRAG Core Engine and KFP Integration",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-858",
+      "linkedSummary": "AutoRAG Jupyter Notebook Experience",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-862",
+      "linkedSummary": "[MVP] AutoRAG UI Experience",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-51370",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1150] - MVP-AutoRAG-UI-Experience",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIUX-1577",
+      "linkedSummary": "[orient] Create design artifacts for AutoRAG MVP for refinement",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-48018",
+      "parentKey": "RHAISTRAT-1150",
+      "summary": "Refactor data handling code",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 122",
+      "components": [
+        "AI Core Dashboard",
+        "AutoRAG"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-01-29T14:33:26.514+0000",
+      "updated": "2026-04-02T13:51:19.291+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-48117",
+          "parentKey": "RHOAIENG-48018",
+          "summary": "[AutoRAG] Create AutoRAG results screen page",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Nick Mazzitelli",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-01-30T16:57:37.728+0000",
+          "updated": "2026-03-27T19:33:45.306+0000",
+          "resolutionDate": "2026-03-27T19:33:45.281+0000"
+        },
+        {
+          "key": "RHOAIENG-48118",
+          "parentKey": "RHOAIENG-48018",
+          "summary": "[AutoRAG] Create AutoRAG Leaderboard component",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Nick Mazzitelli",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-01-30T16:59:06.364+0000",
+          "updated": "2026-03-27T19:33:55.862+0000",
+          "resolutionDate": "2026-03-27T19:33:52.186+0000"
+        },
+        {
+          "key": "RHOAIENG-48129",
+          "parentKey": "RHOAIENG-48018",
+          "summary": "[AutoRAG] Create AutoRAG pattern details component",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Anish Surti",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 5,
+          "created": "2026-01-30T18:01:57.232+0000",
+          "updated": "2026-04-01T16:15:43.683+0000",
+          "resolutionDate": "2026-04-01T16:15:43.652+0000"
+        },
+        {
+          "key": "RHOAIENG-51606",
+          "parentKey": "RHOAIENG-48018",
+          "summary": "[AutoRAG][stretch goal] Add custom tree view",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum",
+            "needs-ux"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-03T15:31:31.670+0000",
+          "updated": "2026-03-03T17:52:12.342+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51608",
+          "parentKey": "RHOAIENG-48018",
+          "summary": "[AutoRAG] Add KFP Pipeline view",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Anish Surti",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-03T15:33:37.525+0000",
+          "updated": "2026-03-20T17:24:13.021+0000",
+          "resolutionDate": "2026-03-20T14:51:14.451+0000"
+        },
+        {
+          "key": "RHOAIENG-56064",
+          "parentKey": "RHOAIENG-48018",
+          "summary": "[AutoRAG] UI for Pattern Comparison",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [],
+          "labels": [
+            "needs-ux"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-30T23:40:40.672+0000",
+          "updated": "2026-04-01T15:55:07.320+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56070",
+          "parentKey": "RHOAIENG-48018",
+          "summary": "[AutoRAG] Fix Download pattern details for Safari and Firefox",
+          "type": "Bug",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-30T23:51:21.738+0000",
+          "updated": "2026-03-30T23:56:01.108+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-48711",
+      "parentKey": "RHAISTRAT-1150",
+      "summary": "Refactor data handling code",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Person 119",
+      "components": [
+        "AI Core Dashboard",
+        "AutoRAG"
+      ],
+      "labels": [
+        "dashboard-modular-architecture",
+        "dashboard-purple-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-04T21:48:54.512+0000",
+      "updated": "2026-03-12T21:37:21.175+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-48712",
+          "parentKey": "RHOAIENG-48711",
+          "summary": "Onboard module and pass Contract Testing",
+          "type": "Sub-task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Anish Surti",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-04T21:48:57.270+0000",
+          "updated": "2026-02-25T16:19:23.976+0000",
+          "resolutionDate": "2026-02-09T17:36:59.583+0000"
+        },
+        {
+          "key": "RHOAIENG-48713",
+          "parentKey": "RHOAIENG-48711",
+          "summary": "Dockerfile Image Onboarding",
+          "type": "Sub-task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Anish Surti",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-04T21:48:59.230+0000",
+          "updated": "2026-02-25T16:19:33.101+0000",
+          "resolutionDate": "2026-02-09T17:12:55.289+0000"
+        },
+        {
+          "key": "RHOAIENG-48714",
+          "parentKey": "RHOAIENG-48711",
+          "summary": "Create request to onboard module with DevOps",
+          "type": "Sub-task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Nick Mazzitelli",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2026-02-04T21:49:01.332+0000",
+          "updated": "2026-03-06T16:08:32.983+0000",
+          "resolutionDate": "2026-03-06T16:08:32.945+0000"
+        },
+        {
+          "key": "RHOAIENG-48715",
+          "parentKey": "RHOAIENG-48711",
+          "summary": "Onboard modular architecture in Konflux ODH",
+          "type": "Sub-task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Nick Mazzitelli",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-04T21:49:03.262+0000",
+          "updated": "2026-03-17T12:25:08.193+0000",
+          "resolutionDate": "2026-03-11T21:34:03.644+0000"
+        },
+        {
+          "key": "RHOAIENG-48716",
+          "parentKey": "RHOAIENG-48711",
+          "summary": "Set up module for Openshift CI builds - autorag",
+          "type": "Sub-task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "David Tam",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-04T21:49:05.148+0000",
+          "updated": "2026-03-11T19:09:40.269+0000",
+          "resolutionDate": "2026-03-11T19:09:40.250+0000"
+        },
+        {
+          "key": "RHOAIENG-48717",
+          "parentKey": "RHOAIENG-48711",
+          "summary": "Onboard Module in Manifest - autorag",
+          "type": "Sub-task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "David Tam",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-04T21:49:07.025+0000",
+          "updated": "2026-03-12T21:36:23.844+0000",
+          "resolutionDate": "2026-03-12T21:36:23.801+0000"
+        },
+        {
+          "key": "RHOAIENG-48718",
+          "parentKey": "RHOAIENG-48711",
+          "summary": "Onboard module in Operator - autorag",
+          "type": "Sub-task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Nick Mazzitelli",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-04T21:49:08.986+0000",
+          "updated": "2026-03-11T21:33:00.145+0000",
+          "resolutionDate": "2026-03-11T21:33:00.123+0000"
+        },
+        {
+          "key": "RHOAIENG-48719",
+          "parentKey": "RHOAIENG-48711",
+          "summary": "Onboard modular architecture in Konflux RHOAI",
+          "type": "Sub-task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "David Tam",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-modular-architecture",
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-04T21:49:10.836+0000",
+          "updated": "2026-03-17T12:29:17.373+0000",
+          "resolutionDate": "2026-03-12T12:38:10.964+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-48720",
+      "parentKey": "RHAISTRAT-1150",
+      "summary": "Add caching mechanism",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Blocker",
+      "assignee": "Person 129",
+      "components": [
+        "AutoRAG",
+        "DevOps"
+      ],
+      "labels": [
+        "dashboard-purple-scrum",
+        "devops-onboarding",
+        "sprint-3.4-EA1"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-04T21:52:19.280+0000",
+      "updated": "2026-03-06T15:45:04.811+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-48722",
+      "parentKey": "RHAISTRAT-1150",
+      "summary": "Update API endpoint",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Blocker",
+      "assignee": "Person 129",
+      "components": [
+        "AutoRAG",
+        "DevOps"
+      ],
+      "labels": [
+        "dashboard-modular-architecture",
+        "dashboard-purple-scrum",
+        "devops-onboarding",
+        "sprint-3.4-EA1",
+        "waiting-on-component"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-04T22:12:54.493+0000",
+      "updated": "2026-03-06T15:41:30.519+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-48887",
+      "parentKey": "RHAISTRAT-1150",
+      "summary": "Optimize database queries",
+      "status": "Review",
+      "statusCategory": "In Progress",
+      "priority": "Normal",
+      "assignee": "Person 131",
+      "components": [
+        "AI Core Dashboard",
+        "AutoRAG"
+      ],
+      "labels": [
+        "dashboard-purple-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-06T15:29:30.971+0000",
+      "updated": "2026-03-25T16:30:40.271+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-48889",
+          "parentKey": "RHOAIENG-48887",
+          "summary": "Test Create AutoRAG Experiment ",
+          "type": "Sub-task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Zahra Jalia",
+          "components": [
+            "AutoRAG"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-06T15:36:12.826+0000",
+          "updated": "2026-03-11T15:03:16.693+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-48895",
+          "parentKey": "RHOAIENG-48887",
+          "summary": "Create new experiment, with existing experiments, Milvus, answer faithfulness",
+          "type": "Sub-task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Normal",
+          "assignee": "Zahra Jalia",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-06T16:30:11.847+0000",
+          "updated": "2026-03-11T16:24:04.218+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51536",
+          "parentKey": "RHOAIENG-48887",
+          "summary": "Create Experiment using modified optimization metric (context correctness)",
+          "type": "Sub-task",
+          "status": "Testing",
+          "statusCategory": "In Progress",
+          "priority": "Normal",
+          "assignee": "Nikhil Sharma",
+          "components": [
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-02T16:46:17.911+0000",
+          "updated": "2026-03-11T16:05:54.366+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51537",
+          "parentKey": "RHOAIENG-48887",
+          "summary": "Create Experiment using modified optimization metric (answer correctness)",
+          "type": "Sub-task",
+          "status": "Testing",
+          "statusCategory": "In Progress",
+          "priority": "Normal",
+          "assignee": "Nikhil Sharma",
+          "components": [
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-02T16:48:23.794+0000",
+          "updated": "2026-03-11T16:06:01.961+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-48967",
+      "parentKey": "RHAISTRAT-1150",
+      "summary": "Add rate limiting",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 242",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-purple-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-09T06:24:31.605+0000",
+      "updated": "2026-03-03T21:28:11.751+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-48050",
+          "parentKey": "RHOAIENG-48967",
+          "summary": "Add AutoAI RAG nav item and feature flag to Gen AI Studio",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Anish Surti",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-01-29T19:10:52.400+0000",
+          "updated": "2026-03-03T21:26:35.371+0000",
+          "resolutionDate": "2026-02-09T15:06:51.493+0000"
+        },
+        {
+          "key": "RHOAIENG-48691",
+          "parentKey": "RHOAIENG-48967",
+          "summary": "Set up initial routing and skeleton pages",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Daniel Duong",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-04T16:38:08.046+0000",
+          "updated": "2026-02-25T16:31:56.693+0000",
+          "resolutionDate": "2026-02-25T16:31:56.673+0000"
+        },
+        {
+          "key": "RHOAIENG-50076",
+          "parentKey": "RHOAIENG-48967",
+          "summary": "Initialize documentation updates for AutoRAG",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Jeffrey Ho",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-17T21:26:07.544+0000",
+          "updated": "2026-03-03T21:28:07.372+0000",
+          "resolutionDate": "2026-02-23T15:10:03.054+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-48968",
+      "parentKey": "RHAISTRAT-1150",
+      "summary": "Fix authentication issue",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Normal",
+      "assignee": "Person 124",
+      "components": [
+        "AI Core Dashboard",
+        "AutoRAG"
+      ],
+      "labels": [
+        "dashboard-purple-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-09T06:38:32.776+0000",
+      "updated": "2026-03-30T15:11:38.167+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-48104",
+          "parentKey": "RHOAIENG-48968",
+          "summary": "Add BFF to GET Llamastack models",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Jeffrey Ho",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 5,
+          "created": "2026-01-30T16:13:33.980+0000",
+          "updated": "2026-03-05T14:12:08.472+0000",
+          "resolutionDate": "2026-03-05T14:12:08.434+0000"
+        },
+        {
+          "key": "RHOAIENG-48798",
+          "parentKey": "RHOAIENG-48968",
+          "summary": "[AutoRAG] Add BFF to get llamastack secrets",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Nick Mazzitelli",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-05T17:03:58.568+0000",
+          "updated": "2026-03-04T20:03:47.557+0000",
+          "resolutionDate": "2026-03-04T20:03:47.520+0000"
+        },
+        {
+          "key": "RHOAIENG-52473",
+          "parentKey": "RHOAIENG-48968",
+          "summary": "[AutoRAG] Migrate get Llamastack models BFF to secret based credentials",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Jeffrey Ho",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-10T14:40:36.651+0000",
+          "updated": "2026-03-11T14:40:46.129+0000",
+          "resolutionDate": "2026-03-11T14:40:46.085+0000"
+        },
+        {
+          "key": "RHOAIENG-52935",
+          "parentKey": "RHOAIENG-48968",
+          "summary": "[AutoRAG] Add BFF to fetch vector stores registered in LLS",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Jeffrey Ho",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-12T14:51:41.467+0000",
+          "updated": "2026-03-30T14:29:28.513+0000",
+          "resolutionDate": "2026-03-30T14:29:28.488+0000"
+        },
+        {
+          "key": "RHOAIENG-55158",
+          "parentKey": "RHOAIENG-48968",
+          "summary": "[AutoRAG] Refactor GET Llama stack models BFF to call native endpoint instead of OpenAI SDK RawJSON workaround",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Jeffrey Ho",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-25T14:31:59.988+0000",
+          "updated": "2026-03-25T14:41:14.815+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-48969",
+      "parentKey": "RHAISTRAT-1150",
+      "summary": "Implement search feature",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Person 100",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-09T06:42:48.280+0000",
+      "updated": "2026-03-25T16:30:42.274+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-48106",
+          "parentKey": "RHOAIENG-48969",
+          "summary": "Add BFF to GET all AutoRAG pipeline runs",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Christopher Jones",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 5,
+          "created": "2026-01-30T16:43:44.724+0000",
+          "updated": "2026-03-04T17:07:47.571+0000",
+          "resolutionDate": "2026-03-04T17:07:47.529+0000"
+        },
+        {
+          "key": "RHOAIENG-48108",
+          "parentKey": "RHOAIENG-48969",
+          "summary": "Add BFF to POST AutoRAG pipeline definition template",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Nick Mazzitelli",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-30T16:46:05.970+0000",
+          "updated": "2026-03-02T14:45:52.166+0000",
+          "resolutionDate": "2026-03-02T14:45:27.541+0000"
+        },
+        {
+          "key": "RHOAIENG-48109",
+          "parentKey": "RHOAIENG-48969",
+          "summary": "[AutoRAG]Create BFF to POST AutoRAG pipeline run from definition",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Anish Surti",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-01-30T16:46:43.710+0000",
+          "updated": "2026-03-09T15:27:01.427+0000",
+          "resolutionDate": "2026-03-07T16:00:26.019+0000"
+        },
+        {
+          "key": "RHOAIENG-48113",
+          "parentKey": "RHOAIENG-48969",
+          "summary": "[autorag] Create BFF to GET status of pipeline run",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Christopher Jones",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2026-01-30T16:49:18.747+0000",
+          "updated": "2026-03-04T17:07:54.705+0000",
+          "resolutionDate": "2026-03-04T17:07:54.667+0000"
+        },
+        {
+          "key": "RHOAIENG-48791",
+          "parentKey": "RHOAIENG-48969",
+          "summary": "[AutoRAG][stretch goal]Add BFF to DELETE AutoRAG pipeline run",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Christopher Jones",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-05T16:17:35.489+0000",
+          "updated": "2026-03-11T19:23:43.899+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-50400",
+          "parentKey": "RHOAIENG-48969",
+          "summary": "Create BFF to query for existing Pipeline Server",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Christopher Jones",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T19:44:19.020+0000",
+          "updated": "2026-03-03T16:38:15.588+0000",
+          "resolutionDate": "2026-03-02T13:50:22.428+0000"
+        },
+        {
+          "key": "RHOAIENG-52194",
+          "parentKey": "RHOAIENG-48969",
+          "summary": "Create middleware to auto-discover AutoRAG pipeline",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Christopher Jones",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-06T16:33:42.519+0000",
+          "updated": "2026-03-12T13:47:19.994+0000",
+          "resolutionDate": "2026-03-12T13:47:19.958+0000"
+        },
+        {
+          "key": "RHOAIENG-52467",
+          "parentKey": "RHOAIENG-48969",
+          "summary": "Query metadata GRPC service to get additional run details",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Christopher Jones",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-10T13:29:28.086+0000",
+          "updated": "2026-03-10T14:25:20.463+0000",
+          "resolutionDate": "2026-03-10T14:25:20.443+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-48970",
+      "parentKey": "RHAISTRAT-1150",
+      "summary": "Fix sorting order",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": "Person 125",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-purple-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-09T06:46:32.036+0000",
+      "updated": "2026-03-31T19:50:28.115+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-48114",
+          "parentKey": "RHOAIENG-48970",
+          "summary": "[AutoRAG]Create BFF to GET file from results reference S3 connection",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Daniel Duong",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 8,
+          "created": "2026-01-30T16:49:59.281+0000",
+          "updated": "2026-03-11T16:08:11.555+0000",
+          "resolutionDate": "2026-03-11T16:08:11.536+0000"
+        },
+        {
+          "key": "RHOAIENG-48116",
+          "parentKey": "RHOAIENG-48970",
+          "summary": "[AutoRAG] Create BFF to list files in results reference S3 storage bucket",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Gustavo Murcia",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-01-30T16:52:43.793+0000",
+          "updated": "2026-03-23T16:03:39.746+0000",
+          "resolutionDate": "2026-03-23T16:02:05.297+0000"
+        },
+        {
+          "key": "RHOAIENG-50385",
+          "parentKey": "RHOAIENG-48970",
+          "summary": "[AutoRAG] Create BFF to POST a new file in S3 storage bucket",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Matthew Thompson",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 5,
+          "created": "2026-02-19T18:21:03.250+0000",
+          "updated": "2026-03-27T19:41:13.117+0000",
+          "resolutionDate": "2026-03-27T19:41:13.086+0000"
+        },
+        {
+          "key": "RHOAIENG-50565",
+          "parentKey": "RHOAIENG-48970",
+          "summary": "[AutoRAG] Create BFF to fetch existing s3 secrets in the current project",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Nick Mazzitelli",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-23T16:00:27.418+0000",
+          "updated": "2026-03-30T19:57:49.738+0000",
+          "resolutionDate": "2026-03-04T20:03:39.535+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-48971",
+      "parentKey": "RHAISTRAT-1150",
+      "summary": "Implement data cleanup",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Person 120",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-09T06:48:54.410+0000",
+      "updated": "2026-03-27T19:42:31.963+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-48105",
+          "parentKey": "RHOAIENG-48971",
+          "summary": "[AutoRAG] Create empty state RAG Landing page",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Daniel Duong",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-01-30T16:35:05.290+0000",
+          "updated": "2026-03-27T19:42:15.821+0000",
+          "resolutionDate": "2026-03-27T19:42:15.795+0000"
+        },
+        {
+          "key": "RHOAIENG-48107",
+          "parentKey": "RHOAIENG-48971",
+          "summary": "Create AutoRAG run list table component",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Julia Kyaw",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-30T16:45:09.723+0000",
+          "updated": "2026-03-09T16:11:40.598+0000",
+          "resolutionDate": "2026-03-09T16:11:40.564+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-48972",
+      "parentKey": "RHAISTRAT-1150",
+      "summary": "Add batch processing",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Person 123",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-09T06:51:35.987+0000",
+      "updated": "2026-04-02T14:52:44.096+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-48110",
+          "parentKey": "RHOAIENG-48972",
+          "summary": "[AutoRAG] Create AutoRAG Configure screen component",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Gustavo Murcia",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-01-30T16:47:36.462+0000",
+          "updated": "2026-04-02T14:47:06.450+0000",
+          "resolutionDate": "2026-04-02T14:47:06.420+0000"
+        },
+        {
+          "key": "RHOAIENG-48111",
+          "parentKey": "RHOAIENG-48972",
+          "summary": "Consume common connection creation component on AutoRAG configure screen",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Matthew Thompson",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-30T16:48:07.962+0000",
+          "updated": "2026-03-06T20:38:55.297+0000",
+          "resolutionDate": "2026-03-06T20:38:55.261+0000"
+        },
+        {
+          "key": "RHOAIENG-48112",
+          "parentKey": "RHOAIENG-48972",
+          "summary": "[AutoRAG] Create dropzone component to drag and drop files to selected s3 connection",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Matthew Thompson",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-01-30T16:48:37.746+0000",
+          "updated": "2026-04-02T13:52:40.507+0000",
+          "resolutionDate": "2026-04-02T13:52:40.476+0000"
+        },
+        {
+          "key": "RHOAIENG-48115",
+          "parentKey": "RHOAIENG-48972",
+          "summary": "[AutoRAG] Create form component for new AutoRAG ",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Daniel Duong",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-01-30T16:52:09.250+0000",
+          "updated": "2026-03-19T21:06:44.312+0000",
+          "resolutionDate": "2026-03-19T21:06:44.279+0000"
+        },
+        {
+          "key": "RHOAIENG-48796",
+          "parentKey": "RHOAIENG-48972",
+          "summary": "[AutoRAG] Create AutoRAG Configure settings modal component",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Jeffrey Ho",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-05T16:36:47.957+0000",
+          "updated": "2026-03-05T14:12:22.038+0000",
+          "resolutionDate": "2026-03-05T14:12:21.999+0000"
+        },
+        {
+          "key": "RHOAIENG-48911",
+          "parentKey": "RHOAIENG-48972",
+          "summary": "[AutoRAG] Create UI component to browse S3 storage",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Gustavo Murcia",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 5,
+          "created": "2026-02-06T19:29:52.052+0000",
+          "updated": "2026-04-01T17:40:43.915+0000",
+          "resolutionDate": "2026-03-31T19:17:59.290+0000"
+        },
+        {
+          "key": "RHOAIENG-52934",
+          "parentKey": "RHOAIENG-48972",
+          "summary": "[AutoRAG] Create form component for selecting a vector store from LLS",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Jeffrey Ho",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-12T14:48:58.626+0000",
+          "updated": "2026-03-25T12:52:58.031+0000",
+          "resolutionDate": "2026-03-25T12:52:58.010+0000"
+        },
+        {
+          "key": "RHOAIENG-52938",
+          "parentKey": "RHOAIENG-48972",
+          "summary": "[AutoRAG] Create inline component to drag and drop test file to selected s3 connection",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Daniel Duong",
+          "components": [
+            "AI Core Dashboard",
+            "AutoRAG"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-12T15:01:07.998+0000",
+          "updated": "2026-04-02T14:43:19.304+0000",
+          "resolutionDate": "2026-04-02T14:43:19.279+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-51020",
+      "parentKey": "RHAISTRAT-1150",
+      "summary": "Add input validation",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Person 119",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-25T19:44:40.109+0000",
+      "updated": "2026-03-31T12:38:07.659+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-51021",
+          "parentKey": "RHOAIENG-51020",
+          "summary": "AutoRAG UI - Build from source (required)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "David Tam",
+          "components": [
+            "OpenShift AI Productization"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-25T19:44:50.427+0000",
+          "updated": "2026-03-30T12:11:23.724+0000",
+          "resolutionDate": "2026-03-13T17:15:17.023+0000"
+        },
+        {
+          "key": "RHOAIENG-51022",
+          "parentKey": "RHOAIENG-51020",
+          "summary": "AutoRAG UI - Feature signoff - TP",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [
+            "signoff"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-25T19:44:50.480+0000",
+          "updated": "2026-03-17T11:54:34.684+0000",
+          "resolutionDate": "2026-03-04T16:49:01.773+0000"
+        },
+        {
+          "key": "RHOAIENG-51023",
+          "parentKey": "RHOAIENG-51020",
+          "summary": "AutoRAG UI - Onboard to RHOAI Build - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "David Tam",
+          "components": [
+            "AutoRAG",
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-25T19:44:50.770+0000",
+          "updated": "2026-03-30T12:11:33.024+0000",
+          "resolutionDate": "2026-03-17T12:30:20.786+0000"
+        },
+        {
+          "key": "RHOAIENG-51024",
+          "parentKey": "RHOAIENG-51020",
+          "summary": "AutoRAG UI - Ensure work with supported lifecyles",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "David Tam",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-25T19:44:50.779+0000",
+          "updated": "2026-03-30T12:11:27.844+0000",
+          "resolutionDate": "2026-03-30T12:11:07.307+0000"
+        },
+        {
+          "key": "RHOAIENG-51025",
+          "parentKey": "RHOAIENG-51020",
+          "summary": "AutoRAG UI - Onboard to ODH Build - 2 week notice! ",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "David Tam",
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-25T19:44:50.799+0000",
+          "updated": "2026-03-30T12:11:34.778+0000",
+          "resolutionDate": "2026-03-17T12:26:28.212+0000"
+        },
+        {
+          "key": "RHOAIENG-51026",
+          "parentKey": "RHOAIENG-51020",
+          "summary": "AutoRAG UI - Feature documented in architecture diagrams",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Christopher Jones",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-25T19:44:50.819+0000",
+          "updated": "2026-03-31T19:33:37.109+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51027",
+          "parentKey": "RHOAIENG-51020",
+          "summary": "AutoRAG UI - Testing requirements",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Nikhil Sharma",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-25T19:44:51.268+0000",
+          "updated": "2026-03-30T12:11:39.360+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51028",
+          "parentKey": "RHOAIENG-51020",
+          "summary": "AutoRAG UI - Create component in jira",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "David Tam",
+          "components": [
+            "AutoRAG",
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-25T19:44:51.268+0000",
+          "updated": "2026-03-30T12:14:57.719+0000",
+          "resolutionDate": "2026-03-05T13:29:12.804+0000"
+        },
+        {
+          "key": "RHOAIENG-51029",
+          "parentKey": "RHOAIENG-51020",
+          "summary": "AutoRAG UI - Test with disconnected environment",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-25T19:44:51.290+0000",
+          "updated": "2026-03-30T12:11:42.191+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51030",
+          "parentKey": "RHOAIENG-51020",
+          "summary": "AutoRAG UI - RHOAI ONLY: AI Platform Core Components (AIPCC) Integration",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-25T19:44:51.286+0000",
+          "updated": "2026-03-30T12:11:44.729+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51031",
+          "parentKey": "RHOAIENG-51020",
+          "summary": "AutoRAG UI - Security requirements",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Normal",
+          "assignee": "David Tam",
+          "components": [
+            "AutoRAG"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-25T19:44:51.357+0000",
+          "updated": "2026-03-30T12:37:30.131+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51032",
+          "parentKey": "RHOAIENG-51020",
+          "summary": "AutoRAG UI - Multi-Architecture Support",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "David Tam",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-25T19:44:51.363+0000",
+          "updated": "2026-03-30T12:11:47.088+0000",
+          "resolutionDate": "2026-03-09T19:27:16.747+0000"
+        },
+        {
+          "key": "RHOAIENG-51033",
+          "parentKey": "RHOAIENG-51020",
+          "summary": "AutoRAG UI - MUST meet designed for FIPS",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Mhamad Chamseddin",
+          "components": [
+            "AutoRAG"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-25T19:44:53.543+0000",
+          "updated": "2026-03-30T12:11:52.352+0000",
+          "resolutionDate": "2026-03-19T13:15:47.555+0000"
+        },
+        {
+          "key": "RHOAIENG-51034",
+          "parentKey": "RHOAIENG-51020",
+          "summary": "[AutoRAG] Tech Preview - ODH and RHOAI Integrations - Integration with ODH operator - 2 week notice!",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "David Tam",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-crucible"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-25T19:44:55.194+0000",
+          "updated": "2026-04-01T21:24:16.315+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51035",
+          "parentKey": "RHOAIENG-51020",
+          "summary": "[AutoRAG] Tech Preview - ODH and RHOAI Integrations - Integration with RHOAI operator - 2 week notice!",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-crucible"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-25T19:44:55.238+0000",
+          "updated": "2026-03-30T12:11:56.072+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51036",
+          "parentKey": "RHOAIENG-51020",
+          "summary": "AutoRAG UI - Add component data to product-definitions for vulnerability tracking",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Normal",
+          "assignee": "David Tam",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-25T19:44:55.240+0000",
+          "updated": "2026-04-01T19:49:54.582+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51037",
+          "parentKey": "RHOAIENG-51020",
+          "summary": "AutoRAG UI - Repository added to ODH/RHOAI",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "David Tam",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-25T19:44:55.275+0000",
+          "updated": "2026-03-30T12:12:04.211+0000",
+          "resolutionDate": "2026-03-30T11:47:54.481+0000"
+        },
+        {
+          "key": "RHOAIENG-51038",
+          "parentKey": "RHOAIENG-51020",
+          "summary": "AutoRAG UI - Add source repo(s) to Snyk",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Normal",
+          "assignee": "David Tam",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-25T19:44:55.301+0000",
+          "updated": "2026-03-30T12:12:00.032+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51039",
+          "parentKey": "RHOAIENG-51020",
+          "summary": "[AutoRAG] Tech Preview - ODH and RHOAI Integrations - Add support for the new component in the QE related repositories",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Scott Froberg",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-crucible"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-25T19:44:55.411+0000",
+          "updated": "2026-03-30T17:50:45.572+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51040",
+          "parentKey": "RHOAIENG-51020",
+          "summary": "AutoRAG UI - Add component support for must-gather",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-25T19:44:55.433+0000",
+          "updated": "2026-03-17T11:57:04.244+0000",
+          "resolutionDate": "2026-03-04T16:47:38.324+0000"
+        },
+        {
+          "key": "RHOAIENG-51041",
+          "parentKey": "RHOAIENG-51020",
+          "summary": "AutoRAG UI - Add Prometheus (metrics) config for component (optional)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-25T19:44:55.493+0000",
+          "updated": "2026-03-17T11:57:10.969+0000",
+          "resolutionDate": "2026-03-04T16:48:19.094+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 12,
+    "totalIssues": 70,
+    "issuesByStatus": {
+      "Closed": 26,
+      "Resolved": 25,
+      "Backlog": 4,
+      "New": 9,
+      "Review": 2,
+      "Testing": 2,
+      "In Progress": 2
+    },
+    "issuesByCategory": {
+      "Done": 51,
+      "In Progress": 6,
+      "To Do": 13
+    },
+    "totalStoryPoints": 100,
+    "storyPointsDone": 94,
+    "completionPct": 73,
+    "staleCount": 3,
+    "unassignedCount": 6,
+    "blockerCount": 4,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-48018",
+        "summary": "[3.3] [AutoRAG UI] Results & Evaluation UI",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Nick Mazzitelli",
+        "totalIssues": 7,
+        "doneIssues": 4,
+        "progressPct": 57,
+        "storyPoints": 14,
+        "storyPointsDone": 14,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-48711",
+        "summary": "Dashboard AutoRag - Deployment",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "David Tam",
+        "totalIssues": 8,
+        "doneIssues": 8,
+        "progressPct": 100,
+        "storyPoints": 20,
+        "storyPointsDone": 20,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-48720",
+        "summary": "ODH Konflux Release Build Onboarding [AutoRAG]",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Mhamad Chamseddin",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-48722",
+        "summary": "RHOAI Konflux Onboarding [AutoRAG]",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Mhamad Chamseddin",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-48887",
+        "summary": "Write / Test AutoRAG Experience e2e scenarios ",
+        "status": "Review",
+        "statusCategory": "In Progress",
+        "assignee": "Nikhil Sharma",
+        "totalIssues": 4,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-48967",
+        "summary": "[1.0] [AutoRAG UI] Foundation & Navigation Setup",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Anish Surti",
+        "totalIssues": 3,
+        "doneIssues": 3,
+        "progressPct": 100,
+        "storyPoints": 3,
+        "storyPointsDone": 3,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-48968",
+        "summary": "[2.1] [AutoRAG UI] LlamaStack Integration BFF",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Jeffrey Ho",
+        "totalIssues": 5,
+        "doneIssues": 4,
+        "progressPct": 80,
+        "storyPoints": 8,
+        "storyPointsDone": 8,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-48969",
+        "summary": "[2.2] [AutoRAG UI] Pipeline Management BFF",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Christopher Jones",
+        "totalIssues": 8,
+        "doneIssues": 7,
+        "progressPct": 88,
+        "storyPoints": 16,
+        "storyPointsDone": 13,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-48970",
+        "summary": "[2.3] [AutoRAG UI] S3 Storage & Connections BFF",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Gustavo Murcia",
+        "totalIssues": 4,
+        "doneIssues": 4,
+        "progressPct": 100,
+        "storyPoints": 16,
+        "storyPointsDone": 16,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-48971",
+        "summary": "[3.1] [AutoRAG UI] Landing Page & Run List UI",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Julia Kyaw",
+        "totalIssues": 2,
+        "doneIssues": 2,
+        "progressPct": 100,
+        "storyPoints": 3,
+        "storyPointsDone": 3,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-48972",
+        "summary": "[3.2] [AutoRAG UI] Create & Configure Experiment Flow",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Matthew Thompson",
+        "totalIssues": 8,
+        "doneIssues": 8,
+        "progressPct": 100,
+        "storyPoints": 17,
+        "storyPointsDone": 17,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-51020",
+        "summary": "Tech Preview - ODH and RHOAI Integrations [AutoRAG UI]",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "David Tam",
+        "totalIssues": 21,
+        "doneIssues": 11,
+        "progressPct": 52,
+        "storyPoints": 3,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

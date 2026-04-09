@@ -1,0 +1,200 @@
+{
+  "key": "TEST1-1115",
+  "summary": "Fix race condition",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Kezia Cook",
+    "accountId": "62867943d9ddcc006e9ec0b3"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "dashboard-tangerine-scrum",
+    "nse_workflow:strat",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "Documentation",
+    "Feature Store",
+    "Notebook Server",
+    "UXD"
+  ],
+  "created": "2026-01-13T09:33:23.296+0000",
+  "updated": "2026-03-18T20:16:27.646+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Date: 15th Feb 2026",
+            "marks": [
+              {
+                "type": "strong"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Flag: Delayed to 3.4 GA (If dashboard can accommodate)",
+            "marks": [
+              {
+                "type": "strong"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Status: The refinement is completed. UX designs reviewed, corrections suggested.The dashboard team only has bandwidth to start the work in 3.4 GA release (Only 2 weeks). So this wont be able to make it in the 3.4 EA2 OR in the 3.4 release if the dashboard team is occupied fully."
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-312",
+      "linkedSummary": "Feature Store & Workbenches Integration Phase 1",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-64",
+      "linkedSummary": "Integrate Feature Store with Workbenches for user friendly and secure Data Science Workflows",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIUX-1817",
+      "linkedSummary": "[UX] Display workbench/projects connections information in Feature store pages",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIUX-1763",
+      "linkedSummary": "[UX] Display feature store connections information in Workbench pages",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIUX-1437",
+      "linkedSummary": "[UX] Improve Feature Store & Workbench Integration Workflows and Content",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-46115",
+      "parentKey": "RHAISTRAT-1115",
+      "summary": "Add unit tests for service",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Major",
+      "assignee": "Person 288",
+      "components": [
+        "Feature Store"
+      ],
+      "labels": [],
+      "storyPoints": 3,
+      "created": "2026-01-19T11:36:20.053+0000",
+      "updated": "2026-03-19T13:12:13.358+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-46116",
+          "parentKey": "RHOAIENG-46115",
+          "summary": "Refinement for Workbench integration by Discovery",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Jitendra Yejare",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-19T11:38:32.286+0000",
+          "updated": "2026-02-24T09:41:53.687+0000",
+          "resolutionDate": "2026-02-24T09:41:53.649+0000"
+        },
+        {
+          "key": "RHOAIENG-50502",
+          "parentKey": "RHOAIENG-46115",
+          "summary": "Implement Automation of access to Groups/Projects to feast Namespaces",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Jitendra Yejare",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-23T07:56:35.503+0000",
+          "updated": "2026-03-26T10:05:33.747+0000",
+          "resolutionDate": "2026-03-26T10:05:33.724+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 2,
+    "issuesByStatus": {
+      "Resolved": 2
+    },
+    "issuesByCategory": {
+      "Done": 2,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 8,
+    "storyPointsDone": 8,
+    "completionPct": 100,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "GREEN",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-46115",
+        "summary": "[Feature Store] Feast-Workbench Integration by Discovery",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Jitendra Yejare",
+        "totalIssues": 2,
+        "doneIssues": 2,
+        "progressPct": 100,
+        "storyPoints": 8,
+        "storyPointsDone": 8,
+        "health": "GREEN"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

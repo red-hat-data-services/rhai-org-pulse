@@ -1,0 +1,958 @@
+{
+  "key": "TEST1-611",
+  "summary": "Fix data migration",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Lindani Phiri",
+    "accountId": "70121:f3dfd35d-9dbc-4225-9e98-a28612802cc7"
+  },
+  "fixVersions": [],
+  "labels": [
+    "RH-request",
+    "aicp-team-heimdall"
+  ],
+  "components": [
+    "AI Core Platform"
+  ],
+  "created": "2025-10-21T14:55:40.424+0000",
+  "updated": "2026-03-09T19:35:30.588+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-549",
+      "linkedSummary": "ODH Security Hardening with AI  and other tool use ",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-898",
+      "linkedSummary": "Deliver Role Based Access Control for RHOAI components",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-46885",
+      "linkedSummary": "[BYOIDC] preserve 2.x dashboard urls with 3.x upgrades",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-36964",
+      "linkedSummary": "[gateway] increase coverage on the gateway controller",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-38569",
+      "linkedSummary": "[gateway] validate and manage network policies for kube-auth-proxy",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-37288",
+      "linkedSummary": "Gateway does not handle certificate rotation",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-28604",
+      "parentKey": "RHAISTRAT-611",
+      "summary": "Implement feature for module",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": "Person 261",
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [
+        "aicp-team-heimdall"
+      ],
+      "storyPoints": 0,
+      "created": "2025-06-30T16:07:35.918+0000",
+      "updated": "2026-01-20T00:30:45.164+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-28605",
+          "parentKey": "RHOAIENG-28604",
+          "summary": "[Spike] Investigate BYO OIDC for OCP clusters on PSI with osia",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 0,
+          "created": "2025-06-30T16:13:53.864+0000",
+          "updated": "2026-01-19T22:43:28.614+0000",
+          "resolutionDate": "2026-01-19T22:43:28.574+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-33145",
+      "parentKey": "RHAISTRAT-611",
+      "summary": "Add caching mechanism",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Former Member 19",
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-08-28T17:51:56.815+0000",
+      "updated": "2025-10-24T16:42:21.995+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-35703",
+          "parentKey": "RHOAIENG-33145",
+          "summary": "Create Benchmark Plan",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Chris Santiago",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-10-08T16:40:44.759+0000",
+          "updated": "2025-10-15T14:55:47.032+0000",
+          "resolutionDate": "2025-10-15T14:55:47.008+0000"
+        },
+        {
+          "key": "RHOAIENG-35704",
+          "parentKey": "RHOAIENG-33145",
+          "summary": "Create Benchmark Tool/Scripts",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Chris Santiago",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-10-08T16:41:16.337+0000",
+          "updated": "2025-10-23T13:33:49.647+0000",
+          "resolutionDate": "2025-10-23T13:33:49.621+0000"
+        },
+        {
+          "key": "RHOAIENG-35705",
+          "parentKey": "RHOAIENG-33145",
+          "summary": "Benchmark RHOAI 2.x Scenario",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Chris Santiago",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-10-08T16:41:40.718+0000",
+          "updated": "2025-10-23T13:37:11.778+0000",
+          "resolutionDate": "2025-10-23T13:37:11.758+0000"
+        },
+        {
+          "key": "RHOAIENG-35706",
+          "parentKey": "RHOAIENG-33145",
+          "summary": "Benchmark RHOAI 3.x + OAuth Scenario",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Chris Santiago",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-10-08T16:42:30.310+0000",
+          "updated": "2025-10-23T13:38:20.097+0000",
+          "resolutionDate": "2025-10-23T13:38:20.076+0000"
+        },
+        {
+          "key": "RHOAIENG-35707",
+          "parentKey": "RHOAIENG-33145",
+          "summary": "Benchmark RHOAI 3.x + OIDC Scenario",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Chris Santiago",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-10-08T16:42:48.293+0000",
+          "updated": "2025-10-23T13:37:44.523+0000",
+          "resolutionDate": "2025-10-23T13:37:44.496+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-35711",
+      "parentKey": "RHAISTRAT-611",
+      "summary": "Add filtering options",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 282",
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [
+        "aicp-team-heimdall"
+      ],
+      "storyPoints": 0,
+      "created": "2025-10-08T17:43:58.806+0000",
+      "updated": "2026-01-27T14:19:24.041+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-39037",
+          "parentKey": "RHOAIENG-35711",
+          "summary": "[kube-auth-proxy] remediate large konflux dependency update PRs",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Ugo Giordano",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-11-17T17:16:34.326+0000",
+          "updated": "2025-11-21T14:23:28.505+0000",
+          "resolutionDate": "2025-11-21T14:23:28.469+0000"
+        },
+        {
+          "key": "RHOAIENG-39158",
+          "parentKey": "RHOAIENG-35711",
+          "summary": "[Spike] [kube-auth-proxy] define upstream release process",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Ugo Giordano",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 0,
+          "created": "2025-11-18T17:47:33.774+0000",
+          "updated": "2026-01-19T11:33:54.106+0000",
+          "resolutionDate": "2026-01-19T11:33:54.089+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-35920",
+      "parentKey": "RHAISTRAT-611",
+      "summary": "Add logging for debugging",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 261",
+      "components": [
+        "AI Core Platform",
+        "TestOps"
+      ],
+      "labels": [
+        "aicp-team-heimdall"
+      ],
+      "storyPoints": 0,
+      "created": "2025-10-13T08:41:59.780+0000",
+      "updated": "2026-01-19T22:42:27.312+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-35922",
+          "parentKey": "RHOAIENG-35920",
+          "summary": "Adapt Jenkins pipeline cluster installation for BYOIDC setup",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Andrej Smigala",
+          "components": [
+            "AI Core Platform",
+            "TestOps"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 5,
+          "created": "2025-10-13T08:48:37.918+0000",
+          "updated": "2025-12-02T14:02:09.579+0000",
+          "resolutionDate": "2025-12-02T14:02:09.548+0000"
+        },
+        {
+          "key": "RHOAIENG-35923",
+          "parentKey": "RHOAIENG-35920",
+          "summary": "Add BYOIDC cluster detection to Jenkins pipeline",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": null,
+          "components": [
+            "AI Core Platform",
+            "TestOps"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-10-13T08:49:11.094+0000",
+          "updated": "2025-11-06T15:46:29.682+0000",
+          "resolutionDate": "2025-11-06T15:46:29.662+0000"
+        },
+        {
+          "key": "RHOAIENG-35924",
+          "parentKey": "RHOAIENG-35920",
+          "summary": "Adapt Jenkins pipeline cluster login for BYOIDC",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Andrej Smigala",
+          "components": [
+            "AI Core Platform",
+            "TestOps"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-10-13T08:49:56.658+0000",
+          "updated": "2025-11-06T15:46:28.446+0000",
+          "resolutionDate": "2025-11-06T15:46:28.425+0000"
+        },
+        {
+          "key": "RHOAIENG-35925",
+          "parentKey": "RHOAIENG-35920",
+          "summary": "Adapt ODS-CI tests for BYOIDC cluster compatibility",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Andrej Smigala",
+          "components": [
+            "AI Core Platform",
+            "TestOps"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-10-13T08:50:38.008+0000",
+          "updated": "2025-11-06T15:46:26.845+0000",
+          "resolutionDate": "2025-11-06T15:46:26.821+0000"
+        },
+        {
+          "key": "RHOAIENG-35926",
+          "parentKey": "RHOAIENG-35920",
+          "summary": "Create DNS records for data-science gateway after operator deployment",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Andrej Smigala",
+          "components": [
+            "AI Core Platform",
+            "TestOps"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-10-13T08:51:16.963+0000",
+          "updated": "2025-10-22T09:20:52.163+0000",
+          "resolutionDate": "2025-10-22T09:20:52.131+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-36864",
+      "parentKey": "RHAISTRAT-611",
+      "summary": "Update notification system",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Former Member 19",
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [
+        "RH-request",
+        "aicp-team-heimdall"
+      ],
+      "storyPoints": 0,
+      "created": "2025-10-21T15:20:44.910+0000",
+      "updated": "2026-02-19T14:58:30.742+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-36196",
+          "parentKey": "RHOAIENG-36864",
+          "summary": "Prometheus Alerts for kube-auth-proxy health check",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Santiago",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 3,
+          "created": "2025-10-15T18:57:53.239+0000",
+          "updated": "2025-11-24T18:35:49.965+0000",
+          "resolutionDate": "2025-11-04T14:01:17.516+0000"
+        },
+        {
+          "key": "RHOAIENG-36927",
+          "parentKey": "RHOAIENG-36864",
+          "summary": "[kube-auth-proxy] sensible defaults for cpu/mem/io reservations",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Chris Santiago",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 1,
+          "created": "2025-10-22T14:10:15.013+0000",
+          "updated": "2025-11-24T18:35:43.611+0000",
+          "resolutionDate": "2025-11-03T13:33:13.316+0000"
+        },
+        {
+          "key": "RHOAIENG-36980",
+          "parentKey": "RHOAIENG-36864",
+          "summary": "engage with perf&scale team to test RHOAI 3.x",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Chris Santiago",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 3,
+          "created": "2025-10-23T00:21:20.723+0000",
+          "updated": "2025-12-01T16:48:47.680+0000",
+          "resolutionDate": "2025-12-01T16:48:47.649+0000"
+        },
+        {
+          "key": "RHOAIENG-38255",
+          "parentKey": "RHOAIENG-36864",
+          "summary": "[gateway] make ext_authz timeouts tunable in gatewayconfig",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Chris Santiago",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 1,
+          "created": "2025-11-07T02:59:25.077+0000",
+          "updated": "2025-11-24T18:35:55.957+0000",
+          "resolutionDate": "2025-11-10T14:01:07.287+0000"
+        },
+        {
+          "key": "RHOAIENG-40618",
+          "parentKey": "RHOAIENG-36864",
+          "summary": " Update kube-auth-proxy resource requests/limits",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Chris Santiago",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 2,
+          "created": "2025-12-01T17:28:41.192+0000",
+          "updated": "2026-01-21T00:34:09.692+0000",
+          "resolutionDate": "2026-01-19T19:09:39.651+0000"
+        },
+        {
+          "key": "RHOAIENG-40619",
+          "parentKey": "RHOAIENG-36864",
+          "summary": "Update kube-rbac-proxy minimum resource requirements",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 2,
+          "created": "2025-12-01T17:36:43.853+0000",
+          "updated": "2026-02-27T00:41:44.236+0000",
+          "resolutionDate": "2026-02-19T14:58:11.172+0000"
+        },
+        {
+          "key": "RHOAIENG-40620",
+          "parentKey": "RHOAIENG-36864",
+          "summary": "Replace STRICT_DNS with EDS in authn Envoy filter",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Chris Santiago",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 2,
+          "created": "2025-12-01T17:37:21.832+0000",
+          "updated": "2026-01-26T19:48:21.157+0000",
+          "resolutionDate": "2026-01-09T08:58:53.583+0000"
+        },
+        {
+          "key": "RHOAIENG-40621",
+          "parentKey": "RHOAIENG-36864",
+          "summary": "Add control plane sizing guidance for RHOAI 3",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 2,
+          "created": "2025-12-01T17:42:10.026+0000",
+          "updated": "2026-01-19T19:12:16.928+0000",
+          "resolutionDate": "2026-01-19T19:12:16.892+0000"
+        },
+        {
+          "key": "RHOAIENG-40622",
+          "parentKey": "RHOAIENG-36864",
+          "summary": "[SPIKE] Investigate kube-auth-proxy scalability limitations",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Chris Santiago",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 2,
+          "created": "2025-12-01T17:44:01.052+0000",
+          "updated": "2026-01-19T19:15:37.336+0000",
+          "resolutionDate": "2026-01-19T19:15:37.294+0000"
+        },
+        {
+          "key": "RHOAIENG-40627",
+          "parentKey": "RHOAIENG-36864",
+          "summary": "Implement HPA for kube-auth-proxy",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Chris Santiago",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 2,
+          "created": "2025-12-01T18:53:00.463+0000",
+          "updated": "2026-02-27T00:41:42.527+0000",
+          "resolutionDate": "2026-01-22T14:32:26.226+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-36966",
+      "parentKey": "RHAISTRAT-611",
+      "summary": "Optimize database queries",
+      "status": "Backlog",
+      "statusCategory": "To Do",
+      "priority": "Critical",
+      "assignee": "Person 263",
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [
+        "RH-request",
+        "aicp-team-heimdall"
+      ],
+      "storyPoints": 0,
+      "created": "2025-10-22T18:42:47.127+0000",
+      "updated": "2025-11-24T18:34:28.554+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-39084",
+          "parentKey": "RHOAIENG-36966",
+          "summary": "[spike] research if connectivity link can replace kube-auth-proxy",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 0,
+          "created": "2025-11-18T14:16:48.859+0000",
+          "updated": "2026-02-13T21:24:55.550+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-36996",
+      "parentKey": "RHAISTRAT-611",
+      "summary": "Update error messages",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 263",
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [
+        "aicp-team-heimdall"
+      ],
+      "storyPoints": 0,
+      "created": "2025-10-23T08:20:38.045+0000",
+      "updated": "2026-02-02T11:11:29.876+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-36997",
+          "parentKey": "RHOAIENG-36996",
+          "summary": "E2E in OpenDataHub Operator for OpenShift OAuth Authentication",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Gowtham Shanmugasundaram",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-10-23T08:27:14.325+0000",
+          "updated": "2025-11-19T00:29:11.746+0000",
+          "resolutionDate": "2025-11-18T05:28:15.824+0000"
+        },
+        {
+          "key": "RHOAIENG-36998",
+          "parentKey": "RHOAIENG-36996",
+          "summary": "E2E in kube-auth-proxy for OpenShift OAuth Authentication",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gowtham Shanmugasundaram",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-10-23T08:41:15.687+0000",
+          "updated": "2025-10-28T10:50:46.684+0000",
+          "resolutionDate": "2025-10-28T10:50:46.644+0000"
+        },
+        {
+          "key": "RHOAIENG-37006",
+          "parentKey": "RHOAIENG-36996",
+          "summary": "[spike] E2E in OpenDataHub Operator for External OIDC Authentication",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 0,
+          "created": "2025-10-23T10:22:14.712+0000",
+          "updated": "2026-02-02T11:11:16.834+0000",
+          "resolutionDate": "2026-02-02T11:11:16.792+0000"
+        },
+        {
+          "key": "RHOAIENG-37007",
+          "parentKey": "RHOAIENG-36996",
+          "summary": "E2E in kube-auth-proxy for External OIDC Authentication",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-10-23T10:30:14.059+0000",
+          "updated": "2025-10-28T10:57:58.503+0000",
+          "resolutionDate": "2025-10-28T10:57:58.473+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-41718",
+      "parentKey": "RHAISTRAT-611",
+      "summary": "Refactor data handling code",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Major",
+      "assignee": "Person 194",
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [
+        "aicp-team-heimdall"
+      ],
+      "storyPoints": 0,
+      "created": "2025-11-13T18:06:02.730+0000",
+      "updated": "2025-12-10T21:22:29.819+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-38796",
+          "parentKey": "RHOAIENG-41718",
+          "summary": "Ensure everything was completed under Tech Preview",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 0,
+          "created": "2025-11-13T18:08:24.987+0000",
+          "updated": "2026-03-23T22:45:07.445+0000",
+          "resolutionDate": "2026-03-23T22:45:06.966+0000"
+        },
+        {
+          "key": "RHOAIENG-38797",
+          "parentKey": "RHOAIENG-41718",
+          "summary": "Acceptance Criteria",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 0,
+          "created": "2025-11-13T18:09:07.053+0000",
+          "updated": "2026-03-23T22:51:24.154+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-38798",
+          "parentKey": "RHOAIENG-41718",
+          "summary": "Security Requirements",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 0,
+          "created": "2025-11-13T18:09:56.463+0000",
+          "updated": "2026-03-23T22:48:28.904+0000",
+          "resolutionDate": "2026-03-23T22:48:28.429+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 8,
+    "totalIssues": 31,
+    "issuesByStatus": {
+      "Closed": 14,
+      "Resolved": 15,
+      "Backlog": 2
+    },
+    "issuesByCategory": {
+      "Done": 29,
+      "In Progress": 0,
+      "To Do": 2
+    },
+    "totalStoryPoints": 60,
+    "storyPointsDone": 60,
+    "completionPct": 94,
+    "staleCount": 0,
+    "unassignedCount": 2,
+    "blockerCount": 4,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-28604",
+        "summary": "BYO OIDC dev cluster automation",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Andrej Smigala",
+        "totalIssues": 1,
+        "doneIssues": 1,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-33145",
+        "summary": "[BYOIDC] Measure Gateway Architecture Performance Impact",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Chris Santiago",
+        "totalIssues": 5,
+        "doneIssues": 5,
+        "progressPct": 100,
+        "storyPoints": 15,
+        "storyPointsDone": 15,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-35711",
+        "summary": "[kube-auth-proxy] security posture and cve remediation plan",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Ugo Giordano",
+        "totalIssues": 2,
+        "doneIssues": 2,
+        "progressPct": 100,
+        "storyPoints": 3,
+        "storyPointsDone": 3,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-35920",
+        "summary": "Gateway API and BYOIDC changes for QE",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Andrej Smigala",
+        "totalIssues": 5,
+        "doneIssues": 5,
+        "progressPct": 100,
+        "storyPoints": 19,
+        "storyPointsDone": 19,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-36864",
+        "summary": "gateway & kube-auth-proxy scaling",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Chris Santiago",
+        "totalIssues": 10,
+        "doneIssues": 10,
+        "progressPct": 100,
+        "storyPoints": 20,
+        "storyPointsDone": 20,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-36966",
+        "summary": "[kube-auth-proxy] sync with upstream oauth2-proxy",
+        "status": "Backlog",
+        "statusCategory": "To Do",
+        "assignee": "Gowtham Shanmugasundaram",
+        "totalIssues": 1,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-36996",
+        "summary": "E2E Testing for Gateway Feature",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Gowtham Shanmugasundaram",
+        "totalIssues": 4,
+        "doneIssues": 4,
+        "progressPct": 100,
+        "storyPoints": 3,
+        "storyPointsDone": 3,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-41718",
+        "summary": "GA Add RHOAI support for Direct Authentication with an OIDC Identity Provider",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Lindani Phiri",
+        "totalIssues": 3,
+        "doneIssues": 2,
+        "progressPct": 67,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

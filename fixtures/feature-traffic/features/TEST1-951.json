@@ -1,0 +1,52 @@
+{
+  "key": "TEST1-951",
+  "summary": "Fix authentication issue",
+  "status": "Backlog",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "assignee": {
+    "displayName": "Kelly Brown",
+    "accountId": "712020:92f277ae-c984-44ca-868a-7f8724edd5be"
+  },
+  "fixVersions": [],
+  "labels": [
+    "Approved-RFE"
+  ],
+  "components": [
+    "Llama Stack Core"
+  ],
+  "created": "2025-12-03T12:24:30.730+0000",
+  "updated": "2026-04-01T06:03:28.281+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-973",
+      "linkedSummary": "Clarify benchmarking embedding models chapter in product docs and why it is needed",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

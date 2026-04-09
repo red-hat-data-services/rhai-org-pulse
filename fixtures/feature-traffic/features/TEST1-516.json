@@ -1,0 +1,64 @@
+{
+  "key": "TEST1-516",
+  "summary": "Add input validation",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Dhiraj Bokde",
+    "accountId": "70121:67c5db13-afc0-424b-bf38-007aac614b6c"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "AI Hub"
+  ],
+  "created": "2024-07-09T14:17:18.404+0000",
+  "updated": "2025-11-25T21:43:38.453+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-675",
+      "linkedSummary": "Create an OCI Compliant Storage layer for Model Registry",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIRFE-419",
+      "linkedSummary": "Create an OCI Compliant Storage layer for Model Registry",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHOAIRFE-273",
+      "linkedSummary": "Model Registry - Support triggering of webhooks",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

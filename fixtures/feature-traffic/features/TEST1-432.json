@@ -1,0 +1,96 @@
+{
+  "key": "TEST1-432",
+  "summary": "Implement search feature",
+  "status": "Backlog",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Adnan Khan",
+    "accountId": "60a7898adafdf00068c10adc"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "GA",
+    "GPU-as-a-Service",
+    "aicp-team-forge",
+    "dashboard-tangerine-scrum",
+    "ux-debt"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "AI Core Platform",
+    "Model Runtimes",
+    "Model Serving",
+    "UXD"
+  ],
+  "created": "2025-10-14T15:28:57.537+0000",
+  "updated": "2026-04-02T21:21:45.314+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-497",
+      "linkedSummary": "Integrate Kueue Workload Scheduling Information in Workbenches Overview",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-874",
+      "linkedSummary": "GPUaaS",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-630",
+      "linkedSummary": "Integrate Kueue Workload Scheduling Information in Model Deployments Overview",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHOAIUX-1216",
+      "linkedSummary": "UX: Kueue Workload Visibility in Model Deployment Status",
+      "linkedStatus": "To Do"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-15568",
+      "linkedSummary": "Implement Improved Serving Statuses",
+      "linkedStatus": "Backlog"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIUX-2227",
+      "linkedSummary": "[3.4 UX Risk] Platform: Lack of granular deployment status information (Kueue Workload Visibility in Model Deployment Status)",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "key": "TEST1-496",
+  "summary": "Update access controls",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Jeff DeMoss",
+    "accountId": "604eca32686bf500700a0b6d"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "AI Core Dashboard",
+    "Customer Exploration & Test",
+    "UXD"
+  ],
+  "created": "2024-06-27T18:25:30.169+0000",
+  "updated": "2026-02-10T04:38:43.477+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Incorporates",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-11338",
+      "linkedSummary": "Home page projects card, should always show DS projects.",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHOAIRFE-100",
+      "linkedSummary": "Enabling users to mark favorite projects",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

@@ -1,0 +1,129 @@
+{
+  "key": "TEST1-138",
+  "summary": "Add input validation",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Ramesh Reddy",
+    "accountId": "557058:8e24dad9-09d5-4261-85de-4b84056a520e"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "agentic",
+    "confidence-yellow",
+    "kubeflow",
+    "mcp",
+    "mcp-registry"
+  ],
+  "components": [
+    "AgentDev",
+    "Agentic",
+    "AI Hub"
+  ],
+  "created": "2025-10-22T16:17:16.165+0000",
+  "updated": "2026-04-04T11:37:45.352+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-137",
+      "linkedSummary": "MCP Server Deployment with OpenShift AI",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1084",
+      "linkedSummary": "Dev Preview - MCP Catalog – Enterprise Control of MCP Assets",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-960",
+      "linkedSummary": "Integrate, Validate, and Certify MCP Servers (and ISVs) + Explore Integration with Model Registry - Cloned from RHAIRFE-437",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1215",
+      "linkedSummary": "[DP] Agent Metadata Spec, Registry & Discovery",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-714",
+      "linkedSummary": "Implement an MCP Validation Framework for Server Trust, Safety, and Quality",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-699",
+      "linkedSummary": "MCP Catalog – Enterprise Control of MCP Assets",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-437",
+      "linkedSummary": "Integrate, Validate, and Certify MCP Servers (and ISVs) + Explore Integration with Model Registry",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-294",
+      "linkedSummary": "MCP Registry – Centralized Governance",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-932",
+      "linkedSummary": "Securely Connect Agents to Tools: MCP Connectivity",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1484",
+      "linkedSummary": "Agent Registry for OpenShift AI (RHOAI) — Phase 1",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1436",
+      "linkedSummary": "Agent Registry for OpenShift AI (RHOAI) — Phase 1",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

@@ -1,0 +1,713 @@
+{
+  "key": "TEST1-1151",
+  "summary": "Add filtering options",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Imran Khalidi",
+    "accountId": "5fd451a591bb2e0108e2514b"
+  },
+  "fixVersions": [
+    "rhoai-3.4"
+  ],
+  "labels": [
+    "3.4-candidate"
+  ],
+  "components": [
+    "Documentation",
+    "Model Serving Runtimes"
+  ],
+  "created": "2026-01-22T16:59:34.002+0000",
+  "updated": "2026-04-07T05:47:19.294+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "date",
+            "attrs": {
+              "timestamp": "1773792000000"
+            }
+          },
+          {
+            "type": "text",
+            "text": "Status Update - Team is on track for 3.4 GA"
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-51470",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1151] - ML Server GA work",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-278",
+      "linkedSummary": "OOTB serving support for classical ML models",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-47678",
+      "parentKey": "RHAISTRAT-1151",
+      "summary": "Fix validation issue",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 135",
+      "components": [
+        "Model Runtimes"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-01-27T15:55:32.345+0000",
+      "updated": "2026-03-12T10:15:15.011+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-45149",
+          "parentKey": "RHOAIENG-47678",
+          "summary": "POC: Evaluate ONNX Model Format Support in MLServer",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Syed Nomaan Ali",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-01-13T11:24:16.335+0000",
+          "updated": "2026-03-15T09:47:21.376+0000",
+          "resolutionDate": "2026-01-23T07:21:38.631+0000"
+        },
+        {
+          "key": "RHOAIENG-47736",
+          "parentKey": "RHOAIENG-47678",
+          "summary": "[Spike] Investigate GPU support in MLServer and framework compatibility",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Brett Thompson",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-01-27T17:05:29.457+0000",
+          "updated": "2026-02-06T20:01:45.862+0000",
+          "resolutionDate": "2026-02-06T20:01:45.826+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-47681",
+      "parentKey": "RHAISTRAT-1151",
+      "summary": "Implement search feature",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 135",
+      "components": [
+        "Model Runtimes"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-01-27T16:56:12.846+0000",
+      "updated": "2026-03-18T21:21:51.986+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-46109",
+          "parentKey": "RHOAIENG-47681",
+          "summary": "SeldonIO/MLServer does not seem to be working well with ModelCars",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Syed Nomaan Ali",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-01-19T10:55:56.346+0000",
+          "updated": "2026-03-15T12:23:16.644+0000",
+          "resolutionDate": "2026-02-16T05:48:52.694+0000"
+        },
+        {
+          "key": "RHOAIENG-47104",
+          "parentKey": "RHOAIENG-47681",
+          "summary": "Add ONNX Runtime as a New MLServer Runtime",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Syed Nomaan Ali",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-01-23T07:44:04.051+0000",
+          "updated": "2026-03-12T09:20:23.172+0000",
+          "resolutionDate": "2026-03-12T09:20:23.135+0000"
+        },
+        {
+          "key": "RHOAIENG-47134",
+          "parentKey": "RHOAIENG-47681",
+          "summary": "Integrate ONNX Models into Existing MLServer Test Suite",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Syed Nomaan Ali",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-01-23T12:17:21.081+0000",
+          "updated": "2026-03-10T15:46:55.525+0000",
+          "resolutionDate": "2026-03-10T15:46:55.504+0000"
+        },
+        {
+          "key": "RHOAIENG-47752",
+          "parentKey": "RHOAIENG-47681",
+          "summary": "[Spike] Validate KServe pre/post processing integration with MLServer runtime",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Brett Thompson",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-27T17:14:06.058+0000",
+          "updated": "2026-03-18T21:21:40.570+0000",
+          "resolutionDate": "2026-03-05T14:08:51.707+0000"
+        },
+        {
+          "key": "RHOAIENG-47756",
+          "parentKey": "RHOAIENG-47681",
+          "summary": "Create UI-based tutorials for predictive AI using MLServer on OpenDataHub for Tech Preview",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Brett Thompson",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-01-27T17:28:56.552+0000",
+          "updated": "2026-03-18T21:21:33.240+0000",
+          "resolutionDate": "2026-03-18T21:19:08.834+0000"
+        },
+        {
+          "key": "RHOAIENG-49436",
+          "parentKey": "RHOAIENG-47681",
+          "summary": "[Upstream]Annotation-based Runtime Defaults for MLServer",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "JooHo Lee",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [
+            "features"
+          ],
+          "storyPoints": 2,
+          "created": "2026-02-11T21:52:39.908+0000",
+          "updated": "2026-03-04T16:07:49.198+0000",
+          "resolutionDate": "2026-03-04T16:07:49.158+0000"
+        },
+        {
+          "key": "RHOAIENG-49822",
+          "parentKey": "RHOAIENG-47681",
+          "summary": "Fix Designed for FIPS tool findings for MLServer",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Syed Nomaan Ali",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-02-16T06:03:46.836+0000",
+          "updated": "2026-03-05T06:54:05.936+0000",
+          "resolutionDate": "2026-03-05T06:18:24.031+0000"
+        },
+        {
+          "key": "RHOAIENG-50126",
+          "parentKey": "RHOAIENG-47681",
+          "summary": "Automate Generation of Hash-Pinned requirements.txt from AIPCC Index (x86_64 & aarch64) for RHOAI Hermetic Builds of MLServer ",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Syed Nomaan Ali",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-02-18T13:15:12.338+0000",
+          "updated": "2026-02-27T18:50:55.582+0000",
+          "resolutionDate": "2026-02-27T18:50:55.566+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-47759",
+      "parentKey": "RHAISTRAT-1151",
+      "summary": "Add pagination support",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Person 135",
+      "components": [
+        "Model Runtimes"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-01-27T17:32:52.259+0000",
+      "updated": "2026-04-06T13:27:40.967+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-47751",
+          "parentKey": "RHOAIENG-47759",
+          "summary": "Add Modelcar validation tests for MLServer frameworks in opendatahub-test",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "JooHo Lee",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-01-27T17:09:31.578+0000",
+          "updated": "2026-04-06T07:04:30.716+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-47753",
+          "parentKey": "RHOAIENG-47759",
+          "summary": "[Spike] Validate KServe Graph Integration with MLServer and Add Test Coverage",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "JooHo Lee",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-27T17:16:56.682+0000",
+          "updated": "2026-04-06T14:27:12.948+0000",
+          "resolutionDate": "2026-04-06T14:27:12.925+0000"
+        },
+        {
+          "key": "RHOAIENG-47758",
+          "parentKey": "RHOAIENG-47759",
+          "summary": "Create simplified tutorials for MLServer runtime usage via Notebooks and Pipelines",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Brett Thompson",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-27T17:31:50.037+0000",
+          "updated": "2026-04-06T07:04:32.197+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-47762",
+          "parentKey": "RHOAIENG-47759",
+          "summary": "Final Validation for MLServer GA Release",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "JooHo Lee",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-01-27T17:41:29.805+0000",
+          "updated": "2026-04-06T07:04:30.490+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-47763",
+          "parentKey": "RHOAIENG-47759",
+          "summary": "Document (KServe Knowledge Base) for Maintenance Features",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "JooHo Lee",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-01-27T17:45:20.864+0000",
+          "updated": "2026-04-06T14:27:59.769+0000",
+          "resolutionDate": "2026-04-06T14:27:59.739+0000"
+        },
+        {
+          "key": "RHOAIENG-49821",
+          "parentKey": "RHOAIENG-47759",
+          "summary": "Fix AI Security Scanner findings for MLServer",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Syed Nomaan Ali",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-02-16T06:00:09.569+0000",
+          "updated": "2026-04-06T07:04:31.287+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52861",
+          "parentKey": "RHOAIENG-47759",
+          "summary": "Enable Renovate to Track and Update AIPCC Base Image in MLServer",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Syed Nomaan Ali",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-03-12T10:28:32.254+0000",
+          "updated": "2026-04-02T07:39:35.211+0000",
+          "resolutionDate": "2026-04-02T07:39:35.185+0000"
+        },
+        {
+          "key": "RHOAIENG-53843",
+          "parentKey": "RHOAIENG-47759",
+          "summary": "Align MLServer Serving Runtime Template for GA Readiness",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "JooHo Lee",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-03-17T12:35:24.147+0000",
+          "updated": "2026-04-02T22:35:10.401+0000",
+          "resolutionDate": "2026-04-01T16:11:14.991+0000"
+        },
+        {
+          "key": "RHOAIENG-56203",
+          "parentKey": "RHOAIENG-47759",
+          "summary": "Add ONNX model class support for MLServer runtime",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "JooHo Lee",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-03-31T22:40:32.207+0000",
+          "updated": "2026-04-02T07:01:40.515+0000",
+          "resolutionDate": "2026-04-02T07:01:40.491+0000"
+        },
+        {
+          "key": "RHOAIENG-56204",
+          "parentKey": "RHOAIENG-47759",
+          "summary": "Fix ONNX model loading failure when deployed via KServe Modelcar (OCI storage)",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "JooHo Lee",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-03-31T22:50:44.941+0000",
+          "updated": "2026-04-02T07:07:55.905+0000",
+          "resolutionDate": "2026-04-02T07:07:55.879+0000"
+        },
+        {
+          "key": "RHOAIENG-56505",
+          "parentKey": "RHOAIENG-47759",
+          "summary": "[Security] Block PYTHONPATH in InferenceService and ServingRuntime admission webhooks",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "JooHo Lee",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-04-02T01:42:59.288+0000",
+          "updated": "2026-04-06T14:54:21.586+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56578",
+          "parentKey": "RHOAIENG-47759",
+          "summary": "Fix MLServer release-* to rhoai-staging sync workflow failures caused by merge conflicts and non-deterministic conflict handling",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Syed Nomaan Ali",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-02T16:17:59.895+0000",
+          "updated": "2026-04-06T15:15:15.979+0000",
+          "resolutionDate": "2026-04-06T15:15:15.959+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-48648",
+      "parentKey": "RHAISTRAT-1151",
+      "summary": "Implement webhook handler",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 141",
+      "components": [
+        "Model Runtimes"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-04T07:01:18.654+0000",
+      "updated": "2026-04-01T16:00:09.866+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-48649",
+          "parentKey": "RHOAIENG-48648",
+          "summary": "[Seldon MLServer - GA] - Promote alpha and beta APIs to their final version",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Syed Nomaan Ali",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-02-04T07:01:22.733+0000",
+          "updated": "2026-03-25T06:42:36.865+0000",
+          "resolutionDate": "2026-03-25T06:16:49.704+0000"
+        },
+        {
+          "key": "RHOAIENG-48650",
+          "parentKey": "RHOAIENG-48648",
+          "summary": "[Seldon MLServer - GA] - Security Requirements",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Syed Nomaan Ali",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-02-04T07:01:22.744+0000",
+          "updated": "2026-03-25T06:42:50.968+0000",
+          "resolutionDate": "2026-03-25T06:20:24.871+0000"
+        },
+        {
+          "key": "RHOAIENG-48651",
+          "parentKey": "RHOAIENG-48648",
+          "summary": "[Seldon MLServer - GA] - Acceptance Criteria",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Syed Nomaan Ali",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-02-04T07:01:22.752+0000",
+          "updated": "2026-04-01T15:59:47.915+0000",
+          "resolutionDate": "2026-04-01T15:59:47.887+0000"
+        },
+        {
+          "key": "RHOAIENG-48652",
+          "parentKey": "RHOAIENG-48648",
+          "summary": "[Seldon MLServer - GA] - Ensure everything was completed under Tech Preview",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Syed Nomaan Ali",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-02-04T07:01:22.744+0000",
+          "updated": "2026-03-25T06:42:23.425+0000",
+          "resolutionDate": "2026-03-25T06:13:16.884+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-50325",
+      "parentKey": "RHAISTRAT-1151",
+      "summary": "Implement feature for module",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": "Former Member 6",
+      "components": [
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-19T15:15:58.852+0000",
+      "updated": "2026-03-09T14:23:44.471+0000",
+      "issues": []
+    }
+  ],
+  "metrics": {
+    "totalEpics": 5,
+    "totalIssues": 26,
+    "issuesByStatus": {
+      "Resolved": 19,
+      "Closed": 2,
+      "Review": 3,
+      "In Progress": 2
+    },
+    "issuesByCategory": {
+      "Done": 21,
+      "In Progress": 5,
+      "To Do": 0
+    },
+    "totalStoryPoints": 52,
+    "storyPointsDone": 40,
+    "completionPct": 81,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-47678",
+        "summary": "MLServer 3.4 Early Access 1 work",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "JooHo Lee",
+        "totalIssues": 2,
+        "doneIssues": 2,
+        "progressPct": 100,
+        "storyPoints": 4,
+        "storyPointsDone": 4,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-47681",
+        "summary": "MLServer 3.4 Early Access 2 work",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "JooHo Lee",
+        "totalIssues": 8,
+        "doneIssues": 8,
+        "progressPct": 100,
+        "storyPoints": 20,
+        "storyPointsDone": 20,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-47759",
+        "summary": "MLServer 3.4 GA work",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "JooHo Lee",
+        "totalIssues": 12,
+        "doneIssues": 7,
+        "progressPct": 58,
+        "storyPoints": 24,
+        "storyPointsDone": 12,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-48648",
+        "summary": "General Availability - ODH and RHOAI Integrations [Seldon MLServer]",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Syed Nomaan Ali",
+        "totalIssues": 4,
+        "doneIssues": 4,
+        "progressPct": 100,
+        "storyPoints": 4,
+        "storyPointsDone": 4,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-50325",
+        "summary": "[ccs Epic] Document ML Server GA - 3.4",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Shumaila Yaseen",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

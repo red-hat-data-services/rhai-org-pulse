@@ -1,0 +1,53 @@
+{
+  "key": "TEST1-1062",
+  "summary": "Fix memory leak",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Yi Zheng",
+    "accountId": "712020:3976877f-2c7c-4070-a6a1-90d3f78a309f"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "Approved-RFE"
+  ],
+  "components": [
+    "Inference-Time Techniques"
+  ],
+  "created": "2025-12-17T15:55:53.049+0000",
+  "updated": "2026-03-31T14:15:50.582+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1085",
+      "linkedSummary": "Standalone ITS algorithm availability across Red Hat AI deployment surfaces",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

@@ -1,0 +1,248 @@
+{
+  "key": "TEST1-423",
+  "summary": "Add health check endpoint",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "Security"
+  ],
+  "created": "2025-09-05T12:26:22.528+0000",
+  "updated": "2025-11-25T21:39:54.014+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Triggers",
+      "direction": "inward",
+      "linkedKey": "COMPLY-2961",
+      "linkedSummary": "ISM (Integrated Service Management)-Effective (Risk Area severity - Medium)",
+      "linkedStatus": "Done"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-33690",
+      "parentKey": "RHAISTRAT-423",
+      "summary": "Add health check endpoint",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Former Member 15",
+      "components": [
+        "Security"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-09-05T12:29:07.350+0000",
+      "updated": "2025-09-25T05:04:08.934+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-33723",
+          "parentKey": "RHOAIENG-33690",
+          "summary": "Spike: Analyze and propose implementation details for ODH branch protections",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Jay Koehler",
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-09-08T14:05:53.269+0000",
+          "updated": "2025-09-10T13:23:53.985+0000",
+          "resolutionDate": "2025-09-10T13:23:53.948+0000"
+        },
+        {
+          "key": "RHOAIENG-33955",
+          "parentKey": "RHOAIENG-33690",
+          "summary": "Implement branch protection solution for ODH",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Maor Friedman",
+          "components": [
+            "Security"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-09-10T13:25:24.109+0000",
+          "updated": "2025-09-11T16:47:17.827+0000",
+          "resolutionDate": "2025-09-11T16:47:17.793+0000"
+        },
+        {
+          "key": "RHOAIENG-34166",
+          "parentKey": "RHOAIENG-33690",
+          "summary": "use dedicated bot token to manage access to github organization",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Maor Friedman",
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-09-15T13:13:24.316+0000",
+          "updated": "2025-09-16T07:53:02.550+0000",
+          "resolutionDate": "2025-09-16T07:53:02.509+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-33713",
+      "parentKey": "RHAISTRAT-423",
+      "summary": "Fix validation issue",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Former Member 15",
+      "components": [
+        "Security"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-09-08T10:42:07.989+0000",
+      "updated": "2025-09-25T05:04:13.567+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-34003",
+          "parentKey": "RHOAIENG-33713",
+          "summary": "Fix failing workflows due to Ruleset restrictions",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Critical",
+          "assignee": null,
+          "components": [
+            "Build and Release"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-09-11T09:47:56.785+0000",
+          "updated": "2025-09-11T09:58:07.831+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-34060",
+      "parentKey": "RHAISTRAT-423",
+      "summary": "Fix sorting order",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "Security"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-09-11T16:57:23.496+0000",
+      "updated": "2025-09-11T16:58:31.410+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-34448",
+      "parentKey": "RHAISTRAT-423",
+      "summary": "Update error messages",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "DevOps",
+        "Security"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-09-18T10:45:57.485+0000",
+      "updated": "2025-09-18T10:48:48.434+0000",
+      "issues": []
+    }
+  ],
+  "metrics": {
+    "totalEpics": 4,
+    "totalIssues": 4,
+    "issuesByStatus": {
+      "Resolved": 2,
+      "New": 1,
+      "Closed": 1
+    },
+    "issuesByCategory": {
+      "Done": 3,
+      "In Progress": 0,
+      "To Do": 1
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 75,
+    "staleCount": 0,
+    "unassignedCount": 1,
+    "blockerCount": 2,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-33690",
+        "summary": "Enable branch protections for ODH",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Maor Friedman",
+        "totalIssues": 3,
+        "doneIssues": 3,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-33713",
+        "summary": "Enable branch protections for RHDS",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Maor Friedman",
+        "totalIssues": 1,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-34060",
+        "summary": "Review RHODS-DevOps-App",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-34448",
+        "summary": "Document rhods-ci-bot",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

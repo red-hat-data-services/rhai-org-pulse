@@ -1,0 +1,701 @@
+{
+  "key": "TEST1-1244",
+  "summary": "Optimize database queries",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Chris Hambridge",
+    "accountId": "557058:ec20c857-da91-474b-990c-82f291123602"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "AI Hub"
+  ],
+  "created": "2026-02-25T15:53:53.303+0000",
+  "updated": "2026-04-03T13:43:49.040+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "date",
+            "attrs": {
+              "timestamp": "1775174400000"
+            }
+          },
+          {
+            "type": "text",
+            "text": ": Green"
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Only release note documentation remains"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1323",
+      "linkedSummary": "embedding models added to Other models category in RHOAI Catalog [3.4 EA2 Target]",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-51659",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1244] - Add Embedding models to Other models category in RHOAI Catalog",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Informs",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-51659",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1244] - Add Embedding models to Other models category in RHOAI Catalog",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-52092",
+      "parentKey": "RHAISTRAT-1244",
+      "summary": "Fix sorting order",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 281",
+      "components": [
+        "AI Hub"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-05T20:00:26.034+0000",
+      "updated": "2026-03-18T19:56:05.248+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-52093",
+          "parentKey": "RHOAIENG-52092",
+          "summary": "Update Model Metadata Collection for Embedding Models",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-03-05T20:07:49.567+0000",
+          "updated": "2026-03-16T20:23:57.463+0000",
+          "resolutionDate": "2026-03-16T20:23:24.904+0000"
+        },
+        {
+          "key": "RHOAIENG-52094",
+          "parentKey": "RHOAIENG-52092",
+          "summary": "Update Model Registry Operator to Support \"Other Models\" Source",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-03-05T20:10:27.917+0000",
+          "updated": "2026-03-18T19:43:36.465+0000",
+          "resolutionDate": "2026-03-18T19:40:23.438+0000"
+        },
+        {
+          "key": "RHOAIENG-52101",
+          "parentKey": "RHOAIENG-52092",
+          "summary": "UI Task Filter Mapping",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-03-05T20:43:09.362+0000",
+          "updated": "2026-03-18T19:43:13.627+0000",
+          "resolutionDate": "2026-03-18T19:43:13.603+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-52708",
+      "parentKey": "RHAISTRAT-1244",
+      "summary": "Add pagination support",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 281",
+      "components": [
+        "AI Hub"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-11T18:48:04.089+0000",
+      "updated": "2026-03-19T18:31:29.045+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-52710",
+          "parentKey": "RHOAIENG-52708",
+          "summary": "CLONE - Promote alpha APIs to beta",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T18:48:14.402+0000",
+          "updated": "2026-03-12T15:40:39.341+0000",
+          "resolutionDate": "2026-03-12T15:40:39.304+0000"
+        },
+        {
+          "key": "RHOAIENG-52711",
+          "parentKey": "RHOAIENG-52708",
+          "summary": "CLONE - Build from source (required)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "OpenShift AI Productization"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T18:48:14.405+0000",
+          "updated": "2026-03-12T15:41:07.095+0000",
+          "resolutionDate": "2026-03-12T15:41:07.060+0000"
+        },
+        {
+          "key": "RHOAIENG-52712",
+          "parentKey": "RHOAIENG-52708",
+          "summary": "Add Embedding models to Other models category in RHOAI Catalog - Feature signoff - TP",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Rob Greenberg",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "signoff"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-11T18:48:14.487+0000",
+          "updated": "2026-03-19T14:43:56.326+0000",
+          "resolutionDate": "2026-03-19T14:43:56.298+0000"
+        },
+        {
+          "key": "RHOAIENG-52713",
+          "parentKey": "RHOAIENG-52708",
+          "summary": "CLONE - Feature documented in architecture diagrams",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T18:48:14.740+0000",
+          "updated": "2026-03-12T15:47:25.371+0000",
+          "resolutionDate": "2026-03-12T15:47:25.334+0000"
+        },
+        {
+          "key": "RHOAIENG-52714",
+          "parentKey": "RHOAIENG-52708",
+          "summary": "CLONE - RHOAI ONLY: AI Platform Core Components (AIPCC) Integration",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T18:48:14.773+0000",
+          "updated": "2026-03-12T15:46:09.559+0000",
+          "resolutionDate": "2026-03-12T15:46:09.516+0000"
+        },
+        {
+          "key": "RHOAIENG-52715",
+          "parentKey": "RHOAIENG-52708",
+          "summary": "CLONE - MUST meet designed for FIPS",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T18:48:14.806+0000",
+          "updated": "2026-03-12T15:48:37.338+0000",
+          "resolutionDate": "2026-03-12T15:48:37.291+0000"
+        },
+        {
+          "key": "RHOAIENG-52716",
+          "parentKey": "RHOAIENG-52708",
+          "summary": "Add Embedding models to Other models category in RHOAI Catalog - Testing requirements",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Debarati Basu-Nag",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-03-11T18:48:14.828+0000",
+          "updated": "2026-03-19T17:58:49.190+0000",
+          "resolutionDate": "2026-03-19T17:58:49.163+0000"
+        },
+        {
+          "key": "RHOAIENG-52717",
+          "parentKey": "RHOAIENG-52708",
+          "summary": "Add Embedding models to Other models category in RHOAI Catalog - Security requirements",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T18:48:14.885+0000",
+          "updated": "2026-03-12T20:14:08.355+0000",
+          "resolutionDate": "2026-03-12T20:14:08.316+0000"
+        },
+        {
+          "key": "RHOAIENG-52718",
+          "parentKey": "RHOAIENG-52708",
+          "summary": "CLONE - Onboard to RHOAI Build - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T18:48:15.114+0000",
+          "updated": "2026-03-12T15:50:15.194+0000",
+          "resolutionDate": "2026-03-12T15:50:15.153+0000"
+        },
+        {
+          "key": "RHOAIENG-52719",
+          "parentKey": "RHOAIENG-52708",
+          "summary": "CLONE - Onboard to ODH Build - 2 week notice! ",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T18:48:15.600+0000",
+          "updated": "2026-03-12T15:50:48.082+0000",
+          "resolutionDate": "2026-03-12T15:50:48.044+0000"
+        },
+        {
+          "key": "RHOAIENG-52721",
+          "parentKey": "RHOAIENG-52708",
+          "summary": "CLONE - Test with disconnected environment",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T18:48:16.965+0000",
+          "updated": "2026-03-12T17:30:54.228+0000",
+          "resolutionDate": "2026-03-12T17:30:54.191+0000"
+        },
+        {
+          "key": "RHOAIENG-52722",
+          "parentKey": "RHOAIENG-52708",
+          "summary": "CLONE - Create component in jira",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T18:48:17.005+0000",
+          "updated": "2026-03-12T15:51:33.224+0000",
+          "resolutionDate": "2026-03-12T15:51:33.186+0000"
+        },
+        {
+          "key": "RHOAIENG-52723",
+          "parentKey": "RHOAIENG-52708",
+          "summary": "CLONE - Repository added to ODH/RHOAI",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T18:48:17.193+0000",
+          "updated": "2026-03-12T15:52:22.049+0000",
+          "resolutionDate": "2026-03-12T15:52:22.001+0000"
+        },
+        {
+          "key": "RHOAIENG-52724",
+          "parentKey": "RHOAIENG-52708",
+          "summary": "CLONE - Ensure work with supported lifecyles",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T18:48:17.197+0000",
+          "updated": "2026-03-12T17:45:56.177+0000",
+          "resolutionDate": "2026-03-12T17:45:56.140+0000"
+        },
+        {
+          "key": "RHOAIENG-52725",
+          "parentKey": "RHOAIENG-52708",
+          "summary": "[AI Hub/Add Embedding models to Other models category in RHOAI Catalog] - Integration with ODH operator - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "no-subteam"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-11T18:48:17.401+0000",
+          "updated": "2026-03-20T19:51:45.703+0000",
+          "resolutionDate": "2026-03-12T13:36:32.366+0000"
+        },
+        {
+          "key": "RHOAIENG-52726",
+          "parentKey": "RHOAIENG-52708",
+          "summary": "CLONE - Add Prometheus (metrics) config for component (optional)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T18:48:18.354+0000",
+          "updated": "2026-03-12T17:29:34.332+0000",
+          "resolutionDate": "2026-03-12T17:29:34.296+0000"
+        },
+        {
+          "key": "RHOAIENG-52727",
+          "parentKey": "RHOAIENG-52708",
+          "summary": "CLONE - Multi-Architecture Support",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T18:48:18.533+0000",
+          "updated": "2026-03-12T15:53:03.884+0000",
+          "resolutionDate": "2026-03-12T15:53:03.843+0000"
+        },
+        {
+          "key": "RHOAIENG-52728",
+          "parentKey": "RHOAIENG-52708",
+          "summary": "[AI Hub/Add Embedding models to Other models category in RHOAI Catalog] - Add support for the new component in the QE related repositories",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "no-subteam"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-11T18:48:18.728+0000",
+          "updated": "2026-03-20T19:51:30.453+0000",
+          "resolutionDate": "2026-03-12T13:36:39.584+0000"
+        },
+        {
+          "key": "RHOAIENG-52729",
+          "parentKey": "RHOAIENG-52708",
+          "summary": "CLONE - Add source repo(s) to Snyk",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T18:48:20.467+0000",
+          "updated": "2026-03-12T15:54:10.870+0000",
+          "resolutionDate": "2026-03-12T15:54:10.790+0000"
+        },
+        {
+          "key": "RHOAIENG-52730",
+          "parentKey": "RHOAIENG-52708",
+          "summary": "[AI Hub/Add Embedding models to Other models category in RHOAI Catalog] - Integration with RHOAI operator - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "no-subteam"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-11T18:48:20.493+0000",
+          "updated": "2026-03-20T19:51:41.141+0000",
+          "resolutionDate": "2026-03-12T13:36:46.560+0000"
+        },
+        {
+          "key": "RHOAIENG-52731",
+          "parentKey": "RHOAIENG-52708",
+          "summary": "CLONE - Add component data to product-definitions for vulnerability tracking",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T18:48:20.599+0000",
+          "updated": "2026-03-12T15:58:09.358+0000",
+          "resolutionDate": "2026-03-12T15:58:09.304+0000"
+        },
+        {
+          "key": "RHOAIENG-52732",
+          "parentKey": "RHOAIENG-52708",
+          "summary": "CLONE - Add component support for must-gather",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T18:48:20.755+0000",
+          "updated": "2026-03-12T17:28:45.596+0000",
+          "resolutionDate": "2026-03-12T17:28:45.555+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-55507",
+      "parentKey": "RHAISTRAT-1244",
+      "summary": "Add filtering options",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Former Member 1",
+      "components": [
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-26T13:59:22.362+0000",
+      "updated": "2026-04-02T19:22:12.085+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-55509",
+          "parentKey": "RHOAIENG-55507",
+          "summary": "[ccs] Draft and review RN for the addition of Embedding models to Catalog",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Manushri Pandya",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [
+            "3.4-must-docs"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-26T14:00:45.197+0000",
+          "updated": "2026-04-02T19:21:52.829+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55510",
+          "parentKey": "RHOAIENG-55507",
+          "summary": "[ccs] Document how to add embedding models to Catalog",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Manushri Pandya",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [
+            "3.4-must-docs"
+          ],
+          "storyPoints": 5,
+          "created": "2026-03-26T14:01:39.673+0000",
+          "updated": "2026-04-02T19:22:17.005+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 3,
+    "totalIssues": 27,
+    "issuesByStatus": {
+      "Resolved": 4,
+      "Closed": 21,
+      "In Progress": 1,
+      "New": 1
+    },
+    "issuesByCategory": {
+      "Done": 25,
+      "In Progress": 1,
+      "To Do": 1
+    },
+    "totalStoryPoints": 20,
+    "storyPointsDone": 13,
+    "completionPct": 93,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 1,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-52092",
+        "summary": "Integration of Text Embedding Models",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Chris Hambridge",
+        "totalIssues": 3,
+        "doneIssues": 3,
+        "progressPct": 100,
+        "storyPoints": 7,
+        "storyPointsDone": 7,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-52708",
+        "summary": "Tech Preview - ODH and RHOAI Integrations [AI Hub/Add Embedding models to Other models category in RHOAI Catalog]",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Chris Hambridge",
+        "totalIssues": 22,
+        "doneIssues": 22,
+        "progressPct": 100,
+        "storyPoints": 6,
+        "storyPointsDone": 6,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-55507",
+        "summary": "[ccs Epic] Document Embedding models to Catalog",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Stephen McCarthy",
+        "totalIssues": 2,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 7,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

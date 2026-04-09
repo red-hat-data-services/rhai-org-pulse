@@ -1,0 +1,52 @@
+{
+  "key": "TEST1-1454",
+  "summary": "Fix memory leak",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Undefined",
+  "assignee": {
+    "displayName": "Sida Feng",
+    "accountId": "712020:66926ca7-cab4-4e90-9968-83d2e986e8fc"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "rfe-creator-autofix-rubric-pass",
+    "tool-calling"
+  ],
+  "components": [],
+  "created": "2026-04-08T01:01:00.585+0000",
+  "updated": "2026-04-08T01:05:32.146+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1429",
+      "linkedSummary": "Tool call test and supported matrix",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

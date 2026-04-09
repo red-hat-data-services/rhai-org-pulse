@@ -1,0 +1,110 @@
+{
+  "key": "TEST1-143",
+  "summary": "Add unit tests for service",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Undefined",
+  "assignee": {
+    "displayName": "Selbi Siddiqi",
+    "accountId": "70121:0d27b449-e70b-4a5a-819c-628f2b5a8499"
+  },
+  "fixVersions": [
+    "RHAIIS-3.4"
+  ],
+  "labels": [],
+  "components": [
+    "INFERENG Midstream"
+  ],
+  "created": "2025-10-30T08:04:17.129+0000",
+  "updated": "2026-04-07T13:40:11.619+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "[sfinn Dec 8th - Q1 planning sync updated]"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "We now have vllm upstream support. From a product perspective need to ask AIPCC look at details with code freeze 7th Jan. "
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-786",
+      "linkedSummary": "AMD GPU MI355X/MI350X support for Red Hat AI",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "INFERENG-3318",
+      "linkedSummary": "[ccs] Add AMD GPU MI355X/MI350X accelerators to RHAIIS, RHEL AI, and RHOAI",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "AIPCC-5109",
+      "linkedSummary": "Add support for ROCm Toolkit to 7.x to the platform",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "AIPCC-7277",
+      "linkedSummary": "Upgrade ROCm Toolkit to 7.1.1 for Accelerator Enablement",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "AIPCC-12210",
+      "linkedSummary": "rocm7.1.1-ubi9 for 3.4",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Cloners",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1444",
+      "linkedSummary": "AMD GPU MI355X/MI350X support for RHOAI notebooks",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

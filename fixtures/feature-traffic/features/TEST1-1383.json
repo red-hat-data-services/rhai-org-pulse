@@ -1,0 +1,68 @@
+{
+  "key": "TEST1-1383",
+  "summary": "Update dependencies",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Selbi Siddiqi",
+    "accountId": "70121:0d27b449-e70b-4a5a-819c-628f2b5a8499"
+  },
+  "fixVersions": [
+    "RHAIIS-3.5"
+  ],
+  "labels": [
+    "INFERSTRAT_251116"
+  ],
+  "components": [
+    "INFERENG Midstream"
+  ],
+  "created": "2026-03-23T13:02:33.244+0000",
+  "updated": "2026-03-23T14:32:42.164+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "[sfinn - Q1 Planning update] No blockers for now"
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-218",
+      "linkedSummary": "AWS Trainium & Inferentia Support for RHAIIS (RHAIIS Tech Preview)",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "key": "TEST1-239",
+  "summary": "Fix concurrent access issue",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Andy Linfoot",
+    "accountId": "712020:c1730ea5-7ef3-4edf-8ab6-53982e78de6f"
+  },
+  "fixVersions": [],
+  "labels": [
+    "INFERSTRAT_251116",
+    "model-validation"
+  ],
+  "components": [
+    "INFERENG Midstream"
+  ],
+  "created": "2025-03-12T17:22:08.019+0000",
+  "updated": "2025-11-16T17:04:21.227+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "PSAP-1744",
+      "linkedSummary": "Third-Party Model Validation Program Pipeline - Summit '25",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "PSAP-1744",
+      "linkedSummary": "Third-Party Model Validation Program Pipeline - Summit '25",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "INFERENG-3274",
+      "linkedSummary": "Model validation program midstream nm-vllm-ent CI/CD - SUMMIT '25 DELIVERABLE",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "key": "TEST1-223",
+  "summary": "Add export functionality",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Erwan Gallen",
+    "accountId": "62d879bb278161644007f05a"
+  },
+  "fixVersions": [],
+  "labels": [
+    "INFERSTRAT_251116"
+  ],
+  "components": [
+    "INFERENG Midstream"
+  ],
+  "created": "2025-07-24T15:02:17.822+0000",
+  "updated": "2026-01-13T10:26:30.726+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-271",
+      "linkedSummary": "[TP] Google TPU Support",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "AIPCC-3365",
+      "linkedSummary": "Billing agent for Google TPU GA",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

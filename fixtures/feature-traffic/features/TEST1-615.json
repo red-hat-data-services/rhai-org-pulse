@@ -1,0 +1,83 @@
+{
+  "key": "TEST1-615",
+  "summary": "Add export functionality",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Jenny Yi",
+    "accountId": "712020:6a1bee1f-f06a-4b5a-98a9-1fc3028d3523"
+  },
+  "fixVersions": [],
+  "labels": [
+    "needs-tech-review",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "AI Core Platform",
+    "UXD"
+  ],
+  "created": "2023-12-20T16:54:44.109+0000",
+  "updated": "2026-02-10T04:38:58.740+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-827",
+      "linkedSummary": "[GA]Create Connections API",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-827",
+      "linkedSummary": "[GA]Create Connections API",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-588",
+      "linkedSummary": "S3 bucket names are not validated against Amazon naming rules when adding a Data Connection",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Triggers",
+      "direction": "outward",
+      "linkedKey": "RHOAIUX-480",
+      "linkedSummary": "Object Storage Browser for DS projects as part of Dashboard UI",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIUX-502",
+      "linkedSummary": "Test data science project s3 datasource at RHOAI dashboard",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

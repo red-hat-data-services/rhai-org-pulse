@@ -1,0 +1,76 @@
+{
+  "key": "TEST1-1422",
+  "summary": "Update API endpoint",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Adriel Paredes",
+    "accountId": "557058:8123280f-6f48-4b0f-8728-019c7db73f87"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "Notebook Server",
+    "UXD"
+  ],
+  "created": "2026-04-01T14:51:25.712+0000",
+  "updated": "2026-04-01T14:59:10.942+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1146",
+      "linkedSummary": "ability to hide default Workbench images",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-591",
+      "linkedSummary": "Custom notebooks UI enhancements - part 2",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-397",
+      "linkedSummary": "Admin UI: ability to hide/show OOTB notebook images",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-4101",
+      "linkedSummary": "AI Core Dashboard: Tier Selection UI for Workbench/Pipeline Creation",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

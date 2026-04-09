@@ -1,0 +1,765 @@
+{
+  "key": "TEST1-1176",
+  "summary": "Fix bug in processing logic",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Daniel Ryszka",
+    "accountId": "712020:456909bf-a7c9-40b8-8f28-212fbfbf495a"
+  },
+  "fixVersions": [
+    "rhoai-3.4"
+  ],
+  "labels": [
+    "aicp-team-crucible",
+    "tech-reviewed",
+    "watsonx.ai"
+  ],
+  "components": [
+    "RAG",
+    "RAG + Vector DB"
+  ],
+  "created": "2026-01-29T18:37:21.994+0000",
+  "updated": "2026-04-06T13:17:48.930+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1150",
+      "linkedSummary": "[MVP] AutoRAG UI Experience",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1177",
+      "linkedSummary": "AutoRAG Jupyter Notebook Experience",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Account",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1177",
+      "linkedSummary": "AutoRAG Jupyter Notebook Experience",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-858",
+      "linkedSummary": "AutoRAG Jupyter Notebook Experience",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1199",
+      "linkedSummary": "[MVP] AutoRAG UI Experience",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-862",
+      "linkedSummary": "[MVP] AutoRAG UI Experience",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-857",
+      "linkedSummary": "AutoRAG Core Engine and KFP Integration",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-51951",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1176] -AutoRAG Backend Delivery",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-860",
+      "linkedSummary": "AutoRAG UI Experience (post-MVP)",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "AIPCC-10863",
+      "linkedSummary": "ai4rag package update request",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "AIPCC-10428",
+      "linkedSummary": "unitxt package update request",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "AIPCC-11621",
+      "linkedSummary": "build packages for AutoRAG Core Engine and KFP Integration",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "AIPCC-11625",
+      "linkedSummary": "build packages for AutoML for RHOAI 3.4",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1424",
+      "linkedSummary": "[Feat] Deploy RAG Pattern as endpoint",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1425",
+      "linkedSummary": "[Feat] Multi-Lingual Support for AutoRAG",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1426",
+      "linkedSummary": "[Feat] MLFlow integration for AutoRAG experiment and artifacts",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-51257",
+      "parentKey": "RHAISTRAT-1176",
+      "summary": "Fix authentication issue",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 129",
+      "components": [
+        "AutoRAG",
+        "DevOps"
+      ],
+      "labels": [
+        "autorag",
+        "devops-onboarding"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-27T02:19:20.592+0000",
+      "updated": "2026-03-25T18:03:21.261+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-51259",
+      "parentKey": "RHAISTRAT-1176",
+      "summary": "Add pagination support",
+      "status": "Review",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Person 129",
+      "components": [
+        "AutoRAG",
+        "DevOps"
+      ],
+      "labels": [
+        "devops-onboarding"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-27T02:26:18.233+0000",
+      "updated": "2026-04-01T14:44:45.981+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-51681",
+      "parentKey": "RHAISTRAT-1176",
+      "summary": "Add caching mechanism",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Blocker",
+      "assignee": "Person 85",
+      "components": [
+        "AutoRAG"
+      ],
+      "labels": [
+        "3.4-committed",
+        "autorag"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-04T08:29:29.955+0000",
+      "updated": "2026-03-30T13:22:27.483+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-51682",
+          "parentKey": "RHOAIENG-51681",
+          "summary": "[AutoRAG Backend] - Build from source (required)",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AutoRAG",
+            "OpenShift AI Productization"
+          ],
+          "labels": [
+            "autorag"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T08:29:39.857+0000",
+          "updated": "2026-04-03T08:29:14.352+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51683",
+          "parentKey": "RHOAIENG-51681",
+          "summary": "[AutoRAG Backend] - Feature signoff - TP",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Blocker",
+          "assignee": null,
+          "components": [
+            "AutoRAG"
+          ],
+          "labels": [
+            "autorag",
+            "signoff"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T08:29:40.075+0000",
+          "updated": "2026-03-20T14:35:52.309+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51684",
+          "parentKey": "RHOAIENG-51681",
+          "summary": "[AutoRAG Backend] - Testing requirements",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AutoRAG"
+          ],
+          "labels": [
+            "autorag"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T08:29:40.397+0000",
+          "updated": "2026-03-20T14:36:35.866+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51685",
+          "parentKey": "RHOAIENG-51681",
+          "summary": "[AutoRAG Backend] - Multi-Architecture Support",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AutoRAG"
+          ],
+          "labels": [
+            "autorag"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T08:29:40.408+0000",
+          "updated": "2026-04-03T08:28:54.952+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51686",
+          "parentKey": "RHOAIENG-51681",
+          "summary": "[AutoRAG Backend] - Test with disconnected environment",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": null,
+          "components": [
+            "AutoRAG"
+          ],
+          "labels": [
+            "autorag"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T08:29:40.411+0000",
+          "updated": "2026-03-20T16:50:41.950+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51687",
+          "parentKey": "RHOAIENG-51681",
+          "summary": "[AutoRAG Backend] - RHOAI ONLY: AI Platform Core Components (AIPCC) Integration",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Daniel Ryszka",
+          "components": [
+            "AutoRAG"
+          ],
+          "labels": [
+            "autorag"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T08:29:40.469+0000",
+          "updated": "2026-04-03T08:29:55.409+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51688",
+          "parentKey": "RHOAIENG-51681",
+          "summary": "[AutoRAG Backend] - Security requirements",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Daniel Ryszka",
+          "components": [
+            "AutoRAG"
+          ],
+          "labels": [
+            "autorag"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T08:29:40.476+0000",
+          "updated": "2026-04-03T08:30:05.631+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51689",
+          "parentKey": "RHOAIENG-51681",
+          "summary": "[AutoRAG Backend] - Onboard to RHOAI Build - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Daniel Ryszka",
+          "components": [
+            "AutoRAG",
+            "DevOps"
+          ],
+          "labels": [
+            "autorag"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T08:29:43.303+0000",
+          "updated": "2026-03-20T15:10:48.039+0000",
+          "resolutionDate": "2026-03-04T19:58:30.628+0000"
+        },
+        {
+          "key": "RHOAIENG-51690",
+          "parentKey": "RHOAIENG-51681",
+          "summary": "[AutoRAG Backend] - Create component in jira",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Daniel Ryszka",
+          "components": [
+            "AutoRAG"
+          ],
+          "labels": [
+            "autorag"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T08:29:43.771+0000",
+          "updated": "2026-03-20T15:10:53.327+0000",
+          "resolutionDate": "2026-03-04T19:59:56.713+0000"
+        },
+        {
+          "key": "RHOAIENG-51691",
+          "parentKey": "RHOAIENG-51681",
+          "summary": "[AutoRAG Backend] - Onboard to ODH Build - 2 week notice! ",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Daniel Ryszka",
+          "components": [
+            "AutoRAG",
+            "DevOps"
+          ],
+          "labels": [
+            "autorag"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T08:29:44.557+0000",
+          "updated": "2026-03-20T15:10:49.922+0000",
+          "resolutionDate": "2026-03-04T19:57:13.421+0000"
+        },
+        {
+          "key": "RHOAIENG-51692",
+          "parentKey": "RHOAIENG-51681",
+          "summary": "[AutoRAG] - Ensure work with supported lifecyles",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AutoRAG"
+          ],
+          "labels": [
+            "autorag"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T08:29:46.452+0000",
+          "updated": "2026-03-24T10:34:32.160+0000",
+          "resolutionDate": "2026-03-24T10:34:32.132+0000"
+        },
+        {
+          "key": "RHOAIENG-51693",
+          "parentKey": "RHOAIENG-51681",
+          "summary": "[AutoRAG] - Repository added to ODH/RHOAI",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Daniel Ryszka",
+          "components": [
+            "AutoRAG"
+          ],
+          "labels": [
+            "autorag"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T08:29:46.555+0000",
+          "updated": "2026-03-20T14:44:29.822+0000",
+          "resolutionDate": "2026-03-20T14:44:14.737+0000"
+        },
+        {
+          "key": "RHOAIENG-51694",
+          "parentKey": "RHOAIENG-51681",
+          "summary": "[AutoRAG Backend] - Feature documented in architecture diagrams",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Lukasz Cmielowski",
+          "components": [
+            "AutoRAG"
+          ],
+          "labels": [
+            "autorag"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T08:29:46.623+0000",
+          "updated": "2026-03-20T15:10:59.291+0000",
+          "resolutionDate": "2026-03-20T14:43:00.747+0000"
+        },
+        {
+          "key": "RHOAIENG-51695",
+          "parentKey": "RHOAIENG-51681",
+          "summary": "[AutoRAG Backend] - Integration with ODH operator - 2 week notice!",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": null,
+          "components": [
+            "AI Core Platform",
+            "AutoRAG"
+          ],
+          "labels": [
+            "aicp-team-crucible",
+            "autorag"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T08:29:46.651+0000",
+          "updated": "2026-03-27T19:26:25.396+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51696",
+          "parentKey": "RHOAIENG-51681",
+          "summary": "[AutoRAG Backend] - Integration with RHOAI operator - 2 week notice!",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Platform",
+            "AutoRAG"
+          ],
+          "labels": [
+            "aicp-team-crucible",
+            "autorag"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T08:29:47.013+0000",
+          "updated": "2026-03-31T13:51:10.726+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51697",
+          "parentKey": "RHOAIENG-51681",
+          "summary": "[AutoRAG Backend] - MUST meet designed for FIPS",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AutoRAG"
+          ],
+          "labels": [
+            "autorag"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T08:29:47.635+0000",
+          "updated": "2026-04-03T08:28:22.493+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51698",
+          "parentKey": "RHOAIENG-51681",
+          "summary": "[AutoRAG Backend] - Add source repo(s) to Snyk",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Daniel Ryszka",
+          "components": [
+            "AutoRAG"
+          ],
+          "labels": [
+            "autorag"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T08:29:48.641+0000",
+          "updated": "2026-03-24T08:28:55.519+0000",
+          "resolutionDate": "2026-03-24T08:28:55.484+0000"
+        },
+        {
+          "key": "RHOAIENG-51699",
+          "parentKey": "RHOAIENG-51681",
+          "summary": "[AutoRAG Backend] - Add component data to product-definitions for vulnerability tracking",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Normal",
+          "assignee": "Daniel Ryszka",
+          "components": [
+            "AutoRAG"
+          ],
+          "labels": [
+            "autorag"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T08:29:49.129+0000",
+          "updated": "2026-04-03T08:28:47.821+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51700",
+          "parentKey": "RHOAIENG-51681",
+          "summary": "[AutoRAG Backend] - Add component support for must-gather",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Daniel Ryszka",
+          "components": [
+            "AutoRAG"
+          ],
+          "labels": [
+            "autorag"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T08:29:49.266+0000",
+          "updated": "2026-03-20T15:09:49.340+0000",
+          "resolutionDate": "2026-03-20T15:09:13.626+0000"
+        },
+        {
+          "key": "RHOAIENG-51701",
+          "parentKey": "RHOAIENG-51681",
+          "summary": "[AutoRAG Backend] - Add Prometheus (metrics) config for component (optional)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Daniel Ryszka",
+          "components": [
+            "AutoRAG"
+          ],
+          "labels": [
+            "autorag"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T08:29:50.343+0000",
+          "updated": "2026-03-20T14:40:05.375+0000",
+          "resolutionDate": "2026-03-12T16:55:36.637+0000"
+        },
+        {
+          "key": "RHOAIENG-51702",
+          "parentKey": "RHOAIENG-51681",
+          "summary": "[AutoRAG Backend] - Add support for the new component in the QE related repositories",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Scott Froberg",
+          "components": [
+            "AI Core Platform",
+            "AutoRAG"
+          ],
+          "labels": [
+            "aicp-team-crucible",
+            "autorag"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-04T08:29:50.413+0000",
+          "updated": "2026-03-30T17:50:45.773+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-54109",
+      "parentKey": "RHAISTRAT-1176",
+      "summary": "Implement data cleanup",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Former Member 5",
+      "components": [
+        "DevOps"
+      ],
+      "labels": [
+        "devops-onboarding"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-18T12:50:08.830+0000",
+      "updated": "2026-04-01T07:14:59.788+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-54795",
+      "parentKey": "RHAISTRAT-1176",
+      "summary": "Optimize database queries",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Critical",
+      "assignee": "Person 346",
+      "components": [
+        "DevOps"
+      ],
+      "labels": [
+        "devops-onboarding",
+        "triaged"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-23T19:06:02.209+0000",
+      "updated": "2026-04-02T10:56:15.272+0000",
+      "issues": []
+    }
+  ],
+  "metrics": {
+    "totalEpics": 5,
+    "totalIssues": 21,
+    "issuesByStatus": {
+      "Review": 7,
+      "In Progress": 4,
+      "Closed": 9,
+      "Backlog": 1
+    },
+    "issuesByCategory": {
+      "Done": 9,
+      "In Progress": 11,
+      "To Do": 1
+    },
+    "totalStoryPoints": 3,
+    "storyPointsDone": 0,
+    "completionPct": 43,
+    "staleCount": 4,
+    "unassignedCount": 8,
+    "blockerCount": 6,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-51257",
+        "summary": "ODH Konflux Release Build Onboarding [AutoRAG Backend]",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Mhamad Chamseddin",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-51259",
+        "summary": "RHOAI Konflux Onboarding [AutoRAG Backend]",
+        "status": "Review",
+        "statusCategory": "In Progress",
+        "assignee": "Mhamad Chamseddin",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-51681",
+        "summary": "Tech Preview - ODH and RHOAI Integrations [AutoRAG Backend]",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Daniel Ryszka",
+        "totalIssues": 21,
+        "doneIssues": 9,
+        "progressPct": 43,
+        "storyPoints": 3,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-54109",
+        "summary": "ODH Konflux CI Build Onboarding [pipelines-components]",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Peter Keappock",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-54795",
+        "summary": "RHOAI Konflux Onboarding [pipelines-components]",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Waldemar Znoinski",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

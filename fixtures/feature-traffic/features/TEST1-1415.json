@@ -1,0 +1,59 @@
+{
+  "key": "TEST1-1415",
+  "summary": "Implement feature for module",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "MaaS",
+    "dashboard-zaffre-scrum"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "Model as a Service"
+  ],
+  "created": "2026-03-30T12:29:27.704+0000",
+  "updated": "2026-03-30T18:27:55.450+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-167",
+      "linkedSummary": "Event Tracking for Core Dashboard Features",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIUX-2170",
+      "linkedSummary": "MaaS 3.4 Event Tracking",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

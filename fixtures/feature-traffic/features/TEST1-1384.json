@@ -1,0 +1,67 @@
+{
+  "key": "TEST1-1384",
+  "summary": "Optimize database queries",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Selbi Siddiqi",
+    "accountId": "70121:0d27b449-e70b-4a5a-819c-628f2b5a8499"
+  },
+  "fixVersions": [
+    "RHAIIS-3.4"
+  ],
+  "labels": [
+    "needs-tech-review",
+    "vllm"
+  ],
+  "components": [],
+  "created": "2026-03-23T13:47:37.751+0000",
+  "updated": "2026-04-01T19:33:38.698+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1279",
+      "linkedSummary": "AMD EPYC CPU Inference Support in vLLM",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "AIPCC-12827",
+      "linkedSummary": "AMD EPYC CPU Inference Support in vLLM",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "AIPCC-12330",
+      "linkedSummary": "cpu-ubi9 for 3.4 GA",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

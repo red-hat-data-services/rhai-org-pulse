@@ -1,0 +1,153 @@
+{
+  "key": "TEST1-752",
+  "summary": "Add health check endpoint",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Roy Nissim",
+    "accountId": "712020:3e6483d7-a7f9-4847-950f-102899cadf8f"
+  },
+  "fixVersions": [],
+  "labels": [
+    "aicp-team-compass",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AI Core Platform",
+    "Documentation",
+    "UXD"
+  ],
+  "created": "2025-06-25T14:05:10.385+0000",
+  "updated": "2026-04-03T20:39:12.910+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "2026-01-21: Delayed to 3.4.EA1. Waiting on observatorium tenant and pipeline infrastructure."
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-467",
+      "linkedSummary": "Centralized Platform Metrics for Self-Managed and Managed RHOAI",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHOBS-1290",
+      "linkedSummary": "Create OpenShift AI tenant & telemeter-server instance",
+      "linkedStatus": "To Do"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-25563",
+      "parentKey": "RHAISTRAT-752",
+      "summary": "Add health check endpoint",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "AI Core Platform",
+        "Inference Extensions"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-05-15T13:57:15.273+0000",
+      "updated": "2026-04-02T12:27:52.043+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-25587",
+          "parentKey": "RHOAIENG-25563",
+          "summary": "Ship metrics to observatorium",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Arik Hadas",
+          "components": [
+            "Inference Extensions"
+          ],
+          "labels": [],
+          "storyPoints": 4,
+          "created": "2025-05-15T15:58:43.062+0000",
+          "updated": "2026-03-02T12:49:03.232+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-40471",
+          "parentKey": "RHOAIENG-25563",
+          "summary": "Deploy MaaS on IBM cluster",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Tal Gitelman",
+          "components": [
+            "AI Core Platform",
+            "Inference Extensions"
+          ],
+          "labels": [
+            "MaaS",
+            "aicp-team-compass"
+          ],
+          "storyPoints": 4,
+          "created": "2025-11-30T14:05:06.692+0000",
+          "updated": "2026-01-21T00:34:13.784+0000",
+          "resolutionDate": "2025-12-30T08:07:50.807+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 2,
+    "issuesByStatus": {
+      "Backlog": 1,
+      "Closed": 1
+    },
+    "issuesByCategory": {
+      "Done": 1,
+      "In Progress": 0,
+      "To Do": 1
+    },
+    "totalStoryPoints": 8,
+    "storyPointsDone": 4,
+    "completionPct": 50,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-25563",
+        "summary": "Build RHOAI adoption metrics pipeline",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 2,
+        "doneIssues": 1,
+        "progressPct": 50,
+        "storyPoints": 8,
+        "storyPointsDone": 4,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

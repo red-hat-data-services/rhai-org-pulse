@@ -1,0 +1,41 @@
+{
+  "key": "TEST1-322",
+  "summary": "Update API endpoint",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Undefined",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [
+    "NetworkPolicy"
+  ],
+  "components": [
+    "AI Core Platform"
+  ],
+  "created": "2024-02-29T12:06:37.873+0000",
+  "updated": "2025-11-25T21:35:37.821+0000",
+  "statusNotes": null,
+  "issueLinks": [],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

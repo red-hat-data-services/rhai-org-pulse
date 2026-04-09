@@ -1,0 +1,65 @@
+{
+  "key": "TEST1-495",
+  "summary": "Add filtering options",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Dominik Dahlem",
+    "accountId": "712020:b6ed9bc3-a265-47d4-9cdf-fa0599b03f3a"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.Next-candidate",
+    "3.x",
+    "experience",
+    "needs-doc",
+    "should-have",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AI Hub",
+    "Model Eval"
+  ],
+  "created": "2025-11-25T13:31:51.488+0000",
+  "updated": "2025-11-25T21:42:45.968+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-513",
+      "linkedSummary": "(persistent Storage/OCI) Integrate LM-Eval with Model CarD, OCI, and Model Registry/Catalog in TrustyAI",
+      "linkedStatus": "Release Pending"
+    },
+    {
+      "type": "Triggers",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-649",
+      "linkedSummary": "Integrate LM-Eval with Model CarD, OCI, and Model Registry/Catalog in TrustyAI",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

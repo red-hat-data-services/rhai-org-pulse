@@ -1,0 +1,3163 @@
+{
+  "key": "TEST1-174",
+  "summary": "Add export functionality",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Alessandro Lazarotti",
+    "accountId": "557058:726798a7-3ce4-4fb6-920c-40b6dca747da"
+  },
+  "fixVersions": [
+    "rhoai-3.3"
+  ],
+  "labels": [
+    "MaaS",
+    "dashboard-zaffre-scrum",
+    "rhoai-3.2"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "AI Core Platform",
+    "Documentation",
+    "Model as a Service",
+    "Model Serving",
+    "UXD"
+  ],
+  "created": "2025-11-05T16:07:50.098+0000",
+  "updated": "2026-04-01T14:06:08.572+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "[status update, Jan 16]"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Overall "
+          },
+          {
+            "type": "text",
+            "text": "YELLOW",
+            "marks": [
+              {
+                "type": "textColor",
+                "attrs": {
+                  "color": "#ffab00"
+                }
+              },
+              {
+                "type": "strong"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " for v3.3: UI effort is now green, waiting on feedback from MaaS backend team"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "inlineCard",
+            "attrs": {
+              "url": "https://redhat.atlassian.net/browse/RHOAIENG-38233#icft=RHOAIENG-38233"
+            }
+          },
+          {
+            "type": "text",
+            "text": " - Tech preview on-boarding requirements - "
+          },
+          {
+            "type": "text",
+            "text": "On track",
+            "marks": [
+              {
+                "type": "strong"
+              },
+              {
+                "type": "textColor",
+                "attrs": {
+                  "color": "#00875a"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " - Minor work remaining"
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "ODH operator is now able to deploy MaaS. Some issues had been identified and are already being fixed."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Platform team is assisting on final tasks to move the integration to RHOAI."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "We have found that we cannot properly test MaaS in a disconnected environment until the downstreaming of the operator integration is finished. We may step back for claiming support in disconnected envs."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "inlineCard",
+            "attrs": {
+              "url": "https://redhat.atlassian.net/browse/RHOAIENG-35116#icft=RHOAIENG-35116"
+            }
+          },
+          {
+            "type": "text",
+            "text": " - MaaS stabilization - "
+          },
+          {
+            "type": "text",
+            "text": "On track",
+            "marks": [
+              {
+                "type": "textColor",
+                "attrs": {
+                  "color": "#00875a"
+                }
+              },
+              {
+                "type": "strong"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " - Minor work remaining"
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Testing of MaaS in on-prem clusters started this week. This may be considered a stretch goal."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "For RHOAI 3.3 we had stepped back on the support for user-defined Gateways."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Some data validations of Tiers are work in progress, on track for code freeze."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "inlineCard",
+            "attrs": {
+              "url": "https://redhat.atlassian.net/browse/RHOAIENG-39597#icft=RHOAIENG-39597"
+            }
+          },
+          {
+            "type": "text",
+            "text": " MaaS TP Community documentation - "
+          },
+          {
+            "type": "text",
+            "text": "No work left",
+            "marks": [
+              {
+                "type": "strong"
+              },
+              {
+                "type": "textColor",
+                "attrs": {
+                  "color": "#00875a"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "The remaining work item was merged."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "inlineCard",
+            "attrs": {
+              "url": "https://redhat.atlassian.net/browse/RHOAIENG-38744#icft=RHOAIENG-38744"
+            }
+          },
+          {
+            "type": "text",
+            "text": " UI for MaaS Tiers & API Keys - "
+          },
+          {
+            "type": "text",
+            "text": "MVP",
+            "marks": [
+              {
+                "type": "textColor",
+                "attrs": {
+                  "color": "#00875a"
+                }
+              },
+              {
+                "type": "strong"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": ", missed stretch goals"
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "UI for MaaS Tiers is finished – signoffs and testing is still going on due to some cluster issues"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "API Keys did not make it with the final push for everything"
+                  }
+                ]
+              },
+              {
+                "type": "bulletList",
+                "content": [
+                  {
+                    "type": "listItem",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Targeted for 3.4"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "inlineCard",
+            "attrs": {
+              "url": "https://redhat.atlassian.net/browse/RHOAIENG-42368#icft=RHOAIENG-42368"
+            }
+          },
+          {
+            "type": "text",
+            "text": " & "
+          },
+          {
+            "type": "inlineCard",
+            "attrs": {
+              "url": "https://redhat.atlassian.net/browse/RHOAIENG-42505#icft=RHOAIENG-42505"
+            }
+          },
+          {
+            "type": "text",
+            "text": " Onboarding of MaaS micro front-end to RHOAI - "
+          },
+          {
+            "type": "text",
+            "text": "no work left",
+            "marks": [
+              {
+                "type": "textColor",
+                "attrs": {
+                  "color": "#00875a"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": " "
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Incorporates",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-846",
+      "linkedSummary": "MaaS UI for Admin",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-846",
+      "linkedSummary": "MaaS UI for Admin",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-409",
+      "linkedSummary": "[DP] Initial MaaS Offering (3.0)",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Blocks",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-940",
+      "linkedSummary": "Batch Inference API - MaaS",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-843",
+      "linkedSummary": "Models-as-a-Service (MaaS) Tech Preview",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-45294",
+      "linkedSummary": "UI GenAI Studio MaaS Enhancements-Part 2",
+      "linkedStatus": "Resolved"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-35116",
+      "parentKey": "RHAISTRAT-174",
+      "summary": "Implement search feature",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "Model as a Service",
+        "Model Serving"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-09-30T13:20:18.395+0000",
+      "updated": "2026-04-01T14:04:09.603+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-32977",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "[Spike] Investigate How we want to show Model Information",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-08-27T20:01:29.167+0000",
+          "updated": "2025-11-10T16:49:08.810+0000",
+          "resolutionDate": "2025-11-10T16:49:08.780+0000"
+        },
+        {
+          "key": "RHOAIENG-32978",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "[Spike] Investigate using a traditional Datastore/Database",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Brent Salisbury",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-08-27T20:03:41.318+0000",
+          "updated": "2025-11-24T16:24:14.042+0000",
+          "resolutionDate": "2025-11-24T16:03:26.612+0000"
+        },
+        {
+          "key": "RHOAIENG-34512",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "[Stretch Goal] Update MaaS API to use Contract First",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Minor",
+          "assignee": null,
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-09-18T20:09:58.919+0000",
+          "updated": "2025-11-10T16:40:44.205+0000",
+          "resolutionDate": "2025-11-10T16:40:44.177+0000"
+        },
+        {
+          "key": "RHOAIENG-35381",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "Enable secure-by-default TLS for MaaS API traffic",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Brent Salisbury",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 8,
+          "created": "2025-10-03T13:55:07.723+0000",
+          "updated": "2026-01-24T00:30:36.490+0000",
+          "resolutionDate": "2026-01-23T16:46:03.074+0000"
+        },
+        {
+          "key": "RHOAIENG-35528",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "Improve error reporting and logging",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Wen Liang",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-10-03T17:06:45.880+0000",
+          "updated": "2025-12-16T14:31:19.732+0000",
+          "resolutionDate": "2025-12-16T14:31:19.697+0000"
+        },
+        {
+          "key": "RHOAIENG-35571",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "Make sure MaaS Pattern works in On-Prem (PSI)",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Wen Liang",
+          "components": [
+            "Model as a Service",
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-10-06T13:50:01.085+0000",
+          "updated": "2026-01-21T00:35:26.164+0000",
+          "resolutionDate": "2026-01-14T17:52:39.236+0000"
+        },
+        {
+          "key": "RHOAIENG-36813",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "[Refinement] RHOAI-MaaS Tech Preview Feature Refinement",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Bartosz Majsak",
+          "components": [
+            "Model as a Service",
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-10-21T11:49:45.406+0000",
+          "updated": "2025-12-02T00:29:21.216+0000",
+          "resolutionDate": "2025-12-01T16:36:52.277+0000"
+        },
+        {
+          "key": "RHOAIENG-36873",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "Fix models list endpoint to only show MaaS-enabled models",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Bartosz Majsak",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-10-21T16:36:27.009+0000",
+          "updated": "2025-12-05T00:30:23.359+0000",
+          "resolutionDate": "2025-12-04T13:04:10.091+0000"
+        },
+        {
+          "key": "RHOAIENG-37251",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "maas-api: Compliance for \"Designed for FIPS\"",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "Model as a Service",
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-10-24T19:02:40.757+0000",
+          "updated": "2025-11-10T04:19:33.325+0000",
+          "resolutionDate": "2025-11-10T04:19:33.291+0000"
+        },
+        {
+          "key": "RHOAIENG-38540",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "[POC] Store Metadata related to created Keys",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Dmytro Zaharnytskyi",
+          "components": [
+            "Model as a Service",
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 8,
+          "created": "2025-11-10T17:57:46.382+0000",
+          "updated": "2025-12-16T00:30:55.064+0000",
+          "resolutionDate": "2025-12-15T15:39:47.935+0000"
+        },
+        {
+          "key": "RHOAIENG-38543",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "[Spike] Investigate how to provide body-based routing",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Bartosz Majsak",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-11-10T18:29:38.901+0000",
+          "updated": "2026-03-19T12:13:52.230+0000",
+          "resolutionDate": "2026-03-19T12:13:51.913+0000"
+        },
+        {
+          "key": "RHOAIENG-38866",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "Create self-contained MaaS setup script for RHOAI",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Edgar Hernandez Garcia",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-11-13T21:05:30.936+0000",
+          "updated": "2025-11-22T00:27:42.221+0000",
+          "resolutionDate": "2025-11-22T00:02:29.916+0000"
+        },
+        {
+          "key": "RHOAIENG-39907",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "Rename maas-billing repository to model-as-a-service",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Jamie Land",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-11-28T08:40:22.157+0000",
+          "updated": "2025-12-13T00:28:42.865+0000",
+          "resolutionDate": "2025-12-12T15:20:29.045+0000"
+        },
+        {
+          "key": "RHOAIENG-40564",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "Quantify MaaS DP Scale Limits & Verify etcd Impact",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Bartosz Majsak",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-12-01T14:15:50.497+0000",
+          "updated": "2025-12-23T00:30:27.331+0000",
+          "resolutionDate": "2025-12-22T15:41:53.672+0000"
+        },
+        {
+          "key": "RHOAIENG-41342",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "HTTPS routes unreachable",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Brent Salisbury",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2025-12-04T13:21:01.833+0000",
+          "updated": "2025-12-19T14:50:14.553+0000",
+          "resolutionDate": "2025-12-15T17:21:38.207+0000"
+        },
+        {
+          "key": "RHOAIENG-41343",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "List only the models that user has permission to",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Noy Itzikowitz",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-12-04T13:25:30.479+0000",
+          "updated": "2026-01-21T00:34:03.265+0000",
+          "resolutionDate": "2026-01-19T17:56:01.200+0000"
+        },
+        {
+          "key": "RHOAIENG-41344",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "Add \"displayName\" for Tier configuration",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Brent Salisbury",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-12-04T13:35:30.930+0000",
+          "updated": "2025-12-15T22:56:08.919+0000",
+          "resolutionDate": "2025-12-15T22:56:08.888+0000"
+        },
+        {
+          "key": "RHOAIENG-41354",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "Simplify logic for api-key and token endpoints",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [
+            "api-key-metadata"
+          ],
+          "storyPoints": 0,
+          "created": "2025-12-04T16:31:10.893+0000",
+          "updated": "2025-12-22T16:00:27.548+0000",
+          "resolutionDate": "2025-12-22T16:00:27.513+0000"
+        },
+        {
+          "key": "RHOAIENG-41355",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "Remove unused TokenValidation logic",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Jamie Land",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [
+            "api-key-metadata"
+          ],
+          "storyPoints": 0,
+          "created": "2025-12-04T16:39:11.103+0000",
+          "updated": "2025-12-22T23:02:25.156+0000",
+          "resolutionDate": "2025-12-22T15:31:40.100+0000"
+        },
+        {
+          "key": "RHOAIENG-41356",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "Remove unused JTI field from UserContext",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Dmytro Zaharnytskyi",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [
+            "api-key-metadata"
+          ],
+          "storyPoints": 1,
+          "created": "2025-12-04T16:49:06.509+0000",
+          "updated": "2025-12-19T16:35:50.359+0000",
+          "resolutionDate": "2025-12-17T12:59:56.997+0000"
+        },
+        {
+          "key": "RHOAIENG-41359",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "Use JWT 'iat' claim for token creation date",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Dmytro Zaharnytskyi",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [
+            "api-key-metadata"
+          ],
+          "storyPoints": 1,
+          "created": "2025-12-04T17:03:16.264+0000",
+          "updated": "2025-12-19T16:35:09.549+0000",
+          "resolutionDate": "2025-12-18T22:06:23.524+0000"
+        },
+        {
+          "key": "RHOAIENG-41360",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "Remove namespace field from API Key metadata storage",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Dmytro Zaharnytskyi",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [
+            "api-key-metadata"
+          ],
+          "storyPoints": 1,
+          "created": "2025-12-04T17:06:16.910+0000",
+          "updated": "2025-12-19T16:34:50.021+0000",
+          "resolutionDate": "2025-12-18T22:06:41.005+0000"
+        },
+        {
+          "key": "RHOAIENG-41361",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "Add \"description\" for Tier configuration",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Wen Liang",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-12-04T17:20:24.754+0000",
+          "updated": "2026-01-21T00:34:00.985+0000",
+          "resolutionDate": "2026-01-15T16:03:42.268+0000"
+        },
+        {
+          "key": "RHOAIENG-41478",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "Remove premature SQLite migration logic",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Dmytro Zaharnytskyi",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2025-12-05T07:00:40.041+0000",
+          "updated": "2025-12-19T16:34:13.299+0000",
+          "resolutionDate": "2025-12-18T22:10:43.574+0000"
+        },
+        {
+          "key": "RHOAIENG-41525",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "Add support of external DB (Postgresql) and in-memory and/or PVC solution like SQLight",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Dmytro Zaharnytskyi",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-12-05T15:44:40.269+0000",
+          "updated": "2025-12-18T15:36:32.506+0000",
+          "resolutionDate": "2025-12-18T15:36:32.470+0000"
+        },
+        {
+          "key": "RHOAIENG-41588",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "Automate Broken Link Detection in Documentation",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chaitanya Kulkarni",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-12-09T07:28:08.354+0000",
+          "updated": "2026-01-22T18:59:57.223+0000",
+          "resolutionDate": "2026-01-22T18:55:35.691+0000"
+        },
+        {
+          "key": "RHOAIENG-42010",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "Support user-defined Gateway (allow configuration of name and namespace references)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-12-15T16:28:18.160+0000",
+          "updated": "2026-03-16T17:53:58.620+0000",
+          "resolutionDate": "2026-03-16T17:53:58.409+0000"
+        },
+        {
+          "key": "RHOAIENG-42587",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "Webhook: Validate tier levels",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Dmytro Zaharnytskyi",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-12-22T07:21:58.873+0000",
+          "updated": "2026-01-22T00:33:04.310+0000",
+          "resolutionDate": "2026-01-21T18:40:17.911+0000"
+        },
+        {
+          "key": "RHOAIENG-42589",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "odh-model-controller: Reconcile RBAC on tier CRUD operations",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Bartosz Majsak",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-12-22T07:35:35.155+0000",
+          "updated": "2026-01-21T00:32:54.612+0000",
+          "resolutionDate": "2026-01-19T17:52:39.084+0000"
+        },
+        {
+          "key": "RHOAIENG-45394",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "Prow CI failing due to resource unavailable",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chaitanya Kulkarni",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-01-13T23:05:53.806+0000",
+          "updated": "2026-01-22T18:57:22.670+0000",
+          "resolutionDate": "2026-01-13T23:07:11.920+0000"
+        },
+        {
+          "key": "RHOAIENG-45886",
+          "parentKey": "RHOAIENG-35116",
+          "summary": "Restrict MaaS token management endpoints to user tokens",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Bartosz Majsak",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-16T12:49:12.327+0000",
+          "updated": "2026-04-01T09:44:05.154+0000",
+          "resolutionDate": "2026-04-01T09:44:05.106+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-37231",
+      "parentKey": "RHAISTRAT-174",
+      "summary": "Refactor data handling code",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Person 185",
+      "components": [
+        "Model as a Service",
+        "Model Serving"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-10-24T13:55:16.651+0000",
+      "updated": "2026-04-01T14:04:12.323+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-33161",
+          "parentKey": "RHOAIENG-37231",
+          "summary": "On-board MaaS automated tests in RHOAI product CI",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Swati Mukund Bagal",
+          "components": [
+            "Model as a Service",
+            "TestOps"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-08-28T19:57:47.577+0000",
+          "updated": "2025-12-16T18:06:01.517+0000",
+          "resolutionDate": "2025-12-16T18:06:01.465+0000"
+        },
+        {
+          "key": "RHOAIENG-37238",
+          "parentKey": "RHOAIENG-37231",
+          "summary": "MaaS - Validate Tool Calling",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Swati Mukund Bagal",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-10-24T15:06:12.506+0000",
+          "updated": "2025-11-10T16:29:34.981+0000",
+          "resolutionDate": "2025-11-10T16:29:34.948+0000"
+        },
+        {
+          "key": "RHOAIENG-37239",
+          "parentKey": "RHOAIENG-37231",
+          "summary": "MaaS-  Validate Stream Responses",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Swati Mukund Bagal",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-10-24T15:07:30.152+0000",
+          "updated": "2025-11-10T16:29:53.226+0000",
+          "resolutionDate": "2025-11-10T16:29:53.197+0000"
+        },
+        {
+          "key": "RHOAIENG-38494",
+          "parentKey": "RHOAIENG-37231",
+          "summary": "MaaS-Billing: Enable E2E tests via Prow (OpenShift CI)",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chaitanya Kulkarni",
+          "components": [
+            "CI/CD",
+            "Model as a Service"
+          ],
+          "labels": [
+            "MaaS",
+            "e2e"
+          ],
+          "storyPoints": 3,
+          "created": "2025-11-10T15:53:52.862+0000",
+          "updated": "2025-12-02T00:29:17.954+0000",
+          "resolutionDate": "2025-12-01T16:40:40.760+0000"
+        },
+        {
+          "key": "RHOAIENG-41300",
+          "parentKey": "RHOAIENG-37231",
+          "summary": "MaaS - Go Coverage - Add unit tests for health endpoint",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-12-03T18:20:02.980+0000",
+          "updated": "2025-12-15T15:50:08.580+0000",
+          "resolutionDate": "2025-12-15T15:50:08.550+0000"
+        },
+        {
+          "key": "RHOAIENG-41303",
+          "parentKey": "RHOAIENG-37231",
+          "summary": "MaaS - Go Coverage - Add unit tests for Token types JSON unmarshaling",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-12-03T18:34:22.210+0000",
+          "updated": "2025-12-15T16:12:08.296+0000",
+          "resolutionDate": "2025-12-15T16:12:08.262+0000"
+        },
+        {
+          "key": "RHOAIENG-41305",
+          "parentKey": "RHOAIENG-37231",
+          "summary": "MaaS - Go Coverage - Add tests for RevokeAllTokens endpoint handler",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-12-03T18:39:28.190+0000",
+          "updated": "2025-12-15T16:18:38.071+0000",
+          "resolutionDate": "2025-12-15T16:18:38.037+0000"
+        },
+        {
+          "key": "RHOAIENG-41306",
+          "parentKey": "RHOAIENG-37231",
+          "summary": "MaaS - Go Coverage - Add tests for ListModels endpoint",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-12-03T18:41:06.102+0000",
+          "updated": "2025-12-15T16:19:35.645+0000",
+          "resolutionDate": "2025-12-15T16:19:35.612+0000"
+        },
+        {
+          "key": "RHOAIENG-41307",
+          "parentKey": "RHOAIENG-37231",
+          "summary": "MaaS - Go Coverage - Add tests for Namespace lookup function",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-12-03T18:42:22.485+0000",
+          "updated": "2025-12-15T16:23:16.009+0000",
+          "resolutionDate": "2025-12-15T16:23:15.979+0000"
+        },
+        {
+          "key": "RHOAIENG-41308",
+          "parentKey": "RHOAIENG-37231",
+          "summary": "MaaS - Go Coverage - Add unit tests for cluster configuration",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-12-03T18:43:43.639+0000",
+          "updated": "2025-12-15T16:24:28.792+0000",
+          "resolutionDate": "2025-12-15T16:24:28.764+0000"
+        },
+        {
+          "key": "RHOAIENG-41424",
+          "parentKey": "RHOAIENG-37231",
+          "summary": "MaaS - Update e2e to deploy using PR maas-api image",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chaitanya Kulkarni",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-12-04T23:31:03.395+0000",
+          "updated": "2025-12-09T20:10:01.684+0000",
+          "resolutionDate": "2025-12-09T20:10:01.650+0000"
+        },
+        {
+          "key": "RHOAIENG-42018",
+          "parentKey": "RHOAIENG-37231",
+          "summary": "Maas - Add maas-gateway-api yaml, rate-limit-policy, token-rate-limit-policy in test.",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Swati Mukund Bagal",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-12-15T21:04:37.611+0000",
+          "updated": "2026-01-27T00:33:28.251+0000",
+          "resolutionDate": "2026-01-26T14:51:43.207+0000"
+        },
+        {
+          "key": "RHOAIENG-42022",
+          "parentKey": "RHOAIENG-37231",
+          "summary": "Maas-model-as-service controller enablement in test.",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Swati Mukund Bagal",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-12-15T22:26:39.637+0000",
+          "updated": "2026-01-27T00:33:26.384+0000",
+          "resolutionDate": "2026-01-26T14:52:03.009+0000"
+        },
+        {
+          "key": "RHOAIENG-42023",
+          "parentKey": "RHOAIENG-37231",
+          "summary": "Maas-Revoke the token before expiration.",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Swati Mukund Bagal",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-12-15T22:27:23.724+0000",
+          "updated": "2026-01-27T00:33:24.519+0000",
+          "resolutionDate": "2026-01-26T14:52:25.369+0000"
+        },
+        {
+          "key": "RHOAIENG-45996",
+          "parentKey": "RHOAIENG-37231",
+          "summary": "MaaS - Triaging and fixing smoke testing issues",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chaitanya Kulkarni",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-16T20:04:57.231+0000",
+          "updated": "2026-01-22T18:58:05.153+0000",
+          "resolutionDate": "2026-01-16T20:06:06.857+0000"
+        },
+        {
+          "key": "RHOAIENG-50134",
+          "parentKey": "RHOAIENG-37231",
+          "summary": "Validate MaaS API on Disconnected cluster and document",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Somya Bhatnagar",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-18T15:38:18.672+0000",
+          "updated": "2026-03-21T03:28:50.484+0000",
+          "resolutionDate": "2026-03-05T15:43:09.314+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-38233",
+      "parentKey": "RHAISTRAT-174",
+      "summary": "Implement data cleanup",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": null,
+      "components": [
+        "AI Core Platform",
+        "Model as a Service"
+      ],
+      "labels": [
+        "aicp-team-compass"
+      ],
+      "storyPoints": 0,
+      "created": "2025-11-06T23:28:19.474+0000",
+      "updated": "2026-03-16T17:03:49.333+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-38234",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "CLONE - Ensure work with supported lifecyles",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Wen Liang",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2025-11-06T23:28:26.615+0000",
+          "updated": "2025-12-03T00:29:24.425+0000",
+          "resolutionDate": "2025-12-02T20:22:59.329+0000"
+        },
+        {
+          "key": "RHOAIENG-38235",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "CLONE - Security requirements",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Lindani Phiri",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-11-06T23:28:26.668+0000",
+          "updated": "2026-03-19T12:10:25.490+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-38236",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "CLONE - MUST meet designed for FIPS",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Wen Liang",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-11-06T23:28:26.680+0000",
+          "updated": "2025-12-03T17:33:39.249+0000",
+          "resolutionDate": "2025-11-27T19:07:19.797+0000"
+        },
+        {
+          "key": "RHOAIENG-38237",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "CLONE - Feature documented in architecture diagrams",
+          "type": "Task",
+          "status": "Testing",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Jamie Land",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2025-11-06T23:28:26.680+0000",
+          "updated": "2026-02-13T21:57:05.417+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-38238",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "CLONE - RHOAI ONLY: AI Platform Core Components (AIPCC) Integration",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Jamie Land",
+          "components": [
+            "AI Core Platform",
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2025-11-06T23:28:26.735+0000",
+          "updated": "2025-11-19T17:59:14.159+0000",
+          "resolutionDate": "2025-11-19T16:08:58.483+0000"
+        },
+        {
+          "key": "RHOAIENG-38239",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "CLONE - Testing requirements",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chaitanya Kulkarni",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-11-06T23:28:26.736+0000",
+          "updated": "2025-12-05T00:30:21.095+0000",
+          "resolutionDate": "2025-12-04T23:26:12.663+0000"
+        },
+        {
+          "key": "RHOAIENG-38240",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "CLONE - Multi-Architecture Support",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Bartosz Majsak",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-11-06T23:28:29.373+0000",
+          "updated": "2025-12-23T00:30:46.097+0000",
+          "resolutionDate": "2025-12-22T15:21:46.140+0000"
+        },
+        {
+          "key": "RHOAIENG-38241",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "CLONE - Test with disconnected environment",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chaitanya Kulkarni",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-11-06T23:28:29.411+0000",
+          "updated": "2025-12-18T16:09:11.934+0000",
+          "resolutionDate": "2025-12-18T16:09:11.903+0000"
+        },
+        {
+          "key": "RHOAIENG-38242",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "CLONE - Add Prometheus config for component",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Wen Liang",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-11-06T23:28:29.412+0000",
+          "updated": "2025-12-03T00:29:22.682+0000",
+          "resolutionDate": "2025-12-02T15:06:56.398+0000"
+        },
+        {
+          "key": "RHOAIENG-38243",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "CLONE - Create component in jira",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Platform",
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-11-06T23:28:29.441+0000",
+          "updated": "2025-11-10T05:10:24.142+0000",
+          "resolutionDate": "2025-11-10T05:10:24.089+0000"
+        },
+        {
+          "key": "RHOAIENG-38244",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "CLONE - Integration with RHOAI operator - 2 week notice!",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Corey Goodfred",
+          "components": [
+            "AI Core Platform",
+            "Model as a Service"
+          ],
+          "labels": [
+            "aicp-team-compass",
+            "needs-qe-verification"
+          ],
+          "storyPoints": 2,
+          "created": "2025-11-06T23:28:29.494+0000",
+          "updated": "2026-01-21T00:35:13.408+0000",
+          "resolutionDate": "2026-01-16T09:47:38.077+0000"
+        },
+        {
+          "key": "RHOAIENG-38245",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "CLONE - Add source repo(s) to Snyk",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Platform",
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-11-06T23:28:29.499+0000",
+          "updated": "2025-11-11T23:31:15.732+0000",
+          "resolutionDate": "2025-11-10T17:42:38.776+0000"
+        },
+        {
+          "key": "RHOAIENG-38246",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "CLONE - Integration with ODH operator - 2 week notice!",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Edgar Hernandez Garcia",
+          "components": [
+            "AI Core Platform",
+            "Model as a Service"
+          ],
+          "labels": [
+            "aicp-team-compass"
+          ],
+          "storyPoints": 5,
+          "created": "2025-11-06T23:28:29.513+0000",
+          "updated": "2026-01-21T00:35:11.016+0000",
+          "resolutionDate": "2026-01-14T00:57:56.865+0000"
+        },
+        {
+          "key": "RHOAIENG-38247",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "CLONE - Repository added to ODH/RHOAI",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Platform",
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-11-06T23:28:29.518+0000",
+          "updated": "2025-11-10T05:12:30.791+0000",
+          "resolutionDate": "2025-11-10T05:12:30.757+0000"
+        },
+        {
+          "key": "RHOAIENG-38248",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "CLONE - Add support for the new component in the QE related repositories",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Corey Goodfred",
+          "components": [
+            "AI Core Platform",
+            "Model as a Service"
+          ],
+          "labels": [
+            "aicp-team-compass"
+          ],
+          "storyPoints": 0,
+          "created": "2025-11-06T23:28:29.523+0000",
+          "updated": "2026-01-16T12:17:15.166+0000",
+          "resolutionDate": "2026-01-16T12:17:15.131+0000"
+        },
+        {
+          "key": "RHOAIENG-38249",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "CLONE - Add component support for must-gather",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Wen Zhou",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-11-06T23:28:29.530+0000",
+          "updated": "2025-12-23T00:30:43.585+0000",
+          "resolutionDate": "2025-12-22T07:42:56.608+0000"
+        },
+        {
+          "key": "RHOAIENG-38250",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "CLONE - Add component data to product-definitions for vulnerability tracking",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Chaitanya Kulkarni",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-11-06T23:28:29.534+0000",
+          "updated": "2025-12-02T00:29:19.637+0000",
+          "resolutionDate": "2025-12-01T20:50:31.096+0000"
+        },
+        {
+          "key": "RHOAIENG-39551",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "[Spike] Sync with MaaS Team on Existing Work",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Corey Goodfred",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-compass"
+          ],
+          "storyPoints": 0,
+          "created": "2025-11-21T21:42:48.828+0000",
+          "updated": "2026-01-08T21:02:32.730+0000",
+          "resolutionDate": "2026-01-08T21:02:32.698+0000"
+        },
+        {
+          "key": "RHOAIENG-39553",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "[Spike] Design DSC Changes for Enabling MaaS",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-compass"
+          ],
+          "storyPoints": 0,
+          "created": "2025-11-21T21:43:47.631+0000",
+          "updated": "2026-01-08T21:06:19.661+0000",
+          "resolutionDate": "2026-01-08T21:06:19.624+0000"
+        },
+        {
+          "key": "RHOAIENG-39601",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "Allow MaaS api to run on any namespace",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Jamie Land",
+          "components": [
+            "Model as a Service",
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-11-24T02:29:45.398+0000",
+          "updated": "2025-12-12T00:30:30.472+0000",
+          "resolutionDate": "2025-12-11T15:49:46.083+0000"
+        },
+        {
+          "key": "RHOAIENG-41755",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "Move user/group validation logic from maas-api to Autrino AuthPolicy",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Jamie Land",
+          "components": [
+            "Model as a Service",
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-12-11T15:57:19.907+0000",
+          "updated": "2025-12-17T00:29:52.133+0000",
+          "resolutionDate": "2025-12-16T21:59:32.429+0000"
+        },
+        {
+          "key": "RHOAIENG-42461",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "Rename Repo - red-hat-data-services/models-as-a-service",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Alex Fan",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [
+            "sprint-3.2"
+          ],
+          "storyPoints": 0,
+          "created": "2025-12-18T17:21:29.266+0000",
+          "updated": "2026-01-21T00:33:01.547+0000",
+          "resolutionDate": "2026-01-08T12:22:25.007+0000"
+        },
+        {
+          "key": "RHOAIENG-42586",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "Configure Jenkins for automated testing with disconnected environments",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Somya Bhatnagar",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-12-22T07:10:04.445+0000",
+          "updated": "2026-04-01T10:07:54.529+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-44474",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "Update install scripts to utilize new operator process for MAAS",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Jamie Land",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-08T17:30:24.349+0000",
+          "updated": "2026-01-22T15:32:33.327+0000",
+          "resolutionDate": "2026-01-22T15:32:33.289+0000"
+        },
+        {
+          "key": "RHOAIENG-44475",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "Update installation documentation for new MAAS operator integration",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Ishita Sequeira",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-08T17:31:08.198+0000",
+          "updated": "2026-01-19T17:58:20.762+0000",
+          "resolutionDate": "2026-01-19T17:58:20.745+0000"
+        },
+        {
+          "key": "RHOAIENG-46637",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "Consolidate Deployment Scripts for MaaS and Add Flexibility Options",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Ishita Sequeira",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 8,
+          "created": "2026-01-20T23:56:36.397+0000",
+          "updated": "2026-02-10T15:20:40.884+0000",
+          "resolutionDate": "2026-02-10T15:20:40.847+0000"
+        },
+        {
+          "key": "RHOAIENG-49025",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "Add kustomize flow to the consolidated deploy script",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Ishita Sequeira",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-02-09T15:21:39.249+0000",
+          "updated": "2026-02-18T15:39:32.666+0000",
+          "resolutionDate": "2026-02-18T15:38:46.561+0000"
+        },
+        {
+          "key": "RHOAIENG-49715",
+          "parentKey": "RHOAIENG-38233",
+          "summary": "fix operator subscriptions and activate LWS controller",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chaitanya Kulkarni",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-02-12T18:00:27.582+0000",
+          "updated": "2026-02-12T18:00:50.765+0000",
+          "resolutionDate": "2026-02-12T18:00:44.432+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-38744",
+      "parentKey": "RHAISTRAT-174",
+      "summary": "Add health check endpoint",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 217",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-zaffre-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2025-11-12T20:09:44.081+0000",
+      "updated": "2026-02-25T15:22:43.914+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-38746",
+          "parentKey": "RHOAIENG-38744",
+          "summary": "Epic Signoffs",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Griffin Sullivan",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "template"
+          ],
+          "storyPoints": 1,
+          "created": "2025-11-12T20:10:51.559+0000",
+          "updated": "2026-02-25T15:22:46.171+0000",
+          "resolutionDate": "2026-02-07T01:17:18.877+0000"
+        },
+        {
+          "key": "RHOAIENG-38752",
+          "parentKey": "RHOAIENG-38744",
+          "summary": "QA Verification for MaaS Admin Tiers UI",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Sri Sai Sowjanya Darna",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas",
+            "dashboard-epic-verification",
+            "dashboard-zaffre-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2025-11-12T20:12:09.829+0000",
+          "updated": "2026-02-11T13:44:35.921+0000",
+          "resolutionDate": "2026-02-06T21:19:45.505+0000"
+        },
+        {
+          "key": "RHOAIENG-38753",
+          "parentKey": "RHOAIENG-38744",
+          "summary": "[SPIKE] Finish refining Dashboard scope for MaaS admin",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Andrew Ballantyne",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 1,
+          "created": "2025-11-12T20:24:48.572+0000",
+          "updated": "2025-11-25T20:59:08.787+0000",
+          "resolutionDate": "2025-11-25T20:59:08.768+0000"
+        },
+        {
+          "key": "RHOAIENG-38754",
+          "parentKey": "RHOAIENG-38744",
+          "summary": "Create a new package for MaaS Admin",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Griffin Sullivan",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 2,
+          "created": "2025-11-12T20:26:53.769+0000",
+          "updated": "2025-12-03T15:23:10.240+0000",
+          "resolutionDate": "2025-12-03T15:23:10.197+0000"
+        },
+        {
+          "key": "RHOAIENG-39719",
+          "parentKey": "RHOAIENG-38744",
+          "summary": "[MVP] Create page shells and navigation ",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Griffin Sullivan",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 1,
+          "created": "2025-11-25T21:54:48.801+0000",
+          "updated": "2025-12-12T17:52:22.289+0000",
+          "resolutionDate": "2025-12-08T16:30:09.017+0000"
+        },
+        {
+          "key": "RHOAIENG-39721",
+          "parentKey": "RHOAIENG-38744",
+          "summary": "[MVP] Finish any setup needed for running the BFF",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Edgar Hernandez Garcia",
+          "components": [
+            "AI Core Dashboard",
+            "Model as a Service"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 2,
+          "created": "2025-11-25T21:57:20.545+0000",
+          "updated": "2025-12-12T17:52:24.258+0000",
+          "resolutionDate": "2025-12-11T16:32:42.268+0000"
+        },
+        {
+          "key": "RHOAIENG-39722",
+          "parentKey": "RHOAIENG-38744",
+          "summary": "[MVP] Create BFF mocks for Tiers endpoints",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Edgar Hernandez Garcia",
+          "components": [
+            "AI Core Dashboard",
+            "Model as a Service"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 3,
+          "created": "2025-11-25T21:59:11.329+0000",
+          "updated": "2025-12-22T20:04:18.190+0000",
+          "resolutionDate": "2025-12-22T20:04:18.154+0000"
+        },
+        {
+          "key": "RHOAIENG-39724",
+          "parentKey": "RHOAIENG-38744",
+          "summary": "[Stretch] Create BFF mocks for API Keys",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Griffin Sullivan",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 3,
+          "created": "2025-11-25T22:00:09.991+0000",
+          "updated": "2026-01-09T14:03:55.899+0000",
+          "resolutionDate": "2026-01-09T14:03:55.858+0000"
+        },
+        {
+          "key": "RHOAIENG-40547",
+          "parentKey": "RHOAIENG-38744",
+          "summary": "[MVP] Add business logic to the BFF for Tiers endpoints",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Edgar Hernandez Garcia",
+          "components": [
+            "AI Core Dashboard",
+            "Model as a Service"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 5,
+          "created": "2025-12-01T13:50:39.116+0000",
+          "updated": "2026-01-07T13:59:48.162+0000",
+          "resolutionDate": "2026-01-07T13:59:48.122+0000"
+        },
+        {
+          "key": "RHOAIENG-40553",
+          "parentKey": "RHOAIENG-38744",
+          "summary": "[MVP] Add the Tiers table",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Emily Samoylov",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 3,
+          "created": "2025-12-01T13:56:48.752+0000",
+          "updated": "2026-01-21T08:00:16.448+0000",
+          "resolutionDate": "2025-12-18T15:42:28.683+0000"
+        },
+        {
+          "key": "RHOAIENG-40554",
+          "parentKey": "RHOAIENG-38744",
+          "summary": "[MVP] Add the create tier page",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Griffin Sullivan",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 3,
+          "created": "2025-12-01T13:57:36.516+0000",
+          "updated": "2026-01-21T08:00:02.572+0000",
+          "resolutionDate": "2026-01-08T20:44:05.443+0000"
+        },
+        {
+          "key": "RHOAIENG-40555",
+          "parentKey": "RHOAIENG-38744",
+          "summary": "[MVP] Add the edit for a tier",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Katelynn Perry",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 3,
+          "created": "2025-12-01T13:58:26.239+0000",
+          "updated": "2026-01-13T16:26:50.786+0000",
+          "resolutionDate": "2026-01-13T16:26:50.753+0000"
+        },
+        {
+          "key": "RHOAIENG-40556",
+          "parentKey": "RHOAIENG-38744",
+          "summary": "[MVP] Add delete modal for tier",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Griffin Sullivan",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 2,
+          "created": "2025-12-01T13:59:34.013+0000",
+          "updated": "2026-01-08T20:43:58.610+0000",
+          "resolutionDate": "2026-01-08T20:43:58.578+0000"
+        },
+        {
+          "key": "RHOAIENG-40557",
+          "parentKey": "RHOAIENG-38744",
+          "summary": "[Stretch] Add API Keys table",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Griffin Sullivan",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 3,
+          "created": "2025-12-01T14:00:23.423+0000",
+          "updated": "2026-01-21T08:00:30.784+0000",
+          "resolutionDate": "2026-01-16T15:30:13.046+0000"
+        },
+        {
+          "key": "RHOAIENG-40558",
+          "parentKey": "RHOAIENG-38744",
+          "summary": "[Stretch] Add revoke all API Keys modal",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Ashley McEntee",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 2,
+          "created": "2025-12-01T14:01:11.715+0000",
+          "updated": "2026-01-16T15:41:46.669+0000",
+          "resolutionDate": "2026-01-16T15:41:46.652+0000"
+        },
+        {
+          "key": "RHOAIENG-40566",
+          "parentKey": "RHOAIENG-38744",
+          "summary": "[MVP][Blocked] Remove AAA checkbox from model deployment wizard",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-serving"
+          ],
+          "storyPoints": 1,
+          "created": "2025-12-01T14:22:35.928+0000",
+          "updated": "2026-01-14T13:25:04.183+0000",
+          "resolutionDate": "2026-01-14T13:25:04.123+0000"
+        },
+        {
+          "key": "RHOAIENG-40569",
+          "parentKey": "RHOAIENG-38744",
+          "summary": "[MVP] Add details page for a tier",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Ashley McEntee",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 2,
+          "created": "2025-12-01T14:39:44.965+0000",
+          "updated": "2026-01-07T19:50:52.197+0000",
+          "resolutionDate": "2026-01-07T19:50:52.164+0000"
+        },
+        {
+          "key": "RHOAIENG-43590",
+          "parentKey": "RHOAIENG-38744",
+          "summary": "[MVP] Follow up Tiers BFF to clean up RateLimits",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Edgar Hernandez Garcia",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 3,
+          "created": "2026-01-06T20:43:57.787+0000",
+          "updated": "2026-01-15T19:44:15.515+0000",
+          "resolutionDate": "2026-01-15T19:44:15.482+0000"
+        },
+        {
+          "key": "RHOAIENG-44469",
+          "parentKey": "RHOAIENG-38744",
+          "summary": "Add validation to create tier form to help user select a unique level and name",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Griffin Sullivan",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 2,
+          "created": "2026-01-08T17:07:37.115+0000",
+          "updated": "2026-01-16T15:08:37.756+0000",
+          "resolutionDate": "2026-01-16T15:08:37.725+0000"
+        },
+        {
+          "key": "RHOAIENG-45118",
+          "parentKey": "RHOAIENG-38744",
+          "summary": "Fix Permission Issue With MaaS (RHOAI) Admin ",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Steven Tobin",
+          "components": [
+            "AI Core Dashboard",
+            "AI Core Platform",
+            "Model as a Service"
+          ],
+          "labels": [
+            "aicp-team-compass",
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-12T21:58:08.747+0000",
+          "updated": "2026-01-16T11:58:47.365+0000",
+          "resolutionDate": "2026-01-16T11:58:47.329+0000"
+        },
+        {
+          "key": "RHOAIENG-50923",
+          "parentKey": "RHOAIENG-38744",
+          "summary": "Epic Signoffs",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Griffin Sullivan",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "template"
+          ],
+          "storyPoints": 1,
+          "created": "2026-02-25T15:22:43.494+0000",
+          "updated": "2026-02-25T15:22:46.155+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-38885",
+      "parentKey": "RHAISTRAT-174",
+      "summary": "Fix data migration",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Former Member 6",
+      "components": [
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-11-14T14:30:31.386+0000",
+      "updated": "2026-03-06T14:21:13.077+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-32441",
+          "parentKey": "RHOAIENG-38885",
+          "summary": "[ccs Spike] Determine documentation needs for initial MaaS offering",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Shumaila Yaseen",
+          "components": [
+            "Documentation",
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-08-18T08:14:22.454+0000",
+          "updated": "2026-02-13T13:59:20.497+0000",
+          "resolutionDate": "2026-02-13T13:59:20.471+0000"
+        },
+        {
+          "key": "RHOAIENG-46991",
+          "parentKey": "RHOAIENG-38885",
+          "summary": "[ccs] Document MaaS (TP)",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Shumaila Yaseen",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 8,
+          "created": "2026-01-22T19:27:57.687+0000",
+          "updated": "2026-03-06T14:21:00.805+0000",
+          "resolutionDate": "2026-03-06T14:21:00.748+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-39597",
+      "parentKey": "RHAISTRAT-174",
+      "summary": "Fix sorting order",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "Model as a Service",
+        "Model Serving"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-11-24T01:27:01.124+0000",
+      "updated": "2026-01-14T03:45:38.494+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-39598",
+          "parentKey": "RHOAIENG-39597",
+          "summary": "MaaS - TP - Document side effects when removing group membership during active usage",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Wen Liang",
+          "components": [
+            "Model as a Service",
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-11-24T01:58:47.658+0000",
+          "updated": "2025-12-19T00:30:39.870+0000",
+          "resolutionDate": "2025-12-18T18:34:33.147+0000"
+        },
+        {
+          "key": "RHOAIENG-39599",
+          "parentKey": "RHOAIENG-39597",
+          "summary": "MaaS - TP - Document side effects when tiers are modified during active usage",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Wen Liang",
+          "components": [
+            "Model as a Service",
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-11-24T02:01:35.112+0000",
+          "updated": "2025-12-23T00:30:37.382+0000",
+          "resolutionDate": "2025-12-22T14:39:02.162+0000"
+        },
+        {
+          "key": "RHOAIENG-39600",
+          "parentKey": "RHOAIENG-39597",
+          "summary": "MaaS - TP - Document side effects when removing model from tier during active usage",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Wen Liang",
+          "components": [
+            "Model as a Service",
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-11-24T02:04:17.130+0000",
+          "updated": "2026-01-21T00:34:21.886+0000",
+          "resolutionDate": "2026-01-13T19:12:06.475+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-41572",
+      "parentKey": "RHAISTRAT-174",
+      "summary": "Implement data cleanup",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Person 209",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2025-12-08T13:57:52.825+0000",
+      "updated": "2026-01-21T09:49:21.732+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-43280",
+          "parentKey": "RHOAIENG-41572",
+          "summary": "Add static Tier information to Models as a Service tab",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Emmanuel Ikeola",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2025-12-30T10:41:54.433+0000",
+          "updated": "2026-02-13T10:46:41.837+0000",
+          "resolutionDate": "2026-01-09T10:09:45.720+0000"
+        },
+        {
+          "key": "RHOAIENG-43282",
+          "parentKey": "RHOAIENG-41572",
+          "summary": "Minor UI Changes - Remove \"Developer Preview\" suffix from Models as a Service tab",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Emmanuel Ikeola",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2025-12-30T10:53:36.836+0000",
+          "updated": "2026-02-13T10:46:43.808+0000",
+          "resolutionDate": "2026-01-07T10:16:57.302+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-42368",
+      "parentKey": "RHAISTRAT-174",
+      "summary": "Add input validation",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Person 217",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-area-maas",
+        "dashboard-modular-architecture",
+        "dashboard-monarch-scrum"
+      ],
+      "storyPoints": 3,
+      "created": "2025-12-18T13:45:43.531+0000",
+      "updated": "2026-01-16T15:28:49.230+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-42369",
+          "parentKey": "RHOAIENG-42368",
+          "summary": "Onboard module and pass Contract Testing",
+          "type": "Sub-task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-monarch-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2025-12-18T13:45:46.197+0000",
+          "updated": "2026-01-16T15:20:33.926+0000",
+          "resolutionDate": "2026-01-16T15:20:33.891+0000"
+        },
+        {
+          "key": "RHOAIENG-42370",
+          "parentKey": "RHOAIENG-42368",
+          "summary": "Create request to onboard module with DevOps",
+          "type": "Sub-task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Griffin Sullivan",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-monarch-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2025-12-18T13:45:48.249+0000",
+          "updated": "2026-01-12T14:31:26.142+0000",
+          "resolutionDate": "2026-01-12T14:31:26.104+0000"
+        },
+        {
+          "key": "RHOAIENG-42371",
+          "parentKey": "RHOAIENG-42368",
+          "summary": "Dockerfile Image Onboarding",
+          "type": "Sub-task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Griffin Sullivan",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-monarch-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2025-12-18T13:45:50.712+0000",
+          "updated": "2025-12-18T21:17:48.553+0000",
+          "resolutionDate": "2025-12-18T21:17:48.521+0000"
+        },
+        {
+          "key": "RHOAIENG-42372",
+          "parentKey": "RHOAIENG-42368",
+          "summary": "Onboard modular architecture in Konflux ODH",
+          "type": "Sub-task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-monarch-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2025-12-18T13:45:52.794+0000",
+          "updated": "2026-01-15T16:14:51.574+0000",
+          "resolutionDate": "2026-01-15T16:14:51.538+0000"
+        },
+        {
+          "key": "RHOAIENG-42373",
+          "parentKey": "RHOAIENG-42368",
+          "summary": "Set up module for Openshift CI builds",
+          "type": "Sub-task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Griffin Sullivan",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-monarch-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2025-12-18T13:45:54.910+0000",
+          "updated": "2026-01-15T22:34:31.447+0000",
+          "resolutionDate": "2026-01-15T22:34:31.414+0000"
+        },
+        {
+          "key": "RHOAIENG-42374",
+          "parentKey": "RHOAIENG-42368",
+          "summary": "Onboard Module in Manifest",
+          "type": "Sub-task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Griffin Sullivan",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-monarch-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2025-12-18T13:45:57.143+0000",
+          "updated": "2026-01-16T15:20:59.237+0000",
+          "resolutionDate": "2026-01-16T15:20:59.203+0000"
+        },
+        {
+          "key": "RHOAIENG-42375",
+          "parentKey": "RHOAIENG-42368",
+          "summary": "Onboard module in Operator",
+          "type": "Sub-task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Griffin Sullivan",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-monarch-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2025-12-18T13:45:59.257+0000",
+          "updated": "2026-01-16T15:17:30.540+0000",
+          "resolutionDate": "2026-01-15T15:49:02.636+0000"
+        },
+        {
+          "key": "RHOAIENG-42376",
+          "parentKey": "RHOAIENG-42368",
+          "summary": "Onboard modular architecture in Konflux RHOAI",
+          "type": "Sub-task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-modular-architecture"
+          ],
+          "storyPoints": 3,
+          "created": "2025-12-18T13:46:01.433+0000",
+          "updated": "2026-01-15T16:15:25.256+0000",
+          "resolutionDate": "2026-01-15T16:15:25.225+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-42505",
+      "parentKey": "RHAISTRAT-174",
+      "summary": "Fix concurrent access issue",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Blocker",
+      "assignee": "Person 343",
+      "components": [
+        "DevOps"
+      ],
+      "labels": [
+        "devops-onboarding",
+        "sprint-3.2"
+      ],
+      "storyPoints": 0,
+      "created": "2025-12-18T20:37:15.718+0000",
+      "updated": "2026-01-21T00:32:58.816+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-47521",
+      "parentKey": "RHAISTRAT-174",
+      "summary": "Update dependencies",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": "Person 185",
+      "components": [
+        "Model as a Service"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-01-26T18:12:28.270+0000",
+      "updated": "2026-03-23T20:08:38.663+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-47524",
+          "parentKey": "RHOAIENG-47521",
+          "summary": "Verifying MaaS test cases on RHOAI",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Swati Mukund Bagal",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-01-26T18:29:16.493+0000",
+          "updated": "2026-03-23T20:08:47.942+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-47978",
+          "parentKey": "RHOAIENG-47521",
+          "summary": "[Test] Validate MaaS CRDs",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Swati Mukund Bagal",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-28T23:07:27.721+0000",
+          "updated": "2026-03-27T20:15:26.836+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-48033",
+          "parentKey": "RHOAIENG-47521",
+          "summary": "Smoke tests are failing in CI for non-admin users (edit/view roles).",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Swati Mukund Bagal",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-29T15:59:03.749+0000",
+          "updated": "2026-02-04T22:50:05.050+0000",
+          "resolutionDate": "2026-02-04T22:50:05.014+0000"
+        },
+        {
+          "key": "RHOAIENG-48035",
+          "parentKey": "RHOAIENG-47521",
+          "summary": "Clean up for Revoke test case",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Swati Mukund Bagal",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-29T16:02:13.999+0000",
+          "updated": "2026-02-05T20:05:51.057+0000",
+          "resolutionDate": "2026-02-05T20:05:51.026+0000"
+        },
+        {
+          "key": "RHOAIENG-48202",
+          "parentKey": "RHOAIENG-47521",
+          "summary": "Validate - RHOAIENG-46770",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Swati Mukund Bagal",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-30T23:49:11.192+0000",
+          "updated": "2026-03-04T07:19:21.082+0000",
+          "resolutionDate": "2026-02-03T18:52:14.957+0000"
+        },
+        {
+          "key": "RHOAIENG-48532",
+          "parentKey": "RHOAIENG-47521",
+          "summary": "Create MaaS CRDs (MaaSAuthPolicy, MaaSSubscription, MaaSModel) in Test",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-03T19:44:11.189+0000",
+          "updated": "2026-02-05T17:01:12.865+0000",
+          "resolutionDate": "2026-02-05T17:01:12.829+0000"
+        },
+        {
+          "key": "RHOAIENG-48729",
+          "parentKey": "RHOAIENG-47521",
+          "summary": "Update scripts for maas-gateway-api exist in cluster",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Swati Mukund Bagal",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-04T22:48:12.579+0000",
+          "updated": "2026-02-11T18:38:29.682+0000",
+          "resolutionDate": "2026-02-11T18:38:29.644+0000"
+        },
+        {
+          "key": "RHOAIENG-49320",
+          "parentKey": "RHOAIENG-47521",
+          "summary": "Validate-deployment script fails for non-admin users: \"Could not determine cluster domain\" ",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chaitanya Kulkarni",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-02-11T16:16:02.061+0000",
+          "updated": "2026-02-17T18:45:13.540+0000",
+          "resolutionDate": "2026-02-17T18:45:13.522+0000"
+        },
+        {
+          "key": "RHOAIENG-49391",
+          "parentKey": "RHOAIENG-47521",
+          "summary": "Validate MaaS in Disconnected Cluster",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Swati Mukund Bagal",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-11T18:41:10.583+0000",
+          "updated": "2026-02-13T21:57:17.582+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-50332",
+          "parentKey": "RHOAIENG-47521",
+          "summary": "Refractor Smoke test ",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Swati Mukund Bagal",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-19T15:46:27.368+0000",
+          "updated": "2026-02-24T15:54:19.302+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-50333",
+          "parentKey": "RHOAIENG-47521",
+          "summary": "Test Plan Creation - Subscription",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Swati Mukund Bagal",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-19T15:48:50.533+0000",
+          "updated": "2026-02-24T15:49:43.359+0000",
+          "resolutionDate": "2026-02-24T15:49:43.325+0000"
+        },
+        {
+          "key": "RHOAIENG-50697",
+          "parentKey": "RHOAIENG-47521",
+          "summary": "Create MaaS CRD objects in openshift-python-wrapper",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Swati Mukund Bagal",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-24T15:51:48.468+0000",
+          "updated": "2026-03-03T06:33:53.234+0000",
+          "resolutionDate": "2026-03-03T06:33:53.190+0000"
+        },
+        {
+          "key": "RHOAIENG-55485",
+          "parentKey": "RHOAIENG-47521",
+          "summary": "Mask or redact the HTTP Authorization header in logs and telemetry so bearer tokens and API keys are not passed through in cleartext",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T13:26:08.076+0000",
+          "updated": "2026-03-26T13:26:34.192+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 10,
+    "totalIssues": 124,
+    "issuesByStatus": {
+      "Closed": 57,
+      "Resolved": 58,
+      "In Progress": 4,
+      "Testing": 1,
+      "New": 3,
+      "Review": 1
+    },
+    "issuesByCategory": {
+      "Done": 115,
+      "In Progress": 6,
+      "To Do": 3
+    },
+    "totalStoryPoints": 241,
+    "storyPointsDone": 230,
+    "completionPct": 93,
+    "staleCount": 4,
+    "unassignedCount": 1,
+    "blockerCount": 6,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-35116",
+        "summary": "Model-as-a-Service - Technical preview stabilization",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 31,
+        "doneIssues": 31,
+        "progressPct": 100,
+        "storyPoints": 71,
+        "storyPointsDone": 71,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-37231",
+        "summary": "Model-as-a-Service - Validate Functionality",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Swati Mukund Bagal",
+        "totalIssues": 16,
+        "doneIssues": 16,
+        "progressPct": 100,
+        "storyPoints": 21,
+        "storyPointsDone": 21,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-38233",
+        "summary": "Tech Preview - ODH and RHOAI Integrations [Model-as-a-Service]",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": null,
+        "totalIssues": 28,
+        "doneIssues": 25,
+        "progressPct": 89,
+        "storyPoints": 62,
+        "storyPointsDone": 54,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-38744",
+        "summary": "UI for MaaS Tiers",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Griffin Sullivan",
+        "totalIssues": 21,
+        "doneIssues": 20,
+        "progressPct": 95,
+        "storyPoints": 46,
+        "storyPointsDone": 45,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-38885",
+        "summary": "[ccs Epic] Document Models-as-a-Service (MaaS) Tech Preview",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Shumaila Yaseen",
+        "totalIssues": 2,
+        "doneIssues": 2,
+        "progressPct": 100,
+        "storyPoints": 11,
+        "storyPointsDone": 11,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-39597",
+        "summary": "Models-as-a-Service - TP Community documentation",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 3,
+        "doneIssues": 3,
+        "progressPct": 100,
+        "storyPoints": 6,
+        "storyPointsDone": 6,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-41572",
+        "summary": "UI GenAI Studio MaaS Enhancements",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Emmanuel Ikeola",
+        "totalIssues": 2,
+        "doneIssues": 2,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-42368",
+        "summary": "Dashboard MaaS - Deployment",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Griffin Sullivan",
+        "totalIssues": 8,
+        "doneIssues": 8,
+        "progressPct": 100,
+        "storyPoints": 20,
+        "storyPointsDone": 20,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-42505",
+        "summary": "RHOAI Konflux Onboarding - MaaS Dashboard Modular Architecture",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Alex Fan",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-47521",
+        "summary": "Model-as-a-Service - Validate Functionality 3.4",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Swati Mukund Bagal",
+        "totalIssues": 13,
+        "doneIssues": 8,
+        "progressPct": 62,
+        "storyPoints": 4,
+        "storyPointsDone": 2,
+        "health": "YELLOW"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

@@ -1,0 +1,1006 @@
+{
+  "key": "TEST1-545",
+  "summary": "Update access controls",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "John Haran",
+    "accountId": "712020:a30bcd9e-6d87-4648-a129-497d103dbfd1"
+  },
+  "fixVersions": [
+    "rhoai-3.4"
+  ],
+  "labels": [
+    "3.4-candidate",
+    "3.4-committed",
+    "Ingestion",
+    "RAG",
+    "UXD",
+    "ai-studio",
+    "dashboard-crimson-scrum",
+    "prompt-lab",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "Documentation",
+    "RAG",
+    "UXD"
+  ],
+  "created": "2025-07-23T10:50:24.134+0000",
+  "updated": "2026-04-07T17:38:53.830+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Development underway on Vector Stores AAE tab UI, will share out epics if needed depending on how dev progresses in coming days."
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-105",
+      "linkedSummary": "[feat] Enable PGVector Provider for Llama Stack vector_store Endpoint",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1102",
+      "linkedSummary": "Gen AI studio - 3.4 (Summit) Deliverables",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1278",
+      "linkedSummary": "Surface Existing Vector Stores in Gen AI Studio Playground",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-166",
+      "linkedSummary": "Enable data processing workflow initiation from GenAI UI",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-164",
+      "linkedSummary": "Create a UI for Knowledge Stack Management",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-165",
+      "linkedSummary": " Display available vector indexes and document collections from Llama Stack",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-171",
+      "linkedSummary": "UI controls for RAG \"generation\" parameter configuration",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-51774",
+      "linkedSummary": "External Vector Store Can Be Enabled in Chat Session Knowledge Tab UI",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-51445",
+      "linkedSummary": "Dev Preview Feature Flag for External Vector Stores",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-764",
+      "linkedSummary": "Online Document Ingestion via Direct Upload for the GenAI UI",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-51963",
+      "linkedSummary": "3.4 Release Feature Implementation Alignment",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-51472",
+      "linkedSummary": "External Vector Stores Registration During BFF LSD Install",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-50033",
+      "linkedSummary": "Investigate Surface Existing Vector Stores for playground",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1067",
+      "linkedSummary": "Gen AI playground Prompt Lab Feature Parity",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1451",
+      "linkedSummary": "Existing Vector Store Addition/Registration in gen AI studio",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1455",
+      "linkedSummary": "Multi-Vector Store Selection in Gen AI Studio Playground",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-50033",
+      "parentKey": "RHAISTRAT-545",
+      "summary": "Implement search feature",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": "Person 210",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-17T11:16:09.485+0000",
+      "updated": "2026-03-25T12:20:13.008+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50407",
+          "parentKey": "RHOAIENG-50033",
+          "summary": "BFF scaffolding for External Vector Stores",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Eder Ignatowicz",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2026-02-19T21:38:32.851+0000",
+          "updated": "2026-03-03T17:26:48.156+0000",
+          "resolutionDate": "2026-02-25T11:40:36.084+0000"
+        },
+        {
+          "key": "RHOAIENG-51438",
+          "parentKey": "RHOAIENG-50033",
+          "summary": "Setup Milvus DB and Qdrant DB in the cluster",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Avik Kundu",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-02T09:01:46.669+0000",
+          "updated": "2026-03-03T20:23:21.858+0000",
+          "resolutionDate": "2026-03-02T14:38:25.876+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-51445",
+      "parentKey": "RHAISTRAT-545",
+      "summary": "Add rate limiting",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 210",
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-02T11:24:50.930+0000",
+      "updated": "2026-04-07T11:50:35.895+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-51448",
+          "parentKey": "RHOAIENG-51445",
+          "summary": "Add External Vector Stores Feature Flag to OdhDashboardConfig",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "John Haran",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-02T11:45:07.370+0000",
+          "updated": "2026-03-31T10:25:46.796+0000",
+          "resolutionDate": "2026-03-31T10:25:46.753+0000"
+        },
+        {
+          "key": "RHOAIENG-51452",
+          "parentKey": "RHOAIENG-51445",
+          "summary": "Document the External Vector Stores Feature Flag",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Minor",
+          "assignee": "John Haran",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-02T12:07:37.374+0000",
+          "updated": "2026-04-07T11:56:59.309+0000",
+          "resolutionDate": "2026-04-07T11:56:59.273+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-51472",
+      "parentKey": "RHAISTRAT-545",
+      "summary": "Fix bug in processing logic",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 210",
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-02T14:28:56.207+0000",
+      "updated": "2026-03-26T19:30:21.619+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-51474",
+          "parentKey": "RHOAIENG-51472",
+          "summary": "Define the gen-ai-aa-vector-stores ConfigMap Schema",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "John Haran",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-02T14:33:20.643+0000",
+          "updated": "2026-03-13T16:58:13.414+0000",
+          "resolutionDate": "2026-03-06T13:49:24.500+0000"
+        },
+        {
+          "key": "RHOAIENG-51769",
+          "parentKey": "RHOAIENG-51472",
+          "summary": "Spike — Investigate Llamastack Responses for Invalid Vector Store Configurations",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "John Haran",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T11:09:43.074+0000",
+          "updated": "2026-03-10T16:55:15.551+0000",
+          "resolutionDate": "2026-03-10T16:55:15.516+0000"
+        },
+        {
+          "key": "RHOAIENG-51773",
+          "parentKey": "RHOAIENG-51472",
+          "summary": "Register External Vector Stores During BFF LSD Install",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "John Haran",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T11:47:42.784+0000",
+          "updated": "2026-04-02T12:10:52.284+0000",
+          "resolutionDate": "2026-04-02T12:10:52.261+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-51774",
+      "parentKey": "RHAISTRAT-545",
+      "summary": "Add rate limiting",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 210",
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-04T12:00:55.622+0000",
+      "updated": "2026-04-02T12:11:49.526+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-51775",
+          "parentKey": "RHOAIENG-51774",
+          "summary": "Enable External Vector Stores in the Playground Knowledge Tab",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "John Haran",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T12:03:26.465+0000",
+          "updated": "2026-03-31T10:30:53.573+0000",
+          "resolutionDate": "2026-03-31T10:30:53.515+0000"
+        },
+        {
+          "key": "RHOAIENG-52021",
+          "parentKey": "RHOAIENG-51774",
+          "summary": "Update View Code Output to Include Vector Store and Embedding Model Details",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Nick Gagan",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-05T13:04:45.293+0000",
+          "updated": "2026-04-02T20:35:39.761+0000",
+          "resolutionDate": "2026-04-02T20:35:39.734+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-51777",
+      "parentKey": "RHAISTRAT-545",
+      "summary": "Add pagination support",
+      "status": "Backlog",
+      "statusCategory": "To Do",
+      "priority": "Major",
+      "assignee": null,
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-04T12:12:11.876+0000",
+      "updated": "2026-03-18T14:00:14.689+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-51779",
+      "parentKey": "RHAISTRAT-545",
+      "summary": "Update documentation",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 210",
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-04T12:23:15.496+0000",
+      "updated": "2026-04-02T12:11:59.524+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-51780",
+          "parentKey": "RHOAIENG-51779",
+          "summary": "Display External Vector Stores in the AAE Vector Stores Tab",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "John Haran",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T12:24:08.024+0000",
+          "updated": "2026-03-26T19:31:27.372+0000",
+          "resolutionDate": "2026-03-26T19:31:27.351+0000"
+        },
+        {
+          "key": "RHOAIENG-51781",
+          "parentKey": "RHOAIENG-51779",
+          "summary": "Add to Playground Flow — Select and Launch a Playground with Vector Stores from AAE",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Nick Gagan",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T12:25:37.706+0000",
+          "updated": "2026-03-26T13:28:38.652+0000",
+          "resolutionDate": "2026-03-26T13:28:38.598+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-52683",
+      "parentKey": "RHAISTRAT-545",
+      "summary": "Fix bug in processing logic",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": "Person 210",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-11T17:22:57.126+0000",
+      "updated": "2026-04-07T16:45:49.447+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-52648",
+          "parentKey": "RHOAIENG-52683",
+          "summary": "Feature signoff - TP",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [
+            "signoff"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-11T16:49:10.637+0000",
+          "updated": "2026-03-18T16:12:00.291+0000",
+          "resolutionDate": "2026-03-18T16:12:00.222+0000"
+        },
+        {
+          "key": "RHOAIENG-54164",
+          "parentKey": "RHOAIENG-52683",
+          "summary": "Feature signoff - DP",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Blocker",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [
+            "signoff"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-18T15:42:36.789+0000",
+          "updated": "2026-03-18T15:45:03.455+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-54137",
+      "parentKey": "RHAISTRAT-545",
+      "summary": "Optimize database queries",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 210",
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-18T14:00:12.273+0000",
+      "updated": "2026-04-07T16:46:58.660+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-54135",
+          "parentKey": "RHOAIENG-54137",
+          "summary": "Real world manual test of vector store flow",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "John Haran",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "3.4",
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-18T13:57:10.237+0000",
+          "updated": "2026-04-07T16:46:53.581+0000",
+          "resolutionDate": "2026-04-07T16:46:53.556+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-57009",
+      "parentKey": "RHAISTRAT-545",
+      "summary": "Fix concurrent access issue",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": null,
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "comp-integration",
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-04-07T16:37:45.776+0000",
+      "updated": "2026-04-07T17:10:01.307+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-57010",
+          "parentKey": "RHOAIENG-57009",
+          "summary": "CLONE - Feature signoff - DP",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Blocker",
+          "assignee": "John Haran",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum",
+            "signoff"
+          ],
+          "storyPoints": 0,
+          "created": "2026-04-07T16:38:11.347+0000",
+          "updated": "2026-04-07T17:20:15.127+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-57018",
+          "parentKey": "RHOAIENG-57009",
+          "summary": "CLONE - Add component to Jira",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Denise Hughes",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-07T16:38:36.642+0000",
+          "updated": "2026-04-07T17:14:42.239+0000",
+          "resolutionDate": "2026-04-07T17:14:42.207+0000"
+        },
+        {
+          "key": "RHOAIENG-57019",
+          "parentKey": "RHOAIENG-57009",
+          "summary": "CLONE - Onboard to ODH Build - 2 week notice! ",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-07T16:38:41.559+0000",
+          "updated": "2026-04-07T17:16:15.675+0000",
+          "resolutionDate": "2026-04-07T17:16:15.642+0000"
+        },
+        {
+          "key": "RHOAIENG-57020",
+          "parentKey": "RHOAIENG-57009",
+          "summary": "CLONE - Repository added to ODH/RHOAI",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-07T16:38:45.212+0000",
+          "updated": "2026-04-07T17:14:25.843+0000",
+          "resolutionDate": "2026-04-07T17:14:25.809+0000"
+        },
+        {
+          "key": "RHOAIENG-57021",
+          "parentKey": "RHOAIENG-57009",
+          "summary": "CLONE - Register new APIs",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-07T16:38:48.879+0000",
+          "updated": "2026-04-07T17:11:22.423+0000",
+          "resolutionDate": "2026-04-07T17:11:22.392+0000"
+        },
+        {
+          "key": "RHOAIENG-57022",
+          "parentKey": "RHOAIENG-57009",
+          "summary": "CLONE - Installation, usage, contact information",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-07T16:38:52.505+0000",
+          "updated": "2026-04-07T16:38:56.426+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-57023",
+          "parentKey": "RHOAIENG-57009",
+          "summary": "CLONE - Onboard to RHOAI Build - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-07T16:38:56.081+0000",
+          "updated": "2026-04-07T17:12:54.482+0000",
+          "resolutionDate": "2026-04-07T17:12:54.399+0000"
+        },
+        {
+          "key": "RHOAIENG-57024",
+          "parentKey": "RHOAIENG-57009",
+          "summary": "CLONE - Multi-Architecture Support (Optional)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-07T16:38:59.496+0000",
+          "updated": "2026-04-07T17:13:03.234+0000",
+          "resolutionDate": "2026-04-07T17:13:03.180+0000"
+        },
+        {
+          "key": "RHOAIENG-57025",
+          "parentKey": "RHOAIENG-57009",
+          "summary": "CLONE - Integration with RHOAI operator - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-07T16:39:02.824+0000",
+          "updated": "2026-04-07T17:15:59.561+0000",
+          "resolutionDate": "2026-04-07T17:15:59.516+0000"
+        },
+        {
+          "key": "RHOAIENG-57026",
+          "parentKey": "RHOAIENG-57009",
+          "summary": "CLONE - Designed for FIPS",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-07T16:39:06.277+0000",
+          "updated": "2026-04-07T17:16:06.352+0000",
+          "resolutionDate": "2026-04-07T17:15:40.361+0000"
+        },
+        {
+          "key": "RHOAIENG-57027",
+          "parentKey": "RHOAIENG-57009",
+          "summary": "CLONE - Follow component integration steps",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-07T16:39:09.788+0000",
+          "updated": "2026-04-07T17:14:16.501+0000",
+          "resolutionDate": "2026-04-07T17:14:16.468+0000"
+        },
+        {
+          "key": "RHOAIENG-57028",
+          "parentKey": "RHOAIENG-57009",
+          "summary": "CLONE - Integration with ODH operator - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-07T16:39:13.270+0000",
+          "updated": "2026-04-07T17:15:52.590+0000",
+          "resolutionDate": "2026-04-07T17:15:52.555+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 9,
+    "totalIssues": 26,
+    "issuesByStatus": {
+      "Resolved": 6,
+      "Closed": 17,
+      "New": 2,
+      "In Progress": 1
+    },
+    "issuesByCategory": {
+      "Done": 23,
+      "In Progress": 1,
+      "To Do": 2
+    },
+    "totalStoryPoints": 4,
+    "storyPointsDone": 4,
+    "completionPct": 88,
+    "staleCount": 0,
+    "unassignedCount": 2,
+    "blockerCount": 6,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-50033",
+        "summary": "Investigate Surface Existing Vector Stores for playground",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "John Haran",
+        "totalIssues": 2,
+        "doneIssues": 2,
+        "progressPct": 100,
+        "storyPoints": 4,
+        "storyPointsDone": 4,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-51445",
+        "summary": "Dev Preview Feature Flag for External Vector Stores",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "John Haran",
+        "totalIssues": 2,
+        "doneIssues": 2,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-51472",
+        "summary": "External Vector Stores Registration During BFF LSD Install",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "John Haran",
+        "totalIssues": 3,
+        "doneIssues": 3,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-51774",
+        "summary": "External Vector Store Can Be Enabled in Chat Session Knowledge Tab UI",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "John Haran",
+        "totalIssues": 2,
+        "doneIssues": 2,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-51777",
+        "summary": "Surface Vector Store Errors in the Playground UI",
+        "status": "Backlog",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-51779",
+        "summary": "Add External Vector Stores to AI Asset Endpoints (AAE) and update Configure Playground modal",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "John Haran",
+        "totalIssues": 2,
+        "doneIssues": 2,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-52683",
+        "summary": "Signoff: Surface Existing Vector Stores for playground",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "John Haran",
+        "totalIssues": 2,
+        "doneIssues": 1,
+        "progressPct": 50,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-54137",
+        "summary": "Sanity tests for vector stores feature",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "John Haran",
+        "totalIssues": 1,
+        "doneIssues": 1,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-57009",
+        "summary": "Dev Preview - ODH and RHOAI Integrations [Gen-AI External Vector Stores]",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": null,
+        "totalIssues": 12,
+        "doneIssues": 10,
+        "progressPct": 83,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

@@ -1,0 +1,111 @@
+{
+  "key": "TEST1-1284",
+  "summary": "Fix timezone handling",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Eder Ignatowicz",
+    "accountId": "70121:8665986b-a71f-433a-ac17-6cdf48859866"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "needs-uxd",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "AI Core Platform"
+  ],
+  "created": "2026-03-10T01:12:09.386+0000",
+  "updated": "2026-03-31T04:14:48.089+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-800",
+      "linkedSummary": "Public API MVP for workbench services",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-827",
+      "linkedSummary": "[GA]Create Connections API",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-449",
+      "linkedSummary": "Data Science projects related enhancements",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-588",
+      "linkedSummary": "S3 bucket names are not validated against Amazon naming rules when adding a Data Connection",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-1811",
+      "linkedSummary": "[Blocked] Data Connection Improvements",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-442",
+      "linkedSummary": "RFE - OpenShift AI - Test data connection button - Datascience UI",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-2545",
+      "linkedSummary": "Trim values when creating data connections and deploying models",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-2472",
+      "linkedSummary": "NBC: https enforced on s3 URL for pipeline connections",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Account",
+      "direction": "outward",
+      "linkedKey": "CIPOE-2194",
+      "linkedSummary": "AIRBUS SE",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

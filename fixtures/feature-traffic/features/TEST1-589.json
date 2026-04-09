@@ -1,0 +1,57 @@
+{
+  "key": "TEST1-589",
+  "summary": "Update error messages",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Gaurav Kamathe",
+    "accountId": "63441feacafc998a91ceb945"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "Feature Store"
+  ],
+  "created": "2025-05-30T15:33:32.668+0000",
+  "updated": "2025-12-16T12:34:59.435+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-39047",
+      "linkedSummary": "Explore and create refinement document for spark integration in Feast",
+      "linkedStatus": "Backlog"
+    },
+    {
+      "type": "Cloners",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-60",
+      "linkedSummary": "Bring Your Own Spark (BYOS) for Feature Transformations in Spark + RAG + Feast Pipelines",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

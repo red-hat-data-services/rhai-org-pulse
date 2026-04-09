@@ -1,0 +1,112 @@
+{
+  "key": "TEST1-1104",
+  "summary": "Optimize database queries",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Sebastien Han",
+    "accountId": "62022b5fff9289006eeb789e"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "confidence-yellow",
+    "needs-tech-review"
+  ],
+  "components": [
+    "Llama Stack Core",
+    "Model as a Service"
+  ],
+  "created": "2026-01-11T12:09:15.663+0000",
+  "updated": "2026-04-03T21:59:23.841+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1027",
+      "linkedSummary": "Define Feature Responsibilities and Integration Strategy: Model-as-a-Service (MaaS) vs. LlamaStack for Inference",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-48772",
+      "parentKey": "RHAISTRAT-1104",
+      "summary": "Add export functionality",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Critical",
+      "assignee": "Person 5",
+      "components": [
+        "Llama Stack Core"
+      ],
+      "labels": [
+        "3.4-candidate",
+        "needs-tech-review",
+        "rhoai-3.4"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-05T13:05:05.636+0000",
+      "updated": "2026-02-10T13:31:55.224+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-48773",
+          "parentKey": "RHOAIENG-48772",
+          "summary": "Feature Matrix Comparaison ",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Sumanth Kamenani",
+          "components": [
+            "Llama Stack Core"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-02-05T13:07:09.790+0000",
+          "updated": "2026-04-03T02:28:07.277+0000",
+          "resolutionDate": "2026-02-26T15:14:10.874+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 1,
+    "issuesByStatus": {
+      "Resolved": 1
+    },
+    "issuesByCategory": {
+      "Done": 1,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 3,
+    "storyPointsDone": 3,
+    "completionPct": 100,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "GREEN",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-48772",
+        "summary": "Define Feature Responsibilities and Integration Strategy: Model-as-a-Service (MaaS) vs. LlamaStack for Inference",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Sebastien Han",
+        "totalIssues": 1,
+        "doneIssues": 1,
+        "progressPct": 100,
+        "storyPoints": 3,
+        "storyPointsDone": 3,
+        "health": "GREEN"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

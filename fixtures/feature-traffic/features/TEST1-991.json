@@ -1,0 +1,50 @@
+{
+  "key": "TEST1-991",
+  "summary": "Refactor data handling code",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Undefined",
+  "assignee": {
+    "displayName": "Aileen O'Connor",
+    "accountId": "5c0012a029575856b0d92c8b"
+  },
+  "fixVersions": [],
+  "labels": [
+    "Approved-RFE"
+  ],
+  "components": [],
+  "created": "2025-12-11T09:56:32.636+0000",
+  "updated": "2026-04-07T08:08:32.565+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1043",
+      "linkedSummary": "test RFE to test updated cloning automation",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

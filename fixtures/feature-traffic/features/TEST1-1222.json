@@ -1,0 +1,53 @@
+{
+  "key": "TEST1-1222",
+  "summary": "Refactor data handling code",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "assignee": {
+    "displayName": "Jehlum Vitasta Pandit",
+    "accountId": "5ff34ffc1051d10075800dd8"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "tech-reviewed"
+  ],
+  "components": [
+    "KubeRay"
+  ],
+  "created": "2026-02-17T16:13:55.380+0000",
+  "updated": "2026-02-17T16:13:55.380+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1300",
+      "linkedSummary": "Enable use of RayData for distributed large-scale data processing - via examples, documentation and perf testing ",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "key": "TEST1-605",
+  "summary": "Implement data cleanup",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Rob Geada",
+    "accountId": "5e258328a7b9540e76f44821"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "AI Core Dashboard",
+    "Explainability"
+  ],
+  "created": "2024-05-21T18:54:51.127+0000",
+  "updated": "2025-11-25T21:47:20.385+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Blocks",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-437",
+      "linkedSummary": "OOTB visualization for data drift detection",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-130",
+      "linkedSummary": "Migrate TrustyAIService to Python and Implement Core Functionality",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-468",
+      "linkedSummary": "Tabular Data Drift detection with Model Mesh",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

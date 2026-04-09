@@ -1,0 +1,659 @@
+{
+  "key": "TEST1-1295",
+  "summary": "Fix concurrent access issue",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Roy Nissim",
+    "accountId": "712020:3e6483d7-a7f9-4847-950f-102899cadf8f"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "aicp-team-heimdall"
+  ],
+  "components": [
+    "AI Core Platform",
+    "AI Platform DevOps",
+    "Model as a Service"
+  ],
+  "created": "2026-03-12T18:57:02.188+0000",
+  "updated": "2026-04-07T20:57:05.656+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1401",
+      "linkedSummary": "[TP] External Model Egress via Inference Gateway",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-55460",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1295] - [TP] External Model Egress via Inference Gateway",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-3191",
+      "linkedSummary": "[ccs Epic] Documentation support for MaaS - Catch-all Epic for 3.4 GA",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-54621",
+      "parentKey": "RHAISTRAT-1295",
+      "summary": "Update configuration settings",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 129",
+      "components": [
+        "DevOps"
+      ],
+      "labels": [
+        "devops-onboarding"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-22T20:41:07.071+0000",
+      "updated": "2026-04-05T00:34:52.620+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-54833",
+      "parentKey": "RHAISTRAT-1295",
+      "summary": "Update API endpoint",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "Model as a Service"
+      ],
+      "labels": [
+        "aicp-team-heimdall"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-23T21:35:55.238+0000",
+      "updated": "2026-04-07T16:38:08.321+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-54834",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "CLONE - MUST meet designed for FIPS",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Chaitanya Kulkarni",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-23T21:36:05.191+0000",
+          "updated": "2026-03-30T18:53:57.663+0000",
+          "resolutionDate": "2026-03-30T18:53:57.637+0000"
+        },
+        {
+          "key": "RHOAIENG-54835",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "CLONE - Repository added to ODH/RHOAI",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Nir Rozenbaum",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-23T21:36:08.265+0000",
+          "updated": "2026-04-01T23:08:15.760+0000",
+          "resolutionDate": "2026-04-01T23:08:15.727+0000"
+        },
+        {
+          "key": "RHOAIENG-54836",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "Tech Preview - ODH and RHOAI Integrations - Ensure work with supported lifecyles",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Senan Zedan",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-23T21:36:11.369+0000",
+          "updated": "2026-04-02T08:43:59.147+0000",
+          "resolutionDate": "2026-04-02T08:43:59.126+0000"
+        },
+        {
+          "key": "RHOAIENG-54837",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "ODH and RHOAI Integrations - Add source repo(s) to Snyk",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Normal",
+          "assignee": "Senan Zedan",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-23T21:36:14.446+0000",
+          "updated": "2026-03-25T17:50:03.967+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54838",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "ODH and RHOAI Integrations - Promote alpha APIs to beta",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-23T21:36:17.603+0000",
+          "updated": "2026-03-31T09:10:05.303+0000",
+          "resolutionDate": "2026-03-31T09:10:05.267+0000"
+        },
+        {
+          "key": "RHOAIENG-54839",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "CLONE - Onboard to ODH Build - 2 week notice! ",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Chaitanya Kulkarni",
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-23T21:36:21.127+0000",
+          "updated": "2026-04-01T23:10:42.165+0000",
+          "resolutionDate": "2026-04-01T23:10:42.140+0000"
+        },
+        {
+          "key": "RHOAIENG-54840",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "CLONE - Test with disconnected environment",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Senan Zedan",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-23T21:36:24.193+0000",
+          "updated": "2026-04-07T16:11:16.817+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54841",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "CLONE - Add component data to product-definitions for vulnerability tracking",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Blocker",
+          "assignee": "Senan Zedan",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-23T21:36:27.156+0000",
+          "updated": "2026-04-01T06:04:52.269+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54842",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "CLONE - Add component support for must-gather",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Senan Zedan",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-23T21:36:30.412+0000",
+          "updated": "2026-03-29T12:29:14.654+0000",
+          "resolutionDate": "2026-03-26T22:10:20.801+0000"
+        },
+        {
+          "key": "RHOAIENG-54843",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "[AI-Gateway-Payload-Processing] - Security requirements",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Blocker",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-23T21:36:33.562+0000",
+          "updated": "2026-03-26T22:11:30.508+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54844",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "ODH and RHOAI Integrations - Create component in jira",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Normal",
+          "assignee": "Denise Hughes",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-23T21:36:36.606+0000",
+          "updated": "2026-03-26T22:07:31.947+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54845",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "[AI-Gateway-Payload-Processing] - Integration with ODH operator - 2 week notice!",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Noy Itzikowitz",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-compass"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-23T21:36:39.728+0000",
+          "updated": "2026-03-26T16:26:47.565+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54846",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "[AI-Gateway-Payload-Processing]  - RHOAI ONLY: AI Platform Core Components (AIPCC) Integration",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Chaitanya Kulkarni",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-23T21:36:42.973+0000",
+          "updated": "2026-03-30T17:04:06.152+0000",
+          "resolutionDate": "2026-03-30T17:04:06.127+0000"
+        },
+        {
+          "key": "RHOAIENG-54847",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "[AI-Gateway-Payload-Processing] - Multi-Architecture Support",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Senan Zedan",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-23T21:36:46.219+0000",
+          "updated": "2026-04-04T15:16:29.361+0000",
+          "resolutionDate": "2026-03-26T21:17:39.831+0000"
+        },
+        {
+          "key": "RHOAIENG-54848",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "[AI-Gateway-Payload-Processing] - Add Prometheus (metrics) config for component (optional)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Senan Zedan",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-23T21:36:49.368+0000",
+          "updated": "2026-03-30T11:53:30.085+0000",
+          "resolutionDate": "2026-03-26T16:39:52.854+0000"
+        },
+        {
+          "key": "RHOAIENG-54849",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "[AI-Gateway-Payload-Processing] - Feature signoff - TP",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Blocker",
+          "assignee": "Roy Nissim",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [
+            "signoff"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-23T21:36:52.426+0000",
+          "updated": "2026-03-26T16:42:16.500+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54856",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "[AI-Gateway-Payload-Processing] - Onboard to RHOAI Build - 2 week notice!",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Normal",
+          "assignee": "Chaitanya Kulkarni",
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-23T21:37:09.921+0000",
+          "updated": "2026-03-26T16:41:59.323+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54857",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "[MaaS - AI-Gateway-Payload-Processing]  - Testing requirements",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Noy Itzikowitz",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-23T21:37:13.070+0000",
+          "updated": "2026-03-26T16:43:10.712+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54858",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "[AI-Gateway-Payload-Processing] - Integration with RHOAI operator - 2 week notice!",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Noy Itzikowitz",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-compass"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-23T21:37:16.140+0000",
+          "updated": "2026-03-26T16:45:53.575+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54859",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "[AI-Gateway-Payload-Processing] - Build from source (required)",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Chaitanya Kulkarni",
+          "components": [
+            "OpenShift AI Productization"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-23T21:37:19.302+0000",
+          "updated": "2026-03-30T17:15:56.457+0000",
+          "resolutionDate": "2026-03-30T17:15:56.433+0000"
+        },
+        {
+          "key": "RHOAIENG-54860",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "[MaaS - AI-Gateway-Payload-Processing] - Add support for the new component in the QE related repositories",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Cesar Francisco San Nicolas Martinez",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-compass"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-23T21:37:22.536+0000",
+          "updated": "2026-03-26T10:51:09.761+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54861",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "ODH and RHOAI Integrations - Feature documented in architecture diagrams",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Normal",
+          "assignee": "Nir Rozenbaum",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-23T21:37:25.471+0000",
+          "updated": "2026-03-31T10:54:25.840+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55669",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "FIPS-CRITICAL — Enforce FIPS-compliant build configuration",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Chaitanya Kulkarni",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-27T06:45:28.217+0000",
+          "updated": "2026-03-30T17:17:30.972+0000",
+          "resolutionDate": "2026-03-30T17:17:30.946+0000"
+        },
+        {
+          "key": "RHOAIENG-55670",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "FIPS-HIGH - Align Makefile build defaults and test targets with FIPS 140-3 compliant Dockerfile",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chaitanya Kulkarni",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-27T06:55:26.334+0000",
+          "updated": "2026-03-30T19:39:46.984+0000",
+          "resolutionDate": "2026-03-30T19:39:46.960+0000"
+        },
+        {
+          "key": "RHOAIENG-55671",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "FIPS-LOW - Document xxhash non-FIPS-approved hash algorithm as accepted non-security usage in dependency tree.",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chaitanya Kulkarni",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-27T06:56:53.612+0000",
+          "updated": "2026-03-30T19:39:58.048+0000",
+          "resolutionDate": "2026-03-30T19:39:58.023+0000"
+        },
+        {
+          "key": "RHOAIENG-56063",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "Onboard AI Gateway on Prow",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chaitanya Kulkarni",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-30T22:54:03.440+0000",
+          "updated": "2026-03-31T21:54:28.640+0000",
+          "resolutionDate": "2026-03-31T21:54:28.611+0000"
+        },
+        {
+          "key": "RHOAIENG-56967",
+          "parentKey": "RHOAIENG-54833",
+          "summary": "ExternalModel: add `spec.targetModel`",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Yuriy Teodorovych",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-07T13:20:15.881+0000",
+          "updated": "2026-04-07T17:59:38.635+0000",
+          "resolutionDate": "2026-04-07T17:59:38.599+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-55187",
+      "parentKey": "RHAISTRAT-1295",
+      "summary": "Add health check endpoint",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Person 346",
+      "components": [
+        "DevOps"
+      ],
+      "labels": [
+        "devops-onboarding"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-25T15:58:36.170+0000",
+      "updated": "2026-04-07T11:36:30.745+0000",
+      "issues": []
+    }
+  ],
+  "metrics": {
+    "totalEpics": 3,
+    "totalIssues": 27,
+    "issuesByStatus": {
+      "Resolved": 10,
+      "Closed": 5,
+      "In Progress": 7,
+      "New": 5
+    },
+    "issuesByCategory": {
+      "Done": 15,
+      "In Progress": 7,
+      "To Do": 5
+    },
+    "totalStoryPoints": 3,
+    "storyPointsDone": 0,
+    "completionPct": 56,
+    "staleCount": 7,
+    "unassignedCount": 1,
+    "blockerCount": 6,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-54621",
+        "summary": "ODH Konflux CI Build Onboarding [AI-Gateway-Payload-Processing]",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Mhamad Chamseddin",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-54833",
+        "summary": "Tech Preview - ODH and RHOAI Integrations [AI-Gateway-Payload-Processing]",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 27,
+        "doneIssues": 15,
+        "progressPct": 56,
+        "storyPoints": 3,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-55187",
+        "summary": "RHOAI Konflux Onboarding [AI-Gateway-Payload-Processing]",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Waldemar Znoinski",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

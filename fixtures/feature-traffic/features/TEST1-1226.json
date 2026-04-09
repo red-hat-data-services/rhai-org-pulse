@@ -1,0 +1,95 @@
+{
+  "key": "TEST1-1226",
+  "summary": "Implement feature for module",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Nick Ommen",
+    "accountId": "712020:4d8ab7b7-4491-490a-b85b-8246663b9db3"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "Notebooks Images"
+  ],
+  "created": "2026-02-18T17:06:24.045+0000",
+  "updated": "2026-04-07T18:14:22.502+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "GREEN",
+            "marks": [
+              {
+                "type": "strong"
+              },
+              {
+                "type": "textColor",
+                "attrs": {
+                  "color": "#00875a"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " as of 07-Apr-2026."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Updates remain on track for GA code freeze and will request to bring back into 3.4. De-scoped RStudio updates since RStudio will be removed in 3.5."
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Informs",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1041",
+      "linkedSummary": "Release 3.4 OOTB Workbenches",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Causality",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1041",
+      "linkedSummary": "Release 3.4 OOTB Workbenches",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

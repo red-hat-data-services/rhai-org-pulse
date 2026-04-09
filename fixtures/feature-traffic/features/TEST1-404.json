@@ -1,0 +1,108 @@
+{
+  "key": "TEST1-404",
+  "summary": "Add filtering options",
+  "status": "Backlog",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Bryan Keane",
+    "accountId": "61f29f5525edab006a256a0a"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4",
+    "3.4-candidate",
+    "GPU-as-a-Service"
+  ],
+  "components": [
+    "KubeRay"
+  ],
+  "created": "2025-10-29T12:28:35.129+0000",
+  "updated": "2026-03-18T10:58:48.894+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Feb 10th Update:",
+            "marks": [
+              {
+                "type": "strong"
+              }
+            ]
+          },
+          {
+            "type": "hardBreak"
+          },
+          {
+            "type": "text",
+            "text": "Blog is planned but yet to be started"
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Triggers",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-193",
+      "linkedSummary": "Extend Training Dashboard to Support RayJobs",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Cloners",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1053",
+      "linkedSummary": "Platform-based Model Checkpointing Support for Ray",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-148",
+      "linkedSummary": "Model Checkpointing Support in RHOAI for Kubeflow Trainer (TP)",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-791",
+      "linkedSummary": "Model Checkpointing Support in RHOAI for Ray",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-791",
+      "linkedSummary": "Model Checkpointing Support in RHOAI for Ray",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

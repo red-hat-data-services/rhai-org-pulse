@@ -1,0 +1,187 @@
+{
+  "key": "TEST1-1367",
+  "summary": "Update access controls",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Rui Vieira",
+    "accountId": "70121:5a9a760a-598b-49c2-af0e-60c52f76c598"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "3.5-candidate"
+  ],
+  "components": [
+    "Documentation",
+    "Model Eval"
+  ],
+  "created": "2026-03-20T15:11:05.702+0000",
+  "updated": "2026-04-03T09:29:47.951+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1377",
+      "linkedSummary": "(MVP) IBM CLEAR Adapter for EvalHub — Agentic AI Evaluation via MLflow Traces (DP)",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Account",
+      "direction": "inward",
+      "linkedKey": "OCTOET-1385",
+      "linkedSummary": "CLEAR Evaluation Hub Integration",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1289",
+      "linkedSummary": "(feat) Core Evaluation Stack (control plane) for Red Hat AI (EA1)",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-979",
+      "linkedSummary": "(feat) Core Evaluation Stack (control plane) for Red Hat AI (EA2)",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1134",
+      "linkedSummary": "UI for Orchestration of Evaluations through Evaluation Stack",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-59",
+      "linkedSummary": "Evaluation & Experimentation Platform for Agentic AI Applications",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-54594",
+      "parentKey": "RHAISTRAT-1367",
+      "summary": "Fix validation issue",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": "Person 162",
+      "components": [
+        "AI Evaluations"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-20T16:55:10.695+0000",
+      "updated": "2026-04-03T09:22:34.180+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-56254",
+          "parentKey": "RHOAIENG-54594",
+          "summary": "feat(evalhub-contrib): add IBM CLEAR agentic evaluation adapter",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub",
+            "evalhub-providers"
+          ],
+          "storyPoints": 0,
+          "created": "2026-04-01T09:56:09.497+0000",
+          "updated": "2026-04-02T23:09:00.867+0000",
+          "resolutionDate": "2026-04-02T23:09:00.829+0000"
+        },
+        {
+          "key": "RHOAIENG-56632",
+          "parentKey": "RHOAIENG-54594",
+          "summary": "chore: set up quay.io image build trigger and image builds for community-ibm-clear",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub",
+            "evalhub-providers"
+          ],
+          "storyPoints": 2,
+          "created": "2026-04-02T23:15:50.694+0000",
+          "updated": "2026-04-02T23:17:30.343+0000",
+          "resolutionDate": "2026-04-02T23:17:19.281+0000"
+        },
+        {
+          "key": "RHOAIENG-56641",
+          "parentKey": "RHOAIENG-54594",
+          "summary": "feat(evalhub-operator): merge IBM CLEAR provider registration into EvalHub configmaps",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub-operator",
+            "evalhub-providers"
+          ],
+          "storyPoints": 0,
+          "created": "2026-04-03T09:20:27.482+0000",
+          "updated": "2026-04-03T09:22:22.570+0000",
+          "resolutionDate": "2026-04-03T09:22:22.549+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 3,
+    "issuesByStatus": {
+      "Resolved": 3
+    },
+    "issuesByCategory": {
+      "Done": 3,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 2,
+    "storyPointsDone": 2,
+    "completionPct": 100,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "GREEN",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-54594",
+        "summary": "[Agentic Eval CLEAR] Eng work",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Rui Vieira",
+        "totalIssues": 3,
+        "doneIssues": 3,
+        "progressPct": 100,
+        "storyPoints": 2,
+        "storyPointsDone": 2,
+        "health": "GREEN"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

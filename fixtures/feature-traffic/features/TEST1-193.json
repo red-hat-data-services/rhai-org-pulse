@@ -1,0 +1,942 @@
+{
+  "key": "TEST1-193",
+  "summary": "Add pagination support",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Laura Fitzgerald",
+    "accountId": "5cc0716350ff750e510131cf"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "dashboard-tangerine-scrum",
+    "ga"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "KubeRay",
+    "UXD"
+  ],
+  "created": "2025-11-10T11:55:49.596+0000",
+  "updated": "2026-04-07T10:15:02.326+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Green",
+            "marks": [
+              {
+                "type": "strong"
+              },
+              {
+                "type": "textColor",
+                "attrs": {
+                  "color": "#00875a"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " - "
+          },
+          {
+            "type": "date",
+            "attrs": {
+              "timestamp": "1775001600000"
+            }
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "All development work completed from "
+                  },
+                  {
+                    "type": "text",
+                    "text": "Dashboard",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "E2E testing have began"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "we are looking good to meet the 3.4 GA timeline"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Triggers",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1053",
+      "linkedSummary": "Platform-based Model Checkpointing Support for Ray",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Triggers",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-404",
+      "linkedSummary": "Model Checkpointing Support for Ray for Data Scientists (as Code)",
+      "linkedStatus": "Backlog"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1089",
+      "linkedSummary": "Ray Train Training Progress Tracking for Distributed Workloads",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-628",
+      "linkedSummary": "Extend Training Dashboard to Support RayJobs",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHOAIUX-1264",
+      "linkedSummary": "Decide where the Trainer page belongs in RHOAI",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIUX-1158",
+      "linkedSummary": "KF Trainer and Ray integration UX ",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Triggers",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-32609",
+      "linkedSummary": "Dashboard UI for Trainer v2",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-39605",
+      "parentKey": "RHAISTRAT-193",
+      "summary": "Fix memory leak",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Person 303",
+      "components": [
+        "KubeRay"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-11-24T10:19:04.168+0000",
+      "updated": "2026-01-28T10:41:57.529+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-39786",
+          "parentKey": "RHOAIENG-39605",
+          "summary": "[spike] investigate backend support",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Laura Fitzgerald",
+          "components": [
+            "KubeRay"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 5,
+          "created": "2025-11-26T15:35:37.653+0000",
+          "updated": "2026-03-15T15:24:34.305+0000",
+          "resolutionDate": "2026-01-19T15:17:29.762+0000"
+        },
+        {
+          "key": "RHOAIENG-41251",
+          "parentKey": "RHOAIENG-39605",
+          "summary": "[spike] determine what logs ray provides for UI work",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Laura Fitzgerald",
+          "components": [
+            "KubeRay"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 5,
+          "created": "2025-12-03T11:23:56.569+0000",
+          "updated": "2026-01-19T15:16:53.139+0000",
+          "resolutionDate": "2026-01-19T15:16:53.117+0000"
+        },
+        {
+          "key": "RHOAIENG-41289",
+          "parentKey": "RHOAIENG-39605",
+          "summary": "[spike] edit node count for RayJob (lifecycled raycluster)",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Laura Fitzgerald",
+          "components": [
+            "KubeRay"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 5,
+          "created": "2025-12-03T15:24:08.050+0000",
+          "updated": "2026-01-16T14:32:07.324+0000",
+          "resolutionDate": "2026-01-15T16:59:37.949+0000"
+        },
+        {
+          "key": "RHOAIENG-41291",
+          "parentKey": "RHOAIENG-39605",
+          "summary": "Map the backend data for kueue status",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Laura Fitzgerald",
+          "components": [
+            "KubeRay"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 1,
+          "created": "2025-12-03T15:27:51.132+0000",
+          "updated": "2026-01-28T10:41:44.767+0000",
+          "resolutionDate": "2026-01-28T10:41:44.750+0000"
+        },
+        {
+          "key": "RHOAIENG-41292",
+          "parentKey": "RHOAIENG-39605",
+          "summary": "Review and Recommend Data for Resources Tab",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Laura Fitzgerald",
+          "components": [
+            "KubeRay"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 2,
+          "created": "2025-12-03T15:30:33.363+0000",
+          "updated": "2026-01-19T15:16:59.340+0000",
+          "resolutionDate": "2026-01-19T15:16:59.324+0000"
+        },
+        {
+          "key": "RHOAIENG-41348",
+          "parentKey": "RHOAIENG-39605",
+          "summary": "[spike] investigate backend for progress related information",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "KubeRay"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-12-04T15:19:29.327+0000",
+          "updated": "2026-01-15T11:41:32.277+0000",
+          "resolutionDate": "2026-01-15T11:41:32.261+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-42604",
+      "parentKey": "RHAISTRAT-193",
+      "summary": "Implement retry logic",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Former Member 12",
+      "components": [
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-12-22T17:13:46.941+0000",
+      "updated": "2026-04-01T17:44:31.781+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-42605",
+          "parentKey": "RHOAIENG-42604",
+          "summary": "[ccs] Create/review single release note to launch RayJobs on Dashboard - GA in 3.4",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Saanchi Sampath",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-12-22T17:15:37.473+0000",
+          "updated": "2026-03-20T20:15:49.887+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-42606",
+          "parentKey": "RHOAIENG-42604",
+          "summary": "[ccs] Identify and complete edits related to RayJobs on Dashboard (Dashboard docs) GA in 3.4",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Saanchi Sampath",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-12-22T17:16:41.906+0000",
+          "updated": "2026-03-20T20:14:18.796+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-42607",
+          "parentKey": "RHOAIENG-42604",
+          "summary": "[ccs] Identify and complete edits related to RayJobs on Dashboard (Distr. WL docs) GA in 3.4",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Saanchi Sampath",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-12-22T17:17:14.867+0000",
+          "updated": "2026-03-13T16:22:51.250+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-42608",
+          "parentKey": "RHOAIENG-42604",
+          "summary": "[ccs] Identify and complete edits related to RayJobs on Dashboard (Trainer docs) GA in 3.4",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Saanchi Sampath",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-12-22T17:17:39.900+0000",
+          "updated": "2026-03-13T16:23:26.322+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-49261",
+      "parentKey": "RHAISTRAT-193",
+      "summary": "Update notification system",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Normal",
+      "assignee": "Person 230",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-tangerine-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-11T13:01:42.744+0000",
+      "updated": "2026-04-01T07:31:12.967+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-49270",
+          "parentKey": "RHOAIENG-49261",
+          "summary": "RayJob K8s types, API hooks, feature flag, and context setup",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Dipanshu Gupta",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-tangerine-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-11T14:33:08.678+0000",
+          "updated": "2026-03-05T12:40:36.595+0000",
+          "resolutionDate": "2026-03-05T12:40:36.560+0000"
+        },
+        {
+          "key": "RHOAIENG-49272",
+          "parentKey": "RHOAIENG-49261",
+          "summary": "RayJobs in unified Jobs table with type and RayCluster columns",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Dipanshu Gupta",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-tangerine-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-11T14:34:32.248+0000",
+          "updated": "2026-03-10T12:47:11.745+0000",
+          "resolutionDate": "2026-03-10T12:47:11.708+0000"
+        },
+        {
+          "key": "RHOAIENG-49273",
+          "parentKey": "RHOAIENG-49261",
+          "summary": "RayJob status column (composite CR + Workload status)",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Claudia Alphonse",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-tangerine-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-11T14:34:47.676+0000",
+          "updated": "2026-03-17T16:06:38.597+0000",
+          "resolutionDate": "2026-03-17T16:06:38.570+0000"
+        },
+        {
+          "key": "RHOAIENG-49274",
+          "parentKey": "RHOAIENG-49261",
+          "summary": "Type filter for mixed workloads",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Claudia Alphonse",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-tangerine-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-11T14:35:01.445+0000",
+          "updated": "2026-03-11T09:07:27.427+0000",
+          "resolutionDate": "2026-03-11T09:07:27.393+0000"
+        },
+        {
+          "key": "RHOAIENG-49275",
+          "parentKey": "RHOAIENG-49261",
+          "summary": "RayJob details drawer layout",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Dipanshu Gupta",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-tangerine-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-11T14:35:19.401+0000",
+          "updated": "2026-03-12T05:26:16.751+0000",
+          "resolutionDate": "2026-03-12T05:26:16.720+0000"
+        },
+        {
+          "key": "RHOAIENG-49276",
+          "parentKey": "RHOAIENG-49261",
+          "summary": "RayJob drawer: Details tab",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Dipanshu Gupta",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-tangerine-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-11T14:35:34.229+0000",
+          "updated": "2026-03-16T09:36:20.558+0000",
+          "resolutionDate": "2026-03-16T09:36:20.531+0000"
+        },
+        {
+          "key": "RHOAIENG-49277",
+          "parentKey": "RHOAIENG-49261",
+          "summary": "RayJob drawer: Resources tab",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Dipanshu Gupta",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-tangerine-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-11T14:35:46.407+0000",
+          "updated": "2026-03-17T11:25:27.767+0000",
+          "resolutionDate": "2026-03-17T11:25:27.741+0000"
+        },
+        {
+          "key": "RHOAIENG-49278",
+          "parentKey": "RHOAIENG-49261",
+          "summary": "RayJob drawer: Pods and Logs tab",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Dipanshu Gupta",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-tangerine-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-11T14:35:53.208+0000",
+          "updated": "2026-03-26T14:44:20.808+0000",
+          "resolutionDate": "2026-03-26T14:44:20.786+0000"
+        },
+        {
+          "key": "RHOAIENG-49279",
+          "parentKey": "RHOAIENG-49261",
+          "summary": "RayJob lifecycle actions (Stop, Pause with checkpointing warning, Delete)",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Claudia Alphonse",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-tangerine-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-11T14:36:14.619+0000",
+          "updated": "2026-03-26T13:47:56.736+0000",
+          "resolutionDate": "2026-03-26T13:47:56.716+0000"
+        },
+        {
+          "key": "RHOAIENG-49280",
+          "parentKey": "RHOAIENG-49261",
+          "summary": "RayJob Edit node count modal (worker groups)",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Claudia Alphonse",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-tangerine-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-11T14:36:26.510+0000",
+          "updated": "2026-03-18T07:25:45.017+0000",
+          "resolutionDate": "2026-03-18T07:25:44.991+0000"
+        },
+        {
+          "key": "RHOAIENG-50509",
+          "parentKey": "RHOAIENG-49261",
+          "summary": "QE Verification Rayjobs",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Premved Dhote",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-tangerine-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-23T10:05:42.485+0000",
+          "updated": "2026-04-06T06:18:11.271+0000",
+          "resolutionDate": "2026-04-06T06:18:11.071+0000"
+        },
+        {
+          "key": "RHOAIENG-50510",
+          "parentKey": "RHOAIENG-49261",
+          "summary": "Content Rayjobs ",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Claudia Alphonse",
+          "components": [
+            "AI Core Dashboard",
+            "Documentation"
+          ],
+          "labels": [
+            "dashboard-tangerine-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-23T10:09:13.461+0000",
+          "updated": "2026-03-30T12:33:51.941+0000",
+          "resolutionDate": "2026-03-30T12:33:51.920+0000"
+        },
+        {
+          "key": "RHOAIENG-52424",
+          "parentKey": "RHOAIENG-49261",
+          "summary": "RayCluster URL",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Dipanshu Gupta",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-tangerine-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-10T06:02:40.718+0000",
+          "updated": "2026-03-26T13:47:10.040+0000",
+          "resolutionDate": "2026-03-26T13:47:10.012+0000"
+        },
+        {
+          "key": "RHOAIENG-52542",
+          "parentKey": "RHOAIENG-49261",
+          "summary": "RayJob status modal — status details and context-aware actions (no Progress/Event tabs)",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Claudia Alphonse",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-tangerine-scrum",
+            "enhancement"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-11T10:40:16.752+0000",
+          "updated": "2026-03-27T09:02:04.353+0000",
+          "resolutionDate": "2026-03-27T09:02:04.325+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-55895",
+      "parentKey": "RHAISTRAT-193",
+      "summary": "Fix data migration",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Person 232",
+      "components": [
+        "Update This Field With Components"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-30T11:54:54.032+0000",
+      "updated": "2026-04-07T16:38:09.780+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-55896",
+          "parentKey": "RHOAIENG-55895",
+          "summary": "Feature signoff - GA",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Blocker",
+          "assignee": "Claudia Alphonse",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [
+            "signoff"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-30T11:55:06.441+0000",
+          "updated": "2026-04-07T07:24:06.926+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55897",
+          "parentKey": "RHOAIENG-55895",
+          "summary": "Ensure everything was completed under Tech Preview",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Blocker",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-30T11:55:09.862+0000",
+          "updated": "2026-03-30T11:57:59.870+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-56124",
+      "parentKey": "RHAISTRAT-193",
+      "summary": "Fix sorting order",
+      "status": "Review",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Former Member 14",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-area-e2e",
+        "dashboard-tangerine-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-31T10:51:42.508+0000",
+      "updated": "2026-04-07T07:01:30.353+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-56125",
+          "parentKey": "RHOAIENG-56124",
+          "summary": "[Sanity] Verify user can pause a Ray job and edit node count",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Premved Dhote",
+          "components": [
+            "AI Core Dashboard",
+            "Training Kubeflow"
+          ],
+          "labels": [
+            "dashboard",
+            "dashboard-area-e2e"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-31T10:51:45.691+0000",
+          "updated": "2026-04-07T09:07:52.510+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56126",
+          "parentKey": "RHOAIENG-56124",
+          "summary": "[Smoke] Verify user can monitor a training job through its lifecycle",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Kanishka Panwar",
+          "components": [
+            "AI Core Dashboard",
+            "Training Kubeflow"
+          ],
+          "labels": [
+            "dashboard",
+            "dashboard-area-e2e",
+            "kubeflow"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-31T10:51:49.295+0000",
+          "updated": "2026-04-07T07:11:27.505+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56127",
+          "parentKey": "RHOAIENG-56124",
+          "summary": "[Sanity] Verify project access for user types",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Kanishka Panwar",
+          "components": [
+            "AI Core Dashboard",
+            "Training Kubeflow"
+          ],
+          "labels": [
+            "dashboard",
+            "dashboard-area-e2e"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-31T10:51:52.835+0000",
+          "updated": "2026-04-07T07:11:31.818+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 5,
+    "totalIssues": 29,
+    "issuesByStatus": {
+      "Resolved": 5,
+      "Closed": 15,
+      "New": 2,
+      "In Progress": 4,
+      "Review": 3
+    },
+    "issuesByCategory": {
+      "Done": 20,
+      "In Progress": 7,
+      "To Do": 2
+    },
+    "totalStoryPoints": 26,
+    "storyPointsDone": 18,
+    "completionPct": 69,
+    "staleCount": 3,
+    "unassignedCount": 1,
+    "blockerCount": 7,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-39605",
+        "summary": "Backend work for supporting RayJobs in the Training Dashboard",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Laura Fitzgerald",
+        "totalIssues": 6,
+        "doneIssues": 6,
+        "progressPct": 100,
+        "storyPoints": 18,
+        "storyPointsDone": 18,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-42604",
+        "summary": "[ccs] Document RayJobs on Dashboard",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Saanchi Sampath",
+        "totalIssues": 4,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 8,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-49261",
+        "summary": "Ray Jobs in Dashboard jobs page",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Dipanshu Gupta",
+        "totalIssues": 14,
+        "doneIssues": 14,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-55895",
+        "summary": "General Availability - ODH and RHOAI Integrations [Dashboard/RayJobs]",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Claudia Alphonse",
+        "totalIssues": 2,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-56124",
+        "summary": "[Cypress-e2e] Dashboard UI tests - Ray jobs",
+        "status": "Review",
+        "statusCategory": "In Progress",
+        "assignee": "Kanishka Panwar",
+        "totalIssues": 3,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      }
+    ]
+  },
+  "topology": {
+    "repos": [
+      {
+        "url": "github.com/ray-project/kuberay",
+        "issueCount": 6,
+        "components": [
+          "KubeRay"
+        ]
+      }
+    ]
+  }
+}

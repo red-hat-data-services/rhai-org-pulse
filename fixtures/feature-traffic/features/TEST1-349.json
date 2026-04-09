@@ -1,0 +1,1020 @@
+{
+  "key": "TEST1-349",
+  "summary": "Add logging for debugging",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Andrew Ballantyne",
+    "accountId": "5fdb88f09edf280075ce339d"
+  },
+  "fixVersions": [
+    "rhoai-3.3"
+  ],
+  "labels": [
+    "3.Next-candidate",
+    "ai-hub",
+    "dashboard-green-scrum"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "AI Hub",
+    "UXD"
+  ],
+  "created": "2025-10-31T13:22:38.956+0000",
+  "updated": "2026-03-12T20:37:57.910+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Dashboard Status: Green - 2025-01-14"
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Microcopy is still left"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Some testing still needed – and any bugs that come from that"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Backend Status: Green - 2025-12-10"
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Finishing final dev ticket this week. Testing on going."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-741",
+      "linkedSummary": "RHOAI Catalog Disallow for Governance",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHOAIUX-1258",
+      "linkedSummary": "RHOAI Catalog Disallow for Governance",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-39544",
+      "linkedSummary": "Wire Up Predictive Catalog Models for Serving",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-37918",
+      "parentKey": "RHAISTRAT-349",
+      "summary": "Fix memory leak",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 215",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-area-model-catalog",
+        "dashboard-green-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2025-11-03T21:21:09.527+0000",
+      "updated": "2026-02-06T00:35:32.211+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-31921",
+          "parentKey": "RHOAIENG-37918",
+          "summary": "[BFF] Stub/Mock BFF: CRUD for Catalog Source Configs",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Pushpa Padti",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-green-scrum",
+            "needs-info"
+          ],
+          "storyPoints": 3,
+          "created": "2025-08-11T07:40:21.369+0000",
+          "updated": "2025-11-19T20:55:59.812+0000",
+          "resolutionDate": "2025-11-19T18:19:15.038+0000"
+        },
+        {
+          "key": "RHOAIENG-37920",
+          "parentKey": "RHOAIENG-37918",
+          "summary": "Epic Signoffs: Catalog Settings / Disallow List",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Mike Turley",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog"
+          ],
+          "storyPoints": 0,
+          "created": "2025-11-03T21:41:29.724+0000",
+          "updated": "2026-02-25T15:00:35.265+0000",
+          "resolutionDate": "2026-02-05T16:09:07.400+0000"
+        },
+        {
+          "key": "RHOAIENG-37926",
+          "parentKey": "RHOAIENG-37918",
+          "summary": "QA Verification: Catalog Settings / Disallow List",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Conor O'Malley",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog",
+            "dashboard-epic-verification"
+          ],
+          "storyPoints": 5,
+          "created": "2025-11-03T21:43:10.624+0000",
+          "updated": "2026-02-11T13:44:40.043+0000",
+          "resolutionDate": "2026-01-22T12:50:03.542+0000"
+        },
+        {
+          "key": "RHOAIENG-38336",
+          "parentKey": "RHOAIENG-37918",
+          "summary": "Catalog Settings Page Skeletons and Context Provider (Upstream only)",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Yulia Krimerman",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog"
+          ],
+          "storyPoints": 2,
+          "created": "2025-11-08T21:45:34.438+0000",
+          "updated": "2025-11-12T16:10:05.817+0000",
+          "resolutionDate": "2025-11-12T15:44:39.740+0000"
+        },
+        {
+          "key": "RHOAIENG-38338",
+          "parentKey": "RHOAIENG-37918",
+          "summary": "Integrate Catalog Settings with ODH Routes/Nav + New Feature Flag",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Manaswini Das",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog"
+          ],
+          "storyPoints": 3,
+          "created": "2025-11-08T21:47:49.721+0000",
+          "updated": "2025-11-18T06:29:46.781+0000",
+          "resolutionDate": "2025-11-18T06:29:46.747+0000"
+        },
+        {
+          "key": "RHOAIENG-38339",
+          "parentKey": "RHOAIENG-37918",
+          "summary": "[BFF] API Calls: CRUD for Catalog Source Configs",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Pushpa Padti",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog"
+          ],
+          "storyPoints": 5,
+          "created": "2025-11-08T21:48:53.886+0000",
+          "updated": "2025-12-15T19:49:05.964+0000",
+          "resolutionDate": "2025-12-15T19:49:05.932+0000"
+        },
+        {
+          "key": "RHOAIENG-38340",
+          "parentKey": "RHOAIENG-37918",
+          "summary": "Frontend API State: CRUD for Catalog Source Configs",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Yulia Krimerman",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog"
+          ],
+          "storyPoints": 2,
+          "created": "2025-11-08T21:49:34.770+0000",
+          "updated": "2025-11-20T18:12:54.754+0000",
+          "resolutionDate": "2025-11-20T18:12:54.720+0000"
+        },
+        {
+          "key": "RHOAIENG-38341",
+          "parentKey": "RHOAIENG-37918",
+          "summary": "[BFF+UI] Types/Mock Updates: Status of a Catalog Source",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Manaswini Das",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog"
+          ],
+          "storyPoints": 2,
+          "created": "2025-11-08T21:50:38.261+0000",
+          "updated": "2025-11-25T16:14:29.237+0000",
+          "resolutionDate": "2025-11-25T16:14:29.198+0000"
+        },
+        {
+          "key": "RHOAIENG-38342",
+          "parentKey": "RHOAIENG-37918",
+          "summary": "[BFF] API Validation: Status of a Catalog Source",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Manaswini Das",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog"
+          ],
+          "storyPoints": 2,
+          "created": "2025-11-08T21:51:27.623+0000",
+          "updated": "2025-12-17T14:12:41.504+0000",
+          "resolutionDate": "2025-12-17T14:12:41.467+0000"
+        },
+        {
+          "key": "RHOAIENG-38343",
+          "parentKey": "RHOAIENG-37918",
+          "summary": "[BFF] Stub/Mock BFF: Filter Preview for a Catalog Source",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Pushpa Padti",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog"
+          ],
+          "storyPoints": 2,
+          "created": "2025-11-08T21:52:00.018+0000",
+          "updated": "2025-11-20T15:12:38.555+0000",
+          "resolutionDate": "2025-11-20T15:12:38.522+0000"
+        },
+        {
+          "key": "RHOAIENG-38344",
+          "parentKey": "RHOAIENG-37918",
+          "summary": "[BFF] API Calls: Filter Preview for a Catalog Source",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Pushpa Padti",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog"
+          ],
+          "storyPoints": 2,
+          "created": "2025-11-08T21:52:54.052+0000",
+          "updated": "2025-12-22T08:40:43.945+0000",
+          "resolutionDate": "2025-12-22T08:40:43.923+0000"
+        },
+        {
+          "key": "RHOAIENG-38345",
+          "parentKey": "RHOAIENG-37918",
+          "summary": "Catalog Sources Table (read-only, excluding status)",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Yulia Krimerman",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog"
+          ],
+          "storyPoints": 2,
+          "created": "2025-11-08T21:53:17.452+0000",
+          "updated": "2025-11-24T19:28:25.074+0000",
+          "resolutionDate": "2025-11-24T19:28:25.043+0000"
+        },
+        {
+          "key": "RHOAIENG-38346",
+          "parentKey": "RHOAIENG-37918",
+          "summary": "Status Column on Catalog Sources Table",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Yulia Krimerman",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog"
+          ],
+          "storyPoints": 2,
+          "created": "2025-11-08T21:54:05.644+0000",
+          "updated": "2025-12-02T16:34:11.264+0000",
+          "resolutionDate": "2025-12-02T14:54:00.333+0000"
+        },
+        {
+          "key": "RHOAIENG-38347",
+          "parentKey": "RHOAIENG-37918",
+          "summary": "Enable/Disable Toggle on Catalog Sources Table",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Pushpa Padti",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog"
+          ],
+          "storyPoints": 2,
+          "created": "2025-11-08T21:54:44.476+0000",
+          "updated": "2025-12-04T07:21:16.911+0000",
+          "resolutionDate": "2025-12-04T07:21:16.889+0000"
+        },
+        {
+          "key": "RHOAIENG-38348",
+          "parentKey": "RHOAIENG-37918",
+          "summary": "Add/Manage Source Form Fields",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Yulia Krimerman",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog"
+          ],
+          "storyPoints": 3,
+          "created": "2025-11-08T21:55:13.198+0000",
+          "updated": "2025-11-20T21:19:54.675+0000",
+          "resolutionDate": "2025-11-20T21:19:54.644+0000"
+        },
+        {
+          "key": "RHOAIENG-38349",
+          "parentKey": "RHOAIENG-37918",
+          "summary": "Prefill and Submit Add/Manage Source Form",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Pushpa Padti",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog"
+          ],
+          "storyPoints": 3,
+          "created": "2025-11-08T21:56:08.578+0000",
+          "updated": "2025-12-02T15:31:51.771+0000",
+          "resolutionDate": "2025-12-02T15:31:51.734+0000"
+        },
+        {
+          "key": "RHOAIENG-38350",
+          "parentKey": "RHOAIENG-37918",
+          "summary": "Preview Filtering Results on Add/Manage Source Form",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Manaswini Das",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog"
+          ],
+          "storyPoints": 3,
+          "created": "2025-11-08T21:56:55.619+0000",
+          "updated": "2025-12-11T10:09:48.758+0000",
+          "resolutionDate": "2025-12-11T10:09:48.721+0000"
+        },
+        {
+          "key": "RHOAIENG-38351",
+          "parentKey": "RHOAIENG-37918",
+          "summary": "Delete Catalog Source",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Yulia Krimerman",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog"
+          ],
+          "storyPoints": 2,
+          "created": "2025-11-08T21:57:45.862+0000",
+          "updated": "2025-12-02T18:25:16.830+0000",
+          "resolutionDate": "2025-12-02T18:25:16.797+0000"
+        },
+        {
+          "key": "RHOAIENG-38352",
+          "parentKey": "RHOAIENG-37918",
+          "summary": "Review/Update Microcopy",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Manaswini Das",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog"
+          ],
+          "storyPoints": 1,
+          "created": "2025-11-08T21:58:10.316+0000",
+          "updated": "2026-01-16T19:04:24.790+0000",
+          "resolutionDate": "2026-01-16T19:04:24.770+0000"
+        },
+        {
+          "key": "RHOAIENG-39294",
+          "parentKey": "RHOAIENG-37918",
+          "summary": "[Smoke] Verify AI catalog settings is available for admin user",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Conor O'Malley",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog"
+          ],
+          "storyPoints": 3,
+          "created": "2025-11-19T18:07:41.113+0000",
+          "updated": "2026-01-15T13:50:39.573+0000",
+          "resolutionDate": "2026-01-15T13:50:39.549+0000"
+        },
+        {
+          "key": "RHOAIENG-40568",
+          "parentKey": "RHOAIENG-37918",
+          "summary": "[Sanity] Verify a source can be enabled/disabled via catalog settings",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Conor O'Malley",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog"
+          ],
+          "storyPoints": 5,
+          "created": "2025-12-01T14:39:27.487+0000",
+          "updated": "2026-01-15T13:50:47.290+0000",
+          "resolutionDate": "2026-01-15T13:50:47.275+0000"
+        },
+        {
+          "key": "RHOAIENG-42016",
+          "parentKey": "RHOAIENG-37918",
+          "summary": "HF sources: Make access token (apiKey) optional, update help text",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Manaswini Das",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog"
+          ],
+          "storyPoints": 3,
+          "created": "2025-12-15T20:14:33.457+0000",
+          "updated": "2025-12-18T16:30:16.259+0000",
+          "resolutionDate": "2025-12-18T16:30:16.240+0000"
+        },
+        {
+          "key": "RHOAIENG-42530",
+          "parentKey": "RHOAIENG-37918",
+          "summary": "Can't preview default catalog sources because their yaml isn't embedded in the configmap",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Mike Turley",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog"
+          ],
+          "storyPoints": 3,
+          "created": "2025-12-19T18:05:34.525+0000",
+          "updated": "2026-01-07T14:17:18.780+0000",
+          "resolutionDate": "2026-01-07T14:11:13.325+0000"
+        },
+        {
+          "key": "RHOAIENG-42535",
+          "parentKey": "RHOAIENG-37918",
+          "summary": "Pagination not working in source preview, needs to pass params server-side and make separate requests for included and excluded tabs",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Mike Turley",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog"
+          ],
+          "storyPoints": 3,
+          "created": "2025-12-19T21:21:47.685+0000",
+          "updated": "2026-01-19T14:41:02.298+0000",
+          "resolutionDate": "2026-01-14T13:36:09.123+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-38568",
+      "parentKey": "RHAISTRAT-349",
+      "summary": "Implement webhook handler",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Person 250",
+      "components": [
+        "AI Hub"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-11-10T19:52:41.584+0000",
+      "updated": "2026-01-20T19:36:46.083+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-37419",
+          "parentKey": "RHOAIENG-38568",
+          "summary": "Merge catalog sources",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Alessio Pragliola",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-10-28T17:59:52.006+0000",
+          "updated": "2026-01-09T12:08:29.930+0000",
+          "resolutionDate": "2025-12-11T09:46:02.615+0000"
+        },
+        {
+          "key": "RHOAIENG-37420",
+          "parentKey": "RHOAIENG-38568",
+          "summary": "Add status and error fields to sources API endpoint",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Alessio Pragliola",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-10-28T18:32:05.361+0000",
+          "updated": "2025-12-12T15:52:16.124+0000",
+          "resolutionDate": "2025-12-12T15:51:35.752+0000"
+        },
+        {
+          "key": "RHOAIENG-38061",
+          "parentKey": "RHOAIENG-38568",
+          "summary": "Create catalog source preview endpoint",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Alessio Pragliola",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 8,
+          "created": "2025-11-05T14:45:41.868+0000",
+          "updated": "2025-12-12T11:10:09.620+0000",
+          "resolutionDate": "2025-12-12T11:10:09.578+0000"
+        },
+        {
+          "key": "RHOAIENG-38652",
+          "parentKey": "RHOAIENG-38568",
+          "summary": "Unify model inclusion/exclusion configuration across catalog source types",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Alessio Pragliola",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-11-11T19:53:10.349+0000",
+          "updated": "2025-12-12T15:08:54.910+0000",
+          "resolutionDate": "2025-12-12T15:08:19.313+0000"
+        },
+        {
+          "key": "RHOAIENG-38653",
+          "parentKey": "RHOAIENG-38568",
+          "summary": "Automatically remove orphaned models when sources are modified or deleted",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Paul Boyd",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-11-11T19:59:45.380+0000",
+          "updated": "2025-12-12T15:25:41.193+0000",
+          "resolutionDate": "2025-12-12T15:25:20.846+0000"
+        },
+        {
+          "key": "RHOAIENG-39033",
+          "parentKey": "RHOAIENG-38568",
+          "summary": "ODH/RHOAI Admin users need to be able to view/edit catalog settings configmaps",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Paul Boyd",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-11-17T17:06:37.084+0000",
+          "updated": "2025-12-12T16:09:55.749+0000",
+          "resolutionDate": "2025-12-12T16:09:20.581+0000"
+        },
+        {
+          "key": "RHOAIENG-41243",
+          "parentKey": "RHOAIENG-38568",
+          "summary": "Sources endpoint should return all sources regardless of the enabled field's value",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-12-03T10:33:04.509+0000",
+          "updated": "2025-12-10T10:35:24.663+0000",
+          "resolutionDate": "2025-12-10T10:35:08.531+0000"
+        },
+        {
+          "key": "RHOAIENG-41633",
+          "parentKey": "RHOAIENG-38568",
+          "summary": "[Testing] Sources endpoint should return all sources regardless of the enabled field's value",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Federico Mosca",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-12-10T10:35:22.376+0000",
+          "updated": "2026-01-08T16:05:05.877+0000",
+          "resolutionDate": "2026-01-08T16:05:05.857+0000"
+        },
+        {
+          "key": "RHOAIENG-41738",
+          "parentKey": "RHOAIENG-38568",
+          "summary": "[Testing] Merge catalog sources",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Federico Mosca",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-12-11T09:46:14.756+0000",
+          "updated": "2026-01-12T16:50:40.614+0000",
+          "resolutionDate": "2026-01-12T16:50:40.591+0000"
+        },
+        {
+          "key": "RHOAIENG-41826",
+          "parentKey": "RHOAIENG-38568",
+          "summary": "[Testing] Create catalog source preview endpoint",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Federico Mosca",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-12-12T11:05:40.141+0000",
+          "updated": "2025-12-24T10:49:22.088+0000",
+          "resolutionDate": "2025-12-24T10:49:22.057+0000"
+        },
+        {
+          "key": "RHOAIENG-41841",
+          "parentKey": "RHOAIENG-38568",
+          "summary": "[Testing] Unify model inclusion/exclusion configuration across catalog source types",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Luca Giorgi",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-12-12T15:08:52.628+0000",
+          "updated": "2026-01-20T11:33:54.180+0000",
+          "resolutionDate": "2026-01-20T11:33:54.146+0000"
+        },
+        {
+          "key": "RHOAIENG-41846",
+          "parentKey": "RHOAIENG-38568",
+          "summary": "[Testing] Automatically remove orphaned models when sources are modified or deleted",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Luca Giorgi",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-12-12T15:25:38.792+0000",
+          "updated": "2026-01-20T11:33:44.778+0000",
+          "resolutionDate": "2026-01-20T11:33:44.742+0000"
+        },
+        {
+          "key": "RHOAIENG-41849",
+          "parentKey": "RHOAIENG-38568",
+          "summary": "[Testing] Add status and error fields to sources API endpoint",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Federico Mosca",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-12-12T15:52:13.751+0000",
+          "updated": "2026-01-08T16:04:47.735+0000",
+          "resolutionDate": "2026-01-08T16:04:47.718+0000"
+        },
+        {
+          "key": "RHOAIENG-41850",
+          "parentKey": "RHOAIENG-38568",
+          "summary": "[Testing] ODH/RHOAI Admin users need to be able to view/edit catalog settings configmaps",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Federico Mosca",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-12-12T16:09:53.325+0000",
+          "updated": "2026-01-15T14:57:35.012+0000",
+          "resolutionDate": "2026-01-15T14:57:34.992+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-40663",
+      "parentKey": "RHAISTRAT-349",
+      "summary": "Update documentation",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Former Member 1",
+      "components": [
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-12-02T12:14:51.746+0000",
+      "updated": "2026-03-31T14:10:11.782+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-40662",
+          "parentKey": "RHOAIENG-40663",
+          "summary": "[ccs Spike] Identify docs needs for model catalog allow/disallow lists",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Stephen McCarthy",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-12-02T12:13:13.315+0000",
+          "updated": "2026-03-24T10:17:13.357+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-40664",
+          "parentKey": "RHOAIENG-40663",
+          "summary": "[ccs] Document model catalog allow/disallow for governance",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Stephen McCarthy",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 8,
+          "created": "2025-12-02T12:23:02.234+0000",
+          "updated": "2026-03-24T10:17:14.942+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 3,
+    "totalIssues": 40,
+    "issuesByStatus": {
+      "Closed": 24,
+      "Resolved": 14,
+      "In Progress": 1,
+      "New": 1
+    },
+    "issuesByCategory": {
+      "Done": 38,
+      "In Progress": 1,
+      "To Do": 1
+    },
+    "totalStoryPoints": 139,
+    "storyPointsDone": 128,
+    "completionPct": 95,
+    "staleCount": 1,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-37918",
+        "summary": "[UI] Catalog Admin Settings / Disallow List",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Mike Turley",
+        "totalIssues": 24,
+        "doneIssues": 24,
+        "progressPct": 100,
+        "storyPoints": 63,
+        "storyPointsDone": 63,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-38568",
+        "summary": "Catalog source preview and disallow",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Alessio Pragliola",
+        "totalIssues": 14,
+        "doneIssues": 14,
+        "progressPct": 100,
+        "storyPoints": 65,
+        "storyPointsDone": 65,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-40663",
+        "summary": "[ccs Epic] Document model catalog disallow for governance",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Stephen McCarthy",
+        "totalIssues": 2,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 11,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

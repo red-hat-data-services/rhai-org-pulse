@@ -1,0 +1,105 @@
+{
+  "key": "TEST1-1283",
+  "summary": "Add export functionality",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Nick Ommen",
+    "accountId": "712020:4d8ab7b7-4491-490a-b85b-8246663b9db3"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "Tooling Experience"
+  ],
+  "created": "2026-03-09T14:05:50.378+0000",
+  "updated": "2026-04-07T18:05:21.886+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "GREEN",
+            "marks": [
+              {
+                "type": "strong"
+              },
+              {
+                "type": "textColor",
+                "attrs": {
+                  "color": "#36b37e"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " as of 07-Apr."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Example available at "
+          },
+          {
+            "type": "inlineCard",
+            "attrs": {
+              "url": "https://github.com/red-hat-data-services/agentic-starter-kits/tree/main/agents/llamaindex"
+            }
+          },
+          {
+            "type": "text",
+            "text": ". Undergoing PM review."
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1174",
+      "linkedSummary": "Bring your agent built on your laptop with llama-index to RH AI ",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1364",
+      "linkedSummary": "MLflow Tracing Integration for Agentic Starter Kits",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

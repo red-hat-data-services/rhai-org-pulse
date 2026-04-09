@@ -1,0 +1,92 @@
+{
+  "key": "TEST1-989",
+  "summary": "Update documentation",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "needs-tech-review"
+  ],
+  "components": [
+    "Documentation",
+    "Llama Stack Core"
+  ],
+  "created": "2025-12-10T13:05:00.825+0000",
+  "updated": "2026-04-03T17:29:51.245+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "The only work needed for this is docs which is tracked in "
+          },
+          {
+            "type": "inlineCard",
+            "attrs": {
+              "url": "https://redhat.atlassian.net/browse/RHAIENG-2794#icft=RHAIENG-2794"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-206",
+      "linkedSummary": "Create Deployment Best Practices Guide for the Llama Stack Operator",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-682",
+      "linkedSummary": "Prevent Unauthorized Access to User Resources and Admin APIs In Llama Stack",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-682",
+      "linkedSummary": "Prevent Unauthorized Access to User Resources and Admin APIs In Llama Stack",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-2794",
+      "linkedSummary": "[ccs] Document multi-tenancy on llama stack",
+      "linkedStatus": "Backlog"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

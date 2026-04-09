@@ -1,0 +1,162 @@
+{
+  "key": "TEST1-1369",
+  "summary": "Fix sorting order",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [
+    "3.Next-candidate"
+  ],
+  "components": [
+    "Documentation",
+    "Model Eval"
+  ],
+  "created": "2026-03-22T14:59:05.895+0000",
+  "updated": "2026-03-22T15:55:17.222+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1147",
+      "linkedSummary": "(feat) Industry/Use Case-Specific Evaluation Collections (MVP) - cloned RFE-238",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIUX-1576",
+      "linkedSummary": "Custom Evaluation Task creation",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1043",
+      "linkedSummary": "(feat) Red Hat AI Evaluation Stack integration with Llama Stack ",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1134",
+      "linkedSummary": "UI for Orchestration of Evaluations through Evaluation Stack",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1254",
+      "linkedSummary": "Expand TrustyAI Evaluation Capabilities to cover Risk-Based Benchmarks",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-656",
+      "linkedSummary": "Expand TrustyAI Evaluation Capabilities to cover Risk-Based Benchmarks",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-907",
+      "linkedSummary": "Red Hat AI Evaluation Stack integration with Llama Stack ",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-926",
+      "linkedSummary": "UI for Orchestration of Evaluations through Evaluation Stack",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-950",
+      "linkedSummary": "LightEval as BYOF adapter using eval-hub-sdk (Multilingual, AIME24 and AIME25)",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1021",
+      "linkedSummary": "Evaluation Stack support for DeepEval (via adapter eval-hub-sdk library)",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1289",
+      "linkedSummary": "(feat) Core Evaluation Stack (control plane) for Red Hat AI (EA1)",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-979",
+      "linkedSummary": "(feat) Core Evaluation Stack (control plane) for Red Hat AI (EA2)",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-57",
+      "linkedSummary": "Create Benchmark for Effective *Safety* Context Window",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-237",
+      "linkedSummary": "Core Evaluation Stack (control plane) for Red Hat AI",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Cloners",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1370",
+      "linkedSummary": "(feat) Industry/Use Case-Specific Evaluation Collections (Telecom) - cloned RFE-238",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Cloners",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1371",
+      "linkedSummary": "(feat) Industry/Use Case-Specific Evaluation Collections (Finance) - cloned RFE-238",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Cloners",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1372",
+      "linkedSummary": "(feat) Industry/Use Case-Specific Evaluation Collections (Software Eng/Programming) - cloned RFE-238",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

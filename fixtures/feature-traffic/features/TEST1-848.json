@@ -1,0 +1,67 @@
+{
+  "key": "TEST1-848",
+  "summary": "Add monitoring metrics",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Myriam Fentanes Gutierrez",
+    "accountId": "70121:2373d18d-8eaa-44eb-8259-7eaee138ea49"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "AI Core Dashboard",
+    "AI Pipelines",
+    "Notebook Server",
+    "UXD"
+  ],
+  "created": "2024-08-01T07:45:53.747+0000",
+  "updated": "2025-11-25T21:57:30.629+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Account",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-27445",
+      "linkedSummary": "Add Experiment and Run tracking in Model Registry Python Client for DSP Integration",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Account",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-27439",
+      "linkedSummary": "Add Experiment and Run tracking in Model Registry Backend",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIRFE-318",
+      "linkedSummary": "Bring back the \"All Runs\" table",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

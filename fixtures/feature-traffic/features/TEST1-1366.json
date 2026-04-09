@@ -1,0 +1,62 @@
+{
+  "key": "TEST1-1366",
+  "summary": "Implement feature for module",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Adam Miller",
+    "accountId": "70121:03586c94-f3ea-476d-a1a1-81cd3a5e2509"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "TP",
+    "navigator",
+    "openshift-ai"
+  ],
+  "components": [
+    "Project Navigator"
+  ],
+  "created": "2026-03-20T13:22:51.493+0000",
+  "updated": "2026-03-20T13:28:26.356+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1218",
+      "linkedSummary": "Project Navigator: Intelligent Model recommendation and intelligent deployment Assistant",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1208",
+      "linkedSummary": "Project Navigator: Intelligent Model recommendation and intelligent deployment Assistant",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

@@ -1,0 +1,570 @@
+{
+  "key": "TEST1-1136",
+  "summary": "Fix authentication issue",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Bob Gregor",
+    "accountId": "712020:6933584a-f175-48eb-84b9-47f7bb496833"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "aicp-team-heimdall",
+    "dashboard-razzmatazz-scrum",
+    "needs-documentation",
+    "nse_workflow:strat",
+    "ux-debt"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "AI Core Platform",
+    "Documentation",
+    "Notebook Server",
+    "UXD"
+  ],
+  "created": "2026-01-19T20:40:55.175+0000",
+  "updated": "2026-04-07T16:20:17.989+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "heading",
+        "attrs": {
+          "level": 1
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Status: "
+          },
+          {
+            "type": "text",
+            "text": "Green",
+            "marks": [
+              {
+                "type": "textColor",
+                "attrs": {
+                  "color": "#00875a"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Reviewed the current UX designs and expectations today and feel like Dev/UX aligned and work is containable to this new sprint."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "2/13/2026 - Reviewed with Juntao before PTO. On track for rhoai-3.4ea2"
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-712",
+      "linkedSummary": "MVP RBAC for Workbenches [Phase 1]",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "UXDR-5511",
+      "linkedSummary": "RBAC Project Permissions and Role Creation ",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-56763",
+      "linkedSummary": "Feature signoff - GA",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-46626",
+      "parentKey": "RHAISTRAT-1136",
+      "summary": "Implement data cleanup",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 239",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-razzmatazz-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-01-20T21:20:55.071+0000",
+      "updated": "2026-02-25T17:10:47.915+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-41319",
+          "parentKey": "RHOAIENG-46626",
+          "summary": "Fetch the workbenches based on user permissions",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Anish Surti",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-12-04T00:36:33.909+0000",
+          "updated": "2026-02-03T17:48:36.650+0000",
+          "resolutionDate": "2026-02-03T17:48:36.603+0000"
+        },
+        {
+          "key": "RHOAIENG-46627",
+          "parentKey": "RHOAIENG-46626",
+          "summary": "Replace inline Add buttons with toolbar “Assign roles”",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Juntao Wang",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-01-20T21:25:48.705+0000",
+          "updated": "2026-01-26T16:02:17.926+0000",
+          "resolutionDate": "2026-01-26T16:02:17.903+0000"
+        },
+        {
+          "key": "RHOAIENG-46628",
+          "parentKey": "RHOAIENG-46626",
+          "summary": "Add Assign/Manage roles page route + shell",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Juntao Wang",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-20T21:26:54.141+0000",
+          "updated": "2026-01-26T16:02:30.592+0000",
+          "resolutionDate": "2026-01-26T16:02:30.574+0000"
+        },
+        {
+          "key": "RHOAIENG-46629",
+          "parentKey": "RHOAIENG-46626",
+          "summary": "Add “Manage roles” action for every row + deep-link params",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Juntao Wang",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-01-20T21:28:39.862+0000",
+          "updated": "2026-01-28T00:52:52.975+0000",
+          "resolutionDate": "2026-01-28T00:52:52.956+0000"
+        },
+        {
+          "key": "RHOAIENG-46630",
+          "parentKey": "RHOAIENG-46626",
+          "summary": "Manage roles: build role list for table (reversible + assigned custom)",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Juntao Wang",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-20T21:31:09.254+0000",
+          "updated": "2026-01-30T16:13:14.110+0000",
+          "resolutionDate": "2026-01-30T16:13:14.072+0000"
+        },
+        {
+          "key": "RHOAIENG-46631",
+          "parentKey": "RHOAIENG-46626",
+          "summary": "Manage roles table UI + states (“Currently assigned/Assigning/Unassigning”)",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-20T21:32:22.276+0000",
+          "updated": "2026-01-21T17:43:45.956+0000",
+          "resolutionDate": "2026-01-21T17:43:45.913+0000"
+        },
+        {
+          "key": "RHOAIENG-46633",
+          "parentKey": "RHOAIENG-46626",
+          "summary": "Warning for unassigning OpenShift custom roles + save confirmation modal",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Juntao Wang",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-01-20T21:33:42.511+0000",
+          "updated": "2026-01-31T04:54:57.433+0000",
+          "resolutionDate": "2026-01-31T04:54:57.398+0000"
+        },
+        {
+          "key": "RHOAIENG-46634",
+          "parentKey": "RHOAIENG-46626",
+          "summary": "Save: delta-based batch RoleBinding updates",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Juntao Wang",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-20T21:34:38.798+0000",
+          "updated": "2026-02-03T00:50:56.717+0000",
+          "resolutionDate": "2026-02-03T00:50:56.681+0000"
+        },
+        {
+          "key": "RHOAIENG-46635",
+          "parentKey": "RHOAIENG-46626",
+          "summary": "Unsaved changes discard modal rules",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Juntao Wang",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-20T21:39:03.305+0000",
+          "updated": "2026-02-04T15:05:52.834+0000",
+          "resolutionDate": "2026-02-04T15:05:52.794+0000"
+        },
+        {
+          "key": "RHOAIENG-46636",
+          "parentKey": "RHOAIENG-46626",
+          "summary": "Test coverage sweep (Cypress mocked + Jest)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Juntao Wang",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-20T21:39:57.459+0000",
+          "updated": "2026-02-06T19:19:16.688+0000",
+          "resolutionDate": "2026-02-06T19:19:16.653+0000"
+        },
+        {
+          "key": "RHOAIENG-48886",
+          "parentKey": "RHOAIENG-46626",
+          "summary": "Microcopy review and feature flag change to true",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Juntao Wang",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-06T14:40:55.760+0000",
+          "updated": "2026-02-06T21:39:09.832+0000",
+          "resolutionDate": "2026-02-06T21:39:09.792+0000"
+        },
+        {
+          "key": "RHOAIENG-49055",
+          "parentKey": "RHOAIENG-46626",
+          "summary": "Epic Signoffs",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Juntao Wang",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "template"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-09T18:34:06.726+0000",
+          "updated": "2026-02-25T14:58:59.526+0000",
+          "resolutionDate": "2026-02-24T14:05:53.519+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-53947",
+      "parentKey": "RHAISTRAT-1136",
+      "summary": "Fix sorting order",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Major",
+      "assignee": "Person 239",
+      "components": [
+        "Update This Field With Components"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-17T15:08:35.253+0000",
+      "updated": "2026-04-06T14:48:00.782+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-56763",
+      "parentKey": "RHAISTRAT-1136",
+      "summary": "Fix data migration",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Critical",
+      "assignee": "Person 237",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "groomed",
+        "signoff"
+      ],
+      "storyPoints": 0,
+      "created": "2026-04-06T15:18:10.020+0000",
+      "updated": "2026-04-07T19:00:01.565+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-56765",
+          "parentKey": "RHOAIENG-56763",
+          "summary": "Prepare feature for GA release",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-06T15:24:23.768+0000",
+          "updated": "2026-04-06T15:24:26.452+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56766",
+          "parentKey": "RHOAIENG-56763",
+          "summary": "Quality Engineering (QE) signoff",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Federico Alonso",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-06T15:24:27.581+0000",
+          "updated": "2026-04-06T15:28:09.424+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56767",
+          "parentKey": "RHOAIENG-56763",
+          "summary": "User Experience Design (UXD) signoff",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-06T15:24:28.516+0000",
+          "updated": "2026-04-07T18:59:39.876+0000",
+          "resolutionDate": "2026-04-07T18:59:39.835+0000"
+        },
+        {
+          "key": "RHOAIENG-56768",
+          "parentKey": "RHOAIENG-56763",
+          "summary": "Engineering Manager signoff",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Bob Gregor",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-06T15:24:29.448+0000",
+          "updated": "2026-04-07T18:19:23.136+0000",
+          "resolutionDate": "2026-04-07T18:19:23.095+0000"
+        },
+        {
+          "key": "RHOAIENG-56769",
+          "parentKey": "RHOAIENG-56763",
+          "summary": "Demo environment and walkthrough for user-visible features",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-06T15:24:32.699+0000",
+          "updated": "2026-04-06T15:24:35.616+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56770",
+          "parentKey": "RHOAIENG-56763",
+          "summary": "Provide cluster access for feature verification",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-06T15:24:34.351+0000",
+          "updated": "2026-04-06T15:24:36.941+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56771",
+          "parentKey": "RHOAIENG-56763",
+          "summary": "Product Management (PM) signoff",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Jenny Yi",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-06T15:24:36.034+0000",
+          "updated": "2026-04-06T15:28:20.470+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56772",
+          "parentKey": "RHOAIENG-56763",
+          "summary": "Component build from source - signoff",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-06T15:24:38.121+0000",
+          "updated": "2026-04-06T15:24:40.640+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 3,
+    "totalIssues": 20,
+    "issuesByStatus": {
+      "Closed": 14,
+      "New": 6
+    },
+    "issuesByCategory": {
+      "Done": 14,
+      "In Progress": 0,
+      "To Do": 6
+    },
+    "totalStoryPoints": 24,
+    "storyPointsDone": 24,
+    "completionPct": 70,
+    "staleCount": 0,
+    "unassignedCount": 4,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-46626",
+        "summary": "Project permissions – Assign/Manage roles flow",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Juntao Wang",
+        "totalIssues": 12,
+        "doneIssues": 12,
+        "progressPct": 100,
+        "storyPoints": 24,
+        "storyPointsDone": 24,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-53947",
+        "summary": "General Availability - ODH and RHOAI Integrations [Project RBAC MVP]",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Juntao Wang",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-56763",
+        "summary": "Feature signoff - GA",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Bob Gregor",
+        "totalIssues": 8,
+        "doneIssues": 2,
+        "progressPct": 25,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

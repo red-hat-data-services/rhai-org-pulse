@@ -1,0 +1,53 @@
+{
+  "key": "TEST1-1429",
+  "summary": "Implement feature for module",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "assignee": {
+    "displayName": "Bill Murdock",
+    "accountId": "712020:827a9d62-5a58-4f8d-adc4-571c3fb2ad23"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.Next-candidate",
+    "requires_architecture_review"
+  ],
+  "components": [
+    "AgentDev"
+  ],
+  "created": "2026-04-01T06:32:08.872+0000",
+  "updated": "2026-04-04T03:13:31.685+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-971",
+      "linkedSummary": "Llama Stack Programmatic Tool Use (Code-Based Orchestration)",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

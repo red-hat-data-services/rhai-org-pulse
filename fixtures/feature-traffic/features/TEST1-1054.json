@@ -1,0 +1,126 @@
+{
+  "key": "TEST1-1054",
+  "summary": "Update dependencies",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Justin Sun",
+    "accountId": "712020:b52b1774-aa43-43a2-84eb-9d72df202a7d"
+  },
+  "fixVersions": [
+    "rhoai-3.4"
+  ],
+  "labels": [
+    "3.4-candidate",
+    "3.4-committed",
+    "Approved-RFE",
+    "confidence-green",
+    "needs-tech-review",
+    "rhoai-3.4"
+  ],
+  "components": [
+    "AgentDev",
+    "Documentation",
+    "Llama Stack Core"
+  ],
+  "created": "2025-12-15T17:17:16.756+0000",
+  "updated": "2026-04-03T15:10:17.829+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "2026-04-03 Green: Testing in progress. Performance and scale signed off on the test plan and is starting their tests."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "2026-03-17 Yellow: Feature code is complete and testing is in progress. Performance and scale testing uncovered bugs which are being addressed in PRs."
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1111",
+      "linkedSummary": "Tech-preview/GA readiness for the conversations API",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1111",
+      "linkedSummary": "Tech-preview/GA readiness for the conversations API",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1110",
+      "linkedSummary": "Tracker for Responses API - API surface area",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1073",
+      "linkedSummary": "Consistent Agentic API: Responses and Inference Parity",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1217",
+      "linkedSummary": "Improve Responses API OpenAI parity",
+      "linkedStatus": "Release Pending"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1028",
+      "linkedSummary": "Tech-preview (readiness) for the responses API ",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1037",
+      "linkedSummary": "Implement Per-user RBAC and data isolation for stored responses in the responses API ",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

@@ -1,0 +1,685 @@
+{
+  "key": "TEST1-1235",
+  "summary": "Improve error handling",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Blocker",
+  "assignee": {
+    "displayName": "Roy Nissim",
+    "accountId": "712020:3e6483d7-a7f9-4847-950f-102899cadf8f"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "3.4-committed",
+    "aicp-team-compass",
+    "dashboard-zaffre-scrum",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "Documentation",
+    "Model and Agent Observability",
+    "Model as a Service"
+  ],
+  "created": "2026-02-23T13:19:15.700+0000",
+  "updated": "2026-04-07T20:50:02.388+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Dashboard - Green - "
+          },
+          {
+            "type": "date",
+            "attrs": {
+              "timestamp": "1775520000000"
+            }
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Looking good – trying to get validations done to make sure we are good across the board, but from latest threads on this the MaaS backend installation works & the Dashboard should just show up"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Cluster verification around CSV export & hiding tabs as RHOAI admin"
+                  },
+                  {
+                    "type": "hardBreak"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Observability - Green - "
+          },
+          {
+            "type": "date",
+            "attrs": {
+              "timestamp": "1773705600000"
+            }
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Functionality is in, improving testing"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1131",
+      "linkedSummary": "MaaS Platform Admin UI",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-52088",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1235] - [TP] MaaS Observability & Showback",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "COST-7164",
+      "linkedSummary": "Cost of MaaS",
+      "linkedStatus": "Backlog"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1130",
+      "linkedSummary": "MaaS Subscription Model Redesign",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-3191",
+      "linkedSummary": "[ccs Epic] Documentation support for MaaS - Catch-all Epic for 3.4 GA",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1314",
+      "linkedSummary": "[TP] MaaS Loki-Based Showback & User-Scoped Dashboards",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Incorporates",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-730",
+      "linkedSummary": "MaaS Metric Exposure",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-51200",
+      "parentKey": "RHAISTRAT-1235",
+      "summary": "Update API endpoint",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Critical",
+      "assignee": "Person 225",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-zaffre-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-26T16:39:57.248+0000",
+      "updated": "2026-04-07T14:46:55.717+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-54047",
+          "parentKey": "RHOAIENG-51200",
+          "summary": "Implement RBAC for dashboard access in kuadrant-system namespace",
+          "type": "Story",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Critical",
+          "assignee": "Steven Tobin",
+          "components": [
+            "AI Core Dashboard",
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-compass",
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-17T22:57:20.001+0000",
+          "updated": "2026-04-02T14:21:15.220+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54048",
+          "parentKey": "RHOAIENG-51200",
+          "summary": "Quality Verification: Validate dashboard metrics with Limitador and showback workflows",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Andrew Ballantyne",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-17T22:57:20.062+0000",
+          "updated": "2026-03-30T21:51:26.021+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54049",
+          "parentKey": "RHOAIENG-51200",
+          "summary": "Determine CSV export functionality for dashboard data",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Christian Vogt",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-17T22:57:20.111+0000",
+          "updated": "2026-04-07T14:46:10.908+0000",
+          "resolutionDate": "2026-04-07T14:46:10.851+0000"
+        },
+        {
+          "key": "RHOAIENG-54050",
+          "parentKey": "RHOAIENG-51200",
+          "summary": "Integrate Perses dashboard into RHOAI Admin UI",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Andrew Ballantyne",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-17T22:57:20.142+0000",
+          "updated": "2026-03-23T15:29:41.567+0000",
+          "resolutionDate": "2026-03-23T15:29:41.529+0000"
+        },
+        {
+          "key": "RHOAIENG-55780",
+          "parentKey": "RHOAIENG-51200",
+          "summary": "Hiding existing dashboards",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Christian Vogt",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-27T19:35:39.644+0000",
+          "updated": "2026-04-07T14:47:18.204+0000",
+          "resolutionDate": "2026-04-07T14:47:18.142+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-51455",
+      "parentKey": "RHAISTRAT-1235",
+      "summary": "Implement webhook handler",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": "Person 188",
+      "components": [
+        "Inference Extensions",
+        "Model as a Service"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-02T13:10:54.945+0000",
+      "updated": "2026-04-02T11:15:50.059+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-51457",
+          "parentKey": "RHOAIENG-51455",
+          "summary": "Implement per-user token consumption metrics by model",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Tal Gitelman",
+          "components": [
+            "Inference Extensions"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-02T13:20:04.268+0000",
+          "updated": "2026-03-04T11:40:45.045+0000",
+          "resolutionDate": "2026-03-04T11:40:35.367+0000"
+        },
+        {
+          "key": "RHOAIENG-51459",
+          "parentKey": "RHOAIENG-51455",
+          "summary": "Admin usage dashboard (showback)",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Tal Gitelman",
+          "components": [
+            "Inference Extensions"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-02T13:33:52.425+0000",
+          "updated": "2026-04-06T12:56:19.780+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51460",
+          "parentKey": "RHOAIENG-51455",
+          "summary": "User usage dashboard (showback)",
+          "type": "Story",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Tal Gitelman",
+          "components": [
+            "Inference Extensions"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-02T13:34:44.031+0000",
+          "updated": "2026-04-06T07:47:21.322+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56530",
+          "parentKey": "RHOAIENG-51455",
+          "summary": "Document user workload monitoring and Kuadrant observability prerequisites",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Ishita Sequeira",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-02T11:17:44.728+0000",
+          "updated": "2026-04-06T15:59:39.061+0000",
+          "resolutionDate": "2026-04-06T15:59:39.032+0000"
+        },
+        {
+          "key": "RHOAIENG-56531",
+          "parentKey": "RHOAIENG-51455",
+          "summary": "Operator support for deployment-based observability (technical preview)",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Ishita Sequeira",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-02T11:18:34.720+0000",
+          "updated": "2026-04-06T12:54:37.001+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56532",
+          "parentKey": "RHOAIENG-51455",
+          "summary": "Sister story: Kustomize-only telemetry / observability (mock operator install)",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Somya Bhatnagar",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-02T11:23:22.299+0000",
+          "updated": "2026-04-02T15:43:46.644+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-51462",
+      "parentKey": "RHAISTRAT-1235",
+      "summary": "Fix sorting order",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": "Person 188",
+      "components": [
+        "Inference Extensions"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-02T13:43:00.451+0000",
+      "updated": "2026-03-12T11:16:15.545+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-52058",
+          "parentKey": "RHOAIENG-51462",
+          "summary": "Managed deployment of Loki",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Inference Extensions"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-05T17:09:36.013+0000",
+          "updated": "2026-03-09T08:41:28.668+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52281",
+          "parentKey": "RHOAIENG-51462",
+          "summary": "Gather user-level usage as logs",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "liel bondy",
+          "components": [
+            "Inference Extensions"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-08T15:55:30.321+0000",
+          "updated": "2026-03-24T09:55:20.324+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52282",
+          "parentKey": "RHOAIENG-51462",
+          "summary": "SPIKE: Export usage data as logs",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Tal Gitelman",
+          "components": [
+            "Inference Extensions"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-08T15:57:47.940+0000",
+          "updated": "2026-03-09T15:30:31.826+0000",
+          "resolutionDate": "2026-03-08T15:59:43.014+0000"
+        },
+        {
+          "key": "RHOAIENG-52283",
+          "parentKey": "RHOAIENG-51462",
+          "summary": "Configure OTEL collector for user-level usage logs in ODH",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Arik Hadas",
+          "components": [
+            "Inference Extensions"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-08T16:04:44.885+0000",
+          "updated": "2026-03-29T08:22:20.624+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52284",
+          "parentKey": "RHOAIENG-51462",
+          "summary": "Configure showback dashboard for Loki",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Tal Gitelman",
+          "components": [
+            "Inference Extensions"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-08T16:07:01.807+0000",
+          "updated": "2026-03-29T08:11:49.784+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52285",
+          "parentKey": "RHOAIENG-51462",
+          "summary": "Remove user-level usage metrics",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Tal Gitelman",
+          "components": [
+            "Inference Extensions"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-08T16:08:11.845+0000",
+          "updated": "2026-03-31T15:14:21.685+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52299",
+          "parentKey": "RHOAIENG-51462",
+          "summary": "Unmanaged deployment of Loki",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "liel bondy",
+          "components": [
+            "Inference Extensions"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-09T08:41:26.237+0000",
+          "updated": "2026-03-09T08:43:01.780+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52302",
+          "parentKey": "RHOAIENG-51462",
+          "summary": "Configure MaaS OTEL collector for optimized queries",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "liel bondy",
+          "components": [
+            "Inference Extensions"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-09T08:47:51.704+0000",
+          "updated": "2026-03-09T09:03:29.547+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52865",
+          "parentKey": "RHOAIENG-51462",
+          "summary": "Provision a development cluster",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Arik Hadas",
+          "components": [
+            "Inference Extensions"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-12T11:16:15.437+0000",
+          "updated": "2026-03-23T07:30:58.749+0000",
+          "resolutionDate": "2026-03-23T07:30:58.705+0000"
+        },
+        {
+          "key": "RHOAIENG-54929",
+          "parentKey": "RHOAIENG-51462",
+          "summary": "Add missing data to inference response",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Tal Gitelman",
+          "components": [
+            "Inference Extensions"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-24T09:55:18.015+0000",
+          "updated": "2026-03-29T08:24:42.930+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 3,
+    "totalIssues": 21,
+    "issuesByStatus": {
+      "Closed": 7,
+      "Review": 3,
+      "Backlog": 2,
+      "New": 3,
+      "In Progress": 6
+    },
+    "issuesByCategory": {
+      "Done": 7,
+      "In Progress": 9,
+      "To Do": 5
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 33,
+    "staleCount": 6,
+    "unassignedCount": 1,
+    "blockerCount": 2,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-51200",
+        "summary": "Tech Preview - MaaS Observability & Showback UI [Dashboard]",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Andrew Ballantyne",
+        "totalIssues": 5,
+        "doneIssues": 3,
+        "progressPct": 60,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-51455",
+        "summary": "Prometheus Dashboards for MaaS Showback",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Tal Gitelman",
+        "totalIssues": 6,
+        "doneIssues": 2,
+        "progressPct": 33,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-51462",
+        "summary": "Optimize the observability stack for showback",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Tal Gitelman",
+        "totalIssues": 10,
+        "doneIssues": 2,
+        "progressPct": 20,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

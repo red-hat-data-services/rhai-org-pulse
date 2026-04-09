@@ -1,0 +1,592 @@
+{
+  "key": "TEST1-1309",
+  "summary": "Fix validation issue",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Normal",
+  "assignee": {
+    "displayName": "Chris Hambridge",
+    "accountId": "557058:ec20c857-da91-474b-990c-82f291123602"
+  },
+  "fixVersions": [
+    "rhoai-3.5.EA1"
+  ],
+  "labels": [],
+  "components": [
+    "AI Hub"
+  ],
+  "created": "2026-03-16T14:23:39.045+0000",
+  "updated": "2026-04-03T14:36:31.215+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "date",
+            "attrs": {
+              "timestamp": "1774224000000"
+            }
+          },
+          {
+            "type": "text",
+            "text": ": Green"
+          },
+          {
+            "type": "hardBreak"
+          },
+          {
+            "type": "text",
+            "text": "- Feature Refinement sent out last week for review"
+          },
+          {
+            "type": "hardBreak"
+          },
+          {
+            "type": "text",
+            "text": "- Feature moved to 3.5 EA1"
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1330",
+      "linkedSummary": "Add Eagle3 Models to RHOAI Catalog [3.4 Target]",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "AIPCC-12379",
+      "linkedSummary": "Modelcar Creation for Speculator Models (Summit 3.4 Release)",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-53774",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1309] - Tech Preview - Add Eagle3 Models to RHOAI Catalog",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-54933",
+      "linkedSummary": "[ccs Epic] Document Eagle3 Models - TP 3.5 EA1",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-53646",
+      "parentKey": "RHAISTRAT-1309",
+      "summary": "Update dependencies",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Person 281",
+      "components": [
+        "AI Hub"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-16T17:56:46.078+0000",
+      "updated": "2026-03-30T11:55:01.455+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-53647",
+          "parentKey": "RHOAIENG-53646",
+          "summary": "CLONE - MUST meet designed for FIPS",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-16T17:56:54.606+0000",
+          "updated": "2026-03-16T18:04:53.879+0000",
+          "resolutionDate": "2026-03-16T18:04:53.838+0000"
+        },
+        {
+          "key": "RHOAIENG-53648",
+          "parentKey": "RHOAIENG-53646",
+          "summary": "CLONE - Repository added to ODH/RHOAI",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-16T17:56:57.769+0000",
+          "updated": "2026-03-16T18:05:43.380+0000",
+          "resolutionDate": "2026-03-16T18:05:43.319+0000"
+        },
+        {
+          "key": "RHOAIENG-53649",
+          "parentKey": "RHOAIENG-53646",
+          "summary": "CLONE - Ensure work with supported lifecyles",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-16T17:57:00.422+0000",
+          "updated": "2026-03-16T18:06:40.456+0000",
+          "resolutionDate": "2026-03-16T18:06:40.418+0000"
+        },
+        {
+          "key": "RHOAIENG-53650",
+          "parentKey": "RHOAIENG-53646",
+          "summary": "CLONE - Add source repo(s) to Snyk",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-16T17:57:03.055+0000",
+          "updated": "2026-03-16T18:07:31.567+0000",
+          "resolutionDate": "2026-03-16T18:07:31.527+0000"
+        },
+        {
+          "key": "RHOAIENG-53651",
+          "parentKey": "RHOAIENG-53646",
+          "summary": "CLONE - Promote alpha APIs to beta",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-16T17:57:05.948+0000",
+          "updated": "2026-03-16T18:08:55.500+0000",
+          "resolutionDate": "2026-03-16T18:08:55.460+0000"
+        },
+        {
+          "key": "RHOAIENG-53652",
+          "parentKey": "RHOAIENG-53646",
+          "summary": "CLONE - Onboard to ODH Build - 2 week notice! ",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-16T17:57:08.383+0000",
+          "updated": "2026-03-16T18:09:20.289+0000",
+          "resolutionDate": "2026-03-16T18:09:20.260+0000"
+        },
+        {
+          "key": "RHOAIENG-53653",
+          "parentKey": "RHOAIENG-53646",
+          "summary": "CLONE - Test with disconnected environment",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-16T17:57:11.290+0000",
+          "updated": "2026-03-16T18:10:08.700+0000",
+          "resolutionDate": "2026-03-16T18:10:08.665+0000"
+        },
+        {
+          "key": "RHOAIENG-53654",
+          "parentKey": "RHOAIENG-53646",
+          "summary": "CLONE - Add component data to product-definitions for vulnerability tracking",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-16T17:57:14.047+0000",
+          "updated": "2026-03-16T18:11:00.122+0000",
+          "resolutionDate": "2026-03-16T18:11:00.084+0000"
+        },
+        {
+          "key": "RHOAIENG-53655",
+          "parentKey": "RHOAIENG-53646",
+          "summary": "CLONE - Add component support for must-gather",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Chris Hambridge",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-16T17:57:16.796+0000",
+          "updated": "2026-03-16T18:11:46.849+0000",
+          "resolutionDate": "2026-03-16T18:11:46.811+0000"
+        },
+        {
+          "key": "RHOAIENG-53656",
+          "parentKey": "RHOAIENG-53646",
+          "summary": "Add Eagle3 Models to RHOAI Catalog- Security requirements",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-16T17:57:19.510+0000",
+          "updated": "2026-03-16T18:13:23.539+0000",
+          "resolutionDate": "2026-03-16T18:13:23.498+0000"
+        },
+        {
+          "key": "RHOAIENG-53657",
+          "parentKey": "RHOAIENG-53646",
+          "summary": "CLONE - Create component in jira",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-16T17:57:22.254+0000",
+          "updated": "2026-03-16T18:14:01.856+0000",
+          "resolutionDate": "2026-03-16T18:14:01.821+0000"
+        },
+        {
+          "key": "RHOAIENG-53658",
+          "parentKey": "RHOAIENG-53646",
+          "summary": "CLONE - Integration with ODH operator - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "no-subteam"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-16T17:57:25.005+0000",
+          "updated": "2026-03-20T19:31:58.486+0000",
+          "resolutionDate": "2026-03-16T18:14:27.303+0000"
+        },
+        {
+          "key": "RHOAIENG-53659",
+          "parentKey": "RHOAIENG-53646",
+          "summary": "CLONE - RHOAI ONLY: AI Platform Core Components (AIPCC) Integration",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-16T17:57:27.906+0000",
+          "updated": "2026-03-16T18:33:43.767+0000",
+          "resolutionDate": "2026-03-16T18:33:43.721+0000"
+        },
+        {
+          "key": "RHOAIENG-53660",
+          "parentKey": "RHOAIENG-53646",
+          "summary": "CLONE - Multi-Architecture Support",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-16T17:57:30.834+0000",
+          "updated": "2026-03-16T18:15:48.539+0000",
+          "resolutionDate": "2026-03-16T18:15:48.494+0000"
+        },
+        {
+          "key": "RHOAIENG-53661",
+          "parentKey": "RHOAIENG-53646",
+          "summary": "CLONE - Add Prometheus (metrics) config for component (optional)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-16T17:57:33.722+0000",
+          "updated": "2026-03-16T18:16:30.219+0000",
+          "resolutionDate": "2026-03-16T18:16:30.186+0000"
+        },
+        {
+          "key": "RHOAIENG-53662",
+          "parentKey": "RHOAIENG-53646",
+          "summary": "Add Eagle3 Models to RHOAI Catalog - Feature signoff - TP",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Blocker",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "signoff"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-16T17:57:36.720+0000",
+          "updated": "2026-03-16T18:18:39.811+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-53669",
+          "parentKey": "RHOAIENG-53646",
+          "summary": "CLONE - Onboard to RHOAI Build - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-16T17:57:53.184+0000",
+          "updated": "2026-03-16T18:30:12.149+0000",
+          "resolutionDate": "2026-03-16T18:30:12.113+0000"
+        },
+        {
+          "key": "RHOAIENG-53670",
+          "parentKey": "RHOAIENG-53646",
+          "summary": "Add Eagle3 Models to RHOAI Catalog- Testing requirements",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-16T17:57:56.179+0000",
+          "updated": "2026-03-16T18:32:56.105+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-53671",
+          "parentKey": "RHOAIENG-53646",
+          "summary": "CLONE - Integration with RHOAI operator - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "no-subteam"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-16T17:57:58.963+0000",
+          "updated": "2026-03-20T19:31:50.234+0000",
+          "resolutionDate": "2026-03-16T18:30:46.025+0000"
+        },
+        {
+          "key": "RHOAIENG-53672",
+          "parentKey": "RHOAIENG-53646",
+          "summary": "CLONE - Build from source (required)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "OpenShift AI Productization"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-16T17:58:01.322+0000",
+          "updated": "2026-03-16T18:31:09.845+0000",
+          "resolutionDate": "2026-03-16T18:31:09.798+0000"
+        },
+        {
+          "key": "RHOAIENG-53673",
+          "parentKey": "RHOAIENG-53646",
+          "summary": "CLONE - Add support for the new component in the QE related repositories",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "no-subteam"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-16T17:58:04.194+0000",
+          "updated": "2026-03-20T19:35:32.830+0000",
+          "resolutionDate": "2026-03-16T18:31:57.297+0000"
+        },
+        {
+          "key": "RHOAIENG-53674",
+          "parentKey": "RHOAIENG-53646",
+          "summary": "CLONE - Feature documented in architecture diagrams",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-16T17:58:06.540+0000",
+          "updated": "2026-03-16T18:32:26.665+0000",
+          "resolutionDate": "2026-03-16T18:32:26.638+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-53863",
+      "parentKey": "RHAISTRAT-1309",
+      "summary": "Implement webhook handler",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Major",
+      "assignee": "Person 281",
+      "components": [
+        "AI Hub"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-17T13:49:25.119+0000",
+      "updated": "2026-03-26T17:41:04.676+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-53864",
+          "parentKey": "RHOAIENG-53863",
+          "summary": "Integrate Eagle3 Speculator Models into RHOAI Catalog",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-03-17T13:53:10.092+0000",
+          "updated": "2026-03-18T14:48:05.558+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 2,
+    "totalIssues": 23,
+    "issuesByStatus": {
+      "Closed": 20,
+      "New": 3
+    },
+    "issuesByCategory": {
+      "Done": 20,
+      "In Progress": 0,
+      "To Do": 3
+    },
+    "totalStoryPoints": 5,
+    "storyPointsDone": 3,
+    "completionPct": 87,
+    "staleCount": 0,
+    "unassignedCount": 2,
+    "blockerCount": 1,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-53646",
+        "summary": "Tech Preview - ODH and RHOAI Integrations [AI Hub/Add Eagle3 Models to RHOAI Catalog]",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Chris Hambridge",
+        "totalIssues": 22,
+        "doneIssues": 20,
+        "progressPct": 91,
+        "storyPoints": 3,
+        "storyPointsDone": 3,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-53863",
+        "summary": "Enable Speculative Decoding in RHOAI via Eagle3 Model Catalog Integration",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Chris Hambridge",
+        "totalIssues": 1,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 2,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

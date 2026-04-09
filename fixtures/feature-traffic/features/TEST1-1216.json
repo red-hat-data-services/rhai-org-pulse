@@ -1,0 +1,154 @@
+{
+  "key": "TEST1-1216",
+  "summary": "Implement data cleanup",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Dimitri Saridakis",
+    "accountId": "712020:b8bad4dd-5c44-48f6-8461-81327a1e18c9"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "3.4-committed",
+    "confidence-yellow",
+    "summit-2026",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AgentOps",
+    "Tooling Experience"
+  ],
+  "created": "2026-02-14T10:38:33.161+0000",
+  "updated": "2026-04-03T14:54:45.459+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "AgentRuntime controller Phase 1 merged (PR #218, Mar 24). Covers config hash, 3-layer config merge, workload labels, and 31 integration tests. Remaining: "
+          },
+          {
+            "type": "inlineCard",
+            "attrs": {
+              "url": "https://redhat.atlassian.net/browse/RHAIENG-3603#icft=RHAIENG-3603"
+            }
+          },
+          {
+            "type": "text",
+            "text": " (workload label management) in progress, "
+          },
+          {
+            "type": "inlineCard",
+            "attrs": {
+              "url": "https://redhat.atlassian.net/browse/RHAIENG-3291#icft=RHAIENG-3291"
+            }
+          },
+          {
+            "type": "text",
+            "text": " (refinement doc) in review. Feature moved to Review for 3.4 release tracking."
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-210",
+      "linkedSummary": "Implement Agentic Security and Access Control",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Blocks",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1214",
+      "linkedSummary": "[DP] Agent - MLflow Tracing Integration ",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1213",
+      "linkedSummary": "[DP] AgentCard Support for Post-deployment Agent Discovery",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1313",
+      "linkedSummary": "Enable browsing, searching, and discovering registered agents in the UI (Agent Hub)",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1298",
+      "linkedSummary": "Agent Template & Demo Discovery via Dashboard Learning Resources",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1314",
+      "linkedSummary": "Experiment with Deployed Agents via the \"Agent Playground\"",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1289",
+      "linkedSummary": "[DP] Agent Deploy & Runtime Management",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-3804",
+      "linkedSummary": "Epic: agentik CLI (krew) — oc agentik for agent lifecycle",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1376",
+      "linkedSummary": "Agent Template & Demo Discovery via Dashboard Learning Resources",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Blocks",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1213",
+      "linkedSummary": "[DP] AgentCard Support for Post-deployment Agent Discovery",
+      "linkedStatus": "Review"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

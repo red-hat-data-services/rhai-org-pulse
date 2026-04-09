@@ -1,0 +1,123 @@
+{
+  "key": "TEST1-87",
+  "summary": "Fix concurrent access issue",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Adam Miller",
+    "accountId": "70121:03586c94-f3ea-476d-a1a1-81cd3a5e2509"
+  },
+  "fixVersions": [],
+  "labels": [
+    "disconnected",
+    "tech-reviewed"
+  ],
+  "components": [
+    "Documentation"
+  ],
+  "created": "2025-09-18T21:32:10.185+0000",
+  "updated": "2026-03-12T11:43:24.481+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "ISV-6262",
+      "linkedSummary": "Create an edge from product listings to container repositories",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "KONFLUX-3515",
+      "linkedSummary": "Hermetic build SBOM",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "KONFLUX-3966",
+      "linkedSummary": "Contextual SBOMs for container images - parent images",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "CWFCONF-11681",
+      "linkedSummary": "RFE: Please add the ability to query Pyxis API for all images related to a product",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "HYDRA-12764",
+      "linkedSummary": "RFE: Please add the ability to query CVE data based on product",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-51292",
+      "linkedSummary": "RHOAI CVE Findings",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-25671",
+      "linkedSummary": "Significant critical CVEs and lacking documentation preventing RHOAI 2.19 disconnected install",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "PSIRT-2813",
+      "linkedSummary": "Public CVE data that Layered Products (ex. RHOAI)",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "PSIRT-2797",
+      "linkedSummary": "Container CVE Affectedness",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-4",
+      "linkedSummary": "Publish CVE report per RHOAI release",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHEC-4226",
+      "linkedSummary": "Phase 3 - Consolidated view of CVE data for Red Hat product listings",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

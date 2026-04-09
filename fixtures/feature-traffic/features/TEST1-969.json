@@ -1,0 +1,59 @@
+{
+  "key": "TEST1-969",
+  "summary": "Add health check endpoint",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [
+    "Approved-RFE",
+    "llm-d"
+  ],
+  "components": [
+    "AI Core Platform",
+    "llm-d",
+    "Model Serving"
+  ],
+  "created": "2025-12-08T14:52:38.191+0000",
+  "updated": "2026-02-11T21:38:15.911+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1009",
+      "linkedSummary": "llm-d: Implement Remote KV Cache Offloading Backend ( Well lit path)",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "AIPCC-7841",
+      "linkedSummary": "AIPCC Build for LLM-D – Remote KV Cache Offload",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

@@ -1,0 +1,221 @@
+{
+  "key": "TEST1-52",
+  "summary": "Fix bug in processing logic",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Leslie Matzinger",
+    "accountId": "712020:0733ae37-05ae-485e-be87-bd2967b416c8"
+  },
+  "fixVersions": [
+    "rhoai-3.0"
+  ],
+  "labels": [
+    "Documentation"
+  ],
+  "components": [
+    "Documentation"
+  ],
+  "created": "2025-08-29T20:05:02.629+0000",
+  "updated": "2025-11-19T11:25:41.211+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Documentation initiative, no impact on Code Freeze."
+          },
+          {
+            "type": "hardBreak"
+          },
+          {
+            "type": "text",
+            "text": "Status update (OCT 17th): on track to deliver a MVP version with 3.0 "
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [],
+  "epics": [
+    {
+      "key": "TEST2-33439",
+      "parentKey": "RHAISTRAT-52",
+      "summary": "Fix data migration",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Former Member 17",
+      "components": [
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-09-02T11:11:31.547+0000",
+      "updated": "2026-03-24T17:53:16.655+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-33443",
+          "parentKey": "RHOAIENG-33439",
+          "summary": "[CCS] Create and share accelerator content project plan",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Jennifer Ciroli",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-09-02T11:55:29.447+0000",
+          "updated": "2026-03-24T17:54:13.663+0000",
+          "resolutionDate": "2026-03-24T17:54:13.623+0000"
+        },
+        {
+          "key": "RHOAIENG-33477",
+          "parentKey": "RHOAIENG-33439",
+          "summary": "Inventory existing accelerator content",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Critical",
+          "assignee": null,
+          "components": [
+            "Documentation"
+          ],
+          "labels": [
+            "no-qe"
+          ],
+          "storyPoints": 0,
+          "created": "2025-09-02T19:38:46.516+0000",
+          "updated": "2025-10-08T12:34:17.858+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-33534",
+          "parentKey": "RHOAIENG-33439",
+          "summary": "Identify in-progress/upcoming accelerator content work",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Documentation"
+          ],
+          "labels": [
+            "no-qe"
+          ],
+          "storyPoints": 0,
+          "created": "2025-09-03T16:58:15.241+0000",
+          "updated": "2025-10-08T12:33:51.129+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-33440",
+      "parentKey": "RHAISTRAT-52",
+      "summary": "Fix bug in processing logic",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Major",
+      "assignee": "Former Member 17",
+      "components": [
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-09-02T11:12:17.750+0000",
+      "updated": "2025-09-16T08:47:04.987+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-33441",
+      "parentKey": "RHAISTRAT-52",
+      "summary": "Implement feature for module",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Major",
+      "assignee": "Former Member 17",
+      "components": [
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-09-02T11:12:56.615+0000",
+      "updated": "2025-10-08T12:34:33.887+0000",
+      "issues": []
+    }
+  ],
+  "metrics": {
+    "totalEpics": 3,
+    "totalIssues": 3,
+    "issuesByStatus": {
+      "Closed": 1,
+      "New": 2
+    },
+    "issuesByCategory": {
+      "Done": 1,
+      "In Progress": 0,
+      "To Do": 2
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 33,
+    "staleCount": 0,
+    "unassignedCount": 2,
+    "blockerCount": 1,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-33439",
+        "summary": "(Phase 1) Accelerator content hub: Discovery & research",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Jennifer Ciroli",
+        "totalIssues": 3,
+        "doneIssues": 1,
+        "progressPct": 33,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-33440",
+        "summary": "(Phase 2) Accelerator content hub: Strategy & design",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Jennifer Ciroli",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-33441",
+        "summary": "(Phase 3) Accelerator content hub: Implementation",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Jennifer Ciroli",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

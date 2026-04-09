@@ -1,0 +1,237 @@
+{
+  "key": "TEST1-1120",
+  "summary": "Update error messages",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Roy Nissim",
+    "accountId": "712020:3e6483d7-a7f9-4847-950f-102899cadf8f"
+  },
+  "fixVersions": [
+    "rhoai-3.4"
+  ],
+  "labels": [
+    "3.4-candidate",
+    "3.4-committed",
+    "aicp-team-heimdall",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AI Core Platform Security",
+    "Model as a Service"
+  ],
+  "created": "2026-01-15T21:18:14.532+0000",
+  "updated": "2026-04-01T14:02:45.032+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Status: Yellow 03.19.26"
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Work is Started should hopefully have something be EOW"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-3191",
+      "linkedSummary": "[ccs Epic] Documentation support for MaaS - Catch-all Epic for 3.4 GA",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1132",
+      "linkedSummary": "MaaS External OIDC Support Validation towards GA",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-53015",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1120] - [TP] MaaS External OIDC Support",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1487",
+      "linkedSummary": "[TP] MaaS Multi-Tenancy — Per-Tenant Gateway and Identity Isolation",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-45862",
+      "parentKey": "RHAISTRAT-1120",
+      "summary": "Implement webhook handler",
+      "status": "Testing",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "Model as a Service"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-01-16T01:21:03.105+0000",
+      "updated": "2026-04-01T14:03:10.672+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-45882",
+          "parentKey": "RHOAIENG-45862",
+          "summary": "Fix security loophole to prevent Service Account tokens from issuing new tokens",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Bartosz Majsak",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-16T12:13:28.118+0000",
+          "updated": "2026-01-22T08:15:57.093+0000",
+          "resolutionDate": "2026-01-22T08:15:57.061+0000"
+        },
+        {
+          "key": "RHOAIENG-47977",
+          "parentKey": "RHOAIENG-45862",
+          "summary": "Integrate OIDC Authentication with MaaS API AuthPolicy",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Jim Rhyness",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [
+            "ai-fixable",
+            "ai-triaged",
+            "integration"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-28T23:04:45.139+0000",
+          "updated": "2026-03-31T14:28:50.072+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-47979",
+          "parentKey": "RHOAIENG-45862",
+          "summary": "[Test] Validate OIDC Authentication Integration for MaaS API",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Yuriy Teodorovych",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-28T23:09:56.213+0000",
+          "updated": "2026-04-01T14:05:10.833+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-49149",
+      "parentKey": "RHAISTRAT-1120",
+      "summary": "Update notification system",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "Model as a Service"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-10T17:42:47.196+0000",
+      "updated": "2026-04-01T14:03:18.533+0000",
+      "issues": []
+    }
+  ],
+  "metrics": {
+    "totalEpics": 2,
+    "totalIssues": 3,
+    "issuesByStatus": {
+      "Closed": 1,
+      "In Progress": 1,
+      "New": 1
+    },
+    "issuesByCategory": {
+      "Done": 1,
+      "In Progress": 1,
+      "To Do": 1
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 33,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-45862",
+        "summary": "MaaS Integration with External OIDC",
+        "status": "Testing",
+        "statusCategory": "In Progress",
+        "assignee": null,
+        "totalIssues": 3,
+        "doneIssues": 1,
+        "progressPct": 33,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-49149",
+        "summary": "Test Epic",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

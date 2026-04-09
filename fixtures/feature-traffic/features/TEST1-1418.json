@@ -1,0 +1,109 @@
+{
+  "key": "TEST1-1418",
+  "summary": "Fix sorting order",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "needs-tech-review",
+    "responses-api"
+  ],
+  "components": [
+    "AgentDev",
+    "Documentation",
+    "Llama Stack Core"
+  ],
+  "created": "2026-03-31T18:25:43.650+0000",
+  "updated": "2026-04-06T03:13:18.662+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1506",
+      "linkedSummary": "GA readiness for the Responses API",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1556",
+      "linkedSummary": "Production-Grade Response Storage and Persistence",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1559",
+      "linkedSummary": "Multi-Provider Validation Matrix for Responses API",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1564",
+      "linkedSummary": "Responses API Observability Integration",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1565",
+      "linkedSummary": "TP-to-GA Upgrade and Migration Path",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Issue split",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1556",
+      "linkedSummary": "Production-Grade Response Storage and Persistence",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Issue split",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1559",
+      "linkedSummary": "Multi-Provider Validation Matrix for Responses API",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Issue split",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1564",
+      "linkedSummary": "Responses API Observability Integration",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Issue split",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1565",
+      "linkedSummary": "TP-to-GA Upgrade and Migration Path",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

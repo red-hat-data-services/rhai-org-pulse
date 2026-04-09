@@ -1,0 +1,53 @@
+{
+  "key": "TEST1-489",
+  "summary": "Add logging for debugging",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Dana Gutride",
+    "accountId": "557058:efe08183-3afa-43a2-ab14-e67f7f3de55a"
+  },
+  "fixVersions": [],
+  "labels": [
+    "Notebooks2.0-related"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "Notebook Server"
+  ],
+  "created": "2024-01-20T03:36:32.898+0000",
+  "updated": "2025-11-25T21:42:30.299+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-408",
+      "linkedSummary": "Enhanced Resource Management: Idle GPU Reclaim",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

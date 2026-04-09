@@ -1,0 +1,68 @@
+{
+  "key": "TEST1-720",
+  "summary": "Update access controls",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Myriam Fentanes Gutierrez",
+    "accountId": "70121:2373d18d-8eaa-44eb-8259-7eaee138ea49"
+  },
+  "fixVersions": [],
+  "labels": [
+    "GPU-as-a-Service"
+  ],
+  "components": [
+    "AI Pipelines",
+    "Training Kubeflow",
+    "UXD"
+  ],
+  "created": "2024-09-10T13:49:22.562+0000",
+  "updated": "2025-11-25T21:52:07.998+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-128",
+      "linkedSummary": "First class model customization through AI pipelines and components ",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-878",
+      "linkedSummary": "Provide tuning experience in RHOAI",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Duplicate",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-850",
+      "linkedSummary": "Efficient Model Fine-Tuning with Pre-Built Pipelines (Data Scientist & AI Developer)",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

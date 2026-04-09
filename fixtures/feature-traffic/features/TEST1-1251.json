@@ -1,0 +1,154 @@
+{
+  "key": "TEST1-1251",
+  "summary": "Fix memory leak",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Rui Vieira",
+    "accountId": "70121:5a9a760a-598b-49c2-af0e-60c52f76c598"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate"
+  ],
+  "components": [
+    "Documentation",
+    "Model Eval"
+  ],
+  "created": "2026-02-27T20:30:47.830+0000",
+  "updated": "2026-04-03T09:43:00.190+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1289",
+      "linkedSummary": "(feat) Core Evaluation Stack (control plane) for Red Hat AI (EA1)",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-979",
+      "linkedSummary": "(feat) Core Evaluation Stack (control plane) for Red Hat AI (EA2)",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1147",
+      "linkedSummary": "(feat) Industry/Use Case-Specific Evaluation Collections (MVP) - cloned RFE-238",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-238",
+      "linkedSummary": "Industry/Use Case-Specific Evaluation Collections (MVP)",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-237",
+      "linkedSummary": "Core Evaluation Stack (control plane) for Red Hat AI",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-950",
+      "linkedSummary": "LightEval as BYOF adapter using eval-hub-sdk (Multilingual, AIME24 and AIME25)",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "AIPCC-10456",
+      "linkedSummary": "lighteval package update request",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-56060",
+      "parentKey": "RHAISTRAT-1251",
+      "summary": "Add filtering options",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 162",
+      "components": [
+        "AI Evaluations"
+      ],
+      "labels": [
+        "evalhub",
+        "evalhub-providers"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-30T20:57:02.233+0000",
+      "updated": "2026-03-31T09:31:59.505+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-56061",
+          "parentKey": "RHOAIENG-56060",
+          "summary": "feat(lighteval): add AIME24 and AIME25 reasoning benchmarks",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub",
+            "evalhub-providers"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-30T21:00:20.662+0000",
+          "updated": "2026-03-31T09:31:48.809+0000",
+          "resolutionDate": "2026-03-31T09:31:48.786+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 1,
+    "issuesByStatus": {
+      "Resolved": 1
+    },
+    "issuesByCategory": {
+      "Done": 1,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 100,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "GREEN",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-56060",
+        "summary": "feat(lighteval): implement LightEval BYO framework adapter",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Rui Vieira",
+        "totalIssues": 1,
+        "doneIssues": 1,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

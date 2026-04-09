@@ -1,0 +1,68 @@
+{
+  "key": "TEST1-1079",
+  "summary": "Implement retry logic",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Shivchander Sudalairaj",
+    "accountId": "712020:79e2a252-5db5-4921-90a8-963bf8258523"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "Approved-RFE",
+    "tech-reviewed"
+  ],
+  "components": [
+    "SDG"
+  ],
+  "created": "2026-01-07T00:13:46.381+0000",
+  "updated": "2026-04-07T08:08:32.213+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1124",
+      "linkedSummary": "[Outcome] Client SDK for eval-hub (eval-hub-sdk)",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1125",
+      "linkedSummary": "[Outcome] Generate Evaluation Datasets from LLM Traces",
+      "linkedStatus": "Refinement"
+    },
+    {
+      "type": "Causality",
+      "direction": "outward",
+      "linkedKey": "RHAIENG-3930",
+      "linkedSummary": "Standardized connector framework enabling SDG Hub to integrate with external tools and services (agents, APIs, code interpreters) for scalable synthetic data generation",
+      "linkedStatus": "Review"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

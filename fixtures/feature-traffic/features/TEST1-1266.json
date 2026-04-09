@@ -1,0 +1,81 @@
+{
+  "key": "TEST1-1266",
+  "summary": "Update documentation",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Alex Brooks",
+    "accountId": "712020:b5d98243-cffd-465a-846f-b5ebb1582a12"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate"
+  ],
+  "components": [
+    "vLLM",
+    "vLLM Runtime"
+  ],
+  "created": "2026-03-03T22:01:43.696+0000",
+  "updated": "2026-04-01T11:05:30.231+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Account",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1066",
+      "linkedSummary": "Multi Modal Output Support (Audio/Vision Generation) – \"Omni Orchestration\" in lm-d",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Account",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1066",
+      "linkedSummary": "Multi Modal Output Support (Audio/Vision Generation) – \"Omni Orchestration\" in lm-d",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "AIPCC-12521",
+      "linkedSummary": "AIPCC vllm-omni productization",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-913",
+      "linkedSummary": "Multimodal Support in Gen AI Studio Playground",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Polaris work item link",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-55052",
+      "linkedSummary": "Tech Preview - ODH and RHOAI Integrations [vLLM-Omni]",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

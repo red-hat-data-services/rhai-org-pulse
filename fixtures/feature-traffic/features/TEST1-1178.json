@@ -1,0 +1,1058 @@
+{
+  "key": "TEST1-1178",
+  "summary": "Update access controls",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Stuart Battersby",
+    "accountId": "712020:d1f056a6-a23c-41b9-99b1-6d58953ce814"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "chatterbox",
+    "confidence-green",
+    "needs-tech-review",
+    "summit-2026"
+  ],
+  "components": [
+    "AI Safety",
+    "Documentation"
+  ],
+  "created": "2026-02-02T11:35:33.383+0000",
+  "updated": "2026-04-07T03:07:10.582+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Informs",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-50665",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1178] - Chatterbox Security Testing via Garak",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-52132",
+      "linkedSummary": "[ccs Epic] Document Chatterbox integration with Garak ",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1310",
+      "linkedSummary": "Update Garak dependency in llama-stack-provider-trustyai-garak image to use midstream fork for Chatterbox security testing",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1224",
+      "linkedSummary": "[Summit] Chatterbox Security Testing via Garak (Backend Evaluation Flow)",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1396",
+      "linkedSummary": "Update Garak dependency in llama-stack-provider-trustyai-garak image to use midstream fork for Chatterbox security testing",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1485",
+      "linkedSummary": "AI Safety Evaluation & Red Teaming Report Visualization in Eval Hub",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-40690",
+      "linkedSummary": "[ccs Epic] Document Garak for AISafety (TrustyAI)",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-40690",
+      "parentKey": "RHAISTRAT-1178",
+      "summary": "Implement data cleanup",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Former Member 8",
+      "components": [
+        "AI Safety",
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 5,
+      "created": "2025-12-02T14:57:25.342+0000",
+      "updated": "2026-03-26T11:16:50.788+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-40692",
+          "parentKey": "RHOAIENG-40690",
+          "summary": "[ccs] [SPIKE] Research Garak documentation requirements",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Bronagh Synnott",
+          "components": [
+            "AI Safety",
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-12-02T15:00:43.024+0000",
+          "updated": "2026-03-06T10:20:53.121+0000",
+          "resolutionDate": "2026-02-09T12:49:48.463+0000"
+        },
+        {
+          "key": "RHOAIENG-49122",
+          "parentKey": "RHOAIENG-40690",
+          "summary": "[Docs]  Create + publish Garak documentation modules",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Bronagh Synnott",
+          "components": [
+            "AI Safety",
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-02-10T13:40:06.221+0000",
+          "updated": "2026-03-24T17:45:49.662+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-48078",
+      "parentKey": "RHAISTRAT-1178",
+      "summary": "Update notification system",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Critical",
+      "assignee": "Person 162",
+      "components": [
+        "AI Evaluations",
+        "AI Safety"
+      ],
+      "labels": [
+        "evalhub",
+        "evalhub-providers"
+      ],
+      "storyPoints": 0,
+      "created": "2026-01-30T09:08:59.812+0000",
+      "updated": "2026-03-30T15:58:19.726+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-48268",
+          "parentKey": "RHOAIENG-48078",
+          "summary": "EvalHub Garak support (EvalHub side)",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub",
+            "evalhub-providers"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-01T22:37:15.827+0000",
+          "updated": "2026-03-16T22:41:59.847+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-50480",
+          "parentKey": "RHOAIENG-48078",
+          "summary": "Add EvalHub SDK Adapter to Garak",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "FailedQA"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-21T23:50:38.006+0000",
+          "updated": "2026-03-20T08:08:38.968+0000",
+          "resolutionDate": "2026-03-20T08:08:21.608+0000"
+        },
+        {
+          "key": "RHOAIENG-53849",
+          "parentKey": "RHOAIENG-48078",
+          "summary": "SDG Generation timeouts due to missing max_concurrency param",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Henrique Nunes",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-17T13:21:19.629+0000",
+          "updated": "2026-03-20T11:00:10.090+0000",
+          "resolutionDate": "2026-03-20T11:00:10.068+0000"
+        },
+        {
+          "key": "RHOAIENG-54425",
+          "parentKey": "RHOAIENG-48078",
+          "summary": "Add KFP support to Garak's EvalHub adapter",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Sai Chandra Pandraju",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-19T22:58:39.204+0000",
+          "updated": "2026-04-01T19:36:07.115+0000",
+          "resolutionDate": "2026-03-19T23:06:11.179+0000"
+        },
+        {
+          "key": "RHOAIENG-54426",
+          "parentKey": "RHOAIENG-48078",
+          "summary": "Add intents support to Garak's EvalHub KFP execution mode.",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Sai Chandra Pandraju",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-19T23:09:17.087+0000",
+          "updated": "2026-04-01T19:36:18.120+0000",
+          "resolutionDate": "2026-03-19T23:12:22.671+0000"
+        },
+        {
+          "key": "RHOAIENG-54427",
+          "parentKey": "RHOAIENG-48078",
+          "summary": "Send S3 artifact URLs in EvalHub job response for Garak KFP mode",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Sai Chandra Pandraju",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-19T23:21:28.108+0000",
+          "updated": "2026-04-01T19:36:24.023+0000",
+          "resolutionDate": "2026-03-19T23:23:00.884+0000"
+        },
+        {
+          "key": "RHOAIENG-54428",
+          "parentKey": "RHOAIENG-48078",
+          "summary": "Save garak artifacts to MLflow",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Sai Chandra Pandraju",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-19T23:28:22.815+0000",
+          "updated": "2026-04-01T19:36:29.067+0000",
+          "resolutionDate": "2026-03-19T23:31:21.799+0000"
+        },
+        {
+          "key": "RHOAIENG-54430",
+          "parentKey": "RHOAIENG-48078",
+          "summary": "Support custom taxonomy and intents for EvalHub SDG garak flow",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Sai Chandra Pandraju",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-19T23:47:54.471+0000",
+          "updated": "2026-04-01T19:36:33.592+0000",
+          "resolutionDate": "2026-03-19T23:56:21.120+0000"
+        },
+        {
+          "key": "RHOAIENG-54434",
+          "parentKey": "RHOAIENG-48078",
+          "summary": "Document e2e setup & run instructions for EvalHub->KFP->Garak->Intents->Mlflow",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Sai Chandra Pandraju",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T00:50:24.428+0000",
+          "updated": "2026-04-01T20:01:47.098+0000",
+          "resolutionDate": "2026-04-01T20:01:47.074+0000"
+        },
+        {
+          "key": "RHOAIENG-54539",
+          "parentKey": "RHOAIENG-48078",
+          "summary": "Artifacts are not written to EvalHub/MLFlow",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Narayan Sagar B S",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [
+            "ai-fixable",
+            "ai-triaged",
+            "evalhub"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:41:06.916+0000",
+          "updated": "2026-03-27T11:31:02.787+0000",
+          "resolutionDate": "2026-03-26T16:10:28.894+0000"
+        },
+        {
+          "key": "RHOAIENG-54550",
+          "parentKey": "RHOAIENG-48078",
+          "summary": "Allow custom garak yaml config to be passed in to job",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Sai Chandra Pandraju",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T11:08:02.793+0000",
+          "updated": "2026-04-01T19:36:50.151+0000",
+          "resolutionDate": "2026-03-26T23:10:25.369+0000"
+        },
+        {
+          "key": "RHOAIENG-54557",
+          "parentKey": "RHOAIENG-48078",
+          "summary": "MulticlassJudge missing default parameters",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Sai Chandra Pandraju",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T11:23:45.289+0000",
+          "updated": "2026-04-01T19:36:56.379+0000",
+          "resolutionDate": "2026-03-26T14:50:11.516+0000"
+        },
+        {
+          "key": "RHOAIENG-55046",
+          "parentKey": "RHOAIENG-48078",
+          "summary": "Using litemaas for the SDG step results in timeout",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Sai Chandra Pandraju",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [
+            "ai-nonfixable",
+            "ai-triaged"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-25T09:58:07.577+0000",
+          "updated": "2026-03-30T02:44:29.902+0000",
+          "resolutionDate": "2026-03-26T15:18:24.984+0000"
+        },
+        {
+          "key": "RHOAIENG-55553",
+          "parentKey": "RHOAIENG-48078",
+          "summary": "TranslationIntent is silently failing when running via EvalHub",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Sai Chandra Pandraju",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T14:51:40.425+0000",
+          "updated": "2026-03-31T08:32:34.192+0000",
+          "resolutionDate": "2026-03-31T08:32:34.167+0000"
+        },
+        {
+          "key": "RHOAIENG-55738",
+          "parentKey": "RHOAIENG-48078",
+          "summary": "Add ability to pass custom YAML flow to SDGHub",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-27T13:07:28.716+0000",
+          "updated": "2026-04-01T20:01:03.908+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55837",
+          "parentKey": "RHOAIENG-48078",
+          "summary": "Add option to override some parameters of the SDGHub flow from EvalHub",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Sai Chandra Pandraju",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-30T08:35:17.530+0000",
+          "updated": "2026-04-01T20:01:25.445+0000",
+          "resolutionDate": "2026-04-01T20:01:25.415+0000"
+        },
+        {
+          "key": "RHOAIENG-55838",
+          "parentKey": "RHOAIENG-48078",
+          "summary": "Update SDG defaults",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Stuart Battersby",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-30T08:36:55.349+0000",
+          "updated": "2026-03-30T17:59:00.038+0000",
+          "resolutionDate": "2026-03-30T17:59:00.014+0000"
+        },
+        {
+          "key": "RHOAIENG-55875",
+          "parentKey": "RHOAIENG-48078",
+          "summary": "HTML report header looks wrong on a small screen",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Alessandro Beltramo",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-30T09:33:11.874+0000",
+          "updated": "2026-03-31T08:48:44.672+0000",
+          "resolutionDate": "2026-03-31T08:48:44.637+0000"
+        },
+        {
+          "key": "RHOAIENG-56147",
+          "parentKey": "RHOAIENG-48078",
+          "summary": "Save `mlflow_run_id` to eval-hub Job results",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Sai Chandra Pandraju",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-31T15:03:09.694+0000",
+          "updated": "2026-04-01T19:16:00.782+0000",
+          "resolutionDate": "2026-04-01T19:16:00.756+0000"
+        },
+        {
+          "key": "RHOAIENG-56359",
+          "parentKey": "RHOAIENG-48078",
+          "summary": "eval-hub side-car not terminating for garak provider",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Sai Chandra Pandraju",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T16:17:16.393+0000",
+          "updated": "2026-04-01T16:39:38.166+0000",
+          "resolutionDate": "2026-04-01T16:39:38.141+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-52133",
+      "parentKey": "RHAISTRAT-1178",
+      "summary": "Fix timezone handling",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Critical",
+      "assignee": "Person 163",
+      "components": [
+        "AI Evaluations",
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-06T09:20:08.041+0000",
+      "updated": "2026-03-18T14:31:25.342+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-54937",
+          "parentKey": "RHOAIENG-52133",
+          "summary": "QE - run full KFP in Cluster",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Karishma Punwatkar",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-24T10:30:49.120+0000",
+          "updated": "2026-03-30T20:58:27.200+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56138",
+          "parentKey": "RHOAIENG-52133",
+          "summary": "Test pipeline on disconnected cluster",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-31T12:58:43.439+0000",
+          "updated": "2026-03-31T13:02:37.122+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-52148",
+      "parentKey": "RHAISTRAT-1178",
+      "summary": "Implement webhook handler",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Critical",
+      "assignee": "Person 172",
+      "components": [
+        "AI Evaluations",
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-06T10:41:57.181+0000",
+      "updated": "2026-03-24T10:12:20.441+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-52152",
+          "parentKey": "RHOAIENG-52148",
+          "summary": "Implement Red Team Prompt Generation Pipeline",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Henrique Nunes",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-06T11:18:37.102+0000",
+          "updated": "2026-03-06T11:18:45.375+0000",
+          "resolutionDate": "2026-03-06T11:18:45.345+0000"
+        },
+        {
+          "key": "RHOAIENG-52153",
+          "parentKey": "RHOAIENG-52148",
+          "summary": "Build Dataset Explorer Visualization Tool",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Henrique Nunes",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-06T11:22:38.919+0000",
+          "updated": "2026-03-06T11:32:15.645+0000",
+          "resolutionDate": "2026-03-06T11:32:15.637+0000"
+        },
+        {
+          "key": "RHOAIENG-52154",
+          "parentKey": "RHOAIENG-52148",
+          "summary": "Implement sdg_hub to Garak Data Format Conversion",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Henrique Nunes",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-06T11:37:38.353+0000",
+          "updated": "2026-03-06T11:37:47.420+0000",
+          "resolutionDate": "2026-03-06T11:37:47.414+0000"
+        },
+        {
+          "key": "RHOAIENG-52155",
+          "parentKey": "RHOAIENG-52148",
+          "summary": "Implement Garak Execution and Report Generation",
+          "type": "Task",
+          "status": "Testing",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Henrique Nunes",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-06T11:38:17.871+0000",
+          "updated": "2026-03-16T15:57:36.573+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52156",
+          "parentKey": "RHOAIENG-52148",
+          "summary": "Standardize Data Flow with XDG_DATA_HOME",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Henrique Nunes",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-06T11:38:40.603+0000",
+          "updated": "2026-03-06T11:38:48.039+0000",
+          "resolutionDate": "2026-03-06T11:38:48.031+0000"
+        },
+        {
+          "key": "RHOAIENG-52157",
+          "parentKey": "RHOAIENG-52148",
+          "summary": "Add KubeFlow Pipelines Support (Optional/Future)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Henrique Nunes",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-06T11:39:00.816+0000",
+          "updated": "2026-03-06T11:41:28.616+0000",
+          "resolutionDate": "2026-03-06T11:39:08.873+0000"
+        },
+        {
+          "key": "RHOAIENG-53490",
+          "parentKey": "RHOAIENG-52148",
+          "summary": "Run notebooks with a locally deployed model",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Alessandro Beltramo",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-16T15:03:28.552+0000",
+          "updated": "2026-03-18T07:18:47.099+0000",
+          "resolutionDate": "2026-03-18T07:18:47.065+0000"
+        },
+        {
+          "key": "RHOAIENG-54057",
+          "parentKey": "RHOAIENG-52148",
+          "summary": "Generating a report picks the wrong report.json file",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Alessandro Beltramo",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-18T07:16:48.597+0000",
+          "updated": "2026-03-18T09:32:45.609+0000",
+          "resolutionDate": "2026-03-18T07:18:26.234+0000"
+        },
+        {
+          "key": "RHOAIENG-54059",
+          "parentKey": "RHOAIENG-52148",
+          "summary": "Test running against cluster deployed LLMs",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Alessandro Beltramo",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-18T08:32:34.879+0000",
+          "updated": "2026-03-18T10:59:51.523+0000",
+          "resolutionDate": "2026-03-18T10:59:51.201+0000"
+        },
+        {
+          "key": "RHOAIENG-54932",
+          "parentKey": "RHOAIENG-52148",
+          "summary": "QE for running the example notebooks",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-24T10:13:52.712+0000",
+          "updated": "2026-03-24T10:34:36.109+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-54435",
+      "parentKey": "RHAISTRAT-1178",
+      "summary": "Update access controls",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Person 166",
+      "components": [
+        "AI Evaluations",
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-20T05:05:18.734+0000",
+      "updated": "2026-04-02T21:15:09.339+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-54436",
+          "parentKey": "RHOAIENG-54435",
+          "summary": "[SPIKE] Research/try using AIPCC base image to build downstream garak provider image",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Sudip Sinha",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T05:52:22.174+0000",
+          "updated": "2026-03-27T19:00:26.161+0000",
+          "resolutionDate": "2026-03-20T05:56:59.197+0000"
+        },
+        {
+          "key": "RHOAIENG-54437",
+          "parentKey": "RHOAIENG-54435",
+          "summary": "Extract requirements from RHAI 3.4 pypi index for hermetic build",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Sai Chandra Pandraju",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T05:59:38.344+0000",
+          "updated": "2026-03-27T18:58:15.279+0000",
+          "resolutionDate": "2026-03-27T18:58:15.258+0000"
+        },
+        {
+          "key": "RHOAIENG-54438",
+          "parentKey": "RHOAIENG-54435",
+          "summary": "Use AIPCC 3.4 base image for our downstream rhoai image",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Sai Chandra Pandraju",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T06:05:49.609+0000",
+          "updated": "2026-04-01T14:59:00.528+0000",
+          "resolutionDate": "2026-04-01T14:59:00.501+0000"
+        },
+        {
+          "key": "RHOAIENG-54439",
+          "parentKey": "RHOAIENG-54435",
+          "summary": "Use RHAI 3.4 pypi index for upstream & midstream garak provider images",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Sai Chandra Pandraju",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T06:08:16.338+0000",
+          "updated": "2026-03-27T18:57:46.551+0000",
+          "resolutionDate": "2026-03-27T18:57:46.507+0000"
+        },
+        {
+          "key": "RHOAIENG-54440",
+          "parentKey": "RHOAIENG-54435",
+          "summary": "Update Garak dependency in llama-stack-provider-trustyai-garak image to use midstream fork for Chatterbox security testing",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Sai Chandra Pandraju",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T06:10:58.647+0000",
+          "updated": "2026-04-01T14:58:02.496+0000",
+          "resolutionDate": "2026-03-30T19:25:12.615+0000"
+        },
+        {
+          "key": "RHOAIENG-55773",
+          "parentKey": "RHOAIENG-54435",
+          "summary": "Update RHAI index to point to prod index instead of test index",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Sai Chandra Pandraju",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-27T18:59:04.425+0000",
+          "updated": "2026-04-02T21:14:32.202+0000",
+          "resolutionDate": "2026-04-02T21:14:32.181+0000"
+        },
+        {
+          "key": "RHOAIENG-56076",
+          "parentKey": "RHOAIENG-54435",
+          "summary": "fix code-scan 'high' issues across all streams",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Minor",
+          "assignee": "Sai Chandra Pandraju",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-31T01:47:39.793+0000",
+          "updated": "2026-04-01T20:05:40.495+0000",
+          "resolutionDate": "2026-04-01T20:05:40.451+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 5,
+    "totalIssues": 41,
+    "issuesByStatus": {
+      "Closed": 14,
+      "In Progress": 2,
+      "Resolved": 20,
+      "Backlog": 1,
+      "Testing": 1,
+      "New": 3
+    },
+    "issuesByCategory": {
+      "Done": 34,
+      "In Progress": 3,
+      "To Do": 4
+    },
+    "totalStoryPoints": 6,
+    "storyPointsDone": 3,
+    "completionPct": 83,
+    "staleCount": 3,
+    "unassignedCount": 3,
+    "blockerCount": 7,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-40690",
+        "summary": "[ccs Epic] Document Garak for AISafety (TrustyAI)",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Bronagh Synnott",
+        "totalIssues": 2,
+        "doneIssues": 1,
+        "progressPct": 50,
+        "storyPoints": 6,
+        "storyPointsDone": 3,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-48078",
+        "summary": "[EvalHub] Garak/EvalHub integration",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Rui Vieira",
+        "totalIssues": 20,
+        "doneIssues": 18,
+        "progressPct": 90,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-52133",
+        "summary": "QE for KFP/EvalHub backend flow",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Karishma Punwatkar",
+        "totalIssues": 2,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-52148",
+        "summary": "Create demo notebooks of process",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Henrique Nunes",
+        "totalIssues": 10,
+        "doneIssues": 8,
+        "progressPct": 80,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-54435",
+        "summary": "Productize EvalHub Garak KFP Intents flow",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Sai Chandra Pandraju",
+        "totalIssues": 7,
+        "doneIssues": 7,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

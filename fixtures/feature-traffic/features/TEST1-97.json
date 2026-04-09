@@ -1,0 +1,78 @@
+{
+  "key": "TEST1-97",
+  "summary": "Implement webhook handler",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "confidence-green"
+  ],
+  "components": [
+    "Llama Stack Core"
+  ],
+  "created": "2025-09-25T11:39:50.968+0000",
+  "updated": "2026-04-03T17:29:52.437+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-175",
+      "linkedSummary": "Introduce E2E Observability for Llama Stack in the product",
+      "linkedStatus": "Release Pending"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-196",
+      "linkedSummary": "[Instrument] Introduce Llama Stack API Adoption Metrics for Product Investment Decisions",
+      "linkedStatus": "Release Pending"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-522",
+      "linkedSummary": "[Telemetery] Introduce Llama Stack API Adoption Metrics for Product Investment Decisions",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-556",
+      "linkedSummary": "[Instrument] Introduce Llama Stack API Adoption Metrics for Product Investment Decisions",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Duplicate",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-522",
+      "linkedSummary": "[Telemetery] Introduce Llama Stack API Adoption Metrics for Product Investment Decisions",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

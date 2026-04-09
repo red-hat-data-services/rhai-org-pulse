@@ -1,0 +1,101 @@
+{
+  "key": "TEST1-1165",
+  "summary": "Add filtering options",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Aviran Badli",
+    "accountId": "712020:f6dc72f9-3c15-4b11-82f2-298a7f78d125"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "AgentDev",
+    "AI Core Dashboard",
+    "AI Hub"
+  ],
+  "created": "2026-01-26T18:00:54.120+0000",
+  "updated": "2026-04-01T15:15:25.693+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIUX-1929",
+      "linkedSummary": "Model Catalog Integration for Validated Tool Calling Metadata",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1254",
+      "linkedSummary": "Add \"Enable Tool Calling\" Support to RHOAI Serving Wizard [3.5 Target]",
+      "linkedStatus": "Draft"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1256",
+      "linkedSummary": "Integrate Validated Tool-Calling Metadata into Model Catalog [3.4]",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1189",
+      "linkedSummary": "Enable Tool Calling Support for Top 5 Open Source Models in RHOAI Catalog & Hugging Face",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1255",
+      "linkedSummary": "Validation and Testing of Tool Calling Functionality",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "INFERENG-3639",
+      "linkedSummary": "Document end-to-end tool calling examples for top 5 open source models",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "INFERENG-4423",
+      "linkedSummary": "Run BFCL on Tool Calling MVP Models, add results to HF cards + handoff to MV team for Catalog [3.4]",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "INFERENG-5553",
+      "linkedSummary": "Run Evaluations for Tool Calling Validation MVP models ",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

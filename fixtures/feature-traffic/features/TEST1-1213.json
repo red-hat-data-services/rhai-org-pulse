@@ -1,0 +1,84 @@
+{
+  "key": "TEST1-1213",
+  "summary": "Update access controls",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Dimitri Saridakis",
+    "accountId": "712020:b8bad4dd-5c44-48f6-8461-81327a1e18c9"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "3.4-committed",
+    "Dev-Preview",
+    "confidence-yellow",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AgentOps"
+  ],
+  "created": "2026-02-14T10:35:17.807+0000",
+  "updated": "2026-04-03T14:56:00.173+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Core AgentCard CR, discovery controller, and sync reconciler are implemented and working in isolation. Known gap: AgentRuntime controller does not yet apply protocol.kagenti.io/<name> labels, so AgentCard auto-creation does not trigger for AgentRuntime-managed workloads. Follow-up PR expected. Refinement doc pending approval. Feature moved to Review for 3.4 release tracking."
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1216",
+      "linkedSummary": "[DP] Agent Deploy & Runtime Management",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1291",
+      "linkedSummary": "[DP] AgentCard Support for Post-deployment Agent Discovery",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1216",
+      "linkedSummary": "[DP] Agent Deploy & Runtime Management",
+      "linkedStatus": "Review"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

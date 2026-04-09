@@ -1,0 +1,60 @@
+{
+  "key": "TEST1-728",
+  "summary": "Update API endpoint",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Laura Fitzgerald",
+    "accountId": "5cc0716350ff750e510131cf"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "AI Pipelines",
+    "KubeRay",
+    "Model Runtimes",
+    "Notebook Server"
+  ],
+  "created": "2024-06-07T14:29:33.014+0000",
+  "updated": "2025-11-25T21:52:24.952+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-350",
+      "linkedSummary": "Better Authentication Method to managed a Ray Cluster in workbenches and pipelines",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Informs",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-26483",
+      "linkedSummary": "Review/Refactor authentication Flow",
+      "linkedStatus": "Review"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

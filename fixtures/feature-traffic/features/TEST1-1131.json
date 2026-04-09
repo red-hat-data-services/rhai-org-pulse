@@ -1,0 +1,394 @@
+{
+  "key": "TEST1-1131",
+  "summary": "Implement webhook handler",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Aniket Paluskar",
+    "accountId": "712020:dfc9ab32-d4ac-427e-8ef1-bb2ab45a1696"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "feature-store"
+  ],
+  "components": [
+    "Feature Store"
+  ],
+  "created": "2026-01-19T07:51:34.948+0000",
+  "updated": "2026-04-03T20:39:23.486+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Status: ["
+          },
+          {
+            "type": "text",
+            "text": "25th March",
+            "marks": [
+              {
+                "type": "strong"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": "] Operator Changes Completed - Testing in Progress"
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-901",
+      "linkedSummary": "Feature Store OIDC Authentication Support",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Causality",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-51187",
+      "linkedSummary": "Review: Feature Refinement-RHAISTRAT-1131-External OIDC Support",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-52085",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1131] - Feature Store OIDC Authentication Support",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-46058",
+      "parentKey": "RHAISTRAT-1131",
+      "summary": "Fix sorting order",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Person 291",
+      "components": [
+        "Feature Store"
+      ],
+      "labels": [
+        "3.4-candidate"
+      ],
+      "storyPoints": 1,
+      "created": "2026-01-19T08:05:12.899+0000",
+      "updated": "2026-03-09T09:48:29.587+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-46059",
+          "parentKey": "RHOAIENG-46058",
+          "summary": "Create Refinement document for OIDC authentication support",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Aniket Paluskar",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 8,
+          "created": "2026-01-19T08:07:16.387+0000",
+          "updated": "2026-03-09T09:18:12.446+0000",
+          "resolutionDate": "2026-03-09T09:18:12.401+0000"
+        },
+        {
+          "key": "RHOAIENG-52164",
+          "parentKey": "RHOAIENG-46058",
+          "summary": "SDK: Support reading OIDC token from environment variable and user_token config field",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Aniket Paluskar",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-03-06T12:26:28.826+0000",
+          "updated": "2026-03-23T09:10:47.018+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52166",
+          "parentKey": "RHOAIENG-46058",
+          "summary": "SDK: Extract groups, namespaces, and realm roles from OIDC JWT tokens",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Aniket Paluskar",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-03-06T13:23:53.111+0000",
+          "updated": "2026-03-20T07:47:35.469+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52167",
+          "parentKey": "RHOAIENG-46058",
+          "summary": "Operator: Use server-only OIDC properties and support configurable token env var",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Aniket Paluskar",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-03-06T13:26:28.069+0000",
+          "updated": "2026-03-24T19:07:49.769+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-52454",
+      "parentKey": "RHAISTRAT-1131",
+      "summary": "Fix authentication issue",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Former Member 4",
+      "components": [
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-10T11:24:40.729+0000",
+      "updated": "2026-03-23T20:38:40.931+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-52455",
+          "parentKey": "RHOAIENG-52454",
+          "summary": "[ccs] Spike: Review the OIDC Authentication experience and plan documentation",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Dana Brown",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-03-10T11:26:47.533+0000",
+          "updated": "2026-03-26T20:22:37.975+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52456",
+          "parentKey": "RHOAIENG-52454",
+          "summary": "[ccs] Create the docs to support Feature Store OIDC Authentication",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Dana Brown",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-03-10T11:27:28.587+0000",
+          "updated": "2026-03-24T19:37:06.035+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-52472",
+      "parentKey": "RHAISTRAT-1131",
+      "summary": "Add batch processing",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Critical",
+      "assignee": "Person 290",
+      "components": [
+        "Feature Store"
+      ],
+      "labels": [],
+      "storyPoints": 5,
+      "created": "2026-03-10T14:35:27.894+0000",
+      "updated": "2026-03-10T14:35:27.894+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-56205",
+          "parentKey": "RHOAIENG-52472",
+          "summary": "Create a Test plan for Feature Store OIDC Authentication Support feature Testing",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Srihari Venkataramaiah",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-04-01T05:37:16.566+0000",
+          "updated": "2026-04-02T13:15:06.349+0000",
+          "resolutionDate": "2026-04-02T13:15:06.329+0000"
+        },
+        {
+          "key": "RHOAIENG-56206",
+          "parentKey": "RHOAIENG-52472",
+          "summary": "Add a Automated Tests for Feast OIDC Authentication support ",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-04-01T06:16:27.499+0000",
+          "updated": "2026-04-01T06:23:41.538+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-55765",
+      "parentKey": "RHAISTRAT-1131",
+      "summary": "Add export functionality",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [
+        "aicp-team-heimdall"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-27T18:11:39.490+0000",
+      "updated": "2026-03-27T18:40:19.674+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-55767",
+          "parentKey": "RHOAIENG-55765",
+          "summary": "Pass JWKS/Discovery URI from ODH operator to Feature Store via params overrides",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Gowtham Shanmugasundaram",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 5,
+          "created": "2026-03-27T18:35:08.832+0000",
+          "updated": "2026-04-02T21:52:29.259+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 4,
+    "totalIssues": 9,
+    "issuesByStatus": {
+      "Closed": 1,
+      "Review": 4,
+      "In Progress": 1,
+      "New": 2,
+      "Resolved": 1
+    },
+    "issuesByCategory": {
+      "Done": 2,
+      "In Progress": 5,
+      "To Do": 2
+    },
+    "totalStoryPoints": 41,
+    "storyPointsDone": 10,
+    "completionPct": 22,
+    "staleCount": 4,
+    "unassignedCount": 1,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-46058",
+        "summary": "Feature Store OIDC Authentication Support",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Aniket Paluskar",
+        "totalIssues": 4,
+        "doneIssues": 1,
+        "progressPct": 25,
+        "storyPoints": 23,
+        "storyPointsDone": 8,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-52454",
+        "summary": "[ccs Epic] Document Feature Store OIDC Authentication",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Dana Brown",
+        "totalIssues": 2,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 8,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-52472",
+        "summary": "Feature Store OIDC Authentication Support Testing",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Srihari Venkataramaiah",
+        "totalIssues": 2,
+        "doneIssues": 1,
+        "progressPct": 50,
+        "storyPoints": 5,
+        "storyPointsDone": 2,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-55765",
+        "summary": "Platform enablement for Feature Store OIDC Authentication Support",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 1,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 5,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

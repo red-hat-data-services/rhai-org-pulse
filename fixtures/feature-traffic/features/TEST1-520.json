@@ -1,0 +1,42 @@
+{
+  "key": "TEST1-520",
+  "summary": "Update configuration settings",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Catherine Weeks",
+    "accountId": "557058:aa0b3bbd-2314-4681-add6-06846100eb7d"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "UXD"
+  ],
+  "created": "2024-07-01T13:20:22.900+0000",
+  "updated": "2025-11-25T21:43:47.740+0000",
+  "statusNotes": null,
+  "issueLinks": [],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

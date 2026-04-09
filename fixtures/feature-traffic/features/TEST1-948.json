@@ -1,0 +1,93 @@
+{
+  "key": "TEST1-948",
+  "summary": "Implement data cleanup",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Blocker",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [
+    "aicp-team-crucible"
+  ],
+  "components": [
+    "AI Core Platform",
+    "AI Platform DevOps",
+    "Data Processing",
+    "Documentation"
+  ],
+  "created": "2025-12-03T11:58:35.984+0000",
+  "updated": "2026-03-23T13:42:39.065+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-181",
+      "linkedSummary": "Dev Preview - Kubeflow Spark Operator for RHOAI",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-48335",
+      "linkedSummary": "RHOAI Konflux Onboarding [Kubeflow Spark Operator]",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-48335",
+      "parentKey": "RHAISTRAT-948",
+      "summary": "Update configuration settings",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Person 348",
+      "components": [
+        "DevOps"
+      ],
+      "labels": [
+        "devops-onboarding"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-02T16:44:18.686+0000",
+      "updated": "2026-03-20T18:36:32.078+0000",
+      "issues": []
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-48335",
+        "summary": "RHOAI Konflux Onboarding [Kubeflow Spark Operator]",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Mohammadi Iram",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

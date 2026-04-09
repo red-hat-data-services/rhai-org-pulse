@@ -1,0 +1,76 @@
+{
+  "key": "TEST1-1121",
+  "summary": "Add rate limiting",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "assignee": {
+    "displayName": "David Tam",
+    "accountId": "712020:7c27708d-5dea-459a-a695-d0cfc6e36a1b"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.Next-candidate",
+    "confidence-red",
+    "dashboard-purple-scrum"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "RAG"
+  ],
+  "created": "2026-01-16T00:27:51.381+0000",
+  "updated": "2026-03-27T09:39:28.979+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-22",
+      "linkedSummary": "[Feat] Document remote vector database provider strategy for partners",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-184",
+      "linkedSummary": "Enable vector database selection from available Llama Stack providers based on options/characteristics (e.g. multimodal support)",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-177",
+      "linkedSummary": "Document remote vector database provider strategy for partners",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-199",
+      "linkedSummary": "(UI) Provide insights into selected embedding model",
+      "linkedStatus": "Stakeholder review"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

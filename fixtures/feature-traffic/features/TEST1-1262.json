@@ -1,0 +1,472 @@
+{
+  "key": "TEST1-1262",
+  "summary": "Fix authentication issue",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Chris Hambridge",
+    "accountId": "557058:ec20c857-da91-474b-990c-82f291123602"
+  },
+  "fixVersions": [],
+  "labels": [
+    "model-catalog",
+    "model-registry"
+  ],
+  "components": [
+    "AI Hub",
+    "Model Serving"
+  ],
+  "created": "2026-03-03T14:55:54.756+0000",
+  "updated": "2026-04-03T13:45:06.783+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "date",
+            "attrs": {
+              "timestamp": "1775174400000"
+            }
+          },
+          {
+            "type": "text",
+            "text": ":"
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "🟢 🎯3.4 GA(Stable)"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Implementation completed"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Validation completed"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "PM Sign-off completed"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Only release not documentation remains"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1256",
+      "linkedSummary": "Integrate Validated Tool-Calling Metadata into Model Catalog [3.4]",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-52474",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1262] - Integrate Validated Tool-Calling Metadata into Model Catalog",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Account",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-52690",
+      "linkedSummary": "Integrate Validated Tool-Calling Metadata in RHOAI Catalog - Feature signoff - DP",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-52684",
+      "parentKey": "RHAISTRAT-1262",
+      "summary": "Implement feature for module",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 281",
+      "components": [
+        "AI Hub"
+      ],
+      "labels": [
+        "comp-integration"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-11T17:41:10.679+0000",
+      "updated": "2026-03-27T12:30:40.721+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-52685",
+          "parentKey": "RHOAIENG-52684",
+          "summary": "CLONE - Multi-Architecture Support (Optional)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T17:41:18.184+0000",
+          "updated": "2026-03-11T18:29:13.130+0000",
+          "resolutionDate": "2026-03-11T18:29:13.090+0000"
+        },
+        {
+          "key": "RHOAIENG-52686",
+          "parentKey": "RHOAIENG-52684",
+          "summary": "CLONE - Add component to Jira",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T17:41:18.186+0000",
+          "updated": "2026-03-11T18:29:54.044+0000",
+          "resolutionDate": "2026-03-11T18:29:54.009+0000"
+        },
+        {
+          "key": "RHOAIENG-52687",
+          "parentKey": "RHOAIENG-52684",
+          "summary": "CLONE - Onboard to ODH Build - 2 week notice! ",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T17:41:18.208+0000",
+          "updated": "2026-03-11T18:26:46.404+0000",
+          "resolutionDate": "2026-03-11T18:26:46.368+0000"
+        },
+        {
+          "key": "RHOAIENG-52688",
+          "parentKey": "RHOAIENG-52684",
+          "summary": "CLONE - Register new APIs",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T17:41:18.218+0000",
+          "updated": "2026-03-11T18:27:27.013+0000",
+          "resolutionDate": "2026-03-11T18:27:26.978+0000"
+        },
+        {
+          "key": "RHOAIENG-52689",
+          "parentKey": "RHOAIENG-52684",
+          "summary": "CLONE - Designed for FIPS",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T17:41:18.224+0000",
+          "updated": "2026-03-11T18:28:23.440+0000",
+          "resolutionDate": "2026-03-11T18:28:23.404+0000"
+        },
+        {
+          "key": "RHOAIENG-52690",
+          "parentKey": "RHOAIENG-52684",
+          "summary": "Integrate Validated Tool-Calling Metadata in RHOAI Catalog - Feature signoff - DP",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Rob Greenberg",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "signoff"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-11T17:41:18.284+0000",
+          "updated": "2026-03-27T01:30:19.243+0000",
+          "resolutionDate": "2026-03-27T01:30:19.219+0000"
+        },
+        {
+          "key": "RHOAIENG-52691",
+          "parentKey": "RHOAIENG-52684",
+          "summary": "CLONE - Onboard to RHOAI Build - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T17:41:18.287+0000",
+          "updated": "2026-03-11T18:32:18.333+0000",
+          "resolutionDate": "2026-03-11T18:32:18.297+0000"
+        },
+        {
+          "key": "RHOAIENG-52692",
+          "parentKey": "RHOAIENG-52684",
+          "summary": "CLONE - Repository added to ODH/RHOAI",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T17:41:18.284+0000",
+          "updated": "2026-03-11T18:34:38.759+0000",
+          "resolutionDate": "2026-03-11T18:34:38.721+0000"
+        },
+        {
+          "key": "RHOAIENG-52693",
+          "parentKey": "RHOAIENG-52684",
+          "summary": "CLONE - Follow component integration steps",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T17:41:18.337+0000",
+          "updated": "2026-03-11T18:33:17.125+0000",
+          "resolutionDate": "2026-03-11T18:33:17.087+0000"
+        },
+        {
+          "key": "RHOAIENG-52694",
+          "parentKey": "RHOAIENG-52684",
+          "summary": "CLONE - Integration with RHOAI operator - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "no-subteam"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-11T17:41:18.375+0000",
+          "updated": "2026-03-20T19:51:10.683+0000",
+          "resolutionDate": "2026-03-11T18:37:02.260+0000"
+        },
+        {
+          "key": "RHOAIENG-52695",
+          "parentKey": "RHOAIENG-52684",
+          "summary": "Installation, usage, contact information",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T17:41:18.384+0000",
+          "updated": "2026-03-12T20:17:03.435+0000",
+          "resolutionDate": "2026-03-12T20:17:03.399+0000"
+        },
+        {
+          "key": "RHOAIENG-52696",
+          "parentKey": "RHOAIENG-52684",
+          "summary": "CLONE - Integration with ODH operator - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "no-subteam"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-11T17:41:18.376+0000",
+          "updated": "2026-03-20T19:51:12.959+0000",
+          "resolutionDate": "2026-03-11T18:37:40.820+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-53374",
+      "parentKey": "RHAISTRAT-1262",
+      "summary": "Add unit tests for service",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 281",
+      "components": [
+        "AI Hub"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-13T19:56:15.547+0000",
+      "updated": "2026-03-26T12:50:15.536+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-53375",
+          "parentKey": "RHOAIENG-53374",
+          "summary": "Ingest and Enrich Model Metadata with Tool-Calling Specifications",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Chris Hambridge",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-03-13T19:58:38.578+0000",
+          "updated": "2026-03-25T20:07:08.365+0000",
+          "resolutionDate": "2026-03-25T20:07:08.136+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 2,
+    "totalIssues": 13,
+    "issuesByStatus": {
+      "Closed": 12,
+      "Resolved": 1
+    },
+    "issuesByCategory": {
+      "Done": 13,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 3,
+    "storyPointsDone": 3,
+    "completionPct": 100,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 1,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-52684",
+        "summary": "Dev Preview - ODH and RHOAI Integrations [AI Hub/Integrate Validated Tool-Calling Metadata in RHOAI Catalog]",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Chris Hambridge",
+        "totalIssues": 12,
+        "doneIssues": 12,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-53374",
+        "summary": "Model Catalog Tool-Calling Metadata & Visibility",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Chris Hambridge",
+        "totalIssues": 1,
+        "doneIssues": 1,
+        "progressPct": 100,
+        "storyPoints": 3,
+        "storyPointsDone": 3,
+        "health": "GREEN"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

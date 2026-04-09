@@ -1,0 +1,49 @@
+{
+  "key": "TEST1-1232",
+  "summary": "Fix validation issue",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [
+    "llama-stack-core"
+  ],
+  "components": [
+    "Llama Stack Core"
+  ],
+  "created": "2026-02-21T12:04:49.057+0000",
+  "updated": "2026-04-07T03:09:37.440+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-734",
+      "linkedSummary": "Sustained Implementation & Parity Progress for OpenAI-Compatible Responses API in Llama Stack",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

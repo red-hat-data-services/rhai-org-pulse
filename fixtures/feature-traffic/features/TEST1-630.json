@@ -1,0 +1,135 @@
+{
+  "key": "TEST1-630",
+  "summary": "Implement retry logic",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Lindani Phiri",
+    "accountId": "70121:f3dfd35d-9dbc-4225-9e98-a28612802cc7"
+  },
+  "fixVersions": [],
+  "labels": [
+    "p0"
+  ],
+  "components": [
+    "AI Core Platform"
+  ],
+  "created": "2024-05-23T12:26:35.908+0000",
+  "updated": "2025-11-25T21:48:20.514+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-536",
+      "linkedSummary": "Enable Feature Flags for TrustyAI Components in DataScienceCluster",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHODS-604",
+      "linkedSummary": "SPIKE: Research how to enable feature flags for functionality",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-2457",
+      "linkedSummary": "Improve Feature Flags",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Blocks",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-10109",
+      "linkedSummary": "Upgrade OdhDashboardConfig v1alpha to v1",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-26470",
+      "linkedSummary": "Document experimental and dev preview API configurations ",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-10974",
+      "parentKey": "RHAISTRAT-630",
+      "summary": "Refactor data handling code",
+      "status": "Backlog",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": "Former Member 20",
+      "components": [
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2024-08-06T13:09:10.751+0000",
+      "updated": "2025-02-19T13:39:31.826+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-10975",
+          "parentKey": "RHOAIENG-10974",
+          "summary": "[ccs Spike] Investigate documentation impact for documenting configuring and managing feature flags",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Chris Tyler",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [
+            "NoDocsQEReview"
+          ],
+          "storyPoints": 3,
+          "created": "2024-08-06T13:11:23.801+0000",
+          "updated": "2024-10-31T16:47:24.351+0000",
+          "resolutionDate": "2024-10-31T16:47:24.306+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 1,
+    "issuesByStatus": {
+      "Closed": 1
+    },
+    "issuesByCategory": {
+      "Done": 1,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 3,
+    "storyPointsDone": 3,
+    "completionPct": 100,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "GREEN",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-10974",
+        "summary": "[ccs Epic] Document how to manage and configure Feature Flags",
+        "status": "Backlog",
+        "statusCategory": "To Do",
+        "assignee": "Chris Tyler",
+        "totalIssues": 1,
+        "doneIssues": 1,
+        "progressPct": 100,
+        "storyPoints": 3,
+        "storyPointsDone": 3,
+        "health": "GREEN"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

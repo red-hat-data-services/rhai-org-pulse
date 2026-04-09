@@ -1,0 +1,48 @@
+{
+  "key": "TEST1-1340",
+  "summary": "Add filtering options",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Undefined",
+  "assignee": {
+    "displayName": "Deepak Jha",
+    "accountId": "712020:1c08fbe3-0a55-4a05-a305-8f97e86b0565"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [],
+  "created": "2026-03-19T03:54:48.500+0000",
+  "updated": "2026-03-19T03:58:29.791+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Issue split",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1255",
+      "linkedSummary": "Callback Mechanism Implementation for InstructLab Training and Mini-Trainer",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

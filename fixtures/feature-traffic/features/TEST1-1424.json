@@ -1,0 +1,66 @@
+{
+  "key": "TEST1-1424",
+  "summary": "Improve error handling",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Undefined",
+  "assignee": {
+    "displayName": "Lukasz Cmielowski",
+    "accountId": "712020:32772c8c-b397-4c1c-8b25-683cff91e216"
+  },
+  "fixVersions": [
+    "rhoai-3.5"
+  ],
+  "labels": [
+    "3.5-candidate"
+  ],
+  "components": [],
+  "created": "2026-04-01T17:05:40.890+0000",
+  "updated": "2026-04-01T20:19:22.489+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1449",
+      "linkedSummary": "Deploy RAG Pattern as endpoint",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1176",
+      "linkedSummary": "[Feat] AutoRAG backend delivery (Core Engine and KFP Integration)",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1426",
+      "linkedSummary": "[Feat] MLFlow integration for AutoRAG experiment and artifacts",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

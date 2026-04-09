@@ -1,0 +1,48 @@
+{
+  "key": "TEST1-559",
+  "summary": "Update access controls",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Minor",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "AI Core Dashboard",
+    "UXD"
+  ],
+  "created": "2024-09-24T20:44:22.526+0000",
+  "updated": "2025-11-25T21:45:27.950+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHOAIRFE-12",
+      "linkedSummary": "Image description is not immediately clear",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

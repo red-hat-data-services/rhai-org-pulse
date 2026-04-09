@@ -1,0 +1,62 @@
+{
+  "key": "TEST1-1413",
+  "summary": "Update configuration settings",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Undefined",
+  "assignee": {
+    "displayName": "Ana Biazetti",
+    "accountId": "712020:7631c516-db21-4782-b7d9-ddc2a4577676"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "needs-review"
+  ],
+  "components": [
+    "AI Pipelines",
+    "Fine Tuning",
+    "MLflow"
+  ],
+  "created": "2026-03-30T03:12:12.772+0000",
+  "updated": "2026-04-07T09:48:38.521+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1479",
+      "linkedSummary": "Add MLflow Integration for Experiment Tracking in AI Training Pipeline",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-43536",
+      "linkedSummary": "Reusable Training Component and Pipelines - Phase 2",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

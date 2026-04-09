@@ -1,0 +1,56 @@
+{
+  "key": "TEST1-976",
+  "summary": "Fix memory leak",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Aditi Saluja",
+    "accountId": "712020:b9b76f94-d254-4c31-a62b-4f176680c1e1"
+  },
+  "fixVersions": [],
+  "labels": [
+    "Approved-RFE",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AI Pipelines",
+    "Fine Tuning",
+    "Training Hub",
+    "Training Kubeflow"
+  ],
+  "created": "2025-12-09T05:26:44.755+0000",
+  "updated": "2026-04-07T08:08:32.711+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-924",
+      "linkedSummary": "Enterprise Users Need Seamless, Repeatable Model Tuning Workflows with Experiment Traceability",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

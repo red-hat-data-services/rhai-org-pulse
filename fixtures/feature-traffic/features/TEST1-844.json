@@ -1,0 +1,1515 @@
+{
+  "key": "TEST1-844",
+  "summary": "Update dependencies",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Adriel Paredes",
+    "accountId": "557058:8123280f-6f48-4b0f-8728-019c7db73f87"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "ide_scrum:indigo",
+    "nse_workflow:strat"
+  ],
+  "components": [
+    "Notebook Server"
+  ],
+  "created": "2025-05-14T14:57:48.490+0000",
+  "updated": "2026-03-18T21:03:48.507+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "2026/02/24: Team shifted focus to 3.3 upgrade work."
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-877",
+      "linkedSummary": "Kubeflow Notebooks 2.0  ",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIUX-25",
+      "linkedSummary": "[Design] Allow creating workbench enviroments from existing Secrets and Config Maps",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Incorporates",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1398",
+      "linkedSummary": "Kubeflow Notebooks 2.0  - Downstream",
+      "linkedStatus": "Stakeholder review"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-16570",
+      "parentKey": "RHAISTRAT-844",
+      "summary": "Fix bug in processing logic",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": "Person 201",
+      "components": [
+        "Notebooks Server"
+      ],
+      "labels": [
+        "ide_refinement:ready-for-sprint",
+        "ide_scrum:indigo",
+        "notebooks2.0"
+      ],
+      "storyPoints": 0,
+      "created": "2024-12-04T20:21:16.607+0000",
+      "updated": "2025-10-16T13:58:58.978+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-24493",
+      "parentKey": "RHAISTRAT-844",
+      "summary": "Fix data migration",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": "Person 202",
+      "components": [
+        "Notebooks Server"
+      ],
+      "labels": [
+        "community_tracker",
+        "ide_refinement:ready-for-sprint",
+        "ide_scrum:indigo",
+        "notebooks2.0",
+        "upstream_org:kubeflow",
+        "upstream_repo:notebooks"
+      ],
+      "storyPoints": 0,
+      "created": "2025-04-25T15:47:04.906+0000",
+      "updated": "2025-11-11T16:20:08.658+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-24497",
+      "parentKey": "RHAISTRAT-844",
+      "summary": "Implement search feature",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Person 236",
+      "components": [
+        "Notebooks Server"
+      ],
+      "labels": [
+        "community_tracker",
+        "ide_refinement:ready-for-sprint",
+        "ide_scrum:indigo",
+        "notebooks2.0",
+        "upstream_org:kubeflow",
+        "upstream_repo:notebooks"
+      ],
+      "storyPoints": 0,
+      "created": "2025-04-25T15:59:47.203+0000",
+      "updated": "2025-11-04T15:17:16.495+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-24516",
+          "parentKey": "RHOAIENG-24497",
+          "summary": "Notebooks V2 Backend API provides functionality required by Frontend to mount existing secret(s) on workspace",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Andy Stoneberg",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0"
+          ],
+          "storyPoints": 2,
+          "created": "2025-04-26T01:59:59.911+0000",
+          "updated": "2026-03-03T14:17:50.516+0000",
+          "resolutionDate": "2025-10-28T13:20:38.089+0000"
+        },
+        {
+          "key": "RHOAIENG-24517",
+          "parentKey": "RHOAIENG-24497",
+          "summary": "Notebooks V2 Backend API provides functionality to list existing workspaces",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Andy Stoneberg",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0"
+          ],
+          "storyPoints": 1,
+          "created": "2025-04-26T02:03:37.283+0000",
+          "updated": "2026-03-03T14:21:47.265+0000",
+          "resolutionDate": "2025-05-19T13:18:54.787+0000"
+        },
+        {
+          "key": "RHOAIENG-24518",
+          "parentKey": "RHOAIENG-24497",
+          "summary": "Notebooks V2 Backend API provides functionality required by Frontend to create a workspace",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": null,
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0"
+          ],
+          "storyPoints": 1,
+          "created": "2025-04-26T02:09:50.757+0000",
+          "updated": "2026-03-03T14:34:44.965+0000",
+          "resolutionDate": "2025-05-19T13:20:15.303+0000"
+        },
+        {
+          "key": "RHOAIENG-24520",
+          "parentKey": "RHOAIENG-24497",
+          "summary": "Valid Notebooks V2 WorkspaceKind manifests can be applied to a k8s cluster",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Andy Stoneberg",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0"
+          ],
+          "storyPoints": 1,
+          "created": "2025-04-26T02:20:51.421+0000",
+          "updated": "2026-03-03T14:08:19.756+0000",
+          "resolutionDate": "2025-05-19T13:19:17.108+0000"
+        },
+        {
+          "key": "RHOAIENG-24533",
+          "parentKey": "RHOAIENG-24497",
+          "summary": "Notebooks V2 Backend API provides functionality to list existing WorkspaceKind resources",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Andy Stoneberg",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0"
+          ],
+          "storyPoints": 1,
+          "created": "2025-04-27T14:06:19.734+0000",
+          "updated": "2026-03-03T14:26:53.854+0000",
+          "resolutionDate": "2025-05-19T13:19:43.494+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-24498",
+      "parentKey": "RHAISTRAT-844",
+      "summary": "Add pagination support",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 203",
+      "components": [
+        "Notebooks Server"
+      ],
+      "labels": [
+        "community_tracker",
+        "ide_refinement:ready-for-sprint",
+        "ide_scrum:indigo",
+        "notebooks2.0",
+        "upstream_org:kubeflow",
+        "upstream_repo:notebooks"
+      ],
+      "storyPoints": 0,
+      "created": "2025-04-25T16:02:58.169+0000",
+      "updated": "2026-01-13T17:06:07.739+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-24519",
+          "parentKey": "RHOAIENG-24498",
+          "summary": "Notebooks V2 Controller ensures an Istio VirtualService is created to expose running workspace",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Harshad Reddy Nalla",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0"
+          ],
+          "storyPoints": 5,
+          "created": "2025-04-26T02:17:14.753+0000",
+          "updated": "2026-03-03T14:31:53.695+0000",
+          "resolutionDate": "2025-11-06T22:27:47.623+0000"
+        },
+        {
+          "key": "RHOAIENG-24521",
+          "parentKey": "RHOAIENG-24498",
+          "summary": "Notebooks V2 Backend API provides functionality required by Frontend to stop a running workspace",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Andy Stoneberg",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0"
+          ],
+          "storyPoints": 3,
+          "created": "2025-04-26T02:27:24.979+0000",
+          "updated": "2026-03-03T14:14:26.225+0000",
+          "resolutionDate": "2025-07-31T13:38:14.584+0000"
+        },
+        {
+          "key": "RHOAIENG-24522",
+          "parentKey": "RHOAIENG-24498",
+          "summary": "Notebooks V2 Backend API provides functionality required by Frontend to restart a running a workspace",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": null,
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0",
+            "nse_workflow:triaged"
+          ],
+          "storyPoints": 3,
+          "created": "2025-04-26T02:28:49.421+0000",
+          "updated": "2026-03-03T14:12:22.847+0000",
+          "resolutionDate": "2026-01-13T17:06:03.868+0000"
+        },
+        {
+          "key": "RHOAIENG-24523",
+          "parentKey": "RHOAIENG-24498",
+          "summary": "Notebooks V2 Backend API provides functionality required by Frontend to start a stopped workspace",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Andy Stoneberg",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0"
+          ],
+          "storyPoints": 3,
+          "created": "2025-04-26T02:30:09.732+0000",
+          "updated": "2026-03-03T14:14:31.805+0000",
+          "resolutionDate": "2025-07-31T13:38:26.987+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-24499",
+      "parentKey": "RHAISTRAT-844",
+      "summary": "Fix memory leak",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Normal",
+      "assignee": "Person 201",
+      "components": [
+        "Notebooks Server"
+      ],
+      "labels": [
+        "community_tracker",
+        "ide_refinement:ready-for-sprint",
+        "ide_scrum:indigo",
+        "notebooks2.0",
+        "nse_workflow:triaged",
+        "upstream_org:kubeflow",
+        "upstream_repo:notebooks",
+        "ux-debt"
+      ],
+      "storyPoints": 0,
+      "created": "2025-04-25T16:04:37.717+0000",
+      "updated": "2026-02-13T15:52:02.857+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-33149",
+          "parentKey": "RHOAIENG-24499",
+          "summary": "Community Tracker #548: [TASK] Add Labels and Annotations to Workspace creation",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Major",
+          "assignee": "Paulo Rego",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "community_tracker",
+            "ide_scrum:indigo",
+            "notebooks2.0",
+            "nse_workflow:triaged",
+            "upstream_org:kubeflow",
+            "upstream_repo:notebooks"
+          ],
+          "storyPoints": 3,
+          "created": "2025-08-28T18:23:00.192+0000",
+          "updated": "2026-03-03T13:29:06.356+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-24790",
+      "parentKey": "RHAISTRAT-844",
+      "summary": "Fix race condition",
+      "status": "Backlog",
+      "statusCategory": "To Do",
+      "priority": "Normal",
+      "assignee": "Person 236",
+      "components": [
+        "Notebooks Server"
+      ],
+      "labels": [
+        "community_tracker",
+        "ide_refinement:ready-for-sprint",
+        "ide_scrum:indigo",
+        "notebooks2.0",
+        "nse_workflow:triaged",
+        "upstream_org:kubeflow",
+        "upstream_repo:notebooks"
+      ],
+      "storyPoints": 0,
+      "created": "2025-05-02T14:43:26.265+0000",
+      "updated": "2026-01-13T17:07:56.174+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-25681",
+      "parentKey": "RHAISTRAT-844",
+      "summary": "Add pagination support",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Normal",
+      "assignee": "Person 195",
+      "components": [
+        "Notebooks Server"
+      ],
+      "labels": [
+        "ide_scrum:indigo",
+        "notebooks2.0",
+        "nse_workflow:triaged"
+      ],
+      "storyPoints": 0,
+      "created": "2025-05-16T20:24:20.295+0000",
+      "updated": "2026-02-03T15:20:36.174+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-25682",
+          "parentKey": "RHOAIENG-25681",
+          "summary": "[SPIKE] Volume and Storage classes design doc for Kubeflow Notebooks 2.0",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Andy Stoneberg",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0",
+            "nse_workflow:triaged"
+          ],
+          "storyPoints": 0,
+          "created": "2025-05-16T20:29:06.735+0000",
+          "updated": "2026-03-16T13:00:45.598+0000",
+          "resolutionDate": "2026-03-16T13:00:45.572+0000"
+        },
+        {
+          "key": "RHOAIENG-27181",
+          "parentKey": "RHOAIENG-25681",
+          "summary": "[SPIKE] Istio VirtualService abstraction design doc for Kubeflow Notebooks 2.0",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Harshad Reddy Nalla",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0"
+          ],
+          "storyPoints": 0,
+          "created": "2025-06-09T14:42:47.677+0000",
+          "updated": "2026-03-03T14:05:21.712+0000",
+          "resolutionDate": "2025-11-21T14:16:14.539+0000"
+        },
+        {
+          "key": "RHOAIENG-32033",
+          "parentKey": "RHOAIENG-25681",
+          "summary": "[SPIKE] Connections API design doc for Kubeflow Notebooks 2.0",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Major",
+          "assignee": "Andy Stoneberg",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0",
+            "nse_workflow:triaged"
+          ],
+          "storyPoints": 0,
+          "created": "2025-08-11T19:48:29.870+0000",
+          "updated": "2026-03-03T14:31:18.164+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-32034",
+          "parentKey": "RHOAIENG-25681",
+          "summary": "[SPIKE] Kueue design doc for Kubeflow Notebooks 2.0",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Major",
+          "assignee": "Harshad Reddy Nalla",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0",
+            "nse_workflow:triaged"
+          ],
+          "storyPoints": 0,
+          "created": "2025-08-11T19:51:42.212+0000",
+          "updated": "2026-03-03T14:14:43.305+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-33156",
+          "parentKey": "RHOAIENG-25681",
+          "summary": "[SPIKE] Investigate pluggable UI architecture",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Critical",
+          "assignee": "Paulo Rego",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0",
+            "nse_workflow:triaged"
+          ],
+          "storyPoints": 3,
+          "created": "2025-08-28T19:08:09.136+0000",
+          "updated": "2026-03-03T14:15:58.383+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-48510",
+          "parentKey": "RHOAIENG-25681",
+          "summary": "[SPIKE] Investigate and create tasks to support RHOAI 3.4 UXD prototype",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Paulo Rego",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0",
+            "nse_workflow:triaged"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-03T15:20:36.039+0000",
+          "updated": "2026-02-23T13:33:05.519+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-29710",
+      "parentKey": "RHAISTRAT-844",
+      "summary": "Add rate limiting",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Former Member 24",
+      "components": [
+        "Notebooks Server"
+      ],
+      "labels": [
+        "ide_refinement:ready-for-sprint",
+        "ide_scrum:indigo",
+        "kubeflow/dashboard",
+        "notebooks2.0"
+      ],
+      "storyPoints": 0,
+      "created": "2025-07-16T13:22:52.346+0000",
+      "updated": "2025-10-28T13:26:45.621+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-28662",
+          "parentKey": "RHOAIENG-29710",
+          "summary": "Migrate kubeflow/kubeflow centraldb_docker_publish.yaml GitHub Action to kubeflow/dashboard",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Yehudit Kerido",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0",
+            "upstream_org:kubeflow",
+            "upstream_repo:dashboard"
+          ],
+          "storyPoints": 3,
+          "created": "2025-07-01T13:17:55.777+0000",
+          "updated": "2026-03-03T14:15:56.225+0000",
+          "resolutionDate": "2025-09-15T12:09:04.909+0000"
+        },
+        {
+          "key": "RHOAIENG-28669",
+          "parentKey": "RHOAIENG-29710",
+          "summary": "Migrate kubeflow/kubeflow centraldb_angular_docker_publish.yaml GitHub Action to kubeflow/dashboard",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Abdallah Samara",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0",
+            "upstream_org:kubeflow",
+            "upstream_repo:dashboard"
+          ],
+          "storyPoints": 3,
+          "created": "2025-07-01T14:47:00.048+0000",
+          "updated": "2026-03-03T14:17:54.331+0000",
+          "resolutionDate": "2025-09-15T12:09:36.773+0000"
+        },
+        {
+          "key": "RHOAIENG-28675",
+          "parentKey": "RHOAIENG-29710",
+          "summary": "Migrate kubeflow/kubeflow prof_controller_docker_publish.yaml GitHub Action to kubeflow/dashboard",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Asaad Balum",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0",
+            "upstream_org:kubeflow",
+            "upstream_repo:dashboard"
+          ],
+          "storyPoints": 3,
+          "created": "2025-07-01T15:21:12.631+0000",
+          "updated": "2026-03-03T14:10:11.248+0000",
+          "resolutionDate": "2025-09-22T21:14:32.015+0000"
+        },
+        {
+          "key": "RHOAIENG-28676",
+          "parentKey": "RHOAIENG-29710",
+          "summary": "Migrate kubeflow/kubeflow kfam_docker_publish.yaml GitHub Action to kubeflow/dashboard",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Yehudit Kerido",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0",
+            "upstream_org:kubeflow",
+            "upstream_repo:dashboard"
+          ],
+          "storyPoints": 3,
+          "created": "2025-07-01T15:25:53.985+0000",
+          "updated": "2026-03-03T14:18:50.635+0000",
+          "resolutionDate": "2025-09-15T12:09:16.286+0000"
+        },
+        {
+          "key": "RHOAIENG-28677",
+          "parentKey": "RHOAIENG-29710",
+          "summary": "Migrate kubeflow/kubeflow poddefaults_docker_publish.yaml GitHub Action to kubeflow/dashboard",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Liav Weiss",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0",
+            "upstream_org:kubeflow",
+            "upstream_repo:dashboard"
+          ],
+          "storyPoints": 3,
+          "created": "2025-07-01T15:30:00.626+0000",
+          "updated": "2026-03-03T14:07:59.658+0000",
+          "resolutionDate": "2025-09-15T12:08:56.076+0000"
+        },
+        {
+          "key": "RHOAIENG-28679",
+          "parentKey": "RHOAIENG-29710",
+          "summary": "Community Tracker #456: [FEATURE] Kubeflow Central Dashboard Integration",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Liav Weiss",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "community_tracker",
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0",
+            "upstream_org:kubeflow",
+            "upstream_repo:notebooks"
+          ],
+          "storyPoints": 8,
+          "created": "2025-07-01T15:48:58.804+0000",
+          "updated": "2026-03-03T13:27:20.067+0000",
+          "resolutionDate": "2025-09-22T21:09:46.731+0000"
+        },
+        {
+          "key": "RHOAIENG-29711",
+          "parentKey": "RHOAIENG-29710",
+          "summary": "Community Tracker kubeflow/dashboard #119: Integration tests don't get triggered by components they rely on",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Yehudit Kerido",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "community_tracker",
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0",
+            "upstream_org:kubeflow",
+            "upstream_repo:notebooks"
+          ],
+          "storyPoints": 3,
+          "created": "2025-07-16T13:30:42.445+0000",
+          "updated": "2026-03-03T13:26:49.104+0000",
+          "resolutionDate": "2025-08-04T17:52:41.304+0000"
+        },
+        {
+          "key": "RHOAIENG-29712",
+          "parentKey": "RHOAIENG-29710",
+          "summary": "Community Tracker kubeflow/dashboard #120:Testing helper scripts are not executable ",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Yehudit Kerido",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "community_tracker",
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0",
+            "upstream_org:kubeflow",
+            "upstream_repo:notebooks"
+          ],
+          "storyPoints": 0,
+          "created": "2025-07-16T13:34:27.804+0000",
+          "updated": "2026-03-03T13:28:44.740+0000",
+          "resolutionDate": "2025-07-18T14:30:57.270+0000"
+        },
+        {
+          "key": "RHOAIENG-29714",
+          "parentKey": "RHOAIENG-29710",
+          "summary": "Community Tracker kubeflow/dashboard #121: Define testing objects in separate files",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Noa Limoy",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "community_tracker",
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0",
+            "upstream_org:kubeflow",
+            "upstream_repo:notebooks"
+          ],
+          "storyPoints": 0,
+          "created": "2025-07-16T13:37:24.634+0000",
+          "updated": "2026-03-03T13:29:27.050+0000",
+          "resolutionDate": "2025-07-23T12:43:46.423+0000"
+        },
+        {
+          "key": "RHOAIENG-29715",
+          "parentKey": "RHOAIENG-29710",
+          "summary": "Community Tracker kubeflow/dashboard #123: Create automation script for updating manifests",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Liav Weiss",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "community_tracker",
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0",
+            "upstream_org:kubeflow",
+            "upstream_repo:notebooks"
+          ],
+          "storyPoints": 3,
+          "created": "2025-07-16T13:39:44.460+0000",
+          "updated": "2026-03-03T13:28:53.877+0000",
+          "resolutionDate": "2025-10-28T13:25:54.652+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-32032",
+      "parentKey": "RHAISTRAT-844",
+      "summary": "Add batch processing",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Person 201",
+      "components": [
+        "Notebooks Server"
+      ],
+      "labels": [
+        "ide_refinement:ready-for-sprint",
+        "ide_scrum:indigo",
+        "notebooks2.0"
+      ],
+      "storyPoints": 0,
+      "created": "2025-08-11T19:12:46.719+0000",
+      "updated": "2025-11-11T03:39:33.756+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-23417",
+          "parentKey": "RHOAIENG-32032",
+          "summary": "Implement shared library in Notebooks v2",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Guilherme Caponetto",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0"
+          ],
+          "storyPoints": 3,
+          "created": "2025-04-08T15:31:54.902+0000",
+          "updated": "2026-03-03T14:34:55.235+0000",
+          "resolutionDate": "2025-09-11T13:42:34.375+0000"
+        },
+        {
+          "key": "RHOAIENG-32106",
+          "parentKey": "RHOAIENG-32032",
+          "summary": "Verify requirements for NB2.0 execution in ODH Dashboard with mocked data",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Guilherme Caponetto",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0"
+          ],
+          "storyPoints": 3,
+          "created": "2025-08-12T19:51:14.630+0000",
+          "updated": "2026-03-03T14:37:19.507+0000",
+          "resolutionDate": "2025-08-13T17:57:59.117+0000"
+        },
+        {
+          "key": "RHOAIENG-32107",
+          "parentKey": "RHOAIENG-32032",
+          "summary": "Verify requirements for NB2.0 execution in ODH Dashboard with real data",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Guilherme Caponetto",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0"
+          ],
+          "storyPoints": 3,
+          "created": "2025-08-12T19:55:54.690+0000",
+          "updated": "2026-03-03T14:10:05.439+0000",
+          "resolutionDate": "2025-08-15T16:38:20.526+0000"
+        },
+        {
+          "key": "RHOAIENG-32726",
+          "parentKey": "RHOAIENG-32032",
+          "summary": "Incorporate improvements from the investigation ",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Guilherme Caponetto",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0"
+          ],
+          "storyPoints": 3,
+          "created": "2025-08-21T13:34:05.616+0000",
+          "updated": "2026-03-03T14:20:06.988+0000",
+          "resolutionDate": "2025-08-29T13:38:10.372+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-36106",
+      "parentKey": "RHAISTRAT-844",
+      "summary": "Add caching mechanism",
+      "status": "Review",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Person 236",
+      "components": [
+        "Notebooks Server"
+      ],
+      "labels": [
+        "community_tracker",
+        "ide_refinement:ready-for-sprint",
+        "ide_scrum:indigo",
+        "notebooks2.0",
+        "nse_workflow:triaged",
+        "upstream_org:kubeflow",
+        "upstream_repo:notebooks"
+      ],
+      "storyPoints": 8,
+      "created": "2025-10-14T13:22:47.581+0000",
+      "updated": "2026-01-05T18:41:41.012+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-36374",
+      "parentKey": "RHAISTRAT-844",
+      "summary": "Update API endpoint",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Person 201",
+      "components": [
+        "Notebooks Server"
+      ],
+      "labels": [
+        "ide_refinement:ready-for-sprint",
+        "ide_scrum:indigo",
+        "notebooks-v2-odh",
+        "notebooks2.0",
+        "nse_workflow:triaged",
+        "upstream_org:kubeflow",
+        "upstream_repo:notebooks"
+      ],
+      "storyPoints": 8,
+      "created": "2025-10-16T14:04:53.555+0000",
+      "updated": "2026-03-30T17:50:15.699+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-24531",
+          "parentKey": "RHOAIENG-36374",
+          "summary": "Setup a shared cluster/demo environment for Notebooks V2",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_category:spike",
+            "ide_scrum:indigo",
+            "notebooks2.0",
+            "nse_workflow:triaged"
+          ],
+          "storyPoints": 0,
+          "created": "2025-04-27T13:56:50.768+0000",
+          "updated": "2026-03-03T14:20:18.244+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-39327",
+          "parentKey": "RHOAIENG-36374",
+          "summary": "Add Notebooks 2.0 backend to odh-dashboard",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Paulo Rego",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0",
+            "nse_workflow:triaged"
+          ],
+          "storyPoints": 0,
+          "created": "2025-11-20T14:06:22.150+0000",
+          "updated": "2026-03-03T14:26:15.679+0000",
+          "resolutionDate": "2026-02-02T13:59:26.707+0000"
+        },
+        {
+          "key": "RHOAIENG-43413",
+          "parentKey": "RHOAIENG-36374",
+          "summary": "integrate nb 2.0 controller with gateway Auth",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Harshad Reddy Nalla",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide-triaged",
+            "ide_scrum:indigo",
+            "nse_workflow:triaged"
+          ],
+          "storyPoints": 5,
+          "created": "2026-01-05T17:46:10.729+0000",
+          "updated": "2026-03-30T18:03:15.204+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-43414",
+          "parentKey": "RHOAIENG-36374",
+          "summary": "setup NB2.0 manifests in ODH operator for default deployment",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_scrum:indigo",
+            "nse_workflow:triaged"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-05T17:53:20.133+0000",
+          "updated": "2026-03-03T14:06:58.607+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-36375",
+      "parentKey": "RHAISTRAT-844",
+      "summary": "Add logging for debugging",
+      "status": "Backlog",
+      "statusCategory": "To Do",
+      "priority": "Major",
+      "assignee": "Person 203",
+      "components": [
+        "Notebooks Server"
+      ],
+      "labels": [
+        "community_tracker",
+        "ide_refinement:ready-for-sprint",
+        "ide_scrum:indigo",
+        "notebooks2.0",
+        "nse_workflow:triaged",
+        "upstream_org:kubeflow",
+        "upstream_repo:notebooks",
+        "ux-debt"
+      ],
+      "storyPoints": 8,
+      "created": "2025-10-16T14:08:27.742+0000",
+      "updated": "2026-03-12T13:23:53.378+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-34767",
+          "parentKey": "RHOAIENG-36375",
+          "summary": "Spike: Culling in Workspace Kind",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Harshad Reddy Nalla",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_category:spike",
+            "ide_refinement:ready-for-spike",
+            "ide_scrum:indigo"
+          ],
+          "storyPoints": 0,
+          "created": "2025-09-22T19:48:21.226+0000",
+          "updated": "2026-03-03T14:10:13.579+0000",
+          "resolutionDate": "2026-01-05T17:59:17.939+0000"
+        },
+        {
+          "key": "RHOAIENG-43415",
+          "parentKey": "RHOAIENG-36375",
+          "summary": "implement culling of workspace in NB 2.0",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Critical",
+          "assignee": "Harshad Reddy Nalla",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_scrum:indigo",
+            "nse_workflow:triaged",
+            "ux-debt"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-05T18:01:14.536+0000",
+          "updated": "2026-02-19T14:24:27.422+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-36376",
+      "parentKey": "RHAISTRAT-844",
+      "summary": "Improve error handling",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Person 202",
+      "components": [
+        "Notebooks Server"
+      ],
+      "labels": [
+        "community_tracker",
+        "ide_refinement:ready-for-sprint",
+        "ide_scrum:indigo",
+        "notebooks2.0",
+        "nse_workflow:triaged",
+        "upstream_org:kubeflow",
+        "upstream_repo:notebooks"
+      ],
+      "storyPoints": 8,
+      "created": "2025-10-16T14:17:42.463+0000",
+      "updated": "2026-03-30T13:13:38.617+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-36377",
+      "parentKey": "RHAISTRAT-844",
+      "summary": "Refactor data handling code",
+      "status": "Backlog",
+      "statusCategory": "To Do",
+      "priority": "Major",
+      "assignee": "Person 204",
+      "components": [
+        "Notebooks Server"
+      ],
+      "labels": [
+        "community_tracker",
+        "ide_refinement:ready-for-sprint",
+        "ide_scrum:indigo",
+        "notebooks2.0",
+        "nse_workflow:triaged",
+        "upstream_org:kubeflow",
+        "upstream_repo:notebooks",
+        "ux-debt"
+      ],
+      "storyPoints": 0,
+      "created": "2025-10-16T14:18:31.986+0000",
+      "updated": "2026-02-25T17:49:11.858+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-36383",
+          "parentKey": "RHOAIENG-36377",
+          "summary": "Community tracker #228: [TASK] API to Update Workspace",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_refinement:ready-for-sprint",
+            "ide_scrum:indigo",
+            "notebooks2.0",
+            "nse_workflow:triaged"
+          ],
+          "storyPoints": 0,
+          "created": "2025-10-16T14:34:45.598+0000",
+          "updated": "2026-03-03T14:12:20.659+0000",
+          "resolutionDate": "2026-01-13T16:29:19.843+0000"
+        },
+        {
+          "key": "RHOAIENG-41296",
+          "parentKey": "RHOAIENG-36377",
+          "summary": "Community Tracker #739: [TASK] Enable edit workspace in the frontend",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Guilherme Caponetto",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "community_tracker",
+            "ide_scrum:indigo",
+            "notebooks2.0",
+            "upstream_org:kubeflow",
+            "upstream_repo:notebooks"
+          ],
+          "storyPoints": 0,
+          "created": "2025-12-03T16:43:44.510+0000",
+          "updated": "2026-03-03T13:27:53.297+0000",
+          "resolutionDate": "2025-12-23T12:28:17.911+0000"
+        },
+        {
+          "key": "RHOAIENG-50548",
+          "parentKey": "RHOAIENG-36377",
+          "summary": "Community Tracker #919: [TASK] Add more filters to image step while creating a workspace",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Paulo Rego",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "community_tracker",
+            "ide_scrum:indigo",
+            "notebooks2.0",
+            "nse_workflow:triaged",
+            "upstream_org:kubeflow",
+            "upstream_repo:notebooks"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-23T13:38:18.892+0000",
+          "updated": "2026-03-03T13:28:02.691+0000",
+          "resolutionDate": "2026-03-02T13:43:14.560+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 14,
+    "totalIssues": 39,
+    "issuesByStatus": {
+      "Resolved": 8,
+      "Closed": 22,
+      "New": 6,
+      "In Progress": 1,
+      "Backlog": 2
+    },
+    "issuesByCategory": {
+      "Done": 30,
+      "In Progress": 1,
+      "To Do": 8
+    },
+    "totalStoryPoints": 72,
+    "storyPointsDone": 61,
+    "completionPct": 77,
+    "staleCount": 0,
+    "unassignedCount": 2,
+    "blockerCount": 10,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-16570",
+        "summary": "Setup kubeflow-ui-essentials repository",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Paulo Rego",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-24493",
+        "summary": "Community Tracker #270: [EPIC] Create WorkspaceKind [Phase 1] ",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Charles Thao",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-24497",
+        "summary": "Setting up a workspace to fine-tune a Gen AI model",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Andy Stoneberg",
+        "totalIssues": 5,
+        "doneIssues": 5,
+        "progressPct": 100,
+        "storyPoints": 6,
+        "storyPointsDone": 6,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-24498",
+        "summary": "Community Tracker #291: [EPIC] Connecting to a running workspace",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Harshad Reddy Nalla",
+        "totalIssues": 4,
+        "doneIssues": 4,
+        "progressPct": 100,
+        "storyPoints": 14,
+        "storyPointsDone": 14,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-24499",
+        "summary": "Community Tracker #544: [EPIC] Managing and updating running workspaces",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Paulo Rego",
+        "totalIssues": 1,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 3,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-24790",
+        "summary": "Repository setup and developer experience",
+        "status": "Backlog",
+        "statusCategory": "To Do",
+        "assignee": "Andy Stoneberg",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-25681",
+        "summary": "Outstanding Architectural Topics for Notebooks 2.0",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Eder Ignatowicz",
+        "totalIssues": 6,
+        "doneIssues": 2,
+        "progressPct": 33,
+        "storyPoints": 3,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-29710",
+        "summary": "Release from kubeflow/dashboards",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Liav Weiss",
+        "totalIssues": 10,
+        "doneIssues": 10,
+        "progressPct": 100,
+        "storyPoints": 29,
+        "storyPointsDone": 29,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-32032",
+        "summary": "[SPIKE] Investigate Kubeflow Notebooks 2.0 integration with odh-dashboard",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Paulo Rego",
+        "totalIssues": 4,
+        "doneIssues": 4,
+        "progressPct": 100,
+        "storyPoints": 12,
+        "storyPointsDone": 12,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-36106",
+        "summary": "Community Tracker #320: [EPIC] Deploy Kubeflow Notebooks 2.0 to a k8s cluster",
+        "status": "Review",
+        "statusCategory": "In Progress",
+        "assignee": "Andy Stoneberg",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-36374",
+        "summary": "[EPIC] Kubeflow Notebooks 2.0 integration with odh-dashboard",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Paulo Rego",
+        "totalIssues": 4,
+        "doneIssues": 1,
+        "progressPct": 25,
+        "storyPoints": 5,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-36375",
+        "summary": "Community Tracker #741: [FEATURE] Backend for culling workspaces",
+        "status": "Backlog",
+        "statusCategory": "To Do",
+        "assignee": "Harshad Reddy Nalla",
+        "totalIssues": 2,
+        "doneIssues": 1,
+        "progressPct": 50,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-36376",
+        "summary": "Community Tracker #543: Updating Workspace Kinds [Phase 1]",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Charles Thao",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-36377",
+        "summary": "Community Tracker #299: [FEATURE] Edit workspace wizard",
+        "status": "Backlog",
+        "statusCategory": "To Do",
+        "assignee": "Guilherme Caponetto",
+        "totalIssues": 3,
+        "doneIssues": 3,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

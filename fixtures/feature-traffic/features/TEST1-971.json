@@ -1,0 +1,100 @@
+{
+  "key": "TEST1-971",
+  "summary": "Add input validation",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Selbi Siddiqi",
+    "accountId": "70121:0d27b449-e70b-4a5a-819c-628f2b5a8499"
+  },
+  "fixVersions": [
+    "RHAIIS-3.4 EA-2"
+  ],
+  "labels": [
+    "Approved-RFE",
+    "Gaudi",
+    "INFERENG",
+    "Intel"
+  ],
+  "components": [
+    "INFERENG Midstream",
+    "vLLM"
+  ],
+  "created": "2025-12-08T17:35:47.878+0000",
+  "updated": "2026-04-01T10:06:02.039+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1225",
+      "linkedSummary": "INTEL Gaudi 3 with AIPPC build for RHOAI",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "INFERENG-4708",
+      "linkedSummary": "[ccs] Docs - INTEL Gaudi 3 with hardware plugin support for RHAIIS",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-71",
+      "linkedSummary": "Provide support for INTEL Gaudi 3 Accelerator in Red Hat AI product portfolio",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-590",
+      "linkedSummary": "INTEL Gaudi 3 accelerator support for RHAIIS",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Blocks",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-31540",
+      "linkedSummary": "[runtimes] Onboard runtimes to AIPCC workflow (vLLM Gaudi)",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "PWO-163",
+      "linkedSummary": "GPU Resource Request for INFERENG",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "AIPCC-662",
+      "linkedSummary": "[TP] Gaudi - Build RH version of vllm for RHAIIS / RHOAI",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

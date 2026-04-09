@@ -1,0 +1,636 @@
+{
+  "key": "TEST1-1432",
+  "summary": "Update dependencies",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Rui Vieira",
+    "accountId": "70121:5a9a760a-598b-49c2-af0e-60c52f76c598"
+  },
+  "fixVersions": [
+    "rhoai-3.4"
+  ],
+  "labels": [
+    "Approved-RFE",
+    "summit-2026"
+  ],
+  "components": [
+    "Documentation",
+    "Model Eval"
+  ],
+  "created": "2026-04-03T13:53:12.049+0000",
+  "updated": "2026-04-03T20:55:36.473+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-979",
+      "linkedSummary": "(feat) Core Evaluation Stack (control plane) for Red Hat AI (EA2)",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-237",
+      "linkedSummary": "Core Evaluation Stack (control plane) for Red Hat AI",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-53259",
+      "parentKey": "RHAISTRAT-1432",
+      "summary": "Add logging for debugging",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Critical",
+      "assignee": "Person 162",
+      "components": [
+        "AI Evaluations"
+      ],
+      "labels": [
+        "evalhub"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-13T12:56:02.707+0000",
+      "updated": "2026-04-03T13:55:16.782+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50536",
+          "parentKey": "RHOAIENG-53259",
+          "summary": "Lighteval crashing with OOMKilled on RHOAI",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "ai-nonfixable",
+            "ai-triaged",
+            "evalhub"
+          ],
+          "storyPoints": 2,
+          "created": "2026-02-23T11:47:17.496+0000",
+          "updated": "2026-03-27T10:09:06.934+0000",
+          "resolutionDate": "2026-03-27T07:57:59.448+0000"
+        },
+        {
+          "key": "RHOAIENG-52322",
+          "parentKey": "RHOAIENG-53259",
+          "summary": "Benchmarks: ValidationError in LMEvalAdapter, Missing required field benchmark_index in JobSpec",
+          "type": "Bug",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Sobha Cheruku",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "ai-could-not-fix",
+            "ai-fixable",
+            "ai-triaged",
+            "evalhub",
+            "qa"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-09T11:23:29.860+0000",
+          "updated": "2026-03-27T05:53:00.113+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52528",
+          "parentKey": "RHOAIENG-53259",
+          "summary": "Add category labeling and filtering capabilities to the Collections API.",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Julian Payne",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-11T05:57:06.669+0000",
+          "updated": "2026-04-03T11:08:20.700+0000",
+          "resolutionDate": "2026-03-27T11:20:45.422+0000"
+        },
+        {
+          "key": "RHOAIENG-52529",
+          "parentKey": "RHOAIENG-53259",
+          "summary": "Update the Collections/Provider API to include URLs for each benchmark.",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Narayan Sagar B S",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-11T06:01:40.865+0000",
+          "updated": "2026-04-02T08:11:20.774+0000",
+          "resolutionDate": "2026-04-02T08:11:20.710+0000"
+        },
+        {
+          "key": "RHOAIENG-53238",
+          "parentKey": "RHOAIENG-53259",
+          "summary": "Store evalhub system resources at startup",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Julian Payne",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub",
+            "evalhub-service"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-13T09:13:47.170+0000",
+          "updated": "2026-03-19T10:26:53.755+0000",
+          "resolutionDate": "2026-03-19T10:26:53.730+0000"
+        },
+        {
+          "key": "RHOAIENG-53254",
+          "parentKey": "RHOAIENG-53259",
+          "summary": "Allow evaluation jobs to override benchmark parameters in a collection",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Julian Payne",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub",
+            "evalhub-service"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-13T10:32:47.007+0000",
+          "updated": "2026-03-27T11:18:46.047+0000",
+          "resolutionDate": "2026-03-27T11:18:46.009+0000"
+        },
+        {
+          "key": "RHOAIENG-53258",
+          "parentKey": "RHOAIENG-53259",
+          "summary": "Controller: Mark EvalHub evaluation jobs as FAILED when job pods fail (e.g. OOMKilled)",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Sobha Cheruku",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub",
+            "evalhub-operator"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-13T12:48:49.973+0000",
+          "updated": "2026-04-01T04:38:44.979+0000",
+          "resolutionDate": "2026-04-01T04:38:44.949+0000"
+        },
+        {
+          "key": "RHOAIENG-53404",
+          "parentKey": "RHOAIENG-53259",
+          "summary": "Kueue support for EvalHub jobs",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Normal",
+          "assignee": "Narayan Sagar B S",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-16T07:09:37.342+0000",
+          "updated": "2026-04-02T03:47:45.214+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-53442",
+          "parentKey": "RHOAIENG-53259",
+          "summary": "OCI -sdk integration to leverage sidecar when on K8s",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Matteo Mortari",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-16T13:10:39.869+0000",
+          "updated": "2026-03-24T11:52:35.513+0000",
+          "resolutionDate": "2026-03-24T11:52:13.333+0000"
+        },
+        {
+          "key": "RHOAIENG-53507",
+          "parentKey": "RHOAIENG-53259",
+          "summary": "RHOAIENG-50648",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-16T16:33:24.331+0000",
+          "updated": "2026-03-30T11:39:17.265+0000",
+          "resolutionDate": "2026-03-30T11:39:17.076+0000"
+        },
+        {
+          "key": "RHOAIENG-53782",
+          "parentKey": "RHOAIENG-53259",
+          "summary": "Tag MLflow experiments with evalhub  tag to enable scoped experiment fetching",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-17T08:34:17.286+0000",
+          "updated": "2026-03-22T21:45:34.250+0000",
+          "resolutionDate": "2026-03-18T10:23:06.393+0000"
+        },
+        {
+          "key": "RHOAIENG-54052",
+          "parentKey": "RHOAIENG-53259",
+          "summary": "Make database configuration explicit in EvalHub CR and fail on missing settings",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub"
+          ],
+          "storyPoints": 5,
+          "created": "2026-03-18T01:26:18.648+0000",
+          "updated": "2026-03-22T21:45:29.854+0000",
+          "resolutionDate": "2026-03-19T10:46:19.992+0000"
+        },
+        {
+          "key": "RHOAIENG-54271",
+          "parentKey": "RHOAIENG-53259",
+          "summary": "docs(evalhub): document mandatory database field in EvalHub CR upstream",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub",
+            "evalhub-operator"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-19T00:04:29.818+0000",
+          "updated": "2026-03-19T21:23:40.570+0000",
+          "resolutionDate": "2026-03-19T14:58:54.386+0000"
+        },
+        {
+          "key": "RHOAIENG-54306",
+          "parentKey": "RHOAIENG-53259",
+          "summary": "Creating an Evaluation Run is stuck in Pending",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Narayan Sagar B S",
+          "components": [
+            "AI Core Dashboard",
+            "AI Evaluations"
+          ],
+          "labels": [
+            "ai-nonfixable",
+            "ai-triaged",
+            "dashboard-crimson-scrum",
+            "evalhub"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-19T10:07:52.158+0000",
+          "updated": "2026-03-27T15:09:19.976+0000",
+          "resolutionDate": "2026-03-27T15:09:19.883+0000"
+        },
+        {
+          "key": "RHOAIENG-54572",
+          "parentKey": "RHOAIENG-53259",
+          "summary": "Write ADR for MLFlow parameters and metadata reference structure",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [],
+          "labels": [
+            "evalhub",
+            "evalhub-sdk"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-20T12:24:25.839+0000",
+          "updated": "2026-04-03T13:59:37.531+0000",
+          "resolutionDate": "2026-04-03T13:58:39.634+0000"
+        },
+        {
+          "key": "RHOAIENG-54581",
+          "parentKey": "RHOAIENG-53259",
+          "summary": "feat(controller): EH Controller watches benchmark job pods and reports abrupt failures to EvalHub",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [],
+          "labels": [
+            "evalhub"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-20T14:10:36.348+0000",
+          "updated": "2026-03-31T07:45:13.615+0000",
+          "resolutionDate": "2026-03-31T07:45:13.583+0000"
+        },
+        {
+          "key": "RHOAIENG-54691",
+          "parentKey": "RHOAIENG-53259",
+          "summary": "EvalHub jobs silently fail when benchmark requires HuggingFace gated dataset auth",
+          "type": "Bug",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-23T10:41:59.114+0000",
+          "updated": "2026-04-03T14:09:33.274+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54862",
+          "parentKey": "RHOAIENG-53259",
+          "summary": "[EvalHub]: model.url field is ignored, causing evaluation job to fail",
+          "type": "Bug",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Prabhu Padashetty",
+          "components": [
+            "AI Core Dashboard",
+            "AI Evaluations"
+          ],
+          "labels": [
+            "ai-fixable",
+            "ai-triaged",
+            "evalhub"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-23T21:58:03.082+0000",
+          "updated": "2026-03-26T01:15:10.419+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54869",
+          "parentKey": "RHOAIENG-53259",
+          "summary": "mlflow_run_id missing from GET /evaluations/jobs/{id} benchmark results response",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Sobha Cheruku",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "ai-could-not-fix",
+            "ai-fixable",
+            "ai-triaged",
+            "evalhub"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-24T05:29:43.103+0000",
+          "updated": "2026-03-27T08:14:00.324+0000",
+          "resolutionDate": "2026-03-26T05:29:35.166+0000"
+        },
+        {
+          "key": "RHOAIENG-54943",
+          "parentKey": "RHOAIENG-53259",
+          "summary": "SDK client Collection failing validation",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Matteo Mortari",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-24T10:41:56.917+0000",
+          "updated": "2026-03-24T11:51:54.275+0000",
+          "resolutionDate": "2026-03-24T11:11:16.891+0000"
+        },
+        {
+          "key": "RHOAIENG-55633",
+          "parentKey": "RHOAIENG-53259",
+          "summary": "docs(evalhub): add multi-tenant user documentation",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub",
+            "evalhub-docs"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-27T00:48:14.389+0000",
+          "updated": "2026-03-30T11:40:16.152+0000",
+          "resolutionDate": "2026-03-30T11:40:16.127+0000"
+        },
+        {
+          "key": "RHOAIENG-55893",
+          "parentKey": "RHOAIENG-53259",
+          "summary": "fix(build): port Containerfile changes to downstream Dockerfile.konflux",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Sobha Cheruku",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub",
+            "evalhub-service"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-30T11:38:26.346+0000",
+          "updated": "2026-04-02T08:14:24.152+0000",
+          "resolutionDate": "2026-04-02T08:14:24.126+0000"
+        },
+        {
+          "key": "RHOAIENG-56199",
+          "parentKey": "RHOAIENG-53259",
+          "summary": "fix(operator): tenant RBAC cleanup not triggered when namespace label is removed",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub",
+            "evalhub-operator"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-31T21:52:12.699+0000",
+          "updated": "2026-04-03T16:17:43.996+0000",
+          "resolutionDate": "2026-04-03T16:17:43.969+0000"
+        },
+        {
+          "key": "RHOAIENG-56520",
+          "parentKey": "RHOAIENG-53259",
+          "summary": "Single benchmark content - Name and description",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Julian Payne",
+          "components": [],
+          "labels": [
+            "evalhub"
+          ],
+          "storyPoints": 0,
+          "created": "2026-04-02T09:08:26.317+0000",
+          "updated": "2026-04-03T09:40:01.200+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56522",
+          "parentKey": "RHOAIENG-53259",
+          "summary": "Benchmark collection / suite content",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Julian Payne",
+          "components": [],
+          "labels": [
+            "evalhub"
+          ],
+          "storyPoints": 0,
+          "created": "2026-04-02T09:22:21.495+0000",
+          "updated": "2026-04-02T13:05:18.026+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56709",
+          "parentKey": "RHOAIENG-53259",
+          "summary": "fix(rbac): add missing \"patch\" verb to user-facing RBAC roles",
+          "type": "Bug",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Rui Vieira",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub-operator",
+            "evalhub-service"
+          ],
+          "storyPoints": 0,
+          "created": "2026-04-03T22:29:40.224+0000",
+          "updated": "2026-04-04T01:52:35.219+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 26,
+    "issuesByStatus": {
+      "Resolved": 15,
+      "Review": 2,
+      "Closed": 4,
+      "In Progress": 5
+    },
+    "issuesByCategory": {
+      "Done": 19,
+      "In Progress": 7,
+      "To Do": 0
+    },
+    "totalStoryPoints": 9,
+    "storyPointsDone": 9,
+    "completionPct": 73,
+    "staleCount": 2,
+    "unassignedCount": 0,
+    "blockerCount": 5,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-53259",
+        "summary": "[Eng] EvalHub work for 3.4",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Rui Vieira",
+        "totalIssues": 26,
+        "doneIssues": 19,
+        "progressPct": 73,
+        "storyPoints": 9,
+        "storyPointsDone": 9,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

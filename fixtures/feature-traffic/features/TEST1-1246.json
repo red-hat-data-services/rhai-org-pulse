@@ -1,0 +1,61 @@
+{
+  "key": "TEST1-1246",
+  "summary": "Fix validation issue",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "assignee": {
+    "displayName": "Derek Higgins",
+    "accountId": "70121:a61c7103-234c-42fe-aad3-ec1cda893c0d"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "rhoai-3.5"
+  ],
+  "components": [
+    "Documentation",
+    "Llama Stack Core"
+  ],
+  "created": "2026-02-26T14:59:18.261+0000",
+  "updated": "2026-04-03T17:29:53.819+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1332",
+      "linkedSummary": "Enable remote::anthropic provider in Llama stack [3.4]",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-3828",
+      "linkedSummary": "[ccs] Document remote::anthropic provider in Llama Stack - 3.4",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

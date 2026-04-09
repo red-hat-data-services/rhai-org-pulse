@@ -1,0 +1,87 @@
+{
+  "key": "TEST1-133",
+  "summary": "Update API endpoint",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Darach Cawley",
+    "accountId": "557058:c42f77e5-5e4b-4a31-8797-bdf4f2224222"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "ai-studio",
+    "dashboard-crimson-scrum",
+    "must-have"
+  ],
+  "components": [
+    "AgentDev",
+    "AI Core Dashboard",
+    "AI Hub",
+    "Gen AI Studio",
+    "RAG + Vector DB"
+  ],
+  "created": "2025-10-21T20:26:39.683+0000",
+  "updated": "2026-03-29T03:09:02.714+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Not until after 3.4GA"
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-132",
+      "linkedSummary": "Multi-Instance Chat Comparison in Playground",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-298",
+      "linkedSummary": "Observability/Tracing for Agentic AI Applications",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-710",
+      "linkedSummary": "Chat Metrics & Observability (Tracing) in Playground",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

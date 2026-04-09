@@ -1,0 +1,87 @@
+{
+  "key": "TEST1-958",
+  "summary": "Add export functionality",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Erwan Gallen",
+    "accountId": "62d879bb278161644007f05a"
+  },
+  "fixVersions": [
+    "RHAIIS-3.3"
+  ],
+  "labels": [
+    "Approved-RFE"
+  ],
+  "components": [
+    "AI Core Platform",
+    "AI Pipelines",
+    "INFERENG Midstream",
+    "Integrations",
+    "Model Runtimes",
+    "Training Hub"
+  ],
+  "created": "2025-12-05T10:04:29.416+0000",
+  "updated": "2026-03-09T14:28:08.063+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-394",
+      "linkedSummary": "Support for Red Hat OpenShift AI on NVIDIA Grace Hopper Superchip Arm Platforms",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-744",
+      "linkedSummary": "Red Hat AI support for NVIDIA GB300 Systems ",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "INFERENG-4742",
+      "linkedSummary": "GB300 validation with RHAIIS 3.3 RC",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "AIPCC-11724",
+      "linkedSummary": "cuda13.x-ubi9 for 3.4 EA2",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "AIPCC-10146",
+      "linkedSummary": "vLLM 0.16.0 on CUDA wheels tracker",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

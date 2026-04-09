@@ -1,0 +1,2090 @@
+{
+  "key": "TEST1-152",
+  "summary": "Add filtering options",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Rob Bell",
+    "accountId": "712020:a82ef133-297a-4b90-8dc4-298f69e76aa6"
+  },
+  "fixVersions": [],
+  "labels": [
+    "GPU-as-a-Service",
+    "requires_architecture_review"
+  ],
+  "components": [
+    "AI Core Platform",
+    "Documentation",
+    "Training Kubeflow"
+  ],
+  "created": "2025-10-29T13:23:42.892+0000",
+  "updated": "2026-04-03T20:39:16.107+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Updates (23 March): ",
+            "marks": [
+              {
+                "type": "strong"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": "yellow",
+            "marks": [
+              {
+                "type": "strong"
+              },
+              {
+                "type": "textColor",
+                "attrs": {
+                  "color": "#fff0b3"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " (core path done; "
+          },
+          {
+            "type": "text",
+            "text": "CUDA/ROCm OpenShift + Konflux onboarding",
+            "marks": [
+              {
+                "type": "strong"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " stuck in "
+          },
+          {
+            "type": "text",
+            "text": "Testing",
+            "marks": [
+              {
+                "type": "strong"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": ")"
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Spike / platform:",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " OpenShift blockers from the spike stay closed — MPI TrainJobs run under default restricted SCC (no anyuid, no "
+                  },
+                  {
+                    "type": "text",
+                    "text": "--allow-run-as-root",
+                    "marks": [
+                      {
+                        "type": "code"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": ", no controller hacks)."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "SDK / launcher:",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " SDK overriding "
+                  },
+                  {
+                    "type": "text",
+                    "text": "ENTRYPOINT",
+                    "marks": [
+                      {
+                        "type": "code"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " and breaking "
+                  },
+                  {
+                    "type": "text",
+                    "text": "mpirun",
+                    "marks": [
+                      {
+                        "type": "code"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " — mitigated with PATH-priority "
+                  },
+                  {
+                    "type": "text",
+                    "text": "mpirun_wrapper.sh",
+                    "marks": [
+                      {
+                        "type": "code"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": "; validated on cluster."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "AIPCC / runtime assumptions:",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " "
+                  },
+                  {
+                    "type": "text",
+                    "text": "mpi4py",
+                    "marks": [
+                      {
+                        "type": "code"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " not required (native MPI backend); MPI needs "
+                  },
+                  {
+                    "type": "text",
+                    "text": "openssh-server",
+                    "marks": [
+                      {
+                        "type": "code"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " for inter-node SSH; today it’s missing on published bases (e.g. cuda-13.0-el9.6) so training layers add it manually — platform fix tracked as "
+                  },
+                  {
+                    "type": "text",
+                    "text": "AIPCC-12606",
+                    "marks": [
+                      {
+                        "type": "link",
+                        "attrs": {
+                          "href": "https://redhat.atlassian.net/browse/AIPCC-12606"
+                        }
+                      },
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " ; "
+                  },
+                  {
+                    "type": "text",
+                    "text": "OpenMPI 4.1.6",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " OK in practice; "
+                  },
+                  {
+                    "type": "text",
+                    "text": "5.0.x",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " still tracked via "
+                  },
+                  {
+                    "type": "text",
+                    "text": "AIPCC-11120",
+                    "marks": [
+                      {
+                        "type": "link",
+                        "attrs": {
+                          "href": "https://redhat.atlassian.net/browse/AIPCC-11120"
+                        }
+                      },
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " / related work."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Delivery (Jira):",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " "
+                  },
+                  {
+                    "type": "text",
+                    "text": "CUDA",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " image build task "
+                  },
+                  {
+                    "type": "text",
+                    "text": "Resolved",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " ("
+                  },
+                  {
+                    "type": "text",
+                    "text": "49098",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": "); "
+                  },
+                  {
+                    "type": "text",
+                    "text": "ROCm",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " image build task "
+                  },
+                  {
+                    "type": "text",
+                    "text": "Resolved",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " ("
+                  },
+                  {
+                    "type": "text",
+                    "text": "51581",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": "); upstream "
+                  },
+                  {
+                    "type": "text",
+                    "text": "setcap",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " cleanup "
+                  },
+                  {
+                    "type": "text",
+                    "text": "Resolved",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " ("
+                  },
+                  {
+                    "type": "text",
+                    "text": "50770",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": "); "
+                  },
+                  {
+                    "type": "text",
+                    "text": "OSU",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " micro-benchmark spike "
+                  },
+                  {
+                    "type": "text",
+                    "text": "Resolved",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " ("
+                  },
+                  {
+                    "type": "text",
+                    "text": "49105",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": "); "
+                  },
+                  {
+                    "type": "text",
+                    "text": "CPU",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " OpenShift spike "
+                  },
+                  {
+                    "type": "text",
+                    "text": "Resolved",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " ("
+                  },
+                  {
+                    "type": "text",
+                    "text": "49093",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": ")."
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "In Testing (blocked on validation / release plumbing):",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " "
+                  }
+                ]
+              },
+              {
+                "type": "bulletList",
+                "content": [
+                  {
+                    "type": "listItem",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "CUDA",
+                            "marks": [
+                              {
+                                "type": "strong"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": " TrainJobs on OpenShift ("
+                          },
+                          {
+                            "type": "text",
+                            "text": "49221",
+                            "marks": [
+                              {
+                                "type": "strong"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": "), "
+                          },
+                          {
+                            "type": "text",
+                            "text": "ROCm",
+                            "marks": [
+                              {
+                                "type": "strong"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": " TrainJobs on OpenShift ("
+                          },
+                          {
+                            "type": "text",
+                            "text": "49222",
+                            "marks": [
+                              {
+                                "type": "strong"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": "),"
+                          },
+                          {
+                            "type": "text",
+                            "text": "RHOAI build onboarding",
+                            "marks": [
+                              {
+                                "type": "strong"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": " ("
+                          },
+                          {
+                            "type": "text",
+                            "text": "48296",
+                            "marks": [
+                              {
+                                "type": "strong"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "text",
+                            "text": "). "
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "listItem",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "PR line items: adjust to whatever is actually merged vs in review today (Jira won’t show GitHub state)."
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Remaining:",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " Finish "
+                  },
+                  {
+                    "type": "text",
+                    "text": "Testing",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " for "
+                  },
+                  {
+                    "type": "text",
+                    "text": "49221/49222",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " (incl. "
+                  },
+                  {
+                    "type": "text",
+                    "text": "multi-node GPU",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " where applicable), land "
+                  },
+                  {
+                    "type": "text",
+                    "text": "production CTRs",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": ", "
+                  },
+                  {
+                    "type": "text",
+                    "text": "Kueue + PVC",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " checks, "
+                  },
+                  {
+                    "type": "text",
+                    "text": "benchmark",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " packaging for "
+                  },
+                  {
+                    "type": "text",
+                    "text": "PSAP",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " handover, "
+                  },
+                  {
+                    "type": "text",
+                    "text": "docs / TP",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " epics still mostly "
+                  },
+                  {
+                    "type": "text",
+                    "text": "New",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": "."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Duplicate",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-679",
+      "linkedSummary": "support for distributed training using Kubeflow Training Operator (KFTO) and MPI/Tensorflow",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1144",
+      "linkedSummary": "Enhanced MPIJob Performance Optimization with KFTv2",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-332",
+      "linkedSummary": "Support for MPIJob v2 in OpenShift AI",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-3586",
+      "linkedSummary": "[ccs Epic] KFT Training - Distr. WL - 3.4 Deliverables (EA1 EA2 GA)",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "AIPCC-11120",
+      "linkedSummary": "Upgrade openMPI component to version 5",
+      "linkedStatus": "Refinement"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "AIPCC-12606",
+      "linkedSummary": "Add openssh-server RPM to AIPCC base image",
+      "linkedStatus": "Refinement"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-48291",
+      "parentKey": "RHAISTRAT-152",
+      "summary": "Update dependencies",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Person 295",
+      "components": [
+        "Training Kubeflow"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-02T10:35:08.670+0000",
+      "updated": "2026-03-02T13:26:07.569+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-49093",
+          "parentKey": "RHOAIENG-48291",
+          "summary": "[SPIKE] Make the MPI jobs run in KFTv2 running on OpenShift CPU environment",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kapil Nema",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 6,
+          "created": "2026-02-10T12:19:32.979+0000",
+          "updated": "2026-02-26T06:12:18.398+0000",
+          "resolutionDate": "2026-02-26T06:12:18.363+0000"
+        },
+        {
+          "key": "RHOAIENG-49094",
+          "parentKey": "RHOAIENG-48291",
+          "summary": "[PLACEHOLDER] Implement the changes upstream",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-10T12:19:44.410+0000",
+          "updated": "2026-02-26T06:46:15.738+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-49095",
+          "parentKey": "RHOAIENG-48291",
+          "summary": "[SPIKE] Verify that Kueue integration works",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Kapil Nema",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-02-10T12:19:48.368+0000",
+          "updated": "2026-03-24T02:58:52.821+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-49096",
+          "parentKey": "RHOAIENG-48291",
+          "summary": "[SPIKE] Verify that shared filesystems still works",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-02-10T12:19:58.181+0000",
+          "updated": "2026-02-11T11:02:56.430+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-49221",
+          "parentKey": "RHOAIENG-48291",
+          "summary": "Make the MPI jobs run in KFTv2 using CUDA running on OpenShift",
+          "type": "Task",
+          "status": "Testing",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Karel Suta",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 4,
+          "created": "2026-02-11T08:42:34.377+0000",
+          "updated": "2026-03-12T11:13:18.874+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-49222",
+          "parentKey": "RHOAIENG-48291",
+          "summary": "Make the MPI jobs run in KFTv2 using ROCm running on OpenShift",
+          "type": "Task",
+          "status": "Testing",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Kapil Nema",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [
+            "FailedQA"
+          ],
+          "storyPoints": 4,
+          "created": "2026-02-11T08:43:07.147+0000",
+          "updated": "2026-03-17T10:28:40.712+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-49492",
+          "parentKey": "RHOAIENG-48291",
+          "summary": "[SPIKE] Investigate usability of AWS /GCP Blackwell nodes for RDMA",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Karel Suta",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 4,
+          "created": "2026-02-12T07:53:10.434+0000",
+          "updated": "2026-03-12T07:57:54.630+0000",
+          "resolutionDate": "2026-03-12T07:57:54.604+0000"
+        },
+        {
+          "key": "RHOAIENG-50770",
+          "parentKey": "RHOAIENG-48291",
+          "summary": "[Upstream]: Remove unnecessary setcap CAP_NET_BIND_SERVICE from MPI runtime Dockerfiles",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kapil Nema",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-02-25T09:57:26.253+0000",
+          "updated": "2026-03-11T09:46:12.367+0000",
+          "resolutionDate": "2026-03-11T09:46:12.324+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-48292",
+      "parentKey": "RHAISTRAT-152",
+      "summary": "Optimize database queries",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Person 286",
+      "components": [
+        "Training Kubeflow"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-02T10:40:08.499+0000",
+      "updated": "2026-03-03T11:18:44.685+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-49097",
+          "parentKey": "RHOAIENG-48292",
+          "summary": "[SPIKE] Define image contents and base for MPI runtimes",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Karel Suta",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-02-10T12:22:37.884+0000",
+          "updated": "2026-02-26T11:04:43.434+0000",
+          "resolutionDate": "2026-02-26T11:04:43.399+0000"
+        },
+        {
+          "key": "RHOAIENG-49098",
+          "parentKey": "RHOAIENG-48292",
+          "summary": "Create image/dockerfile build for training:py312-cuda128-torch280-openmpi50",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Karel Suta",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 4,
+          "created": "2026-02-10T12:22:41.535+0000",
+          "updated": "2026-03-06T09:59:53.354+0000",
+          "resolutionDate": "2026-03-06T09:59:17.321+0000"
+        },
+        {
+          "key": "RHOAIENG-49099",
+          "parentKey": "RHOAIENG-48292",
+          "summary": "Add ClusterTrainingRuntime CRs for OpenMPI (CUDA and ROCm)",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-02-10T12:22:45.271+0000",
+          "updated": "2026-03-12T12:54:08.715+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-49100",
+          "parentKey": "RHOAIENG-48292",
+          "summary": "[SPIKE] Verify MPI TrainJob runs with new runtime and image",
+          "type": "Task",
+          "status": "Testing",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Kapil Nema",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-02-10T12:22:56.377+0000",
+          "updated": "2026-03-24T10:46:16.251+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-49101",
+          "parentKey": "RHOAIENG-48292",
+          "summary": "Provide e2e test coverage for MPI training job",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 4,
+          "created": "2026-02-10T12:22:59.471+0000",
+          "updated": "2026-02-11T11:19:48.191+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-49102",
+          "parentKey": "RHOAIENG-48292",
+          "summary": "Provide e2e upgrade test coverage for MPI training job",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 4,
+          "created": "2026-02-10T12:23:03.269+0000",
+          "updated": "2026-02-11T11:20:10.899+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51581",
+          "parentKey": "RHOAIENG-48292",
+          "summary": "Create image/dockerfile build for training:py312-rocm64-torch280-openmpi50",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kapil Nema",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 4,
+          "created": "2026-03-03T11:18:44.188+0000",
+          "updated": "2026-03-11T06:22:59.349+0000",
+          "resolutionDate": "2026-03-11T06:22:59.318+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-48293",
+      "parentKey": "RHAISTRAT-152",
+      "summary": "Add caching mechanism",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Person 295",
+      "components": [
+        "Training Kubeflow"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-02T10:48:02.523+0000",
+      "updated": "2026-03-20T08:52:09.963+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-49103",
+          "parentKey": "RHOAIENG-48293",
+          "summary": "Request access to RDMA-enabled environment for testing",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-10T12:26:14.263+0000",
+          "updated": "2026-02-11T11:20:50.237+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-49105",
+          "parentKey": "RHOAIENG-48293",
+          "summary": "[SPIKE] Set up OSU Micro-benchmarks in MPI runtime image / job",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Sridhar Pillai",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-02-10T12:26:18.258+0000",
+          "updated": "2026-04-02T07:07:07.397+0000",
+          "resolutionDate": "2026-03-11T10:40:28.098+0000"
+        },
+        {
+          "key": "RHOAIENG-49106",
+          "parentKey": "RHOAIENG-48293",
+          "summary": "Document benchmark results for release sign-off and future comparison",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-02-10T12:26:22.210+0000",
+          "updated": "2026-03-12T12:55:16.461+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-49107",
+          "parentKey": "RHOAIENG-48293",
+          "summary": "[OPTIONAL] Add perftest (or RDMA) benchmarks if needed",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-10T12:26:25.950+0000",
+          "updated": "2026-02-11T11:22:24.571+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51102",
+          "parentKey": "RHOAIENG-48293",
+          "summary": "[SPIKE] Choose algorithm and dataset for a real-world representative benchmark",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Shilpa Chugh",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-26T09:30:19.815+0000",
+          "updated": "2026-03-24T15:01:52.904+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51103",
+          "parentKey": "RHOAIENG-48293",
+          "summary": "Create real-world representative benchmark",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Shilpa Chugh",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-26T09:40:12.723+0000",
+          "updated": "2026-03-31T08:56:22.996+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54476",
+          "parentKey": "RHOAIENG-48293",
+          "summary": "create a script for PSAP team to validate benchmarks and security requirements for MPI",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Kapil Nema",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-03-20T08:53:59.330+0000",
+          "updated": "2026-03-24T03:02:27.403+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56094",
+          "parentKey": "RHOAIENG-48293",
+          "summary": "MPI training runtime image missing nvcc — DeepSpeed import fails without CUDA compiler",
+          "type": "Bug",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-31T08:50:22.661+0000",
+          "updated": "2026-03-31T09:01:53.003+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56095",
+          "parentKey": "RHOAIENG-48293",
+          "summary": "https://redhat.atlassian.net/browse/RHOAIENG-56094",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-31T09:00:43.896+0000",
+          "updated": "2026-03-31T09:02:40.902+0000",
+          "resolutionDate": "2026-03-31T09:02:40.861+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-48294",
+      "parentKey": "RHAISTRAT-152",
+      "summary": "Fix validation issue",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Former Member 12",
+      "components": [
+        "Documentation",
+        "Training Kubeflow"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-02T10:52:46.273+0000",
+      "updated": "2026-03-25T15:29:07.297+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-49084",
+          "parentKey": "RHOAIENG-48294",
+          "summary": "Documentation draft support - Eng collab",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Rob Bell",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-10T11:51:43.677+0000",
+          "updated": "2026-02-10T11:51:43.677+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-49085",
+          "parentKey": "RHOAIENG-48294",
+          "summary": "[ccs] Review edits draft provided by Eng - Support for MPIJob with KFTv2",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Saanchi Sampath",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-02-10T11:53:19.380+0000",
+          "updated": "2026-03-13T16:22:50.366+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-49086",
+          "parentKey": "RHOAIENG-48294",
+          "summary": "[ccs] New content - Support for MPIJob with KFTv2",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Saanchi Sampath",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-10T11:53:54.748+0000",
+          "updated": "2026-03-13T16:24:52.488+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-49088",
+          "parentKey": "RHOAIENG-48294",
+          "summary": "[ccs] Finalize release-ready content including RN - Support for MPIJob with KFTv2",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Saanchi Sampath",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-10T12:02:11.977+0000",
+          "updated": "2026-03-25T14:47:46.237+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-49109",
+          "parentKey": "RHOAIENG-48294",
+          "summary": "Document MPI runtimes and images for users and operators",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-10T12:28:00.996+0000",
+          "updated": "2026-02-10T12:28:00.996+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-49110",
+          "parentKey": "RHOAIENG-48294",
+          "summary": "Document benchmark results and baseline",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-10T12:28:04.100+0000",
+          "updated": "2026-02-10T12:28:04.100+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-49111",
+          "parentKey": "RHOAIENG-48294",
+          "summary": "User guide: Running MPI TrainJobs in KFTv2",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-10T12:28:07.188+0000",
+          "updated": "2026-02-10T12:28:07.188+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-49112",
+          "parentKey": "RHOAIENG-48294",
+          "summary": "Document limitations and out-of-scope (MVP MPI)",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-10T12:28:10.299+0000",
+          "updated": "2026-02-10T12:28:10.299+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-49113",
+          "parentKey": "RHOAIENG-48294",
+          "summary": "Troubleshooting runbook (MPI)",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-10T12:28:19.308+0000",
+          "updated": "2026-02-10T12:28:19.308+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-49114",
+          "parentKey": "RHOAIENG-48294",
+          "summary": "Release notes / feature documentation for MVP MPI",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-10T12:28:22.976+0000",
+          "updated": "2026-02-10T12:28:22.976+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-48295",
+      "parentKey": "RHAISTRAT-152",
+      "summary": "Update API endpoint",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": "Person 286",
+      "components": [
+        "Training Kubeflow"
+      ],
+      "labels": [
+        "aicp-team-forge"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-02T10:55:09.024+0000",
+      "updated": "2026-03-24T09:51:32.519+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-48296",
+          "parentKey": "RHOAIENG-48295",
+          "summary": "CLONE - Onboard to RHOAI Build - 2 week notice!",
+          "type": "Task",
+          "status": "Testing",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Karel Suta",
+          "components": [
+            "DevOps",
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-02-02T10:55:18.552+0000",
+          "updated": "2026-03-12T11:07:23.076+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-48297",
+          "parentKey": "RHOAIENG-48295",
+          "summary": "CLONE - Onboard to ODH Build - 2 week notice! ",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Kapil Nema",
+          "components": [
+            "DevOps",
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-02-02T10:55:18.588+0000",
+          "updated": "2026-03-24T10:45:28.866+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-48298",
+          "parentKey": "RHOAIENG-48295",
+          "summary": "CLONE - Security requirements",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Owen Watkins",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-02-02T10:55:18.606+0000",
+          "updated": "2026-03-30T13:02:19.168+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-48299",
+          "parentKey": "RHOAIENG-48295",
+          "summary": "CLONE - Ensure work with supported lifecyles",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-02T10:55:18.631+0000",
+          "updated": "2026-03-26T09:56:09.146+0000",
+          "resolutionDate": "2026-03-26T09:56:08.982+0000"
+        },
+        {
+          "key": "RHOAIENG-48306",
+          "parentKey": "RHOAIENG-48295",
+          "summary": "CLONE - Create component in jira",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-02T10:55:18.930+0000",
+          "updated": "2026-02-10T14:22:36.013+0000",
+          "resolutionDate": "2026-02-10T14:22:05.081+0000"
+        },
+        {
+          "key": "RHOAIENG-48307",
+          "parentKey": "RHOAIENG-48295",
+          "summary": "CLONE - Add Prometheus config for component",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-02T10:55:21.925+0000",
+          "updated": "2026-03-26T09:55:25.530+0000",
+          "resolutionDate": "2026-03-26T09:55:25.264+0000"
+        },
+        {
+          "key": "RHOAIENG-48308",
+          "parentKey": "RHOAIENG-48295",
+          "summary": "CLONE - Repository added to ODH/RHOAI",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-02T10:55:21.926+0000",
+          "updated": "2026-02-10T14:28:37.658+0000",
+          "resolutionDate": "2026-02-10T14:28:37.618+0000"
+        },
+        {
+          "key": "RHOAIENG-48309",
+          "parentKey": "RHOAIENG-48295",
+          "summary": "CLONE - Add component support for must-gather",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-02T10:55:21.964+0000",
+          "updated": "2026-02-10T14:32:18.378+0000",
+          "resolutionDate": "2026-02-10T14:32:18.331+0000"
+        },
+        {
+          "key": "RHOAIENG-48310",
+          "parentKey": "RHOAIENG-48295",
+          "summary": "[Kubeflow Trainer MPI Images] - Integration with ODH operator - 2 week notice!",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Platform",
+            "Training Kubeflow"
+          ],
+          "labels": [
+            "aicp-team-forge"
+          ],
+          "storyPoints": 1,
+          "created": "2026-02-02T10:55:22.091+0000",
+          "updated": "2026-03-02T13:47:01.394+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-48311",
+          "parentKey": "RHOAIENG-48295",
+          "summary": "[Kubeflow Trainer MPI Images] - Integration with RHOAI operator - 2 week notice!",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Platform",
+            "Training Kubeflow"
+          ],
+          "labels": [
+            "aicp-team-forge"
+          ],
+          "storyPoints": 1,
+          "created": "2026-02-02T10:55:22.119+0000",
+          "updated": "2026-03-02T13:46:30.952+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-48312",
+          "parentKey": "RHOAIENG-48295",
+          "summary": "[Kubeflow Trainer MPI Images] - Add support for the new component in the QE related repositories",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Platform",
+            "Training Kubeflow"
+          ],
+          "labels": [
+            "aicp-team-forge"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-02T10:55:22.020+0000",
+          "updated": "2026-03-02T13:46:58.330+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-48313",
+          "parentKey": "RHOAIENG-48295",
+          "summary": "CLONE - Add source repo(s) to Snyk",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-02-02T10:55:22.170+0000",
+          "updated": "2026-02-10T14:30:00.606+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-48314",
+          "parentKey": "RHOAIENG-48295",
+          "summary": "CLONE - Add component data to product-definitions for vulnerability tracking",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-02-02T10:55:22.237+0000",
+          "updated": "2026-02-10T14:31:04.837+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52864",
+          "parentKey": "RHOAIENG-48295",
+          "summary": "Soft onboard CUDA MPI image to RHOAI Build",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Karel Suta",
+          "components": [
+            "DevOps",
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-03-12T11:07:21.136+0000",
+          "updated": "2026-03-26T11:19:29.176+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-51776",
+      "parentKey": "RHAISTRAT-152",
+      "summary": "Implement search feature",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Major",
+      "assignee": null,
+      "components": [
+        "DevOps"
+      ],
+      "labels": [
+        "devops-onboarding"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-04T12:04:12.886+0000",
+      "updated": "2026-03-31T11:55:45.414+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-54866",
+      "parentKey": "RHAISTRAT-152",
+      "summary": "Update documentation",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": "Person 295",
+      "components": [
+        "Training Kubeflow"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-24T02:51:41.538+0000",
+      "updated": "2026-03-24T02:52:00.630+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-48300",
+          "parentKey": "RHOAIENG-54866",
+          "summary": "CLONE - MUST meet designed for FIPS",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-02-02T10:55:18.667+0000",
+          "updated": "2026-03-24T16:24:19.151+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-48301",
+          "parentKey": "RHOAIENG-54866",
+          "summary": "CLONE - Feature documented in architecture diagrams",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-02T10:55:18.673+0000",
+          "updated": "2026-03-24T16:22:37.729+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-48302",
+          "parentKey": "RHOAIENG-54866",
+          "summary": "CLONE - Multi-Architecture Support",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-02-02T10:55:18.876+0000",
+          "updated": "2026-03-24T16:23:30.582+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-48303",
+          "parentKey": "RHOAIENG-54866",
+          "summary": "CLONE - Testing requirements",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-02T10:55:18.896+0000",
+          "updated": "2026-03-24T02:53:01.629+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-48304",
+          "parentKey": "RHOAIENG-54866",
+          "summary": "CLONE - Test with disconnected environment",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 4,
+          "created": "2026-02-02T10:55:18.900+0000",
+          "updated": "2026-03-24T16:23:10.206+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-48305",
+          "parentKey": "RHOAIENG-54866",
+          "summary": "RHOAI ONLY: AI Platform Core Components (AIPCC) Integration",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-02T10:55:18.896+0000",
+          "updated": "2026-03-24T16:24:01.802+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-54925",
+      "parentKey": "RHAISTRAT-152",
+      "summary": "Fix authentication issue",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Major",
+      "assignee": null,
+      "components": [
+        "DevOps"
+      ],
+      "labels": [
+        "devops-onboarding"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-24T09:47:20.140+0000",
+      "updated": "2026-03-31T11:59:35.237+0000",
+      "issues": []
+    }
+  ],
+  "metrics": {
+    "totalEpics": 8,
+    "totalIssues": 54,
+    "issuesByStatus": {
+      "Testing": 4,
+      "In Progress": 2,
+      "Resolved": 8,
+      "Closed": 5,
+      "New": 33,
+      "Review": 2
+    },
+    "issuesByCategory": {
+      "Done": 13,
+      "In Progress": 8,
+      "To Do": 33
+    },
+    "totalStoryPoints": 101,
+    "storyPointsDone": 24,
+    "completionPct": 24,
+    "staleCount": 6,
+    "unassignedCount": 26,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-48291",
+        "summary": "KFTv2 MPI works on OpenShift",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Kapil Nema",
+        "totalIssues": 8,
+        "doneIssues": 3,
+        "progressPct": 38,
+        "storyPoints": 24,
+        "storyPointsDone": 12,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-48292",
+        "summary": "Create OpenMPI Cluster Training Runtime",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Karel Suta",
+        "totalIssues": 7,
+        "doneIssues": 3,
+        "progressPct": 43,
+        "storyPoints": 22,
+        "storyPointsDone": 10,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-48293",
+        "summary": "Create OpenMPI benchmarks",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Kapil Nema",
+        "totalIssues": 9,
+        "doneIssues": 2,
+        "progressPct": 22,
+        "storyPoints": 19,
+        "storyPointsDone": 2,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-48294",
+        "summary": "[ccs Epic] Documentation for MPI workloads in KFTv2",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Saanchi Sampath",
+        "totalIssues": 10,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 13,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-48295",
+        "summary": "Tech Preview - ODH and RHOAI Integrations [Kubeflow Trainer MPI Images]",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Karel Suta",
+        "totalIssues": 14,
+        "doneIssues": 5,
+        "progressPct": 36,
+        "storyPoints": 14,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-51776",
+        "summary": "RHOAI Konflux Onboarding [MPI training images]",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-54866",
+        "summary": "Tech Preview MPI - Phase 2",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Kapil Nema",
+        "totalIssues": 6,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 9,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-54925",
+        "summary": "ODH Konflux CI Build Onboarding [MPI training images]",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

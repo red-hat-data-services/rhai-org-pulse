@@ -1,0 +1,98 @@
+{
+  "key": "TEST1-1393",
+  "summary": "Add monitoring metrics",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Nick Ommen",
+    "accountId": "712020:4d8ab7b7-4491-490a-b85b-8246663b9db3"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "Tooling Experience"
+  ],
+  "created": "2026-03-23T22:32:18.711+0000",
+  "updated": "2026-04-07T18:05:35.760+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "GREEN",
+            "marks": [
+              {
+                "type": "strong"
+              },
+              {
+                "type": "textColor",
+                "attrs": {
+                  "color": "#36b37e"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " as of 07-Apr."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Example available at "
+          },
+          {
+            "type": "inlineCard",
+            "attrs": {
+              "url": "https://github.com/red-hat-data-services/agentic-starter-kits/tree/main/agents/langgraph"
+            }
+          },
+          {
+            "type": "text",
+            "text": ". Undergoing PM review."
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1172",
+      "linkedSummary": "Bring your agent built on your laptop with Langchain & Langgraph SDK to RH AI ",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

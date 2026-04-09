@@ -1,0 +1,65 @@
+{
+  "key": "TEST1-1144",
+  "summary": "Fix timezone handling",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Rob Bell",
+    "accountId": "712020:a82ef133-297a-4b90-8dc4-298f69e76aa6"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "Documentation",
+    "Training Kubeflow"
+  ],
+  "created": "2026-01-21T15:48:53.201+0000",
+  "updated": "2026-02-26T15:05:30.169+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-152",
+      "linkedSummary": "Distributed Workloads: Support for MPIJob with KFTv2",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Triggers",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-332",
+      "linkedSummary": "Support for MPIJob v2 in OpenShift AI",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "PSAP-2166",
+      "linkedSummary": "P&S Feature Investigation - (MPI) protocol for low-latency IPC Scaling Analysis & Performance Extrapolation",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

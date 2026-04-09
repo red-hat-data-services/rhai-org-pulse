@@ -1,0 +1,125 @@
+{
+  "key": "TEST1-241",
+  "summary": "Fix memory leak",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Erwan Gallen",
+    "accountId": "62d879bb278161644007f05a"
+  },
+  "fixVersions": [
+    "RHAIIS-3.2.5"
+  ],
+  "labels": [
+    "INFERSTRAT_251116"
+  ],
+  "components": [
+    "INFERENG Midstream"
+  ],
+  "created": "2025-09-08T13:21:02.643+0000",
+  "updated": "2026-01-13T10:10:52.118+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "GREEN",
+            "marks": [
+              {
+                "type": "textColor",
+                "attrs": {
+                  "color": "#00875a"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " "
+          },
+          {
+            "type": "emoji",
+            "attrs": {
+              "shortName": ":check_mark:",
+              "id": "atlassian-check_mark",
+              "text": ":check_mark:"
+            }
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "[SFinn Oct 22]Ruben Rivas, IBM Systems Program Manager confirmed that we have the green light to deliver this in RHAIIS 3.2.5. We (IBM, AIPCC) only had capacity to deliver [TP] Z in RHAIIS 3.2.4 due to IBM runner issues. It was agreed that Power would skip  [TP]and deliver [GA] in Dec 11th - RHAIIS 3.2.5 GA"
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-68",
+      "linkedSummary": "Red Hat AI IBM Spyre AIU support on Power for RHAIIS",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "AIPCC-3555",
+      "linkedSummary": "GA - Power/ppc64le: IBM Spyre AIU Accelerator support",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "AIPCC-3555",
+      "linkedSummary": "GA - Power/ppc64le: IBM Spyre AIU Accelerator support",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "AIPCC-1290",
+      "linkedSummary": "Tech Preview - IBM Power (ppc64le architecture) CPU support",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-68",
+      "linkedSummary": "Red Hat AI IBM Spyre AIU support on Power for RHAIIS",
+      "linkedStatus": "Stakeholder review"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

@@ -1,0 +1,2444 @@
+{
+  "key": "TEST1-813",
+  "summary": "Update error messages",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Matteo Mortari",
+    "accountId": "5b6859ac36d4343beb82c7a7"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "3.Next-candidate",
+    "3.x",
+    "ai-hub",
+    "dashboard-green-scrum"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "AI Hub",
+    "Documentation",
+    "UXD"
+  ],
+  "created": "2025-01-28T03:33:05.912+0000",
+  "updated": "2026-04-01T14:21:16.521+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Green",
+            "marks": [
+              {
+                "type": "strong"
+              },
+              {
+                "type": "textColor",
+                "attrs": {
+                  "color": "#00875a"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " - "
+          },
+          {
+            "type": "date",
+            "attrs": {
+              "timestamp": "1775001600000"
+            }
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "🟢 🎯 3.4 Stable"
+                  }
+                ]
+              },
+              {
+                "type": "bulletList",
+                "content": [
+                  {
+                    "type": "listItem",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Namespace selector bug still needs to merge – CI is having troubles"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "listItem",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Signoffs are complete"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-675",
+      "linkedSummary": "Create an OCI Compliant Storage layer for Model Registry",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Blocks",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-726",
+      "linkedSummary": "Model Registry - GA",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-675",
+      "linkedSummary": "Create an OCI Compliant Storage layer for Model Registry",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIUX-499",
+      "linkedSummary": "[Ideate] Create an OCI Compliant Storage layer for Model Registry",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-156",
+      "linkedSummary": "Provide UI Guidance or Docs for Uploading Models Directly to Model Registry Storage",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1040",
+      "linkedSummary": "Create ability to sign and verify AI Artifacts in Registry UI",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIUX-1382",
+      "linkedSummary": "Provide UI Guidance for Uploading Models Directly to Model Registry Storage",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-51556",
+      "linkedSummary": "Support IMAGES_JOBS_ASYNC_UPLOAD variable in Dashboard Manifests",
+      "linkedStatus": "Testing"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHOAIRFE-419",
+      "linkedSummary": "Create an OCI Compliant Storage layer for Model Registry",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-39740",
+      "linkedSummary": "OCI Artifact for ML model & metadata",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-18982",
+      "linkedSummary": "[ccs] Add Doc to setup Pull token for RH Container Registry",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-39754",
+      "linkedSummary": "Demo the OCI Artifact for ML model & metadata",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-16838",
+      "parentKey": "RHAISTRAT-813",
+      "summary": "Update access controls",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Former Member 1",
+      "components": [
+        "AI Hub",
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2024-12-10T15:42:54.933+0000",
+      "updated": "2026-03-06T17:21:24.001+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-16839",
+          "parentKey": "RHOAIENG-16838",
+          "summary": "[ccs Spike] - OCI Compliant Storage layer for Model Registry",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Stephen McCarthy",
+          "components": [
+            "AI Hub",
+            "Documentation"
+          ],
+          "labels": [
+            "ContentX_CJ25"
+          ],
+          "storyPoints": 3,
+          "created": "2024-12-10T15:45:59.133+0000",
+          "updated": "2026-03-24T10:17:14.328+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-16840",
+          "parentKey": "RHOAIENG-16838",
+          "summary": "[ccs] Document the OCI Compliant Storage layer for Model Registry",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Stephen McCarthy",
+          "components": [
+            "AI Hub",
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2024-12-10T15:52:05.293+0000",
+          "updated": "2026-03-24T10:17:18.215+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-49749",
+          "parentKey": "RHOAIENG-16838",
+          "summary": "[ccs] Review microcopy for model registry storage admin screens",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Stephen McCarthy",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-02-13T10:30:34.279+0000",
+          "updated": "2026-03-24T10:17:13.865+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-18922",
+      "parentKey": "RHAISTRAT-813",
+      "summary": "Fix validation issue",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Critical",
+      "assignee": "Person 247",
+      "components": [
+        "AI Hub"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-01-29T14:20:38.818+0000",
+      "updated": "2025-10-03T15:16:01.775+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-18923",
+          "parentKey": "RHOAIENG-18922",
+          "summary": "Admin Persona - Manual Testing",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Luca Giorgi",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-01-29T14:23:45.696+0000",
+          "updated": "2025-05-22T15:27:16.270+0000",
+          "resolutionDate": "2025-05-22T15:27:16.235+0000"
+        },
+        {
+          "key": "RHOAIENG-18924",
+          "parentKey": "RHOAIENG-18922",
+          "summary": "[Storage Layer] Automated test for OCI backend with Skopeo",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Minor",
+          "assignee": "Luca Giorgi",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "QE_MR"
+          ],
+          "storyPoints": 0,
+          "created": "2025-01-29T14:24:19.065+0000",
+          "updated": "2025-10-03T15:13:00.084+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-18925",
+          "parentKey": "RHOAIENG-18922",
+          "summary": "[Storage Layer] Automated test for OCI backend with Oras",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Minor",
+          "assignee": "Luca Giorgi",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "QE_MR"
+          ],
+          "storyPoints": 0,
+          "created": "2025-01-29T14:28:30.568+0000",
+          "updated": "2025-10-03T15:15:25.434+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-18926",
+          "parentKey": "RHOAIENG-18922",
+          "summary": "[Storage Layer] Automated test for S3 backend",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Minor",
+          "assignee": "Luca Giorgi",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "QE_MR"
+          ],
+          "storyPoints": 0,
+          "created": "2025-01-29T14:28:59.962+0000",
+          "updated": "2025-10-03T15:16:32.946+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-31311",
+          "parentKey": "RHOAIENG-18922",
+          "summary": "[Automation] Add minio in the cluster ",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Federico Mosca",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "QE_MR"
+          ],
+          "storyPoints": 1,
+          "created": "2025-08-01T15:08:58.131+0000",
+          "updated": "2025-08-04T12:46:12.221+0000",
+          "resolutionDate": "2025-08-04T12:46:12.196+0000"
+        },
+        {
+          "key": "RHOAIENG-31313",
+          "parentKey": "RHOAIENG-18922",
+          "summary": "[Automation] Deploy async job",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "QE_MR"
+          ],
+          "storyPoints": 0,
+          "created": "2025-08-01T15:10:58.517+0000",
+          "updated": "2025-08-04T14:19:59.450+0000",
+          "resolutionDate": "2025-08-04T14:19:59.422+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-19077",
+      "parentKey": "RHAISTRAT-813",
+      "summary": "Add rate limiting",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Person 157",
+      "components": [
+        "AI Hub"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-01-31T12:27:34.456+0000",
+      "updated": "2025-07-03T07:41:49.604+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-21749",
+          "parentKey": "RHOAIENG-19077",
+          "summary": "Followup on Phase 2 blocking requirements",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Matteo Mortari",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-03-17T14:47:59.655+0000",
+          "updated": "2025-07-03T07:40:25.613+0000",
+          "resolutionDate": "2025-05-19T12:59:34.663+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-21647",
+      "parentKey": "RHAISTRAT-813",
+      "summary": "Fix authentication issue",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Person 157",
+      "components": [
+        "AI Hub"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-03-13T16:19:19.512+0000",
+      "updated": "2025-07-03T07:34:17.021+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-20226",
+          "parentKey": "RHOAIENG-21647",
+          "summary": "provide base-image as simple binary in olot",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Matteo Mortari",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 8,
+          "created": "2025-02-19T18:05:02.264+0000",
+          "updated": "2025-07-03T07:05:57.060+0000",
+          "resolutionDate": "2025-07-03T07:05:57.034+0000"
+        },
+        {
+          "key": "RHOAIENG-20294",
+          "parentKey": "RHOAIENG-21647",
+          "summary": "Run an end-to-end test using Konflux-like setup",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Matteo Mortari",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-02-20T10:12:41.868+0000",
+          "updated": "2025-04-24T10:25:00.498+0000",
+          "resolutionDate": "2025-04-24T10:25:00.462+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-24451",
+      "parentKey": "RHAISTRAT-813",
+      "summary": "Add caching mechanism",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Person 157",
+      "components": [
+        "AI Hub"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-04-24T15:58:38.538+0000",
+      "updated": "2025-10-22T16:07:56.258+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-24453",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "Design in ADR a K8s Job to produce ModelCar",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Matteo Mortari",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-04-24T16:12:42.727+0000",
+          "updated": "2025-05-08T14:20:34.966+0000",
+          "resolutionDate": "2025-05-08T14:20:34.942+0000"
+        },
+        {
+          "key": "RHOAIENG-25093",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "Propose K8s Job spec for Async Model Job",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Eric Dobroveanu",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-05-07T19:32:16.258+0000",
+          "updated": "2025-05-19T18:06:57.954+0000",
+          "resolutionDate": "2025-05-19T18:06:57.914+0000"
+        },
+        {
+          "key": "RHOAIENG-25094",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "Build Dockerfile for MR K8s async Job",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Eric Dobroveanu",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-05-07T19:40:36.382+0000",
+          "updated": "2025-05-22T14:54:17.409+0000",
+          "resolutionDate": "2025-05-22T14:54:17.365+0000"
+        },
+        {
+          "key": "RHOAIENG-25095",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "Expand MR K8s Async Job to validate OCI source/destination credentials",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Eric Dobroveanu",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-05-07T19:45:30.295+0000",
+          "updated": "2025-06-05T14:38:38.439+0000",
+          "resolutionDate": "2025-06-05T14:38:38.403+0000"
+        },
+        {
+          "key": "RHOAIENG-26433",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "Expand MR K8s Async Job to validate S3 source/destination credentials",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Eric Dobroveanu",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-05-29T15:05:42.912+0000",
+          "updated": "2025-06-05T14:47:59.350+0000",
+          "resolutionDate": "2025-06-05T14:47:59.309+0000"
+        },
+        {
+          "key": "RHOAIENG-26434",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "Define Test Plan for Async Job ",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-05-29T15:07:44.960+0000",
+          "updated": "2025-05-29T15:27:31.265+0000",
+          "resolutionDate": "2025-05-29T15:27:31.227+0000"
+        },
+        {
+          "key": "RHOAIENG-26435",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "Expand K8s Job to consume additional customProperties",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Jon Burdo",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-05-29T15:14:54.554+0000",
+          "updated": "2025-10-21T13:52:31.288+0000",
+          "resolutionDate": "2025-10-21T13:51:11.331+0000"
+        },
+        {
+          "key": "RHOAIENG-26436",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "Expand K8s Model Job to support hf URI-type connections",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Jon Burdo",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-05-29T15:17:03.444+0000",
+          "updated": "2025-10-17T01:06:55.538+0000",
+          "resolutionDate": "2025-07-24T14:34:21.367+0000"
+        },
+        {
+          "key": "RHOAIENG-26438",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "Add terminationMessagePath to K8s Async Job",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Jon Burdo",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-05-29T15:19:10.600+0000",
+          "updated": "2025-08-01T18:36:34.995+0000",
+          "resolutionDate": "2025-07-21T13:53:11.672+0000"
+        },
+        {
+          "key": "RHOAIENG-26439",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "Expand MR K8s Job to perform S3 -> OCI upload",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Eric Dobroveanu",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 8,
+          "created": "2025-05-29T15:20:09.832+0000",
+          "updated": "2025-07-15T14:31:39.964+0000",
+          "resolutionDate": "2025-07-15T14:31:39.928+0000"
+        },
+        {
+          "key": "RHOAIENG-26440",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "Add GH Action(s) for the Async Job (build image, push, etc)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Matteo Mortari",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-05-29T15:39:41.735+0000",
+          "updated": "2025-07-29T14:32:01.493+0000",
+          "resolutionDate": "2025-07-29T14:32:01.448+0000"
+        },
+        {
+          "key": "RHOAIENG-26452",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "Add validation to ensure model-registry connection params are valid",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Eric Dobroveanu",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-05-29T17:06:01.674+0000",
+          "updated": "2025-06-17T13:15:30.592+0000",
+          "resolutionDate": "2025-06-17T13:15:30.560+0000"
+        },
+        {
+          "key": "RHOAIENG-26453",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "Ensure appropriate labels/annotations are added and documented for the Job",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Sidney Glinton",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-05-29T17:08:46.607+0000",
+          "updated": "2025-07-17T14:17:16.102+0000",
+          "resolutionDate": "2025-07-17T14:17:16.064+0000"
+        },
+        {
+          "key": "RHOAIENG-26454",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "Add example/document Job spec and expected params, env vars, etc",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Eric Dobroveanu",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-05-29T17:10:15.522+0000",
+          "updated": "2025-07-14T13:41:18.549+0000",
+          "resolutionDate": "2025-07-14T13:41:18.504+0000"
+        },
+        {
+          "key": "RHOAIENG-26455",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "Demonstrate the Job to the team",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Jon Burdo",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-05-29T17:10:54.931+0000",
+          "updated": "2025-09-30T13:26:09.511+0000",
+          "resolutionDate": "2025-09-30T13:26:09.452+0000"
+        },
+        {
+          "key": "RHOAIENG-26456",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "Ensure after upload, that the job adds the model_artifact.uri to the model registry (via api)",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Eric Dobroveanu",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2025-05-29T17:31:47.994+0000",
+          "updated": "2025-07-15T15:00:56.524+0000",
+          "resolutionDate": "2025-07-15T15:00:56.484+0000"
+        },
+        {
+          "key": "RHOAIENG-26457",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "Coordinate with DevOps to ensure async-job container is productionized for RHOAI",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Matteo Mortari",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-05-29T17:39:09.851+0000",
+          "updated": "2025-10-07T12:58:31.651+0000",
+          "resolutionDate": "2025-10-07T12:58:31.617+0000"
+        },
+        {
+          "key": "RHOAIENG-29390",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "Determine the Service Account in ODH and RHOAI should be associated to the async-job",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Jon Burdo",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-07-11T18:15:46.794+0000",
+          "updated": "2025-09-19T20:29:41.879+0000",
+          "resolutionDate": "2025-09-19T20:29:41.841+0000"
+        },
+        {
+          "key": "RHOAIENG-30169",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "Refactor Async Job configuration parsing to use dataclasses (and be more pythonic)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Eric Dobroveanu",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-07-18T15:28:37.882+0000",
+          "updated": "2025-10-14T19:43:46.660+0000",
+          "resolutionDate": "2025-10-14T12:32:22.029+0000"
+        },
+        {
+          "key": "RHOAIENG-30314",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "Expand K8s Model Job to support HTTP source",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Jon Burdo",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-07-22T13:09:02.812+0000",
+          "updated": "2025-08-01T16:44:44.959+0000",
+          "resolutionDate": "2025-07-31T19:53:26.017+0000"
+        },
+        {
+          "key": "RHOAIENG-30520",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "Refactor async-upload job's config-parsing to be more pythonic",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Eric Dobroveanu",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-07-25T14:04:56.628+0000",
+          "updated": "2025-10-14T19:43:46.671+0000",
+          "resolutionDate": "2025-07-29T13:13:53.687+0000"
+        },
+        {
+          "key": "RHOAIENG-32146",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "async-upload-test.yml/job-test is failing on main",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Matteo Mortari",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-08-13T08:48:10.871+0000",
+          "updated": "2025-08-18T14:51:24.227+0000",
+          "resolutionDate": "2025-08-18T14:51:24.185+0000"
+        },
+        {
+          "key": "RHOAIENG-32160",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "Required for a params.env way to \"reference\" the Job Async-upload image",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Matteo Mortari",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-08-13T16:21:38.419+0000",
+          "updated": "2025-08-21T14:32:32.066+0000",
+          "resolutionDate": "2025-08-21T14:32:32.026+0000"
+        },
+        {
+          "key": "RHOAIENG-32603",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "Allow async-upload Job to create MR metadata (instead of update)",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Jon Burdo",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 8,
+          "created": "2025-08-20T07:06:27.231+0000",
+          "updated": "2025-09-22T17:24:20.901+0000",
+          "resolutionDate": "2025-09-22T14:29:37.846+0000"
+        },
+        {
+          "key": "RHOAIENG-32626",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "async-upload: generate requirements.txt and VCS",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Matteo Mortari",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2025-08-20T12:33:36.036+0000",
+          "updated": "2025-08-21T14:30:44.608+0000",
+          "resolutionDate": "2025-08-21T14:30:44.559+0000"
+        },
+        {
+          "key": "RHOAIENG-32807",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "gap: async-upload for URI is missing Connection resource mount support",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Jon Burdo",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2025-08-25T16:04:11.013+0000",
+          "updated": "2025-08-26T16:58:01.070+0000",
+          "resolutionDate": "2025-08-26T16:58:01.030+0000"
+        },
+        {
+          "key": "RHOAIENG-34579",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "Fix token environment variable default handling in async-job",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Jon Burdo",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-09-19T19:35:41.769+0000",
+          "updated": "2025-11-18T15:22:13.953+0000",
+          "resolutionDate": "2025-09-22T16:44:00.200+0000"
+        },
+        {
+          "key": "RHOAIENG-34718",
+          "parentKey": "RHOAIENG-24451",
+          "summary": "Update OCP Template in model registry operator for upload intents",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Jon Burdo",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2025-09-22T14:28:00.851+0000",
+          "updated": "2025-10-01T18:38:11.038+0000",
+          "resolutionDate": "2025-10-01T18:38:11.000+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-27992",
+      "parentKey": "RHAISTRAT-813",
+      "summary": "Implement data cleanup",
+      "status": "Review",
+      "statusCategory": "In Progress",
+      "priority": "Normal",
+      "assignee": "Person 215",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-green-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2025-06-23T14:10:16.940+0000",
+      "updated": "2026-04-01T12:32:54.600+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-27993",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Prompt and warning in Model registry settings",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Minor",
+          "assignee": "Philip Carneiro",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-green-scrum",
+            "ux-debt"
+          ],
+          "storyPoints": 3,
+          "created": "2025-06-23T14:31:54.805+0000",
+          "updated": "2026-02-10T14:12:14.729+0000",
+          "resolutionDate": "2026-02-06T17:50:34.205+0000"
+        },
+        {
+          "key": "RHOAIENG-27995",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Register and Store Toggle Buttons(Register Selected)",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Mike Turley",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-green-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2025-06-23T14:44:01.373+0000",
+          "updated": "2026-01-21T14:19:48.845+0000",
+          "resolutionDate": "2026-01-21T14:19:48.823+0000"
+        },
+        {
+          "key": "RHOAIENG-28000",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Register and store - Project dropdown and disabled state  ",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-green-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2025-06-23T15:16:07.361+0000",
+          "updated": "2026-02-12T06:57:24.701+0000",
+          "resolutionDate": "2025-11-06T12:22:07.399+0000"
+        },
+        {
+          "key": "RHOAIENG-28008",
+          "parentKey": "RHOAIENG-27992",
+          "summary": " Model source location (no submit)",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Mike Turley",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-green-scrum"
+          ],
+          "storyPoints": 5,
+          "created": "2025-06-23T15:45:34.125+0000",
+          "updated": "2026-01-21T14:19:56.640+0000",
+          "resolutionDate": "2026-01-21T14:19:56.622+0000"
+        },
+        {
+          "key": "RHOAIENG-28009",
+          "parentKey": "RHOAIENG-27992",
+          "summary": " Model destination location(no submit)",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Arsheen Taj Syed",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-green-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2025-06-23T15:51:53.045+0000",
+          "updated": "2026-01-30T15:49:25.258+0000",
+          "resolutionDate": "2026-01-30T15:49:25.223+0000"
+        },
+        {
+          "key": "RHOAIENG-28010",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Submit logic for Register and store (UI+BFF)",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Mike Turley",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 3,
+          "created": "2025-06-23T16:10:56.407+0000",
+          "updated": "2026-02-18T14:11:46.580+0000",
+          "resolutionDate": "2026-02-18T14:11:46.559+0000"
+        },
+        {
+          "key": "RHOAIENG-28011",
+          "parentKey": "RHOAIENG-27992",
+          "summary": " Model version table column for Storage job status ",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-green-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2025-06-23T16:18:56.275+0000",
+          "updated": "2026-02-16T16:54:10.204+0000",
+          "resolutionDate": "2025-11-06T12:45:35.589+0000"
+        },
+        {
+          "key": "RHOAIENG-28012",
+          "parentKey": "RHOAIENG-27992",
+          "summary": " Modal to show event log when storage job status is Progressing/failed ",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Manaswini Das",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 5,
+          "created": "2025-06-23T16:24:37.814+0000",
+          "updated": "2026-03-02T14:24:38.361+0000",
+          "resolutionDate": "2026-03-02T14:16:28.477+0000"
+        },
+        {
+          "key": "RHOAIENG-31974",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "SPIKE: Connection types midstream/upstream",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Mike Turley",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 5,
+          "created": "2025-08-11T14:22:24.521+0000",
+          "updated": "2025-08-29T16:59:57.606+0000",
+          "resolutionDate": "2025-08-29T16:59:57.566+0000"
+        },
+        {
+          "key": "RHOAIENG-38181",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Register and store - Model transfer job name and Edit resource name fields ",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Yulia Krimerman",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-green-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2025-11-06T12:18:22.134+0000",
+          "updated": "2026-02-02T20:31:00.984+0000",
+          "resolutionDate": "2026-02-02T20:31:00.952+0000"
+        },
+        {
+          "key": "RHOAIENG-38184",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Register and store - namespace dropdown and disabled state",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Pushpa Padti",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-green-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2025-11-06T12:23:50.433+0000",
+          "updated": "2026-02-09T12:24:53.580+0000",
+          "resolutionDate": "2026-02-03T08:01:34.987+0000"
+        },
+        {
+          "key": "RHOAIENG-38187",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Add notification for register and register and store ",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Philip Carneiro",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 2,
+          "created": "2025-11-06T12:49:45.569+0000",
+          "updated": "2026-02-24T09:01:15.354+0000",
+          "resolutionDate": "2026-02-24T09:01:15.312+0000"
+        },
+        {
+          "key": "RHOAIENG-38189",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Model transfer jobs table ",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Manaswini Das",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-green-scrum"
+          ],
+          "storyPoints": 5,
+          "created": "2025-11-06T12:55:44.729+0000",
+          "updated": "2026-01-30T19:57:30.505+0000",
+          "resolutionDate": "2026-01-30T19:57:30.488+0000"
+        },
+        {
+          "key": "RHOAIENG-38265",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Model transfer jobs table - Transfer jobs status column",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Manaswini Das",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-green-scrum"
+          ],
+          "storyPoints": 5,
+          "created": "2025-11-07T08:28:01.740+0000",
+          "updated": "2026-03-02T14:24:34.718+0000",
+          "resolutionDate": "2026-03-02T14:08:19.076+0000"
+        },
+        {
+          "key": "RHOAIENG-38266",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Model transfer jobs table - kebab action column with \"Delete\"",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Manaswini Das",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 3,
+          "created": "2025-11-07T08:30:43.660+0000",
+          "updated": "2026-02-17T19:25:13.334+0000",
+          "resolutionDate": "2026-02-17T19:25:13.299+0000"
+        },
+        {
+          "key": "RHOAIENG-38267",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Model transfer jobs table - Job status \"retry\" operation (BFF+UI)",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Mike Turley",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-registry",
+            "dashboard-green-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2025-11-07T08:37:13.997+0000",
+          "updated": "2026-03-09T21:18:36.666+0000",
+          "resolutionDate": "2026-03-09T21:18:36.636+0000"
+        },
+        {
+          "key": "RHOAIENG-38268",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Storage location section in version details page ",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Yulia Krimerman",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 3,
+          "created": "2025-11-07T08:42:41.409+0000",
+          "updated": "2026-03-12T14:20:08.570+0000",
+          "resolutionDate": "2026-03-12T14:20:08.532+0000"
+        },
+        {
+          "key": "RHOAIENG-38311",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "[BFF] CRUD for copy jobs and their secrets",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Pushpa Padti",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 3,
+          "created": "2025-11-07T12:49:43.661+0000",
+          "updated": "2026-02-27T06:55:58.016+0000",
+          "resolutionDate": "2026-02-27T06:55:57.995+0000"
+        },
+        {
+          "key": "RHOAIENG-38312",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Microcopy review ",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Manaswini Das",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 1,
+          "created": "2025-11-07T12:55:31.249+0000",
+          "updated": "2026-03-05T09:41:14.583+0000",
+          "resolutionDate": "2026-03-05T09:41:14.543+0000"
+        },
+        {
+          "key": "RHOAIENG-46759",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Manually run a model transfer job on a cluster",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Pushpa Padti",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 3,
+          "created": "2026-01-21T15:46:56.179+0000",
+          "updated": "2026-01-28T12:13:26.748+0000",
+          "resolutionDate": "2026-01-28T12:13:26.728+0000"
+        },
+        {
+          "key": "RHOAIENG-48736",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Check if the selected project has access to the registry before submitting a copy job",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Philip Carneiro",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 5,
+          "created": "2026-02-05T08:59:13.091+0000",
+          "updated": "2026-02-24T09:02:11.951+0000",
+          "resolutionDate": "2026-02-23T16:23:27.320+0000"
+        },
+        {
+          "key": "RHOAIENG-49020",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "QE Verification - OCI",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Conor O'Malley",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard",
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 5,
+          "created": "2026-02-09T14:55:28.277+0000",
+          "updated": "2026-04-02T15:31:24.483+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-49021",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "[Cypress-e2e] Enhance testRegisterModel.cy.ts for OCI",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Arsheen Taj Syed",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard",
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 2,
+          "created": "2026-02-09T14:56:57.200+0000",
+          "updated": "2026-03-23T13:19:38.924+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51446",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Update the BFF to read the job image from configmap",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-02T11:25:22.925+0000",
+          "updated": "2026-03-05T23:12:14.254+0000",
+          "resolutionDate": "2026-03-05T23:12:14.218+0000"
+        },
+        {
+          "key": "RHOAIENG-51471",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Model Transfer Jobs page should lazy load pod log events",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Manaswini Das",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-02T14:22:17.708+0000",
+          "updated": "2026-03-23T13:10:19.802+0000",
+          "resolutionDate": "2026-03-09T05:59:59.904+0000"
+        },
+        {
+          "key": "RHOAIENG-51543",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Async-upload job container image URI is hard-coded in BFF",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Mike Turley",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-02T17:38:04.910+0000",
+          "updated": "2026-03-23T13:08:31.449+0000",
+          "resolutionDate": "2026-03-13T13:31:50.698+0000"
+        },
+        {
+          "key": "RHOAIENG-51798",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Model transfer jobs: broken links for create-version intent, missing display names, namespace filtering issues",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Pushpa Padti",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-04T14:40:54.035+0000",
+          "updated": "2026-03-11T20:38:30.711+0000",
+          "resolutionDate": "2026-03-09T13:07:08.655+0000"
+        },
+        {
+          "key": "RHOAIENG-52163",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Cannot register and store a model - async upload container failing",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Pushpa Padti",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-06T12:19:43.549+0000",
+          "updated": "2026-03-26T00:42:09.455+0000",
+          "resolutionDate": "2026-03-13T16:15:28.445+0000"
+        },
+        {
+          "key": "RHOAIENG-52191",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Add Registry OCI Storage feature flag to odhdashboardconfig CRD",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Mike Turley",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-06T16:15:46.431+0000",
+          "updated": "2026-03-13T18:36:24.954+0000",
+          "resolutionDate": "2026-03-13T18:36:24.919+0000"
+        },
+        {
+          "key": "RHOAIENG-52192",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Model transfer job: success toast shown while job is still running/failed",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Manaswini Das",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-06T16:20:10.128+0000",
+          "updated": "2026-03-23T13:11:05.312+0000",
+          "resolutionDate": "2026-03-11T15:37:42.982+0000"
+        },
+        {
+          "key": "RHOAIENG-52238",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Remove optional \"email\" field from async copy job (register-and-store) form",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Mike Turley",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-06T18:32:47.887+0000",
+          "updated": "2026-03-23T13:08:51.775+0000",
+          "resolutionDate": "2026-03-09T21:19:49.252+0000"
+        },
+        {
+          "key": "RHOAIENG-52345",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Cannot access failed transfer jobs via model registry",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Yulia Krimerman",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-09T14:29:55.505+0000",
+          "updated": "2026-03-23T13:18:10.118+0000",
+          "resolutionDate": "2026-03-10T17:02:43.593+0000"
+        },
+        {
+          "key": "RHOAIENG-52446",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Register and store \"create_version\" intent fails - BFF ConfigMap field mismatch with async-upload pod",
+          "type": "Bug",
+          "status": "Testing",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-10T09:59:22.543+0000",
+          "updated": "2026-03-23T13:45:34.502+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52478",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Model catalog doesn't support Register and store flow",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Arsheen Taj Syed",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-10T15:47:53.131+0000",
+          "updated": "2026-03-17T17:46:23.994+0000",
+          "resolutionDate": "2026-03-11T13:02:59.514+0000"
+        },
+        {
+          "key": "RHOAIENG-53344",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Notification bridge index-based cursor can skip notifications when deletions occur",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Minor",
+          "assignee": "Pushpa Padti",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-13T15:19:23.916+0000",
+          "updated": "2026-03-26T11:24:28.986+0000",
+          "resolutionDate": "2026-03-26T11:23:28.620+0000"
+        },
+        {
+          "key": "RHOAIENG-53719",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Catalog registration form microcopy references \"Register and store\" option when it is not available",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Mike Turley",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog",
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-16T20:58:30.805+0000",
+          "updated": "2026-03-23T13:14:59.261+0000",
+          "resolutionDate": "2026-03-17T16:12:37.461+0000"
+        },
+        {
+          "key": "RHOAIENG-53783",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Remove temporary feature flag for OCI storage in Kubeflow upstream",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Manaswini Das",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-17T09:29:22.240+0000",
+          "updated": "2026-03-17T15:41:51.197+0000",
+          "resolutionDate": "2026-03-17T12:48:43.926+0000"
+        },
+        {
+          "key": "RHOAIENG-53949",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Remove registryOciStorage CRD feature flag from odh-dashboard",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Mike Turley",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-17T15:26:17.428+0000",
+          "updated": "2026-03-23T13:15:29.762+0000",
+          "resolutionDate": "2026-03-17T20:46:06.621+0000"
+        },
+        {
+          "key": "RHOAIENG-53997",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "SubjectAccessReview in namespace registry access check missing service account groups",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Mike Turley",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-17T18:56:01.519+0000",
+          "updated": "2026-03-23T13:15:21.438+0000",
+          "resolutionDate": "2026-03-17T19:38:12.118+0000"
+        },
+        {
+          "key": "RHOAIENG-54006",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Model transfer job failure reason shows \"(unknown)\" — pod termination message not used for already-failed jobs",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Mike Turley",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-17T19:53:33.094+0000",
+          "updated": "2026-03-23T13:15:48.386+0000",
+          "resolutionDate": "2026-03-18T21:14:25.718+0000"
+        },
+        {
+          "key": "RHOAIENG-54420",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "\"View model transfer jobs\" link missing in ODH empty registry state",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Mike Turley",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-19T20:48:58.086+0000",
+          "updated": "2026-03-23T13:45:38.569+0000",
+          "resolutionDate": "2026-03-20T19:55:28.769+0000"
+        },
+        {
+          "key": "RHOAIENG-55230",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "Replace namespace selector with ODH project selector extension in Register and Store form",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Mike Turley",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-registry",
+            "enhancement"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-25T20:39:27.856+0000",
+          "updated": "2026-04-02T14:18:25.248+0000",
+          "resolutionDate": "2026-04-02T14:18:25.219+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-28246",
+      "parentKey": "RHAISTRAT-813",
+      "summary": "Fix validation issue",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Person 254",
+      "components": [
+        "AI Hub"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-06-26T09:43:45.108+0000",
+      "updated": "2026-03-10T15:49:16.514+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-26404",
+          "parentKey": "RHOAIENG-28246",
+          "summary": "py: refactor the Storage to OCI auth to use secure temp file",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Minor",
+          "assignee": "Jon Burdo",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-05-29T11:48:21.114+0000",
+          "updated": "2025-09-09T13:08:08.909+0000",
+          "resolutionDate": "2025-09-09T13:08:08.887+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-36141",
+      "parentKey": "RHAISTRAT-813",
+      "summary": "Add batch processing",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Minor",
+      "assignee": "Person 157",
+      "components": [
+        "AI Hub"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-10-15T06:52:02.483+0000",
+      "updated": "2026-02-24T21:09:35.396+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-25096",
+          "parentKey": "RHOAIENG-36141",
+          "summary": "Expand MR K8s Job to perform OCI -> OCI upload",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Eric Dobroveanu",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-05-07T19:48:54.820+0000",
+          "updated": "2025-10-15T06:53:26.148+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-26441",
+          "parentKey": "RHOAIENG-36141",
+          "summary": "Expand K8s Async Job to support S3 -> PVC",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-05-29T15:44:36.082+0000",
+          "updated": "2025-10-15T06:53:39.380+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-30453",
+          "parentKey": "RHOAIENG-36141",
+          "summary": "Refactor CI/CD Scripts and GH Actions to unify env-vars",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-07-23T20:36:15.053+0000",
+          "updated": "2025-10-15T06:53:32.893+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-47260",
+          "parentKey": "RHOAIENG-36141",
+          "summary": "Add created IDs to async-upload job termination message",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Adysen Rothman",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "QE_MR",
+            "async-upload",
+            "job",
+            "kubernetes",
+            "model-registry"
+          ],
+          "storyPoints": 3,
+          "created": "2026-01-23T18:33:58.859+0000",
+          "updated": "2026-02-06T19:07:16.537+0000",
+          "resolutionDate": "2026-02-05T16:57:32.120+0000"
+        },
+        {
+          "key": "RHOAIENG-47261",
+          "parentKey": "RHOAIENG-36141",
+          "summary": "Store async-upload job metadata in model registry custom properties for persistent storage",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Critical",
+          "assignee": null,
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "async-upload",
+            "audit",
+            "job",
+            "model-registry",
+            "persistence"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-23T18:34:34.223+0000",
+          "updated": "2026-02-03T15:04:45.000+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-50744",
+          "parentKey": "RHOAIENG-36141",
+          "summary": "async-upload: OCI credentials not decoded from base64 in .dockerconfigjson",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Jon Burdo",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-02-24T21:04:24.085+0000",
+          "updated": "2026-02-25T18:10:27.640+0000",
+          "resolutionDate": "2026-02-25T18:10:27.608+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-36929",
+      "parentKey": "RHAISTRAT-813",
+      "summary": "Fix timezone handling",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "AI Hub"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-10-22T14:26:00.981+0000",
+      "updated": "2025-10-22T16:06:52.445+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-36931",
+          "parentKey": "RHOAIENG-36929",
+          "summary": "Create a common python entrypoint",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-10-22T14:26:17.555+0000",
+          "updated": "2025-10-22T17:55:34.068+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-36932",
+          "parentKey": "RHOAIENG-36929",
+          "summary": "Create end-to-end community examples",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-10-22T14:26:28.453+0000",
+          "updated": "2025-10-22T16:06:02.130+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-36933",
+          "parentKey": "RHOAIENG-36929",
+          "summary": "Write a community blog post",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Jon Burdo",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-10-22T14:26:39.498+0000",
+          "updated": "2025-10-22T14:41:11.183+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-51260",
+      "parentKey": "RHAISTRAT-813",
+      "summary": "Implement data cleanup",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "AI Core Dashboard",
+        "AI Core Platform",
+        "AI Hub",
+        "Documentation",
+        "UXD"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-27T05:10:15.159+0000",
+      "updated": "2026-04-01T09:25:01.439+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-52298",
+      "parentKey": "RHAISTRAT-813",
+      "summary": "Fix concurrent access issue",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Person 215",
+      "components": [
+        "Update This Field With Components"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-09T08:37:15.801+0000",
+      "updated": "2026-04-01T09:25:00.066+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-52300",
+          "parentKey": "RHOAIENG-52298",
+          "summary": "Ensure everything was completed under Tech Preview",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-09T08:46:28.796+0000",
+          "updated": "2026-03-11T20:36:48.646+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52301",
+          "parentKey": "RHOAIENG-52298",
+          "summary": "Acceptance Criteria",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-09T08:47:35.405+0000",
+          "updated": "2026-03-09T08:52:03.820+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52303",
+          "parentKey": "RHOAIENG-52298",
+          "summary": "Security Requirements",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-09T08:48:18.793+0000",
+          "updated": "2026-03-09T08:52:23.435+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52304",
+          "parentKey": "RHOAIENG-52298",
+          "summary": "Promote alpha and beta APIs to their final version",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-09T08:48:35.842+0000",
+          "updated": "2026-03-09T08:52:43.175+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52305",
+          "parentKey": "RHOAIENG-52298",
+          "summary": "Feature signoff - GA",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Blocker",
+          "assignee": "Mike Turley",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "signoff"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-09T08:48:58.909+0000",
+          "updated": "2026-03-24T14:18:40.179+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 11,
+    "totalIssues": 97,
+    "issuesByStatus": {
+      "Backlog": 1,
+      "New": 15,
+      "Closed": 62,
+      "Resolved": 14,
+      "In Progress": 3,
+      "Review": 1,
+      "Testing": 1
+    },
+    "issuesByCategory": {
+      "Done": 76,
+      "In Progress": 5,
+      "To Do": 16
+    },
+    "totalStoryPoints": 253,
+    "storyPointsDone": 228,
+    "completionPct": 78,
+    "staleCount": 4,
+    "unassignedCount": 10,
+    "blockerCount": 11,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-16838",
+        "summary": "[ccs Epic] Document OCI Compliant Storage layer for Model Registry",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Stephen McCarthy",
+        "totalIssues": 3,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 10,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-18922",
+        "summary": "Test Plan - Storage Layer for Model Registry",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Luca Giorgi",
+        "totalIssues": 6,
+        "doneIssues": 3,
+        "progressPct": 50,
+        "storyPoints": 1,
+        "storyPointsDone": 1,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-19077",
+        "summary": "Assess blocking requirements and Record decision how to persist attached Storages to a Model Registry",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Matteo Mortari",
+        "totalIssues": 1,
+        "doneIssues": 1,
+        "progressPct": 100,
+        "storyPoints": 5,
+        "storyPointsDone": 5,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-21647",
+        "summary": "Cross-components/Cross-Teams requests (phase 2 of OCI Storage)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Matteo Mortari",
+        "totalIssues": 2,
+        "doneIssues": 2,
+        "progressPct": 100,
+        "storyPoints": 11,
+        "storyPointsDone": 11,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-24451",
+        "summary": "Design and Implement a K8s Job to produce ModelCar",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Matteo Mortari",
+        "totalIssues": 28,
+        "doneIssues": 28,
+        "progressPct": 100,
+        "storyPoints": 91,
+        "storyPointsDone": 91,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-27992",
+        "summary": "Dashboard - OCI Compliant Storage layer for Model Registry",
+        "status": "Review",
+        "statusCategory": "In Progress",
+        "assignee": "Mike Turley",
+        "totalIssues": 42,
+        "doneIssues": 39,
+        "progressPct": 93,
+        "storyPoints": 118,
+        "storyPointsDone": 111,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-28246",
+        "summary": "followup from phase 1 of Create an OCI Compliant Storage layer for Model Registry",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Jon Burdo",
+        "totalIssues": 1,
+        "doneIssues": 1,
+        "progressPct": 100,
+        "storyPoints": 5,
+        "storyPointsDone": 5,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-36141",
+        "summary": "Async-upload Job Backend nice-to-have(s)",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Matteo Mortari",
+        "totalIssues": 6,
+        "doneIssues": 2,
+        "progressPct": 33,
+        "storyPoints": 7,
+        "storyPointsDone": 4,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-36929",
+        "summary": "Showcase async upload job for community",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 3,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 5,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-51260",
+        "summary": "[IGNORE] GA - ODH and RHOAI Integrations [AI Core Dashboard, AI Hub, Documentation, UXD]",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-52298",
+        "summary": "GA - ODH and RHOAI Integrations [AI Core Dashboard/AI Hub - OCI Compliant Storage layer for MR]",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Mike Turley",
+        "totalIssues": 5,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

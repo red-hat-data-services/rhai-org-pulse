@@ -1,0 +1,260 @@
+{
+  "key": "TEST1-1147",
+  "summary": "Fix data migration",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Julian Payne",
+    "accountId": "712020:e1bbe0c7-3d8c-4289-be71-d6360cdddd5b"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate"
+  ],
+  "components": [
+    "Documentation",
+    "Model Eval"
+  ],
+  "created": "2026-01-21T21:05:47.704+0000",
+  "updated": "2026-04-03T16:19:27.828+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1043",
+      "linkedSummary": "(feat) Red Hat AI Evaluation Stack integration with Llama Stack ",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1289",
+      "linkedSummary": "(feat) Core Evaluation Stack (control plane) for Red Hat AI (EA1)",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-979",
+      "linkedSummary": "(feat) Core Evaluation Stack (control plane) for Red Hat AI (EA2)",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1134",
+      "linkedSummary": "UI for Orchestration of Evaluations through Evaluation Stack",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1251",
+      "linkedSummary": "LightEval as BYOF adapter using eval-hub-sdk - cloned from RHAIRFE-950",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1254",
+      "linkedSummary": "Expand TrustyAI Evaluation Capabilities to cover Risk-Based Benchmarks",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-656",
+      "linkedSummary": "Expand TrustyAI Evaluation Capabilities to cover Risk-Based Benchmarks",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-238",
+      "linkedSummary": "Industry/Use Case-Specific Evaluation Collections (MVP)",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-57",
+      "linkedSummary": "Create Benchmark for Effective *Safety* Context Window",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-237",
+      "linkedSummary": "Core Evaluation Stack (control plane) for Red Hat AI",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIUX-1576",
+      "linkedSummary": "Custom Evaluation Task creation",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-907",
+      "linkedSummary": "Red Hat AI Evaluation Stack integration with Llama Stack ",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-926",
+      "linkedSummary": "UI for Orchestration of Evaluations through Evaluation Stack",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-950",
+      "linkedSummary": "LightEval as BYOF adapter using eval-hub-sdk (Multilingual, AIME24 and AIME25)",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1021",
+      "linkedSummary": "Evaluation Stack support for DeepEval (via adapter eval-hub-sdk library)",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Cloners",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1369",
+      "linkedSummary": "(feat) Industry/Use Case-Specific Evaluation Collections (Healthcare) - cloned RFE-238",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-56281",
+      "parentKey": "RHAISTRAT-1147",
+      "summary": "Fix validation issue",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": null,
+      "components": [
+        "AI Evaluations"
+      ],
+      "labels": [
+        "evalhub",
+        "evalhub-service"
+      ],
+      "storyPoints": 0,
+      "created": "2026-04-01T12:09:35.530+0000",
+      "updated": "2026-04-01T12:29:25.897+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-56278",
+          "parentKey": "RHOAIENG-56281",
+          "summary": "feat(evalhub): Leaderboard v2 evaluation collection",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Marius Ion Danciu",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub",
+            "evalhub-service"
+          ],
+          "storyPoints": 0,
+          "created": "2026-04-01T12:07:22.009+0000",
+          "updated": "2026-04-01T12:40:34.036+0000",
+          "resolutionDate": "2026-04-01T12:40:33.995+0000"
+        },
+        {
+          "key": "RHOAIENG-56279",
+          "parentKey": "RHOAIENG-56281",
+          "summary": "feat(evalhub): Safety and Fairness evaluation collection",
+          "type": "Task",
+          "status": "Testing",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Julian Payne",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub",
+            "evalhub-service"
+          ],
+          "storyPoints": 0,
+          "created": "2026-04-01T12:07:41.371+0000",
+          "updated": "2026-04-02T14:13:26.973+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56280",
+          "parentKey": "RHOAIENG-56281",
+          "summary": "feat(evalhub): Toxicity and Ethical Principles evaluation collection",
+          "type": "Task",
+          "status": "Testing",
+          "statusCategory": "In Progress",
+          "priority": "Normal",
+          "assignee": "Julian Payne",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub",
+            "evalhub-service"
+          ],
+          "storyPoints": 0,
+          "created": "2026-04-01T12:07:45.013+0000",
+          "updated": "2026-04-03T11:15:06.011+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 3,
+    "issuesByStatus": {
+      "Closed": 1,
+      "Testing": 2
+    },
+    "issuesByCategory": {
+      "Done": 1,
+      "In Progress": 2,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 33,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-56281",
+        "summary": "[Epic] Industry-Specific Evaluation Collections (MVP)",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": null,
+        "totalIssues": 3,
+        "doneIssues": 1,
+        "progressPct": 33,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

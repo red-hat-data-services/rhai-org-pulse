@@ -1,0 +1,52 @@
+{
+  "key": "TEST1-668",
+  "summary": "Optimize database queries",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Undefined",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [],
+  "components": [],
+  "created": "2024-08-26T17:59:10.971+0000",
+  "updated": "2026-03-09T20:21:39.076+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "OCPSTRAT-1616",
+      "linkedSummary": "Continued GCP WIF enablement for OLM-managed operators",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "OSDGCP-49",
+      "linkedSummary": "M1: Enable GCP workload identity federation for OSD-GCP",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

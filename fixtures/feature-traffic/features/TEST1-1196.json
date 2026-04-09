@@ -1,0 +1,102 @@
+{
+  "key": "TEST1-1196",
+  "summary": "Add caching mechanism",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Sumanth Kamenani",
+    "accountId": "712020:b84bf70f-721b-43f1-be72-30992d134f3a"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "confidence-green"
+  ],
+  "components": [
+    "Llama Stack Core"
+  ],
+  "created": "2026-02-09T13:24:59.836+0000",
+  "updated": "2026-04-01T06:02:30.566+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Blocks",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-313",
+      "linkedSummary": "Guardrails – Surface Basic Llama Stack Guardrails in playground (MVP)",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-313",
+      "linkedSummary": "Guardrails – Surface Basic Llama Stack Guardrails in playground (MVP)",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1156",
+      "linkedSummary": "A mechanism to pass user-request headers to external llama-stack providers ",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Blocks",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-46676",
+      "linkedSummary": "[Blocked]: Verify MaaS token is passed to llama stack with trustyai provider",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Incorporates",
+      "direction": "outward",
+      "linkedKey": "RHAIENG-3381",
+      "linkedSummary": "Safety API passthrough provider for passing headers",
+      "linkedStatus": "Testing"
+    },
+    {
+      "type": "Account",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-3272",
+      "linkedSummary": "Extend Passthrough Provider Pattern Beyond Inference",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Account",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-3271",
+      "linkedSummary": "Deployer-Controlled Header Forwarding for External Providers",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Blocks",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-52248",
+      "linkedSummary": "Refactor AAE and Gen AI Studio to support MaaS subscriptions",
+      "linkedStatus": "Testing"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}
