@@ -168,6 +168,10 @@
           </div>
         </div>
 
+        <div v-if="!filteredReleases.length" class="text-sm text-gray-500 dark:text-gray-400">
+          No releases match the current filters.
+        </div>
+
         <article
           v-for="release in filteredReleases"
           :key="release.releaseNumber"

@@ -150,7 +150,7 @@
         </div>
 
         <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-          <span>{{ filteredReleaseTabs.length }} of {{ releaseTabs.length }} releases</span>
+          <span>{{ filteredReleases.length }} of {{ allReleases.length }} releases</span>
           <button
             v-if="selectedProducts.size || selectedVersions.size"
             class="text-xs font-medium text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
@@ -497,30 +497,23 @@ const selectedVersions = reactive(new Set())
 const productDropdownOpen = ref(false)
 const versionDropdownOpen = ref(false)
 
-const releaseTabs = computed(() => {
-  const releases = analysis.value?.releases || []
-  return releases.map(r => ({
-    key: r.releaseNumber,
-    label: r.releaseNumber,
-    issueCount: r.issues?.length || 0
-  }))
-})
+const allReleases = computed(() => analysis.value?.releases || [])
 
 const allProducts = computed(() =>
-  [...new Set(releaseTabs.value.map(r => extractProduct(r.key)).filter(Boolean))].sort()
+  [...new Set(allReleases.value.map(r => extractProduct(r.releaseNumber)).filter(Boolean))].sort()
 )
 
 const allVersions = computed(() =>
-  [...new Set(releaseTabs.value.map(r => extractVersion(r.key)).filter(Boolean))]
+  [...new Set(allReleases.value.map(r => extractVersion(r.releaseNumber)).filter(Boolean))]
     .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
 )
 
 const visibleProducts = computed(() => {
   if (!selectedVersions.size) return allProducts.value
   return [...new Set(
-    releaseTabs.value
-      .filter(r => selectedVersions.has(extractVersion(r.key)))
-      .map(r => extractProduct(r.key))
+    allReleases.value
+      .filter(r => selectedVersions.has(extractVersion(r.releaseNumber)))
+      .map(r => extractProduct(r.releaseNumber))
       .filter(Boolean)
   )].sort()
 })
@@ -528,9 +521,9 @@ const visibleProducts = computed(() => {
 const visibleVersions = computed(() => {
   if (!selectedProducts.size) return allVersions.value
   return [...new Set(
-    releaseTabs.value
-      .filter(r => selectedProducts.has(extractProduct(r.key)))
-      .map(r => extractVersion(r.key))
+    allReleases.value
+      .filter(r => selectedProducts.has(extractProduct(r.releaseNumber)))
+      .map(r => extractVersion(r.releaseNumber))
       .filter(Boolean)
   )].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
 })
@@ -557,17 +550,8 @@ function toggleVersion(version) {
   else selectedVersions.add(version)
 }
 
-const filteredReleaseTabs = computed(() => {
-  return releaseTabs.value.filter(r => {
-    if (selectedProducts.size && !selectedProducts.has(extractProduct(r.key))) return false
-    if (selectedVersions.size && !selectedVersions.has(extractVersion(r.key))) return false
-    return true
-  })
-})
-
 const filteredReleases = computed(() => {
-  const releases = analysis.value?.releases || []
-  return releases.filter(r => {
+  return allReleases.value.filter(r => {
     if (selectedProducts.size && !selectedProducts.has(extractProduct(r.releaseNumber))) return false
     if (selectedVersions.size && !selectedVersions.has(extractVersion(r.releaseNumber))) return false
     return true
