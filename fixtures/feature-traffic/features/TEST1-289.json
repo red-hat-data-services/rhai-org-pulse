@@ -1,0 +1,68 @@
+{
+  "key": "TEST1-289",
+  "summary": "Add caching mechanism",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Gray Knox",
+    "accountId": "712020:3976877f-2c7c-4070-a6a1-90d3f78a309f"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "Approved-RFE",
+    "needs-tech-review"
+  ],
+  "components": [
+    "SDG"
+  ],
+  "created": "2025-11-20T20:05:38.666+0000",
+  "updated": "2026-04-07T08:08:33.212+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-914",
+      "linkedSummary": "Reusable KFP Component for SDG (Foundational Piece for End-to-End Model Customization Pipelines)",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAIENG-3495",
+      "linkedSummary": "Create a Kubeflow Pipeline Component for sdg_hub python",
+      "linkedStatus": "Testing"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-214",
+      "linkedSummary": "End-to-end model customization pipeline orchestration for RHOAI",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

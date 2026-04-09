@@ -1,0 +1,127 @@
+{
+  "key": "TEST1-210",
+  "summary": "Update notification system",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Onyx Mitchell",
+    "accountId": "712020:b8bad4dd-5c44-48f6-8461-81327a1e18c9"
+  },
+  "fixVersions": [
+    "rhoai-3.5"
+  ],
+  "labels": [
+    "agentic",
+    "confidence-red",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AgentDev",
+    "AgentOps"
+  ],
+  "created": "2025-11-14T08:54:17.061+0000",
+  "updated": "2026-04-03T14:59:08.903+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Green for 3.5 (NOT 3.4). Punted from 3.4 to 3.5. Active design phase with multiple approaches: Gordon Sim's klaviger PoC (token exchange + SPIFFE), Akram's refinement doc, ADR exists. Need to determine which of 5 phased scopes to target and assign a scrum team. Three months to 3.5 freeze provides adequate runway."
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1216",
+      "linkedSummary": "[DP] Agent Deploy & Runtime Management",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1289",
+      "linkedSummary": "[DP] Agent Deploy & Runtime Management",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-872",
+      "linkedSummary": "Bring Your Own Agent (BYOA) for Unified Agent Lifecycle Management in Red Hat AI",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-408",
+      "linkedSummary": "Implement Agentic Security and Access Control for Llama Stack ",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Causality",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-51189",
+      "linkedSummary": "ADR Access control for Agentic Workloads on RHOAI",
+      "linkedStatus": "Backlog"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-54872",
+      "linkedSummary": "Test Keycloak changes: client auth vs admin credentials (PR #966)",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-54872",
+      "linkedSummary": "Test Keycloak changes: client auth vs admin credentials (PR #966)",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Triggers",
+      "direction": "outward",
+      "linkedKey": "RHAIENG-3962",
+      "linkedSummary": "PoC for unified, self contained sidecar",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Polaris work item link",
+      "direction": "outward",
+      "linkedKey": "RHAIENG-4178",
+      "linkedSummary": "Test and validate Istio authorization provider for agent-to-agent access token validation (authbridge-waypoint)",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "key": "TEST1-1143",
+  "summary": "Add export functionality",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Merit Ingram",
+    "accountId": "712020:4f4f6a78-d27c-4d5c-9b25-e659994aa29e"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "Documentation",
+    "MLflow",
+    "Training Kubeflow"
+  ],
+  "created": "2026-01-21T14:46:09.598+0000",
+  "updated": "2026-03-20T09:43:46.459+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Triggers",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1081",
+      "linkedSummary": "MLflow integration in RHOAI TP",
+      "linkedStatus": "Release Pending"
+    },
+    {
+      "type": "Blocks",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-49115",
+      "linkedSummary": "Create MlFlow guided example in distribute mode (with kubeflow trainer)",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

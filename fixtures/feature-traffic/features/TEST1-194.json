@@ -1,0 +1,71 @@
+{
+  "key": "TEST1-194",
+  "summary": "Implement search feature",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [
+    "3.Next-candidate",
+    "tech-reviewed"
+  ],
+  "components": [
+    "RAG"
+  ],
+  "created": "2025-11-10T13:17:37.605+0000",
+  "updated": "2026-01-27T13:22:02.905+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-532",
+      "linkedSummary": "Make Llama stack RAG Open AI compatible (vector store & file API)",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-24",
+      "linkedSummary": "[DP] Support existing AI applications using the responses API",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-973",
+      "linkedSummary": "CrewAI Llama Stack Integration - Cloned from RHAIRFE-594",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-594",
+      "linkedSummary": "CrewAI Llama Stack Integration",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

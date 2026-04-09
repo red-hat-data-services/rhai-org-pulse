@@ -1,0 +1,2198 @@
+{
+  "key": "TEST1-1134",
+  "summary": "Update error messages",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Merit Bishop",
+    "accountId": "712020:ae505486-f587-4834-bec0-a32773e90835"
+  },
+  "fixVersions": [
+    "rhoai-3.4"
+  ],
+  "labels": [
+    "3.4-candidate",
+    "3.4-committed",
+    "dashboard-crimson-scrum",
+    "needs-ux",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "Documentation",
+    "Model Eval",
+    "UXD"
+  ],
+  "created": "2026-01-19T19:15:19.050+0000",
+  "updated": "2026-04-01T15:09:30.356+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "GREEN",
+            "marks": [
+              {
+                "type": "textColor",
+                "attrs": {
+                  "color": "#00875a"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Feb 25th Update",
+            "marks": [
+              {
+                "type": "strong"
+              }
+            ]
+          },
+          {
+            "type": "hardBreak"
+          },
+          {
+            "type": "text",
+            "text": "1. UX design is in progress"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "2. The Eval Hub deployment on ODH/RHOAI is started"
+          },
+          {
+            "type": "hardBreak"
+          },
+          {
+            "type": "text",
+            "text": "3. Work on BFF mocks and UI is in progress"
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1289",
+      "linkedSummary": "(feat) Core Evaluation Stack (control plane) for Red Hat AI (EA1)",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-979",
+      "linkedSummary": "(feat) Core Evaluation Stack (control plane) for Red Hat AI (EA2)",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1147",
+      "linkedSummary": "(feat) Industry/Use Case-Specific Evaluation Collections (MVP) - cloned RFE-238",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIUX-1757",
+      "linkedSummary": "MVP prototype",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIUX-1575",
+      "linkedSummary": "Provide expert-curated, industry-specific evaluation suites to enable rapid, evaluations without requiring internal expertise",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1377",
+      "linkedSummary": "(MVP) IBM CLEAR Adapter for EvalHub — Agentic AI Evaluation via MLflow Traces (DP)",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-238",
+      "linkedSummary": "Industry/Use Case-Specific Evaluation Collections (MVP)",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-239",
+      "linkedSummary": "Evaluation Framework Integration and Extensibility",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-237",
+      "linkedSummary": "Core Evaluation Stack (control plane) for Red Hat AI",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-926",
+      "linkedSummary": "UI for Orchestration of Evaluations through Evaluation Stack",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIUX-1839",
+      "linkedSummary": "EvalHub MVP 3.4 Content review",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1367",
+      "linkedSummary": "(feat)(MVP) IBM CLEAR Adapter for EvalHub — Agentic AI Evaluation via MLflow Traces (DP)",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1369",
+      "linkedSummary": "(feat) Industry/Use Case-Specific Evaluation Collections (Healthcare) - cloned RFE-238",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1370",
+      "linkedSummary": "(feat) Industry/Use Case-Specific Evaluation Collections (Telecom) - cloned RFE-238",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1371",
+      "linkedSummary": "(feat) Industry/Use Case-Specific Evaluation Collections (Finance) - cloned RFE-238",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1372",
+      "linkedSummary": "(feat) Industry/Use Case-Specific Evaluation Collections (Software Eng/Programming) - cloned RFE-238",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Account",
+      "direction": "outward",
+      "linkedKey": "RHOAIUX-2001",
+      "linkedSummary": "Evaluations Hub UXD Roadmap",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-48987",
+      "parentKey": "RHAISTRAT-1134",
+      "summary": "Fix concurrent access issue",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Person 229",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum",
+        "dashboard-modular-architecture",
+        "dashboard-monarch-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-09T11:37:55.066+0000",
+      "updated": "2026-03-11T06:50:18.175+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-48988",
+          "parentKey": "RHOAIENG-48987",
+          "summary": "Onboard module and pass Contract Testing",
+          "type": "Sub-task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum",
+            "dashboard-monarch-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-09T11:37:57.440+0000",
+          "updated": "2026-03-11T06:49:54.327+0000",
+          "resolutionDate": "2026-03-11T06:49:54.285+0000"
+        },
+        {
+          "key": "RHOAIENG-48989",
+          "parentKey": "RHOAIENG-48987",
+          "summary": "Dockerfile Image Onboarding",
+          "type": "Sub-task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-monarch-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-09T11:37:59.003+0000",
+          "updated": "2026-03-10T05:22:55.190+0000",
+          "resolutionDate": "2026-03-10T05:22:55.170+0000"
+        },
+        {
+          "key": "RHOAIENG-48990",
+          "parentKey": "RHOAIENG-48987",
+          "summary": "Create request to onboard module with DevOps",
+          "type": "Sub-task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-monarch-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2026-02-09T11:38:00.594+0000",
+          "updated": "2026-03-10T05:23:38.684+0000",
+          "resolutionDate": "2026-03-10T05:23:38.668+0000"
+        },
+        {
+          "key": "RHOAIENG-48991",
+          "parentKey": "RHOAIENG-48987",
+          "summary": "Onboard modular architecture in Konflux ODH",
+          "type": "Sub-task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum",
+            "dashboard-monarch-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-09T11:38:02.145+0000",
+          "updated": "2026-03-10T05:24:07.670+0000",
+          "resolutionDate": "2026-03-10T05:24:07.653+0000"
+        },
+        {
+          "key": "RHOAIENG-48992",
+          "parentKey": "RHOAIENG-48987",
+          "summary": "Set up module for Openshift CI builds",
+          "type": "Sub-task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum",
+            "dashboard-monarch-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-09T11:38:03.754+0000",
+          "updated": "2026-03-10T05:24:28.285+0000",
+          "resolutionDate": "2026-03-10T05:24:28.263+0000"
+        },
+        {
+          "key": "RHOAIENG-48993",
+          "parentKey": "RHOAIENG-48987",
+          "summary": "Onboard Module in Manifest",
+          "type": "Sub-task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum",
+            "dashboard-monarch-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-09T11:38:05.282+0000",
+          "updated": "2026-03-10T05:24:49.935+0000",
+          "resolutionDate": "2026-03-10T05:24:49.913+0000"
+        },
+        {
+          "key": "RHOAIENG-48994",
+          "parentKey": "RHOAIENG-48987",
+          "summary": "Onboard module in Operator",
+          "type": "Sub-task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum",
+            "dashboard-monarch-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-09T11:38:06.849+0000",
+          "updated": "2026-03-10T05:25:08.020+0000",
+          "resolutionDate": "2026-03-10T05:25:08.001+0000"
+        },
+        {
+          "key": "RHOAIENG-48995",
+          "parentKey": "RHOAIENG-48987",
+          "summary": "Onboard modular architecture in Konflux RHOAI",
+          "type": "Sub-task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-modular-architecture"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-09T11:38:08.458+0000",
+          "updated": "2026-03-10T05:34:36.953+0000",
+          "resolutionDate": "2026-03-10T05:32:18.390+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-49845",
+      "parentKey": "RHAISTRAT-1134",
+      "summary": "Implement webhook handler",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 209",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-16T10:39:48.666+0000",
+      "updated": "2026-03-25T11:55:00.948+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-49846",
+          "parentKey": "RHOAIENG-49845",
+          "summary": "Eval Hub - UI - Empty State",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Merit Bishop",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-16T10:41:08.933+0000",
+          "updated": "2026-03-02T12:12:44.063+0000",
+          "resolutionDate": "2026-03-02T09:42:03.356+0000"
+        },
+        {
+          "key": "RHOAIENG-50108",
+          "parentKey": "RHOAIENG-49845",
+          "summary": "[BFF]: clean-up default bff created using package script",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-18T10:53:25.828+0000",
+          "updated": "2026-03-02T15:27:41.450+0000",
+          "resolutionDate": "2026-03-02T08:16:05.181+0000"
+        },
+        {
+          "key": "RHOAIENG-50109",
+          "parentKey": "RHOAIENG-49845",
+          "summary": "[BFF]: Create BFF mocks for eval hub",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-18T10:56:03.027+0000",
+          "updated": "2026-03-02T15:27:31.535+0000",
+          "resolutionDate": "2026-03-02T08:17:02.325+0000"
+        },
+        {
+          "key": "RHOAIENG-50797",
+          "parentKey": "RHOAIENG-49845",
+          "summary": "UI: Create New Evaluations Runs Card Page",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-25T12:10:34.240+0000",
+          "updated": "2026-03-02T12:12:44.030+0000",
+          "resolutionDate": "2026-03-02T06:49:07.066+0000"
+        },
+        {
+          "key": "RHOAIENG-50801",
+          "parentKey": "RHOAIENG-49845",
+          "summary": "Create Collections Page",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-25T12:47:23.816+0000",
+          "updated": "2026-03-02T12:05:17.869+0000",
+          "resolutionDate": "2026-03-02T06:49:20.622+0000"
+        },
+        {
+          "key": "RHOAIENG-51164",
+          "parentKey": "RHOAIENG-49845",
+          "summary": "Create Benchmark Page ",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-26T13:46:57.443+0000",
+          "updated": "2026-03-03T20:23:34.324+0000",
+          "resolutionDate": "2026-03-02T06:49:34.896+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-50197",
+      "parentKey": "RHAISTRAT-1134",
+      "summary": "Fix data migration",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Merit Upton",
+      "components": [
+        "DevOps"
+      ],
+      "labels": [
+        "devops-onboarding"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-19T02:53:28.951+0000",
+      "updated": "2026-03-04T14:16:56.356+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-50200",
+      "parentKey": "RHAISTRAT-1134",
+      "summary": "Fix race condition",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Merit Upton",
+      "components": [
+        "DevOps"
+      ],
+      "labels": [
+        "dashboard-modular-architecture",
+        "devops-onboarding"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-19T06:15:12.977+0000",
+      "updated": "2026-03-09T10:24:12.949+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-50225",
+      "parentKey": "RHAISTRAT-1134",
+      "summary": "Update documentation",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Person 229",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-19T10:39:36.118+0000",
+      "updated": "2026-03-25T11:55:01.507+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50227",
+          "parentKey": "RHOAIENG-50225",
+          "summary": "[Spike] Confirm Eval Hub API auth",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T10:41:56.674+0000",
+          "updated": "2026-03-02T08:24:55.580+0000",
+          "resolutionDate": "2026-03-02T08:24:55.436+0000"
+        },
+        {
+          "key": "RHOAIENG-50229",
+          "parentKey": "RHOAIENG-50225",
+          "summary": "[Spike] Confirm no SSE/WebSocket in Eval Hub API",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T10:44:39.965+0000",
+          "updated": "2026-03-16T06:38:42.135+0000",
+          "resolutionDate": "2026-03-16T06:38:42.112+0000"
+        },
+        {
+          "key": "RHOAIENG-50231",
+          "parentKey": "RHOAIENG-50225",
+          "summary": "Register evalHub in federation-configmap.yaml",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T10:46:15.000+0000",
+          "updated": "2026-03-16T06:39:39.024+0000",
+          "resolutionDate": "2026-03-16T06:32:40.974+0000"
+        },
+        {
+          "key": "RHOAIENG-50232",
+          "parentKey": "RHOAIENG-50225",
+          "summary": "Scaffold BFF",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T10:47:22.702+0000",
+          "updated": "2026-03-16T06:39:50.140+0000",
+          "resolutionDate": "2026-03-02T08:18:44.860+0000"
+        },
+        {
+          "key": "RHOAIENG-50234",
+          "parentKey": "RHOAIENG-50225",
+          "summary": "Implement EvalHubClient interface + Go types + real HTTP client + factory",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Bishop",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T10:48:52.078+0000",
+          "updated": "2026-03-16T06:39:52.985+0000",
+          "resolutionDate": "2026-02-26T13:28:41.260+0000"
+        },
+        {
+          "key": "RHOAIENG-50235",
+          "parentKey": "RHOAIENG-50225",
+          "summary": "Implement MockEvalHubClient with static fixtures for all interface methods",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T10:50:07.677+0000",
+          "updated": "2026-03-16T06:39:56.275+0000",
+          "resolutionDate": "2026-03-02T06:50:07.468+0000"
+        },
+        {
+          "key": "RHOAIENG-50236",
+          "parentKey": "RHOAIENG-50225",
+          "summary": "Scaffold frontend",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Bishop",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T10:51:00.307+0000",
+          "updated": "2026-03-16T06:39:58.904+0000",
+          "resolutionDate": "2026-03-02T08:19:11.682+0000"
+        },
+        {
+          "key": "RHOAIENG-51436",
+          "parentKey": "RHOAIENG-50225",
+          "summary": "Eval Hub not working for Non admins",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Merit Bishop",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-02T08:44:10.457+0000",
+          "updated": "2026-03-05T10:40:22.342+0000",
+          "resolutionDate": "2026-03-05T10:40:22.309+0000"
+        },
+        {
+          "key": "RHOAIENG-51437",
+          "parentKey": "RHOAIENG-50225",
+          "summary": "Eval Hub Empty State for CR",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-02T08:47:57.395+0000",
+          "updated": "2026-03-16T06:39:16.354+0000",
+          "resolutionDate": "2026-03-16T06:39:16.137+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-50461",
+      "parentKey": "RHAISTRAT-1134",
+      "summary": "Refactor data handling code",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": "Person 229",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-21T23:11:43.432+0000",
+      "updated": "2026-03-19T09:06:14.199+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50462",
+          "parentKey": "RHOAIENG-50461",
+          "summary": "BFF implementation",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-21T23:13:23.064+0000",
+          "updated": "2026-03-02T15:27:57.007+0000",
+          "resolutionDate": "2026-03-02T08:22:11.987+0000"
+        },
+        {
+          "key": "RHOAIENG-50463",
+          "parentKey": "RHOAIENG-50461",
+          "summary": "Frontend implementation",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-21T23:13:51.136+0000",
+          "updated": "2026-03-02T15:28:07.458+0000",
+          "resolutionDate": "2026-03-02T08:22:21.182+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-50464",
+      "parentKey": "RHAISTRAT-1134",
+      "summary": "Fix bug in processing logic",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Person 209",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-21T23:16:59.596+0000",
+      "updated": "2026-03-19T09:05:43.474+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50465",
+          "parentKey": "RHOAIENG-50464",
+          "summary": "Frontend implementation",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Merit Bishop",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-21T23:20:18.394+0000",
+          "updated": "2026-03-12T13:34:31.845+0000",
+          "resolutionDate": "2026-03-12T13:34:31.809+0000"
+        },
+        {
+          "key": "RHOAIENG-50466",
+          "parentKey": "RHOAIENG-50464",
+          "summary": "BFF implementation",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Merit Bishop",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-21T23:20:41.242+0000",
+          "updated": "2026-03-12T13:34:39.819+0000",
+          "resolutionDate": "2026-03-12T13:34:39.784+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-50467",
+      "parentKey": "RHAISTRAT-1134",
+      "summary": "Add filtering options",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Person 209",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-21T23:25:05.949+0000",
+      "updated": "2026-03-16T10:00:35.924+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50468",
+          "parentKey": "RHOAIENG-50467",
+          "summary": "BFF implementation",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Merit Bishop",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-21T23:26:16.445+0000",
+          "updated": "2026-03-04T10:04:12.303+0000",
+          "resolutionDate": "2026-03-04T10:04:12.264+0000"
+        },
+        {
+          "key": "RHOAIENG-50469",
+          "parentKey": "RHOAIENG-50467",
+          "summary": "Frontend implementation",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Merit Bishop",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-21T23:27:00.509+0000",
+          "updated": "2026-03-04T10:04:21.319+0000",
+          "resolutionDate": "2026-03-04T10:04:21.285+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-50470",
+      "parentKey": "RHAISTRAT-1134",
+      "summary": "Add caching mechanism",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-21T23:30:54.284+0000",
+      "updated": "2026-03-19T09:06:42.600+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50478",
+          "parentKey": "RHOAIENG-50470",
+          "summary": "Frontend implementation",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Bishop",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-21T23:41:31.180+0000",
+          "updated": "2026-03-20T10:39:40.952+0000",
+          "resolutionDate": "2026-03-19T09:03:17.388+0000"
+        },
+        {
+          "key": "RHOAIENG-50479",
+          "parentKey": "RHOAIENG-50470",
+          "summary": "Frontend implementation 2",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Bishop",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-21T23:41:52.952+0000",
+          "updated": "2026-03-19T09:03:22.061+0000",
+          "resolutionDate": "2026-03-19T09:03:22.037+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-50471",
+      "parentKey": "RHAISTRAT-1134",
+      "summary": "Fix validation issue",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Person 229",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-21T23:31:46.995+0000",
+      "updated": "2026-03-16T12:29:40.887+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50476",
+          "parentKey": "RHOAIENG-50471",
+          "summary": "BFF implementation",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-21T23:38:44.501+0000",
+          "updated": "2026-03-24T06:42:21.569+0000",
+          "resolutionDate": "2026-03-24T06:41:15.320+0000"
+        },
+        {
+          "key": "RHOAIENG-50477",
+          "parentKey": "RHOAIENG-50471",
+          "summary": "Frontend implementation",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-21T23:39:16.435+0000",
+          "updated": "2026-03-24T06:42:18.171+0000",
+          "resolutionDate": "2026-03-24T06:41:28.401+0000"
+        },
+        {
+          "key": "RHOAIENG-53398",
+          "parentKey": "RHOAIENG-50471",
+          "summary": "Change the Benchmark id and name",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-16T06:12:52.728+0000",
+          "updated": "2026-03-24T06:42:15.841+0000",
+          "resolutionDate": "2026-03-24T06:42:10.050+0000"
+        },
+        {
+          "key": "RHOAIENG-53399",
+          "parentKey": "RHOAIENG-50471",
+          "summary": "Add benchmark description and Framework to benchmark suite",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-16T06:20:08.683+0000",
+          "updated": "2026-03-24T06:43:08.558+0000",
+          "resolutionDate": "2026-03-24T06:43:08.525+0000"
+        },
+        {
+          "key": "RHOAIENG-53401",
+          "parentKey": "RHOAIENG-50471",
+          "summary": "Add benchmark URL",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-16T06:41:08.427+0000",
+          "updated": "2026-04-01T16:14:05.424+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-53402",
+          "parentKey": "RHOAIENG-50471",
+          "summary": "Add filter by category and pagination to collection page",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-16T06:42:23.362+0000",
+          "updated": "2026-03-27T13:57:09.424+0000",
+          "resolutionDate": "2026-03-27T13:57:09.394+0000"
+        },
+        {
+          "key": "RHOAIENG-53433",
+          "parentKey": "RHOAIENG-50471",
+          "summary": "[BUG]: Remove benchmark parameter from payload when collection is selected in Evaluation page",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-16T12:20:42.944+0000",
+          "updated": "2026-03-24T06:43:31.321+0000",
+          "resolutionDate": "2026-03-24T06:43:31.296+0000"
+        },
+        {
+          "key": "RHOAIENG-54673",
+          "parentKey": "RHOAIENG-50471",
+          "summary": "Cleanup lmEval from Main dashboard",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-23T08:36:11.957+0000",
+          "updated": "2026-03-30T10:35:08.485+0000",
+          "resolutionDate": "2026-03-27T13:56:17.714+0000"
+        },
+        {
+          "key": "RHOAIENG-54745",
+          "parentKey": "RHOAIENG-50471",
+          "summary": "RBAC permission",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-23T14:26:36.522+0000",
+          "updated": "2026-03-27T13:55:41.827+0000",
+          "resolutionDate": "2026-03-27T13:55:41.803+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-50472",
+      "parentKey": "RHAISTRAT-1134",
+      "summary": "Update API endpoint",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-21T23:32:25.154+0000",
+      "updated": "2026-03-30T11:12:26.887+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50473",
+          "parentKey": "RHOAIENG-50472",
+          "summary": "Extend EvaluationRunsTable.tsx ",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-21T23:34:03.314+0000",
+          "updated": "2026-04-01T13:41:10.463+0000",
+          "resolutionDate": "2026-04-01T13:33:23.635+0000"
+        },
+        {
+          "key": "RHOAIENG-50474",
+          "parentKey": "RHOAIENG-50472",
+          "summary": "Add Dockerfile",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-21T23:34:35.890+0000",
+          "updated": "2026-04-01T13:41:12.633+0000",
+          "resolutionDate": "2026-04-01T13:33:29.839+0000"
+        },
+        {
+          "key": "RHOAIENG-50475",
+          "parentKey": "RHOAIENG-50472",
+          "summary": "Validate quickstart.md",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-21T23:35:46.012+0000",
+          "updated": "2026-04-01T13:41:14.598+0000",
+          "resolutionDate": "2026-04-01T13:33:34.687+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-54053",
+      "parentKey": "RHAISTRAT-1134",
+      "summary": "Add unit tests for service",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 209",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-18T05:17:48.034+0000",
+      "updated": "2026-03-30T11:11:42.619+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-54054",
+          "parentKey": "RHOAIENG-54053",
+          "summary": "Create a Experiment dropdown in Evaluation page",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Bishop",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-18T05:20:56.596+0000",
+          "updated": "2026-03-26T13:04:33.682+0000",
+          "resolutionDate": "2026-03-26T13:04:33.659+0000"
+        },
+        {
+          "key": "RHOAIENG-54055",
+          "parentKey": "RHOAIENG-54053",
+          "summary": "Embed the MLflow UI in Evaluation details page",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Nolan",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-18T05:21:23.899+0000",
+          "updated": "2026-03-26T13:04:13.417+0000",
+          "resolutionDate": "2026-03-26T13:04:13.397+0000"
+        },
+        {
+          "key": "RHOAIENG-54056",
+          "parentKey": "RHOAIENG-54053",
+          "summary": "[Spike]: Investigation on Mlflow integration",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Bishop",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-18T05:22:18.547+0000",
+          "updated": "2026-03-30T10:35:37.973+0000",
+          "resolutionDate": "2026-03-24T09:32:03.188+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-55879",
+      "parentKey": "RHAISTRAT-1134",
+      "summary": "Update dependencies",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Person 209",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-30T10:09:18.175+0000",
+      "updated": "2026-04-01T15:10:06.835+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-55880",
+          "parentKey": "RHOAIENG-55879",
+          "summary": "Eval Hub Cypress mock test foundation — mock data, intercepts, page objects, data-testids",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Bishop",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-30T10:14:28.426+0000",
+          "updated": "2026-04-02T11:43:40.555+0000",
+          "resolutionDate": "2026-04-02T11:43:40.524+0000"
+        },
+        {
+          "key": "RHOAIENG-55881",
+          "parentKey": "RHOAIENG-55879",
+          "summary": "Eval Hub Cypress mock tests — evaluations list page and error/edge states",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Bishop",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-30T10:15:54.461+0000",
+          "updated": "2026-04-02T11:43:44.178+0000",
+          "resolutionDate": "2026-04-02T11:43:44.150+0000"
+        },
+        {
+          "key": "RHOAIENG-55883",
+          "parentKey": "RHOAIENG-55879",
+          "summary": "Eval Hub Cypress mock tests — create flow entry, choose benchmark, choose collection",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-30T10:17:07.215+0000",
+          "updated": "2026-03-30T11:09:37.638+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55884",
+          "parentKey": "RHOAIENG-55879",
+          "summary": "Eval Hub Cypress mock tests — start evaluation run page",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-30T10:17:51.620+0000",
+          "updated": "2026-03-30T11:09:40.583+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-55891",
+      "parentKey": "RHAISTRAT-1134",
+      "summary": "Add export functionality",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Person 229",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-30T11:24:43.185+0000",
+      "updated": "2026-03-30T11:25:14.823+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-55965",
+          "parentKey": "RHOAIENG-55891",
+          "summary": "eval-hub UI stuck in loading state when no EvalHub CR exists (BFF returns 503)",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-30T13:18:20.108+0000",
+          "updated": "2026-04-02T12:15:08.256+0000",
+          "resolutionDate": "2026-04-02T12:15:08.231+0000"
+        },
+        {
+          "key": "RHOAIENG-56255",
+          "parentKey": "RHOAIENG-55891",
+          "summary": "EvalHub BFF: Move CR auto-discovery from startup to per-request in /evalhub/health",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-04-01T09:56:14.833+0000",
+          "updated": "2026-04-02T12:15:16.197+0000",
+          "resolutionDate": "2026-04-02T12:15:16.174+0000"
+        },
+        {
+          "key": "RHOAIENG-56267",
+          "parentKey": "RHOAIENG-55891",
+          "summary": "EvalHub UI: bug",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-04-01T11:44:54.711+0000",
+          "updated": "2026-04-01T16:12:09.169+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-56223",
+      "parentKey": "RHAISTRAT-1134",
+      "summary": "Fix memory leak",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Person 209",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-04-01T09:24:51.745+0000",
+      "updated": "2026-04-01T13:41:52.569+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-56224",
+          "parentKey": "RHOAIENG-56223",
+          "summary": "Evalhub - MUST meet designed for FIPS",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T09:25:04.224+0000",
+          "updated": "2026-04-01T13:43:04.461+0000",
+          "resolutionDate": "2026-04-01T13:43:04.432+0000"
+        },
+        {
+          "key": "RHOAIENG-56225",
+          "parentKey": "RHOAIENG-56223",
+          "summary": "Evalhub - Repository added to ODH/RHOAI",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T09:25:08.337+0000",
+          "updated": "2026-04-01T13:44:15.664+0000",
+          "resolutionDate": "2026-04-01T13:44:15.641+0000"
+        },
+        {
+          "key": "RHOAIENG-56226",
+          "parentKey": "RHOAIENG-56223",
+          "summary": "Evalhub - Ensure work with supported lifecyles",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T09:25:12.758+0000",
+          "updated": "2026-04-01T13:44:30.560+0000",
+          "resolutionDate": "2026-04-01T13:44:30.535+0000"
+        },
+        {
+          "key": "RHOAIENG-56227",
+          "parentKey": "RHOAIENG-56223",
+          "summary": "Evalhub - Add source repo(s) to Snyk",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T09:25:16.935+0000",
+          "updated": "2026-04-01T13:45:52.405+0000",
+          "resolutionDate": "2026-04-01T13:45:52.368+0000"
+        },
+        {
+          "key": "RHOAIENG-56228",
+          "parentKey": "RHOAIENG-56223",
+          "summary": "Promote alpha APIs to beta",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T09:25:21.460+0000",
+          "updated": "2026-04-01T13:46:01.281+0000",
+          "resolutionDate": "2026-04-01T13:46:01.256+0000"
+        },
+        {
+          "key": "RHOAIENG-56229",
+          "parentKey": "RHOAIENG-56223",
+          "summary": "Evalhub Onboard to ODH Build - 2 week notice! ",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T09:25:25.337+0000",
+          "updated": "2026-04-01T13:46:08.498+0000",
+          "resolutionDate": "2026-04-01T13:46:08.474+0000"
+        },
+        {
+          "key": "RHOAIENG-56230",
+          "parentKey": "RHOAIENG-56223",
+          "summary": "Evalhub - Test with disconnected environment",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T09:25:29.331+0000",
+          "updated": "2026-04-01T13:46:16.320+0000",
+          "resolutionDate": "2026-04-01T13:46:16.292+0000"
+        },
+        {
+          "key": "RHOAIENG-56231",
+          "parentKey": "RHOAIENG-56223",
+          "summary": "Evalhub - Add component data to product-definitions for vulnerability tracking",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T09:25:33.049+0000",
+          "updated": "2026-04-01T13:46:32.926+0000",
+          "resolutionDate": "2026-04-01T13:46:32.896+0000"
+        },
+        {
+          "key": "RHOAIENG-56232",
+          "parentKey": "RHOAIENG-56223",
+          "summary": "Evalhub - Add component support for must-gather",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T09:25:37.815+0000",
+          "updated": "2026-04-01T13:51:01.366+0000",
+          "resolutionDate": "2026-04-01T13:51:01.216+0000"
+        },
+        {
+          "key": "RHOAIENG-56233",
+          "parentKey": "RHOAIENG-56223",
+          "summary": "Evalhub - Security requirements",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T09:25:41.591+0000",
+          "updated": "2026-04-01T13:51:09.443+0000",
+          "resolutionDate": "2026-04-01T13:51:09.396+0000"
+        },
+        {
+          "key": "RHOAIENG-56234",
+          "parentKey": "RHOAIENG-56223",
+          "summary": "Evalhub - Create component in jira",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T09:25:45.298+0000",
+          "updated": "2026-04-01T13:51:16.094+0000",
+          "resolutionDate": "2026-04-01T13:51:16.051+0000"
+        },
+        {
+          "key": "RHOAIENG-56235",
+          "parentKey": "RHOAIENG-56223",
+          "summary": "Evalhub- Integration with ODH operator - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T09:25:49.026+0000",
+          "updated": "2026-04-01T13:51:22.179+0000",
+          "resolutionDate": "2026-04-01T13:51:22.146+0000"
+        },
+        {
+          "key": "RHOAIENG-56236",
+          "parentKey": "RHOAIENG-56223",
+          "summary": "Evalhub - RHOAI ONLY: AI Platform Core Components (AIPCC) Integration",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T09:25:52.774+0000",
+          "updated": "2026-04-01T13:51:29.060+0000",
+          "resolutionDate": "2026-04-01T13:51:29.031+0000"
+        },
+        {
+          "key": "RHOAIENG-56237",
+          "parentKey": "RHOAIENG-56223",
+          "summary": "Evalhub - Multi-Architecture Support",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T09:25:56.420+0000",
+          "updated": "2026-04-01T13:51:35.721+0000",
+          "resolutionDate": "2026-04-01T13:51:35.693+0000"
+        },
+        {
+          "key": "RHOAIENG-56238",
+          "parentKey": "RHOAIENG-56223",
+          "summary": "Evalhub - Add Prometheus (metrics) config for component (optional)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T09:25:59.878+0000",
+          "updated": "2026-04-01T13:51:41.803+0000",
+          "resolutionDate": "2026-04-01T13:51:41.773+0000"
+        },
+        {
+          "key": "RHOAIENG-56239",
+          "parentKey": "RHOAIENG-56223",
+          "summary": "Evalhub - Feature signoff - TP",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [
+            "signoff"
+          ],
+          "storyPoints": 0,
+          "created": "2026-04-01T09:26:03.158+0000",
+          "updated": "2026-04-01T13:45:30.401+0000",
+          "resolutionDate": "2026-04-01T13:45:30.350+0000"
+        },
+        {
+          "key": "RHOAIENG-56246",
+          "parentKey": "RHOAIENG-56223",
+          "summary": "Evalhub - Onboard to RHOAI Build - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T09:26:22.945+0000",
+          "updated": "2026-04-01T13:47:09.704+0000",
+          "resolutionDate": "2026-04-01T13:47:09.675+0000"
+        },
+        {
+          "key": "RHOAIENG-56247",
+          "parentKey": "RHOAIENG-56223",
+          "summary": "Evalhub - Testing requirements",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T09:26:26.490+0000",
+          "updated": "2026-04-01T13:47:01.989+0000",
+          "resolutionDate": "2026-04-01T13:47:01.960+0000"
+        },
+        {
+          "key": "RHOAIENG-56248",
+          "parentKey": "RHOAIENG-56223",
+          "summary": "Evalhub - Integration with RHOAI operator - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T09:26:29.907+0000",
+          "updated": "2026-04-01T13:46:54.111+0000",
+          "resolutionDate": "2026-04-01T13:46:54.085+0000"
+        },
+        {
+          "key": "RHOAIENG-56249",
+          "parentKey": "RHOAIENG-56223",
+          "summary": "Evalhub - Build from source (required)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "OpenShift AI Productization"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T09:26:33.201+0000",
+          "updated": "2026-04-01T13:46:48.446+0000",
+          "resolutionDate": "2026-04-01T13:46:48.419+0000"
+        },
+        {
+          "key": "RHOAIENG-56250",
+          "parentKey": "RHOAIENG-56223",
+          "summary": "Evalhub - Add support for the new component in the QE related repositories",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-04-01T09:26:36.665+0000",
+          "updated": "2026-04-01T13:45:23.674+0000",
+          "resolutionDate": "2026-04-01T13:45:23.639+0000"
+        },
+        {
+          "key": "RHOAIENG-56251",
+          "parentKey": "RHOAIENG-56223",
+          "summary": "Evalhub - Feature documented in architecture diagrams",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T09:26:39.910+0000",
+          "updated": "2026-04-01T13:44:40.306+0000",
+          "resolutionDate": "2026-04-01T13:44:40.282+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 15,
+    "totalIssues": 75,
+    "issuesByStatus": {
+      "Closed": 48,
+      "Resolved": 23,
+      "In Progress": 2,
+      "Backlog": 2
+    },
+    "issuesByCategory": {
+      "Done": 71,
+      "In Progress": 2,
+      "To Do": 2
+    },
+    "totalStoryPoints": 23,
+    "storyPointsDone": 23,
+    "completionPct": 95,
+    "staleCount": 0,
+    "unassignedCount": 4,
+    "blockerCount": 11,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-48987",
+        "summary": "Dashboard Eval Hub - Deployment",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Frankie Rand",
+        "totalIssues": 8,
+        "doneIssues": 8,
+        "progressPct": 100,
+        "storyPoints": 20,
+        "storyPointsDone": 20,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-49845",
+        "summary": "Eval Hub - 3.4 EA2",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Merit Bishop",
+        "totalIssues": 6,
+        "doneIssues": 6,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-50197",
+        "summary": "ODH Konflux Release Build Onboarding [Eval Hub Modular Architecture]",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Merit Oates",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-50200",
+        "summary": "RHOAI Konflux Onboarding [Eval Hub Modular Architecture]",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Merit Oates",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-50225",
+        "summary": "Eval Hub - Foundation",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Frankie Rand",
+        "totalIssues": 9,
+        "doneIssues": 9,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-50461",
+        "summary": "Eval Hub - Collections Browse",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Frankie Rand",
+        "totalIssues": 2,
+        "doneIssues": 2,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-50464",
+        "summary": "Eval Hub - Trigger Evaluation",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Merit Bishop",
+        "totalIssues": 2,
+        "doneIssues": 2,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-50467",
+        "summary": "Eval Hub - Runs List & Status Monitoring ",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Merit Bishop",
+        "totalIssues": 2,
+        "doneIssues": 2,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-50470",
+        "summary": "Eval Hub - Results Detail",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 2,
+        "doneIssues": 2,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-50471",
+        "summary": "Eval Hub - Benchmarks and Benchmark suite",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Frankie Rand",
+        "totalIssues": 9,
+        "doneIssues": 8,
+        "progressPct": 89,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-50472",
+        "summary": "Eval Hub - Run History & Polish",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 3,
+        "doneIssues": 3,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-54053",
+        "summary": "Evalhub - MLFlow Embedded UI",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Merit Bishop",
+        "totalIssues": 3,
+        "doneIssues": 3,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-55879",
+        "summary": "Evalhub - Mocked Tests",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Merit Bishop",
+        "totalIssues": 4,
+        "doneIssues": 2,
+        "progressPct": 50,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-55891",
+        "summary": "Evalhub - UI Bugs",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Frankie Rand",
+        "totalIssues": 3,
+        "doneIssues": 2,
+        "progressPct": 67,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-56223",
+        "summary": "Tech Preview - ODH and RHOAI Integrations [AI Core Dashboard - EvalHub]",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Merit Bishop",
+        "totalIssues": 22,
+        "doneIssues": 22,
+        "progressPct": 100,
+        "storyPoints": 3,
+        "storyPointsDone": 3,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

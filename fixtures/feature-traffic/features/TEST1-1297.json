@@ -1,0 +1,117 @@
+{
+  "key": "TEST1-1297",
+  "summary": "Add export functionality",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Frankie Dean",
+    "accountId": "712020:4d8ab7b7-4491-490a-b85b-8246663b9db3"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "Notebooks Images"
+  ],
+  "created": "2026-03-12T20:09:07.278+0000",
+  "updated": "2026-04-07T18:16:22.697+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "GREEN",
+            "marks": [
+              {
+                "type": "strong"
+              },
+              {
+                "type": "textColor",
+                "attrs": {
+                  "color": "#006644"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " as of 07-Apr-2026."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Packages updated in LLM Compressor images and in testing. Will have images available for PM review 08-Apr. Will request feature return to 3.4 GA as all work will be completed by code freeze."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "cc: "
+          },
+          {
+            "type": "mention",
+            "attrs": {
+              "id": "712020:6da81bbe-44d3-451a-a220-f20dbe34d3af",
+              "text": "@Rob Greenberg",
+              "accessLevel": "",
+              "localId": "ba63317f-0729-4c47-9d68-f4323cde68de"
+            }
+          },
+          {
+            "type": "text",
+            "text": " "
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1035",
+      "linkedSummary": "Update model-opt (llm compressor, ct, speculators)Image for RHOAI 3.4 Workbench & Pipelines",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Duplicate",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1054",
+      "linkedSummary": "[RHOAI 3.3 Target] - Leverage model-opt image with LLM Compressor (and dependencies) in RHOAI Workbench/Runtime Images",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

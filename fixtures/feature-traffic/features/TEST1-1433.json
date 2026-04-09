@@ -1,0 +1,545 @@
+{
+  "key": "TEST1-1433",
+  "summary": "Optimize database queries",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Gray Grant",
+    "accountId": "712020:07c24d45-743b-4e25-a6fc-2e87b3176f76"
+  },
+  "fixVersions": [],
+  "labels": [
+    "MLflow",
+    "aicp-team-crucible",
+    "dashboard-razzmatazz-scrum"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "AI Pipelines",
+    "DevTestOps",
+    "Documentation",
+    "MLflow",
+    "UXD"
+  ],
+  "created": "2026-04-03T14:30:44.086+0000",
+  "updated": "2026-04-06T13:17:48.696+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Date: "
+          },
+          {
+            "type": "date",
+            "attrs": {
+              "timestamp": "1775174400000"
+            }
+          },
+          {
+            "type": "text",
+            "text": ":"
+          },
+          {
+            "type": "hardBreak"
+          },
+          {
+            "type": "text",
+            "text": "Status:  GREEN"
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Pipelines & Dashboard work is progressing.  Work moved to this feature as it was not completed by April 2, 2026. "
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Pipelines:",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " "
+                  },
+                  {
+                    "type": "text",
+                    "text": "The ",
+                    "marks": [
+                      {
+                        "type": "link",
+                        "attrs": {
+                          "href": "https://redhat.atlassian.net/browse/RHOAIENG-50328"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": "Integrate MLflow with KFP",
+                    "marks": [
+                      {
+                        "type": "link",
+                        "attrs": {
+                          "href": "https://redhat.atlassian.net/browse/RHOAIENG-50328"
+                        }
+                      },
+                      {
+                        "type": "em"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": "  in progress. "
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Dashboard:",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " The "
+                  },
+                  {
+                    "type": "text",
+                    "text": "dashboard integration",
+                    "marks": [
+                      {
+                        "type": "link",
+                        "attrs": {
+                          "href": "https://redhat.atlassian.net/browse/RHOAIENG-45792"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " is blocked pending completion of the pipelines work."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1161",
+      "linkedSummary": "MLFlow integration in RHOAI GA",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-745",
+      "linkedSummary": "MLFlow integration in RHOAI",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-150",
+      "linkedSummary": "Prompt Engineering & Management  - Embed MLFlow UI ",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-52091",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1161] - MLFlow integration in RHOAI 3.4GA",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Issue split",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1161",
+      "linkedSummary": "MLFlow integration in RHOAI GA",
+      "linkedStatus": "Review"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-50328",
+      "parentKey": "RHAISTRAT-1433",
+      "summary": "Fix sorting order",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Person 311",
+      "components": [
+        "AI Pipelines"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-19T15:40:59.107+0000",
+      "updated": "2026-04-03T14:58:15.997+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50329",
+          "parentKey": "RHOAIENG-50328",
+          "summary": "Pipeline Run Proto Change",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Yates",
+          "components": [
+            "AI Pipelines"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-02-19T15:45:00.604+0000",
+          "updated": "2026-03-09T15:07:00.946+0000",
+          "resolutionDate": "2026-03-09T15:07:00.911+0000"
+        },
+        {
+          "key": "RHOAIENG-50331",
+          "parentKey": "RHOAIENG-50328",
+          "summary": "Add Pipeline Run API lifecycle hooks",
+          "type": "Story",
+          "status": "Testing",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Onyx Foster",
+          "components": [
+            "AI Pipelines"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-19T15:46:26.258+0000",
+          "updated": "2026-04-06T17:09:19.904+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-50334",
+          "parentKey": "RHOAIENG-50328",
+          "summary": "Driver life cycle hooks",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Onyx North",
+          "components": [
+            "AI Pipelines"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-19T15:50:15.610+0000",
+          "updated": "2026-04-06T17:09:20.830+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-50335",
+          "parentKey": "RHOAIENG-50328",
+          "summary": "Launcher life cycle hooks",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Onyx North",
+          "components": [
+            "AI Pipelines"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-19T15:51:43.001+0000",
+          "updated": "2026-04-06T17:09:21.058+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-50348",
+          "parentKey": "RHOAIENG-50328",
+          "summary": "Rebase/Cherry Pick KFP to midstream",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Onyx North",
+          "components": [
+            "AI Pipelines"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-02-19T16:31:04.347+0000",
+          "updated": "2026-03-31T17:08:27.955+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-53614",
+          "parentKey": "RHOAIENG-50328",
+          "summary": "DSPO changes for MLflow integration",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Onyx North",
+          "components": [
+            "AI Pipelines"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-03-16T17:21:11.084+0000",
+          "updated": "2026-04-06T17:09:21.398+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54415",
+          "parentKey": "RHOAIENG-50328",
+          "summary": "Add Integration Tests for MLflow Integration",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Onyx Foster",
+          "components": [],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-03-19T19:38:03.943+0000",
+          "updated": "2026-04-06T14:15:23.102+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55760",
+          "parentKey": "RHOAIENG-50328",
+          "summary": "Add action to deploy mlflow-operator for integration tetsing",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Grant",
+          "components": [
+            "AI Pipelines"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-03-27T16:22:04.609+0000",
+          "updated": "2026-04-02T14:39:18.792+0000",
+          "resolutionDate": "2026-04-02T14:39:18.759+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-53995",
+      "parentKey": "RHAISTRAT-1433",
+      "summary": "Implement search feature",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Critical",
+      "assignee": "Person 204",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-razzmatazz-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-17T18:11:17.079+0000",
+      "updated": "2026-04-03T14:59:12.479+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-53434",
+          "parentKey": "RHOAIENG-53995",
+          "summary": "Add experiments endpoint with SDK integration to MLflow BFF",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Sato",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-16T12:33:20.589+0000",
+          "updated": "2026-03-19T16:02:54.015+0000",
+          "resolutionDate": "2026-03-19T16:02:53.982+0000"
+        },
+        {
+          "key": "RHOAIENG-53996",
+          "parentKey": "RHOAIENG-53995",
+          "summary": "Implement UI changes according to the design",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Sato",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-17T18:27:28.789+0000",
+          "updated": "2026-04-06T16:01:25.084+0000",
+          "resolutionDate": "2026-04-06T16:01:25.054+0000"
+        },
+        {
+          "key": "RHOAIENG-54321",
+          "parentKey": "RHOAIENG-53995",
+          "summary": "Create shared MLflow experiment selector dropdown component",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Sato",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-19T11:11:59.523+0000",
+          "updated": "2026-03-20T14:54:32.506+0000",
+          "resolutionDate": "2026-03-20T14:54:32.483+0000"
+        },
+        {
+          "key": "RHOAIENG-55573",
+          "parentKey": "RHOAIENG-53995",
+          "summary": "Rename MLflow BFF proxy path to avoid HTTPRoute conflict with MLflow operator",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Merit Sato",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-26T16:59:44.006+0000",
+          "updated": "2026-03-27T10:04:46.145+0000",
+          "resolutionDate": "2026-03-27T10:04:46.122+0000"
+        },
+        {
+          "key": "RHOAIENG-55963",
+          "parentKey": "RHOAIENG-53995",
+          "summary": "Add DSPA-based condition for MLflow UI integration visibility",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Merit Sato",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-30T13:17:10.524+0000",
+          "updated": "2026-03-31T20:30:53.555+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 2,
+    "totalIssues": 13,
+    "issuesByStatus": {
+      "Closed": 2,
+      "Testing": 1,
+      "Review": 3,
+      "New": 1,
+      "In Progress": 2,
+      "Resolved": 4
+    },
+    "issuesByCategory": {
+      "Done": 6,
+      "In Progress": 6,
+      "To Do": 1
+    },
+    "totalStoryPoints": 29,
+    "storyPointsDone": 4,
+    "completionPct": 46,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 1,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-50328",
+        "summary": "Integrate MLflow with KFP",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Gray Grant",
+        "totalIssues": 8,
+        "doneIssues": 2,
+        "progressPct": 25,
+        "storyPoints": 29,
+        "storyPointsDone": 4,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-53995",
+        "summary": "Integrate Dashboard Pipelines Runs with MLflow",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Merit Sato",
+        "totalIssues": 5,
+        "doneIssues": 4,
+        "progressPct": 80,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

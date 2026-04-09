@@ -1,0 +1,82 @@
+{
+  "key": "TEST1-1183",
+  "summary": "Fix validation issue",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Onyx Dunn",
+    "accountId": "62d879bb278161644007f05a"
+  },
+  "fixVersions": [
+    "RHAIIS-3.4 EA-1"
+  ],
+  "labels": [
+    "INFERSTRAT_251116"
+  ],
+  "components": [
+    "INFERENG Midstream"
+  ],
+  "created": "2026-02-03T10:30:53.286+0000",
+  "updated": "2026-03-26T17:44:50.733+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-290",
+      "linkedSummary": "RHAIIS 3.3 - v0.13.0 vLLM Build & Validation ",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Causality",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-52468",
+      "linkedSummary": "update imageParamMap from RHAIIS to RHAII",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "INFERENG-4705",
+      "linkedSummary": "[ccs] Docs - RHAII 3.4 - Rebranding to RHAII",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "inward",
+      "linkedKey": "AIPCC-9936",
+      "linkedSummary": "RHAII 3.4 -  rebranding to Red Hat AI Inference (RHAII)",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1404",
+      "linkedSummary": "CLONE - RHAII 3.4 - Rebranding to RHAII",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

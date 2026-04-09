@@ -1,0 +1,386 @@
+{
+  "key": "TEST1-1285",
+  "summary": "Implement webhook handler",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Onyx Price",
+    "accountId": "712020:bb8a6a79-2d44-4fc2-a843-e695a33df84b"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "confidence-yellow",
+    "trustworthy-agents"
+  ],
+  "components": [
+    "AI Safety",
+    "Model Eval"
+  ],
+  "created": "2026-03-10T12:58:11.672+0000",
+  "updated": "2026-04-07T03:07:03.553+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1263",
+      "linkedSummary": "Start an Agentic Safety Research & Validation Program",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1442",
+      "linkedSummary": "Developer-Facing Safety Configuration for AI Agents",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1254",
+      "linkedSummary": "Expand TrustyAI Evaluation Capabilities to cover Risk-Based Benchmarks",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-53861",
+      "parentKey": "RHAISTRAT-1285",
+      "summary": "Add export functionality",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Person 177",
+      "components": [],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-17T13:40:57.661+0000",
+      "updated": "2026-03-17T15:30:41.397+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-53862",
+          "parentKey": "RHOAIENG-53861",
+          "summary": "Test gemma models with Agent Dojo",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Price",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-17T13:41:14.206+0000",
+          "updated": "2026-03-18T13:34:23.766+0000",
+          "resolutionDate": "2026-03-18T13:34:23.743+0000"
+        },
+        {
+          "key": "RHOAIENG-53950",
+          "parentKey": "RHOAIENG-53861",
+          "summary": "Test Qwen Code with AgentDojo",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Price",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-17T15:28:12.514+0000",
+          "updated": "2026-03-25T11:49:53.029+0000",
+          "resolutionDate": "2026-03-25T11:49:52.943+0000"
+        },
+        {
+          "key": "RHOAIENG-54132",
+          "parentKey": "RHOAIENG-53861",
+          "summary": "Test Qwen code with guardrails in AgentDojo",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Price",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-18T13:34:05.084+0000",
+          "updated": "2026-03-25T11:39:56.898+0000",
+          "resolutionDate": "2026-03-25T11:39:56.834+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-54341",
+      "parentKey": "RHAISTRAT-1285",
+      "summary": "Fix data migration",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Person 177",
+      "components": [
+        "AI Evaluations",
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-19T13:30:25.117+0000",
+      "updated": "2026-03-25T18:56:45.384+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-55211",
+          "parentKey": "RHOAIENG-54341",
+          "summary": "Define attack template and suite scenario data constants ",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Price",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-25T18:31:39.259+0000",
+          "updated": "2026-03-25T19:01:12.760+0000",
+          "resolutionDate": "2026-03-25T19:01:12.728+0000"
+        },
+        {
+          "key": "RHOAIENG-55212",
+          "parentKey": "RHOAIENG-54341",
+          "summary": "Implement AgentDojoBase probe class",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Price",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-25T18:31:52.399+0000",
+          "updated": "2026-03-25T19:01:19.942+0000",
+          "resolutionDate": "2026-03-25T19:01:19.918+0000"
+        },
+        {
+          "key": "RHOAIENG-55213",
+          "parentKey": "RHOAIENG-54341",
+          "summary": "Implement ImportantInstructions probe",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Price",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-25T18:32:21.022+0000",
+          "updated": "2026-03-25T19:01:27.533+0000",
+          "resolutionDate": "2026-03-25T19:01:27.512+0000"
+        },
+        {
+          "key": "RHOAIENG-55214",
+          "parentKey": "RHOAIENG-54341",
+          "summary": "Implement InjectionFollowed detector ",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Price",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-25T18:32:28.957+0000",
+          "updated": "2026-03-25T19:01:34.499+0000",
+          "resolutionDate": "2026-03-25T19:01:34.470+0000"
+        },
+        {
+          "key": "RHOAIENG-55215",
+          "parentKey": "RHOAIENG-54341",
+          "summary": "Create unit and smoke tests",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Price",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-25T18:32:52.590+0000",
+          "updated": "2026-03-25T19:01:43.264+0000",
+          "resolutionDate": "2026-03-25T19:01:43.230+0000"
+        },
+        {
+          "key": "RHOAIENG-55216",
+          "parentKey": "RHOAIENG-54341",
+          "summary": "Garak<->Agentdojo Integration  tests",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Onyx Price",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-25T18:33:10.044+0000",
+          "updated": "2026-03-26T15:11:24.252+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55218",
+          "parentKey": "RHOAIENG-54341",
+          "summary": "Run full test suite and validate probe registration",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Onyx Price",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-25T18:33:17.962+0000",
+          "updated": "2026-03-25T18:57:30.350+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-55235",
+      "parentKey": "RHAISTRAT-1285",
+      "summary": "Implement webhook handler",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Person 177",
+      "components": [
+        "AI Evaluations",
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-26T03:19:07.340+0000",
+      "updated": "2026-03-26T13:17:30.766+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-55236",
+          "parentKey": "RHOAIENG-55235",
+          "summary": "Agentic safety platform blog",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Onyx Price",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T03:26:47.218+0000",
+          "updated": "2026-03-26T03:29:42.939+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55237",
+          "parentKey": "RHOAIENG-55235",
+          "summary": "Agentic safety frameworks and platforms - survey + list",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Onyx Price",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T03:29:37.285+0000",
+          "updated": "2026-03-26T03:30:38.155+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 3,
+    "totalIssues": 12,
+    "issuesByStatus": {
+      "Resolved": 8,
+      "In Progress": 3,
+      "New": 1
+    },
+    "issuesByCategory": {
+      "Done": 8,
+      "In Progress": 3,
+      "To Do": 1
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 67,
+    "staleCount": 3,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-53861",
+        "summary": "Experiment with AgentDojo",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Onyx Price",
+        "totalIssues": 3,
+        "doneIssues": 3,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-54341",
+        "summary": "explore translation+integration of agentDojo attack functions as garak probes",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Onyx Price",
+        "totalIssues": 7,
+        "doneIssues": 5,
+        "progressPct": 71,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-55235",
+        "summary": "Agentic Safety frameworks landscape analysis",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Onyx Price",
+        "totalIssues": 2,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

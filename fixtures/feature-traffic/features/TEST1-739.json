@@ -1,0 +1,45 @@
+{
+  "key": "TEST1-739",
+  "summary": "Refactor data handling code",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [],
+  "components": [],
+  "created": "2025-05-16T21:00:41.947+0000",
+  "updated": "2025-11-25T21:52:51.852+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-238",
+      "linkedSummary": "[GA] LLM Compressor RHAIIS Pipeline",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

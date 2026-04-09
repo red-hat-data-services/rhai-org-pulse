@@ -1,0 +1,131 @@
+{
+  "key": "TEST1-960",
+  "summary": "Add monitoring metrics",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Frankie Hayes",
+    "accountId": "624b179d4fe01d006ba9362c"
+  },
+  "fixVersions": [],
+  "labels": [
+    "Approved-RFE",
+    "differentiator",
+    "mcp",
+    "mid-term",
+    "partner",
+    "rhoai-3.0.next",
+    "should-have",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AgentDev",
+    "Agentic",
+    "AI Hub"
+  ],
+  "created": "2025-12-05T16:16:19.576+0000",
+  "updated": "2026-03-30T08:05:05.544+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1084",
+      "linkedSummary": "Dev Preview - MCP Catalog – Enterprise Control of MCP Assets",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-138",
+      "linkedSummary": "MCP Registry – Centralized Governance",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "APPENG-3680",
+      "linkedSummary": "Integrate, Validate, and Certify MCP Servers",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "UXE-348",
+      "linkedSummary": "AI Support:  AI Registry / MCP Registry",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "UXE-727",
+      "linkedSummary": "Track MCP Servers and consumers of MCP servers in XE Compass",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-373",
+      "linkedSummary": "MCP Catalog & Trust Registry",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-290",
+      "linkedSummary": "Implement MCP Server Lifecycle Management with OpenShift AI",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-437",
+      "linkedSummary": "Integrate, Validate, and Certify MCP Servers (and ISVs) + Explore Integration with Model Registry",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-457",
+      "linkedSummary": "Productize MCP servers for RH products",
+      "linkedStatus": "Rejection Pending"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-699",
+      "linkedSummary": "MCP Catalog – Enterprise Control of MCP Assets",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-373",
+      "linkedSummary": "MCP Catalog & Trust Registry",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

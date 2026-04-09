@@ -1,0 +1,703 @@
+{
+  "key": "TEST1-1179",
+  "summary": "Add filtering options",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Merit Webb",
+    "accountId": "712020:d1f056a6-a23c-41b9-99b1-6d58953ce814"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "chatterbox",
+    "confidence-green",
+    "needs-docs",
+    "needs-tech-review",
+    "summit-2026"
+  ],
+  "components": [
+    "AI Safety",
+    "Documentation"
+  ],
+  "created": "2026-02-02T11:36:32.199+0000",
+  "updated": "2026-04-07T03:07:09.014+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1223",
+      "linkedSummary": "[Summit] Refactor AIMI/Chatterbox Logic into Garak (Python)",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-50653",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1179] - Refactor AIMI/Chatterbox Logic into Garak (Python)",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Informs",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-50653",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1179] - Refactor AIMI/Chatterbox Logic into Garak (Python)",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-52132",
+      "linkedSummary": "[ccs Epic] Document Chatterbox integration with Garak ",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1485",
+      "linkedSummary": "AI Safety Evaluation & Red Teaming Report Visualization in Eval Hub",
+      "linkedStatus": "Stakeholder review"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-52113",
+      "parentKey": "RHAISTRAT-1179",
+      "summary": "Add pagination support",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Critical",
+      "assignee": "Person 163",
+      "components": [
+        "AI Evaluations",
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-06T08:10:22.140+0000",
+      "updated": "2026-03-24T10:34:36.043+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-52114",
+      "parentKey": "RHAISTRAT-1179",
+      "summary": "Fix memory leak",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Critical",
+      "assignee": "Person 172",
+      "components": [
+        "AI Evaluations",
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-05T17:49:10.019+0000",
+      "updated": "2026-03-18T14:05:55.758+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-52139",
+          "parentKey": "RHOAIENG-52114",
+          "summary": "Implement EarlyStopHarness for Adaptive Intent-Based Testing",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Emery",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-06T10:14:35.065+0000",
+          "updated": "2026-03-31T09:22:47.047+0000",
+          "resolutionDate": "2026-03-31T09:22:47.023+0000"
+        },
+        {
+          "key": "RHOAIENG-52140",
+          "parentKey": "RHOAIENG-52114",
+          "summary": "Implement Intent-Based Attack Probes (TAP, SPO, Translation)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Emery",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-06T10:20:44.723+0000",
+          "updated": "2026-03-31T09:22:53.302+0000",
+          "resolutionDate": "2026-03-31T09:22:53.239+0000"
+        },
+        {
+          "key": "RHOAIENG-52141",
+          "parentKey": "RHOAIENG-52114",
+          "summary": "Fix Stub Tracking Type Safety and Linkage",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Zimmerman",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-06T10:21:10.745+0000",
+          "updated": "2026-03-06T10:53:25.617+0000",
+          "resolutionDate": "2026-03-06T10:21:20.321+0000"
+        },
+        {
+          "key": "RHOAIENG-52142",
+          "parentKey": "RHOAIENG-52114",
+          "summary": "Integrate EarlyStopHarness with Reporting and Evaluation Systems",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Emery",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-06T10:21:33.468+0000",
+          "updated": "2026-03-31T09:22:58.610+0000",
+          "resolutionDate": "2026-03-31T09:22:58.583+0000"
+        },
+        {
+          "key": "RHOAIENG-52143",
+          "parentKey": "RHOAIENG-52114",
+          "summary": "Fix Default Configuration to Prevent Unintended Intent System Activation",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Zimmerman",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-06T10:21:58.785+0000",
+          "updated": "2026-03-06T10:54:26.894+0000",
+          "resolutionDate": "2026-03-06T10:22:05.538+0000"
+        },
+        {
+          "key": "RHOAIENG-52144",
+          "parentKey": "RHOAIENG-52114",
+          "summary": "Enhance Intent Service Architecture and Stub Management",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Zimmerman",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-06T10:22:15.985+0000",
+          "updated": "2026-03-06T10:54:45.763+0000",
+          "resolutionDate": "2026-03-06T10:22:22.665+0000"
+        },
+        {
+          "key": "RHOAIENG-52145",
+          "parentKey": "RHOAIENG-52114",
+          "summary": "Add Test Coverage and Documentation for Intent System",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Zimmerman",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-06T10:22:41.847+0000",
+          "updated": "2026-03-06T10:55:00.776+0000",
+          "resolutionDate": "2026-03-06T10:22:50.348+0000"
+        },
+        {
+          "key": "RHOAIENG-52146",
+          "parentKey": "RHOAIENG-52114",
+          "summary": "Update Dependencies for Security and Compatibility",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Zimmerman",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-06T10:23:02.695+0000",
+          "updated": "2026-03-06T10:55:16.886+0000",
+          "resolutionDate": "2026-03-06T10:23:10.266+0000"
+        },
+        {
+          "key": "RHOAIENG-52160",
+          "parentKey": "RHOAIENG-52114",
+          "summary": "Automated Red Teaming HTML Report",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Emery",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-06T12:08:47.798+0000",
+          "updated": "2026-03-31T09:59:47.622+0000",
+          "resolutionDate": "2026-03-31T09:58:51.253+0000"
+        },
+        {
+          "key": "RHOAIENG-52165",
+          "parentKey": "RHOAIENG-52114",
+          "summary": "Implement improved multiclass detector",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Zimmerman",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-06T13:16:41.248+0000",
+          "updated": "2026-03-31T09:23:13.357+0000",
+          "resolutionDate": "2026-03-31T09:23:13.334+0000"
+        },
+        {
+          "key": "RHOAIENG-53502",
+          "parentKey": "RHOAIENG-52114",
+          "summary": "Rebase midstream Garak on upstream",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Frankie Emery",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-16T16:05:22.139+0000",
+          "updated": "2026-03-18T08:37:29.961+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-53784",
+          "parentKey": "RHOAIENG-52114",
+          "summary": "Check output jsonl file contains model responses and detections",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Frankie Emery",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-17T09:44:40.581+0000",
+          "updated": "2026-03-18T07:56:52.647+0000",
+          "resolutionDate": "2026-03-18T07:56:52.621+0000"
+        },
+        {
+          "key": "RHOAIENG-53798",
+          "parentKey": "RHOAIENG-52114",
+          "summary": "Check what is passed as {question} to detector when applied with attack probes",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Frankie Emery",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-17T09:49:49.509+0000",
+          "updated": "2026-03-18T10:32:00.738+0000",
+          "resolutionDate": "2026-03-18T10:32:00.537+0000"
+        },
+        {
+          "key": "RHOAIENG-53799",
+          "parentKey": "RHOAIENG-52114",
+          "summary": "Check behaviour when all attempts are rejected",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Frankie Emery",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-17T09:59:46.843+0000",
+          "updated": "2026-03-23T13:47:00.825+0000",
+          "resolutionDate": "2026-03-23T13:47:00.434+0000"
+        },
+        {
+          "key": "RHOAIENG-54136",
+          "parentKey": "RHOAIENG-52114",
+          "summary": "[AIPCC req] Enable version detection from tag in midstream Garak",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-18T13:58:35.115+0000",
+          "updated": "2026-03-18T14:06:52.915+0000",
+          "resolutionDate": "2026-03-18T14:05:55.618+0000"
+        },
+        {
+          "key": "RHOAIENG-54412",
+          "parentKey": "RHOAIENG-52114",
+          "summary": "TAP only reports ~half the necessary intent stubs",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Emery",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-19T19:29:28.905+0000",
+          "updated": "2026-03-23T12:53:29.811+0000",
+          "resolutionDate": "2026-03-23T10:11:54.428+0000"
+        },
+        {
+          "key": "RHOAIENG-54421",
+          "parentKey": "RHOAIENG-52114",
+          "summary": "Translation probe doesn't include the jailbreak text",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Zimmerman",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "FailedQA"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-19T21:06:18.116+0000",
+          "updated": "2026-03-31T08:32:07.015+0000",
+          "resolutionDate": "2026-03-31T08:32:06.987+0000"
+        },
+        {
+          "key": "RHOAIENG-55152",
+          "parentKey": "RHOAIENG-52114",
+          "summary": "Consolidate terminology across report and docs",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Zimmerman",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-25T13:51:06.317+0000",
+          "updated": "2026-03-31T09:23:36.650+0000",
+          "resolutionDate": "2026-03-31T09:23:36.597+0000"
+        },
+        {
+          "key": "RHOAIENG-55756",
+          "parentKey": "RHOAIENG-52114",
+          "summary": "Errors from Garak aren't logged in the ODH KFP step. ",
+          "type": "Bug",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-27T15:28:08.315+0000",
+          "updated": "2026-04-01T19:56:46.919+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56380",
+          "parentKey": "RHOAIENG-52114",
+          "summary": "Surface complied prompts to hitlog.jsonl",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T19:42:08.690+0000",
+          "updated": "2026-04-01T19:52:23.406+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-52132",
+      "parentKey": "RHAISTRAT-1179",
+      "summary": "Add export functionality",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Frankie Jensen",
+      "components": [
+        "AI Evaluations",
+        "AI Safety",
+        "Documentation"
+      ],
+      "labels": [
+        "3.4-committed",
+        "needs-docs"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-24T14:11:51.136+0000",
+      "updated": "2026-04-01T14:05:37.588+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-54748",
+          "parentKey": "RHOAIENG-52132",
+          "summary": "Draft initial documentation detailing the process for refining",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Zimmerman",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-23T14:48:30.521+0000",
+          "updated": "2026-03-26T09:56:06.416+0000",
+          "resolutionDate": "2026-03-26T09:56:06.393+0000"
+        },
+        {
+          "key": "RHOAIENG-55368",
+          "parentKey": "RHOAIENG-52132",
+          "summary": "Draft ART docs PR to OpenShift AI Documentation",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Onyx Zimmerman",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T09:57:30.569+0000",
+          "updated": "2026-03-26T10:00:00.018+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55508",
+          "parentKey": "RHOAIENG-52132",
+          "summary": "Create high level presentation and video of our method",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Emery",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T13:59:43.218+0000",
+          "updated": "2026-03-30T07:55:27.568+0000",
+          "resolutionDate": "2026-03-30T07:55:27.543+0000"
+        },
+        {
+          "key": "RHOAIENG-56137",
+          "parentKey": "RHOAIENG-52132",
+          "summary": "Document how to run on disconnected clusters",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-31T12:50:01.928+0000",
+          "updated": "2026-03-31T12:59:30.498+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56265",
+          "parentKey": "RHOAIENG-52132",
+          "summary": "Point to section from “Enforcing AI safety”",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T11:40:04.488+0000",
+          "updated": "2026-04-01T11:43:19.999+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56266",
+          "parentKey": "RHOAIENG-52132",
+          "summary": "Document KFP only workflow",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T11:43:49.111+0000",
+          "updated": "2026-04-01T11:47:04.289+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56268",
+          "parentKey": "RHOAIENG-52132",
+          "summary": "Add pre-reqs on OAI pipelines",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T11:47:54.539+0000",
+          "updated": "2026-04-01T11:49:51.078+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 3,
+    "totalIssues": 27,
+    "issuesByStatus": {
+      "Closed": 16,
+      "Backlog": 1,
+      "Resolved": 3,
+      "In Progress": 1,
+      "New": 6
+    },
+    "issuesByCategory": {
+      "Done": 19,
+      "In Progress": 1,
+      "To Do": 7
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 70,
+    "staleCount": 1,
+    "unassignedCount": 6,
+    "blockerCount": 4,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-52113",
+        "summary": "QE for new Garak implementations",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Kerry Cross",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-52114",
+        "summary": "Update midstream garak with automated red teaming logic",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Onyx Zimmerman",
+        "totalIssues": 20,
+        "doneIssues": 17,
+        "progressPct": 85,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-52132",
+        "summary": "[ccs Epic] Document Chatterbox integration with Garak ",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Gray Rowe",
+        "totalIssues": 7,
+        "doneIssues": 2,
+        "progressPct": 29,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

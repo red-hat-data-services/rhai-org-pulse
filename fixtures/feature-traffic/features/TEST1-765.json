@@ -1,0 +1,44 @@
+{
+  "key": "TEST1-765",
+  "summary": "Fix data migration",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Merit Kane",
+    "accountId": "5e3336d0fae00f0cb3ad180f"
+  },
+  "fixVersions": [],
+  "labels": [
+    "llm-d"
+  ],
+  "components": [
+    "llm-d"
+  ],
+  "created": "2025-10-16T19:24:11.516+0000",
+  "updated": "2025-11-25T21:53:58.988+0000",
+  "statusNotes": null,
+  "issueLinks": [],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

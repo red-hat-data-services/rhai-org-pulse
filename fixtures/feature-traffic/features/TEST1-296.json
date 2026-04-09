@@ -1,0 +1,58 @@
+{
+  "key": "TEST1-296",
+  "summary": "Update configuration settings",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Onyx Upton",
+    "accountId": "712020:32edded2-aff1-454d-9734-0a31f9cd4a00"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "AI Core Dashboard",
+    "Model Serving"
+  ],
+  "created": "2025-11-21T16:11:14.761+0000",
+  "updated": "2026-03-30T14:48:43.170+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-348",
+      "linkedSummary": "Support KServe Transformer",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Polaris work item link",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-54772",
+      "linkedSummary": "[Spike] Support KServer Transformer",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

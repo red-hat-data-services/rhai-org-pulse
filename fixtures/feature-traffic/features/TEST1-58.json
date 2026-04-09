@@ -1,0 +1,79 @@
+{
+  "key": "TEST1-58",
+  "summary": "Update API endpoint",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Kerry Webb",
+    "accountId": "712020:827a9d62-5a58-4f8d-adc4-571c3fb2ad23"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "confidence-yellow",
+    "needs-doc",
+    "rhoai-3.0.next",
+    "rhoai-3.4",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AgentDev",
+    "Documentation"
+  ],
+  "created": "2025-09-06T14:54:00.164+0000",
+  "updated": "2026-04-03T15:11:03.131+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "2026-04-03 Green: All critical GPT-OSS accuracy fixes landed in Llama Stack 0.7.0. Smaller follow-on items targeting 0.7.1/0.7.2 still in progress but not blockers for 3.4 GA. Final accuracy impact report pending confirmation of which 0.7.x ships (code freeze imminent). Feature moved to Review for 3.4 release tracking."
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-324",
+      "linkedSummary": "Establish Reliability Boundaries for Llama Stack's OOTB MCP Tool Implementation",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-586",
+      "linkedSummary": "Support GPT-OSS with Llama Stack",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

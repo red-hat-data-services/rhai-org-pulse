@@ -1,0 +1,61 @@
+{
+  "key": "TEST1-1057",
+  "summary": "Fix validation issue",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Undefined",
+  "assignee": {
+    "displayName": "Onyx Cross",
+    "accountId": "5ffd69b7dd5eb501080f8aeb"
+  },
+  "fixVersions": [
+    "RHAIIS-3.3"
+  ],
+  "labels": [
+    "Approved-RFE"
+  ],
+  "components": [
+    "INFERENG Midstream"
+  ],
+  "created": "2025-12-16T15:52:34.887+0000",
+  "updated": "2026-04-07T08:08:32.401+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "INFERENG-4009",
+      "linkedSummary": "Document Mistral 3 Model Support",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1053",
+      "linkedSummary": "Red Hat AI inference support for Mistral 3",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

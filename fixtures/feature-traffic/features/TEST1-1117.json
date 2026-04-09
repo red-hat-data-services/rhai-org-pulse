@@ -1,0 +1,2401 @@
+{
+  "key": "TEST1-1117",
+  "summary": "Update dependencies",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Blocker",
+  "assignee": {
+    "displayName": "Frankie Mead",
+    "accountId": "712020:3e6483d7-a7f9-4847-950f-102899cadf8f"
+  },
+  "fixVersions": [
+    "rhoai-3.4"
+  ],
+  "labels": [
+    "3.4-candidate",
+    "3.4-committed",
+    "dashboard-zaffre-scrum",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "Model as a Service",
+    "UXD"
+  ],
+  "created": "2026-01-14T22:16:15.650+0000",
+  "updated": "2026-04-07T20:48:02.701+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Dashboard - Green - "
+          },
+          {
+            "type": "date",
+            "attrs": {
+              "timestamp": "1775520000000"
+            }
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Wrapping up the latest of the feature work"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Dealing with some of the finer details – testing is on-going"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "MaaSAuthPolicy is still WIP & is on track to MaaS feature freeze (Apr 10, 2026)"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "MaaS - Green - 2026-03-12"
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Basic functionality released as part of EA2"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Account",
+      "direction": "inward",
+      "linkedKey": "RHOAIUX-1581",
+      "linkedSummary": "3.4 MaaS Subscription/Tier/Quota Relationship Model",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-3191",
+      "linkedSummary": "[ccs Epic] Documentation support for MaaS - Catch-all Epic for 3.4 GA",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1130",
+      "linkedSummary": "MaaS Subscription Model Redesign",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIUX-1582",
+      "linkedSummary": "3.4 Subscription UX",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-53016",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1117] - MaaS Subscription Model Redesign",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Causality",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-52248",
+      "linkedSummary": "Refactor AAE and Gen AI Studio to support MaaS subscriptions",
+      "linkedStatus": "Testing"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1486",
+      "linkedSummary": "[TP] MaaS Body-Based Policy Enforcement — Apply Subscriptions, Tiers, and Rate Limiting to OpenAI-Compatible /v1/chat/completions Requests",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-45857",
+      "parentKey": "RHAISTRAT-1117",
+      "summary": "Update documentation",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Person 179",
+      "components": [
+        "Model as a Service"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-01-16T00:58:29.419+0000",
+      "updated": "2026-03-12T19:20:54.124+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-45858",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "[Spike] Define CRD Schemas and Migration Path for Subscription Entities",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Voss",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-16T01:02:44.143+0000",
+          "updated": "2026-02-13T12:01:37.259+0000",
+          "resolutionDate": "2026-02-13T12:01:37.224+0000"
+        },
+        {
+          "key": "RHOAIENG-45859",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "[Spike] Architecture Design for Subscription Controller & Kuadrant Integration",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Voss",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-16T01:04:21.809+0000",
+          "updated": "2026-02-03T15:07:26.852+0000",
+          "resolutionDate": "2026-02-03T15:07:26.829+0000"
+        },
+        {
+          "key": "RHOAIENG-47922",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Investigation: Fix namespace mismatch for MaaS API tier lookups",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Udall",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-28T17:28:31.855+0000",
+          "updated": "2026-03-19T15:51:03.445+0000",
+          "resolutionDate": "2026-02-03T20:09:43.576+0000"
+        },
+        {
+          "key": "RHOAIENG-47976",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Define MaaS CRDs (MaaSAuthPolicy, MaaSSubscription, MaaSModel)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Voss",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-28T22:57:51.217+0000",
+          "updated": "2026-02-13T18:16:38.419+0000",
+          "resolutionDate": "2026-02-13T18:16:38.376+0000"
+        },
+        {
+          "key": "RHOAIENG-47981",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "[Telemetry] Implement Telemetry and TelemetryPolicy Reconciliation for MaaS",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-28T23:27:43.149+0000",
+          "updated": "2026-02-13T18:18:23.310+0000",
+          "resolutionDate": "2026-02-13T18:18:23.273+0000"
+        },
+        {
+          "key": "RHOAIENG-48060",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Implement MaaS Controllers",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-29T22:37:40.854+0000",
+          "updated": "2026-02-13T12:02:59.660+0000",
+          "resolutionDate": "2026-02-13T12:02:59.626+0000"
+        },
+        {
+          "key": "RHOAIENG-48062",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Create Documentation Guide",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-29T22:39:33.731+0000",
+          "updated": "2026-03-09T15:03:48.523+0000",
+          "resolutionDate": "2026-03-09T15:03:48.481+0000"
+        },
+        {
+          "key": "RHOAIENG-48320",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Develop Proof of Concept (PoC) for Subscription Architecture",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Udall",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-02T12:32:36.901+0000",
+          "updated": "2026-03-09T14:36:49.778+0000",
+          "resolutionDate": "2026-03-09T14:36:49.739+0000"
+        },
+        {
+          "key": "RHOAIENG-49783",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "ODH Model Controller – remove AuthPolicy and tier-based resources",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Udall",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-13T17:58:50.025+0000",
+          "updated": "2026-03-09T14:35:58.114+0000",
+          "resolutionDate": "2026-03-09T14:35:58.073+0000"
+        },
+        {
+          "key": "RHOAIENG-49784",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Support X-MAAS-SUBSCRIPTION header for inference requests",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Day",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-13T17:59:03.159+0000",
+          "updated": "2026-03-03T00:38:18.980+0000",
+          "resolutionDate": "2026-03-02T15:46:51.196+0000"
+        },
+        {
+          "key": "RHOAIENG-49787",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Implement `tokenMetadata` on MaaSSubscription CRD and in controller so limitador /metrics includes token counts",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Day",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-13T18:06:22.036+0000",
+          "updated": "2026-03-04T15:39:28.952+0000",
+          "resolutionDate": "2026-03-04T15:39:28.916+0000"
+        },
+        {
+          "key": "RHOAIENG-49788",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Standardize display name and description on MaaS CRDs",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Gray York",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-13T18:07:56.952+0000",
+          "updated": "2026-03-30T14:35:11.103+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-49789",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "E2E tests for subscription flow (MaaSModel + MaaSAuthPolicy + MaaSSubscription)",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Day",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-13T18:08:10.630+0000",
+          "updated": "2026-03-05T13:00:36.415+0000",
+          "resolutionDate": "2026-03-05T13:00:36.370+0000"
+        },
+        {
+          "key": "RHOAIENG-49790",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Migration path from tier-based to subscription CRDs",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Hayes",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-02-13T18:11:23.218+0000",
+          "updated": "2026-03-16T07:08:39.979+0000",
+          "resolutionDate": "2026-03-16T04:38:29.340+0000"
+        },
+        {
+          "key": "RHOAIENG-49791",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "User-facing documentation for subscription model",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Voss",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-13T18:12:05.020+0000",
+          "updated": "2026-03-18T20:11:09.367+0000",
+          "resolutionDate": "2026-03-18T20:11:09.341+0000"
+        },
+        {
+          "key": "RHOAIENG-50133",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Configure quay repo for MaaS Controller",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Ives",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-02-18T15:29:30.005+0000",
+          "updated": "2026-02-26T00:35:33.420+0000",
+          "resolutionDate": "2026-02-25T23:38:15.943+0000"
+        },
+        {
+          "key": "RHOAIENG-50318",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Lock MaaS CRDs to system namespace",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Edge",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [
+            "easy-starter"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T14:18:33.428+0000",
+          "updated": "2026-02-25T20:51:54.315+0000",
+          "resolutionDate": "2026-02-25T20:51:54.296+0000"
+        },
+        {
+          "key": "RHOAIENG-50369",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Investigate and resolve Kuadrant policy conflicts for multi-model MaaS deployments",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-19T17:33:26.212+0000",
+          "updated": "2026-03-16T18:15:13.790+0000",
+          "resolutionDate": "2026-03-16T18:15:13.766+0000"
+        },
+        {
+          "key": "RHOAIENG-50403",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Add endpoint override to MaaSModel",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray York",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [
+            "easy-starter"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T20:12:44.242+0000",
+          "updated": "2026-03-18T14:33:36.620+0000",
+          "resolutionDate": "2026-03-18T14:33:36.600+0000"
+        },
+        {
+          "key": "RHOAIENG-50486",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Missing polling logic for MaaSModel pending states and active status validation",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Kirk",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [
+            "easy-starter"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-22T20:48:31.093+0000",
+          "updated": "2026-03-06T12:45:49.710+0000",
+          "resolutionDate": "2026-03-06T12:45:49.673+0000"
+        },
+        {
+          "key": "RHOAIENG-50570",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "MaaSModel deployable to any namespace (namespace on MaaSAuthPolicy / MaaSSubscription)",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Edge",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-23T16:55:40.952+0000",
+          "updated": "2026-03-10T19:27:44.258+0000",
+          "resolutionDate": "2026-03-10T19:27:44.223+0000"
+        },
+        {
+          "key": "RHOAIENG-50571",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "MaaS controller namespace-scoped (watch only specified namespace)",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Edge",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-23T16:55:53.066+0000",
+          "updated": "2026-03-09T20:02:00.145+0000",
+          "resolutionDate": "2026-03-09T20:02:00.111+0000"
+        },
+        {
+          "key": "RHOAIENG-50572",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Rename MaaSModel CRD to MaaSModelRef",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Day",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-23T16:56:00.390+0000",
+          "updated": "2026-03-04T15:38:46.410+0000",
+          "resolutionDate": "2026-03-04T15:38:46.371+0000"
+        },
+        {
+          "key": "RHOAIENG-50596",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Add CI/CD pipeline for maas-controller image builds.",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Ives",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-23T19:00:03.702+0000",
+          "updated": "2026-03-04T00:36:45.353+0000",
+          "resolutionDate": "2026-03-03T15:19:41.459+0000"
+        },
+        {
+          "key": "RHOAIENG-50701",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Add maas-controller as a new component to ODH/RHOAI release",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Voss",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-24T18:00:20.265+0000",
+          "updated": "2026-03-16T14:56:19.898+0000",
+          "resolutionDate": "2026-03-16T14:56:19.874+0000"
+        },
+        {
+          "key": "RHOAIENG-51551",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Fix maas-controller Reconcile Logic for MaaSModels",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Hayes",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-02T21:17:00.354+0000",
+          "updated": "2026-03-26T12:38:14.852+0000",
+          "resolutionDate": "2026-03-26T12:38:14.829+0000"
+        },
+        {
+          "key": "RHOAIENG-51552",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Move maas-authorino NetworkPolicy to Kustomize Overlay",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Hayes",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-02T21:21:01.670+0000",
+          "updated": "2026-03-26T09:08:07.375+0000",
+          "resolutionDate": "2026-03-10T12:31:52.652+0000"
+        },
+        {
+          "key": "RHOAIENG-51555",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Verify maas-controller Generated Manifests Are Up to Date on PR",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Hayes",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-02T21:35:13.935+0000",
+          "updated": "2026-03-16T04:37:55.385+0000",
+          "resolutionDate": "2026-03-16T04:37:55.359+0000"
+        },
+        {
+          "key": "RHOAIENG-52197",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Add migration cleanup for legacy MaaS tier Roles and RoleBindings",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Udall",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-06T16:43:02.391+0000",
+          "updated": "2026-03-26T19:50:30.819+0000",
+          "resolutionDate": "2026-03-26T19:50:30.791+0000"
+        },
+        {
+          "key": "RHOAIENG-52225",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "MaaS API /v1/models Returns All Models User Has Access To",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Day",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [
+            "quality-and-stability"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-06T18:06:42.565+0000",
+          "updated": "2026-03-23T15:11:03.899+0000",
+          "resolutionDate": "2026-03-23T15:11:03.872+0000"
+        },
+        {
+          "key": "RHOAIENG-52226",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Subscription Info Returned with /v1/models",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Frankie Day",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-06T18:08:29.597+0000",
+          "updated": "2026-03-23T15:11:11.245+0000",
+          "resolutionDate": "2026-03-23T15:11:11.216+0000"
+        },
+        {
+          "key": "RHOAIENG-52227",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "New Endpoint /v1/model/{model-id}/subscriptions",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray York",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-06T18:11:25.707+0000",
+          "updated": "2026-03-24T15:01:02.576+0000",
+          "resolutionDate": "2026-03-24T15:01:02.543+0000"
+        },
+        {
+          "key": "RHOAIENG-52336",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Fixx MaaSModelRef Endpoint Selection in Multi-Gateway Setups",
+          "type": "Story",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-09T13:34:14.401+0000",
+          "updated": "2026-03-24T12:53:46.324+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52350",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Add tools.mk to maas-controller for reproducible tool installation",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Ives",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-03-09T15:27:10.506+0000",
+          "updated": "2026-03-19T03:32:55.464+0000",
+          "resolutionDate": "2026-03-19T03:32:55.438+0000"
+        },
+        {
+          "key": "RHOAIENG-52370",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Add .golangci.yml linter configuration to maas-controller",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Hayes",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-09T16:20:31.490+0000",
+          "updated": "2026-03-27T15:26:08.388+0000",
+          "resolutionDate": "2026-03-27T15:26:08.363+0000"
+        },
+        {
+          "key": "RHOAIENG-52371",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Extract container.mk and refactor maas-controller Makefile",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Ives",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [
+            "ai-fixable",
+            "ai-triaged"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-09T16:22:22.580+0000",
+          "updated": "2026-03-19T16:22:24.706+0000",
+          "resolutionDate": "2026-03-19T15:57:28.130+0000"
+        },
+        {
+          "key": "RHOAIENG-52372",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Create maas-controller CI workflow and clean up maas-api CI",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-09T16:25:41.100+0000",
+          "updated": "2026-03-31T23:04:18.364+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52391",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "MaaS API namespace-scoped (watch only specified namespace for subscription)",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Edge",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-09T19:32:00.674+0000",
+          "updated": "2026-03-19T20:31:55.681+0000",
+          "resolutionDate": "2026-03-19T20:31:55.649+0000"
+        },
+        {
+          "key": "RHOAIENG-53680",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Simplify Subscription Flow — Remove Duplicate Logic from TokenRateLimitPolicy",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Day",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-16T18:46:54.734+0000",
+          "updated": "2026-03-23T17:24:12.734+0000",
+          "resolutionDate": "2026-03-23T17:24:12.703+0000"
+        },
+        {
+          "key": "RHOAIENG-53702",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Remove tier-based access system from maas-billing",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Udall",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-16T19:28:20.955+0000",
+          "updated": "2026-03-30T16:17:29.596+0000",
+          "resolutionDate": "2026-03-30T16:13:35.636+0000"
+        },
+        {
+          "key": "RHOAIENG-53771",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Auto-create `models-as-a-service` namespace with the operator",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Hayes",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [
+            "ai-fixable",
+            "ai-triaged"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-17T01:38:20.087+0000",
+          "updated": "2026-03-26T12:50:02.928+0000",
+          "resolutionDate": "2026-03-26T12:50:02.908+0000"
+        },
+        {
+          "key": "RHOAIENG-53869",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Prevent Multiple MaaSModelRefs from Pointing to the Same HTTPRoute\n",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Gray Blake",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-17T14:47:20.495+0000",
+          "updated": "2026-03-30T07:35:01.294+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54145",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Rewrite tier-related documents entirely",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Udall",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-18T14:23:02.590+0000",
+          "updated": "2026-03-30T16:17:17.828+0000",
+          "resolutionDate": "2026-03-30T16:14:20.147+0000"
+        },
+        {
+          "key": "RHOAIENG-54147",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Subscription selection cache key missing subscription and groups",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Kirk",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [
+            "ai-accelerated-fix",
+            "ai-fixable",
+            "ai-triaged"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-18T14:33:26.636+0000",
+          "updated": "2026-04-02T12:41:25.213+0000",
+          "resolutionDate": "2026-04-02T12:41:25.188+0000"
+        },
+        {
+          "key": "RHOAIENG-54148",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Investigate auth_server_evaluator_total for MaaS API metadata failure alerting",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Onyx Hayes",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-18T14:38:43.459+0000",
+          "updated": "2026-03-27T18:30:54.207+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54592",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Refactor MaaSModelRef to use TypedLocalObjectReference pattern for model references",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Oates",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T16:21:58.737+0000",
+          "updated": "2026-03-26T00:58:35.343+0000",
+          "resolutionDate": "2026-03-26T00:58:35.323+0000"
+        },
+        {
+          "key": "RHOAIENG-54596",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "[Urgent] Subscription-scoped API keys: mint per subscription, remove X-MaaS-Subscription header for key auth",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Edge",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T17:15:15.032+0000",
+          "updated": "2026-03-25T20:40:16.350+0000",
+          "resolutionDate": "2026-03-25T20:40:16.320+0000"
+        },
+        {
+          "key": "RHOAIENG-54800",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Key mismatch: /v1/models endpoint doesn't reference MaaSModelRef -- other endpoints do",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Day",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-23T20:57:48.874+0000",
+          "updated": "2026-03-25T18:50:00.983+0000",
+          "resolutionDate": "2026-03-25T18:50:00.952+0000"
+        },
+        {
+          "key": "RHOAIENG-55976",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "MaaSSubscription CRD require tokenRateLimits and remove unused tokenRateLimitRef for 3.4",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Hayes",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [
+            "quality-and-stability"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-30T14:11:27.437+0000",
+          "updated": "2026-04-01T20:05:51.488+0000",
+          "resolutionDate": "2026-03-31T12:14:19.689+0000"
+        },
+        {
+          "key": "RHOAIENG-55977",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "RHOAI/ODH operator integration for MaaS external-model payload processing",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Carter",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-30T14:12:01.731+0000",
+          "updated": "2026-04-06T13:51:40.888+0000",
+          "resolutionDate": "2026-04-06T13:51:40.868+0000"
+        },
+        {
+          "key": "RHOAIENG-55978",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Document Helm chart namespace configuration for MaaS external model payload processing on ODH and RHOAI\n",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-30T14:19:57.178+0000",
+          "updated": "2026-03-31T12:47:21.856+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56002",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Validate MaaS when both OpenShift and MaaS use OIDC plus standard OpenShift tokens\n",
+          "type": "Story",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-30T16:57:33.416+0000",
+          "updated": "2026-03-30T16:58:28.337+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56368",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "Attempt to apply correct kubernetesTokenReview audience on maas-api AuthPolicy (operator or reconciler)",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Kerry Oates",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T16:59:30.838+0000",
+          "updated": "2026-04-07T12:08:06.144+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-57006",
+          "parentKey": "RHOAIENG-45857",
+          "summary": "MaaSAuthPolicy & MaaSSubscription: accurate status (models, TokenRateLimits, AuthPolicies)\n",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-07T16:26:28.487+0000",
+          "updated": "2026-04-07T16:27:24.460+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-49759",
+      "parentKey": "RHAISTRAT-1117",
+      "summary": "Add logging for debugging",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Person 179",
+      "components": [
+        "Model as a Service"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-13T12:05:15.267+0000",
+      "updated": "2026-03-12T19:20:49.368+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-34505",
+          "parentKey": "RHOAIENG-49759",
+          "summary": "[SPIKE] Investigate Performance Impact of High Cardinality \"Token Count Per User\" Metric in Prometheus",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Gray Carter",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-09-18T19:43:01.792+0000",
+          "updated": "2026-03-20T19:48:13.648+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-49785",
+          "parentKey": "RHOAIENG-49759",
+          "summary": "Add telemetry configuration to MaaS CRDs and controller",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Kerry Oates",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-13T18:04:23.552+0000",
+          "updated": "2026-03-26T00:54:11.068+0000",
+          "resolutionDate": "2026-03-26T00:54:11.038+0000"
+        },
+        {
+          "key": "RHOAIENG-49786",
+          "parentKey": "RHOAIENG-49759",
+          "summary": "Document telemetry defaults and cardinality guidance",
+          "type": "Story",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-13T18:04:32.610+0000",
+          "updated": "2026-03-16T17:20:06.625+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-50987",
+      "parentKey": "RHAISTRAT-1117",
+      "summary": "Implement data cleanup",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Person 217",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-area-maas",
+        "dashboard-zaffre-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-25T19:00:01.905+0000",
+      "updated": "2026-04-07T16:38:04.283+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50989",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "Feature signoff - GA",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Blocker",
+          "assignee": "Kerry Day",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "signoff"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-25T19:06:02.318+0000",
+          "updated": "2026-03-23T13:12:08.160+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-50996",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "Security Requirements",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Kerry Day",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-02-25T19:10:39.978+0000",
+          "updated": "2026-03-23T13:48:23.122+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-50997",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "Promote alpha and beta APIs to their final version",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Day",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-25T19:15:40.494+0000",
+          "updated": "2026-03-02T20:09:41.659+0000",
+          "resolutionDate": "2026-03-02T20:09:41.627+0000"
+        },
+        {
+          "key": "RHOAIENG-50998",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "Acceptance Criteria",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Kerry Day",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-02-25T19:16:24.798+0000",
+          "updated": "2026-03-23T13:48:31.110+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51000",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "Ensure everything was completed under Tech Preview",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Day",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-02-25T19:17:12.787+0000",
+          "updated": "2026-03-11T20:36:49.769+0000",
+          "resolutionDate": "2026-03-04T19:57:06.868+0000"
+        },
+        {
+          "key": "RHOAIENG-51186",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "SPIKE: Understand RHOAI Admin Fetch \"all\" MaaSModelRef",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Gray Walsh",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 1,
+          "created": "2026-02-26T16:03:13.593+0000",
+          "updated": "2026-03-06T20:07:06.090+0000",
+          "resolutionDate": "2026-03-06T20:07:06.066+0000"
+        },
+        {
+          "key": "RHOAIENG-51815",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "Add subscription list page",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Abbott",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-04T16:02:49.729+0000",
+          "updated": "2026-03-23T19:26:08.039+0000",
+          "resolutionDate": "2026-03-23T19:26:08.015+0000"
+        },
+        {
+          "key": "RHOAIENG-51816",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "Add subscription create page",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Kerry Day",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-04T16:02:56.201+0000",
+          "updated": "2026-04-07T17:04:40.337+0000",
+          "resolutionDate": "2026-04-07T17:04:40.298+0000"
+        },
+        {
+          "key": "RHOAIENG-51817",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "[MVP-2] Add checkbox to subscription create for creating MaaSAuthPolicy",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Kerry Day",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-04T16:03:03.245+0000",
+          "updated": "2026-04-07T17:04:44.576+0000",
+          "resolutionDate": "2026-04-07T17:04:44.544+0000"
+        },
+        {
+          "key": "RHOAIENG-51818",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "Handle edit subscription and warning for policies",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Kerry Jay",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-04T16:03:15.690+0000",
+          "updated": "2026-04-07T12:30:44.040+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51819",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "Add delete modal for subscriptions",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Abbott",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-04T16:03:21.955+0000",
+          "updated": "2026-03-25T12:35:24.471+0000",
+          "resolutionDate": "2026-03-25T12:35:24.427+0000"
+        },
+        {
+          "key": "RHOAIENG-51820",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "Create MaaSModelRef when adding model to MaaS in the wizard",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Abbott",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-04T16:03:39.244+0000",
+          "updated": "2026-04-02T17:00:46.345+0000",
+          "resolutionDate": "2026-04-02T17:00:46.305+0000"
+        },
+        {
+          "key": "RHOAIENG-51821",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "Handle delete / removal of model from MaaS",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Abbott",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-04T16:03:45.880+0000",
+          "updated": "2026-04-02T17:00:50.896+0000",
+          "resolutionDate": "2026-04-02T17:00:50.871+0000"
+        },
+        {
+          "key": "RHOAIENG-51822",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "Update OpenAPI spec to correctly reflect the new Subscription API",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Gray Carter",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-04T16:03:54.486+0000",
+          "updated": "2026-03-18T21:07:19.228+0000",
+          "resolutionDate": "2026-03-18T21:07:19.199+0000"
+        },
+        {
+          "key": "RHOAIENG-51823",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "Add mocks in the BFF for Subscription API changes",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Gray Carter",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 5,
+          "created": "2026-03-04T16:04:07.443+0000",
+          "updated": "2026-03-18T21:07:28.100+0000",
+          "resolutionDate": "2026-03-18T21:07:28.074+0000"
+        },
+        {
+          "key": "RHOAIENG-51824",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "Add business logic for new Subscriptions API in the BFF",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Gray Carter",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 5,
+          "created": "2026-03-04T16:04:42.627+0000",
+          "updated": "2026-03-23T21:05:47.376+0000",
+          "resolutionDate": "2026-03-23T21:05:47.344+0000"
+        },
+        {
+          "key": "RHOAIENG-51825",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "[Stretch] Preview resource button on Subscription create page (include YAML)",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T16:04:56.960+0000",
+          "updated": "2026-03-31T19:23:34.544+0000",
+          "resolutionDate": "2026-03-31T19:23:34.520+0000"
+        },
+        {
+          "key": "RHOAIENG-51826",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "[Stretch] BFF endpoint for fetching “Preview resource button” on Subscription create",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T16:05:24.266+0000",
+          "updated": "2026-03-31T19:23:42.868+0000",
+          "resolutionDate": "2026-03-31T19:23:42.842+0000"
+        },
+        {
+          "key": "RHOAIENG-51827",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "[AuthPolicies MVP] List UI Page + Feature Flag",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Abbott",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-04T16:05:35.735+0000",
+          "updated": "2026-04-06T20:59:14.813+0000",
+          "resolutionDate": "2026-04-06T20:59:14.785+0000"
+        },
+        {
+          "key": "RHOAIENG-51828",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "[AuthPolicies MVP] Update MaaS BFF for Policies pages",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Carter",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-04T16:05:43.971+0000",
+          "updated": "2026-04-02T17:59:09.066+0000",
+          "resolutionDate": "2026-04-02T17:59:09.036+0000"
+        },
+        {
+          "key": "RHOAIENG-51829",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "[Stretch] Pending models modal on Subscription list page",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T16:05:51.016+0000",
+          "updated": "2026-03-31T19:23:25.539+0000",
+          "resolutionDate": "2026-03-31T19:23:25.515+0000"
+        },
+        {
+          "key": "RHOAIENG-51830",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "[Stretch] BFF endpoint for pending models",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T16:06:06.754+0000",
+          "updated": "2026-03-31T19:23:18.826+0000",
+          "resolutionDate": "2026-03-31T19:23:18.799+0000"
+        },
+        {
+          "key": "RHOAIENG-51831",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "[Stretch] Add YAML viewers for read and create on Subscriptions pages",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T16:06:33.751+0000",
+          "updated": "2026-03-31T19:23:09.854+0000",
+          "resolutionDate": "2026-03-31T19:23:09.818+0000"
+        },
+        {
+          "key": "RHOAIENG-51832",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "[Stretch] BFF endpoint for fetching YAML",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T16:06:43.069+0000",
+          "updated": "2026-03-31T19:22:59.054+0000",
+          "resolutionDate": "2026-03-31T19:22:59.027+0000"
+        },
+        {
+          "key": "RHOAIENG-51945",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "[MVP-2] View subscription page",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Kerry Winn",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-04T18:55:05.133+0000",
+          "updated": "2026-03-30T14:23:48.216+0000",
+          "resolutionDate": "2026-03-30T14:23:48.192+0000"
+        },
+        {
+          "key": "RHOAIENG-51946",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "QA verification for Subscription Redesign UI",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-04T18:56:49.376+0000",
+          "updated": "2026-03-23T13:48:27.280+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51947",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "E2E test for Subscriptions UI",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-04T18:57:20.621+0000",
+          "updated": "2026-03-23T13:48:28.741+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54046",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "Support RHOAI \"MaaS\" Admins In Tenancy Namespace (3.4)",
+          "type": "Story",
+          "status": "Testing",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Gray Finn",
+          "components": [
+            "AI Core Dashboard",
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-compass"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-17T22:15:33.798+0000",
+          "updated": "2026-03-31T08:26:38.016+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54215",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "Add routes and page skeletons",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Kerry Day",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas",
+            "ready-for-grooming",
+            "zaffre-triaged"
+          ],
+          "storyPoints": 1,
+          "created": "2026-03-18T21:09:44.050+0000",
+          "updated": "2026-03-20T18:47:19.306+0000",
+          "resolutionDate": "2026-03-20T18:47:19.274+0000"
+        },
+        {
+          "key": "RHOAIENG-55157",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "MaaS section not displaying properly in model expanded section",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Abbott",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas",
+            "dashboard-area-model-serving"
+          ],
+          "storyPoints": 1,
+          "created": "2026-03-25T14:22:24.127+0000",
+          "updated": "2026-04-07T18:33:32.144+0000",
+          "resolutionDate": "2026-04-07T18:33:32.119+0000"
+        },
+        {
+          "key": "RHOAIENG-56185",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "[AuthPolicies MVP] Create / Edit UI page",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Kerry Winn",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-31T19:29:56.796+0000",
+          "updated": "2026-04-07T09:29:22.849+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56186",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "[AuthPolicies MVP] Delete UI Modal",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Abbott",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 1,
+          "created": "2026-03-31T19:30:14.756+0000",
+          "updated": "2026-04-06T20:59:09.266+0000",
+          "resolutionDate": "2026-04-06T20:59:09.223+0000"
+        },
+        {
+          "key": "RHOAIENG-56187",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "[AuthPolicies MVP] View Details page",
+          "type": "Story",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Kerry Jay",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-31T19:30:31.164+0000",
+          "updated": "2026-04-06T08:57:03.146+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56731",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "Rework type guards to prevent page crashes if API shifts on us",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Kerry Winn",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 2,
+          "created": "2026-04-06T13:38:00.890+0000",
+          "updated": "2026-04-06T13:39:55.463+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-57030",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "We should error if more than 5 digits are in a limit",
+          "type": "Bug",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard",
+            "Model as a Service"
+          ],
+          "labels": [
+            "dashboard-area-maas"
+          ],
+          "storyPoints": 0,
+          "created": "2026-04-07T16:46:40.578+0000",
+          "updated": "2026-04-07T16:48:28.253+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-57052",
+          "parentKey": "RHOAIENG-50987",
+          "summary": "Error redeploying llmd maas model (dryrun for ref fails?)",
+          "type": "Bug",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Onyx Abbott",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas",
+            "dashboard-area-model-serving"
+          ],
+          "storyPoints": 0,
+          "created": "2026-04-07T19:57:44.236+0000",
+          "updated": "2026-04-07T20:25:38.673+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-51964",
+      "parentKey": "RHAISTRAT-1117",
+      "summary": "Fix authentication issue",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Person 348",
+      "components": [
+        "DevOps"
+      ],
+      "labels": [
+        "devops-onboarding"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-05T06:41:19.994+0000",
+      "updated": "2026-03-25T12:04:32.485+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-52248",
+      "parentKey": "RHAISTRAT-1117",
+      "summary": "Add caching mechanism",
+      "status": "Testing",
+      "statusCategory": "In Progress",
+      "priority": "Blocker",
+      "assignee": "Onyx Vaughn",
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-06T19:12:44.057+0000",
+      "updated": "2026-03-27T04:56:18.142+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-52251",
+          "parentKey": "RHOAIENG-52248",
+          "summary": "[UI] Add Subscription Dropdown in the Models Tab in Playground",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Frankie Underwood",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-06T19:37:13.335+0000",
+          "updated": "2026-03-27T04:54:13.083+0000",
+          "resolutionDate": "2026-03-27T04:54:13.059+0000"
+        },
+        {
+          "key": "RHOAIENG-52252",
+          "parentKey": "RHOAIENG-52248",
+          "summary": "[SPIKE] Can LLS forward subscription headers for MaaS",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Frankie Underwood",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-06T19:40:40.427+0000",
+          "updated": "2026-03-30T10:35:49.114+0000",
+          "resolutionDate": "2026-03-11T05:27:34.486+0000"
+        },
+        {
+          "key": "RHOAIENG-52253",
+          "parentKey": "RHOAIENG-52248",
+          "summary": "[Verification] Test MaaS 3.4 with AAE page and MaaS models inference",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Blocker",
+          "assignee": "Onyx Anderson",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-06T19:41:22.335+0000",
+          "updated": "2026-04-07T11:57:50.402+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52527",
+          "parentKey": "RHOAIENG-52248",
+          "summary": "[Upstream] LLS Fix Tracking - Forwarding headers to inference providers",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Onyx Anderson",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-11T05:26:00.462+0000",
+          "updated": "2026-03-24T09:28:27.832+0000",
+          "resolutionDate": "2026-03-24T06:51:25.991+0000"
+        },
+        {
+          "key": "RHOAIENG-54009",
+          "parentKey": "RHOAIENG-52248",
+          "summary": "[BFF] Switch to ephemeral keys when minting MaaS api keys with /v1/api-keys endpoint from Gen AI Studio",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Frankie Underwood",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-17T20:02:00.464+0000",
+          "updated": "2026-03-27T04:54:07.070+0000",
+          "resolutionDate": "2026-03-27T04:54:07.048+0000"
+        },
+        {
+          "key": "RHOAIENG-54665",
+          "parentKey": "RHOAIENG-52248",
+          "summary": "[BFF] Update the Models endpoint in GenAI BFF to expose Subscription details for the models",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Frankie Underwood",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-23T07:26:37.061+0000",
+          "updated": "2026-03-27T04:54:19.567+0000",
+          "resolutionDate": "2026-03-27T04:54:19.539+0000"
+        },
+        {
+          "key": "RHOAIENG-54797",
+          "parentKey": "RHOAIENG-52248",
+          "summary": "[BFF] Playground - Inference with MaaS models using Subscriptions",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Frankie Underwood",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-23T20:01:51.906+0000",
+          "updated": "2026-03-27T04:54:26.480+0000",
+          "resolutionDate": "2026-03-27T04:54:26.450+0000"
+        },
+        {
+          "key": "RHOAIENG-56644",
+          "parentKey": "RHOAIENG-52248",
+          "summary": "Fix MaaS model visibility in local federated dev and playground configuration error",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Frankie Underwood",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2026-04-03T09:55:35.786+0000",
+          "updated": "2026-04-06T12:23:59.844+0000",
+          "resolutionDate": "2026-04-06T12:23:59.809+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-54863",
+      "parentKey": "RHAISTRAT-1117",
+      "summary": "Implement search feature",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Major",
+      "assignee": null,
+      "components": [
+        "Model as a Service"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-23T22:08:46.715+0000",
+      "updated": "2026-04-07T16:38:08.658+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-54864",
+          "parentKey": "RHOAIENG-54863",
+          "summary": "CLONE - CLONE - Feature signoff - GA",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Blocker",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [
+            "signoff"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-23T22:08:57.626+0000",
+          "updated": "2026-03-23T22:09:01.931+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54865",
+          "parentKey": "RHOAIENG-54863",
+          "summary": "CLONE - Ensure everything was completed under Tech Preview",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Blocker",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-23T22:09:01.372+0000",
+          "updated": "2026-03-23T22:09:04.797+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-55185",
+      "parentKey": "RHAISTRAT-1117",
+      "summary": "Fix timezone handling",
+      "status": "Review",
+      "statusCategory": "In Progress",
+      "priority": "Blocker",
+      "assignee": "Gray Price",
+      "components": [
+        "DevOps"
+      ],
+      "labels": [
+        "devops-onboarding"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-25T15:47:54.547+0000",
+      "updated": "2026-04-07T11:31:22.549+0000",
+      "issues": []
+    }
+  ],
+  "metrics": {
+    "totalEpics": 7,
+    "totalIssues": 103,
+    "issuesByStatus": {
+      "Review": 5,
+      "Closed": 37,
+      "Resolved": 40,
+      "Backlog": 9,
+      "In Progress": 6,
+      "Testing": 1,
+      "New": 5
+    },
+    "issuesByCategory": {
+      "Done": 77,
+      "In Progress": 12,
+      "To Do": 14
+    },
+    "totalStoryPoints": 94,
+    "storyPointsDone": 71,
+    "completionPct": 75,
+    "staleCount": 6,
+    "unassignedCount": 11,
+    "blockerCount": 16,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-45857",
+        "summary": "MaaS Subscription Model Redesign & CRD Implementation",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Onyx Voss",
+        "totalIssues": 54,
+        "doneIssues": 45,
+        "progressPct": 83,
+        "storyPoints": 19,
+        "storyPointsDone": 19,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-49759",
+        "summary": "MaaS Subscription Telemetry Updates",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Onyx Voss",
+        "totalIssues": 3,
+        "doneIssues": 1,
+        "progressPct": 33,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-50987",
+        "summary": "General Availability - ODH and RHOAI Integrations MaaS Subscription Redesign UI",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Kerry Day",
+        "totalIssues": 36,
+        "doneIssues": 24,
+        "progressPct": 67,
+        "storyPoints": 62,
+        "storyPointsDone": 39,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-51964",
+        "summary": "ODH Konflux Release Build Onboarding [MaaS Controller]",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Merit Lane",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-52248",
+        "summary": "Refactor AAE and Gen AI Studio to support MaaS subscriptions",
+        "status": "Testing",
+        "statusCategory": "In Progress",
+        "assignee": "Frankie Underwood",
+        "totalIssues": 8,
+        "doneIssues": 7,
+        "progressPct": 88,
+        "storyPoints": 13,
+        "storyPointsDone": 13,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-54863",
+        "summary": "General Availability - ODH and RHOAI Integrations [Models as a Service - MaaS Subscription (maas-controller)]",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 2,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-55185",
+        "summary": "RHOAI Konflux Onboarding [maas-controller]",
+        "status": "Review",
+        "statusCategory": "In Progress",
+        "assignee": "Merit Ellis",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

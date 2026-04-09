@@ -1,0 +1,245 @@
+{
+  "key": "TEST1-1109",
+  "summary": "Improve error handling",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Normal",
+  "assignee": {
+    "displayName": "Gray Graham",
+    "accountId": "5b6859ac36d4343beb82c7a7"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "3.4-committed",
+    "tech-reviewed"
+  ],
+  "components": [
+    "Documentation",
+    "Model Eval"
+  ],
+  "created": "2026-01-12T16:04:51.111+0000",
+  "updated": "2026-04-03T13:37:51.550+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "2026-04-03: code merged and tested, QE confirmed; demonstrated with "
+          },
+          {
+            "type": "text",
+            "text": "video link",
+            "marks": [
+              {
+                "type": "link",
+                "attrs": {
+                  "href": "https://drive.google.com/file/d/1VNJw3iKDzfwB5iqxmuYCmlkNgyyvYNKw/view?usp=drive_link"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " and discussing with William PM about next step (the demo video "
+          },
+          {
+            "type": "text",
+            "text": "is deemed satisfactory",
+            "marks": [
+              {
+                "type": "link",
+                "attrs": {
+                  "href": "https://issues.redhat.com/browse/RHAISTRAT-1109?focusedId=29235329&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-29235329"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " as with regards implementation) added a small README.md doc as by PM in addition to the video, will followup for signoffs. "
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-513",
+      "linkedSummary": "(persistent Storage/OCI) Integrate LM-Eval with Model CarD, OCI, and Model Registry/Catalog in TrustyAI",
+      "linkedStatus": "Release Pending"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1018",
+      "linkedSummary": "Integrate eval-hub Evaluation Scores with OCI for Dynamic Model Cards",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-46875",
+      "parentKey": "RHAISTRAT-1109",
+      "summary": "Fix authentication issue",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Person 157",
+      "components": [
+        "AI Evaluations"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-01-22T15:53:10.527+0000",
+      "updated": "2026-03-10T07:28:47.452+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-46878",
+          "parentKey": "RHOAIENG-46875",
+          "summary": "feat: implement Eval Scores with OCI (no-op)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Graham",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-22T15:58:43.366+0000",
+          "updated": "2026-01-22T16:02:47.905+0000",
+          "resolutionDate": "2026-01-22T16:02:47.884+0000"
+        },
+        {
+          "key": "RHOAIENG-46880",
+          "parentKey": "RHOAIENG-46875",
+          "summary": "test(e2e): scaffhold E2E testing for OCI persistence",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Graham",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-22T16:02:19.671+0000",
+          "updated": "2026-03-10T07:25:51.599+0000",
+          "resolutionDate": "2026-03-10T07:25:51.578+0000"
+        },
+        {
+          "key": "RHOAIENG-46881",
+          "parentKey": "RHOAIENG-46875",
+          "summary": "DX, ci/cd, and misc improvements",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Graham",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-22T16:06:28.996+0000",
+          "updated": "2026-03-10T07:25:14.062+0000",
+          "resolutionDate": "2026-03-10T07:25:14.041+0000"
+        },
+        {
+          "key": "RHOAIENG-46883",
+          "parentKey": "RHOAIENG-46875",
+          "summary": "Implement OCI upload",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Graham",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-22T16:11:00.230+0000",
+          "updated": "2026-03-10T07:26:57.715+0000",
+          "resolutionDate": "2026-03-10T07:26:57.697+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-46876",
+      "parentKey": "RHAISTRAT-1109",
+      "summary": "Implement search feature",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Person 167",
+      "components": [
+        "AI Evaluations"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-01-22T15:56:16.573+0000",
+      "updated": "2026-03-18T10:06:16.355+0000",
+      "issues": []
+    }
+  ],
+  "metrics": {
+    "totalEpics": 2,
+    "totalIssues": 4,
+    "issuesByStatus": {
+      "Closed": 4
+    },
+    "issuesByCategory": {
+      "Done": 4,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 3,
+    "storyPointsDone": 3,
+    "completionPct": 100,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-46875",
+        "summary": "[Eng] Integrate eval-hub Evaluation Scores with OCI for Dynamic Model Cards",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Gray Graham",
+        "totalIssues": 4,
+        "doneIssues": 4,
+        "progressPct": 100,
+        "storyPoints": 3,
+        "storyPointsDone": 3,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-46876",
+        "summary": "[QE] Integrate eval-hub Evaluation Scores with OCI for Dynamic Model Cards",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Kerry Sato",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

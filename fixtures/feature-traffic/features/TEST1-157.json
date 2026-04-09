@@ -1,0 +1,107 @@
+{
+  "key": "TEST1-157",
+  "summary": "Add unit tests for service",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [
+    "field-request"
+  ],
+  "components": [
+    "Documentation"
+  ],
+  "created": "2024-07-01T15:32:34.427+0000",
+  "updated": "2025-11-03T10:39:15.077+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHOAIRFE-252",
+      "linkedSummary": "Enforce queue priorities ",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-20047",
+      "parentKey": "RHAISTRAT-157",
+      "summary": "Fix memory leak",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": "Merit Vale",
+      "components": [
+        "Documentation",
+        "Workload Orchestration"
+      ],
+      "labels": [
+        "refined"
+      ],
+      "storyPoints": 3,
+      "created": "2025-02-17T17:27:02.621+0000",
+      "updated": "2025-08-21T17:01:52.864+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-20046",
+          "parentKey": "RHOAIENG-20047",
+          "summary": "[Doc] Provide documentation input on workload priority management, including Kueue preemption",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Onyx True",
+          "components": [
+            "Workload Orchestration"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 3,
+          "created": "2025-02-17T17:24:51.798+0000",
+          "updated": "2026-03-16T11:03:49.034+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 1,
+    "issuesByStatus": {
+      "New": 1
+    },
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 1
+    },
+    "totalStoryPoints": 3,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-20047",
+        "summary": "[ccs Epic] Create documentation for workload priority management",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Gray Adler",
+        "totalIssues": 1,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 3,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

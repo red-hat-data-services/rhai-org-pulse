@@ -1,0 +1,84 @@
+{
+  "key": "TEST1-298",
+  "summary": "Refactor data handling code",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Gray Evans",
+    "accountId": "5fd451a591bb2e0108e2514b"
+  },
+  "fixVersions": [],
+  "labels": [
+    "Approved-RFE",
+    "Gaudi",
+    "Intel",
+    "tech-reviewed"
+  ],
+  "components": [
+    "Model Runtimes",
+    "Model Serving"
+  ],
+  "created": "2025-11-21T16:13:17.680+0000",
+  "updated": "2026-04-02T13:26:01.091+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-853",
+      "linkedSummary": "Implement Model Cache in RHOAI",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Duplicate",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-299",
+      "linkedSummary": "Persistent Caches for model serving runtimes",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "MGMT-18375",
+      "linkedSummary": "Intel Gaudi 3 Accelerator enablement for OpenShift",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-430",
+      "linkedSummary": "Persistent Caches for model serving runtimes",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-44671",
+      "linkedSummary": "[SPIKE] Research about GKM and how to integrate with KServe",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

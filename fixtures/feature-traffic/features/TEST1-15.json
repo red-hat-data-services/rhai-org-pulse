@@ -1,0 +1,43 @@
+{
+  "key": "TEST1-15",
+  "summary": "Fix authentication issue",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Merit Bennett",
+    "accountId": "70121:1ee0aa13-ab68-4b98-8782-38693f33a1ab"
+  },
+  "fixVersions": [],
+  "labels": [
+    "Gaudi",
+    "INTEL"
+  ],
+  "components": [],
+  "created": "2025-05-20T08:42:39.192+0000",
+  "updated": "2025-07-15T12:41:13.071+0000",
+  "statusNotes": null,
+  "issueLinks": [],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

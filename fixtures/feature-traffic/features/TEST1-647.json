@@ -1,0 +1,50 @@
+{
+  "key": "TEST1-647",
+  "summary": "Fix memory leak",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Kerry Hill",
+    "accountId": "712020:395040de-1e7a-4630-a23b-c43f216d8baa"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "DevOps"
+  ],
+  "created": "2025-11-07T14:37:14.302+0000",
+  "updated": "2025-11-25T21:49:05.484+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-622",
+      "linkedSummary": "Phase2 - E2E CI/CD Ecosystem across ODH & RHOAI - Branching & Auto-Sync Rethink",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

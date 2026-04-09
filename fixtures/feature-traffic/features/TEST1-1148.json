@@ -1,0 +1,523 @@
+{
+  "key": "TEST1-1148",
+  "summary": "Update error messages",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Kerry Torres",
+    "accountId": "70121:a61c7103-234c-42fe-aad3-ec1cda893c0d"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "confidence-red"
+  ],
+  "components": [
+    "Documentation",
+    "Llama Stack Core"
+  ],
+  "created": "2026-01-22T09:55:10.068+0000",
+  "updated": "2026-04-06T11:38:35.140+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Code is merged upstream (this afternoon), will handle midstream changes once an image is available."
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1039",
+      "linkedSummary": "Enhance Core Access Control Policy Engine for Llama Stack",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-52876",
+      "linkedSummary": "Llama - Platform refinement review RHAISTRAT-1148",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIENG-710",
+      "linkedSummary": "Add LLS instance configuration directly into LLSD as a sub-schema",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-3595",
+      "linkedSummary": "[ccs] Document Core Access Control Policy Engine for Llama Stack - TP 3.4 EA2",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-53296",
+      "parentKey": "RHAISTRAT-1148",
+      "summary": "Implement webhook handler",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Person 8",
+      "components": [
+        "Llama Stack Core"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-13T14:17:43.538+0000",
+      "updated": "2026-04-01T15:53:32.360+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-53298",
+          "parentKey": "RHOAIENG-53296",
+          "summary": "[Llamastack ABAC] Onboard to RHOAI Build - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Torres",
+          "components": [
+            "Llama Stack Core"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-13T14:17:56.171+0000",
+          "updated": "2026-04-03T02:25:09.646+0000",
+          "resolutionDate": "2026-03-13T14:55:45.591+0000"
+        },
+        {
+          "key": "RHOAIENG-53299",
+          "parentKey": "RHOAIENG-53296",
+          "summary": "[Llamastack ABAC] Feature signoff - TP",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Blocker",
+          "assignee": "Kerry Torres",
+          "components": [
+            "Llama Stack Core"
+          ],
+          "labels": [
+            "signoff"
+          ],
+          "storyPoints": 1,
+          "created": "2026-03-13T14:17:56.269+0000",
+          "updated": "2026-04-03T01:53:05.467+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-53300",
+          "parentKey": "RHOAIENG-53296",
+          "summary": "[Llamastack ABAC] Onboard to ODH Build - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Torres",
+          "components": [
+            "Llama Stack Core"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-13T14:17:56.352+0000",
+          "updated": "2026-04-03T02:25:08.832+0000",
+          "resolutionDate": "2026-03-13T15:03:34.220+0000"
+        },
+        {
+          "key": "RHOAIENG-53301",
+          "parentKey": "RHOAIENG-53296",
+          "summary": "[Llamastack ABAC] Promote alpha APIs to beta",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Torres",
+          "components": [
+            "Llama Stack Core"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-13T14:17:56.402+0000",
+          "updated": "2026-04-03T02:25:07.970+0000",
+          "resolutionDate": "2026-03-13T15:04:34.860+0000"
+        },
+        {
+          "key": "RHOAIENG-53302",
+          "parentKey": "RHOAIENG-53296",
+          "summary": "[Llamastack ABAC] Build from source (required)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Torres",
+          "components": [
+            "Llama Stack Core"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-13T14:17:58.993+0000",
+          "updated": "2026-04-03T02:25:07.120+0000",
+          "resolutionDate": "2026-03-13T15:05:56.742+0000"
+        },
+        {
+          "key": "RHOAIENG-53313",
+          "parentKey": "RHOAIENG-53296",
+          "summary": "[Llamastack ABAC] Ensure work with supported lifecyles",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Torres",
+          "components": [
+            "Llama Stack Core"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-13T14:19:21.083+0000",
+          "updated": "2026-04-03T02:25:06.153+0000",
+          "resolutionDate": "2026-03-13T15:08:05.529+0000"
+        },
+        {
+          "key": "RHOAIENG-53314",
+          "parentKey": "RHOAIENG-53296",
+          "summary": "[Llamastack ABAC] Feature documented in architecture diagrams",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Kerry Torres",
+          "components": [
+            "Llama Stack Core"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-03-13T14:19:21.629+0000",
+          "updated": "2026-04-03T01:58:24.733+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-53315",
+          "parentKey": "RHOAIENG-53296",
+          "summary": "[Llamastack ABAC] Security requirements",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Kerry Torres",
+          "components": [
+            "Llama Stack Core"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-03-13T14:19:21.847+0000",
+          "updated": "2026-04-03T01:53:07.968+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-53316",
+          "parentKey": "RHOAIENG-53296",
+          "summary": "[Llamastack ABAC] Testing requirements",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Kerry Torres",
+          "components": [
+            "Llama Stack Core"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-03-13T14:19:21.951+0000",
+          "updated": "2026-04-03T01:57:34.378+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-53317",
+          "parentKey": "RHOAIENG-53296",
+          "summary": "[Llamastack ABAC] MUST meet designed for FIPS",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Torres",
+          "components": [
+            "Llama Stack Core"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-13T14:19:22.360+0000",
+          "updated": "2026-04-03T02:25:05.116+0000",
+          "resolutionDate": "2026-03-13T15:16:35.698+0000"
+        },
+        {
+          "key": "RHOAIENG-53318",
+          "parentKey": "RHOAIENG-53296",
+          "summary": "[Llamastack ABAC] RHOAI ONLY: AI Platform Core Components (AIPCC) Integration",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Torres",
+          "components": [
+            "Llama Stack Core"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-13T14:19:24.413+0000",
+          "updated": "2026-04-03T02:25:03.788+0000",
+          "resolutionDate": "2026-03-13T15:17:50.947+0000"
+        },
+        {
+          "key": "RHOAIENG-53319",
+          "parentKey": "RHOAIENG-53296",
+          "summary": "[Llamastack ABAC] Multi-Architecture Support",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Torres",
+          "components": [
+            "Llama Stack Core"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-13T14:19:25.300+0000",
+          "updated": "2026-04-03T02:25:02.623+0000",
+          "resolutionDate": "2026-03-13T15:19:16.892+0000"
+        },
+        {
+          "key": "RHOAIENG-53320",
+          "parentKey": "RHOAIENG-53296",
+          "summary": "[Llamastack ABAC] Test with disconnected environment",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Kerry Torres",
+          "components": [
+            "Llama Stack Core"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-03-13T14:19:25.329+0000",
+          "updated": "2026-04-03T01:57:38.881+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-53321",
+          "parentKey": "RHOAIENG-53296",
+          "summary": "[Llamastack ABAC] Integration with RHOAI operator - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Torres",
+          "components": [
+            "Llama Stack Core"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-13T14:19:25.739+0000",
+          "updated": "2026-04-03T02:25:01.757+0000",
+          "resolutionDate": "2026-03-13T15:22:17.673+0000"
+        },
+        {
+          "key": "RHOAIENG-53323",
+          "parentKey": "RHOAIENG-53296",
+          "summary": "[Llamastack ABAC] Add Prometheus (metrics) config for component (optional)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Kerry Torres",
+          "components": [
+            "Llama Stack Core"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-13T14:19:27.097+0000",
+          "updated": "2026-04-03T02:25:00.711+0000",
+          "resolutionDate": "2026-03-13T15:26:03.613+0000"
+        },
+        {
+          "key": "RHOAIENG-53324",
+          "parentKey": "RHOAIENG-53296",
+          "summary": "[Llamastack ABAC] Add support for the new component in the QE related repositories",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Kerry Torres",
+          "components": [
+            "Llama Stack Core"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-03-13T14:19:27.205+0000",
+          "updated": "2026-04-03T01:57:42.361+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-53325",
+          "parentKey": "RHOAIENG-53296",
+          "summary": "[Llamastack ABAC] Add source repo(s) to Snyk",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Kerry Torres",
+          "components": [
+            "Llama Stack Core"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-03-13T14:19:27.424+0000",
+          "updated": "2026-04-03T01:58:19.311+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-53326",
+          "parentKey": "RHOAIENG-53296",
+          "summary": "[Llamastack ABAC] Create component in jira",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Torres",
+          "components": [
+            "Llama Stack Core"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-13T14:19:28.228+0000",
+          "updated": "2026-04-03T02:24:59.761+0000",
+          "resolutionDate": "2026-03-13T15:31:44.408+0000"
+        },
+        {
+          "key": "RHOAIENG-53327",
+          "parentKey": "RHOAIENG-53296",
+          "summary": "[Llamastack ABAC] Add component data to product-definitions for vulnerability tracking",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Kerry Torres",
+          "components": [
+            "Llama Stack Core"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-13T14:19:28.989+0000",
+          "updated": "2026-04-03T02:24:58.876+0000",
+          "resolutionDate": "2026-03-13T15:37:08.813+0000"
+        },
+        {
+          "key": "RHOAIENG-53328",
+          "parentKey": "RHOAIENG-53296",
+          "summary": "[Llamastack ABAC] Add component support for must-gather",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Kerry Torres",
+          "components": [
+            "Llama Stack Core"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-13T14:19:29.045+0000",
+          "updated": "2026-04-03T02:24:57.947+0000",
+          "resolutionDate": "2026-03-13T15:38:32.397+0000"
+        },
+        {
+          "key": "RHOAIENG-53329",
+          "parentKey": "RHOAIENG-53296",
+          "summary": "[Llamastack ABAC] Repository added to ODH/RHOAI",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Torres",
+          "components": [
+            "Llama Stack Core"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-13T14:19:29.652+0000",
+          "updated": "2026-04-03T02:24:57.105+0000",
+          "resolutionDate": "2026-03-13T15:39:36.701+0000"
+        },
+        {
+          "key": "RHOAIENG-53330",
+          "parentKey": "RHOAIENG-53296",
+          "summary": "[Llamastack ABAC] Integration with ODH operator - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Torres",
+          "components": [
+            "Llama Stack Core"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-13T14:19:31.126+0000",
+          "updated": "2026-04-03T02:24:56.297+0000",
+          "resolutionDate": "2026-03-13T15:40:35.015+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 22,
+    "issuesByStatus": {
+      "Closed": 15,
+      "Backlog": 7
+    },
+    "issuesByCategory": {
+      "Done": 15,
+      "In Progress": 0,
+      "To Do": 7
+    },
+    "totalStoryPoints": 11,
+    "storyPointsDone": 0,
+    "completionPct": 68,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 1,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-53296",
+        "summary": "Tech Preview - ODH and RHOAI Integrations [Llamastack ABAC]",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Kerry Torres",
+        "totalIssues": 22,
+        "doneIssues": 15,
+        "progressPct": 68,
+        "storyPoints": 11,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

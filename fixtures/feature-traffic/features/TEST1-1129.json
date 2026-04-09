@@ -1,0 +1,630 @@
+{
+  "key": "TEST1-1129",
+  "summary": "Fix race condition",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Merit Emery",
+    "accountId": "70121:1052a58b-2d69-4663-b865-ce2f8db94c68"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate"
+  ],
+  "components": [
+    "Documentation",
+    "Feature Store"
+  ],
+  "created": "2026-01-19T07:41:56.167+0000",
+  "updated": "2026-04-07T13:58:26.380+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Status - "
+          },
+          {
+            "type": "date",
+            "attrs": {
+              "timestamp": "1775520000000"
+            }
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Opentelemetry support related changes added"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Online server performance tuning guide added "
+                  },
+                  {
+                    "type": "text",
+                    "text": "https://docs.feast.dev/master/how-to-guides/online-server-performance-tuning",
+                    "marks": [
+                      {
+                        "type": "link",
+                        "attrs": {
+                          "href": "https://docs.feast.dev/master/how-to-guides/online-server-performance-tuning"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "All changes targeted merged to upstream, only benchmarking documentation is pending"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Good from 3.4 code freeze perspective"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1145",
+      "linkedSummary": "Feast Feature Server & On-Demand Transformations Performance Optimization",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-52086",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1129] - Feast Feature Server & On-Demand Transformations Performance Optimization",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-46061",
+      "parentKey": "RHAISTRAT-1129",
+      "summary": "Fix validation issue",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Person 289",
+      "components": [
+        "Feature Store"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-01-19T08:14:33.303+0000",
+      "updated": "2026-03-23T12:31:47.295+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-46062",
+          "parentKey": "RHOAIENG-46061",
+          "summary": "Create Refinement document for Feature Server & On-Demand Transformations Performance Optimization",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Emery",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 8,
+          "created": "2026-01-19T08:16:14.010+0000",
+          "updated": "2026-03-04T04:12:50.245+0000",
+          "resolutionDate": "2026-03-04T04:12:50.183+0000"
+        },
+        {
+          "key": "RHOAIENG-47115",
+          "parentKey": "RHOAIENG-46061",
+          "summary": "Add HTTP connection pooling for remote online store client",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Emery",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-01-23T10:03:55.615+0000",
+          "updated": "2026-01-29T07:05:29.349+0000",
+          "resolutionDate": "2026-01-29T07:05:29.325+0000"
+        },
+        {
+          "key": "RHOAIENG-47116",
+          "parentKey": "RHOAIENG-46061",
+          "summary": "Optimize DynamoDB online store for improved latency",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Emery",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-01-23T10:06:17.132+0000",
+          "updated": "2026-01-29T07:06:13.818+0000",
+          "resolutionDate": "2026-01-29T07:06:13.797+0000"
+        },
+        {
+          "key": "RHOAIENG-47984",
+          "parentKey": "RHOAIENG-46061",
+          "summary": "Create test plan and result document to share with State Farm and Perf team ",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Emery",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-01-29T07:16:30.517+0000",
+          "updated": "2026-02-09T07:37:50.754+0000",
+          "resolutionDate": "2026-02-09T07:37:50.728+0000"
+        },
+        {
+          "key": "RHOAIENG-48003",
+          "parentKey": "RHOAIENG-46061",
+          "summary": "Support Feast Operator to optimize container infrastructure",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Emery",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-01-29T09:14:03.251+0000",
+          "updated": "2026-02-03T08:01:34.094+0000",
+          "resolutionDate": "2026-02-03T08:01:34.071+0000"
+        },
+        {
+          "key": "RHOAIENG-49823",
+          "parentKey": "RHOAIENG-46061",
+          "summary": "Add full complex type (Map/Dict) support and implement schema validation",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Emery",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-16T06:50:19.728+0000",
+          "updated": "2026-02-26T03:50:03.116+0000",
+          "resolutionDate": "2026-02-26T03:50:03.093+0000"
+        },
+        {
+          "key": "RHOAIENG-49905",
+          "parentKey": "RHOAIENG-46061",
+          "summary": "Add support for Json, Map and Struct Complex Feast Type",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Emery",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-16T15:51:56.726+0000",
+          "updated": "2026-02-26T03:50:22.657+0000",
+          "resolutionDate": "2026-02-26T03:50:22.636+0000"
+        },
+        {
+          "key": "RHOAIENG-50008",
+          "parentKey": "RHOAIENG-46061",
+          "summary": "Set up performance test harness for Feast feature server on OpenShift + DynamoDB",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Rowe",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-17T08:38:14.329+0000",
+          "updated": "2026-03-20T04:57:35.974+0000",
+          "resolutionDate": "2026-03-20T04:57:35.952+0000"
+        },
+        {
+          "key": "RHOAIENG-50010",
+          "parentKey": "RHOAIENG-46061",
+          "summary": "Execute baseline performance benchmarks and document p50/p95/p99 latencies",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Rowe",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-17T08:40:40.936+0000",
+          "updated": "2026-03-20T05:19:27.516+0000",
+          "resolutionDate": "2026-03-20T05:19:27.490+0000"
+        },
+        {
+          "key": "RHOAIENG-50012",
+          "parentKey": "RHOAIENG-46061",
+          "summary": "Validate horizontal scaling efficiency (2x, 4x replicas and worker scaling)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Emery",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-17T08:43:34.883+0000",
+          "updated": "2026-04-07T15:47:33.305+0000",
+          "resolutionDate": "2026-04-07T15:47:33.210+0000"
+        },
+        {
+          "key": "RHOAIENG-50013",
+          "parentKey": "RHOAIENG-46061",
+          "summary": "Identify and document performance bottlenecks in the feature serving path",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Rowe",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-17T08:45:52.504+0000",
+          "updated": "2026-03-20T04:52:17.110+0000",
+          "resolutionDate": "2026-03-19T18:25:59.867+0000"
+        },
+        {
+          "key": "RHOAIENG-50014",
+          "parentKey": "RHOAIENG-46061",
+          "summary": "Add OpenTelemetry request latency (feature_count and feature_view_count dimensions) histogram to Feast feature server",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Emery",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-17T08:49:55.329+0000",
+          "updated": "2026-03-26T14:16:15.721+0000",
+          "resolutionDate": "2026-03-26T14:16:15.696+0000"
+        },
+        {
+          "key": "RHOAIENG-50017",
+          "parentKey": "RHOAIENG-46061",
+          "summary": "Add on-demand transformation and online store read duration metric",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Emery",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-17T08:53:34.676+0000",
+          "updated": "2026-03-26T14:16:06.167+0000",
+          "resolutionDate": "2026-03-26T14:16:06.140+0000"
+        },
+        {
+          "key": "RHOAIENG-50018",
+          "parentKey": "RHOAIENG-46061",
+          "summary": "Validate OpenTelemetry metrics via Feast Operator deployment",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Emery",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-17T08:55:27.786+0000",
+          "updated": "2026-04-07T15:45:16.028+0000",
+          "resolutionDate": "2026-04-07T15:45:15.948+0000"
+        },
+        {
+          "key": "RHOAIENG-50019",
+          "parentKey": "RHOAIENG-46061",
+          "summary": "Validate and benchmark on-demand transformation modes (Pandas, Python)",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Merit Rowe",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-17T08:57:37.748+0000",
+          "updated": "2026-04-07T15:50:21.247+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-50023",
+          "parentKey": "RHOAIENG-46061",
+          "summary": "Implement Metadata API endpoints for feature store statistics",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Emery",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-02-17T09:02:39.141+0000",
+          "updated": "2026-03-26T14:15:25.821+0000",
+          "resolutionDate": "2026-03-26T14:15:25.789+0000"
+        },
+        {
+          "key": "RHOAIENG-50512",
+          "parentKey": "RHOAIENG-46061",
+          "summary": "Distributing replicas across zones for HA",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Emery",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-23T10:20:41.328+0000",
+          "updated": "2026-03-04T07:09:23.710+0000",
+          "resolutionDate": "2026-03-04T07:09:23.653+0000"
+        },
+        {
+          "key": "RHOAIENG-51284",
+          "parentKey": "RHOAIENG-46061",
+          "summary": "Add horizontal scaling support for feast operator",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Emery",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-27T09:33:14.516+0000",
+          "updated": "2026-03-02T12:22:49.552+0000",
+          "resolutionDate": "2026-03-02T12:22:49.516+0000"
+        },
+        {
+          "key": "RHOAIENG-51285",
+          "parentKey": "RHOAIENG-46061",
+          "summary": "Add HA feast operator PodDisruptionBudgetConfig field to ScalingConfig ",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Emery",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-27T09:35:04.044+0000",
+          "updated": "2026-03-04T07:09:16.131+0000",
+          "resolutionDate": "2026-03-04T07:09:16.080+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-49262",
+      "parentKey": "RHAISTRAT-1129",
+      "summary": "Add export functionality",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Kerry Joyce",
+      "components": [
+        "Documentation",
+        "Feature Store"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-11T13:21:48.708+0000",
+      "updated": "2026-03-09T10:00:21.324+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-52183",
+      "parentKey": "RHAISTRAT-1129",
+      "summary": "Update dependencies",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Kerry Joyce",
+      "components": [
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-06T15:10:17.435+0000",
+      "updated": "2026-03-31T19:19:06.111+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-52184",
+          "parentKey": "RHOAIENG-52183",
+          "summary": "[ccs Spike] Run DPA to identify docs needs to support Feat Store server & on-demand transformation",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Merit Fischer",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-03-06T15:12:53.098+0000",
+          "updated": "2026-03-30T21:18:18.616+0000",
+          "resolutionDate": "2026-03-30T21:16:23.450+0000"
+        },
+        {
+          "key": "RHOAIENG-52185",
+          "parentKey": "RHOAIENG-52183",
+          "summary": "[ccs] Document Feature Server & On-Demand Transformations",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Merit Fischer",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 8,
+          "created": "2026-03-06T15:13:38.668+0000",
+          "updated": "2026-03-31T19:15:34.525+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 3,
+    "totalIssues": 21,
+    "issuesByStatus": {
+      "Closed": 11,
+      "Resolved": 8,
+      "In Progress": 2
+    },
+    "issuesByCategory": {
+      "Done": 19,
+      "In Progress": 2,
+      "To Do": 0
+    },
+    "totalStoryPoints": 109,
+    "storyPointsDone": 96,
+    "completionPct": 90,
+    "staleCount": 1,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-46061",
+        "summary": "Feast Feature Server & On-Demand Transformations Performance Optimization",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Merit Emery",
+        "totalIssues": 19,
+        "doneIssues": 18,
+        "progressPct": 95,
+        "storyPoints": 96,
+        "storyPointsDone": 91,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-49262",
+        "summary": "[ccs Epic] Feast Feature Server & On-Demand Transformations Performance Optimization",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Merit Fischer",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-52183",
+        "summary": "[ccs Epic] Document Feast Feature Server & On-Demand Transformations Performance - GA 3.4 (May)",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Merit Fischer",
+        "totalIssues": 2,
+        "doneIssues": 1,
+        "progressPct": 50,
+        "storyPoints": 13,
+        "storyPointsDone": 5,
+        "health": "YELLOW"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

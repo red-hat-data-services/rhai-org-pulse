@@ -1,0 +1,2278 @@
+{
+  "key": "TEST1-773",
+  "summary": "Fix memory leak",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Onyx Kelley",
+    "accountId": "606b693110a0a9006fd7ca32"
+  },
+  "fixVersions": [],
+  "labels": [
+    "SDElements",
+    "dashboard-razzmatazz-scrum",
+    "security"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "AI Core Platform"
+  ],
+  "created": "2024-01-05T20:23:33.589+0000",
+  "updated": "2026-02-05T17:04:23.023+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-927",
+      "linkedSummary": "RHOAI Traffic Encryption, Authentication and Authorization Modernization",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-393",
+      "linkedSummary": "Support SSO for all RHOAI components",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-848",
+      "linkedSummary": "RHOAI - Implement SDL based on RH-SDL",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "SSE-2013",
+      "linkedSummary": "SD Elements Threat Model: Red Hat Openshift AI",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "SSE-2851",
+      "linkedSummary": " Template SD Elements Threat Model: <Offering> <version number> ",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-1314",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Fix timezone handling",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 225",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "Investigate",
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:13.655+0000",
+      "updated": "2026-03-21T17:53:01.755+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-15046",
+          "parentKey": "RHOAIENG-1314",
+          "summary": "Review Each Endpoint For Data",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Gray Walsh",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2024-10-24T20:59:52.490+0000",
+          "updated": "2024-11-26T22:39:37.559+0000",
+          "resolutionDate": "2024-11-26T22:38:39.441+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-1315",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Implement webhook handler",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": "Person 282",
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:15.130+0000",
+      "updated": "2026-03-21T17:52:59.384+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1316",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Add health check endpoint",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:16.649+0000",
+      "updated": "2026-03-21T17:52:55.674+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1317",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Fix data migration",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:18.063+0000",
+      "updated": "2026-03-21T17:52:53.423+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1318",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Update error messages",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [
+        "AI Core Dashboard",
+        "AI Core Platform"
+      ],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDE-Migration-State:MayNeedManualCorrection",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:19.619+0000",
+      "updated": "2026-03-21T17:52:50.889+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-15047",
+          "parentKey": "RHOAIENG-1318",
+          "summary": "Test Submission Size",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2024-10-24T21:10:30.079+0000",
+          "updated": "2025-11-07T16:05:22.909+0000",
+          "resolutionDate": "2025-11-07T16:05:22.896+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-1319",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Add rate limiting",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": "Person 267",
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:21.106+0000",
+      "updated": "2026-03-21T17:52:46.263+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1320",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Update access controls",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:22.613+0000",
+      "updated": "2026-03-21T17:52:43.872+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1321",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Add filtering options",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:24.108+0000",
+      "updated": "2026-03-21T17:52:41.332+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1322",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Fix sorting order",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:25.635+0000",
+      "updated": "2026-03-21T17:52:39.060+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1323",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Implement data cleanup",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:27.178+0000",
+      "updated": "2026-03-21T17:52:36.768+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1324",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Add batch processing",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:28.662+0000",
+      "updated": "2026-03-21T17:52:34.482+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1325",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Fix concurrent access issue",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [
+        "AI Core Dashboard",
+        "AI Core Platform",
+        "Notebooks Server"
+      ],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "ide-dashboard-triaged",
+        "ide-triaged",
+        "needs-refinement",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:30.038+0000",
+      "updated": "2026-03-21T17:52:31.977+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1326",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Update notification system",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [
+        "AI Core Dashboard",
+        "AI Core Platform"
+      ],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDE-Migration-State:MayNeedManualCorrection",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:31.729+0000",
+      "updated": "2026-03-21T17:52:29.457+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-15142",
+          "parentKey": "RHOAIENG-1326",
+          "summary": "Implement a Rate Limter",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2024-10-25T20:04:13.041+0000",
+          "updated": "2025-11-07T16:05:25.265+0000",
+          "resolutionDate": "2025-11-07T16:05:25.249+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-1327",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Add export functionality",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Gray Owens",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:33.201+0000",
+      "updated": "2026-03-21T17:52:24.996+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-3416",
+          "parentKey": "RHOAIENG-1327",
+          "summary": "[SPIKE] Investigate solution for SSRF Snyk issues",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Onyx Brock",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard_scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2024-02-20T15:15:31.388+0000",
+          "updated": "2024-05-20T09:29:35.659+0000",
+          "resolutionDate": "2024-03-25T13:04:22.901+0000"
+        },
+        {
+          "key": "RHOAIENG-5415",
+          "parentKey": "RHOAIENG-1327",
+          "summary": "Fix high severity Snyk SSRF issues",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Onyx Brock",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard_scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2024-04-15T13:25:41.258+0000",
+          "updated": "2024-05-20T09:30:40.782+0000",
+          "resolutionDate": "2024-04-18T15:55:51.899+0000"
+        },
+        {
+          "key": "RHOAIENG-6135",
+          "parentKey": "RHOAIENG-1327",
+          "summary": "Snyk - [CWE-918] - [high] - [main] - red-hat-data-services/odh-dashboard -  - Server-Side Request Forgery (SSRF)",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Brock",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "CWE-918",
+            "code-analysis",
+            "cwe",
+            "dashboard_scrum",
+            "security",
+            "snyk"
+          ],
+          "storyPoints": 0,
+          "created": "2024-04-17T13:40:13.491+0000",
+          "updated": "2024-05-20T09:31:43.391+0000",
+          "resolutionDate": "2024-04-18T16:52:08.420+0000"
+        },
+        {
+          "key": "RHOAIENG-6136",
+          "parentKey": "RHOAIENG-1327",
+          "summary": "Snyk - [CWE-918] - [high] - [main] - red-hat-data-services/odh-dashboard -  - Server-Side Request Forgery (SSRF)",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Brock",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "CWE-918",
+            "code-analysis",
+            "cwe",
+            "security",
+            "snyk"
+          ],
+          "storyPoints": 0,
+          "created": "2024-04-17T13:40:14.223+0000",
+          "updated": "2024-05-20T09:31:25.927+0000",
+          "resolutionDate": "2024-04-18T16:52:45.052+0000"
+        },
+        {
+          "key": "RHOAIENG-6641",
+          "parentKey": "RHOAIENG-1327",
+          "summary": "Backport dashboard SSRF fixes to RHOAI 2.8.3",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Brock",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "RC1",
+            "dashboard_scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2024-05-01T13:39:31.725+0000",
+          "updated": "2024-06-13T15:15:25.521+0000",
+          "resolutionDate": "2024-06-13T15:15:25.504+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-1328",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Fix timezone handling",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [
+        "AI Core Dashboard",
+        "AI Core Platform"
+      ],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDE-Migration-State:MayNeedManualCorrection",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:34.619+0000",
+      "updated": "2026-03-21T17:52:22.343+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-16686",
+          "parentKey": "RHOAIENG-1328",
+          "summary": "Decrease the Keep Alive to 60s",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-infrastructure"
+          ],
+          "storyPoints": 1,
+          "created": "2024-12-06T19:52:09.147+0000",
+          "updated": "2025-11-07T16:05:24.140+0000",
+          "resolutionDate": "2025-11-07T16:05:24.127+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-1329",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Implement webhook handler",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:36.008+0000",
+      "updated": "2026-03-21T17:52:16.413+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1330",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Add unit tests for service",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:37.437+0000",
+      "updated": "2026-03-21T17:52:14.234+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1331",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Update configuration settings",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:38.962+0000",
+      "updated": "2026-03-21T17:52:11.840+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1332",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Fix bug in processing logic",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:40.368+0000",
+      "updated": "2026-03-21T17:52:09.566+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1333",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Implement feature for module",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:41.710+0000",
+      "updated": "2026-03-21T17:52:07.223+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1334",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Update access controls",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:43.112+0000",
+      "updated": "2026-03-21T17:52:04.987+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1335",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Add filtering options",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [
+        "AI Core Dashboard",
+        "AI Core Platform"
+      ],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:44.518+0000",
+      "updated": "2026-03-21T17:52:02.782+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1336",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Fix sorting order",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Person 225",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "dashboard_scrum",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:45.872+0000",
+      "updated": "2026-03-21T17:52:00.276+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1337",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Implement data cleanup",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:47.251+0000",
+      "updated": "2026-03-21T17:51:57.890+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1338",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Add batch processing",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:48.597+0000",
+      "updated": "2026-03-21T17:51:55.696+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1339",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Fix concurrent access issue",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:50.143+0000",
+      "updated": "2026-03-21T17:51:52.827+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1341",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Add logging for debugging",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:53.178+0000",
+      "updated": "2026-03-21T17:51:46.001+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1342",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Improve error handling",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:54.720+0000",
+      "updated": "2026-03-21T17:51:43.705+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1343",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Refactor data handling code",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "aicp-team-heimdall",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:56.230+0000",
+      "updated": "2026-03-21T17:51:41.194+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1344",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Add unit tests for service",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [
+        "AI Core Dashboard",
+        "AI Core Platform"
+      ],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:57.749+0000",
+      "updated": "2026-03-21T17:51:38.905+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1345",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Update configuration settings",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:34:59.134+0000",
+      "updated": "2026-03-21T17:51:36.574+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1346",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Fix bug in processing logic",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:35:00.804+0000",
+      "updated": "2026-03-21T17:51:34.072+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1347",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Implement feature for module",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:35:02.158+0000",
+      "updated": "2026-03-21T17:51:31.668+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1348",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Update access controls",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": null,
+      "components": [
+        "AI Core Platform Security"
+      ],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDE-Migration-State:MayNeedManualCorrection",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:35:03.657+0000",
+      "updated": "2026-03-21T17:51:29.151+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1349",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Add filtering options",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": "Person 282",
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:35:05.060+0000",
+      "updated": "2026-03-21T17:51:24.718+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1350",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Update dependencies",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:35:06.492+0000",
+      "updated": "2026-03-21T17:51:22.320+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1351",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Optimize database queries",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:35:07.959+0000",
+      "updated": "2026-03-21T17:51:19.957+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1352",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Add caching mechanism",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:35:09.336+0000",
+      "updated": "2026-03-21T17:51:17.462+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1353",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Fix validation issue",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:35:10.762+0000",
+      "updated": "2026-03-21T17:51:15.144+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1354",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Update API endpoint",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": null,
+      "components": [
+        "DevOps"
+      ],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:35:12.162+0000",
+      "updated": "2026-03-21T17:51:12.650+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1355",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Add logging for debugging",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:35:13.537+0000",
+      "updated": "2026-03-21T17:51:10.263+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1356",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Improve error handling",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:35:14.925+0000",
+      "updated": "2026-03-21T17:51:07.795+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1357",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Refactor data handling code",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": "Person 267",
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:35:16.331+0000",
+      "updated": "2026-03-21T17:51:05.428+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1358",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Add unit tests for service",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:35:17.636+0000",
+      "updated": "2026-03-21T17:51:02.787+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1359",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Update configuration settings",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:35:19.085+0000",
+      "updated": "2026-03-21T17:51:00.411+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-16687",
+          "parentKey": "RHOAIENG-1359",
+          "summary": "Determine our situation",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-infrastructure"
+          ],
+          "storyPoints": 0,
+          "created": "2024-12-06T20:36:08.353+0000",
+          "updated": "2025-11-07T15:39:31.009+0000",
+          "resolutionDate": "2025-11-07T15:39:30.978+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-1360",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Add monitoring metrics",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": "Person 283",
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:35:20.570+0000",
+      "updated": "2026-03-21T17:50:58.011+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1361",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Implement retry logic",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:35:22.039+0000",
+      "updated": "2026-03-21T17:50:55.688+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1362",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Fix race condition",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:35:23.464+0000",
+      "updated": "2026-03-21T17:50:53.473+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1363",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Add input validation",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [
+        "AI Core Dashboard",
+        "AI Core Platform"
+      ],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:35:25.095+0000",
+      "updated": "2026-03-21T17:50:50.958+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1364",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Update dependencies",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:35:26.478+0000",
+      "updated": "2026-03-21T17:50:48.694+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1365",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Optimize database queries",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:35:27.883+0000",
+      "updated": "2026-03-21T17:50:46.495+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1366",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Add caching mechanism",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:35:29.400+0000",
+      "updated": "2026-03-21T17:50:44.110+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1367",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Fix validation issue",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:35:30.833+0000",
+      "updated": "2026-03-21T17:50:41.684+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1368",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Update API endpoint",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": "Person 282",
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:35:32.262+0000",
+      "updated": "2026-03-21T17:50:39.455+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1369",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Add logging for debugging",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": "Person 282",
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:35:33.912+0000",
+      "updated": "2026-03-21T17:50:37.103+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1370",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Implement search feature",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:35:35.375+0000",
+      "updated": "2026-03-21T17:50:34.880+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-1371",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Add pagination support",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [],
+      "labels": [
+        "SD-Elements",
+        "SDE-Migration-State:Completed",
+        "SDElements",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-01-08T12:43:06.944+0000",
+      "updated": "2026-03-21T17:50:32.459+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-3358",
+      "parentKey": "RHAISTRAT-773",
+      "summary": "Fix timezone handling",
+      "status": "Backlog",
+      "statusCategory": "To Do",
+      "priority": "Critical",
+      "assignee": "Onyx Fischer",
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [
+        "aicp-team-forge",
+        "p0",
+        "security"
+      ],
+      "storyPoints": 0,
+      "created": "2024-02-19T14:22:26.272+0000",
+      "updated": "2026-01-12T16:40:52.883+0000",
+      "issues": []
+    }
+  ],
+  "metrics": {
+    "totalEpics": 58,
+    "totalIssues": 10,
+    "issuesByStatus": {
+      "Closed": 10
+    },
+    "issuesByCategory": {
+      "Done": 10,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 10,
+    "storyPointsDone": 10,
+    "completionPct": 100,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 2,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-1314",
+        "summary": "T42: Avoid relying on untrusted data for server-side selection",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Gray Walsh",
+        "totalIssues": 1,
+        "doneIssues": 1,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-1315",
+        "summary": "T1945: Do not disable NamespaceLifecycle admission controller (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Gray Vaughn",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1316",
+        "summary": "T1929: Secure communication between API server and master nodes (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1317",
+        "summary": "T1983: Set permissions for sensitive files properly (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1318",
+        "summary": "T536: Restrict the size of incoming messages in services",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 1,
+        "doneIssues": 1,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1319",
+        "summary": "T1144: Prevent Server-Side Template Injection (SSTI)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Kerry Reeves",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1320",
+        "summary": "T43: Avoid unsafe operating system interaction",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1321",
+        "summary": "T18: Make authorization decisions using full context",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1322",
+        "summary": "T1985: Secure etcd communication (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1323",
+        "summary": "T1965: Enable the APIPriorityAndFairness feature gate (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1324",
+        "summary": "T184: Perform authorization checks on RESTful web services",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1325",
+        "summary": "T558: Authenticate all other components before any network communication with them",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1326",
+        "summary": "T1362: Perform message throttling in Web APIs",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 1,
+        "doneIssues": 1,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1327",
+        "summary": "T1365: Mitigate Server Side Request Forgery",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Onyx Brock",
+        "totalIssues": 5,
+        "doneIssues": 5,
+        "progressPct": 100,
+        "storyPoints": 9,
+        "storyPointsDone": 9,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1328",
+        "summary": "T35: Fine-tune HTTP server settings",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 1,
+        "doneIssues": 1,
+        "progressPct": 100,
+        "storyPoints": 1,
+        "storyPointsDone": 1,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1329",
+        "summary": "T1957: Ensure that etcd arguments are properly set (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1330",
+        "summary": "T1959: Do not disable ServiceAccount admission controller (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1331",
+        "summary": "T573: Prevent UDDI/ebXML spoofing",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1332",
+        "summary": "T2017: Ensure that the make-iptables-util-chains is set to true (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1333",
+        "summary": "T1931: Prevent insecure bindings and insecure port access (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1334",
+        "summary": "T373: Design and regulate access to unauthenticated parts of the application",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1335",
+        "summary": "T378: Authorize every request for data objects",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1336",
+        "summary": "T1468: Encrypt sensitive data at rest in the browser",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Gray Walsh",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1337",
+        "summary": "T1967: Adjust the request timeout value (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1338",
+        "summary": "T1887: Decide on the right OAuth 2.0 flow for your application",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1339",
+        "summary": "T1975: Do not change the default setting for service-account-private-key-file (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1341",
+        "summary": "T36: Escape untrusted data in HTML, HTML attributes, CSS, and JavaScript",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1342",
+        "summary": "T1969: Do not expose profiling to the web (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1343",
+        "summary": "T257: Secure cross origin resource sharing (CORS)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1344",
+        "summary": "T2141: Perform function level authorization in API",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1345",
+        "summary": "T1947: Configure auditing properly on the API server (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1346",
+        "summary": "T1949: Do not set authorization-mode flag (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1347",
+        "summary": "T1951: Do not use static token files for authentication (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1348",
+        "summary": "T1999: Implement strong network policies (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1349",
+        "summary": "T2001: Limit the use of privileged containers (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Gray Vaughn",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1350",
+        "summary": "T1927: Disable basic-auth-file method (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1351",
+        "summary": "T1943: Use Security Context Constraints instead of SecurityContextDeny admission controllers (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1352",
+        "summary": "T1961: Ensure that the admission control plugin NodeRestriction is enabled (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1353",
+        "summary": "T61: Disable default accounts or change all default passwords",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1354",
+        "summary": "T186: Use recommended settings and the latest patches for third party libraries and software",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1355",
+        "summary": "T2013: Adjust the value of streaming-connection-idle-timeout argument (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1356",
+        "summary": "T20: Generate unique session IDs and reset old IDs after authentication",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1357",
+        "summary": "T50: Use indirect object reference maps if accessing files",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Kerry Reeves",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1358",
+        "summary": "T1925: Maintain the default behavior for anonymous access (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1359",
+        "summary": "T1539: Clear browser data on user logout",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 1,
+        "doneIssues": 1,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1360",
+        "summary": "T1918: Integrate with SSO",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Gray Palmer",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1361",
+        "summary": "T1963: Encrypt data at rest in etcd datastore with aescbc encryption (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1362",
+        "summary": "T1955: Do not enable PodSecurityPolicy admission control plugin (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1363",
+        "summary": "T2156: Validate Scalable Vector Graphics (SVG)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1364",
+        "summary": "T1973: Do not disable use-service-account-credentials argument (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1365",
+        "summary": "T1953: Ensure that the service-account-lookup and service-account-key-file arguments are properly set (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1366",
+        "summary": "T1977: Ensure that root-ca-file is properly set (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1367",
+        "summary": "T1933: Do not disable secure-port for API server traffic (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1368",
+        "summary": "T1989: Run pods with the most restrictive Security Context Constraints possible (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Gray Vaughn",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1369",
+        "summary": "T17: Do not only rely on client-side authorization",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Gray Vaughn",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1370",
+        "summary": "T15: Centralize authorization",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-1371",
+        "summary": "T2007: Keep the default value for the authorization mode argument (OpenShift)",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-3358",
+        "summary": "RHOAI network policy",
+        "status": "Backlog",
+        "statusCategory": "To Do",
+        "assignee": "Kerry Fischer",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

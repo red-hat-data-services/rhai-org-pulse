@@ -1,0 +1,71 @@
+{
+  "key": "TEST1-160",
+  "summary": "Add export functionality",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "assignee": {
+    "displayName": "Kerry Udall",
+    "accountId": "712020:fdf20562-7f15-423a-b43d-f926f34b3c21"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "confidence-yellow",
+    "core",
+    "needs-tech-review",
+    "rhoai-3.5"
+  ],
+  "components": [
+    "IBM Z",
+    "Llama Stack Core"
+  ],
+  "created": "2025-11-03T11:45:25.842+0000",
+  "updated": "2026-04-03T17:29:47.867+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-648",
+      "linkedSummary": "Llama Stack should be support Multi-Arch [Z]",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-37736",
+      "linkedSummary": "Identify gaps in multi-arch component builds",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIENG-33",
+      "linkedSummary": "Ensure LlamaStack is built for power, z, and ARM",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

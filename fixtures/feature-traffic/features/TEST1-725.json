@@ -1,0 +1,56 @@
+{
+  "key": "TEST1-725",
+  "summary": "Refactor data handling code",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [
+    "field-request"
+  ],
+  "components": [
+    "Notebook Server"
+  ],
+  "created": "2024-08-01T16:32:13.961+0000",
+  "updated": "2025-11-25T21:52:18.259+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-423",
+      "linkedSummary": "Provide better support for customers who want to build custom images based on the OOTB images",
+      "linkedStatus": "Pending Approval"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHOAIRFE-56",
+      "linkedSummary": "Having a proper display of which are the source images used for Workbenches",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

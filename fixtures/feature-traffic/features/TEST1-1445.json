@@ -1,0 +1,70 @@
+{
+  "key": "TEST1-1445",
+  "summary": "Add input validation",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Merit Zimmerman",
+    "accountId": "712020:3f08a403-b52d-4aa7-9212-9ee6dba8bc3b"
+  },
+  "fixVersions": [],
+  "labels": [
+    "NIM",
+    "rfe-creator-auto-revised",
+    "rfe-creator-autofix-rubric-pass"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "AI Core Platform",
+    "Model Serving"
+  ],
+  "created": "2026-04-07T14:13:28.069+0000",
+  "updated": "2026-04-07T14:18:28.910+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-256",
+      "linkedSummary": "Provisioning NVIDIA NIM Operator for Red Hat OpenShift AI",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Incorporates",
+      "direction": "inward",
+      "linkedKey": "NVPE-311",
+      "linkedSummary": "Integrate NVIDIA NIM Operator into RHOAI",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "NVPE-312",
+      "linkedSummary": "ADR: Provisioning NVIDIA NIM Operator for Red Hat OpenShift AI",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

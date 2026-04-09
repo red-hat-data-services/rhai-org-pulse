@@ -1,0 +1,213 @@
+{
+  "key": "TEST1-695",
+  "summary": "Add batch processing",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [
+    "field-request",
+    "needs-pm",
+    "needs-tech-review",
+    "needs-triage",
+    "needs-ux",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "Notebook Server",
+    "UXD"
+  ],
+  "created": "2024-07-19T20:49:10.926+0000",
+  "updated": "2026-02-10T04:37:54.861+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Opened kubeflow/notebooks ticket "
+          },
+          {
+            "type": "text",
+            "text": "https://github.com/kubeflow/notebooks/issues/253",
+            "marks": [
+              {
+                "type": "link",
+                "attrs": {
+                  "href": "https://github.com/kubeflow/notebooks/issues/253"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-346",
+      "linkedSummary": "Data Connections need to support more than just Object Storage",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-587",
+      "linkedSummary": "Need a way to manage designated ODH-Connection/Secret of Model Registry",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-827",
+      "linkedSummary": "[GA]Create Connections API",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Informs",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-5",
+      "linkedSummary": "Python PIP Repository Infrastructure",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-297",
+      "linkedSummary": "Ability to inject additional pip repositories configuration in the workbenches",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-23410",
+      "linkedSummary": "Mount OCI Connection into Workbench pod auth file",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-398",
+      "linkedSummary": "Need a way to manage designated ODH-Connection/Secret of Model Registry",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Account",
+      "direction": "outward",
+      "linkedKey": "CIPOE-148887",
+      "linkedSummary": "TURK HAVA YOLLARI ANONIM ORTAKLIGI",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-24405",
+      "linkedSummary": "[ccs] Document Injectable Pip configuration",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-24132",
+      "parentKey": "RHAISTRAT-695",
+      "summary": "Fix race condition",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Kerry Vaughn",
+      "components": [
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 5,
+      "created": "2025-04-17T09:59:20.860+0000",
+      "updated": "2025-11-10T14:37:42.317+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-24133",
+          "parentKey": "RHOAIENG-24132",
+          "summary": "[ccs Spike] Identify Docs support to the pip repositories configuration in the workbenches",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Finn",
+          "components": [
+            "Documentation",
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ContentX_CJ25"
+          ],
+          "storyPoints": 3,
+          "created": "2025-04-17T10:01:13.313+0000",
+          "updated": "2026-03-03T14:17:19.074+0000",
+          "resolutionDate": "2025-11-11T15:43:54.136+0000"
+        },
+        {
+          "key": "RHOAIENG-24405",
+          "parentKey": "RHOAIENG-24132",
+          "summary": "[ccs] Document Injectable Pip configuration",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Finn",
+          "components": [
+            "Documentation",
+            "Notebooks Server"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-04-23T15:18:37.231+0000",
+          "updated": "2026-03-03T14:13:27.879+0000",
+          "resolutionDate": "2025-11-11T15:45:22.601+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 2,
+    "issuesByStatus": {
+      "Closed": 2
+    },
+    "issuesByCategory": {
+      "Done": 2,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 8,
+    "storyPointsDone": 8,
+    "completionPct": 100,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "GREEN",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-24132",
+        "summary": "[ccs Epic] Document pip repositories configuration in the workbenches",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Frankie Finn",
+        "totalIssues": 2,
+        "doneIssues": 2,
+        "progressPct": 100,
+        "storyPoints": 8,
+        "storyPointsDone": 8,
+        "health": "GREEN"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

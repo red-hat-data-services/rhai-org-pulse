@@ -1,0 +1,91 @@
+{
+  "key": "TEST1-1181",
+  "summary": "Optimize database queries",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Gray Knox",
+    "accountId": "712020:3976877f-2c7c-4070-a6a1-90d3f78a309f"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "confidence-green",
+    "needs-tech-review"
+  ],
+  "components": [
+    "AI Safety",
+    "Model Eval",
+    "SDG"
+  ],
+  "created": "2026-02-02T11:38:48.165+0000",
+  "updated": "2026-04-07T03:07:05.125+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1174",
+      "linkedSummary": "[Spike] Garak Report Generation as Post‑Processing Step",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1269",
+      "linkedSummary": "Platform-Level Safety Enforcement for AI Agent Tool Calls",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1218",
+      "linkedSummary": "Synthetic Data Generation for Automated Model Safety Validation & Red Teaming",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Account",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-3496",
+      "linkedSummary": "Create SDG-HUB flow for generating red teaming and model safety validation data",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1225",
+      "linkedSummary": "[Duplicate][Summit] Customer Taxonomies for Security Testing",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1381",
+      "linkedSummary": "Expand Garak with agent-specific probes that test tool-call hijacking, multi-turn escalation, and delegation abuse through agent protocols",
+      "linkedStatus": "Stakeholder review"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

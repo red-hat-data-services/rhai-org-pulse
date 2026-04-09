@@ -1,0 +1,194 @@
+{
+  "key": "TEST1-1180",
+  "summary": "Update dependencies",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Merit Webb",
+    "accountId": "712020:d1f056a6-a23c-41b9-99b1-6d58953ce814"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "chatterbox",
+    "confidence-green",
+    "needs-tech-review",
+    "summit-2026"
+  ],
+  "components": [
+    "AI Safety",
+    "Documentation"
+  ],
+  "created": "2026-02-02T11:37:35.637+0000",
+  "updated": "2026-04-07T03:07:07.244+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-52132",
+      "linkedSummary": "[ccs Epic] Document Chatterbox integration with Garak ",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1222",
+      "linkedSummary": "[Summit] Backend Report Artifact Generation for Security Testing + Storage",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-50652",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1180] - Backend Report Artifact Generation for Security Testing + Storage",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1485",
+      "linkedSummary": "AI Safety Evaluation & Red Teaming Report Visualization in Eval Hub",
+      "linkedStatus": "Stakeholder review"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-52134",
+      "parentKey": "RHAISTRAT-1180",
+      "summary": "Implement webhook handler",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Person 172",
+      "components": [
+        "AI Evaluations",
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-06T09:34:41.460+0000",
+      "updated": "2026-03-31T09:20:14.984+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-54383",
+          "parentKey": "RHOAIENG-52134",
+          "summary": "Example notebook throws exception when there are no complied rows",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Emery",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-19T17:38:21.376+0000",
+          "updated": "2026-03-23T08:22:15.390+0000",
+          "resolutionDate": "2026-03-23T08:22:15.141+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-52135",
+      "parentKey": "RHAISTRAT-1180",
+      "summary": "Add health check endpoint",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Critical",
+      "assignee": "Person 163",
+      "components": [
+        "AI Evaluations",
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-06T09:41:39.017+0000",
+      "updated": "2026-03-18T14:31:36.624+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-52158",
+      "parentKey": "RHAISTRAT-1180",
+      "summary": "Fix concurrent access issue",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Person 172",
+      "components": [
+        "AI Evaluations",
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-06T11:48:49.259+0000",
+      "updated": "2026-03-31T09:20:20.198+0000",
+      "issues": []
+    }
+  ],
+  "metrics": {
+    "totalEpics": 3,
+    "totalIssues": 1,
+    "issuesByStatus": {
+      "Resolved": 1
+    },
+    "issuesByCategory": {
+      "Done": 1,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 100,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-52134",
+        "summary": "Create HTML report for Garak output",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Onyx Zimmerman",
+        "totalIssues": 1,
+        "doneIssues": 1,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-52135",
+        "summary": "QE for HTML report generation",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Kerry Cross",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-52158",
+        "summary": "Implement generation of Garak intent typology and stub files from a red-teaming dataset and generate risk-based assessment report from Garak results.",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Onyx Zimmerman",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

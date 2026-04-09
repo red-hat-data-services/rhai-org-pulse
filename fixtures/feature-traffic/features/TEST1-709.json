@@ -1,0 +1,247 @@
+{
+  "key": "TEST1-709",
+  "summary": "Update documentation",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "assignee": {
+    "displayName": "Gray Bennett",
+    "accountId": "712020:6a1bee1f-f06a-4b5a-98a9-1fc3028d3523"
+  },
+  "fixVersions": [],
+  "labels": [
+    "FY22",
+    "UI",
+    "dashboard-area",
+    "eng",
+    "groomed"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "UXD"
+  ],
+  "created": "2022-01-12T20:42:26.536+0000",
+  "updated": "2025-11-25T21:51:40.021+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-443",
+      "linkedSummary": "Customize sizes for Workbench and Jupyter",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-2752",
+      "linkedSummary": "Support Disabling Workbenches Section of DS Projects",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-400",
+      "linkedSummary": "UI: Support tolerations for different container sizes",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIRFE-120",
+      "linkedSummary": "Workbench Container Size Shows \"Unknown\" when customized",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIRFE-112",
+      "linkedSummary": "Custom Workbench Size",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIRFE-184",
+      "linkedSummary": "Make the dashboard configuration file editable by an OpenShift AI admin",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHODS-3624",
+      "linkedSummary": "UI: Support tolerations for Jupyter notebooks",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHODS-1659",
+      "linkedSummary": "Support tolerations for Jupyter notebooks",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHODS-3159",
+      "linkedSummary": "UI: Unable to change the default PVC size",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHODS-2638",
+      "linkedSummary": "Unable to change the default PVC size",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHODS-2324",
+      "linkedSummary": "Ability for customers to cull their own notebooks",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHODS-3158",
+      "linkedSummary": "UI: Ability for customers to cull their own notebooks",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Account",
+      "direction": "outward",
+      "linkedKey": "CIPOE-2194",
+      "linkedSummary": "AIRBUS SE",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHODS-3203",
+      "linkedSummary": "Custom notebooks - phase 2",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHOAIUX-6",
+      "linkedSummary": "[Design] Ability for admins to configure NB container sizes",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHODS-3399",
+      "linkedSummary": "Custom notebooks from curated library",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHODS-2211",
+      "linkedSummary": "Custom notebooks - phase 1",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-333",
+      "parentKey": "RHAISTRAT-709",
+      "summary": "Add monitoring metrics",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard_scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2023-12-05T16:28:13.304+0000",
+      "updated": "2025-05-05T15:35:22.051+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-395",
+          "parentKey": "RHOAIENG-333",
+          "summary": "Admin UI to enable/disable features",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "UI",
+            "dashboard_scrum",
+            "eng",
+            "groomed"
+          ],
+          "storyPoints": 0,
+          "created": "2023-02-10T15:48:21.525+0000",
+          "updated": "2025-05-05T15:36:22.065+0000",
+          "resolutionDate": "2025-05-05T15:36:22.032+0000"
+        },
+        {
+          "key": "RHOAIENG-2752",
+          "parentKey": "RHOAIENG-333",
+          "summary": "Support Disabling Workbenches Section of DS Projects",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2024-02-06T23:36:32.644+0000",
+          "updated": "2025-05-05T15:36:00.948+0000",
+          "resolutionDate": "2025-05-05T15:36:00.908+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 2,
+    "issuesByStatus": {
+      "Closed": 2
+    },
+    "issuesByCategory": {
+      "Done": 2,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 100,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-333",
+        "summary": "[Blocked] Admin UI Requirements",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 2,
+        "doneIssues": 2,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

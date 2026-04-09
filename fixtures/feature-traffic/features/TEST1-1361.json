@@ -1,0 +1,71 @@
+{
+  "key": "TEST1-1361",
+  "summary": "Improve error handling",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Onyx Edge",
+    "accountId": "712020:b84bf70f-721b-43f1-be72-30992d134f3a"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "confidence-red",
+    "needs-tech-review"
+  ],
+  "components": [
+    "AI Safety",
+    "Documentation",
+    "Llama Stack Core",
+    "Model Eval"
+  ],
+  "created": "2026-03-19T19:13:36.164+0000",
+  "updated": "2026-04-07T12:32:12.084+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1436",
+      "linkedSummary": "Deprecate and remove the Evaluation API from Llama Stack distribution",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-941",
+      "linkedSummary": "Ensure Upstream Compatibility and Usability for Llama Stack Client in RHOAI",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIENG-4214",
+      "linkedSummary": "Spike: work breakdown and stakeholder analysis for Eval API deprecation (RHAISTRAT-1361)",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

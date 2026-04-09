@@ -1,0 +1,77 @@
+{
+  "key": "TEST1-161",
+  "summary": "Update notification system",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Normal",
+  "assignee": {
+    "displayName": "Onyx Drake",
+    "accountId": "712020:bc89782e-7a3f-4e48-9a3b-43e7d98219ee"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "confidence-yellow",
+    "core",
+    "rhoai-3.5"
+  ],
+  "components": [
+    "IBM P",
+    "Llama Stack Core"
+  ],
+  "created": "2025-11-03T11:47:03.530+0000",
+  "updated": "2026-04-03T17:29:48.829+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-37736",
+      "linkedSummary": "Identify gaps in multi-arch component builds",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIENG-33",
+      "linkedSummary": "Ensure LlamaStack is built for power, z, and ARM",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Incorporates",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-3194",
+      "linkedSummary": "Add ppc64le compatible Llama Stack Distribution Image for Power",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Incorporates",
+      "direction": "inward",
+      "linkedKey": "AIPCC-10033",
+      "linkedSummary": "Add ppc64le wheels cache indexes to enable Llama Stack",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

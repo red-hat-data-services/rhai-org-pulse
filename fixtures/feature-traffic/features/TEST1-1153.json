@@ -1,0 +1,296 @@
+{
+  "key": "TEST1-1153",
+  "summary": "Implement data cleanup",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Gray Kelley",
+    "accountId": "70121:477befce-5ca3-4a68-84b6-49b07964a721"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "Documentation",
+    "Feature Store"
+  ],
+  "created": "2026-01-23T09:06:43.059+0000",
+  "updated": "2026-02-23T07:53:18.146+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "heading",
+        "attrs": {
+          "level": 2
+        },
+        "content": [
+          {
+            "type": "text",
+            "text": "Status Update:"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Status: Postponed to 3.5"
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Feb 15, 2026:",
+            "marks": [
+              {
+                "type": "strong"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Refinement is completed. The decision for the common RHAOI observability dashboard vs. the Feature Store observability dashboard is "
+          },
+          {
+            "type": "text",
+            "text": "recorded",
+            "marks": [
+              {
+                "type": "link",
+                "attrs": {
+                  "href": "https://docs.google.com/document/d/16stGORaqTwGPzJab5zVYflXfF5cerGL4oB9bHvefbWo/"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "The UX designs have also been reviewed and finalized. The dashboard is occupied until the 3.5 EA1 release, preventing progress on the work. So this won't make it into the 3.4 release."
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-904",
+      "linkedSummary": "Feature Store: Real-Time Feature Monitoring & Drift Detection",
+      "linkedStatus": "Stakeholder review"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-46056",
+      "parentKey": "RHAISTRAT-1153",
+      "summary": "Update access controls",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Person 288",
+      "components": [
+        "Feature Store"
+      ],
+      "labels": [
+        "rhoai-3.4"
+      ],
+      "storyPoints": 0,
+      "created": "2026-01-19T07:58:49.262+0000",
+      "updated": "2026-04-01T07:20:45.220+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-44806",
+          "parentKey": "RHOAIENG-46056",
+          "summary": "[Feature Monitoring] Feature Refinement Document",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Gray Kelley",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-12T08:28:49.197+0000",
+          "updated": "2026-02-23T07:45:18.312+0000",
+          "resolutionDate": "2026-02-23T07:45:18.276+0000"
+        },
+        {
+          "key": "RHOAIENG-46057",
+          "parentKey": "RHOAIENG-46056",
+          "summary": "Create Refinement document for Real-Time Feature Monitoring & Drift Detection",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Gray Kelley",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 8,
+          "created": "2026-01-19T08:01:05.186+0000",
+          "updated": "2026-01-23T08:56:43.177+0000",
+          "resolutionDate": "2026-01-23T08:56:35.592+0000"
+        },
+        {
+          "key": "RHOAIENG-54343",
+          "parentKey": "RHOAIENG-46056",
+          "summary": "Feature Monitoring UX Refinements",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Gray Kelley",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-03-19T13:32:15.865+0000",
+          "updated": "2026-03-19T15:22:33.926+0000",
+          "resolutionDate": "2026-03-19T13:38:23.534+0000"
+        },
+        {
+          "key": "RHOAIENG-54642",
+          "parentKey": "RHOAIENG-46056",
+          "summary": "Implement Distribution Metrics / Statistical Metrics in feast",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Gray Kelley",
+          "components": [],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-03-23T06:38:41.790+0000",
+          "updated": "2026-03-30T09:40:35.674+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54644",
+          "parentKey": "RHOAIENG-46056",
+          "summary": "Implement Operational Metrics ready for Prometheus",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Major",
+          "assignee": "Gray Kelley",
+          "components": [],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-03-23T06:44:30.888+0000",
+          "updated": "2026-03-23T06:49:57.388+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54645",
+          "parentKey": "RHOAIENG-46056",
+          "summary": "Manage operational metrics via COO watched by feast operator",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Major",
+          "assignee": "Gray Kelley",
+          "components": [],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-03-23T06:46:35.985+0000",
+          "updated": "2026-03-23T06:50:50.742+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-49082",
+      "parentKey": "RHAISTRAT-1153",
+      "summary": "Fix sorting order",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Major",
+      "assignee": "Kerry Joyce",
+      "components": [
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-10T11:17:53.354+0000",
+      "updated": "2026-03-23T06:43:44.944+0000",
+      "issues": []
+    }
+  ],
+  "metrics": {
+    "totalEpics": 2,
+    "totalIssues": 6,
+    "issuesByStatus": {
+      "Closed": 2,
+      "Resolved": 1,
+      "In Progress": 1,
+      "New": 2
+    },
+    "issuesByCategory": {
+      "Done": 3,
+      "In Progress": 1,
+      "To Do": 2
+    },
+    "totalStoryPoints": 24,
+    "storyPointsDone": 13,
+    "completionPct": 50,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-46056",
+        "summary": "Feature Store Real-Time Feature Monitoring & Drift Detection",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Gray Kelley",
+        "totalIssues": 6,
+        "doneIssues": 3,
+        "progressPct": 50,
+        "storyPoints": 24,
+        "storyPointsDone": 13,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-49082",
+        "summary": "[ccs Epic] Documentation support of Feature Store Monitoring & Distribution Visualization",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Merit Fischer",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

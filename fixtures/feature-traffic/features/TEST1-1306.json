@@ -1,0 +1,536 @@
+{
+  "key": "TEST1-1306",
+  "summary": "Update dependencies",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Onyx Pierce",
+    "accountId": "557058:ec20c857-da91-474b-990c-82f291123602"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "confidence-yellow",
+    "mcp",
+    "mcp-catalog",
+    "should-do",
+    "yellow"
+  ],
+  "components": [
+    "Agentic",
+    "AI Hub",
+    "UXD"
+  ],
+  "created": "2026-03-13T19:58:29.147+0000",
+  "updated": "2026-04-06T14:14:08.956+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "date",
+            "attrs": {
+              "timestamp": "1775174400000"
+            }
+          },
+          {
+            "type": "text",
+            "text": ":"
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "emoji",
+                    "attrs": {
+                      "shortName": ":yellow_circle:",
+                      "id": "1f7e1",
+                      "text": "🟡"
+                    }
+                  },
+                  {
+                    "type": "text",
+                    "text": " 3.4 GA(Stable)"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Implementation completed"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Validation in-progress"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Release note documentation remains"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "PM is hoping to get Partner data included (YAML), but timing makes this unlikely for the current release."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1084",
+      "linkedSummary": "Dev Preview - MCP Catalog – Enterprise Control of MCP Assets",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-932",
+      "linkedSummary": "Securely Connect Agents to Tools: MCP Connectivity",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1303",
+      "linkedSummary": "MCP Catalog: Pre-Canned MCP Servers Included Out-of-the-Box",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-53710",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1306] - MCP Catalog: Pre-Canned MCP Servers Included Out-of-the-Box",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-54944",
+      "linkedSummary": "[ccs] Draft & review RN for OOTB MCP Servers - DP in 3.4",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-53385",
+      "parentKey": "RHAISTRAT-1306",
+      "summary": "Add logging for debugging",
+      "status": "Review",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Person 281",
+      "components": [
+        "AI Hub"
+      ],
+      "labels": [
+        "comp-integration"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-13T20:43:27.016+0000",
+      "updated": "2026-04-03T13:08:45.062+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-53386",
+          "parentKey": "RHOAIENG-53385",
+          "summary": "CLONE - Register new APIs",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-13T20:43:34.531+0000",
+          "updated": "2026-03-13T20:48:22.355+0000",
+          "resolutionDate": "2026-03-13T20:48:22.320+0000"
+        },
+        {
+          "key": "RHOAIENG-53387",
+          "parentKey": "RHOAIENG-53385",
+          "summary": "CLONE - Add component to Jira",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-13T20:43:34.560+0000",
+          "updated": "2026-03-13T20:46:09.583+0000",
+          "resolutionDate": "2026-03-13T20:46:09.548+0000"
+        },
+        {
+          "key": "RHOAIENG-53388",
+          "parentKey": "RHOAIENG-53385",
+          "summary": "CLONE - Multi-Architecture Support (Optional)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-13T20:43:34.580+0000",
+          "updated": "2026-03-13T20:46:50.559+0000",
+          "resolutionDate": "2026-03-13T20:46:50.526+0000"
+        },
+        {
+          "key": "RHOAIENG-53389",
+          "parentKey": "RHOAIENG-53385",
+          "summary": "CLONE - Designed for FIPS",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-13T20:43:34.623+0000",
+          "updated": "2026-03-13T20:47:38.016+0000",
+          "resolutionDate": "2026-03-13T20:47:37.981+0000"
+        },
+        {
+          "key": "RHOAIENG-53390",
+          "parentKey": "RHOAIENG-53385",
+          "summary": "CLONE - Onboard to ODH Build - 2 week notice! ",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-13T20:43:34.694+0000",
+          "updated": "2026-03-13T20:48:54.965+0000",
+          "resolutionDate": "2026-03-13T20:48:54.919+0000"
+        },
+        {
+          "key": "RHOAIENG-53391",
+          "parentKey": "RHOAIENG-53385",
+          "summary": "Pre-Canned MCP Servers Included Out-of-the-Box - Feature signoff - DP",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Blocker",
+          "assignee": "Frankie Hayes",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "signoff"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-13T20:43:34.730+0000",
+          "updated": "2026-04-03T16:06:02.952+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-53392",
+          "parentKey": "RHOAIENG-53385",
+          "summary": "CLONE - Integration with ODH operator - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "no-subteam"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-13T20:43:34.838+0000",
+          "updated": "2026-03-20T19:31:57.738+0000",
+          "resolutionDate": "2026-03-13T20:51:26.081+0000"
+        },
+        {
+          "key": "RHOAIENG-53393",
+          "parentKey": "RHOAIENG-53385",
+          "summary": "CLONE - Installation, usage, contact information",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-13T20:43:37.939+0000",
+          "updated": "2026-03-13T20:53:52.091+0000",
+          "resolutionDate": "2026-03-13T20:53:52.058+0000"
+        },
+        {
+          "key": "RHOAIENG-53394",
+          "parentKey": "RHOAIENG-53385",
+          "summary": "CLONE - Follow component integration steps",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-13T20:43:38.024+0000",
+          "updated": "2026-03-13T20:54:45.266+0000",
+          "resolutionDate": "2026-03-13T20:54:45.230+0000"
+        },
+        {
+          "key": "RHOAIENG-53395",
+          "parentKey": "RHOAIENG-53385",
+          "summary": "CLONE - Onboard to RHOAI Build - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-13T20:43:38.063+0000",
+          "updated": "2026-03-13T20:55:17.970+0000",
+          "resolutionDate": "2026-03-13T20:55:17.934+0000"
+        },
+        {
+          "key": "RHOAIENG-53396",
+          "parentKey": "RHOAIENG-53385",
+          "summary": "CLONE - Repository added to ODH/RHOAI",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-13T20:43:38.101+0000",
+          "updated": "2026-03-13T20:56:03.162+0000",
+          "resolutionDate": "2026-03-13T20:56:03.120+0000"
+        },
+        {
+          "key": "RHOAIENG-53397",
+          "parentKey": "RHOAIENG-53385",
+          "summary": "CLONE - Integration with RHOAI operator - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "no-subteam"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-13T20:43:38.316+0000",
+          "updated": "2026-03-20T19:31:53.950+0000",
+          "resolutionDate": "2026-03-13T20:56:32.868+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-53850",
+      "parentKey": "RHAISTRAT-1306",
+      "summary": "Add health check endpoint",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 281",
+      "components": [
+        "AI Hub"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-17T13:24:12.923+0000",
+      "updated": "2026-04-03T15:14:10.157+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-53851",
+          "parentKey": "RHOAIENG-53850",
+          "summary": "Populate and Package Curated MCP Metadata",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-03-17T13:28:50.486+0000",
+          "updated": "2026-04-03T14:03:21.719+0000",
+          "resolutionDate": "2026-04-03T14:03:20.893+0000"
+        },
+        {
+          "key": "RHOAIENG-53852",
+          "parentKey": "RHOAIENG-53850",
+          "summary": "Configure Operator to Surface Default MCP Catalog Sources",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-03-17T13:31:22.096+0000",
+          "updated": "2026-04-02T23:15:38.630+0000",
+          "resolutionDate": "2026-04-02T23:15:38.301+0000"
+        },
+        {
+          "key": "RHOAIENG-56633",
+          "parentKey": "RHOAIENG-53850",
+          "summary": "[testing] test automation associated with default MCP catalog sources",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Oliver",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-04-02T23:22:33.175+0000",
+          "updated": "2026-04-03T14:32:52.037+0000",
+          "resolutionDate": "2026-04-03T14:32:52.012+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 2,
+    "totalIssues": 15,
+    "issuesByStatus": {
+      "Closed": 11,
+      "Review": 1,
+      "Resolved": 3
+    },
+    "issuesByCategory": {
+      "Done": 14,
+      "In Progress": 1,
+      "To Do": 0
+    },
+    "totalStoryPoints": 11,
+    "storyPointsDone": 11,
+    "completionPct": 93,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 1,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-53385",
+        "summary": "Dev Preview - ODH and RHOAI Integrations [AI Hub/MCP Catalog: Pre-Canned MCP Servers Included Out-of-the-Box]",
+        "status": "Review",
+        "statusCategory": "In Progress",
+        "assignee": "Onyx Pierce",
+        "totalIssues": 12,
+        "doneIssues": 11,
+        "progressPct": 92,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-53850",
+        "summary": "Curated Out-of-the-Box MCP Catalog Integration",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Onyx Pierce",
+        "totalIssues": 3,
+        "doneIssues": 3,
+        "progressPct": 100,
+        "storyPoints": 11,
+        "storyPointsDone": 11,
+        "health": "GREEN"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

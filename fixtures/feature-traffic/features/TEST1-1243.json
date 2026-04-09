@@ -1,0 +1,261 @@
+{
+  "key": "TEST1-1243",
+  "summary": "Update dependencies",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Normal",
+  "assignee": {
+    "displayName": "Onyx Pierce",
+    "accountId": "557058:ec20c857-da91-474b-990c-82f291123602"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "AI Hub"
+  ],
+  "created": "2026-02-25T15:50:22.718+0000",
+  "updated": "2026-04-03T13:44:24.002+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "date",
+            "attrs": {
+              "timestamp": "1775174400000"
+            }
+          },
+          {
+            "type": "text",
+            "text": ": Green"
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Validation completed"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "PM Sign-off"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Release Note is all that remains"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1311",
+      "linkedSummary": "Wire up new Granite modelcars to RHOAI Catalog for 3.4 EA2",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-51660",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1243] - Add Granite modelcars for IBM Z to RHOAI Catalog",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Informs",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-51660",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1243] - Add Granite modelcars for IBM Z to RHOAI Catalog",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-55082",
+      "linkedSummary": "RHOAI 3.4 EA2 new feature: Model Car",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-52089",
+      "parentKey": "RHAISTRAT-1243",
+      "summary": "Add rate limiting",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 281",
+      "components": [
+        "AI Hub"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-05T19:39:17.174+0000",
+      "updated": "2026-03-18T19:38:23.658+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-52090",
+          "parentKey": "RHOAIENG-52089",
+          "summary": "Update Model Metadata Collection for IBM Z Granite Modelcars",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-05T19:43:26.555+0000",
+          "updated": "2026-03-18T19:05:51.785+0000",
+          "resolutionDate": "2026-03-18T19:05:51.759+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-52851",
+      "parentKey": "RHAISTRAT-1243",
+      "summary": "Fix concurrent access issue",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 281",
+      "components": [
+        "AI Hub"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-11T20:36:40.409+0000",
+      "updated": "2026-03-18T13:53:14.162+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-52852",
+          "parentKey": "RHOAIENG-52851",
+          "summary": "Add Granite modelcars for IBM Z + Power to RHOAI Catalog - Ensure everything was completed under Tech Preview",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T20:36:44.603+0000",
+          "updated": "2026-03-12T20:15:44.272+0000",
+          "resolutionDate": "2026-03-12T20:15:44.234+0000"
+        },
+        {
+          "key": "RHOAIENG-52853",
+          "parentKey": "RHOAIENG-52851",
+          "summary": "Add Granite modelcars for IBM Z + Power to RHOAI Catalog - Feature signoff - GA",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Onyx Vance",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "signoff"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-11T20:36:44.646+0000",
+          "updated": "2026-03-12T16:58:53.045+0000",
+          "resolutionDate": "2026-03-12T16:58:52.992+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 2,
+    "totalIssues": 3,
+    "issuesByStatus": {
+      "Resolved": 1,
+      "Closed": 2
+    },
+    "issuesByCategory": {
+      "Done": 3,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 100,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 1,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-52089",
+        "summary": "Add Granite Quantized Modelcars for IBM Z",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Onyx Pierce",
+        "totalIssues": 1,
+        "doneIssues": 1,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-52851",
+        "summary": "General Availability - ODH and RHOAI Integrations [AI Hub/Add Granite modelcars for IBM Z + Power to RHOAI Catalog]",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Onyx Pierce",
+        "totalIssues": 2,
+        "doneIssues": 2,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "key": "TEST1-65",
+  "summary": "Implement feature for module",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Gray Bishop",
+    "accountId": "712020:e8fc2b45-1938-491f-8017-b4b591b648f0"
+  },
+  "fixVersions": [],
+  "labels": [
+    "UX",
+    "core"
+  ],
+  "components": [
+    "Llama Stack Core"
+  ],
+  "created": "2025-09-09T15:39:27.492+0000",
+  "updated": "2026-04-01T06:03:31.859+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Account",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-1131",
+      "linkedSummary": "[ccs] Add documentation for the custom distribution image configuration in LLSD CR",
+      "linkedStatus": "Backlog"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-441",
+      "linkedSummary": "Streamline Custom Llama Stack Deployments on OpenShift AI with BYOD",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

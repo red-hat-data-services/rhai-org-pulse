@@ -1,0 +1,63 @@
+{
+  "key": "TEST1-248",
+  "summary": "Add health check endpoint",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Undefined",
+  "assignee": {
+    "displayName": "Merit Rand",
+    "accountId": "70121:8fa7a52d-f2cd-4342-b2fa-cb4f5101c23c"
+  },
+  "fixVersions": [
+    "RHAIIS-3.4EA1"
+  ],
+  "labels": [
+    "INFERSTRAT_251116",
+    "needs-tech-review",
+    "needs_doc"
+  ],
+  "components": [
+    "INFERENG Midstream"
+  ],
+  "created": "2025-09-24T09:44:12.039+0000",
+  "updated": "2026-04-02T17:45:01.994+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-135",
+      "linkedSummary": "Ecosystem Rebellions inference enablement in Red Hat AI",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Cloners",
+      "direction": "inward",
+      "linkedKey": "INFERENG-2260",
+      "linkedSummary": "Rebellions AI Accelerators support in RHAIIS",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

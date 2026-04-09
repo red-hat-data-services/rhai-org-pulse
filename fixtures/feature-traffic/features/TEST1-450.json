@@ -1,0 +1,60 @@
+{
+  "key": "TEST1-450",
+  "summary": "Add caching mechanism",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Frankie Mead",
+    "accountId": "712020:3e6483d7-a7f9-4847-950f-102899cadf8f"
+  },
+  "fixVersions": [],
+  "labels": [
+    "llm-d",
+    "observability"
+  ],
+  "components": [
+    "llm-d"
+  ],
+  "created": "2025-10-07T01:42:09.030+0000",
+  "updated": "2026-01-01T10:54:08.364+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Blocks",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-420",
+      "linkedSummary": "llm-d Metric Exposure for User & Cluster Admins",
+      "linkedStatus": "Refinement"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-38011",
+      "linkedSummary": "[ccs] llm-d Grafana connectivity docs",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

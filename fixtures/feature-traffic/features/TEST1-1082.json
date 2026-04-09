@@ -1,0 +1,68 @@
+{
+  "key": "TEST1-1082",
+  "summary": "Implement webhook handler",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Gray Dean",
+    "accountId": "5cc0716350ff750e510131cf"
+  },
+  "fixVersions": [],
+  "labels": [
+    "Approved-RFE",
+    "GPU-as-a-Service",
+    "tech-reviewed"
+  ],
+  "components": [
+    "KubeRay"
+  ],
+  "created": "2026-01-07T11:06:07.622+0000",
+  "updated": "2026-04-07T08:08:32.137+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-324",
+      "linkedSummary": "Support for creating/managing Ray Jobs via the CodeflareSDK",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Duplicate",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1083",
+      "linkedSummary": "RayJob submission using Predefined Runtime Configurations",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-432",
+      "linkedSummary": "Simplified RayJob Submission Using Predefined Runtime Configurations",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

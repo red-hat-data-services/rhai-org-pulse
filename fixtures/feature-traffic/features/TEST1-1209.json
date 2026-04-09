@@ -1,0 +1,85 @@
+{
+  "key": "TEST1-1209",
+  "summary": "Add health check endpoint",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Kerry Lane",
+    "accountId": "70121:fcaeccc6-4cc5-4dc0-81e0-3fdf5a709419"
+  },
+  "fixVersions": [],
+  "labels": [
+    "Approved-RFE",
+    "llm-d"
+  ],
+  "components": [
+    "AI Core Platform",
+    "Documentation",
+    "llm-d",
+    "Model Serving",
+    "UXD"
+  ],
+  "created": "2026-02-12T18:24:48.786+0000",
+  "updated": "2026-03-18T02:42:19.622+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Feb 12: Consolidated all four repos (llm-d-infra-xks, cert-manager-operator-chart, sail-operator-chart, lws-operator-chart) into the opendatahub-io/rhaii-on-xks monorepo"
+          },
+          {
+            "type": "hardBreak"
+          },
+          {
+            "type": "text",
+            "text": "Helm charts and validation scripts are in progress. "
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1208",
+      "linkedSummary": "Provide Distributed Inference with llm-d on xKS: Tech Preview",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Triggers",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-747",
+      "linkedSummary": "llm-d: Provide Distributed Inference with llm-d on xKS",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

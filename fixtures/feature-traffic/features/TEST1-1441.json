@@ -1,0 +1,151 @@
+{
+  "key": "TEST1-1441",
+  "summary": "Update documentation",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Undefined",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate"
+  ],
+  "components": [
+    "AI Safety"
+  ],
+  "created": "2026-04-07T09:14:45.218+0000",
+  "updated": "2026-04-08T03:08:49.366+0000",
+  "statusNotes": null,
+  "issueLinks": [],
+  "epics": [
+    {
+      "key": "TEST2-56908",
+      "parentKey": "RHAISTRAT-1441",
+      "summary": "Fix sorting order",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "AI Evaluations",
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-04-07T09:20:46.240+0000",
+      "updated": "2026-04-07T09:21:36.003+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-53502",
+          "parentKey": "RHOAIENG-56908",
+          "summary": "Rebase midstream Garak on upstream",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Frankie Emery",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-16T16:05:22.139+0000",
+          "updated": "2026-04-07T09:21:57.764+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54429",
+          "parentKey": "RHOAIENG-56908",
+          "summary": "Forward `evaluation_metadata` to job response artifacts automatically in SDK",
+          "type": "Sub-task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-19T23:41:13.297+0000",
+          "updated": "2026-04-07T09:28:30.212+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55756",
+          "parentKey": "RHOAIENG-56908",
+          "summary": "Errors from Garak aren't logged properly in CLI ",
+          "type": "Bug",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-27T15:28:08.315+0000",
+          "updated": "2026-04-07T15:00:08.236+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56380",
+          "parentKey": "RHOAIENG-56908",
+          "summary": "Surface complied prompts to hitlog.jsonl",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T19:42:08.690+0000",
+          "updated": "2026-04-07T14:35:12.150+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 4,
+    "issuesByStatus": {
+      "Backlog": 3,
+      "New": 1
+    },
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 4
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 3,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-56908",
+        "summary": "Automated Red Teaming - 3.5",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 4,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

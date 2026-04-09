@@ -1,0 +1,180 @@
+{
+  "key": "TEST1-970",
+  "summary": "Update dependencies",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Onyx Finn",
+    "accountId": "70121:5a9a760a-598b-49c2-af0e-60c52f76c598"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "Approved-RFE",
+    "confidence-green"
+  ],
+  "components": [
+    "AI Safety",
+    "Model Eval"
+  ],
+  "created": "2025-12-08T15:49:05.092+0000",
+  "updated": "2026-04-07T03:07:12.139+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1011",
+      "linkedSummary": "TrustyAI Operator: Resolve OOMKilled Issues",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-18619",
+      "linkedSummary": "[SPIKE] Investigate solutions to reduce memory consumption for the TrustyAI operator",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-42311",
+      "parentKey": "RHAISTRAT-970",
+      "summary": "Update access controls",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Person 162",
+      "components": [
+        "AI Evaluations",
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-12-17T10:50:09.811+0000",
+      "updated": "2026-04-03T16:24:23.134+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-18226",
+          "parentKey": "RHOAIENG-42311",
+          "summary": "TrustyAI Operator Controller Manager gets OOMKilled",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Onyx Finn",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-01-16T13:54:49.758+0000",
+          "updated": "2026-03-19T21:06:52.204+0000",
+          "resolutionDate": "2025-01-24T16:42:24.879+0000"
+        },
+        {
+          "key": "RHOAIENG-39864",
+          "parentKey": "RHOAIENG-42311",
+          "summary": "[2.25] TrustyAI Operator Controller Manager is OOMKilled (again)",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Onyx Finn",
+          "components": [
+            "AI Evaluations",
+            "AI Safety"
+          ],
+          "labels": [
+            "trustyai-operator"
+          ],
+          "storyPoints": 0,
+          "created": "2025-11-27T13:04:49.671+0000",
+          "updated": "2026-03-30T00:14:21.674+0000",
+          "resolutionDate": "2026-03-30T00:14:21.538+0000"
+        },
+        {
+          "key": "RHOAIENG-52926",
+          "parentKey": "RHOAIENG-42311",
+          "summary": "trustyai-operator OOMKilled by unfiltered ConfigMap informer",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Gray Vaughn",
+          "components": [
+            "AI Core Platform",
+            "AI Core Platform Security",
+            "AI Evaluations"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-12T14:22:43.955+0000",
+          "updated": "2026-03-23T16:18:07.945+0000",
+          "resolutionDate": "2026-03-23T16:18:07.921+0000"
+        },
+        {
+          "key": "RHOAIENG-53745",
+          "parentKey": "RHOAIENG-42311",
+          "summary": "[3.4GA] TrustyAI Operator Controller Manager is OOMKilled (again)",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Onyx Finn",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "trustyai-operator"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-16T23:22:49.920+0000",
+          "updated": "2026-03-26T15:27:38.292+0000",
+          "resolutionDate": "2026-03-20T12:28:32.149+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 4,
+    "issuesByStatus": {
+      "Closed": 1,
+      "Resolved": 3
+    },
+    "issuesByCategory": {
+      "Done": 4,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 100,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 3,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-42311",
+        "summary": "[Eng] TrustyAI Operator OOMKilled",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Onyx Finn",
+        "totalIssues": 4,
+        "doneIssues": 4,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

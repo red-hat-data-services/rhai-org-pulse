@@ -1,0 +1,95 @@
+{
+  "key": "TEST1-1364",
+  "summary": "Update configuration settings",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Frankie Dean",
+    "accountId": "712020:4d8ab7b7-4491-490a-b85b-8246663b9db3"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "Tooling Experience"
+  ],
+  "created": "2026-03-11T17:11:46.360+0000",
+  "updated": "2026-04-06T14:53:42.940+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "GREEN",
+            "marks": [
+              {
+                "type": "strong"
+              },
+              {
+                "type": "textColor",
+                "attrs": {
+                  "color": "#36b37e"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " as of 31-Mar-2026."
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Completed updating 4 of 6 examples. Work in progress."
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1283",
+      "linkedSummary": "Bring your agent built on your laptop with llama-index to RH AI ",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Issue split",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1306",
+      "linkedSummary": "Show how to add observability via MLFlow to agentic template frameworks ",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

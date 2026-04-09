@@ -1,0 +1,68 @@
+{
+  "key": "TEST1-1404",
+  "summary": "Fix sorting order",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Onyx Dunn",
+    "accountId": "62d879bb278161644007f05a"
+  },
+  "fixVersions": [
+    "RHAIIS-3.4 EA-1"
+  ],
+  "labels": [
+    "INFERSTRAT_251116"
+  ],
+  "components": [
+    "INFERENG Midstream"
+  ],
+  "created": "2026-03-26T17:44:47.872+0000",
+  "updated": "2026-03-26T17:44:51.842+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1183",
+      "linkedSummary": "RHAII 3.4 - Rebranding to RHAII",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "INFERENG-4705",
+      "linkedSummary": "[ccs] Docs - RHAII 3.4 - Rebranding to RHAII",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Causality",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-52468",
+      "linkedSummary": "update imageParamMap from RHAIIS to RHAII",
+      "linkedStatus": "Resolved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

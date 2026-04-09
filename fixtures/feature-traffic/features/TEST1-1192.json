@@ -1,0 +1,102 @@
+{
+  "key": "TEST1-1192",
+  "summary": "Fix race condition",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Frankie Dean",
+    "accountId": "712020:4d8ab7b7-4491-490a-b85b-8246663b9db3"
+  },
+  "fixVersions": [],
+  "labels": [
+    "tech-reviewed"
+  ],
+  "components": [
+    "MLflow",
+    "Tooling Experience"
+  ],
+  "created": "2026-02-04T20:27:53.654+0000",
+  "updated": "2026-04-06T11:54:51.741+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "2026-04-03 Yellow: Significant progress — Langfuse updated to v3, examples restructured to align with new agentic template structure. However, MLflow integration and Kagenti deployment story are still in progress upstream, leaving limited time for demos to be fully baked for Summit use."
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1290",
+      "linkedSummary": "Infuse Agent Deployment/Runtime (Kagenti) Best Practices into Agent Templates",
+      "linkedStatus": "Refinement"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1298",
+      "linkedSummary": "Agent Template & Demo Discovery via Dashboard Learning Resources",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1345",
+      "linkedSummary": "Infuse Agent Deployment/Runtime (Kagenti) Best Practices into Agent Templates",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1173",
+      "linkedSummary": "Bring your Langflow agent to RH AI ",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-3260",
+      "linkedSummary": "Adding LangFlow based agent templates to Agentic-Starter-Kit repo ",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1376",
+      "linkedSummary": "Agent Template & Demo Discovery via Dashboard Learning Resources",
+      "linkedStatus": "Refinement"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

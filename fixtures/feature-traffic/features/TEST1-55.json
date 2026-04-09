@@ -1,0 +1,131 @@
+{
+  "key": "TEST1-55",
+  "summary": "Refactor data handling code",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Blocker",
+  "assignee": {
+    "displayName": "Gray Day",
+    "accountId": "712020:a8b965fb-1129-4541-8501-10ba2e01c8fd"
+  },
+  "fixVersions": [],
+  "labels": [
+    "data-processing",
+    "needs-tech-review",
+    "upstream-only"
+  ],
+  "components": [
+    "Data Processing"
+  ],
+  "created": "2025-06-25T16:22:57.530+0000",
+  "updated": "2026-04-05T22:26:07.884+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-11",
+      "linkedSummary": "Post-processing for a model customization (fine-tuning only) with knowledge ",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Incorporates",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-10",
+      "linkedSummary": "Enable data preparation and processing for AI use cases (SDG, RAG, fine-tuning, NLP) at scale",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-25",
+      "linkedSummary": "Example notebooks for document processing",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHELAI-4508",
+      "linkedSummary": "Fork datacurate4LLMs",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHELAI-4489",
+      "linkedSummary": "Datamixing Exploration",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHELAI-4491",
+      "linkedSummary": "Initial SDG Summary Output Review",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHELAI-4487",
+      "linkedSummary": "Subset Selection Midstreaming",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHELAI-4492",
+      "linkedSummary": "Review summary_extractive, summary_detailed, key_facts fields",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-119",
+      "linkedSummary": "Explainable/Traceable QA Generation with SDG",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-133",
+      "linkedSummary": "Utility to Merge SDG Output .jsonl Files and Convert to Messages Format",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIENG-219",
+      "linkedSummary": "Post-processing: scripts, location, distribution ",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIENG-220",
+      "linkedSummary": "SDG output data review ",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

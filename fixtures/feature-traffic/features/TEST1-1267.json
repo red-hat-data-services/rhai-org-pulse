@@ -1,0 +1,404 @@
+{
+  "key": "TEST1-1267",
+  "summary": "Add monitoring metrics",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Onyx Walsh",
+    "accountId": "712020:ce710f80-369e-4b6d-95e2-ca6c9e58d9fb"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-ea1-candidate",
+    "dashboard-monarch-scrum",
+    "observability"
+  ],
+  "components": [
+    "AI Core Dashboard"
+  ],
+  "created": "2026-03-03T22:06:57.265+0000",
+  "updated": "2026-03-25T18:06:01.027+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-113",
+      "linkedSummary": "Perses Dashboard Integration for RHOAI End-to-End Implementation",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-47371",
+      "parentKey": "RHAISTRAT-1267",
+      "summary": "Update notification system",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Critical",
+      "assignee": "Onyx Ingram",
+      "components": [
+        "Documentation"
+      ],
+      "labels": [
+        "3.Next-candidate",
+        "dashboard-monarch-scrum",
+        "llm-d",
+        "observability",
+        "tech-reviewed"
+      ],
+      "storyPoints": 0,
+      "created": "2026-01-23T20:29:40.367+0000",
+      "updated": "2026-03-24T13:18:35.201+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-47373",
+          "parentKey": "RHOAIENG-47371",
+          "summary": "[ccs SPIKE] Identify doc needs for Perses Dashboard Integration",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Critical",
+          "assignee": "Kerry Carter",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [
+            "3.Next-candidate",
+            "llm-d",
+            "observability",
+            "tech-reviewed"
+          ],
+          "storyPoints": 3,
+          "created": "2026-01-23T20:31:45.839+0000",
+          "updated": "2026-03-24T18:44:58.926+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52136",
+          "parentKey": "RHOAIENG-47371",
+          "summary": "[ccs] Draft & review RN for Perses Dashboard integration - 3.4 (rel TBC)",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Kerry Carter",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-03-06T09:43:17.486+0000",
+          "updated": "2026-03-27T14:48:56.880+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-48724",
+      "parentKey": "RHAISTRAT-1267",
+      "summary": "Improve error handling",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-monarch-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-04T22:15:15.126+0000",
+      "updated": "2026-03-03T22:38:41.119+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-41542",
+          "parentKey": "RHOAIENG-48724",
+          "summary": "create embeddable perses dashboard component",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-monarch-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2025-12-05T16:54:42.832+0000",
+          "updated": "2026-03-03T22:34:04.075+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51661",
+          "parentKey": "RHOAIENG-48724",
+          "summary": "SPIKE: Investigate Perses tag support",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-monarch-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-03T22:24:49.509+0000",
+          "updated": "2026-03-05T20:48:49.928+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51662",
+          "parentKey": "RHOAIENG-48724",
+          "summary": "Document the Perses dashboard contribution workflow for component teams",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-monarch-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-03T22:30:08.845+0000",
+          "updated": "2026-03-05T20:50:18.509+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51663",
+          "parentKey": "RHOAIENG-48724",
+          "summary": "Document how to embed Perses dashboards into feature pages",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-monarch-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-03T22:38:40.640+0000",
+          "updated": "2026-03-05T20:50:23.268+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-51664",
+      "parentKey": "RHAISTRAT-1267",
+      "summary": "Add filtering options",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-monarch-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-03T22:55:33.046+0000",
+      "updated": "2026-03-23T14:40:16.354+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-51665",
+          "parentKey": "RHOAIENG-51664",
+          "summary": "Add a Perses data source for the Prometheus tenancy endpoint",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-monarch-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-03T22:55:45.933+0000",
+          "updated": "2026-03-05T20:50:42.260+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51666",
+          "parentKey": "RHOAIENG-51664",
+          "summary": "Use RBAC check for cluster metrics access on the cluster overview dashboard",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-monarch-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-03T22:55:57.029+0000",
+          "updated": "2026-03-05T20:50:46.803+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51667",
+          "parentKey": "RHOAIENG-51664",
+          "summary": "Update the models dashboard to use the tenancy data source for user metrics",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-monarch-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-03T22:56:07.606+0000",
+          "updated": "2026-03-05T20:50:51.183+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51668",
+          "parentKey": "RHOAIENG-51664",
+          "summary": "Configure the cluster overview dashboard to use the cluster data source explicitly",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-monarch-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-03T22:56:17.954+0000",
+          "updated": "2026-03-05T20:50:55.716+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51669",
+          "parentKey": "RHOAIENG-51664",
+          "summary": "Handle graceful degradation when the monitoring stack is unavailable",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-monarch-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-03T22:56:29.193+0000",
+          "updated": "2026-03-05T20:51:00.969+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52100",
+          "parentKey": "RHOAIENG-51664",
+          "summary": "Investigate proxy service for namespace-scoped metrics access via Thanos tenancy endpoint",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Walsh",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-monarch-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-05T20:38:42.682+0000",
+          "updated": "2026-04-01T17:02:05.164+0000",
+          "resolutionDate": "2026-04-01T17:02:05.131+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 3,
+    "totalIssues": 12,
+    "issuesByStatus": {
+      "New": 10,
+      "Closed": 1,
+      "In Progress": 1
+    },
+    "issuesByCategory": {
+      "Done": 1,
+      "In Progress": 1,
+      "To Do": 10
+    },
+    "totalStoryPoints": 8,
+    "storyPointsDone": 3,
+    "completionPct": 8,
+    "staleCount": 0,
+    "unassignedCount": 9,
+    "blockerCount": 1,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-47371",
+        "summary": "[ccs Epic] Perses Dashboard Integration for RHOAI End-to-End Implementation",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Kerry Carter",
+        "totalIssues": 2,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 5,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-48724",
+        "summary": "embed perses dashboards",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 4,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-51664",
+        "summary": "Enable non-cluster-admin user access to observability metrics",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 6,
+        "doneIssues": 1,
+        "progressPct": 17,
+        "storyPoints": 3,
+        "storyPointsDone": 3,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

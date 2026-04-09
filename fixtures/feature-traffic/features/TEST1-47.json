@@ -1,0 +1,80 @@
+{
+  "key": "TEST1-47",
+  "summary": "Optimize database queries",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Kerry Kane",
+    "accountId": "70121:7153e3d8-9e27-49e4-bcb2-2d2fae23e0e5"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "Data Processing",
+    "Fine Tuning",
+    "SDG"
+  ],
+  "created": "2025-08-28T16:03:29.945+0000",
+  "updated": "2026-02-10T17:15:30.831+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Paul McCarthy following up with PM to see if this work is still in scope of 3.0"
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Duplicate",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-63",
+      "linkedSummary": "Multilingual Model Customization: Enable Model Customization in other languages",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-70",
+      "linkedSummary": "Multilingual Model Customization: Enable Model Customization in other languages",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-122",
+      "linkedSummary": "SDG for Multilingual Model Customization",
+      "linkedStatus": "Pending Approval"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

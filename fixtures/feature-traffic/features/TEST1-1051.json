@@ -1,0 +1,307 @@
+{
+  "key": "TEST1-1051",
+  "summary": "Implement retry logic",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Frankie Flynn",
+    "accountId": "5e258328a7b9540e76f44821"
+  },
+  "fixVersions": [
+    "rhoai-3.4"
+  ],
+  "labels": [
+    "3.4-candidate",
+    "confidence-green",
+    "must-have",
+    "needs-doc",
+    "rhoai-3.4",
+    "tech-preview",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AI Safety",
+    "Documentation"
+  ],
+  "created": "2025-12-14T15:45:57.992+0000",
+  "updated": "2026-04-07T10:33:57.288+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-61",
+      "linkedSummary": "[TP] Support NeMo Guardrails - Part II [Productization]",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "OCPSTRAT-2979",
+      "linkedSummary": "OpenShift Applied/Agentic AI Experience (post 5.0)",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-299",
+      "linkedSummary": "Support NeMo Guardrails",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "OCPSTRAT-2841",
+      "linkedSummary": "OpenShift 5.0 Applied/Agentic AI Experience",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-50657",
+      "parentKey": "RHAISTRAT-1051",
+      "summary": "Fix sorting order",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Person 161",
+      "components": [
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-24T11:32:01.886+0000",
+      "updated": "2026-03-30T15:42:28.830+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50658",
+          "parentKey": "RHOAIENG-50657",
+          "summary": "Provide /v1/guardrails/checks endpoint in RH build of NeMo Guardrails",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Merit Young",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 12,
+          "created": "2026-02-24T11:32:53.237+0000",
+          "updated": "2026-03-30T08:35:40.958+0000",
+          "resolutionDate": "2026-03-13T11:10:20.128+0000"
+        },
+        {
+          "key": "RHOAIENG-51045",
+          "parentKey": "RHOAIENG-50657",
+          "summary": "Add v1/models endpoint to complete OpenAI compatibility",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Kerry James",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-25T19:50:57.917+0000",
+          "updated": "2026-03-24T10:50:39.791+0000",
+          "resolutionDate": "2026-03-24T10:50:39.760+0000"
+        },
+        {
+          "key": "RHOAIENG-53257",
+          "parentKey": "RHOAIENG-50657",
+          "summary": "Improve NeMo controller reconciliation loop",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Merit Young",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-03-13T11:16:50.759+0000",
+          "updated": "2026-03-30T08:35:45.959+0000",
+          "resolutionDate": "2026-03-16T16:04:33.995+0000"
+        },
+        {
+          "key": "RHOAIENG-53503",
+          "parentKey": "RHOAIENG-50657",
+          "summary": "Set up an auto-forwarding of all headers to all models",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Merit Young",
+          "components": [],
+          "labels": [],
+          "storyPoints": 9,
+          "created": "2026-03-16T16:06:12.086+0000",
+          "updated": "2026-04-01T10:11:28.465+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54329",
+          "parentKey": "RHOAIENG-50657",
+          "summary": "NeMO guardrails image is incorrect in the trustyai-service-operator-config ConfigMap",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Kerry Sato",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-03-19T11:44:17.742+0000",
+          "updated": "2026-03-25T15:21:38.101+0000",
+          "resolutionDate": "2026-03-24T12:57:08.524+0000"
+        },
+        {
+          "key": "RHOAIENG-54559",
+          "parentKey": "RHOAIENG-50657",
+          "summary": "Bugfix: Fix disconnected cluster embedding model downloads",
+          "type": "Bug",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Merit Young",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-03-20T11:45:06.835+0000",
+          "updated": "2026-04-07T10:19:32.265+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54749",
+          "parentKey": "RHOAIENG-50657",
+          "summary": "Multi-part content format (OpenAI spec) causes garbled prompts and TypeError crash",
+          "type": "Bug",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Merit Young",
+          "components": [],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-03-23T14:51:25.379+0000",
+          "updated": "2026-03-30T08:36:09.082+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54750",
+          "parentKey": "RHOAIENG-50657",
+          "summary": "Jailbreak rail is not fully operational without a pre-trained rf classider",
+          "type": "Bug",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Merit Young",
+          "components": [],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-03-23T14:54:57.001+0000",
+          "updated": "2026-04-07T10:20:27.125+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54931",
+          "parentKey": "RHOAIENG-50657",
+          "summary": "Investigate streaming issues with NeMo Guardrails",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Flynn",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-24T10:05:17.000+0000",
+          "updated": "2026-03-24T10:28:27.899+0000",
+          "resolutionDate": "2026-03-24T10:28:27.856+0000"
+        },
+        {
+          "key": "RHOAIENG-55479",
+          "parentKey": "RHOAIENG-50657",
+          "summary": "Add replicas support for NeMo Guardrails deployment",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Merit Young",
+          "components": [],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-03-26T13:09:35.715+0000",
+          "updated": "2026-03-30T08:40:43.250+0000",
+          "resolutionDate": "2026-03-27T09:45:21.744+0000"
+        },
+        {
+          "key": "RHOAIENG-56965",
+          "parentKey": "RHOAIENG-50657",
+          "summary": "OpenTelemetry auto-instrumentation support not working due to missing packages and entrypoint not being configured",
+          "type": "Bug",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Merit Young",
+          "components": [],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-04-07T13:10:31.709+0000",
+          "updated": "2026-04-07T14:10:05.546+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 11,
+    "issuesByStatus": {
+      "Resolved": 6,
+      "Review": 4,
+      "In Progress": 1
+    },
+    "issuesByCategory": {
+      "Done": 6,
+      "In Progress": 5,
+      "To Do": 0
+    },
+    "totalStoryPoints": 48,
+    "storyPointsDone": 23,
+    "completionPct": 55,
+    "staleCount": 1,
+    "unassignedCount": 0,
+    "blockerCount": 1,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-50657",
+        "summary": "NeMo Guardrails: Provide features for 3.4 GA release",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Frankie Flynn",
+        "totalIssues": 11,
+        "doneIssues": 6,
+        "progressPct": 55,
+        "storyPoints": 48,
+        "storyPointsDone": 23,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

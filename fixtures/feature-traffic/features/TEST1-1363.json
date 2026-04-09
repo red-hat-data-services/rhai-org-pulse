@@ -1,0 +1,57 @@
+{
+  "key": "TEST1-1363",
+  "summary": "Add unit tests for service",
+  "status": "Backlog",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Frankie Dean",
+    "accountId": "712020:4d8ab7b7-4491-490a-b85b-8246663b9db3"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "Tooling Experience"
+  ],
+  "created": "2026-03-19T19:19:05.665+0000",
+  "updated": "2026-03-19T19:29:21.999+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-789",
+      "linkedSummary": "Production Knowledge Pipeline Flow with MLflow Integration for SDG Hub and Training Hub",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-3596",
+      "linkedSummary": "[ccs] Document a flow using KfP and KFTO for model customization",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

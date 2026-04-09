@@ -1,0 +1,86 @@
+{
+  "key": "TEST1-1214",
+  "summary": "Add filtering options",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Onyx Mitchell",
+    "accountId": "712020:b8bad4dd-5c44-48f6-8461-81327a1e18c9"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "confidence-yellow",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AgentOps",
+    "MLflow"
+  ],
+  "created": "2026-02-14T10:36:53.212+0000",
+  "updated": "2026-04-07T16:42:24.425+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Traces appear in MLflow with manual tweaks. Experiment creation and configuration setting still need fixes. Partially blocked by "
+          },
+          {
+            "type": "inlineCard",
+            "attrs": {
+              "url": "https://redhat.atlassian.net/browse/RHAISTRAT-1216#icft=RHAISTRAT-1216"
+            }
+          },
+          {
+            "type": "text",
+            "text": " (AgentRuntime). Feature moved to Review for 3.4 release tracking; substantial risk remains."
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1216",
+      "linkedSummary": "[DP] Agent Deploy & Runtime Management",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1290",
+      "linkedSummary": "[DP] Agent - MLflow Tracing Integration ",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

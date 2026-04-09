@@ -1,0 +1,173 @@
+{
+  "key": "TEST1-284",
+  "summary": "Refactor data handling code",
+  "status": "Backlog",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Onyx Kelley",
+    "accountId": "606b693110a0a9006fd7ca32"
+  },
+  "fixVersions": [],
+  "labels": [
+    "Approved-RFE",
+    "aicp-team-heimdall",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AI Core Platform"
+  ],
+  "created": "2025-11-19T15:31:30.234+0000",
+  "updated": "2026-03-18T18:15:12.873+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Duplicate",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-285",
+      "linkedSummary": "OpenShift AI infrastructure workload on infra machineset",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Duplicate",
+      "direction": "inward",
+      "linkedKey": "RFE-6526",
+      "linkedSummary": "OpenShift AI infrastructure workload on infra machineset",
+      "linkedStatus": "Backlog"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-306",
+      "linkedSummary": "OpenShift AI infrastructure workload on infra machineset",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Account",
+      "direction": "outward",
+      "linkedKey": "CIPOE-110517",
+      "linkedSummary": "ICON PLC",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-51631",
+      "parentKey": "RHAISTRAT-284",
+      "summary": "Add health check endpoint",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Major",
+      "assignee": null,
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [
+        "aicp-team-heimdall"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-03T18:40:21.921+0000",
+      "updated": "2026-03-04T11:19:39.673+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-51675",
+          "parentKey": "RHOAIENG-51631",
+          "summary": "[Spike] Investigate feature domain",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Major",
+          "assignee": "Merit Judd",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 5,
+          "created": "2026-03-04T00:59:59.926+0000",
+          "updated": "2026-03-30T12:57:56.972+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51768",
+          "parentKey": "RHOAIENG-51631",
+          "summary": "Create feature refinement doc",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T11:04:01.314+0000",
+          "updated": "2026-03-26T12:04:25.149+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51771",
+          "parentKey": "RHOAIENG-51631",
+          "summary": "Create epics(s) and tasks for implementation",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T11:19:39.236+0000",
+          "updated": "2026-03-04T11:21:03.016+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 3,
+    "issuesByStatus": {
+      "New": 2,
+      "Backlog": 1
+    },
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 3
+    },
+    "totalStoryPoints": 5,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 2,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-51631",
+        "summary": "RHOAI infra machineset discovery & refinement",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 3,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 5,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

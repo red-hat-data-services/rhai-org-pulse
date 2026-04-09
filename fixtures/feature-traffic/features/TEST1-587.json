@@ -1,0 +1,80 @@
+{
+  "key": "TEST1-587",
+  "summary": "Fix authentication issue",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Blocker",
+  "assignee": {
+    "displayName": "Merit Zimmerman",
+    "accountId": "712020:3f08a403-b52d-4aa7-9212-9ee6dba8bc3b"
+  },
+  "fixVersions": [],
+  "labels": [
+    "tech-reviewed"
+  ],
+  "components": [
+    "AI Hub"
+  ],
+  "created": "2025-09-03T17:15:33.778+0000",
+  "updated": "2025-11-25T21:46:33.820+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Blocks",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-675",
+      "linkedSummary": "Create an OCI Compliant Storage layer for Model Registry",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-695",
+      "linkedSummary": "Ability to inject additional pip repositories configuration in the workbenches",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-827",
+      "linkedSummary": "[GA]Create Connections API",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-398",
+      "linkedSummary": "Need a way to manage designated ODH-Connection/Secret of Model Registry",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-23410",
+      "linkedSummary": "Mount OCI Connection into Workbench pod auth file",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

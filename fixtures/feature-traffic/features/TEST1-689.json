@@ -1,0 +1,722 @@
+{
+  "key": "TEST1-689",
+  "summary": "Add unit tests for service",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "AI Core Platform"
+  ],
+  "created": "2025-11-10T13:17:07.728+0000",
+  "updated": "2026-03-10T16:45:51.070+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Triggers",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-37736",
+      "linkedSummary": "Identify gaps in multi-arch component builds",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-39710",
+      "parentKey": "RHAISTRAT-689",
+      "summary": "Optimize database queries",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "IBM P"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-11-25T20:02:01.454+0000",
+      "updated": "2026-01-14T10:54:13.291+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-38719",
+          "parentKey": "RHOAIENG-39710",
+          "summary": "Build IBM Power arch (ppc64le) for odh-llm-d-routing-sidecar-rhel9",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM P"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-11-12T18:36:16.733+0000",
+          "updated": "2026-01-14T10:59:39.820+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-38720",
+          "parentKey": "RHOAIENG-39710",
+          "summary": "Build IBM Power arch (ppc64le) for odh-llm-d-inference-scheduler-rhel9",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM P"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-11-12T18:36:20.002+0000",
+          "updated": "2025-11-25T20:05:59.552+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-38721",
+          "parentKey": "RHOAIENG-39710",
+          "summary": "Build IBM Power arch (ppc64le) for odh-llama-stack-k8s-operator-rhel9",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Onyx Drake",
+          "components": [
+            "IBM P"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-11-12T18:36:23.169+0000",
+          "updated": "2026-02-13T21:57:25.429+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-38722",
+          "parentKey": "RHOAIENG-39710",
+          "summary": "Build IBM Power arch (ppc64le) for odh-trustyai-ragas-lls-provider-dsp-rhel9",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM P"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-11-12T18:36:26.326+0000",
+          "updated": "2026-01-13T13:59:13.974+0000",
+          "resolutionDate": "2026-01-13T13:59:13.947+0000"
+        },
+        {
+          "key": "RHOAIENG-45239",
+          "parentKey": "RHOAIENG-39710",
+          "summary": "Add the serving runtime template for spyre in odh-model-controller",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Owens",
+          "components": [
+            "IBM P"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-13T13:57:28.040+0000",
+          "updated": "2026-03-30T06:40:37.155+0000",
+          "resolutionDate": "2026-03-30T06:40:37.128+0000"
+        },
+        {
+          "key": "RHOAIENG-45247",
+          "parentKey": "RHOAIENG-39710",
+          "summary": "vllm-cpu upgrade for ppc64le with AIPCC base image",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM P"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-13T14:36:38.537+0000",
+          "updated": "2026-01-13T14:36:38.537+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-45248",
+          "parentKey": "RHOAIENG-39710",
+          "summary": "Build latest docling and have it published to RH public Index",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Merit Ward",
+          "components": [
+            "IBM P"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-13T14:38:55.489+0000",
+          "updated": "2026-02-13T21:59:14.128+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-45484",
+          "parentKey": "RHOAIENG-39710",
+          "summary": "Build IBM Power arch (ppc64le) for odh-llama-stack-core-rhel9",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Onyx Drake",
+          "components": [
+            "IBM P"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-14T10:51:38.074+0000",
+          "updated": "2026-02-24T06:46:20.523+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-45485",
+          "parentKey": "RHOAIENG-39710",
+          "summary": "Build IBM Power arch (ppc64le) for odh-mlflow-rhel9",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM P"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-14T10:52:43.108+0000",
+          "updated": "2026-01-14T11:00:17.415+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-45486",
+          "parentKey": "RHOAIENG-39710",
+          "summary": "Build IBM Power arch (ppc64le) for odh-mlserver-rhel9",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM P"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-14T10:53:24.564+0000",
+          "updated": "2026-01-14T11:00:24.422+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-45487",
+          "parentKey": "RHOAIENG-39710",
+          "summary": "Build IBM Power arch (ppc64le) for odh-trustyai-nemo-guardrails-server-rhel9",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Onyx Drake",
+          "components": [
+            "IBM P"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-14T10:54:13.224+0000",
+          "updated": "2026-02-27T08:31:37.940+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-39711",
+      "parentKey": "RHAISTRAT-689",
+      "summary": "Add caching mechanism",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "IBM Z"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-11-25T20:02:45.253+0000",
+      "updated": "2026-01-14T10:58:54.151+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-38725",
+          "parentKey": "RHOAIENG-39711",
+          "summary": "Build IBM Z arch (s390x) for odh-llm-d-routing-sidecar-rhel9",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM Z"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-11-12T18:49:09.074+0000",
+          "updated": "2025-11-25T20:08:11.392+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-38726",
+          "parentKey": "RHOAIENG-39711",
+          "summary": "Build IBM Z arch (s390x) for odh-llm-d-inference-scheduler-rhel9",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM Z"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-11-12T18:49:12.303+0000",
+          "updated": "2025-11-25T20:08:14.222+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-38727",
+          "parentKey": "RHOAIENG-39711",
+          "summary": "Build IBM Z arch (s390x) for odh-llama-stack-k8s-operator-rhel9",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM Z"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-11-12T18:49:15.466+0000",
+          "updated": "2026-01-14T10:56:42.759+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-38728",
+          "parentKey": "RHOAIENG-39711",
+          "summary": "Build IBM Z arch (s390x) for odh-mlmd-grpc-server-rhel9",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM Z"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-11-12T18:49:18.618+0000",
+          "updated": "2025-11-25T20:08:19.813+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-38729",
+          "parentKey": "RHOAIENG-39711",
+          "summary": "Build IBM Z arch (s390x) for odh-ml-pipelines-scheduledworkflow-v2-rhel9",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM Z"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-11-12T18:49:21.752+0000",
+          "updated": "2025-11-25T20:08:22.583+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-38730",
+          "parentKey": "RHOAIENG-39711",
+          "summary": "Build IBM Z arch (s390x) for odh-ml-pipelines-persistenceagent-v2-rhel9",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM Z"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-11-12T18:49:25.782+0000",
+          "updated": "2025-11-25T20:08:30.502+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-38731",
+          "parentKey": "RHOAIENG-39711",
+          "summary": "Build IBM Z arch (s390x) for odh-ml-pipelines-launcher-rhel9",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM Z"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-11-12T18:49:28.968+0000",
+          "updated": "2025-11-25T20:08:33.420+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-38732",
+          "parentKey": "RHOAIENG-39711",
+          "summary": "Build IBM Z arch (s390x) for odh-ml-pipelines-driver-rhel9",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM Z"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-11-12T18:49:32.223+0000",
+          "updated": "2025-11-25T20:08:36.254+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-38733",
+          "parentKey": "RHOAIENG-39711",
+          "summary": "Build IBM Z arch (s390x) for odh-ml-pipelines-api-server-v2-rhel9",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM Z"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-11-12T18:49:36.086+0000",
+          "updated": "2025-11-25T20:08:38.854+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-38734",
+          "parentKey": "RHOAIENG-39711",
+          "summary": "Build IBM Z arch (s390x) for odh-kuberay-operator-controller-rhel9",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM Z"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-11-12T18:49:39.175+0000",
+          "updated": "2025-11-25T20:08:41.378+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-38735",
+          "parentKey": "RHOAIENG-39711",
+          "summary": "Build IBM Z arch (s390x) for odh-feature-server-rhel9",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM Z"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-11-12T18:49:42.334+0000",
+          "updated": "2025-11-25T20:08:59.595+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-38736",
+          "parentKey": "RHOAIENG-39711",
+          "summary": "Build IBM Z arch (s390x) for odh-feast-operator-rhel9",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM Z"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-11-12T18:49:46.329+0000",
+          "updated": "2025-11-25T20:09:02.497+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-38737",
+          "parentKey": "RHOAIENG-39711",
+          "summary": "Build IBM Z arch (s390x) for odh-data-science-pipelines-operator-controller-rhel9",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM Z"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-11-12T18:49:50.132+0000",
+          "updated": "2025-11-25T20:09:05.788+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-38738",
+          "parentKey": "RHOAIENG-39711",
+          "summary": "Build IBM Z arch (s390x) for odh-data-science-pipelines-argo-workflowcontroller-rhel9",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM Z"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-11-12T18:49:53.687+0000",
+          "updated": "2025-11-25T20:09:08.355+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-38739",
+          "parentKey": "RHOAIENG-39711",
+          "summary": "Build IBM Z arch (s390x) for odh-data-science-pipelines-argo-argoexec-rhel9",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM Z"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-11-12T18:49:56.900+0000",
+          "updated": "2025-11-25T20:09:11.011+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-38740",
+          "parentKey": "RHOAIENG-39711",
+          "summary": "Build IBM Z arch (s390x) for odh-training-operator-rhel9",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM Z"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-11-12T18:50:00.472+0000",
+          "updated": "2025-11-25T20:09:22.083+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-38741",
+          "parentKey": "RHOAIENG-39711",
+          "summary": "Build IBM Z arch (s390x) for odh-trustyai-ragas-lls-provider-dsp-rhel9",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM Z"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-11-12T18:50:04.409+0000",
+          "updated": "2026-01-13T13:57:44.639+0000",
+          "resolutionDate": "2026-01-13T13:57:44.607+0000"
+        },
+        {
+          "key": "RHOAIENG-45488",
+          "parentKey": "RHOAIENG-39711",
+          "summary": "Build IBM Z arch (s390x) for odh-llama-stack-core-rhel9",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM Z"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-14T10:56:02.499+0000",
+          "updated": "2026-01-14T10:57:29.522+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-45489",
+          "parentKey": "RHOAIENG-39711",
+          "summary": "Build IBM Z arch (s390x) for odh-mlflow-rhel9",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM Z"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-14T10:56:53.538+0000",
+          "updated": "2026-01-14T10:58:03.827+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-45490",
+          "parentKey": "RHOAIENG-39711",
+          "summary": "Build IBM Z arch (s390x) for odh-mlserver-rhel9",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM Z"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-14T10:57:39.057+0000",
+          "updated": "2026-01-14T10:59:08.207+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-45491",
+          "parentKey": "RHOAIENG-39711",
+          "summary": "Build IBM Z arch (s390x) for odh-trustyai-nemo-guardrails-server-rhel9",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "IBM Z"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-14T10:58:54.085+0000",
+          "updated": "2026-02-10T02:56:15.453+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-52475",
+      "parentKey": "RHAISTRAT-689",
+      "summary": "Add export functionality",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Critical",
+      "assignee": null,
+      "components": [
+        "to-refine"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-10T15:35:11.092+0000",
+      "updated": "2026-03-10T15:45:51.914+0000",
+      "issues": []
+    }
+  ],
+  "metrics": {
+    "totalEpics": 3,
+    "totalIssues": 32,
+    "issuesByStatus": {
+      "New": 25,
+      "In Progress": 4,
+      "Closed": 2,
+      "Resolved": 1
+    },
+    "issuesByCategory": {
+      "Done": 3,
+      "In Progress": 4,
+      "To Do": 25
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 9,
+    "staleCount": 4,
+    "unassignedCount": 25,
+    "blockerCount": 1,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-39710",
+        "summary": "Build RHOAI Components for IBM Power (ppc64le)",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 11,
+        "doneIssues": 2,
+        "progressPct": 18,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-39711",
+        "summary": "Build RHOAI Components for IBM Z (s390x)",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 21,
+        "doneIssues": 1,
+        "progressPct": 5,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-52475",
+        "summary": "Build missing RHOAI Components for Arm",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

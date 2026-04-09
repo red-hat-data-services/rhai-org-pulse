@@ -1,0 +1,409 @@
+{
+  "key": "TEST1-1045",
+  "summary": "Add logging for debugging",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Onyx Finn",
+    "accountId": "70121:5a9a760a-598b-49c2-af0e-60c52f76c598"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "summit-2026"
+  ],
+  "components": [
+    "Documentation",
+    "Model Eval"
+  ],
+  "created": "2025-12-12T17:33:38.786+0000",
+  "updated": "2026-04-03T13:41:26.172+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1203",
+      "linkedSummary": "(feat) MCP Server for Eval-Hub - cloned from RHAIRFE-1161",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1020",
+      "linkedSummary": "K8s Controller for Evaluation Stack/eval-hub",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-52877",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1045] - K8s Controller for Evaluation Stack/eval-hub",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1178",
+      "linkedSummary": "Python-Native Visualization Framework Integration for Eval-Hub",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1161",
+      "linkedSummary": "MCP Server for Eval-Hub",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1381",
+      "linkedSummary": "CLONE - (feat) rewrite from Py to GoLang the MCP Server for Eval-Hub - cloned from RHAIRFE-1161",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-42310",
+      "parentKey": "RHAISTRAT-1045",
+      "summary": "Implement feature for module",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Person 162",
+      "components": [
+        "AI Evaluations"
+      ],
+      "labels": [
+        "evalhub",
+        "evalhub-operator"
+      ],
+      "storyPoints": 0,
+      "created": "2025-12-17T10:45:50.086+0000",
+      "updated": "2026-02-16T01:27:57.772+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-43381",
+      "parentKey": "RHAISTRAT-1045",
+      "summary": "Add rate limiting",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Person 162",
+      "components": [
+        "AI Evaluations"
+      ],
+      "labels": [
+        "evalhub",
+        "evalhub-operator"
+      ],
+      "storyPoints": 0,
+      "created": "2026-01-05T08:54:16.971+0000",
+      "updated": "2026-02-27T00:41:28.584+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-43382",
+          "parentKey": "RHOAIENG-43381",
+          "summary": "Implement EvalHub controller through the TrustyAI Service Operator",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Onyx Finn",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub",
+            "evalhub-operator"
+          ],
+          "storyPoints": 8,
+          "created": "2026-01-05T09:15:38.473+0000",
+          "updated": "2026-03-15T17:15:23.751+0000",
+          "resolutionDate": "2026-01-29T16:26:58.554+0000"
+        },
+        {
+          "key": "RHOAIENG-43389",
+          "parentKey": "RHOAIENG-43381",
+          "summary": "Add EvalHub image reference to ODH/RHOAI operator",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Onyx Finn",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-05T10:52:45.158+0000",
+          "updated": "2026-03-15T12:23:21.378+0000",
+          "resolutionDate": "2026-02-16T01:14:54.724+0000"
+        },
+        {
+          "key": "RHOAIENG-46493",
+          "parentKey": "RHOAIENG-43381",
+          "summary": "[EvalHub] Merge controller POC upstream",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Finn",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub"
+          ],
+          "storyPoints": 8,
+          "created": "2026-01-20T11:22:08.595+0000",
+          "updated": "2026-03-15T17:15:21.824+0000",
+          "resolutionDate": "2026-01-20T11:22:25.514+0000"
+        },
+        {
+          "key": "RHOAIENG-48376",
+          "parentKey": "RHOAIENG-43381",
+          "summary": "[EvalHub] Add SERVICE_URL environment variable to operator deployment",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Finn",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub-operator",
+            "trustyai-operator"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-03T10:49:33.479+0000",
+          "updated": "2026-02-22T20:07:11.068+0000",
+          "resolutionDate": "2026-02-16T01:15:57.876+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-50028",
+      "parentKey": "RHAISTRAT-1045",
+      "summary": "Optimize database queries",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Person 157",
+      "components": [
+        "AI Evaluations"
+      ],
+      "labels": [
+        "evalhub"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-17T10:57:10.687+0000",
+      "updated": "2026-03-11T16:51:34.051+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50029",
+          "parentKey": "RHOAIENG-50028",
+          "summary": "remove hardcoded providers",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Graham",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-17T11:01:07.044+0000",
+          "updated": "2026-03-11T16:47:55.414+0000",
+          "resolutionDate": "2026-03-11T16:47:55.397+0000"
+        },
+        {
+          "key": "RHOAIENG-50030",
+          "parentKey": "RHOAIENG-50028",
+          "summary": "provide ootb provider as manifest",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Graham",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-17T11:01:52.129+0000",
+          "updated": "2026-03-11T16:49:28.276+0000",
+          "resolutionDate": "2026-03-11T16:48:34.263+0000"
+        },
+        {
+          "key": "RHOAIENG-50031",
+          "parentKey": "RHOAIENG-50028",
+          "summary": "make Trusty operator for EH CRD reconciliation (hold for multi-tenancy)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Graham",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-17T11:02:43.533+0000",
+          "updated": "2026-03-11T16:51:12.564+0000",
+          "resolutionDate": "2026-03-11T16:50:54.428+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-50482",
+      "parentKey": "RHAISTRAT-1045",
+      "summary": "Update dependencies",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Person 162",
+      "components": [
+        "AI Evaluations"
+      ],
+      "labels": [
+        "evalhub",
+        "evalhub-operator"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-22T19:37:14.078+0000",
+      "updated": "2026-03-11T17:14:11.942+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-47884",
+          "parentKey": "RHOAIENG-50482",
+          "summary": "Check authentication/authorization for EA2",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Finn",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-28T10:38:50.875+0000",
+          "updated": "2026-03-11T17:13:16.666+0000",
+          "resolutionDate": "2026-03-11T17:13:16.615+0000"
+        },
+        {
+          "key": "RHOAIENG-51312",
+          "parentKey": "RHOAIENG-50482",
+          "summary": "Support OTEL configuration in EvalHub CR spec",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Finn",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [
+            "evalhub",
+            "trustyai-operator"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-27T12:48:09.860+0000",
+          "updated": "2026-03-05T00:41:21.812+0000",
+          "resolutionDate": "2026-03-05T00:41:21.766+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 4,
+    "totalIssues": 9,
+    "issuesByStatus": {
+      "Resolved": 7,
+      "Closed": 2
+    },
+    "issuesByCategory": {
+      "Done": 9,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 16,
+    "storyPointsDone": 16,
+    "completionPct": 100,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 2,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-42310",
+        "summary": "[Eng] EvalHub controller",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Onyx Finn",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-43381",
+        "summary": "[EvalHub] TrustyAI Operator Controller [3.4EA1]",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Onyx Finn",
+        "totalIssues": 4,
+        "doneIssues": 4,
+        "progressPct": 100,
+        "storyPoints": 16,
+        "storyPointsDone": 16,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-50028",
+        "summary": "(OPTIONAL) Trusty controller for EH and Providers config arch changes",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Gray Graham",
+        "totalIssues": 3,
+        "doneIssues": 3,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-50482",
+        "summary": "[EvalHub] TrustyAI Operator Controller [3.4EA2]",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Onyx Finn",
+        "totalIssues": 2,
+        "doneIssues": 2,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

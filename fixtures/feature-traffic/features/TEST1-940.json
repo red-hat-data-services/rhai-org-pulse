@@ -1,0 +1,76 @@
+{
+  "key": "TEST1-940",
+  "summary": "Fix data migration",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Gray Cole",
+    "accountId": "557058:6c32d721-3df7-4262-b3e8-d9d0a583a5f0"
+  },
+  "fixVersions": [],
+  "labels": [
+    "Approved-RFE",
+    "GPU-as-a-Service",
+    "tech-reviewed"
+  ],
+  "components": [
+    "Kubeflow Unified SDK",
+    "Training Kubeflow"
+  ],
+  "created": "2025-12-02T15:28:11.205+0000",
+  "updated": "2026-02-23T09:21:21.821+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-942",
+      "linkedSummary": "CodeFlare SDK OIDC Support",
+      "linkedStatus": "Release Pending"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-901",
+      "linkedSummary": "Feature Store OIDC Authentication Support",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-977",
+      "linkedSummary": "CodeFlare SDK OIDC Support",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-979",
+      "linkedSummary": "Kubeflow Trainer v2 OIDC Support",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "key": "TEST1-1409",
+  "summary": "Add export functionality",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Blocker",
+  "assignee": {
+    "displayName": "Gray Yates",
+    "accountId": "712020:855854c3-5473-467c-b78e-a8b08a94f169"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "rhoai-3.5"
+  ],
+  "components": [
+    "AI Core Platform",
+    "Data Processing"
+  ],
+  "created": "2026-03-27T16:21:09.589+0000",
+  "updated": "2026-04-06T15:13:18.029+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1541",
+      "linkedSummary": "docling image updates every EA2 release ",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "AIPCC-13096",
+      "linkedSummary": "rapidocr package update request",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

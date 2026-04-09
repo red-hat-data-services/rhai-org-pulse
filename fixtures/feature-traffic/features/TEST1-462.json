@@ -1,0 +1,108 @@
+{
+  "key": "TEST1-462",
+  "summary": "Update API endpoint",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [
+    "dashboard_scrum"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "UXD"
+  ],
+  "created": "2024-07-02T20:19:50.736+0000",
+  "updated": "2025-11-25T21:41:25.579+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Duplicate",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-747",
+      "linkedSummary": "We need to be able to configure scalablity of inferencing service using Openshift AI UI",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-10036",
+      "parentKey": "RHAISTRAT-462",
+      "summary": "Implement webhook handler",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": null,
+      "components": [
+        "AI Core Dashboard",
+        "Model Runtimes"
+      ],
+      "labels": [
+        "dashboard-area-model-serving"
+      ],
+      "storyPoints": 0,
+      "created": "2024-07-17T22:56:30.202+0000",
+      "updated": "2026-02-20T18:46:04.516+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-1481",
+          "parentKey": "RHOAIENG-10036",
+          "summary": "KServe Autoscaler",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard_scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2024-01-10T09:58:08.161+0000",
+          "updated": "2026-02-20T18:45:50.749+0000",
+          "resolutionDate": "2026-02-20T18:45:50.708+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 1,
+    "issuesByStatus": {
+      "Closed": 1
+    },
+    "issuesByCategory": {
+      "Done": 1,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 100,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-10036",
+        "summary": "KServe Autoscaler",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 1,
+        "doneIssues": 1,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

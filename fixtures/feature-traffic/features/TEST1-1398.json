@@ -1,0 +1,49 @@
+{
+  "key": "TEST1-1398",
+  "summary": "Optimize database queries",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate"
+  ],
+  "components": [
+    "AI Core Dashboard"
+  ],
+  "created": "2026-03-25T16:38:35.779+0000",
+  "updated": "2026-03-26T16:19:17.530+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1376",
+      "linkedSummary": "Agent Template & Demo Discovery via Dashboard Learning Resources",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

@@ -1,0 +1,126 @@
+{
+  "key": "TEST1-1203",
+  "summary": "Add batch processing",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Gray Graham",
+    "accountId": "5b6859ac36d4343beb82c7a7"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "requires_architecture_review",
+    "tech-reviewed"
+  ],
+  "components": [
+    "Documentation",
+    "Model Eval"
+  ],
+  "created": "2026-02-11T19:48:29.801+0000",
+  "updated": "2026-04-03T16:48:02.077+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "2026-03-17: the "
+          },
+          {
+            "type": "text",
+            "text": "proposed ADR",
+            "marks": [
+              {
+                "type": "link",
+                "attrs": {
+                  "href": "https://redhat-internal.slack.com/archives/C09P3G66RGQ/p1771314711294619"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " is validated for the Summit timeframe, wrapping "
+          },
+          {
+            "type": "text",
+            "text": "-sdk[client]",
+            "marks": [
+              {
+                "type": "code"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " for a demo; starting assessment wrt connection to MCP Gateway related discussion for authn/z/tenants with Architects."
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1045",
+      "linkedSummary": "[Feat] K8s Controller for Evaluation Stack/eval-hub - cloned from RHAIRFE-1020",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1160",
+      "linkedSummary": "Agent Skills for Eval-Hub (for evalhub cli)",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1161",
+      "linkedSummary": "MCP Server for Eval-Hub",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Triggers",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-49163",
+      "linkedSummary": "Spike: wrap eval-hub-sdk[client] and expose MCP Server",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Cloners",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1381",
+      "linkedSummary": "CLONE - (feat) rewrite from Py to GoLang the MCP Server for Eval-Hub - cloned from RHAIRFE-1161",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

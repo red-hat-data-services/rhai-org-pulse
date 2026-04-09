@@ -1,0 +1,137 @@
+{
+  "key": "TEST1-53",
+  "summary": "Update configuration settings",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Onyx Park",
+    "accountId": "70121:5ac25270-120c-4194-b019-f4faf2dc692a"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [],
+  "created": "2025-09-02T11:13:06.578+0000",
+  "updated": "2025-09-02T11:41:27.819+0000",
+  "statusNotes": null,
+  "issueLinks": [],
+  "epics": [
+    {
+      "key": "TEST2-27742",
+      "parentKey": "RHAISTRAT-53",
+      "summary": "Fix validation issue",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Normal",
+      "assignee": "Onyx Reeves",
+      "components": [
+        "Documentation"
+      ],
+      "labels": [
+        "ccs-internal",
+        "no--qe"
+      ],
+      "storyPoints": 0,
+      "created": "2025-06-18T13:45:58.950+0000",
+      "updated": "2025-09-03T18:22:20.782+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-19284",
+          "parentKey": "RHOAIENG-27742",
+          "summary": "[ccs internal SPIKE] Investigate how to improve navigation of RHOAI docs",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Park",
+          "components": [
+            "Internal Processes & Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-02-04T15:35:24.183+0000",
+          "updated": "2026-03-15T12:26:13.691+0000",
+          "resolutionDate": "2025-09-03T18:23:17.291+0000"
+        },
+        {
+          "key": "RHOAIENG-27748",
+          "parentKey": "RHOAIENG-27742",
+          "summary": "Map existing IA for portfolio and product/technology docs",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Onyx Park",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [
+            "ccs-internal"
+          ],
+          "storyPoints": 5,
+          "created": "2025-06-18T14:02:37.370+0000",
+          "updated": "2025-09-03T18:05:28.217+0000",
+          "resolutionDate": "2025-09-03T18:05:28.156+0000"
+        },
+        {
+          "key": "RHOAIENG-33549",
+          "parentKey": "RHOAIENG-27742",
+          "summary": "Proposal for new IA/ToCs for RH AI docs",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Onyx Park",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [
+            "ccs-internal",
+            "no-qe-needed"
+          ],
+          "storyPoints": 0,
+          "created": "2025-09-03T18:22:20.664+0000",
+          "updated": "2026-01-19T13:12:16.036+0000",
+          "resolutionDate": "2026-01-19T13:12:16.008+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 3,
+    "issuesByStatus": {
+      "Closed": 3
+    },
+    "issuesByCategory": {
+      "Done": 3,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 5,
+    "storyPointsDone": 5,
+    "completionPct": 100,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 1,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-27742",
+        "summary": "[ccs internal] Explore IA / nav options for RH AI docs",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Onyx Park",
+        "totalIssues": 3,
+        "doneIssues": 3,
+        "progressPct": 100,
+        "storyPoints": 5,
+        "storyPointsDone": 5,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

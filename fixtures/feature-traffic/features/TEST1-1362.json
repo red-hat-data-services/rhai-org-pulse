@@ -1,0 +1,69 @@
+{
+  "key": "TEST1-1362",
+  "summary": "Refactor data handling code",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Frankie Judd",
+    "accountId": "5b5f330fcffc7f2ca3b5c960"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "confidence-red",
+    "needs-tech-review"
+  ],
+  "components": [
+    "AI Safety",
+    "Llama Stack Core"
+  ],
+  "created": "2026-03-19T19:15:13.509+0000",
+  "updated": "2026-04-07T03:07:17.687+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1435",
+      "linkedSummary": "Deprecate and remove the Safety/Shields API from Llama Stack distribution",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-941",
+      "linkedSummary": "Ensure Upstream Compatibility and Usability for Llama Stack Client in RHOAI",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Issue split",
+      "direction": "outward",
+      "linkedKey": "RHAIENG-4235",
+      "linkedSummary": "Spike: work breakdown and stakeholder analysis for Safety/Shields API deprecation (RHAISTRAT-1362)",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

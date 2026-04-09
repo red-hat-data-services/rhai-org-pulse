@@ -1,0 +1,508 @@
+{
+  "key": "TEST1-1169",
+  "summary": "Fix concurrent access issue",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Undefined",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [
+    "aicp-team-forge"
+  ],
+  "components": [
+    "AI Core Platform"
+  ],
+  "created": "2026-01-27T10:37:31.251+0000",
+  "updated": "2026-04-01T09:29:11.135+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RFE-8620",
+      "linkedSummary": "[JobSet] Publish official Helm Charts for JObSet operator to enable installation on non-OpenShift Kubernetes (xKS).",
+      "linkedStatus": "Backlog"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RFE-8711",
+      "linkedSummary": "[istio] Publish official Helm Charts for Sail operator to enable installation on non-OpenShift Kubernetes (xKS).",
+      "linkedStatus": "Backlog"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RFE-8710",
+      "linkedSummary": "[cert-manager] Publish official Helm Charts for cert-manager operator to enable installation on non-OpenShift Kubernetes (xKS).",
+      "linkedStatus": "Backlog"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RFE-8618",
+      "linkedSummary": "[Kueue] Publish official Helm Charts for Kueue operator to enable installation on non-OpenShift Kubernetes (xKS).",
+      "linkedStatus": "Backlog"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RFE-8619",
+      "linkedSummary": "[LWS] Publish official Helm Charts for LWS operator to enable installation on non-OpenShift Kubernetes (xKS).",
+      "linkedStatus": "Backlog"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-50137",
+      "linkedSummary": "Enable CI/CD infrastructure for building, versioning, and publishing RHOAI Helm charts",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-47140",
+      "linkedSummary": "[spike] Define the structure of the Helm Chart repository for the xKS support",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-50184",
+      "linkedSummary": "Enable RHAI Operator to run llm-d via Kserve on non-OpenShift Kubernetes clusters (xKS)",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-48004",
+      "linkedSummary": "Define cert-manager installation strategy for RHOAI on xKS platforms",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-52337",
+      "parentKey": "RHAISTRAT-1169",
+      "summary": "Implement webhook handler",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [
+        "aicp-team-forge"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-09T13:45:24.859+0000",
+      "updated": "2026-03-24T10:05:06.925+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-49746",
+          "parentKey": "RHOAIENG-52337",
+          "summary": "[Spike] Ensure upgrade path from RHAI standalone to full RHOAI platform",
+          "type": "Story",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-forge"
+          ],
+          "storyPoints": 1,
+          "created": "2026-02-13T09:34:17.075+0000",
+          "updated": "2026-03-24T13:00:44.166+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51620",
+          "parentKey": "RHOAIENG-52337",
+          "summary": "Cache Helm client instantiation once per action instead of per render",
+          "type": "Story",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-forge"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-03T15:53:32.166+0000",
+          "updated": "2026-03-17T15:37:45.257+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51623",
+          "parentKey": "RHOAIENG-52337",
+          "summary": "[spike] Investigate metadata-only cache for cloud manager controllers",
+          "type": "Story",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-forge"
+          ],
+          "storyPoints": 1,
+          "created": "2026-03-03T15:56:17.925+0000",
+          "updated": "2026-03-24T13:00:53.775+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51624",
+          "parentKey": "RHOAIENG-52337",
+          "summary": "Skip main operator e2e tests in CI when only cloud manager code is changed",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-crucible",
+            "aicp-team-forge"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-03T15:58:27.541+0000",
+          "updated": "2026-03-31T19:41:26.337+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52338",
+          "parentKey": "RHOAIENG-52337",
+          "summary": "Replace platform labels with infrastructure labels in cloud controller manager resource management",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Kerry Reeves",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-forge"
+          ],
+          "storyPoints": 5,
+          "created": "2026-03-09T13:52:03.646+0000",
+          "updated": "2026-04-02T12:26:54.845+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52466",
+          "parentKey": "RHOAIENG-52337",
+          "summary": "Monitor each dependency health individually instead of using deployment action across resources",
+          "type": "Story",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-forge"
+          ],
+          "storyPoints": 5,
+          "created": "2026-03-10T13:24:21.729+0000",
+          "updated": "2026-03-31T11:46:20.254+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52531",
+          "parentKey": "RHOAIENG-52337",
+          "summary": "[spike] Define per-dependency health monitoring for cloud controller manager",
+          "type": "Story",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-forge"
+          ],
+          "storyPoints": 1,
+          "created": "2026-03-11T08:47:31.532+0000",
+          "updated": "2026-03-31T11:45:59.123+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52924",
+          "parentKey": "RHOAIENG-52337",
+          "summary": "[cloud manager] Cert-manager bootstrap action does not honor RHAI_* env var overrides",
+          "type": "Bug",
+          "status": "Testing",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Merit Reed",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "ai-accelerated-fix",
+            "ai-fixable",
+            "ai-triaged",
+            "aicp-team-forge",
+            "triage-backlog"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-12T14:00:19.163+0000",
+          "updated": "2026-03-31T11:48:58.957+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-53376",
+          "parentKey": "RHOAIENG-52337",
+          "summary": "[spike] Investigate ownership of application namespace creation when DSCI is disabled",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Critical",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-forge"
+          ],
+          "storyPoints": 1,
+          "created": "2026-03-13T20:10:29.130+0000",
+          "updated": "2026-03-26T12:57:14.569+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-53513",
+          "parentKey": "RHOAIENG-52337",
+          "summary": "Add cert-manager Certificate as a well-known resource kind in the resource apply ordering",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Onyx Carter",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-forge"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-16T16:44:45.892+0000",
+          "updated": "2026-04-02T15:19:44.829+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-53946",
+          "parentKey": "RHOAIENG-52337",
+          "summary": "Refactor HasCRDWithVersion to remove the StoredVersions check from the general-purpose CRD presence path",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Onyx Nolan",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-compass"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-17T15:04:51.559+0000",
+          "updated": "2026-03-31T10:49:02.922+0000",
+          "resolutionDate": "2026-03-31T10:49:02.892+0000"
+        },
+        {
+          "key": "RHOAIENG-53998",
+          "parentKey": "RHOAIENG-52337",
+          "summary": "Improvement after certificate management bootstrap",
+          "type": "Task",
+          "status": "Testing",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Gray Zane",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-forge"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-17T18:57:16.708+0000",
+          "updated": "2026-04-02T15:19:52.576+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54569",
+          "parentKey": "RHOAIENG-52337",
+          "summary": "[spike] Investigate and scope down RBAC permissions for RHAII operator deployment",
+          "type": "Story",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Critical",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-forge"
+          ],
+          "storyPoints": 1,
+          "created": "2026-03-20T12:08:36.672+0000",
+          "updated": "2026-03-26T13:24:51.955+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54576",
+          "parentKey": "RHOAIENG-52337",
+          "summary": "Hardcoded cert-manager namespace name doesn't allow for non-standard installations",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Minor",
+          "assignee": null,
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T13:01:18.551+0000",
+          "updated": "2026-03-24T10:04:25.222+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54789",
+          "parentKey": "RHOAIENG-52337",
+          "summary": "[cloud-manager] Make dependency namespaces configurable in cloud manager CRs",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Gray Zane",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-forge"
+          ],
+          "storyPoints": 5,
+          "created": "2026-03-23T17:50:15.462+0000",
+          "updated": "2026-04-01T10:59:17.726+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54875",
+          "parentKey": "RHOAIENG-52337",
+          "summary": "Improve image pull secret management for xKS environments",
+          "type": "Story",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-forge"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-24T09:36:41.736+0000",
+          "updated": "2026-03-30T16:57:37.729+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55999",
+          "parentKey": "RHOAIENG-52337",
+          "summary": "Update e2e tests which use cloud manager to configure image pull secrets on service accounts",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-forge"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-30T16:42:08.312+0000",
+          "updated": "2026-03-30T17:01:03.510+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56560",
+          "parentKey": "RHOAIENG-52337",
+          "summary": "Rename webhook certificate from opendatahub-operator-webhook-cert to rhai-operator-webhook-cert in rhai-on-xks-chart",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-forge"
+          ],
+          "storyPoints": 0,
+          "created": "2026-04-02T13:44:48.044+0000",
+          "updated": "2026-04-02T13:44:50.945+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 18,
+    "issuesByStatus": {
+      "Backlog": 10,
+      "Review": 2,
+      "Testing": 2,
+      "Resolved": 1,
+      "New": 2,
+      "In Progress": 1
+    },
+    "issuesByCategory": {
+      "Done": 1,
+      "In Progress": 5,
+      "To Do": 12
+    },
+    "totalStoryPoints": 34,
+    "storyPointsDone": 3,
+    "completionPct": 6,
+    "staleCount": 0,
+    "unassignedCount": 12,
+    "blockerCount": 4,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-52337",
+        "summary": "Refine Cloud Controller Manager implementation",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 18,
+        "doneIssues": 1,
+        "progressPct": 6,
+        "storyPoints": 34,
+        "storyPointsDone": 3,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

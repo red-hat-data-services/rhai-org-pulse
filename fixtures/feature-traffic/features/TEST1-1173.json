@@ -1,0 +1,252 @@
+{
+  "key": "TEST1-1173",
+  "summary": "Refactor data handling code",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Frankie Flynn",
+    "accountId": "5e258328a7b9540e76f44821"
+  },
+  "fixVersions": [],
+  "labels": [
+    "confidence-yellow",
+    "needs-doc",
+    "needs-tech-review",
+    "rhoai-3.3"
+  ],
+  "components": [
+    "AI Safety",
+    "Documentation"
+  ],
+  "created": "2026-01-27T14:14:34.582+0000",
+  "updated": "2026-04-07T03:06:39.747+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-957",
+      "linkedSummary": "Introduce an AI Safety Starter Kit and Documentation",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-49121",
+      "parentKey": "RHAISTRAT-1173",
+      "summary": "Update notification system",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Frankie Jensen",
+      "components": [
+        "AI Safety",
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 5,
+      "created": "2026-02-10T13:24:32.992+0000",
+      "updated": "2026-03-24T10:17:15.408+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-49124",
+          "parentKey": "RHOAIENG-49121",
+          "summary": "[Docs] Document Lemonade stand for AI Safety (TrustyAI)",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Rowe",
+          "components": [
+            "AI Safety",
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-10T13:47:32.257+0000",
+          "updated": "2026-03-03T14:41:22.830+0000",
+          "resolutionDate": "2026-03-03T14:09:07.757+0000"
+        },
+        {
+          "key": "RHOAIENG-49125",
+          "parentKey": "RHOAIENG-49121",
+          "summary": "[Spike] Document Lemonade stand for AI Safety (TrustyAI)",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Rowe",
+          "components": [
+            "AI Safety",
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-02-10T13:47:49.698+0000",
+          "updated": "2026-03-03T14:09:58.795+0000",
+          "resolutionDate": "2026-02-27T10:32:48.946+0000"
+        },
+        {
+          "key": "RHOAIENG-50050",
+          "parentKey": "RHOAIENG-49121",
+          "summary": "[Docs ] Spike: 'AI Safety Architecture' high-level safety workflow(s)",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Gray Rowe",
+          "components": [
+            "AI Safety",
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-02-17T14:20:17.539+0000",
+          "updated": "2026-03-31T14:23:59.973+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-50051",
+          "parentKey": "RHOAIENG-49121",
+          "summary": "[Docs] Document 'AI Safety Architecture' high-level safety workflow(s)",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Rowe",
+          "components": [
+            "AI Safety",
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-02-17T14:20:53.025+0000",
+          "updated": "2026-02-27T10:36:08.555+0000",
+          "resolutionDate": "2026-02-27T10:36:08.509+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-50401",
+      "parentKey": "RHAISTRAT-1173",
+      "summary": "Add monitoring metrics",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-19T19:48:40.608+0000",
+      "updated": "2026-03-06T08:58:00.396+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50402",
+          "parentKey": "RHOAIENG-50401",
+          "summary": "test task",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-19T19:59:39.987+0000",
+          "updated": "2026-02-19T20:00:04.785+0000",
+          "resolutionDate": "2026-02-19T20:00:04.749+0000"
+        },
+        {
+          "key": "RHOAIENG-50440",
+          "parentKey": "RHOAIENG-50401",
+          "summary": "test task",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-20T15:18:24.945+0000",
+          "updated": "2026-02-20T15:18:24.945+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-50441",
+          "parentKey": "RHOAIENG-50401",
+          "summary": "test task 2",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-20T15:23:26.180+0000",
+          "updated": "2026-02-20T15:23:26.180+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 2,
+    "totalIssues": 7,
+    "issuesByStatus": {
+      "Closed": 4,
+      "New": 3
+    },
+    "issuesByCategory": {
+      "Done": 4,
+      "In Progress": 0,
+      "To Do": 3
+    },
+    "totalStoryPoints": 13,
+    "storyPointsDone": 10,
+    "completionPct": 57,
+    "staleCount": 0,
+    "unassignedCount": 2,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-49121",
+        "summary": "[ccs Epic] Document 'Lemonade stand' / AI Safety Starter Kit for AISafety-TrustyAI",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Gray Rowe",
+        "totalIssues": 4,
+        "doneIssues": 3,
+        "progressPct": 75,
+        "storyPoints": 13,
+        "storyPointsDone": 10,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-50401",
+        "summary": "test epic",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 3,
+        "doneIssues": 1,
+        "progressPct": 33,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

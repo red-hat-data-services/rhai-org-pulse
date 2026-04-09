@@ -1,0 +1,52 @@
+{
+  "key": "TEST1-1392",
+  "summary": "Update documentation",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Gray Knox",
+    "accountId": "712020:3976877f-2c7c-4070-a6a1-90d3f78a309f"
+  },
+  "fixVersions": [
+    "rhoai-3.5"
+  ],
+  "labels": [],
+  "components": [
+    "Inference-Time Techniques"
+  ],
+  "created": "2026-03-23T22:00:03.070+0000",
+  "updated": "2026-03-23T22:00:11.084+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1079",
+      "linkedSummary": "Enable Reward-Based Algorithms in ITS Gateway",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

@@ -1,0 +1,1489 @@
+{
+  "key": "TEST1-1161",
+  "summary": "Update configuration settings",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Gray Foster",
+    "accountId": "60d3b72ad5dde80071971572"
+  },
+  "fixVersions": [
+    "rhoai-3.4"
+  ],
+  "labels": [
+    "3.4-candidate",
+    "3.4-committed",
+    "aicp-team-crucible",
+    "dashboard-razzmatazz-scrum"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "AI Core Platform",
+    "AI Pipelines",
+    "DevTestOps",
+    "Documentation",
+    "MLflow",
+    "Notebook Server",
+    "Notebooks Images",
+    "Security",
+    "UXD"
+  ],
+  "created": "2026-01-14T19:14:21.514+0000",
+  "updated": "2026-04-06T15:35:51.608+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Date:  April 6, 2026:"
+          },
+          {
+            "type": "hardBreak"
+          },
+          {
+            "type": "text",
+            "text": "Status:  Green"
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Code Complete; Docs Pending"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "PM to sign-off week of April 10, 2026"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Feature "
+                  },
+                  {
+                    "type": "inlineCard",
+                    "attrs": {
+                      "url": "https://redhat.atlassian.net/browse/RHAISTRAT-1433"
+                    }
+                  },
+                  {
+                    "type": "text",
+                    "text": "  created for pipelines integration work ("
+                  },
+                  {
+                    "type": "text",
+                    "text": "The ",
+                    "marks": [
+                      {
+                        "type": "link",
+                        "attrs": {
+                          "href": "https://redhat.atlassian.net/browse/RHOAIENG-50328"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": "Integrate MLflow with KFP",
+                    "marks": [
+                      {
+                        "type": "link",
+                        "attrs": {
+                          "href": "https://redhat.atlassian.net/browse/RHOAIENG-50328"
+                        }
+                      },
+                      {
+                        "type": "em"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": " and "
+                  },
+                  {
+                    "type": "text",
+                    "text": "dashboard integration",
+                    "marks": [
+                      {
+                        "type": "link",
+                        "attrs": {
+                          "href": "https://redhat.atlassian.net/browse/RHOAIENG-45792"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "type": "text",
+                    "text": ")   that was included in this feature but not complete as of April 3, 2023."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1081",
+      "linkedSummary": "MLflow integration in RHOAI TP",
+      "linkedStatus": "Release Pending"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-745",
+      "linkedSummary": "MLFlow integration in RHOAI",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-745",
+      "linkedSummary": "MLFlow integration in RHOAI",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-52091",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1161] - MLFlow integration in RHOAI 3.4GA",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-44447",
+      "linkedSummary": "Get MLflow Konflux builds working in hermetic environment",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-53370",
+      "linkedSummary": "Clarify and document support stance for MLflow SDK and third-party Python libraries shipped in RHOAI images",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-150",
+      "linkedSummary": "Prompt Engineering & Management  - Embed MLFlow UI ",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Cloners",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1433",
+      "linkedSummary": "MLFlow integration in RHOAI (KFP int & Dashboard Work that was targeted for 3.4Stable but not completed by April 3))",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Issue split",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1433",
+      "linkedSummary": "MLFlow integration in RHOAI (KFP int & Dashboard Work that was targeted for 3.4Stable but not completed by April 3))",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-44465",
+      "parentKey": "RHAISTRAT-1161",
+      "summary": "Update error messages",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": "Person 317",
+      "components": [
+        "MLflow"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-01-08T16:32:20.570+0000",
+      "updated": "2026-04-03T14:59:57.049+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-44452",
+          "parentKey": "RHOAIENG-44465",
+          "summary": "Add the ability to override the MLflow artifact root per Kubernetes namespace",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Foster",
+          "components": [
+            "MLflow"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-01-08T15:51:52.051+0000",
+          "updated": "2026-02-18T15:25:25.504+0000",
+          "resolutionDate": "2026-02-18T15:25:25.487+0000"
+        },
+        {
+          "key": "RHOAIENG-51516",
+          "parentKey": "RHOAIENG-44465",
+          "summary": "Add test for artifact location overrides in MLflowConfig",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Knox",
+          "components": [
+            "MLflow"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-03-02T15:50:31.753+0000",
+          "updated": "2026-03-19T18:39:18.653+0000",
+          "resolutionDate": "2026-03-19T18:39:18.630+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-45792",
+      "parentKey": "RHAISTRAT-1161",
+      "summary": "Add pagination support",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Critical",
+      "assignee": "Person 241",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-razzmatazz-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-01-15T17:07:48.115+0000",
+      "updated": "2026-04-06T16:59:59.513+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-37614",
+          "parentKey": "RHOAIENG-45792",
+          "summary": "Add the multi-tenancy UI to MLflow upstream",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Merit Dawson",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-pipelines",
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 5,
+          "created": "2025-10-30T14:49:34.478+0000",
+          "updated": "2026-02-16T15:49:22.760+0000",
+          "resolutionDate": "2026-02-16T15:49:22.741+0000"
+        },
+        {
+          "key": "RHOAIENG-47259",
+          "parentKey": "RHOAIENG-45792",
+          "summary": "Fix modal backdrop and centering when modal is opened inside the iframe",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-23T17:36:01.193+0000",
+          "updated": "2026-02-17T13:48:41.286+0000",
+          "resolutionDate": "2026-02-17T13:48:41.247+0000"
+        },
+        {
+          "key": "RHOAIENG-48782",
+          "parentKey": "RHOAIENG-45792",
+          "summary": "Embed the Prompt Management page into the dashboard UI",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-05T14:43:46.584+0000",
+          "updated": "2026-02-17T14:12:13.353+0000",
+          "resolutionDate": "2026-02-17T14:12:13.302+0000"
+        },
+        {
+          "key": "RHOAIENG-48783",
+          "parentKey": "RHOAIENG-45792",
+          "summary": "[SPIKE]: Get the MLflow CR status in the dashboard",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-05T14:50:04.251+0000",
+          "updated": "2026-03-24T13:21:05.805+0000",
+          "resolutionDate": "2026-03-24T13:21:05.777+0000"
+        },
+        {
+          "key": "RHOAIENG-48784",
+          "parentKey": "RHOAIENG-45792",
+          "summary": "[SPIKE]: Using module federation to replace iframe for MLflow",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Nolan",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-monarch-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-05T14:52:15.321+0000",
+          "updated": "2026-02-17T13:48:41.293+0000",
+          "resolutionDate": "2026-02-17T13:46:41.616+0000"
+        },
+        {
+          "key": "RHOAIENG-49260",
+          "parentKey": "RHOAIENG-45792",
+          "summary": "MLFlow card missing from Explore view",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Gray Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "cypress_found_bug",
+            "dashboard",
+            "dashboard-monarch-scrum"
+          ],
+          "storyPoints": 1,
+          "created": "2026-02-11T12:45:47.907+0000",
+          "updated": "2026-02-26T09:18:16.631+0000",
+          "resolutionDate": "2026-02-26T09:18:16.593+0000"
+        },
+        {
+          "key": "RHOAIENG-49660",
+          "parentKey": "RHOAIENG-45792",
+          "summary": "Verify that the ModArch embedding of MLFLow does not globally override PF styles",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Nolan",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-12T13:54:31.907+0000",
+          "updated": "2026-02-12T18:07:57.452+0000",
+          "resolutionDate": "2026-02-12T18:07:57.416+0000"
+        },
+        {
+          "key": "RHOAIENG-49661",
+          "parentKey": "RHOAIENG-45792",
+          "summary": "MLFlow UI Security Audit for GA",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Onyx Bennett",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 1,
+          "created": "2026-02-12T13:58:42.749+0000",
+          "updated": "2026-04-02T19:16:00.860+0000",
+          "resolutionDate": "2026-04-02T19:16:00.828+0000"
+        },
+        {
+          "key": "RHOAIENG-49716",
+          "parentKey": "RHOAIENG-45792",
+          "summary": "Make UX changes from TP (buttons, text, tabs, search bar)",
+          "type": "Story",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Major",
+          "assignee": "Onyx Bennett",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 1,
+          "created": "2026-02-12T18:23:21.412+0000",
+          "updated": "2026-03-24T14:12:57.627+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-49903",
+          "parentKey": "RHOAIENG-45792",
+          "summary": "Followup fixes to experiments module federation ",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Bennett",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-16T15:38:52.487+0000",
+          "updated": "2026-02-23T15:50:34.249+0000",
+          "resolutionDate": "2026-02-23T15:50:34.200+0000"
+        },
+        {
+          "key": "RHOAIENG-50056",
+          "parentKey": "RHOAIENG-45792",
+          "summary": "[SPIKE] MLflow BFF using MLflow-Go-SDK for API Access",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Sato",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-17T16:25:48.603+0000",
+          "updated": "2026-02-25T16:48:24.348+0000",
+          "resolutionDate": "2026-02-25T16:48:24.331+0000"
+        },
+        {
+          "key": "RHOAIENG-50563",
+          "parentKey": "RHOAIENG-45792",
+          "summary": "Experimentation tracking on mlflow-go",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Vaughn",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-23T15:54:41.453+0000",
+          "updated": "2026-02-27T15:33:01.680+0000",
+          "resolutionDate": "2026-02-27T15:33:01.641+0000"
+        },
+        {
+          "key": "RHOAIENG-51088",
+          "parentKey": "RHOAIENG-45792",
+          "summary": "Connecting the SDK to remote MLflow instances",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Vaughn",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2026-02-25T22:13:03.206+0000",
+          "updated": "2026-02-27T15:33:11.310+0000",
+          "resolutionDate": "2026-02-27T15:33:11.274+0000"
+        },
+        {
+          "key": "RHOAIENG-51356",
+          "parentKey": "RHOAIENG-45792",
+          "summary": "Deprecate the MLflow tech preview feature flag for GA",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Critical",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard",
+            "MLflow"
+          ],
+          "labels": [
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-27T16:40:58.744+0000",
+          "updated": "2026-03-24T14:13:11.961+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54418",
+          "parentKey": "RHOAIENG-45792",
+          "summary": "Add e2e tests to midstream ",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Onyx Bennett",
+          "components": [
+            "AI Core Dashboard",
+            "AI Pipelines",
+            "MLflow"
+          ],
+          "labels": [
+            "dashboard-area-mlflow",
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-19T20:10:40.559+0000",
+          "updated": "2026-04-02T13:16:38.013+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54799",
+          "parentKey": "RHOAIENG-45792",
+          "summary": "[workbenches] Inject opendatahub.io/mlflow-instance annotation into Notebook CR when MLflow is enabled",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Bennett",
+          "components": [
+            "AI Core Dashboard",
+            "Notebooks Server"
+          ],
+          "labels": [
+            "dashboard-razzmatazz-scrum",
+            "ide-dashboard-triaged"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-23T20:34:47.187+0000",
+          "updated": "2026-03-27T22:11:11.338+0000",
+          "resolutionDate": "2026-03-27T22:11:11.315+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-45969",
+      "parentKey": "RHAISTRAT-1161",
+      "summary": "Update configuration settings",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 236",
+      "components": [
+        "Notebooks Server"
+      ],
+      "labels": [
+        "ide_refinement:needs-acceptance-criteria",
+        "ide_refinement:ready-for-sprint",
+        "ide_scrum:indigo",
+        "nse_workflow:triaged"
+      ],
+      "storyPoints": 5,
+      "created": "2026-01-16T16:00:45.657+0000",
+      "updated": "2026-04-06T19:24:26.015+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-53848",
+          "parentKey": "RHOAIENG-45969",
+          "summary": "Inject Mlflow support content to workbenches when enabled",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Zane",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_scrum:indigo",
+            "nse_workflow:triaged"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-17T13:19:47.596+0000",
+          "updated": "2026-04-01T19:05:24.838+0000",
+          "resolutionDate": "2026-03-27T22:22:28.888+0000"
+        },
+        {
+          "key": "RHOAIENG-53860",
+          "parentKey": "RHOAIENG-45969",
+          "summary": "Use params.env for getting the mlflow configuration on notebook-controller",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Zane",
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_scrum:indigo",
+            "nse_workflow:triaged"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-17T13:39:01.651+0000",
+          "updated": "2026-04-01T19:09:31.447+0000",
+          "resolutionDate": "2026-04-01T19:09:31.355+0000"
+        },
+        {
+          "key": "RHOAIENG-53866",
+          "parentKey": "RHOAIENG-45969",
+          "summary": "[Workbenches] Set custom variable like gatewayUrl and Mlflow enabled on workbench env vars. ",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Zane",
+          "components": [
+            "AI Core Platform",
+            "Notebooks Server"
+          ],
+          "labels": [
+            "aicp-team-crucible"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-17T14:36:33.487+0000",
+          "updated": "2026-03-24T15:11:52.061+0000",
+          "resolutionDate": "2026-03-24T15:11:52.030+0000"
+        },
+        {
+          "key": "RHOAIENG-54379",
+          "parentKey": "RHOAIENG-45969",
+          "summary": "[Documentation] Add documentation of mlflow integration with workbenches",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Zane",
+          "components": [
+            "Documentation",
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_scrum:indigo",
+            "nse_workflow:triaged"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-19T17:12:46.540+0000",
+          "updated": "2026-04-06T17:52:21.210+0000",
+          "resolutionDate": "2026-04-06T17:52:21.185+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-47377",
+      "parentKey": "RHAISTRAT-1161",
+      "summary": "Update error messages",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Normal",
+      "assignee": "Merit Marsh",
+      "components": [
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-01-20T17:14:40.694+0000",
+      "updated": "2026-03-31T19:37:21.554+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-30127",
+          "parentKey": "RHOAIENG-47377",
+          "summary": "[ccs Spike] Assess documentation needs to support GenAI metrics",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Merit Hayes",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-07-18T07:38:50.648+0000",
+          "updated": "2026-03-13T09:41:59.940+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-42180",
+          "parentKey": "RHOAIENG-47377",
+          "summary": "[ccs] Collaborate/review on the Quickstart for MLFlow",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Merit Hayes",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-12-16T13:20:44.849+0000",
+          "updated": "2026-03-23T17:23:56.564+0000",
+          "resolutionDate": "2026-03-23T17:23:56.537+0000"
+        },
+        {
+          "key": "RHOAIENG-46524",
+          "parentKey": "RHOAIENG-47377",
+          "summary": "[ccs] Document MLflow integration",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Merit Hayes",
+          "components": [
+            "Documentation",
+            "MLflow"
+          ],
+          "labels": [
+            "3.4-must-docs"
+          ],
+          "storyPoints": 8,
+          "created": "2026-01-20T15:53:17.715+0000",
+          "updated": "2026-04-02T10:05:42.706+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-50341",
+          "parentKey": "RHOAIENG-47377",
+          "summary": "[ccs] Document Mlflow integration in KFP",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Kerry Carter",
+          "components": [
+            "AI Pipelines",
+            "Documentation"
+          ],
+          "labels": [
+            "3.4-must-docs"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-19T16:17:21.509+0000",
+          "updated": "2026-04-06T21:01:17.460+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52482",
+          "parentKey": "RHOAIENG-47377",
+          "summary": "Validate the MLFlow TP docs needs",
+          "type": "Sub-task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Lowe",
+          "components": [
+            "MLflow"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-10T16:12:57.580+0000",
+          "updated": "2026-03-16T18:32:27.811+0000",
+          "resolutionDate": "2026-03-16T18:32:27.559+0000"
+        },
+        {
+          "key": "RHOAIENG-56218",
+          "parentKey": "RHOAIENG-47377",
+          "summary": "[ccs] Document MLFlow integration with Workbenches",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Frankie Finn",
+          "components": [
+            "Documentation",
+            "MLflow"
+          ],
+          "labels": [
+            "3.4-must-docs"
+          ],
+          "storyPoints": 5,
+          "created": "2026-04-01T07:48:12.350+0000",
+          "updated": "2026-04-06T19:52:13.641+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56219",
+          "parentKey": "RHOAIENG-47377",
+          "summary": "[ccs] Document impact of MLFlow integration to Kubeflow-specific docs",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Onyx Oates",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [
+            "3.4-must-docs"
+          ],
+          "storyPoints": 5,
+          "created": "2026-04-01T08:01:14.102+0000",
+          "updated": "2026-04-02T10:06:20.548+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-50306",
+      "parentKey": "RHAISTRAT-1161",
+      "summary": "Fix timezone handling",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Person 204",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "3.4-candidate",
+        "dashboard-razzmatazz-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-19T13:45:49.657+0000",
+      "updated": "2026-03-16T16:24:40.842+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50307",
+          "parentKey": "RHOAIENG-50306",
+          "summary": "Onboard module and pass Contract Testing",
+          "type": "Sub-task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Sato",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-19T13:45:52.054+0000",
+          "updated": "2026-03-05T14:58:00.569+0000",
+          "resolutionDate": "2026-03-05T14:58:00.537+0000"
+        },
+        {
+          "key": "RHOAIENG-50308",
+          "parentKey": "RHOAIENG-50306",
+          "summary": "Dockerfile Image Onboarding",
+          "type": "Sub-task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Merit Sato",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-19T13:45:53.989+0000",
+          "updated": "2026-02-25T18:27:49.848+0000",
+          "resolutionDate": "2026-02-25T17:20:59.843+0000"
+        },
+        {
+          "key": "RHOAIENG-50309",
+          "parentKey": "RHOAIENG-50306",
+          "summary": "Create request to onboard module with DevOps",
+          "type": "Sub-task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Merit Sato",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2026-02-19T13:45:55.947+0000",
+          "updated": "2026-02-25T18:26:35.458+0000",
+          "resolutionDate": "2026-02-25T18:26:19.434+0000"
+        },
+        {
+          "key": "RHOAIENG-50310",
+          "parentKey": "RHOAIENG-50306",
+          "summary": "Onboard modular architecture in Konflux ODH",
+          "type": "Sub-task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Merit Sato",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-19T13:45:57.640+0000",
+          "updated": "2026-03-02T16:02:26.258+0000",
+          "resolutionDate": "2026-03-02T16:02:26.231+0000"
+        },
+        {
+          "key": "RHOAIENG-50311",
+          "parentKey": "RHOAIENG-50306",
+          "summary": "Set up module for Openshift CI builds",
+          "type": "Sub-task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Sato",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-19T13:45:59.356+0000",
+          "updated": "2026-03-06T13:19:14.170+0000",
+          "resolutionDate": "2026-03-06T13:19:14.137+0000"
+        },
+        {
+          "key": "RHOAIENG-50312",
+          "parentKey": "RHOAIENG-50306",
+          "summary": "Onboard Module in Manifest",
+          "type": "Sub-task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Sato",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-19T13:46:01.422+0000",
+          "updated": "2026-03-05T15:25:07.958+0000",
+          "resolutionDate": "2026-03-05T15:25:07.924+0000"
+        },
+        {
+          "key": "RHOAIENG-50313",
+          "parentKey": "RHOAIENG-50306",
+          "summary": "Onboard module in Operator",
+          "type": "Sub-task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Sato",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-19T13:46:03.298+0000",
+          "updated": "2026-03-11T11:07:52.725+0000",
+          "resolutionDate": "2026-03-11T11:07:52.690+0000"
+        },
+        {
+          "key": "RHOAIENG-50314",
+          "parentKey": "RHOAIENG-50306",
+          "summary": "Onboard modular architecture in Konflux RHOAI",
+          "type": "Sub-task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Sato",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-19T13:46:04.975+0000",
+          "updated": "2026-03-16T16:23:39.781+0000",
+          "resolutionDate": "2026-03-16T16:23:39.758+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-50982",
+      "parentKey": "RHAISTRAT-1161",
+      "summary": "Fix bug in processing logic",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Person 343",
+      "components": [
+        "DevOps",
+        "MLflow"
+      ],
+      "labels": [
+        "dashboard-razzmatazz-scrum",
+        "devops-onboarding"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-25T17:51:37.078+0000",
+      "updated": "2026-04-01T10:57:13.664+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-50984",
+      "parentKey": "RHAISTRAT-1161",
+      "summary": "Update access controls",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Person 343",
+      "components": [
+        "DevOps",
+        "MLflow"
+      ],
+      "labels": [
+        "dashboard-razzmatazz-scrum",
+        "devops-onboarding"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-25T18:06:33.687+0000",
+      "updated": "2026-03-16T16:12:10.361+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-51520",
+      "parentKey": "RHAISTRAT-1161",
+      "summary": "Update configuration settings",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 317",
+      "components": [
+        "MLflow"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-02T15:56:39.042+0000",
+      "updated": "2026-04-06T15:40:28.350+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-51518",
+          "parentKey": "RHOAIENG-51520",
+          "summary": "[MLflow] Ensure everything was completed under Tech Preview",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Gray Lowe",
+          "components": [
+            "MLflow"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-02T15:53:51.183+0000",
+          "updated": "2026-04-03T13:27:25.003+0000",
+          "resolutionDate": "2026-04-03T13:27:24.783+0000"
+        },
+        {
+          "key": "RHOAIENG-51521",
+          "parentKey": "RHOAIENG-51520",
+          "summary": "Acceptance Criteria",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": null,
+          "components": [
+            "MLflow"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-02T16:06:37.209+0000",
+          "updated": "2026-04-06T15:40:06.861+0000",
+          "resolutionDate": "2026-04-06T15:40:06.834+0000"
+        },
+        {
+          "key": "RHOAIENG-51522",
+          "parentKey": "RHOAIENG-51520",
+          "summary": "Security Requirements",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": null,
+          "components": [
+            "MLflow"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-02T16:08:09.785+0000",
+          "updated": "2026-03-13T19:14:25.274+0000",
+          "resolutionDate": "2026-03-13T19:14:25.259+0000"
+        },
+        {
+          "key": "RHOAIENG-51523",
+          "parentKey": "RHOAIENG-51520",
+          "summary": "Promote alpha and beta APIs to their final version",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": null,
+          "components": [
+            "MLflow"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-02T16:09:26.947+0000",
+          "updated": "2026-03-16T15:10:30.901+0000",
+          "resolutionDate": "2026-03-16T15:10:30.722+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-54369",
+      "parentKey": "RHAISTRAT-1161",
+      "summary": "Fix data migration",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [
+        "MLflow"
+      ],
+      "labels": [
+        "groomed",
+        "jira-template",
+        "signoff"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-19T16:05:19.894+0000",
+      "updated": "2026-04-06T15:42:30.365+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-54370",
+          "parentKey": "RHOAIENG-54369",
+          "summary": "CLONE - Prepare feature for release",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Blocker",
+          "assignee": null,
+          "components": [
+            "MLflow"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-19T16:05:24.743+0000",
+          "updated": "2026-04-06T16:28:39.602+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54371",
+          "parentKey": "RHOAIENG-54369",
+          "summary": "CLONE - Component build from source - signoff",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Blocker",
+          "assignee": null,
+          "components": [
+            "MLflow"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-19T16:05:27.595+0000",
+          "updated": "2026-04-06T18:55:09.510+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54372",
+          "parentKey": "RHOAIENG-54369",
+          "summary": "CLONE - QE signoff",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Blocker",
+          "assignee": null,
+          "components": [
+            "MLflow"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-19T16:05:30.107+0000",
+          "updated": "2026-04-06T16:05:19.445+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54373",
+          "parentKey": "RHOAIENG-54369",
+          "summary": "CLONE - UXD signoff",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Blocker",
+          "assignee": null,
+          "components": [
+            "MLflow"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-19T16:05:32.601+0000",
+          "updated": "2026-03-27T19:51:23.651+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54374",
+          "parentKey": "RHOAIENG-54369",
+          "summary": "CLONE - PM signoff",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Blocker",
+          "assignee": "Kerry Hunt",
+          "components": [
+            "MLflow"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-19T16:05:35.053+0000",
+          "updated": "2026-03-27T19:51:25.486+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54375",
+          "parentKey": "RHOAIENG-54369",
+          "summary": "CLONE - Engineering Manager Sign off",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Blocker",
+          "assignee": "Kerry Dawson",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-19T16:05:37.591+0000",
+          "updated": "2026-03-27T19:51:27.838+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54582",
+          "parentKey": "RHOAIENG-54369",
+          "summary": "Dashboards Component Feature Sign off GA",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Merit Winn",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-20T14:11:28.559+0000",
+          "updated": "2026-04-02T12:42:39.347+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 9,
+    "totalIssues": 48,
+    "issuesByStatus": {
+      "New": 10,
+      "Resolved": 15,
+      "Closed": 18,
+      "In Progress": 3,
+      "Backlog": 2
+    },
+    "issuesByCategory": {
+      "Done": 33,
+      "In Progress": 3,
+      "To Do": 12
+    },
+    "totalStoryPoints": 80,
+    "storyPointsDone": 55,
+    "completionPct": 69,
+    "staleCount": 0,
+    "unassignedCount": 5,
+    "blockerCount": 17,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-44465",
+        "summary": "Implement MLflow Kubernetes workspace provider to support per workspace artifact locations",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Gray Lowe",
+        "totalIssues": 2,
+        "doneIssues": 2,
+        "progressPct": 100,
+        "storyPoints": 8,
+        "storyPointsDone": 8,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-45792",
+        "summary": "[Dashboard] MLflow Integration- GA",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Onyx Bennett",
+        "totalIssues": 16,
+        "doneIssues": 13,
+        "progressPct": 81,
+        "storyPoints": 13,
+        "storyPointsDone": 12,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-45969",
+        "summary": "Workbenches MLFlow SDK Support",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Kerry Edge",
+        "totalIssues": 4,
+        "doneIssues": 4,
+        "progressPct": 100,
+        "storyPoints": 10,
+        "storyPointsDone": 10,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-47377",
+        "summary": "[ccs Epic] Document MLflow integration in RHOAI (GA)",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Merit Hayes",
+        "totalIssues": 7,
+        "doneIssues": 2,
+        "progressPct": 29,
+        "storyPoints": 29,
+        "storyPointsDone": 5,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-50306",
+        "summary": "Dashboard MLFlow BFF - Deployment",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Merit Sato",
+        "totalIssues": 8,
+        "doneIssues": 8,
+        "progressPct": 100,
+        "storyPoints": 20,
+        "storyPointsDone": 20,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-50982",
+        "summary": "ODH Konflux Release Build Onboarding [MLflow]",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Merit Graham",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-50984",
+        "summary": "RHOAI Konflux Onboarding [MLflow]",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Merit Graham",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-51520",
+        "summary": "General Availability - ODH and RHOAI Integrations [MLflow]",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Gray Lowe",
+        "totalIssues": 4,
+        "doneIssues": 4,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-54369",
+        "summary": " Feature signoff - GA (MLflow)",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": null,
+        "totalIssues": 7,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

@@ -1,0 +1,261 @@
+{
+  "key": "TEST1-437",
+  "summary": "Add health check endpoint",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "assignee": {
+    "displayName": "Frankie Flynn",
+    "accountId": "5e258328a7b9540e76f44821"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "AI Core Dashboard",
+    "Explainability",
+    "UXD"
+  ],
+  "created": "2024-01-24T02:59:39.765+0000",
+  "updated": "2025-11-27T16:21:24.874+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-113",
+      "linkedSummary": "Perses Dashboard Integration for RHOAI End-to-End Implementation",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-807",
+      "linkedSummary": "OOTB visualization for OOD metrics",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-385",
+      "linkedSummary": "TrustyAI Data Drift Detection Demo - Product Documentation Integration",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-697",
+      "linkedSummary": "Implement and Integrate Drift Detection Metrics (Predictive AI)",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-605",
+      "linkedSummary": "Generalized Numeric Data Drift detection",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-7432",
+      "parentKey": "RHAISTRAT-437",
+      "summary": "Implement search feature",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Person 161",
+      "components": [
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2024-05-20T08:57:08.801+0000",
+      "updated": "2025-08-27T12:34:30.932+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-11502",
+          "parentKey": "RHOAIENG-7432",
+          "summary": "SPIKE: Understand ImageDrift strengths and weaknesses",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Flynn",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 4,
+          "created": "2024-08-19T13:47:03.430+0000",
+          "updated": "2024-09-05T10:01:18.133+0000",
+          "resolutionDate": "2024-09-05T10:01:18.105+0000"
+        },
+        {
+          "key": "RHOAIENG-11504",
+          "parentKey": "RHOAIENG-7432",
+          "summary": "Generalize ImageDrift to n-channel, n-dimensional tensors",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Flynn",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2024-08-19T13:47:17.732+0000",
+          "updated": "2025-08-27T12:33:02.294+0000",
+          "resolutionDate": "2025-08-27T12:33:02.263+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-9395",
+      "parentKey": "RHAISTRAT-437",
+      "summary": "Add caching mechanism",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2024-07-02T19:30:24.798+0000",
+      "updated": "2026-02-25T17:08:35.345+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-9396",
+          "parentKey": "RHOAIENG-9395",
+          "summary": "QA Verification for this Feature",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-epic-verification"
+          ],
+          "storyPoints": 0,
+          "created": "2024-07-02T19:30:27.775+0000",
+          "updated": "2026-02-13T21:25:07.773+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-9397",
+          "parentKey": "RHOAIENG-9395",
+          "summary": "Cypress Test for this Feature",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2024-07-02T19:30:27.779+0000",
+          "updated": "2026-02-13T21:26:15.670+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-9398",
+          "parentKey": "RHOAIENG-9395",
+          "summary": "Epic Signoffs",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2024-07-02T19:30:27.788+0000",
+          "updated": "2026-02-25T17:07:51.580+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-29006",
+          "parentKey": "RHOAIENG-9395",
+          "summary": "[Docs Story] TrustyAI UI - Data drift component docs",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Rowe",
+          "components": [
+            "AI Safety",
+            "Documentation"
+          ],
+          "labels": [
+            "lm-eval-cross-functional-team"
+          ],
+          "storyPoints": 5,
+          "created": "2025-07-07T11:59:27.830+0000",
+          "updated": "2025-08-25T09:35:21.692+0000",
+          "resolutionDate": "2025-08-25T09:35:21.630+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 2,
+    "totalIssues": 6,
+    "issuesByStatus": {
+      "Backlog": 3,
+      "Resolved": 1,
+      "Closed": 2
+    },
+    "issuesByCategory": {
+      "Done": 3,
+      "In Progress": 0,
+      "To Do": 3
+    },
+    "totalStoryPoints": 11,
+    "storyPointsDone": 11,
+    "completionPct": 50,
+    "staleCount": 0,
+    "unassignedCount": 3,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-7432",
+        "summary": "Generic Numeric Data Drift Detection",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Frankie Flynn",
+        "totalIssues": 2,
+        "doneIssues": 2,
+        "progressPct": 100,
+        "storyPoints": 6,
+        "storyPointsDone": 6,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-9395",
+        "summary": "[Blocked] Dashboard - OOTB visualization for data drift detection",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 4,
+        "doneIssues": 1,
+        "progressPct": 25,
+        "storyPoints": 5,
+        "storyPointsDone": 5,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

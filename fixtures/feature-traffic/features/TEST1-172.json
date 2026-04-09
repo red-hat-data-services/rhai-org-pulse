@@ -1,0 +1,891 @@
+{
+  "key": "TEST1-172",
+  "summary": "Implement webhook handler",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Onyx Anderson",
+    "accountId": "712020:ab079f38-3314-4d53-aa7e-5c655af3c199"
+  },
+  "fixVersions": [
+    "rhoai-3.4"
+  ],
+  "labels": [
+    "3.4-candidate",
+    "3.4-committed",
+    "dashboard-crimson-scrum",
+    "model-registry",
+    "prompt-lab",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "AI Hub",
+    "Documentation",
+    "Gen AI Studio",
+    "Model as a Service",
+    "Model Runtimes",
+    "UXD"
+  ],
+  "created": "2025-11-04T17:22:16.440+0000",
+  "updated": "2026-04-07T17:29:47.144+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "In progress, no known dependencies."
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1102",
+      "linkedSummary": "Gen AI studio - 3.4 (Summit) Deliverables",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-475",
+      "linkedSummary": "AI Asset Endpoints - External Model Endpoints Support",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIUX-1837",
+      "linkedSummary": "Explore combined Models list differentiating namespace models, MaaS models and External models",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIUX-1360",
+      "linkedSummary": "Add the ability to connect an external model provider's API endpoint as an AI Asset",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-50589",
+      "linkedSummary": "Custom Endpoint - Feature flags for custom endpoint visibility and provider access",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-50600",
+      "linkedSummary": "Custom endpoints - Custom Endpoint Registration - MVP",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-50609",
+      "linkedSummary": "Custom Endpoints - Custom Endpoint Display and Management",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-50616",
+      "linkedSummary": "Custom Endpoints - Custom Endpoint Integration with AI Playground",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-51963",
+      "linkedSummary": "3.4 Release Feature Implementation Alignment",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-51115",
+      "linkedSummary": "[ccs Epic] Document enhancements to the GenAI Playground experience - 3.4",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-51616",
+      "linkedSummary": "[ccs] Document custom endpoints",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Polaris work item link",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-55186",
+      "linkedSummary": "Custom Endpoints - Event tracking",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-56052",
+      "linkedSummary": "Feature signoff - AAE Custom Endpoints TP",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIENG-4326",
+      "linkedSummary": "AI Asset Endpoints - OpenAI custom endpoint verification fails for GPT-5.4 models due to unsupported max_tokens parameter",
+      "linkedStatus": "Review"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-50589",
+      "parentKey": "RHAISTRAT-172",
+      "summary": "Fix data migration",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 127",
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-23T18:30:42.656+0000",
+      "updated": "2026-04-01T12:41:00.210+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50590",
+          "parentKey": "RHOAIENG-50589",
+          "summary": "Define and document external model ConfigMap schema and BFF shared types",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Anderson",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-23T18:31:23.089+0000",
+          "updated": "2026-03-04T00:36:47.825+0000",
+          "resolutionDate": "2026-03-03T16:12:47.594+0000"
+        },
+        {
+          "key": "RHOAIENG-50594",
+          "parentKey": "RHOAIENG-50589",
+          "summary": "Add visibility feature flag (Flag 1) to OdhDashboardConfig CR",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Anderson",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-23T18:53:48.524+0000",
+          "updated": "2026-03-05T19:01:16.473+0000",
+          "resolutionDate": "2026-03-05T19:01:16.433+0000"
+        },
+        {
+          "key": "RHOAIENG-50595",
+          "parentKey": "RHOAIENG-50589",
+          "summary": "Add external model provider feature flag (Flag 2) to OdhDashboardConfig CR",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Anderson",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-23T18:58:25.831+0000",
+          "updated": "2026-03-05T19:01:22.638+0000",
+          "resolutionDate": "2026-03-05T19:01:22.601+0000"
+        },
+        {
+          "key": "RHOAIENG-50597",
+          "parentKey": "RHOAIENG-50589",
+          "summary": "Implement BFF endpoint or config loader to read both feature flags from OdhDashboardConfig and expose to frontend",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Anderson",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-23T19:00:47.731+0000",
+          "updated": "2026-03-25T13:09:12.065+0000",
+          "resolutionDate": "2026-03-25T13:09:12.037+0000"
+        },
+        {
+          "key": "RHOAIENG-50598",
+          "parentKey": "RHOAIENG-50589",
+          "summary": "Wire UI to BFF feature-flag API: hide external model entry when visibility off; registration options per provider flag",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Anderson",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-23T19:01:25.103+0000",
+          "updated": "2026-03-25T22:20:24.451+0000",
+          "resolutionDate": "2026-03-25T22:20:24.429+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-50600",
+      "parentKey": "RHAISTRAT-172",
+      "summary": "Implement search feature",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 127",
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-23T19:07:42.888+0000",
+      "updated": "2026-03-25T15:50:52.773+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50601",
+          "parentKey": "RHOAIENG-50600",
+          "summary": "Implement BFF endpoint to create external model (ConfigMap entry and Secret)",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Anderson",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-23T19:08:08.480+0000",
+          "updated": "2026-03-04T00:36:42.865+0000",
+          "resolutionDate": "2026-03-03T18:17:37.648+0000"
+        },
+        {
+          "key": "RHOAIENG-50603",
+          "parentKey": "RHOAIENG-50600",
+          "summary": "Implement BFF endpoint to verify external model (sample request, distinct errors)",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Anderson",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-23T19:13:32.905+0000",
+          "updated": "2026-03-18T21:07:09.394+0000",
+          "resolutionDate": "2026-03-18T21:07:09.368+0000"
+        },
+        {
+          "key": "RHOAIENG-50604",
+          "parentKey": "RHOAIENG-50600",
+          "summary": "Implement registration wizard UI from AI Available Assets",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Anderson",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-23T19:13:37.180+0000",
+          "updated": "2026-03-11T21:48:34.442+0000",
+          "resolutionDate": "2026-03-11T21:48:34.408+0000"
+        },
+        {
+          "key": "RHOAIENG-50605",
+          "parentKey": "RHOAIENG-50600",
+          "summary": "Ensure API keys/tokens are never logged or exposed in UI",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Anderson",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-23T19:13:45.886+0000",
+          "updated": "2026-03-23T16:06:17.867+0000",
+          "resolutionDate": "2026-03-23T16:06:17.806+0000"
+        },
+        {
+          "key": "RHOAIENG-50606",
+          "parentKey": "RHOAIENG-50600",
+          "summary": "Handle duplicate model ID or alias in same namespace",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Anderson",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-23T19:13:49.381+0000",
+          "updated": "2026-03-25T13:09:19.952+0000",
+          "resolutionDate": "2026-03-25T13:09:19.924+0000"
+        },
+        {
+          "key": "RHOAIENG-50607",
+          "parentKey": "RHOAIENG-50600",
+          "summary": "Confirm URL validation approach and apply in BFF and UI",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Anderson",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-23T19:13:52.707+0000",
+          "updated": "2026-03-25T15:50:46.219+0000",
+          "resolutionDate": "2026-03-25T13:09:30.016+0000"
+        },
+        {
+          "key": "RHOAIENG-50824",
+          "parentKey": "RHOAIENG-50600",
+          "summary": "[SPIKE] Multi-Provider Support and LlamaStack Remote Providers",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Anderson",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-25T14:44:20.335+0000",
+          "updated": "2026-03-05T22:01:33.149+0000",
+          "resolutionDate": "2026-03-03T16:11:26.117+0000"
+        },
+        {
+          "key": "RHOAIENG-52029",
+          "parentKey": "RHOAIENG-50600",
+          "summary": "Add feature to llama stack to prevent validation of models on startup",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Onyx Anderson",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio",
+            "Llama Stack Core"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-05T14:26:56.704+0000",
+          "updated": "2026-03-09T14:17:39.431+0000",
+          "resolutionDate": "2026-03-09T14:17:39.394+0000"
+        },
+        {
+          "key": "RHOAIENG-53991",
+          "parentKey": "RHOAIENG-50600",
+          "summary": "Update endpoint UX to move away from \"external\" messaging",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Onyx Anderson",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-17T17:31:40.410+0000",
+          "updated": "2026-03-20T20:38:40.367+0000",
+          "resolutionDate": "2026-03-20T20:38:40.346+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-50609",
+      "parentKey": "RHAISTRAT-172",
+      "summary": "Optimize database queries",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 127",
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-23T19:19:19.738+0000",
+      "updated": "2026-03-24T17:22:52.746+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50611",
+          "parentKey": "RHOAIENG-50609",
+          "summary": "Implement BFF endpoint to list external models (read ConfigMap, no token in response)",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Anderson",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-23T19:19:48.194+0000",
+          "updated": "2026-03-04T20:53:43.945+0000",
+          "resolutionDate": "2026-03-04T20:53:43.894+0000"
+        },
+        {
+          "key": "RHOAIENG-50612",
+          "parentKey": "RHOAIENG-50609",
+          "summary": "Implement BFF endpoint to delete external model (ConfigMap entry and Secret)",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Anderson",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-23T19:19:51.103+0000",
+          "updated": "2026-03-04T15:14:46.554+0000",
+          "resolutionDate": "2026-03-04T15:14:46.511+0000"
+        },
+        {
+          "key": "RHOAIENG-50613",
+          "parentKey": "RHOAIENG-50609",
+          "summary": "Implement BFF endpoint to register external model in LlamaStack when not already registered",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Anderson",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-23T19:19:54.212+0000",
+          "updated": "2026-03-17T14:20:08.294+0000",
+          "resolutionDate": "2026-03-17T14:20:08.269+0000"
+        },
+        {
+          "key": "RHOAIENG-50614",
+          "parentKey": "RHOAIENG-50609",
+          "summary": "Implement list view UI for external models on AI Available Assets",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Anderson",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-23T19:19:57.261+0000",
+          "updated": "2026-03-24T17:19:14.361+0000",
+          "resolutionDate": "2026-03-24T17:19:14.309+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-50616",
+      "parentKey": "RHAISTRAT-172",
+      "summary": "Fix memory leak",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 127",
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-23T19:27:20.355+0000",
+      "updated": "2026-03-24T15:46:34.998+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50732",
+          "parentKey": "RHOAIENG-50616",
+          "summary": "Implement BFF endpoint to register external model in LlamaStack instance used by Playground",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Anderson",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-24T20:16:32.840+0000",
+          "updated": "2026-03-16T19:57:21.249+0000",
+          "resolutionDate": "2026-03-16T19:57:21.220+0000"
+        },
+        {
+          "key": "RHOAIENG-50819",
+          "parentKey": "RHOAIENG-50616",
+          "summary": "Ensure external models appear in AI Playground models dropdown and are selectable",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Anderson",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-25T14:33:03.308+0000",
+          "updated": "2026-03-20T22:57:41.525+0000",
+          "resolutionDate": "2026-03-20T22:57:41.489+0000"
+        },
+        {
+          "key": "RHOAIENG-50821",
+          "parentKey": "RHOAIENG-50616",
+          "summary": "Ensure inference path uses responses API with API key/token from Secret (server-side); streaming and errors consistent with internal models",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Anderson",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-25T14:39:30.453+0000",
+          "updated": "2026-03-24T15:45:12.974+0000",
+          "resolutionDate": "2026-03-24T15:45:12.949+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-52233",
+      "parentKey": "RHAISTRAT-172",
+      "summary": "Optimize database queries",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Onyx Vaughn",
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-06T18:22:30.223+0000",
+      "updated": "2026-03-25T11:55:03.705+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-52234",
+          "parentKey": "RHOAIENG-52233",
+          "summary": "[BFF] Unified Models Tab Backend Changes",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Underwood",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-06T18:26:15.536+0000",
+          "updated": "2026-03-16T13:18:35.477+0000",
+          "resolutionDate": "2026-03-16T13:18:35.447+0000"
+        },
+        {
+          "key": "RHOAIENG-52236",
+          "parentKey": "RHOAIENG-52233",
+          "summary": "Unified Models Data Layer: Types, Hooks, and Merge Logic",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Underwood",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-06T18:29:32.009+0000",
+          "updated": "2026-03-16T13:17:40.183+0000",
+          "resolutionDate": "2026-03-16T13:17:40.156+0000"
+        },
+        {
+          "key": "RHOAIENG-52237",
+          "parentKey": "RHOAIENG-52233",
+          "summary": "Unified Models Tab UI: Columns, Filters, and MaaS Tab Removal",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Underwood",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-06T18:32:19.387+0000",
+          "updated": "2026-03-16T13:17:46.287+0000",
+          "resolutionDate": "2026-03-16T13:17:46.262+0000"
+        },
+        {
+          "key": "RHOAIENG-52240",
+          "parentKey": "RHOAIENG-52233",
+          "summary": "Endpoint Detail Modal",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Underwood",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-06T18:37:25.927+0000",
+          "updated": "2026-03-18T22:35:45.901+0000",
+          "resolutionDate": "2026-03-16T13:17:52.501+0000"
+        },
+        {
+          "key": "RHOAIENG-52241",
+          "parentKey": "RHOAIENG-52233",
+          "summary": "Cypress Mocked Tests for Unified Models Tab",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Underwood",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-06T18:38:11.979+0000",
+          "updated": "2026-03-18T22:36:23.928+0000",
+          "resolutionDate": "2026-03-16T13:17:57.893+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 5,
+    "totalIssues": 26,
+    "issuesByStatus": {
+      "Resolved": 26
+    },
+    "issuesByCategory": {
+      "Done": 26,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 12,
+    "storyPointsDone": 12,
+    "completionPct": 100,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 2,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-50589",
+        "summary": "Custom Endpoint - Feature flags for custom endpoint visibility and provider access",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Onyx Anderson",
+        "totalIssues": 5,
+        "doneIssues": 5,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-50600",
+        "summary": "Custom endpoints - Custom Endpoint Registration - MVP",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Onyx Anderson",
+        "totalIssues": 9,
+        "doneIssues": 9,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-50609",
+        "summary": "Custom Endpoints - Custom Endpoint Display and Management",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Onyx Anderson",
+        "totalIssues": 4,
+        "doneIssues": 4,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-50616",
+        "summary": "Custom Endpoints - Custom Endpoint Integration with AI Playground",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Onyx Anderson",
+        "totalIssues": 3,
+        "doneIssues": 3,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-52233",
+        "summary": "Unified Models Tab: Merge MaaS and AI Models into Single View",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Frankie Underwood",
+        "totalIssues": 5,
+        "doneIssues": 5,
+        "progressPct": 100,
+        "storyPoints": 12,
+        "storyPointsDone": 12,
+        "health": "GREEN"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

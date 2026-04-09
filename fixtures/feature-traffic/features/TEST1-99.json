@@ -1,0 +1,106 @@
+{
+  "key": "TEST1-99",
+  "summary": "Add export functionality",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Frankie Dean",
+    "accountId": "712020:4d8ab7b7-4491-490a-b85b-8246663b9db3"
+  },
+  "fixVersions": [],
+  "labels": [
+    "Notebooks",
+    "disconnected",
+    "documentation",
+    "ide_scrum:indigo",
+    "platform",
+    "tech-reviewed"
+  ],
+  "components": [
+    "Notebooks Images"
+  ],
+  "created": "2025-09-25T14:22:55.103+0000",
+  "updated": "2026-02-19T18:33:29.466+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "ISV-6262",
+      "linkedSummary": "Create an edge from product listings to container repositories",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "CWFCONF-11681",
+      "linkedSummary": "RFE: Please add the ability to query Pyxis API for all images related to a product",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "HYDRA-12764",
+      "linkedSummary": "RFE: Please add the ability to query CVE data based on product",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-3297",
+      "linkedSummary": "[Not blocking RC] [rhoai-3.3] Remove legacy quay.io/modh/ workbench images from rhoai-3.3.md disconnected install helper",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-25671",
+      "linkedSummary": "Significant critical CVEs and lacking documentation preventing RHOAI 2.19 disconnected install",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-3",
+      "linkedSummary": "Clear documentation for disconnected imagestreams",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIENG-617",
+      "linkedSummary": "Confirm disconnected installer instructions updated to reference registry",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHEC-4226",
+      "linkedSummary": "Phase 3 - Consolidated view of CVE data for Red Hat product listings",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

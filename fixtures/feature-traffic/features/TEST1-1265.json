@@ -1,0 +1,567 @@
+{
+  "key": "TEST1-1265",
+  "summary": "Fix memory leak",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Blocker",
+  "assignee": {
+    "displayName": "Merit Evans",
+    "accountId": "5aba8737f4b3dd2a74573cf7"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "Data Processing"
+  ],
+  "created": "2026-03-03T16:07:16.876+0000",
+  "updated": "2026-04-07T13:57:44.572+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1286",
+      "linkedSummary": "KSO + Workbench integration - interactive spark job management ",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1193",
+      "linkedSummary": "Kubeflow Spark Operator - Tech Preview",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-48812",
+      "parentKey": "RHAISTRAT-1265",
+      "summary": "Update error messages",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Person 22",
+      "components": [
+        "Data Processing",
+        "Kubeflow Spark Operator"
+      ],
+      "labels": [
+        "aicp-team-crucible"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-05T19:53:11.224+0000",
+      "updated": "2026-04-02T22:13:39.585+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-48813",
+          "parentKey": "RHOAIENG-48812",
+          "summary": "CLONE - Onboard to RHOAI Build - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-05T19:53:19.842+0000",
+          "updated": "2026-03-20T14:00:56.227+0000",
+          "resolutionDate": "2026-03-17T18:23:17.535+0000"
+        },
+        {
+          "key": "RHOAIENG-48814",
+          "parentKey": "RHOAIENG-48812",
+          "summary": "CLONE - Onboard to ODH Build - 2 week notice! ",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-05T19:53:19.850+0000",
+          "updated": "2026-03-17T18:23:39.309+0000",
+          "resolutionDate": "2026-03-17T18:23:39.281+0000"
+        },
+        {
+          "key": "RHOAIENG-48815",
+          "parentKey": "RHOAIENG-48812",
+          "summary": "CLONE - Testing requirements",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Critical",
+          "assignee": "Gray Vale",
+          "components": [
+            "Data Processing",
+            "Kubeflow Spark Operator"
+          ],
+          "labels": [
+            "ai-nonfixable",
+            "ai-triaged"
+          ],
+          "storyPoints": 1,
+          "created": "2026-02-05T19:53:20.569+0000",
+          "updated": "2026-04-02T22:14:00.064+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-48816",
+          "parentKey": "RHOAIENG-48812",
+          "summary": "CLONE - RHOAI ONLY: AI Platform Core Components (AIPCC) Integration",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-05T19:53:20.589+0000",
+          "updated": "2026-03-17T18:26:53.031+0000",
+          "resolutionDate": "2026-03-17T18:26:53.008+0000"
+        },
+        {
+          "key": "RHOAIENG-48817",
+          "parentKey": "RHOAIENG-48812",
+          "summary": "CLONE - Security requirements",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Merit Evans",
+          "components": [
+            "Data Processing",
+            "Kubeflow Spark Operator"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-02-05T19:53:20.569+0000",
+          "updated": "2026-04-02T22:13:53.916+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-48818",
+          "parentKey": "RHOAIENG-48812",
+          "summary": "CLONE - Test with disconnected environment",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Gray Vale",
+          "components": [
+            "Data Processing",
+            "Kubeflow Spark Operator"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-02-05T19:53:20.591+0000",
+          "updated": "2026-04-02T22:13:52.327+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-48819",
+          "parentKey": "RHOAIENG-48812",
+          "summary": "CLONE - Multi-Architecture Support",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Gray Vale",
+          "components": [
+            "Data Processing",
+            "Kubeflow Spark Operator"
+          ],
+          "labels": [
+            "ai-nonfixable",
+            "ai-triaged"
+          ],
+          "storyPoints": 1,
+          "created": "2026-02-05T19:53:20.633+0000",
+          "updated": "2026-04-02T22:13:50.596+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-48820",
+          "parentKey": "RHOAIENG-48812",
+          "summary": "CLONE - Add component data to product-definitions for vulnerability tracking",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Merit Evans",
+          "components": [
+            "Data Processing",
+            "Kubeflow Spark Operator"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-02-05T19:53:22.333+0000",
+          "updated": "2026-03-25T14:54:39.715+0000",
+          "resolutionDate": "2026-03-25T14:54:39.684+0000"
+        },
+        {
+          "key": "RHOAIENG-48821",
+          "parentKey": "RHOAIENG-48812",
+          "summary": "Add source repo(s) to Snyk: https://github.com/red-hat-data-services/spark-operator",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Gray Vale",
+          "components": [
+            "Data Processing",
+            "Kubeflow Spark Operator"
+          ],
+          "labels": [
+            "ai-nonfixable",
+            "ai-triaged"
+          ],
+          "storyPoints": 2,
+          "created": "2026-02-05T19:53:22.353+0000",
+          "updated": "2026-04-02T14:15:31.407+0000",
+          "resolutionDate": "2026-04-02T14:15:31.370+0000"
+        },
+        {
+          "key": "RHOAIENG-48822",
+          "parentKey": "RHOAIENG-48812",
+          "summary": "CLONE - Add component support for must-gather",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Onyx Ward",
+          "components": [
+            "Data Processing",
+            "Kubeflow Spark Operator"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-02-05T19:53:22.358+0000",
+          "updated": "2026-04-02T16:39:41.895+0000",
+          "resolutionDate": "2026-04-02T16:39:41.867+0000"
+        },
+        {
+          "key": "RHOAIENG-48823",
+          "parentKey": "RHOAIENG-48812",
+          "summary": "CLONE - Add Prometheus config for component",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Merit Evans",
+          "components": [
+            "Data Processing",
+            "Kubeflow Spark Operator"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-05T19:53:22.400+0000",
+          "updated": "2026-04-02T22:13:49.246+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-48824",
+          "parentKey": "RHOAIENG-48812",
+          "summary": "CLONE - Feature documented in architecture diagrams",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Merit Evans",
+          "components": [
+            "Data Processing",
+            "Kubeflow Spark Operator"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-02-05T19:53:22.865+0000",
+          "updated": "2026-03-27T15:22:10.305+0000",
+          "resolutionDate": "2026-03-27T15:22:10.269+0000"
+        },
+        {
+          "key": "RHOAIENG-48825",
+          "parentKey": "RHOAIENG-48812",
+          "summary": "CLONE - Ensure work with supported lifecyles",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Merit Evans",
+          "components": [
+            "Data Processing",
+            "Kubeflow Spark Operator"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-02-05T19:53:22.868+0000",
+          "updated": "2026-03-24T20:24:00.224+0000",
+          "resolutionDate": "2026-03-24T20:24:00.190+0000"
+        },
+        {
+          "key": "RHOAIENG-48826",
+          "parentKey": "RHOAIENG-48812",
+          "summary": "TP [Kubeflow Spark Operator] - Integration with ODH operator - 2 week notice!",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Platform",
+            "Kubeflow Spark Operator"
+          ],
+          "labels": [
+            "aicp-team-crucible"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-05T19:53:23.663+0000",
+          "updated": "2026-03-17T18:30:57.160+0000",
+          "resolutionDate": "2026-03-17T18:30:57.137+0000"
+        },
+        {
+          "key": "RHOAIENG-48827",
+          "parentKey": "RHOAIENG-48812",
+          "summary": " Repository added to ODH/RHOAI",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-05T19:53:23.681+0000",
+          "updated": "2026-02-05T20:16:53.691+0000",
+          "resolutionDate": "2026-02-05T20:16:53.660+0000"
+        },
+        {
+          "key": "RHOAIENG-48828",
+          "parentKey": "RHOAIENG-48812",
+          "summary": "Create component in jira",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Kubeflow Spark Operator"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-05T19:53:23.716+0000",
+          "updated": "2026-02-05T20:19:13.823+0000",
+          "resolutionDate": "2026-02-05T20:18:36.171+0000"
+        },
+        {
+          "key": "RHOAIENG-48829",
+          "parentKey": "RHOAIENG-48812",
+          "summary": "TP [Kubeflow Spark Operator] - Integration with RHOAI operator - 2 week notice!",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Platform",
+            "Kubeflow Spark Operator"
+          ],
+          "labels": [
+            "aicp-team-crucible"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-05T19:53:23.838+0000",
+          "updated": "2026-03-17T18:31:25.045+0000",
+          "resolutionDate": "2026-03-17T18:31:25.018+0000"
+        },
+        {
+          "key": "RHOAIENG-48830",
+          "parentKey": "RHOAIENG-48812",
+          "summary": "CLONE - MUST meet designed for FIPS",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-05T19:53:25.924+0000",
+          "updated": "2026-04-02T22:14:04.244+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-48831",
+          "parentKey": "RHOAIENG-48812",
+          "summary": "TP [Kubeflow Spark Operator] - Add support for the new component in the QE related repositories",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Gray Sato",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-crucible"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-05T19:53:26.560+0000",
+          "updated": "2026-03-02T13:04:43.524+0000",
+          "resolutionDate": "2026-03-02T13:04:43.481+0000"
+        },
+        {
+          "key": "RHOAIENG-54584",
+          "parentKey": "RHOAIENG-48812",
+          "summary": "Enable E2E Tests in CI to use Kustomize Manifests instead of Helm Charts",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Gray Yates",
+          "components": [
+            "Data Processing",
+            "Kubeflow Spark Operator"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-03-20T14:23:09.128+0000",
+          "updated": "2026-03-31T01:41:32.051+0000",
+          "resolutionDate": "2026-03-31T01:41:32.024+0000"
+        },
+        {
+          "key": "RHOAIENG-54585",
+          "parentKey": "RHOAIENG-48812",
+          "summary": "Build Spark Operator Container based off Red Hat Images & AIPCC Pyspark",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Onyx Ward",
+          "components": [
+            "Data Processing",
+            "Kubeflow Spark Operator"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-03-20T14:30:20.090+0000",
+          "updated": "2026-04-03T15:56:07.047+0000",
+          "resolutionDate": "2026-04-03T15:56:07.016+0000"
+        },
+        {
+          "key": "RHOAIENG-54587",
+          "parentKey": "RHOAIENG-48812",
+          "summary": "Sync ODH Midstream Repository before Tech Preview",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Critical",
+          "assignee": "Merit Evans",
+          "components": [
+            "Data Processing",
+            "Kubeflow Spark Operator"
+          ],
+          "labels": [
+            "ai-nonfixable",
+            "ai-triaged"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-20T14:38:40.966+0000",
+          "updated": "2026-04-02T22:13:57.809+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54588",
+          "parentKey": "RHOAIENG-48812",
+          "summary": "Team Documentation of Customer KSO Installation via RHOAI",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Critical",
+          "assignee": "Gray Vale",
+          "components": [
+            "Data Processing",
+            "Kubeflow Spark Operator"
+          ],
+          "labels": [
+            "ai-nonfixable",
+            "ai-triaged"
+          ],
+          "storyPoints": 1,
+          "created": "2026-03-20T14:45:49.367+0000",
+          "updated": "2026-04-02T22:13:55.615+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56059",
+          "parentKey": "RHOAIENG-48812",
+          "summary": "Add CI Testing Infrastructure for Dockerfile.odh",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Gray Vale",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-30T20:11:30.015+0000",
+          "updated": "2026-04-02T22:14:02.132+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 24,
+    "issuesByStatus": {
+      "Closed": 3,
+      "Resolved": 12,
+      "Backlog": 3,
+      "In Progress": 3,
+      "Review": 1,
+      "New": 2
+    },
+    "issuesByCategory": {
+      "Done": 15,
+      "In Progress": 4,
+      "To Do": 5
+    },
+    "totalStoryPoints": 29,
+    "storyPointsDone": 17,
+    "completionPct": 63,
+    "staleCount": 0,
+    "unassignedCount": 1,
+    "blockerCount": 14,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-48812",
+        "summary": "Tech Preview - ODH and RHOAI Integrations [Kubeflow Spark Operator]",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Merit Evans",
+        "totalIssues": 24,
+        "doneIssues": 15,
+        "progressPct": 63,
+        "storyPoints": 29,
+        "storyPointsDone": 17,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

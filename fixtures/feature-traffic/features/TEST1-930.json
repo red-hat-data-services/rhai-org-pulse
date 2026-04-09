@@ -1,0 +1,148 @@
+{
+  "key": "TEST1-930",
+  "summary": "Add export functionality",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Kerry Lane",
+    "accountId": "70121:fcaeccc6-4cc5-4dc0-81e0-3fdf5a709419"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "aicp-team-compass",
+    "llm-d",
+    "observability"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "AI Core Platform",
+    "Documentation",
+    "llm-d",
+    "Model Serving"
+  ],
+  "created": "2025-10-06T17:35:13.741+0000",
+  "updated": "2026-03-27T12:32:12.769+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Triggers",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1198",
+      "linkedSummary": "DP-Implement End-to-End Distributed Tracing for llm-d",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Incorporates",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-828",
+      "linkedSummary": " llm-d: Productized Perses Dashboard for Observability",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-420",
+      "linkedSummary": "llm-d Metric Exposure for User & Cluster Admins",
+      "linkedStatus": "Refinement"
+    },
+    {
+      "type": "Triggers",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-332",
+      "linkedSummary": "llm-d: OpenShift Console Integration via User Workload Monitoring",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Triggers",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1206",
+      "linkedSummary": "Documenting llm-d related Metrics and example queries that customer can use to create their own dashboard (self hosted)",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Triggers",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-113",
+      "linkedSummary": "Add llm-d Observability for User & Cluster-admins",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-28166",
+      "linkedSummary": "Metrics collection for llm-d components",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Triggers",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1069",
+      "linkedSummary": "Implement End-to-End Distributed Tracing for llm-d",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Triggers",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1368",
+      "linkedSummary": "GA - Implement End-to-End Distributed Tracing for llm-d",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-51428",
+      "parentKey": "RHAISTRAT-930",
+      "summary": "Optimize database queries",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": "Merit Dean",
+      "components": [
+        "Documentation",
+        "llm-d"
+      ],
+      "labels": [],
+      "storyPoints": 4,
+      "created": "2026-03-01T16:35:08.058+0000",
+      "updated": "2026-03-06T13:51:17.981+0000",
+      "issues": []
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-51428",
+        "summary": "[ccs] llm-d: Establish End-to-End Observability",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Kerry Emery",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

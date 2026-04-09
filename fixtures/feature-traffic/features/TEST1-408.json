@@ -1,0 +1,189 @@
+{
+  "key": "TEST1-408",
+  "summary": "Update configuration settings",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Frankie Park",
+    "accountId": "5b335d1d2975df4c55ea6f83"
+  },
+  "fixVersions": [],
+  "labels": [
+    "Accelerator_Platform",
+    "GPU-as-a-Service"
+  ],
+  "components": [
+    "AI Core Platform",
+    "KubeRay"
+  ],
+  "created": "2024-06-04T07:02:52.309+0000",
+  "updated": "2025-12-08T11:10:41.886+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-796",
+      "linkedSummary": "IDE Kubeflow v2.0 Implementation",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-489",
+      "linkedSummary": "Ability to change time settings on idle notebooks per-namespace",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-440",
+      "linkedSummary": "GPU-only idle culling",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Triggers",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-537",
+      "linkedSummary": "Enhanced Resource Management: Idle GPU Reclaim",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-350",
+      "linkedSummary": "enable instaslice for Distributed Workloads",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-13945",
+      "parentKey": "RHAISTRAT-408",
+      "summary": "Fix validation issue",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "KubeRay"
+      ],
+      "labels": [
+        "Accelerator_Platform"
+      ],
+      "storyPoints": 0,
+      "created": "2024-10-04T08:02:55.746+0000",
+      "updated": "2025-05-14T12:36:25.898+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-13963",
+          "parentKey": "RHOAIENG-13945",
+          "summary": "Scale-to-zero / Preempt idle workloads with KEDA",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Nolan",
+          "components": [
+            "Workload Orchestration"
+          ],
+          "labels": [
+            "Accelerator_Platform",
+            "refined"
+          ],
+          "storyPoints": 5,
+          "created": "2024-10-04T11:26:25.644+0000",
+          "updated": "2025-04-16T15:38:32.601+0000",
+          "resolutionDate": "2025-04-16T15:38:32.553+0000"
+        },
+        {
+          "key": "RHOAIENG-23595",
+          "parentKey": "RHOAIENG-13945",
+          "summary": "RHOAI blog-post/demo on using CMA alongside Kueue",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Nolan",
+          "components": [
+            "Workload Orchestration"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-04-11T10:33:20.315+0000",
+          "updated": "2026-03-15T12:25:40.596+0000",
+          "resolutionDate": "2025-08-26T10:14:43.038+0000"
+        },
+        {
+          "key": "RHOAIENG-25382",
+          "parentKey": "RHOAIENG-13945",
+          "summary": "Review Draft Blog: CMA and Kueue on OpenShift AI",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Grant",
+          "components": [
+            "Documentation",
+            "Workload Orchestration"
+          ],
+          "labels": [
+            "ContentX_CY25",
+            "refined"
+          ],
+          "storyPoints": 2,
+          "created": "2025-05-13T12:20:28.532+0000",
+          "updated": "2025-07-23T10:22:19.524+0000",
+          "resolutionDate": "2025-05-20T08:47:50.224+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 3,
+    "issuesByStatus": {
+      "Resolved": 1,
+      "Closed": 2
+    },
+    "issuesByCategory": {
+      "Done": 3,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 12,
+    "storyPointsDone": 12,
+    "completionPct": 100,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-13945",
+        "summary": "Automatically release accelerator resources owned by idle workloads",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": null,
+        "totalIssues": 3,
+        "doneIssues": 3,
+        "progressPct": 100,
+        "storyPoints": 12,
+        "storyPointsDone": 12,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": [
+      {
+        "url": "github.com/ray-project/kuberay",
+        "issueCount": 0,
+        "components": [
+          "KubeRay"
+        ]
+      }
+    ]
+  }
+}

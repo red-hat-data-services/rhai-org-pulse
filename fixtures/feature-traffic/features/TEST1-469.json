@@ -1,0 +1,82 @@
+{
+  "key": "TEST1-469",
+  "summary": "Implement retry logic",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "UXD"
+  ],
+  "created": "2024-05-22T12:50:26.735+0000",
+  "updated": "2025-11-25T21:41:43.210+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-345",
+      "linkedSummary": "Improve UX of the Projects table view",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Triggers",
+      "direction": "inward",
+      "linkedKey": "RHOAIUX-166",
+      "linkedSummary": "Improve the Home and Project page experience",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Duplicate",
+      "direction": "outward",
+      "linkedKey": "RHOAIUX-137",
+      "linkedSummary": "[Design] updated Project details page v3 for RHOAI dashboard",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Incorporates",
+      "direction": "outward",
+      "linkedKey": "UXDR-3132",
+      "linkedSummary": "OpenShift AI Start and Project Page",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHOAIRFE-157",
+      "linkedSummary": "Improve UX of Project Overview ",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIRFE-119",
+      "linkedSummary": "Improve UX of the Projects table view",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

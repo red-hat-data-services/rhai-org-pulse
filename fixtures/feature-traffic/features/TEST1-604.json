@@ -1,0 +1,446 @@
+{
+  "key": "TEST1-604",
+  "summary": "Add batch processing",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Frankie Mead",
+    "accountId": "712020:3e6483d7-a7f9-4847-950f-102899cadf8f"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "AI Core Dashboard",
+    "Model and Agent Observability",
+    "Model Serving",
+    "UXD"
+  ],
+  "created": "2024-09-05T18:18:57.239+0000",
+  "updated": "2026-01-01T10:55:43.895+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-535",
+      "linkedSummary": "KServe Metrics - Charts for LLM performance metrics",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Duplicate",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-535",
+      "linkedSummary": "KServe Metrics - Charts for LLM performance metrics",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Incorporates",
+      "direction": "inward",
+      "linkedKey": "NVPE-49",
+      "linkedSummary": "NIM metrics page design on dashboard",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Incorporates",
+      "direction": "inward",
+      "linkedKey": "NVPE-31",
+      "linkedSummary": "Visualizations for the NIm metrics and performance merics",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-905",
+      "linkedSummary": "Common Accelerator Agnostic Metrics ",
+      "linkedStatus": "Pending Approval"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-29295",
+      "linkedSummary": "Dashboard Investigation/Design Doc for Metrics (KServe)",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-429",
+      "linkedSummary": "Kserve enhancements",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-112",
+      "linkedSummary": "Add Foundational Observability for AI Models",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Duplicate",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-903",
+      "linkedSummary": "GPU and LLM Metrics Dashboard ",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Incorporates",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-903",
+      "linkedSummary": "GPU and LLM Metrics Dashboard ",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-30794",
+      "linkedSummary": "Update \"Grafana Metrics\" docs to include new dashboards",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-12528",
+      "linkedSummary": "[Backend] GPU/LLM Performance Metrics",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIRFE-336",
+      "linkedSummary": "Consolidated Notification Center",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-12528",
+      "parentKey": "RHAISTRAT-604",
+      "summary": "Fix sorting order",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Critical",
+      "assignee": "Person 146",
+      "components": [
+        "Model Serving"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2024-09-05T18:30:07.009+0000",
+      "updated": "2025-09-19T13:08:10.549+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-12531",
+          "parentKey": "RHOAIENG-12528",
+          "summary": "GPU + LLM Metrics - refinement",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Critical",
+          "assignee": "Onyx Thorne",
+          "components": [
+            "Model Serving"
+          ],
+          "labels": [
+            "ready-to-plan"
+          ],
+          "storyPoints": 3,
+          "created": "2024-09-05T18:36:59.884+0000",
+          "updated": "2026-02-13T21:24:51.236+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-13169",
+          "parentKey": "RHOAIENG-12528",
+          "summary": "[SPIKE] GPU utilization metrics",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Thorne",
+          "components": [
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 4,
+          "created": "2024-09-20T14:29:34.745+0000",
+          "updated": "2024-09-27T20:07:18.752+0000",
+          "resolutionDate": "2024-09-27T20:01:35.644+0000"
+        },
+        {
+          "key": "RHOAIENG-17964",
+          "parentKey": "RHOAIENG-12528",
+          "summary": "[GPU Metrics] PoC - Create a Grafana board with the proposed metrics for NVIDIA",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Thorne",
+          "components": [
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-01-12T23:20:59.292+0000",
+          "updated": "2025-05-29T15:07:33.850+0000",
+          "resolutionDate": "2025-02-24T13:36:20.402+0000"
+        },
+        {
+          "key": "RHOAIENG-21205",
+          "parentKey": "RHOAIENG-12528",
+          "summary": "[GPU Metrics] PoC Grafana - Add metrics for AMD accelerator",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Onyx Thorne",
+          "components": [
+            "Documentation",
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2025-03-06T18:53:37.054+0000",
+          "updated": "2025-08-25T07:28:32.975+0000",
+          "resolutionDate": "2025-05-29T16:37:42.275+0000"
+        },
+        {
+          "key": "RHOAIENG-21206",
+          "parentKey": "RHOAIENG-12528",
+          "summary": "[GPU Metrics] PoC Grafana - Add metrics for Gaudi accelerator",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Onyx Thorne",
+          "components": [
+            "Documentation",
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2025-03-06T18:54:06.304+0000",
+          "updated": "2025-06-06T15:35:00.133+0000",
+          "resolutionDate": "2025-06-06T15:35:00.112+0000"
+        },
+        {
+          "key": "RHOAIENG-21207",
+          "parentKey": "RHOAIENG-12528",
+          "summary": "[GPU Metrics] Publish the Grafana Dashboard to the rh-aiservices-bu repository",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Onyx Thorne",
+          "components": [
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2025-03-06T18:58:13.713+0000",
+          "updated": "2025-07-16T13:58:37.357+0000",
+          "resolutionDate": "2025-05-08T16:33:23.777+0000"
+        },
+        {
+          "key": "RHOAIENG-21208",
+          "parentKey": "RHOAIENG-12528",
+          "summary": "[GPU Metrics] Document the Grafana Metrics Dashboard",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Onyx Thorne",
+          "components": [
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-03-06T19:01:10.056+0000",
+          "updated": "2025-07-16T13:58:34.368+0000",
+          "resolutionDate": "2025-05-12T16:48:02.054+0000"
+        },
+        {
+          "key": "RHOAIENG-25685",
+          "parentKey": "RHOAIENG-12528",
+          "summary": "[GPU Metrics] Create Perses Dashboards for All GPU Types (AMD, Gaudi, NVIDIA)",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Critical",
+          "assignee": "Onyx Thorne",
+          "components": [
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-05-16T21:19:14.350+0000",
+          "updated": "2026-02-13T21:26:47.071+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-26490",
+          "parentKey": "RHOAIENG-12528",
+          "summary": "[GPU Metrics] Define the new home for the OpenShift AI related metrics",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Onyx Thorne",
+          "components": [
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2025-05-30T17:36:12.075+0000",
+          "updated": "2025-06-06T19:28:29.782+0000",
+          "resolutionDate": "2025-06-06T19:28:29.766+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-16977",
+      "parentKey": "RHAISTRAT-604",
+      "summary": "Implement feature for module",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Kerry Drake",
+      "components": [
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2024-12-13T10:54:52.058+0000",
+      "updated": "2026-03-06T14:15:47.400+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-16978",
+          "parentKey": "RHOAIENG-16977",
+          "summary": "[ccs Spike] Understand the documentation needs to support KServe metrics",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Hart",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [
+            "NoDocsQEReview"
+          ],
+          "storyPoints": 3,
+          "created": "2024-12-13T10:56:38.918+0000",
+          "updated": "2025-03-03T15:51:01.430+0000",
+          "resolutionDate": "2025-01-29T20:03:04.714+0000"
+        },
+        {
+          "key": "RHOAIENG-22427",
+          "parentKey": "RHOAIENG-16977",
+          "summary": "[ccs] Document the Grafana Metrics Dashboard",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Frankie Hart",
+          "components": [
+            "Documentation",
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-03-25T17:42:33.118+0000",
+          "updated": "2025-07-16T13:53:46.792+0000",
+          "resolutionDate": "2025-05-10T16:25:41.647+0000"
+        },
+        {
+          "key": "RHOAIENG-26247",
+          "parentKey": "RHOAIENG-16977",
+          "summary": "[ccs] Document Grafana metrics for AMD & Gaudi",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Hart",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-05-27T14:28:10.855+0000",
+          "updated": "2025-08-19T07:28:05.593+0000",
+          "resolutionDate": "2025-07-29T04:11:10.561+0000"
+        },
+        {
+          "key": "RHOAIENG-30794",
+          "parentKey": "RHOAIENG-16977",
+          "summary": "Update \"Grafana Metrics\" docs to include new dashboards",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Hart",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-07-28T21:00:22.646+0000",
+          "updated": "2025-09-30T13:18:51.117+0000",
+          "resolutionDate": "2025-09-30T13:18:51.058+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 2,
+    "totalIssues": 13,
+    "issuesByStatus": {
+      "Backlog": 2,
+      "Closed": 8,
+      "Resolved": 3
+    },
+    "issuesByCategory": {
+      "Done": 11,
+      "In Progress": 0,
+      "To Do": 2
+    },
+    "totalStoryPoints": 31,
+    "storyPointsDone": 25,
+    "completionPct": 85,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 8,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-12528",
+        "summary": "[Backend] GPU/LLM Performance Metrics",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Onyx Thorne",
+        "totalIssues": 9,
+        "doneIssues": 7,
+        "progressPct": 78,
+        "storyPoints": 18,
+        "storyPointsDone": 12,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-16977",
+        "summary": "[ccs Epic] Document KServe Metrics - GPU Utilization",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Frankie Hart",
+        "totalIssues": 4,
+        "doneIssues": 4,
+        "progressPct": 100,
+        "storyPoints": 13,
+        "storyPointsDone": 13,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

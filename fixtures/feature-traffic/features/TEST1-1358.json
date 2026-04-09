@@ -1,0 +1,283 @@
+{
+  "key": "TEST1-1358",
+  "summary": "Fix concurrent access issue",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Frankie Flynn",
+    "accountId": "5e258328a7b9540e76f44821"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "confidence-yellow",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AI Safety"
+  ],
+  "created": "2026-03-19T12:38:38.013+0000",
+  "updated": "2026-04-07T10:33:56.402+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-299",
+      "linkedSummary": "Support NeMo Guardrails",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-54333",
+      "parentKey": "RHAISTRAT-1358",
+      "summary": "Fix memory leak",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Person 161",
+      "components": [
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-19T12:41:04.400+0000",
+      "updated": "2026-03-26T12:56:27.976+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50659",
+          "parentKey": "RHOAIENG-54333",
+          "summary": "Provide regex detectors for NeMo Guardrails",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry James",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-24T11:33:18.181+0000",
+          "updated": "2026-04-02T14:48:59.461+0000",
+          "resolutionDate": "2026-04-02T14:48:59.376+0000"
+        },
+        {
+          "key": "RHOAIENG-50660",
+          "parentKey": "RHOAIENG-54333",
+          "summary": "Integrate with remote HF Predictive Models",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Merit Young",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-24T11:34:59.436+0000",
+          "updated": "2026-03-19T12:41:47.701+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-50661",
+          "parentKey": "RHOAIENG-54333",
+          "summary": "Integrate with local HF predictive models",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Merit Young",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-24T11:35:10.476+0000",
+          "updated": "2026-03-26T12:58:39.775+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51358",
+          "parentKey": "RHOAIENG-54333",
+          "summary": "Support dynamic MaaS and user tokens inside NeMo Guardrails",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Blocker",
+          "assignee": "Frankie Flynn",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-27T17:20:08.118+0000",
+          "updated": "2026-04-07T08:19:15.715+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55982",
+          "parentKey": "RHOAIENG-54333",
+          "summary": "Add Prometheus support to the nemo-guardrails server",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Kerry James",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-30T14:41:47.884+0000",
+          "updated": "2026-03-31T13:40:47.990+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56104",
+          "parentKey": "RHOAIENG-54333",
+          "summary": "Extend HF detector runtime",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Merit Young",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-31T09:30:39.515+0000",
+          "updated": "2026-03-31T09:33:27.353+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-56971",
+      "parentKey": "RHAISTRAT-1358",
+      "summary": "Fix sorting order",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Person 161",
+      "components": [
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-04-07T13:58:00.784+0000",
+      "updated": "2026-04-07T13:58:57.847+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-56972",
+          "parentKey": "RHOAIENG-56971",
+          "summary": "Add chat/completions tests for nemo-guardrails",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Frankie Flynn",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-07T13:58:35.052+0000",
+          "updated": "2026-04-07T13:59:22.068+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56973",
+          "parentKey": "RHOAIENG-56971",
+          "summary": "Add guardrails/checks tests",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Frankie Flynn",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-07T13:58:49.338+0000",
+          "updated": "2026-04-07T13:59:27.780+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56974",
+          "parentKey": "RHOAIENG-56971",
+          "summary": "Add authentication tests to NeMo Guardrails",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Frankie Flynn",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-07T13:59:12.562+0000",
+          "updated": "2026-04-07T13:59:29.019+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 2,
+    "totalIssues": 9,
+    "issuesByStatus": {
+      "Resolved": 1,
+      "New": 4,
+      "Review": 1,
+      "In Progress": 3
+    },
+    "issuesByCategory": {
+      "Done": 1,
+      "In Progress": 4,
+      "To Do": 4
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 11,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 1,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-54333",
+        "summary": "NeMo Guardrails: Provide features for 3.5 release",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Frankie Flynn",
+        "totalIssues": 6,
+        "doneIssues": 1,
+        "progressPct": 17,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-56971",
+        "summary": "QE: Add NeMo Guardrails test suite to opendatahub-tests",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Frankie Flynn",
+        "totalIssues": 3,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

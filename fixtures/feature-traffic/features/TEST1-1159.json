@@ -1,0 +1,89 @@
+{
+  "key": "TEST1-1159",
+  "summary": "Implement webhook handler",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Frankie Clay",
+    "accountId": "70121:0d27b449-e70b-4a5a-819c-628f2b5a8499"
+  },
+  "fixVersions": [
+    "RHAIIS-3.4 GA"
+  ],
+  "labels": [
+    "Approved-RFE"
+  ],
+  "components": [
+    "INFERENG Midstream"
+  ],
+  "created": "2026-01-26T13:25:43.534+0000",
+  "updated": "2026-03-31T14:17:14.356+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-956",
+      "linkedSummary": "Support vLLM on CPU for RHAIIS AVX2",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1163",
+      "linkedSummary": "RHAIIS-3.4 EA1 Release Tracker",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "AIPCC-9510",
+      "linkedSummary": "Support vLLM on CPU for RHAIIS AVX512 AMX",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "INFERENG-5099",
+      "linkedSummary": "CPU build failure: mla_decode.cpp fails to compile on x86 without AVX512 in vLLM v0.16.0",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "INFERENG-4713",
+      "linkedSummary": "[ccs] Docs - Support vLLM on CPU for RHAIIS AVX512 AMX",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "AIPCC-12533",
+      "linkedSummary": "Upgrade GCC in builder to support AVX-512 for cpu-ubi9",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

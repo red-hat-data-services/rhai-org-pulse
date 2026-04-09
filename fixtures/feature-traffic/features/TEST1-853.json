@@ -1,0 +1,370 @@
+{
+  "key": "TEST1-853",
+  "summary": "Add logging for debugging",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Onyx Upton",
+    "accountId": "712020:32edded2-aff1-454d-9734-0a31f9cd4a00"
+  },
+  "fixVersions": [],
+  "labels": [
+    "tech-reviewed"
+  ],
+  "components": [
+    "Model Serving"
+  ],
+  "created": "2025-07-29T15:46:17.500+0000",
+  "updated": "2026-04-03T20:39:17.879+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-298",
+      "linkedSummary": "Persistent Caches for model serving runtimes",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Incorporates",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-31929",
+      "linkedSummary": "Implement Model Cache in RHOAI",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-52452",
+      "linkedSummary": "[ccs] Document how to enable Model caching",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-77",
+      "linkedSummary": "Implement Model Cache in RHOAI",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-31929",
+      "parentKey": "RHAISTRAT-853",
+      "summary": "Add rate limiting",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Person 149",
+      "components": [
+        "Model Serving"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-08-11T12:17:06.199+0000",
+      "updated": "2026-04-01T19:43:46.810+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-31930",
+          "parentKey": "RHOAIENG-31929",
+          "summary": "Enable Model Cache in RHOAI ",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Rowe",
+          "components": [
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-08-11T12:21:28.517+0000",
+          "updated": "2025-09-15T15:56:33.153+0000",
+          "resolutionDate": "2025-09-15T15:56:33.110+0000"
+        },
+        {
+          "key": "RHOAIENG-31963",
+          "parentKey": "RHOAIENG-31929",
+          "summary": "[SPIKE] - test ModelCache feature with OCI",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Rowe",
+          "components": [
+            "Model Serving"
+          ],
+          "labels": [
+            "malhaj-review"
+          ],
+          "storyPoints": 3,
+          "created": "2025-08-11T13:30:14.029+0000",
+          "updated": "2025-09-02T14:41:17.514+0000",
+          "resolutionDate": "2025-08-29T13:17:33.086+0000"
+        },
+        {
+          "key": "RHOAIENG-33247",
+          "parentKey": "RHOAIENG-31929",
+          "summary": "Alternate solution to ModelCache Daemonset using 'hostPath' on the volume. ",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Onyx Rowe",
+          "components": [
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-08-29T13:34:20.370+0000",
+          "updated": "2025-09-15T15:56:11.282+0000",
+          "resolutionDate": "2025-09-15T15:56:11.237+0000"
+        },
+        {
+          "key": "RHOAIENG-33258",
+          "parentKey": "RHOAIENG-31929",
+          "summary": "Product tests for ModelCache ",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Critical",
+          "assignee": null,
+          "components": [
+            "Model Serving"
+          ],
+          "labels": [
+            "groomed"
+          ],
+          "storyPoints": 3,
+          "created": "2025-08-29T14:54:02.037+0000",
+          "updated": "2026-03-19T15:40:44.202+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-33461",
+          "parentKey": "RHOAIENG-31929",
+          "summary": "Model Cache Refinement ",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Onyx Rowe",
+          "components": [
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-09-02T14:33:01.879+0000",
+          "updated": "2025-11-13T12:29:37.946+0000",
+          "resolutionDate": "2025-09-22T05:00:03.275+0000"
+        },
+        {
+          "key": "RHOAIENG-33908",
+          "parentKey": "RHOAIENG-31929",
+          "summary": "ADR for ModelCache",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Onyx Rowe",
+          "components": [
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-09-09T17:12:38.135+0000",
+          "updated": "2025-09-22T04:59:05.066+0000",
+          "resolutionDate": "2025-09-22T04:59:05.034+0000"
+        },
+        {
+          "key": "RHOAIENG-33909",
+          "parentKey": "RHOAIENG-31929",
+          "summary": "Add option to enable ModelCache while installing Kserve ",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Onyx Rowe",
+          "components": [
+            "AI Core Platform",
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2025-09-09T17:25:10.055+0000",
+          "updated": "2026-04-02T14:17:46.080+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-33910",
+          "parentKey": "RHOAIENG-31929",
+          "summary": "ModelCache feature integration with LLMInferenceService ",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Onyx Rowe",
+          "components": [
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-09-09T17:30:28.766+0000",
+          "updated": "2026-03-09T17:54:50.686+0000",
+          "resolutionDate": "2026-03-09T17:54:50.651+0000"
+        },
+        {
+          "key": "RHOAIENG-34771",
+          "parentKey": "RHOAIENG-31929",
+          "summary": "SPIKE #2 Model Cache",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Onyx Rowe",
+          "components": [
+            "Model Serving"
+          ],
+          "labels": [
+            "upstream-review"
+          ],
+          "storyPoints": 2,
+          "created": "2025-09-22T21:41:50.184+0000",
+          "updated": "2026-03-15T15:24:51.640+0000",
+          "resolutionDate": "2026-02-02T14:13:27.854+0000"
+        },
+        {
+          "key": "RHOAIENG-41858",
+          "parentKey": "RHOAIENG-31929",
+          "summary": "Allow ModelCache workflow to define model download credentials in their own namespace ",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Onyx Rowe",
+          "components": [
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-12-12T16:58:42.115+0000",
+          "updated": "2026-03-12T18:06:59.838+0000",
+          "resolutionDate": "2026-03-11T02:19:24.320+0000"
+        },
+        {
+          "key": "RHOAIENG-41859",
+          "parentKey": "RHOAIENG-31929",
+          "summary": "Namespace-Scoped LocalModelCache CRD",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Onyx Rowe",
+          "components": [
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-12-12T17:00:54.062+0000",
+          "updated": "2026-03-11T02:19:15.654+0000",
+          "resolutionDate": "2026-03-11T02:19:15.621+0000"
+        },
+        {
+          "key": "RHOAIENG-48270",
+          "parentKey": "RHOAIENG-31929",
+          "summary": "Enable ModelCache image builds for Openshift CI and ODH Konflux",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Rowe",
+          "components": [
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-02-02T01:02:17.507+0000",
+          "updated": "2026-04-01T21:00:25.779+0000",
+          "resolutionDate": "2026-04-01T21:00:25.734+0000"
+        },
+        {
+          "key": "RHOAIENG-48271",
+          "parentKey": "RHOAIENG-31929",
+          "summary": "Enable ModelCache for LLMInferenceServices ",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Onyx Rowe",
+          "components": [
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-02-02T01:04:11.838+0000",
+          "updated": "2026-04-01T13:52:44.082+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-53504",
+          "parentKey": "RHOAIENG-31929",
+          "summary": "Modelcache Agent permission fixes for Openshift ",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Rowe",
+          "components": [
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-03-16T16:08:01.371+0000",
+          "updated": "2026-04-01T23:36:52.004+0000",
+          "resolutionDate": "2026-04-01T23:36:51.949+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 14,
+    "issuesByStatus": {
+      "Resolved": 6,
+      "Backlog": 1,
+      "Closed": 5,
+      "Review": 2
+    },
+    "issuesByCategory": {
+      "Done": 11,
+      "In Progress": 2,
+      "To Do": 1
+    },
+    "totalStoryPoints": 33,
+    "storyPointsDone": 28,
+    "completionPct": 79,
+    "staleCount": 0,
+    "unassignedCount": 1,
+    "blockerCount": 9,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-31929",
+        "summary": "Implement Model Cache in RHOAI",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Onyx Rowe",
+        "totalIssues": 14,
+        "doneIssues": 11,
+        "progressPct": 79,
+        "storyPoints": 33,
+        "storyPointsDone": 28,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

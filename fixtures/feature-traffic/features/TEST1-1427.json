@@ -1,0 +1,51 @@
+{
+  "key": "TEST1-1427",
+  "summary": "Update configuration settings",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Undefined",
+  "assignee": {
+    "displayName": "Gray Zimmerman",
+    "accountId": "712020:32772c8c-b397-4c1c-8b25-683cff91e216"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "needs-review"
+  ],
+  "components": [],
+  "created": "2026-04-01T22:57:57.567+0000",
+  "updated": "2026-04-01T22:59:47.443+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1461",
+      "linkedSummary": "MLFlow Integration with AutoML",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

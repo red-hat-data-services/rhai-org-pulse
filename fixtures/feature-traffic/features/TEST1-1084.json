@@ -1,0 +1,2421 @@
+{
+  "key": "TEST1-1084",
+  "summary": "Fix data migration",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Onyx Pierce",
+    "accountId": "557058:ec20c857-da91-474b-990c-82f291123602"
+  },
+  "fixVersions": [
+    "rhoai-3.4"
+  ],
+  "labels": [
+    "3.4-candidate",
+    "3.4-committed",
+    "ai-hub",
+    "confidence-yellow",
+    "dashboard-green-scrum",
+    "mcp",
+    "mcp-catalog",
+    "needs-documentation",
+    "rhoai-3.4"
+  ],
+  "components": [
+    "Agentic",
+    "AI Core Dashboard",
+    "AI Hub",
+    "UXD"
+  ],
+  "created": "2026-01-07T20:21:45.940+0000",
+  "updated": "2026-04-06T17:05:06.945+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Yellow",
+            "marks": [
+              {
+                "type": "strong"
+              },
+              {
+                "type": "textColor",
+                "attrs": {
+                  "color": "#fff0b3"
+                }
+              },
+              {
+                "type": "underline"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " - "
+          },
+          {
+            "type": "date",
+            "attrs": {
+              "timestamp": "1775001600000"
+            }
+          },
+          {
+            "type": "hardBreak"
+          },
+          {
+            "type": "text",
+            "text": "Backend:",
+            "marks": [
+              {
+                "type": "strong"
+              },
+              {
+                "type": "underline"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "🟢 🎯3.4 GA(Stable)"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "MCP Catalog backend development work in completed for AI Hub"
+                  }
+                ]
+              },
+              {
+                "type": "bulletList",
+                "content": [
+                  {
+                    "type": "listItem",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Only one automation spike issue remains"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Dashboard:",
+            "marks": [
+              {
+                "type": "strong"
+              },
+              {
+                "type": "underline"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "MCP Catalog",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      },
+                      {
+                        "type": "underline"
+                      }
+                    ]
+                  },
+                  {
+                    "type": "hardBreak"
+                  },
+                  {
+                    "type": "text",
+                    "text": "🟢 🎯 3.4 GA(Stable)"
+                  }
+                ]
+              },
+              {
+                "type": "bulletList",
+                "content": [
+                  {
+                    "type": "listItem",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Waiting on QE validation"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "MCP Deployment",
+                    "marks": [
+                      {
+                        "type": "strong"
+                      },
+                      {
+                        "type": "underline"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "bulletList",
+                "content": [
+                  {
+                    "type": "listItem",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "🟡 🎯 3.4 GA(Stable)"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "listItem",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "PRs are all in review – we are closing out on things"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "listItem",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "More testing is needed"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "listItem",
+                    "content": [
+                      {
+                        "type": "paragraph",
+                        "content": [
+                          {
+                            "type": "text",
+                            "text": "Yellow more-so on the quality concerns side (unknown unknowns)"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-932",
+      "linkedSummary": "Securely Connect Agents to Tools: MCP Connectivity",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-137",
+      "linkedSummary": "MCP Server Deployment with OpenShift AI",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-137",
+      "linkedSummary": "MCP Server Deployment with OpenShift AI",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1260",
+      "linkedSummary": "Gen AI Studio Playground: Merge Global + Namespace MCP Servers ",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-960",
+      "linkedSummary": "Integrate, Validate, and Certify MCP Servers (and ISVs) + Explore Integration with Model Registry - Cloned from RHAIRFE-437",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1306",
+      "linkedSummary": "Dev Preview - MCP Catalog: Pre-Canned MCP Servers Included Out-of-the-Box",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1123",
+      "linkedSummary": "Expanding AI Hub in RHOAI ",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1149",
+      "linkedSummary": "Document Best Practices for Deploying MCP Servers with OpenShift AI",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1260",
+      "linkedSummary": "Gen AI Studio Playground: Merge Global + Namespace MCP Servers ",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-138",
+      "linkedSummary": "MCP Registry – Centralized Governance",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1302",
+      "linkedSummary": "Gen AI Studio Playground: Merge Global + Namespace MCP Servers ",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-699",
+      "linkedSummary": "MCP Catalog – Enterprise Control of MCP Assets",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1302",
+      "linkedSummary": "Gen AI Studio Playground: Merge Global + Namespace MCP Servers ",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1303",
+      "linkedSummary": "MCP Catalog: Pre-Canned MCP Servers Included Out-of-the-Box",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-437",
+      "linkedSummary": "Integrate, Validate, and Certify MCP Servers (and ISVs) + Explore Integration with Model Registry",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHOAIUX-1238",
+      "linkedSummary": "MCP Catalog",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-44926",
+      "linkedSummary": "MCP Catalog Backend",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-294",
+      "linkedSummary": "MCP Registry – Centralized Governance",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "OCPSTRAT-2879",
+      "linkedSummary": "MCP lifecycle operator",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-44926",
+      "parentKey": "RHAISTRAT-1084",
+      "summary": "Add batch processing",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Person 281",
+      "components": [
+        "AI Hub"
+      ],
+      "labels": [
+        "3.4-candidate",
+        "ai-hub",
+        "mcp",
+        "mcp-catalog",
+        "rhoai-3.4"
+      ],
+      "storyPoints": 0,
+      "created": "2026-01-12T13:46:34.505+0000",
+      "updated": "2026-04-03T15:58:23.386+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-46608",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "Add OpenAPI schema for MCP Catalog API endpoints and API schema",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Gray Ward",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-01-20T19:16:34.868+0000",
+          "updated": "2026-02-19T11:09:38.715+0000",
+          "resolutionDate": "2026-02-19T11:09:38.669+0000"
+        },
+        {
+          "key": "RHOAIENG-46609",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "Implement database storage layer for MCP servers using ml_metadata Context tables",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-01-20T19:19:26.542+0000",
+          "updated": "2026-02-26T11:48:57.611+0000",
+          "resolutionDate": "2026-02-26T11:48:57.586+0000"
+        },
+        {
+          "key": "RHOAIENG-46610",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "Implement core YAML loading infrastructure for MCP servers",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Kerry Foster",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-01-20T19:24:48.887+0000",
+          "updated": "2026-03-04T16:37:08.072+0000",
+          "resolutionDate": "2026-03-04T16:37:08.015+0000"
+        },
+        {
+          "key": "RHOAIENG-46612",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "Add glob pattern-based filtering for MCP servers admin",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Kerry Foster",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-20T19:27:38.721+0000",
+          "updated": "2026-03-18T10:07:00.363+0000",
+          "resolutionDate": "2026-03-18T10:07:00.335+0000"
+        },
+        {
+          "key": "RHOAIENG-46613",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "Implement field-level merging of MCP sources from multiple configuration files",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Kerry Foster",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-20T19:30:03.295+0000",
+          "updated": "2026-03-13T10:37:33.753+0000",
+          "resolutionDate": "2026-03-13T10:37:33.731+0000"
+        },
+        {
+          "key": "RHOAIENG-46617",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "Extend catalog sources API to support both Model Catalog and MCP Catalog sources",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Gray Ward",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-20T20:09:43.106+0000",
+          "updated": "2026-03-09T15:49:24.546+0000",
+          "resolutionDate": "2026-03-09T15:49:24.521+0000"
+        },
+        {
+          "key": "RHOAIENG-46618",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "Implement server-side advanced filtering using SQL-like filter queries for MCP servers",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Gray Ward",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-01-20T20:12:05.377+0000",
+          "updated": "2026-03-10T10:41:54.051+0000",
+          "resolutionDate": "2026-03-10T10:41:54.021+0000"
+        },
+        {
+          "key": "RHOAIENG-46619",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "Add support for pre-defined named queries that can be referenced in API calls",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Kerry Foster",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-20T20:14:03.692+0000",
+          "updated": "2026-03-12T10:39:29.878+0000",
+          "resolutionDate": "2026-03-12T10:39:29.853+0000"
+        },
+        {
+          "key": "RHOAIENG-46621",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "Add support for remotely hosted MCP servers accessed via HTTP or SSE endpoints",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Kerry Foster",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-20T20:17:11.082+0000",
+          "updated": "2026-03-13T15:58:08.295+0000",
+          "resolutionDate": "2026-03-13T15:58:08.271+0000"
+        },
+        {
+          "key": "RHOAIENG-46622",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "Implement Model Registry-aligned custom properties",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-01-20T20:21:05.472+0000",
+          "updated": "2026-03-02T21:27:49.652+0000",
+          "resolutionDate": "2026-03-02T21:27:49.524+0000"
+        },
+        {
+          "key": "RHOAIENG-46623",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "Add license metadata with SPDX identifier support and display name transformation",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-01-20T20:23:41.051+0000",
+          "updated": "2026-03-16T13:20:28.215+0000",
+          "resolutionDate": "2026-03-16T13:20:26.760+0000"
+        },
+        {
+          "key": "RHOAIENG-46624",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "Add free-form keyword search across MCP server name, description, and provider fields",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Gray Ward",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-01-20T20:25:49.768+0000",
+          "updated": "2026-03-17T09:25:27.485+0000",
+          "resolutionDate": "2026-03-17T09:25:27.280+0000"
+        },
+        {
+          "key": "RHOAIENG-48980",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "Create Test Plan for MCP Catalog",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Thorne",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "QE_MR"
+          ],
+          "storyPoints": 5,
+          "created": "2026-02-09T10:08:06.939+0000",
+          "updated": "2026-02-11T14:24:18.996+0000",
+          "resolutionDate": "2026-02-10T15:21:50.262+0000"
+        },
+        {
+          "key": "RHOAIENG-51582",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "[testing] Validate core YAML loading infrastructure for MCP servers (RHOAIENG-46610)",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Thorne",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "QE_MR"
+          ],
+          "storyPoints": 5,
+          "created": "2026-03-03T11:19:39.357+0000",
+          "updated": "2026-03-12T16:33:11.563+0000",
+          "resolutionDate": "2026-03-06T15:44:38.312+0000"
+        },
+        {
+          "key": "RHOAIENG-51583",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "[testing] Validate catalog sources API with assetType support (RHOAIENG-46617)",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Thorne",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "QE_MR"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-03T11:20:02.249+0000",
+          "updated": "2026-03-09T17:04:02.593+0000",
+          "resolutionDate": "2026-03-09T17:04:02.575+0000"
+        },
+        {
+          "key": "RHOAIENG-51584",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "[testing] Validate server-side advanced filtering for MCP servers (RHOAIENG-46618)",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Thorne",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "QE_MR"
+          ],
+          "storyPoints": 5,
+          "created": "2026-03-03T11:20:06.663+0000",
+          "updated": "2026-03-13T15:47:38.975+0000",
+          "resolutionDate": "2026-03-13T15:47:38.957+0000"
+        },
+        {
+          "key": "RHOAIENG-51764",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "toolCount is 0 when not passing includeTools=true",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Ward",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-03-04T09:48:49.528+0000",
+          "updated": "2026-03-05T16:52:48.387+0000",
+          "resolutionDate": "2026-03-05T16:52:48.351+0000"
+        },
+        {
+          "key": "RHOAIENG-51765",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "tool name returned by api is {server_name}@{version}:{tool_name} ",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Foster",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-03-04T09:56:34.346+0000",
+          "updated": "2026-03-09T14:56:20.815+0000",
+          "resolutionDate": "2026-03-09T14:56:20.782+0000"
+        },
+        {
+          "key": "RHOAIENG-52247",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "Labels Endpoint Support for MCP Servers",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Gray Ward",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-03-06T18:59:56.917+0000",
+          "updated": "2026-03-19T13:43:00.591+0000",
+          "resolutionDate": "2026-03-19T13:43:00.568+0000"
+        },
+        {
+          "key": "RHOAIENG-52374",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "[testing] Validate field-level merging of MCP sources from multiple config files (RHOAIENG-46613)",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Thorne",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "QE_MR"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-09T16:39:26.889+0000",
+          "updated": "2026-03-13T11:02:46.837+0000",
+          "resolutionDate": "2026-03-13T11:02:34.365+0000"
+        },
+        {
+          "key": "RHOAIENG-52375",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "[testing] Validate pre-defined named queries for MCP servers API (RHOAIENG-46619)",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Thorne",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "QE_MR"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-09T16:39:30.006+0000",
+          "updated": "2026-03-13T15:47:49.632+0000",
+          "resolutionDate": "2026-03-13T15:47:49.616+0000"
+        },
+        {
+          "key": "RHOAIENG-52376",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "[testing] Validate remotely hosted MCP servers via HTTP/SSE endpoints (RHOAIENG-46621)",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Thorne",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "QE_MR"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-09T16:39:33.155+0000",
+          "updated": "2026-03-16T12:54:47.040+0000",
+          "resolutionDate": "2026-03-16T12:51:52.220+0000"
+        },
+        {
+          "key": "RHOAIENG-52377",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "[testing] Validate license metadata with SPDX identifier support (RHOAIENG-46623)",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Thorne",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "QE_MR"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-09T16:39:36.138+0000",
+          "updated": "2026-03-16T15:31:58.345+0000",
+          "resolutionDate": "2026-03-16T15:31:58.320+0000"
+        },
+        {
+          "key": "RHOAIENG-52378",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "[testing] Validate free-form keyword search for MCP servers (RHOAIENG-46624)",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Thorne",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "QE_MR"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-09T16:39:38.619+0000",
+          "updated": "2026-03-17T13:57:10.825+0000",
+          "resolutionDate": "2026-03-17T13:57:10.795+0000"
+        },
+        {
+          "key": "RHOAIENG-52379",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "[testing] Validate labels endpoint assetType support for MCP servers (RHOAIENG-52247)",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Thorne",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "QE_MR"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-09T16:39:41.753+0000",
+          "updated": "2026-03-19T10:17:30.401+0000",
+          "resolutionDate": "2026-03-19T10:17:30.371+0000"
+        },
+        {
+          "key": "RHOAIENG-52380",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "[testing] Validate glob pattern-based filtering for MCP servers (RHOAIENG-46612)",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Thorne",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "QE_MR"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-09T16:39:44.552+0000",
+          "updated": "2026-03-19T07:53:27.921+0000",
+          "resolutionDate": "2026-03-19T07:53:27.884+0000"
+        },
+        {
+          "key": "RHOAIENG-52381",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "[testing] Validate MCP catalog regression, security, and data validation (RHOAIENG-44926)",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Thorne",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "QE_MR"
+          ],
+          "storyPoints": 5,
+          "created": "2026-03-09T16:48:17.296+0000",
+          "updated": "2026-03-23T13:33:04.427+0000",
+          "resolutionDate": "2026-03-23T13:33:04.396+0000"
+        },
+        {
+          "key": "RHOAIENG-52447",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "MCP Catalog: filterQuery on 'name' searches composite name instead of base name",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Foster",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-03-10T10:22:52.029+0000",
+          "updated": "2026-03-16T09:56:53.223+0000",
+          "resolutionDate": "2026-03-16T09:56:52.270+0000"
+        },
+        {
+          "key": "RHOAIENG-52448",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "MCP Catalog: sortOrder ASC/DESC is inverted for MCP servers listing",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Foster",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-03-10T10:23:04.099+0000",
+          "updated": "2026-03-16T09:41:28.354+0000",
+          "resolutionDate": "2026-03-16T09:37:39.850+0000"
+        },
+        {
+          "key": "RHOAIENG-52453",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "[testing] Validate MCP server tools API endpoints (RHOAIENG-46610)",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Thorne",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "QE_MR"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-10T11:17:19.931+0000",
+          "updated": "2026-03-30T07:24:44.247+0000",
+          "resolutionDate": "2026-03-30T07:24:44.224+0000"
+        },
+        {
+          "key": "RHOAIENG-52539",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "MCP Catalog API silently accepts invalid inputs instead of returning 400 errors",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Foster",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-03-11T10:09:18.340+0000",
+          "updated": "2026-03-23T15:36:08.794+0000",
+          "resolutionDate": "2026-03-23T15:36:08.762+0000"
+        },
+        {
+          "key": "RHOAIENG-53987",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "Enable User-defined MCP Server Catalog support in operator",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-03-17T17:09:51.509+0000",
+          "updated": "2026-03-25T09:31:27.788+0000",
+          "resolutionDate": "2026-03-25T09:31:14.028+0000"
+        },
+        {
+          "key": "RHOAIENG-54108",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "MCP server list ignores sourceLabel filter parameter",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Kerry Foster",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-03-18T12:48:47.683+0000",
+          "updated": "2026-03-24T11:09:54.702+0000",
+          "resolutionDate": "2026-03-24T11:09:54.368+0000"
+        },
+        {
+          "key": "RHOAIENG-54119",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "MCP server tools lose access type and input parameters when loaded from YAML source files",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Kerry Foster",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-03-18T13:16:28.799+0000",
+          "updated": "2026-03-23T16:03:39.406+0000",
+          "resolutionDate": "2026-03-23T16:03:39.380+0000"
+        },
+        {
+          "key": "RHOAIENG-54413",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "Enhance MCPRuntimeMetadata with Kubernetes Prerequisites Metadata",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-03-19T19:31:51.709+0000",
+          "updated": "2026-03-26T14:10:05.685+0000",
+          "resolutionDate": "2026-03-26T14:10:05.293+0000"
+        },
+        {
+          "key": "RHOAIENG-54555",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "Model Catalog and MCP Server APIs accept invalid artifact URIs without validation",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Tate",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "ai-accelerated-fix",
+            "ai-fixable",
+            "ai-triaged"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-20T11:11:02.499+0000",
+          "updated": "2026-03-27T09:31:24.902+0000",
+          "resolutionDate": "2026-03-27T09:31:24.879+0000"
+        },
+        {
+          "key": "RHOAIENG-54579",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "Model Catalog NAME sorting uses internal prefixed context names instead of display names",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Kerry Foster",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T13:37:37.738+0000",
+          "updated": "2026-03-23T15:10:57.588+0000",
+          "resolutionDate": "2026-03-23T15:10:57.552+0000"
+        },
+        {
+          "key": "RHOAIENG-54715",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "MCPServer securityIndicators not populated in API responses when loaded from YAML catalog sources",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Kerry Foster",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-23T12:47:06.216+0000",
+          "updated": "2026-03-27T09:52:39.656+0000",
+          "resolutionDate": "2026-03-27T09:52:39.426+0000"
+        },
+        {
+          "key": "RHOAIENG-54874",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "[Testing] MCP Server Catalog ConfigMap support in operator (RHOAIENG-53987)",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Gray Thorne",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "QE_MR"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-24T09:30:14.927+0000",
+          "updated": "2026-03-25T13:14:52.554+0000",
+          "resolutionDate": "2026-03-25T13:14:52.526+0000"
+        },
+        {
+          "key": "RHOAIENG-54939",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "[Testing] RHOAIENG-54108 MCP server sourceLabel filter parameter",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Gray Thorne",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "QE_MR"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-24T10:34:39.690+0000",
+          "updated": "2026-03-25T09:24:17.078+0000",
+          "resolutionDate": "2026-03-25T09:24:17.048+0000"
+        },
+        {
+          "key": "RHOAIENG-55737",
+          "parentKey": "RHOAIENG-44926",
+          "summary": "toolLimit query parameter has no effect on MCP servers listing endpoint",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Ward",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-03-27T12:46:35.081+0000",
+          "updated": "2026-03-31T19:39:34.144+0000",
+          "resolutionDate": "2026-03-31T19:39:34.112+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-47518",
+      "parentKey": "RHAISTRAT-1084",
+      "summary": "Implement feature for module",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Critical",
+      "assignee": "Gray Ellis",
+      "components": [
+        "Documentation"
+      ],
+      "labels": [
+        "3.4-candidate",
+        "3.4-committed",
+        "ai-hub",
+        "mcp",
+        "mcp-catalog",
+        "needs-documentation",
+        "requires_architecture_review",
+        "rhoai-3.4"
+      ],
+      "storyPoints": 0,
+      "created": "2026-01-26T17:38:42.528+0000",
+      "updated": "2026-03-06T16:58:03.531+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-46119",
+          "parentKey": "RHOAIENG-47518",
+          "summary": "[ccs Spike] - Identify doc needs for MCP Server Catalog",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Merit Voss",
+          "components": [
+            "AI Hub",
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-19T12:01:41.606+0000",
+          "updated": "2026-02-26T11:07:10.775+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51120",
+          "parentKey": "RHOAIENG-47518",
+          "summary": "[ccs] Draft and review RN to support MCP Catalog DP in 3.4",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Merit Voss",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-02-26T11:10:56.737+0000",
+          "updated": "2026-04-06T17:12:26.802+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-48329",
+      "parentKey": "RHAISTRAT-1084",
+      "summary": "Fix concurrent access issue",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Person 228",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-area-mcp",
+        "dashboard-green-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-02T15:56:48.321+0000",
+      "updated": "2026-04-06T12:38:07.953+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50226",
+          "parentKey": "RHOAIENG-48329",
+          "summary": "BFF Layer, Types, Mocks & API Hooks",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Chang",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 5,
+          "created": "2026-02-19T10:40:48.215+0000",
+          "updated": "2026-03-10T08:35:48.782+0000",
+          "resolutionDate": "2026-03-09T21:21:00.314+0000"
+        },
+        {
+          "key": "RHOAIENG-50521",
+          "parentKey": "RHOAIENG-48329",
+          "summary": "Landing Page Layout and Routing - Upstream",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Park",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-23T11:03:11.547+0000",
+          "updated": "2026-03-09T15:33:29.364+0000",
+          "resolutionDate": "2026-03-09T14:41:22.730+0000"
+        },
+        {
+          "key": "RHOAIENG-50522",
+          "parentKey": "RHOAIENG-48329",
+          "summary": "Landing Page Routing & Feature Flag - Midstream",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Knox",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 2,
+          "created": "2026-02-23T11:11:02.855+0000",
+          "updated": "2026-03-10T11:33:12.186+0000",
+          "resolutionDate": "2026-03-10T11:33:12.162+0000"
+        },
+        {
+          "key": "RHOAIENG-50525",
+          "parentKey": "RHOAIENG-48329",
+          "summary": "Epic Signoffs",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Merit Chang",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp",
+            "dashboard-green-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-23T11:19:37.291+0000",
+          "updated": "2026-03-23T13:19:39.130+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-50530",
+          "parentKey": "RHOAIENG-48329",
+          "summary": "QA Verification for MCP catalog",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Normal",
+          "assignee": "Merit James",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-epic-verification"
+          ],
+          "storyPoints": 5,
+          "created": "2026-02-23T11:22:07.747+0000",
+          "updated": "2026-03-27T10:23:07.096+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-50531",
+          "parentKey": "RHOAIENG-48329",
+          "summary": "Left Sidebar Filters",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Park",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-23T11:32:25.787+0000",
+          "updated": "2026-03-19T09:55:04.845+0000",
+          "resolutionDate": "2026-03-19T09:55:04.821+0000"
+        },
+        {
+          "key": "RHOAIENG-50535",
+          "parentKey": "RHOAIENG-48329",
+          "summary": "Top Toolbar, Search, Cards Grid & Pagination",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Park",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 5,
+          "created": "2026-02-23T11:43:15.880+0000",
+          "updated": "2026-03-12T13:26:56.648+0000",
+          "resolutionDate": "2026-03-12T13:26:56.629+0000"
+        },
+        {
+          "key": "RHOAIENG-50537",
+          "parentKey": "RHOAIENG-48329",
+          "summary": "Details Page Layout & Navigation",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Thorne",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-23T12:12:31.001+0000",
+          "updated": "2026-03-09T21:17:41.694+0000",
+          "resolutionDate": "2026-03-09T21:17:41.661+0000"
+        },
+        {
+          "key": "RHOAIENG-50539",
+          "parentKey": "RHOAIENG-48329",
+          "summary": "Tools Card with Client-Side Filtering",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Knox",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-23T12:25:02.607+0000",
+          "updated": "2026-03-17T11:36:51.501+0000",
+          "resolutionDate": "2026-03-17T11:36:17.627+0000"
+        },
+        {
+          "key": "RHOAIENG-50540",
+          "parentKey": "RHOAIENG-48329",
+          "summary": "README card content",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Thorne",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 2,
+          "created": "2026-02-23T12:29:49.439+0000",
+          "updated": "2026-03-09T21:17:47.752+0000",
+          "resolutionDate": "2026-03-09T21:17:47.720+0000"
+        },
+        {
+          "key": "RHOAIENG-50544",
+          "parentKey": "RHOAIENG-48329",
+          "summary": "Connect BFF layer to actual backend API",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Chang",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-23T12:47:05.782+0000",
+          "updated": "2026-03-26T11:23:03.069+0000",
+          "resolutionDate": "2026-03-26T11:23:03.020+0000"
+        },
+        {
+          "key": "RHOAIENG-50545",
+          "parentKey": "RHOAIENG-48329",
+          "summary": "Microcopy review",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Fischer",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 2,
+          "created": "2026-02-23T12:50:30.948+0000",
+          "updated": "2026-03-17T17:37:19.364+0000",
+          "resolutionDate": "2026-03-17T17:37:19.339+0000"
+        },
+        {
+          "key": "RHOAIENG-52526",
+          "parentKey": "RHOAIENG-48329",
+          "summary": "Navigation order of MCP and other AI hub components",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Knox",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-11T04:41:32.320+0000",
+          "updated": "2026-03-12T08:18:06.906+0000",
+          "resolutionDate": "2026-03-12T08:18:06.886+0000"
+        },
+        {
+          "key": "RHOAIENG-53445",
+          "parentKey": "RHOAIENG-48329",
+          "summary": "Use Labels endpoint to show description for source labels",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Chang",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-16T13:30:34.056+0000",
+          "updated": "2026-03-23T10:54:45.408+0000",
+          "resolutionDate": "2026-03-23T10:54:45.383+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-49762",
+      "parentKey": "RHAISTRAT-1084",
+      "summary": "Fix memory leak",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Person 36",
+      "components": [
+        "AgentDev"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-13T13:40:20.014+0000",
+      "updated": "2026-03-03T21:02:09.323+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-51676",
+      "parentKey": "RHAISTRAT-1084",
+      "summary": "Implement feature for module",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Person 228",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-area-mcp",
+        "dashboard-green-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-04T05:31:32.344+0000",
+      "updated": "2026-04-06T12:40:00.259+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-51726",
+          "parentKey": "RHOAIENG-51676",
+          "summary": "Microcopy review",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Merit Thorne",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-04T08:38:06.653+0000",
+          "updated": "2026-04-06T15:30:37.967+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-51727",
+          "parentKey": "RHOAIENG-51676",
+          "summary": "QA Verification for MCP Server Deployment UI",
+          "type": "Story",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 5,
+          "created": "2026-03-04T08:40:32.325+0000",
+          "updated": "2026-03-23T13:59:31.355+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52637",
+          "parentKey": "RHOAIENG-51676",
+          "summary": "SPIKE: Test MCP Operator Install",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Merit Knox",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-11T13:31:20.459+0000",
+          "updated": "2026-03-23T12:55:00.054+0000",
+          "resolutionDate": "2026-03-23T12:55:00.020+0000"
+        },
+        {
+          "key": "RHOAIENG-52639",
+          "parentKey": "RHOAIENG-51676",
+          "summary": "SPIKE: Test K8s Basic-User Access to CRD Availability",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Merit Knox",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-11T13:42:06.166+0000",
+          "updated": "2026-03-23T12:55:43.274+0000",
+          "resolutionDate": "2026-03-23T12:55:43.238+0000"
+        },
+        {
+          "key": "RHOAIENG-52641",
+          "parentKey": "RHOAIENG-51676",
+          "summary": "SPIKE: Evaluate MCPServers for Commonality",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Gray Walsh",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-11T13:48:16.739+0000",
+          "updated": "2026-03-27T13:26:02.521+0000",
+          "resolutionDate": "2026-03-27T13:26:02.493+0000"
+        },
+        {
+          "key": "RHOAIENG-53377",
+          "parentKey": "RHOAIENG-51676",
+          "summary": "BFF: Mock endpoints for listing and deleting MCPServer deployments",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Knox",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-13T20:12:24.491+0000",
+          "updated": "2026-03-26T14:50:54.743+0000",
+          "resolutionDate": "2026-03-24T14:18:41.043+0000"
+        },
+        {
+          "key": "RHOAIENG-53378",
+          "parentKey": "RHOAIENG-51676",
+          "summary": "BFF: Real K8s API for CRUD - MCPServer deployments",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Chang",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-13T20:12:55.861+0000",
+          "updated": "2026-04-02T14:56:34.467+0000",
+          "resolutionDate": "2026-04-02T14:51:16.068+0000"
+        },
+        {
+          "key": "RHOAIENG-53379",
+          "parentKey": "RHOAIENG-51676",
+          "summary": "MCP Deployments list page and table",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Thorne",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-13T20:15:30.749+0000",
+          "updated": "2026-03-31T16:21:08.889+0000",
+          "resolutionDate": "2026-03-31T16:21:08.861+0000"
+        },
+        {
+          "key": "RHOAIENG-53380",
+          "parentKey": "RHOAIENG-51676",
+          "summary": "Delete MCP server deployment",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Fischer",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-13T20:16:19.119+0000",
+          "updated": "2026-04-01T12:51:16.615+0000",
+          "resolutionDate": "2026-04-01T12:51:16.588+0000"
+        },
+        {
+          "key": "RHOAIENG-53497",
+          "parentKey": "RHOAIENG-51676",
+          "summary": "Create BFF endpoint using extension to detect operator/CRD availability for deployments",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Merit Chang",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-16T15:40:28.002+0000",
+          "updated": "2026-03-26T11:22:20.610+0000",
+          "resolutionDate": "2026-03-26T11:22:20.365+0000"
+        },
+        {
+          "key": "RHOAIENG-54095",
+          "parentKey": "RHOAIENG-51676",
+          "summary": "[Spike] Navigation changes for models section in AI Hub",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Ingram",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-catalog",
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-18T09:37:31.558+0000",
+          "updated": "2026-03-19T20:45:22.087+0000",
+          "resolutionDate": "2026-03-19T18:38:26.111+0000"
+        },
+        {
+          "key": "RHOAIENG-54389",
+          "parentKey": "RHOAIENG-51676",
+          "summary": "Implement tab-route navigation extensions for AI Hub Models and MCP Servers pages",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Kerry Ingram",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp",
+            "dashboard-area-model-catalog",
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 5,
+          "created": "2026-03-19T18:28:19.441+0000",
+          "updated": "2026-04-01T17:51:18.050+0000",
+          "resolutionDate": "2026-04-01T17:51:18.023+0000"
+        },
+        {
+          "key": "RHOAIENG-54730",
+          "parentKey": "RHOAIENG-51676",
+          "summary": "Create mock BFF endpoints for POST/CREATE and PATCH for MCPServer Deployments",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Knox",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-23T12:59:39.736+0000",
+          "updated": "2026-03-30T12:56:22.762+0000",
+          "resolutionDate": "2026-03-30T12:56:22.741+0000"
+        },
+        {
+          "key": "RHOAIENG-54732",
+          "parentKey": "RHOAIENG-51676",
+          "summary": "Deployment modal for MCPServer",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Knox",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-23T13:02:52.660+0000",
+          "updated": "2026-04-06T09:29:10.515+0000",
+          "resolutionDate": "2026-04-06T09:29:10.490+0000"
+        },
+        {
+          "key": "RHOAIENG-54985",
+          "parentKey": "RHOAIENG-51676",
+          "summary": "Add runtimeMetadata field to McpServer type",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Chang",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-24T13:53:42.565+0000",
+          "updated": "2026-03-24T13:54:04.868+0000",
+          "resolutionDate": "2026-03-24T13:54:04.844+0000"
+        },
+        {
+          "key": "RHOAIENG-54986",
+          "parentKey": "RHOAIENG-51676",
+          "summary": "Create a new BFF endpoint to get the data to prefil deploy modal",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Chang",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-24T13:58:24.665+0000",
+          "updated": "2026-03-30T07:53:28.535+0000",
+          "resolutionDate": "2026-03-30T07:53:28.510+0000"
+        },
+        {
+          "key": "RHOAIENG-55563",
+          "parentKey": "RHOAIENG-51676",
+          "summary": "McpCatalogCard unit test fails in odh-dashboard — route changed by downstream PR without updating test",
+          "type": "Bug",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Minor",
+          "assignee": "Merit Knox",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-26T16:01:19.764+0000",
+          "updated": "2026-04-06T14:22:25.039+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55983",
+          "parentKey": "RHOAIENG-51676",
+          "summary": "MCP deployment types deleted and misplaced in upstream directory",
+          "type": "Bug",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Minor",
+          "assignee": "Kerry Ingram",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-30T14:47:00.846+0000",
+          "updated": "2026-03-30T14:48:04.981+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56331",
+          "parentKey": "RHOAIENG-51676",
+          "summary": "Add Cypress Test for the Delete MCP Server Deployment ",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Normal",
+          "assignee": "Frankie Fischer",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 2,
+          "created": "2026-04-01T13:51:32.693+0000",
+          "updated": "2026-04-02T14:56:07.545+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56355",
+          "parentKey": "RHOAIENG-51676",
+          "summary": "Add mcpCatalog to CRD and disable it by default",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Merit Knox",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 1,
+          "created": "2026-04-01T15:47:21.939+0000",
+          "updated": "2026-04-06T13:04:47.787+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56565",
+          "parentKey": "RHOAIENG-51676",
+          "summary": "Replace namespace selector with project selector",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Chang",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 2,
+          "created": "2026-04-02T14:55:00.679+0000",
+          "updated": "2026-04-02T14:56:59.985+0000",
+          "resolutionDate": "2026-04-02T14:56:59.941+0000"
+        },
+        {
+          "key": "RHOAIENG-56576",
+          "parentKey": "RHOAIENG-51676",
+          "summary": "MCP Deployment modal YAML should just take the values inside the spec object not spec itself",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Merit Thorne",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-mcp"
+          ],
+          "storyPoints": 2,
+          "created": "2026-04-02T16:14:29.351+0000",
+          "updated": "2026-04-03T17:58:53.033+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-52670",
+      "parentKey": "RHAISTRAT-1084",
+      "summary": "Implement feature for module",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Person 281",
+      "components": [
+        "AI Hub"
+      ],
+      "labels": [
+        "comp-integration"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-11T17:17:46.663+0000",
+      "updated": "2026-03-12T20:30:14.694+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-52671",
+          "parentKey": "RHOAIENG-52670",
+          "summary": "CLONE - Register new APIs",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T17:17:54.503+0000",
+          "updated": "2026-03-11T18:06:08.976+0000",
+          "resolutionDate": "2026-03-11T18:05:41.465+0000"
+        },
+        {
+          "key": "RHOAIENG-52672",
+          "parentKey": "RHOAIENG-52670",
+          "summary": "CLONE - Onboard to ODH Build - 2 week notice! ",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T17:17:54.511+0000",
+          "updated": "2026-03-11T18:01:53.215+0000",
+          "resolutionDate": "2026-03-11T18:01:53.177+0000"
+        },
+        {
+          "key": "RHOAIENG-52673",
+          "parentKey": "RHOAIENG-52670",
+          "summary": "CLONE - Designed for FIPS",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T17:17:54.513+0000",
+          "updated": "2026-03-11T18:03:25.606+0000",
+          "resolutionDate": "2026-03-11T17:58:27.731+0000"
+        },
+        {
+          "key": "RHOAIENG-52674",
+          "parentKey": "RHOAIENG-52670",
+          "summary": "CLONE - Multi-Architecture Support (Optional)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T17:17:54.511+0000",
+          "updated": "2026-03-11T18:03:40.869+0000",
+          "resolutionDate": "2026-03-11T17:59:29.635+0000"
+        },
+        {
+          "key": "RHOAIENG-52675",
+          "parentKey": "RHOAIENG-52670",
+          "summary": "CLONE - Add component to Jira",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T17:17:54.544+0000",
+          "updated": "2026-03-11T18:02:55.030+0000",
+          "resolutionDate": "2026-03-11T18:02:54.993+0000"
+        },
+        {
+          "key": "RHOAIENG-52676",
+          "parentKey": "RHOAIENG-52670",
+          "summary": "MCP Catalog - Feature signoff - DP",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Blocker",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "signoff"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-11T17:17:54.674+0000",
+          "updated": "2026-04-03T20:01:45.437+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52677",
+          "parentKey": "RHOAIENG-52670",
+          "summary": "CLONE - Integration with ODH operator - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "no-subteam"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-11T17:17:57.016+0000",
+          "updated": "2026-03-20T19:51:06.841+0000",
+          "resolutionDate": "2026-03-11T18:06:54.385+0000"
+        },
+        {
+          "key": "RHOAIENG-52678",
+          "parentKey": "RHOAIENG-52670",
+          "summary": "CLONE - Follow component integration steps",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T17:17:58.357+0000",
+          "updated": "2026-03-11T18:16:38.896+0000",
+          "resolutionDate": "2026-03-11T18:16:38.857+0000"
+        },
+        {
+          "key": "RHOAIENG-52679",
+          "parentKey": "RHOAIENG-52670",
+          "summary": "CLONE - Installation, usage, contact information",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T17:17:58.358+0000",
+          "updated": "2026-03-11T18:18:40.332+0000",
+          "resolutionDate": "2026-03-11T18:18:40.297+0000"
+        },
+        {
+          "key": "RHOAIENG-52680",
+          "parentKey": "RHOAIENG-52670",
+          "summary": "CLONE - Onboard to RHOAI Build - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T17:17:58.377+0000",
+          "updated": "2026-03-11T18:08:05.089+0000",
+          "resolutionDate": "2026-03-11T18:08:05.054+0000"
+        },
+        {
+          "key": "RHOAIENG-52681",
+          "parentKey": "RHOAIENG-52670",
+          "summary": "CLONE - Repository added to ODH/RHOAI",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T17:17:58.450+0000",
+          "updated": "2026-03-11T18:10:33.039+0000",
+          "resolutionDate": "2026-03-11T18:10:32.996+0000"
+        },
+        {
+          "key": "RHOAIENG-52682",
+          "parentKey": "RHOAIENG-52670",
+          "summary": "CLONE - Integration with RHOAI operator - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "no-subteam"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-11T17:17:58.638+0000",
+          "updated": "2026-03-20T19:51:08.772+0000",
+          "resolutionDate": "2026-03-11T18:08:54.250+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 6,
+    "totalIssues": 91,
+    "issuesByStatus": {
+      "New": 2,
+      "Closed": 39,
+      "Resolved": 40,
+      "Backlog": 2,
+      "In Progress": 2,
+      "Review": 6
+    },
+    "issuesByCategory": {
+      "Done": 79,
+      "In Progress": 8,
+      "To Do": 4
+    },
+    "totalStoryPoints": 206,
+    "storyPointsDone": 184,
+    "completionPct": 87,
+    "staleCount": 2,
+    "unassignedCount": 1,
+    "blockerCount": 19,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-44926",
+        "summary": "MCP Catalog Backend",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Onyx Pierce",
+        "totalIssues": 41,
+        "doneIssues": 41,
+        "progressPct": 100,
+        "storyPoints": 112,
+        "storyPointsDone": 112,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-47518",
+        "summary": "[ccs Epic] MCP Catalog – Enterprise Control of MCP Assets - DP 3.4",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Merit Voss",
+        "totalIssues": 2,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 5,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-48329",
+        "summary": "MCP Server Catalog UI",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Merit Chang",
+        "totalIssues": 14,
+        "doneIssues": 12,
+        "progressPct": 86,
+        "storyPoints": 40,
+        "storyPointsDone": 35,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-49762",
+        "summary": "MCP Lifecycle operator for MCP server deployment",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Gray Clay",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-51676",
+        "summary": "MCP Server Deployment UI",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Merit Chang",
+        "totalIssues": 22,
+        "doneIssues": 15,
+        "progressPct": 68,
+        "storyPoints": 49,
+        "storyPointsDone": 37,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-52670",
+        "summary": "Dev Preview - ODH and RHOAI Integrations [AI Hub/MCP Catalog]",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Onyx Pierce",
+        "totalIssues": 12,
+        "doneIssues": 11,
+        "progressPct": 92,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

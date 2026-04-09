@@ -1,0 +1,73 @@
+{
+  "key": "TEST1-1311",
+  "summary": "Fix authentication issue",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Frankie Frost",
+    "accountId": "5ff34ffc1051d10075800dd8"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate"
+  ],
+  "components": [
+    "Data Processing"
+  ],
+  "created": "2026-03-16T17:22:42.900+0000",
+  "updated": "2026-04-02T19:39:32.459+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1192",
+      "linkedSummary": "Build & Provide custom OOTB data connections for databases ",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIUX-2089",
+      "linkedSummary": "[Orient] YAML Templates for Common Connectors",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Incorporates",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-376",
+      "linkedSummary": "Generic Secret for Workbench Data Connections",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1586",
+      "linkedSummary": "Provide OOTB connections for Common Data Sources in UI",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

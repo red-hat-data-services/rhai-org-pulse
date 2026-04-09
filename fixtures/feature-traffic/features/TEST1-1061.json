@@ -1,0 +1,115 @@
+{
+  "key": "TEST1-1061",
+  "summary": "Add pagination support",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Merit Yates",
+    "accountId": "712020:52749cac-326b-47a7-8260-0103da5e3b52"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "confidence-yellow",
+    "core",
+    "requires_architecture_review"
+  ],
+  "components": [
+    "Documentation",
+    "Llama Stack Core"
+  ],
+  "created": "2025-12-17T14:40:55.924+0000",
+  "updated": "2026-04-03T17:29:55.665+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Change in scope due to "
+          },
+          {
+            "type": "inlineCard",
+            "attrs": {
+              "url": "https://redhat.atlassian.net/browse/RHAISTRAT-1373"
+            }
+          },
+          {
+            "type": "text",
+            "text": " . All the spec changes should be included in new CRD instead of introducing a new version. This will reduce the migrations end users would need to manage. Should be moved to same taregt version as RHAISTRAT-1373"
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1158",
+      "linkedSummary": "Improve Maintenance and Ownership of LLama Stack Demos",
+      "linkedStatus": "Release Pending"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-3597",
+      "linkedSummary": "Adapt test automation to llamastack.io/v1alpha2",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-2702",
+      "linkedSummary": "[ccs Epic] Document LlamaStackDistribution CRD update",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1435",
+      "linkedSummary": "Deprecate and remove the Safety/Shields API from Llama Stack distribution",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1436",
+      "linkedSummary": "Deprecate and remove the Evaluation API from Llama Stack distribution",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1373",
+      "linkedSummary": "CLONE - Rename Llama Stack to remove Meta trademark dependency ahead of GA",
+      "linkedStatus": "Refinement"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

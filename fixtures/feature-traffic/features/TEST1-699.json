@@ -1,0 +1,51 @@
+{
+  "key": "TEST1-699",
+  "summary": "Update access controls",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Blocker",
+  "assignee": {
+    "displayName": "Merit Zimmerman",
+    "accountId": "712020:3f08a403-b52d-4aa7-9212-9ee6dba8bc3b"
+  },
+  "fixVersions": [],
+  "labels": [
+    "ai-hub",
+    "tech-reviewed"
+  ],
+  "components": [],
+  "created": "2025-09-03T17:10:30.454+0000",
+  "updated": "2025-11-25T21:51:15.642+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-132",
+      "linkedSummary": "Index for the published Models on registry.redhat.io",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

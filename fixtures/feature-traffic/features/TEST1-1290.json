@@ -1,0 +1,139 @@
+{
+  "key": "TEST1-1290",
+  "summary": "Update access controls",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Frankie Dean",
+    "accountId": "712020:4d8ab7b7-4491-490a-b85b-8246663b9db3"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-arch-walkthrough",
+    "3.4-candidate",
+    "confidence-yellow",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AgentOps",
+    "Tooling Experience"
+  ],
+  "created": "2026-03-12T06:58:20.830+0000",
+  "updated": "2026-04-06T16:01:32.551+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Kagenti guidance provided to Tooling Experience team week of Mar 30. Refinement beginning. No implementation started yet — templates need kagenti-native artifacts (well-known.json, agentRuntime CRs, OCI labels) baked in. Depends on "
+          },
+          {
+            "type": "inlineCard",
+            "attrs": {
+              "url": "https://redhat.atlassian.net/browse/RHAISTRAT-1216#icft=RHAISTRAT-1216"
+            }
+          },
+          {
+            "type": "text",
+            "text": " (AgentRuntime) and "
+          },
+          {
+            "type": "inlineCard",
+            "attrs": {
+              "url": "https://redhat.atlassian.net/browse/RHAISTRAT-1213#icft=RHAISTRAT-1213"
+            }
+          },
+          {
+            "type": "text",
+            "text": " (AgentCard) which are now both in Review/Green. Feature moved to Review for 3.4 release tracking."
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1192",
+      "linkedSummary": "Bring your Langflow agent to RH AI ",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1298",
+      "linkedSummary": "Agent Template & Demo Discovery via Dashboard Learning Resources",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1345",
+      "linkedSummary": "Infuse Agent Deployment/Runtime (Kagenti) Best Practices into Agent Templates",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1026",
+      "linkedSummary": "From Dev to Prod: Deploying Llama Stack Agentic apps to Red Hat OpenShift AI",
+      "linkedStatus": "Rejection Pending"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1307",
+      "linkedSummary": "Bring your agent built on your laptop with CrewAI to RH AI",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1172",
+      "linkedSummary": "Bring your agent built on your laptop with Langchain & Langgraph SDK to RH AI ",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1174",
+      "linkedSummary": "Bring your agent built on your laptop with llama-index to RH AI ",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1376",
+      "linkedSummary": "Agent Template & Demo Discovery via Dashboard Learning Resources",
+      "linkedStatus": "Refinement"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

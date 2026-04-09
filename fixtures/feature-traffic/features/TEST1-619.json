@@ -1,0 +1,48 @@
+{
+  "key": "TEST1-619",
+  "summary": "Implement data cleanup",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "assignee": {
+    "displayName": "Kerry Kelley",
+    "accountId": "5e95b11a34f7b90c0fb347b3"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [],
+  "created": "2024-06-06T09:34:29.078+0000",
+  "updated": "2025-11-25T21:47:52.741+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-579",
+      "linkedSummary": "Support heterogeneous clusters",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

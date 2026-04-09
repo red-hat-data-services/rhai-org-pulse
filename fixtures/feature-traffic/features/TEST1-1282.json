@@ -1,0 +1,75 @@
+{
+  "key": "TEST1-1282",
+  "summary": "Update notification system",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Onyx Xu",
+    "accountId": "70121:f3dfd35d-9dbc-4225-9e98-a28612802cc7"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "llm-d"
+  ],
+  "components": [
+    "DevTestOps",
+    "llm-d"
+  ],
+  "created": "2026-03-08T17:21:39.490+0000",
+  "updated": "2026-03-30T11:14:59.589+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Informs",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1166",
+      "linkedSummary": "Distributed Inference with llm-d: 3.4 Summit 2026 deliverable Outcome",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1144",
+      "linkedSummary": "Functional Validation of llm-d on Disconnected Bare Metal OpenShift",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-46495",
+      "linkedSummary": "Implement llm-d CI configuration for disconnected cluster",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-55887",
+      "linkedSummary": "Perform manual tests for functional validation of llm-d on bare metal with 3.4 stable",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

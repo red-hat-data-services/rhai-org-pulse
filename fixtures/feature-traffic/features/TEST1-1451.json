@@ -1,0 +1,55 @@
+{
+  "key": "TEST1-1451",
+  "summary": "Fix authentication issue",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Gray Hale",
+    "accountId": "712020:71ea9177-1cf6-465a-bd4d-fe5c9924540d"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "rfe-creator-auto-revised",
+    "rfe-creator-autofix-rubric-pass",
+    "tool-calling"
+  ],
+  "components": [
+    "vLLM Runtime"
+  ],
+  "created": "2026-04-08T00:31:13.960+0000",
+  "updated": "2026-04-08T00:36:16.300+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1431",
+      "linkedSummary": "Rapid Tool-Calling Support for New Models",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

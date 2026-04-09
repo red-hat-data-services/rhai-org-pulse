@@ -1,0 +1,44 @@
+{
+  "key": "TEST1-1379",
+  "summary": "Fix bug in processing logic",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Blocker",
+  "assignee": {
+    "displayName": "Frankie Park",
+    "accountId": "5b335d1d2975df4c55ea6f83"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-committed"
+  ],
+  "components": [
+    "AI Core Platform"
+  ],
+  "created": "2026-03-23T06:10:02.014+0000",
+  "updated": "2026-03-23T18:56:19.635+0000",
+  "statusNotes": null,
+  "issueLinks": [],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

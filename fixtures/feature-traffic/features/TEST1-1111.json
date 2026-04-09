@@ -1,0 +1,71 @@
+{
+  "key": "TEST1-1111",
+  "summary": "Fix memory leak",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Kerry Palmer",
+    "accountId": "70121:60857a87-9351-4d38-bd27-75488f0f04de"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "Approved-RFE",
+    "confidence-yellow",
+    "needs-tech-review"
+  ],
+  "components": [
+    "AgentDev",
+    "Documentation",
+    "Llama Stack Core"
+  ],
+  "created": "2026-01-12T18:13:36.593+0000",
+  "updated": "2026-04-07T03:06:26.828+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1054",
+      "linkedSummary": "Tech-preview (readiness) for the responses API  - Cloned from RHAIRFE-1028",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1054",
+      "linkedSummary": "Tech-preview (readiness) for the responses API  - Cloned from RHAIRFE-1028",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1028",
+      "linkedSummary": "Tech-preview (readiness) for the responses API ",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

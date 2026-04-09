@@ -1,0 +1,124 @@
+{
+  "key": "TEST1-476",
+  "summary": "Update API endpoint",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "Documentation"
+  ],
+  "created": "2024-11-21T08:31:34.594+0000",
+  "updated": "2025-11-25T21:41:59.167+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-18878",
+      "linkedSummary": "Present Extended Kueue RBAC to Upstream WG Batch",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-16144",
+      "parentKey": "RHAISTRAT-476",
+      "summary": "Implement retry logic",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": "Kerry Vaughn",
+      "components": [
+        "Documentation",
+        "Workload Orchestration"
+      ],
+      "labels": [
+        "refined"
+      ],
+      "storyPoints": 3,
+      "created": "2024-11-22T18:17:25.723+0000",
+      "updated": "2026-03-22T15:54:40.073+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-16142",
+          "parentKey": "RHOAIENG-16144",
+          "summary": "Provide doc input for how to configure RBAC for Kueue and KFTO",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Workload Orchestration"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2024-11-22T18:10:24.207+0000",
+          "updated": "2025-07-24T15:44:11.249+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-16143",
+          "parentKey": "RHOAIENG-16144",
+          "summary": "[ccs] Distributed Workloads: User documentation on RBAC, Kueue, KFTO",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Frankie Finn",
+          "components": [
+            "Documentation",
+            "Workload Orchestration"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 3,
+          "created": "2024-11-22T18:14:16.479+0000",
+          "updated": "2026-03-22T16:05:24.119+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 2,
+    "issuesByStatus": {
+      "New": 2
+    },
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 2
+    },
+    "totalStoryPoints": 3,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 1,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-16144",
+        "summary": "[ccs Epic] Create RBAC documentation for Kueue, KFTO",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Frankie Finn",
+        "totalIssues": 2,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 3,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

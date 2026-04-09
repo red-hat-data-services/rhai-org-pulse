@@ -1,0 +1,78 @@
+{
+  "key": "TEST1-164",
+  "summary": "Implement data cleanup",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "assignee": {
+    "displayName": "Frankie Vaughn",
+    "accountId": "70121:8665986b-a71f-433a-ac17-6cdf48859866"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.Next-candidate",
+    "ai-studio",
+    "needs-tech-review",
+    "playground",
+    "should-do",
+    "tech-reviewed"
+  ],
+  "components": [
+    "Gen AI Studio"
+  ],
+  "created": "2025-11-03T14:41:41.133+0000",
+  "updated": "2026-03-18T19:06:48.837+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1046",
+      "linkedSummary": "[GA] AI Playground - RHOAI AI Hub UI to compare, evaluate, and test w/ Available Models/MCP Servers",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-799",
+      "linkedSummary": "[TP] AI Playground - RHOAI AI Hub UI to compare, evaluate, and test w/ Available Models/MCP Servers",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-334",
+      "linkedSummary": "Live Tracing & Basic Observability – Visualize real-time spans for chats/agents to debug latency & tool calls",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-811",
+      "linkedSummary": "Gen AI Studio - Playground: Add “Download Full Chat Transcript” Capability",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

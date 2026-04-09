@@ -1,0 +1,9 @@
+{
+  "team-tracker": true,
+  "org-roster": true,
+  "ai-impact": true,
+  "feature-traffic": true,
+  "release-analysis": true,
+  "allocation-tracker": true,
+  "upstream-pulse": true
+}

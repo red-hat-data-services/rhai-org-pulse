@@ -1,0 +1,139 @@
+{
+  "key": "TEST1-1440",
+  "summary": "Fix memory leak",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Frankie Flynn",
+    "accountId": "5e258328a7b9540e76f44821"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "aicp-team-crucible",
+    "confidence-yellow",
+    "needs-tech-review"
+  ],
+  "components": [
+    "AI Core Platform",
+    "AI Safety"
+  ],
+  "created": "2026-04-07T08:16:27.630+0000",
+  "updated": "2026-04-07T10:33:58.030+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1233",
+      "linkedSummary": " [DP] Provide Integration knobs for Guardrails with the MCP Gateway via the Trusty AI Operator",
+      "linkedStatus": "Review"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-50506",
+      "parentKey": "RHAISTRAT-1440",
+      "summary": "Fix concurrent access issue",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Normal",
+      "assignee": "Person 164",
+      "components": [
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-23T09:35:53.599+0000",
+      "updated": "2026-04-07T13:50:04.915+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-56969",
+          "parentKey": "RHOAIENG-50506",
+          "summary": "Scope out work to convert the plugins adapter to a BBR plugin",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Kerry James",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-07T13:45:38.700+0000",
+          "updated": "2026-04-07T13:47:05.545+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-52041",
+      "parentKey": "RHAISTRAT-1440",
+      "summary": "Fix race condition",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Normal",
+      "assignee": "Person 164",
+      "components": [
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-05T16:29:17.852+0000",
+      "updated": "2026-04-07T08:18:02.127+0000",
+      "issues": []
+    }
+  ],
+  "metrics": {
+    "totalEpics": 2,
+    "totalIssues": 1,
+    "issuesByStatus": {
+      "New": 1
+    },
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 1
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-50506",
+        "summary": "Integrate Kagenti Plugin Adapter into TrustyAI",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Kerry James",
+        "totalIssues": 1,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-52041",
+        "summary": "Understand Request Pathways from MCP Servers, Gateway, Plugin Adapter, and NeMo",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Kerry James",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

@@ -1,0 +1,148 @@
+{
+  "key": "TEST1-59",
+  "summary": "Fix validation issue",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Onyx Finn",
+    "accountId": "70121:5a9a760a-598b-49c2-af0e-60c52f76c598"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "confidence-red",
+    "rhoai-3.4"
+  ],
+  "components": [
+    "AgentDev",
+    "MLflow",
+    "Model Eval",
+    "UXD"
+  ],
+  "created": "2025-09-07T15:23:35.809+0000",
+  "updated": "2026-04-03T03:08:56.221+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-155",
+      "linkedSummary": "Make Agents Trustworthy: Enterprise AgentOps Lifecycle",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-792",
+      "linkedSummary": "[lm-eval] Implement an initial Minimum Viable Product User Interface for LM Evaluation",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1211",
+      "linkedSummary": "[Summit] Bring Your Own Agent (BYOA) - AgentOps Journey for summit",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-124",
+      "linkedSummary": "Generate synthetic data for evaluating RAG systems",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1125",
+      "linkedSummary": "[Outcome] Generate Evaluation Datasets from LLM Traces",
+      "linkedStatus": "Refinement"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-43",
+      "linkedSummary": "(feat) RAGAS Eval Provider for Llama Stack (Inline and Remote via KFP)",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-240",
+      "linkedSummary": "RAGAS Eval Provider for Llama Stack (Inline and Remote via KFP)",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIUX-1466",
+      "linkedSummary": "[Explore] Unified user experience of Benchmark/Evaluation",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-66",
+      "linkedSummary": "Extend TrustyAI with RAGAS Framework Support",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-264",
+      "linkedSummary": "Evaluation & Experimentation Platform for Agentic AI Applications",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-298",
+      "linkedSummary": "Observability/Tracing for Agentic AI Applications",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-86",
+      "linkedSummary": "Generate synthetic data for evaluating RAG systems",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1377",
+      "linkedSummary": "(MVP) IBM CLEAR Adapter for EvalHub — Agentic AI Evaluation via MLflow Traces (DP)",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1367",
+      "linkedSummary": "(feat)(MVP) IBM CLEAR Adapter for EvalHub — Agentic AI Evaluation via MLflow Traces (DP)",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

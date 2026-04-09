@@ -1,0 +1,804 @@
+{
+  "key": "TEST1-44",
+  "summary": "Update API endpoint",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Kerry Kane",
+    "accountId": "70121:7153e3d8-9e27-49e4-bcb2-2d2fae23e0e5"
+  },
+  "fixVersions": [],
+  "labels": [
+    "GPU-as-a-Service",
+    "fine-tuning"
+  ],
+  "components": [
+    "Documentation",
+    "Fine Tuning",
+    "Training Hub"
+  ],
+  "created": "2025-08-27T14:51:08.417+0000",
+  "updated": "2026-03-24T01:57:09.925+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "18/3/2026"
+          },
+          {
+            "type": "hardBreak"
+          },
+          {
+            "type": "text",
+            "text": "Status: Green"
+          },
+          {
+            "type": "hardBreak"
+          },
+          {
+            "type": "text",
+            "text": "This is complete, just need to follow on with a demo. The EPIC linked is resolved."
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-45",
+      "linkedSummary": "Productize Continual Post Training for Instruct Models",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-218",
+      "linkedSummary": "Build/Update runtime container image for KF Trainer",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Incorporates",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-31786",
+      "linkedSummary": "Make training-cuda buildable on arm64",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-2436",
+      "linkedSummary": "Update workbench images to RHAIBI 3.3",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-35212",
+      "parentKey": "RHAISTRAT-44",
+      "summary": "Update API endpoint",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Kerry Hayes",
+      "components": [
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-10-01T09:16:19.779+0000",
+      "updated": "2026-03-06T14:52:14.828+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-35246",
+          "parentKey": "RHOAIENG-35212",
+          "summary": "[ccs Spike] Identify the documentation for the Universal Image for Kubeflow Trainer V2",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Oates",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-10-01T09:29:20.909+0000",
+          "updated": "2026-01-21T18:50:53.491+0000",
+          "resolutionDate": "2026-01-21T18:50:53.442+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-35648",
+      "parentKey": "RHAISTRAT-44",
+      "summary": "Implement search feature",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Person 300",
+      "components": [
+        "Kubeflow Unified SDK"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-10-08T13:55:54.921+0000",
+      "updated": "2026-03-18T08:58:46.710+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-33860",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "MUST meet designed for FIPS",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Adler",
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 3,
+          "created": "2025-09-09T12:41:17.724+0000",
+          "updated": "2026-03-18T08:53:14.488+0000",
+          "resolutionDate": "2026-03-18T08:46:56.300+0000"
+        },
+        {
+          "key": "RHOAIENG-34069",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "[Spike] Adding Image to Workbench using Image Stream",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Cole",
+          "components": [
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 5,
+          "created": "2025-09-12T06:44:28.838+0000",
+          "updated": "2025-11-18T11:53:22.700+0000",
+          "resolutionDate": "2025-11-18T11:53:22.680+0000"
+        },
+        {
+          "key": "RHOAIENG-34708",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "[Spike] Initial Wheel Building with AIPCC Tooling",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Cole",
+          "components": [
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 5,
+          "created": "2025-09-22T12:55:03.690+0000",
+          "updated": "2026-01-06T07:10:26.685+0000",
+          "resolutionDate": "2026-01-06T07:10:26.647+0000"
+        },
+        {
+          "key": "RHOAIENG-34709",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "[Spike] Initial Universal Image Building with unified SDK",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Gray Cole",
+          "components": [
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 5,
+          "created": "2025-09-22T12:57:50.358+0000",
+          "updated": "2025-10-08T13:58:14.736+0000",
+          "resolutionDate": "2025-10-07T13:03:52.937+0000"
+        },
+        {
+          "key": "RHOAIENG-35755",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "Create a JIRA with all python dependencies for AIPCC",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Cole",
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-10-09T16:38:58.180+0000",
+          "updated": "2025-10-13T15:08:25.275+0000",
+          "resolutionDate": "2025-10-13T15:07:56.772+0000"
+        },
+        {
+          "key": "RHOAIENG-36149",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "Create initial POC ARM based universal image ",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-10-15T09:16:10.431+0000",
+          "updated": "2026-01-05T22:34:26.518+0000",
+          "resolutionDate": "2026-01-05T22:34:26.488+0000"
+        },
+        {
+          "key": "RHOAIENG-36693",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "[SPIKE] Initial ROCm Investigate for universal image",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 5,
+          "created": "2025-10-19T20:23:39.251+0000",
+          "updated": "2026-01-05T10:26:36.408+0000",
+          "resolutionDate": "2026-01-05T10:26:36.372+0000"
+        },
+        {
+          "key": "RHOAIENG-36697",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "Verify the correct python version is used in the final image",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-10-20T09:44:19.484+0000",
+          "updated": "2025-11-18T14:29:24.422+0000",
+          "resolutionDate": "2025-11-18T14:29:24.404+0000"
+        },
+        {
+          "key": "RHOAIENG-36701",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "Determine ARM dependency requirements for universal image",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 5,
+          "created": "2025-10-20T10:41:02.287+0000",
+          "updated": "2026-01-07T22:29:47.645+0000",
+          "resolutionDate": "2026-01-07T22:29:47.615+0000"
+        },
+        {
+          "key": "RHOAIENG-36914",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "Build Unified SDK AIPCC Wheel from midstream repo ",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 5,
+          "created": "2025-10-22T08:27:12.215+0000",
+          "updated": "2025-12-02T10:55:04.354+0000",
+          "resolutionDate": "2025-12-02T10:55:04.317+0000"
+        },
+        {
+          "key": "RHOAIENG-37787",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "Create manifest automation for creation of Images Streams",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Kerry Adler",
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 5,
+          "created": "2025-11-03T08:42:27.357+0000",
+          "updated": "2026-03-18T08:44:14.645+0000",
+          "resolutionDate": "2026-03-18T08:44:14.576+0000"
+        },
+        {
+          "key": "RHOAIENG-37814",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "Update Universal Image to include Pipeline Runtime Dependencies",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Cole",
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 0,
+          "created": "2025-11-03T09:12:40.049+0000",
+          "updated": "2025-11-18T14:25:48.918+0000",
+          "resolutionDate": "2025-11-18T14:25:48.900+0000"
+        },
+        {
+          "key": "RHOAIENG-37815",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "[spike] Verify Arm Image as a Training Runtime.",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Merit Archer",
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 5,
+          "created": "2025-11-03T09:19:06.912+0000",
+          "updated": "2025-11-21T14:26:10.292+0000",
+          "resolutionDate": "2025-11-21T14:26:10.256+0000"
+        },
+        {
+          "key": "RHOAIENG-37816",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "Add Midstream universal Cuda image",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Cole",
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 5,
+          "created": "2025-11-03T09:25:16.168+0000",
+          "updated": "2025-11-18T10:37:52.895+0000",
+          "resolutionDate": "2025-11-18T10:37:52.875+0000"
+        },
+        {
+          "key": "RHOAIENG-37819",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "Add midstream universal rocM image",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Adler",
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 5,
+          "created": "2025-11-03T09:34:17.872+0000",
+          "updated": "2025-12-15T08:21:47.848+0000",
+          "resolutionDate": "2025-12-15T08:21:47.825+0000"
+        },
+        {
+          "key": "RHOAIENG-38141",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "Create Konflux build for midstream odh cuda universal image",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Cole",
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 5,
+          "created": "2025-11-06T10:30:18.326+0000",
+          "updated": "2025-11-18T11:43:54.193+0000",
+          "resolutionDate": "2025-11-12T10:29:11.951+0000"
+        },
+        {
+          "key": "RHOAIENG-38353",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "Mellanox rpms built from source",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Adler",
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 5,
+          "created": "2025-11-09T18:57:27.235+0000",
+          "updated": "2026-02-12T09:08:18.499+0000",
+          "resolutionDate": "2026-02-12T09:08:18.480+0000"
+        },
+        {
+          "key": "RHOAIENG-39082",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "Onboard universal image CUDA x86 and ROCm to downstream",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Cole",
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 5,
+          "created": "2025-11-18T13:18:35.107+0000",
+          "updated": "2026-02-04T11:57:44.469+0000",
+          "resolutionDate": "2026-02-04T11:57:44.451+0000"
+        },
+        {
+          "key": "RHOAIENG-39329",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "Refactor odh universal image Dockerfile and related files to support AIPCC and Hermetic builds",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Adler",
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 5,
+          "created": "2025-11-20T14:50:34.131+0000",
+          "updated": "2025-11-27T10:33:15.108+0000",
+          "resolutionDate": "2025-11-27T10:33:15.074+0000"
+        },
+        {
+          "key": "RHOAIENG-39337",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "Sanity check all AIPCC dependencies are in their staging environment for training hub 0.3.0 and universal image",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 0,
+          "created": "2025-11-20T16:23:24.501+0000",
+          "updated": "2025-12-01T14:03:20.790+0000",
+          "resolutionDate": "2025-11-24T14:49:02.388+0000"
+        },
+        {
+          "key": "RHOAIENG-41340",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "Tidy up universal image folder and konflux config ",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Adler",
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 2,
+          "created": "2025-12-04T13:09:15.358+0000",
+          "updated": "2026-02-16T09:48:39.595+0000",
+          "resolutionDate": "2026-02-16T09:48:39.574+0000"
+        },
+        {
+          "key": "RHOAIENG-41957",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "Move universal image base image to self managed base image ",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Adler",
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 5,
+          "created": "2025-12-15T08:29:42.419+0000",
+          "updated": "2025-12-17T10:40:12.155+0000",
+          "resolutionDate": "2025-12-17T10:40:12.127+0000"
+        },
+        {
+          "key": "RHOAIENG-43407",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "[Spike] Bump glob dependency to 11.1.0.",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Adler",
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 5,
+          "created": "2026-01-05T15:59:26.396+0000",
+          "updated": "2026-01-27T09:53:07.501+0000",
+          "resolutionDate": "2026-01-27T09:53:07.470+0000"
+        },
+        {
+          "key": "RHOAIENG-43483",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "Update Runtime Manifests for reference universal image for 3.3",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Adler",
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-06T07:13:12.168+0000",
+          "updated": "2026-01-16T15:23:27.272+0000",
+          "resolutionDate": "2026-01-16T15:23:27.236+0000"
+        },
+        {
+          "key": "RHOAIENG-43581",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "Universal image tidy ",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Adler",
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-06T16:27:56.010+0000",
+          "updated": "2026-01-19T14:15:44.161+0000",
+          "resolutionDate": "2026-01-19T14:15:44.128+0000"
+        },
+        {
+          "key": "RHOAIENG-45299",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "Product Definitions for 3.4 ea2 runtimes images",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Cole",
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 2,
+          "created": "2026-01-13T15:05:05.450+0000",
+          "updated": "2026-03-10T10:39:33.655+0000",
+          "resolutionDate": "2026-03-10T10:39:33.614+0000"
+        },
+        {
+          "key": "RHOAIENG-47613",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "Universal images for 3.4 ea2",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Adler",
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 5,
+          "created": "2026-01-27T10:05:40.197+0000",
+          "updated": "2026-03-16T08:43:36.333+0000",
+          "resolutionDate": "2026-03-16T08:43:36.307+0000"
+        },
+        {
+          "key": "RHOAIENG-47615",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "Document the process of releasing new images",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Adler",
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 2,
+          "created": "2026-01-27T10:10:36.704+0000",
+          "updated": "2026-02-16T14:06:25.860+0000",
+          "resolutionDate": "2026-02-16T09:50:16.061+0000"
+        },
+        {
+          "key": "RHOAIENG-47634",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "Universal image hermetic builds",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Adler",
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 3,
+          "created": "2026-01-27T10:19:56.735+0000",
+          "updated": "2026-03-16T08:43:42.400+0000",
+          "resolutionDate": "2026-03-16T08:43:42.372+0000"
+        },
+        {
+          "key": "RHOAIENG-48344",
+          "parentKey": "RHOAIENG-35648",
+          "summary": "Document universal image",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Fine Tuning",
+            "Kubeflow Unified SDK"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-02T19:37:32.297+0000",
+          "updated": "2026-02-02T19:43:59.858+0000",
+          "resolutionDate": "2026-02-02T19:43:59.840+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 2,
+    "totalIssues": 31,
+    "issuesByStatus": {
+      "Resolved": 13,
+      "Closed": 18
+    },
+    "issuesByCategory": {
+      "Done": 31,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 100,
+    "storyPointsDone": 100,
+    "completionPct": 100,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "GREEN",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-35212",
+        "summary": "[ccs Epic] Document the Universal Image for Kubeflow Trainer V2",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Onyx Oates",
+        "totalIssues": 1,
+        "doneIssues": 1,
+        "progressPct": 100,
+        "storyPoints": 3,
+        "storyPointsDone": 3,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-35648",
+        "summary": "Universal Image for Kubeflow Trainer v2 and Training Hub ",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Gray Cole",
+        "totalIssues": 30,
+        "doneIssues": 30,
+        "progressPct": 100,
+        "storyPoints": 97,
+        "storyPointsDone": 97,
+        "health": "GREEN"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

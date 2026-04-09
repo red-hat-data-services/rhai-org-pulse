@@ -1,0 +1,62 @@
+{
+  "key": "TEST1-974",
+  "summary": "Add monitoring metrics",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Gray Stone",
+    "accountId": "712020:65dba4d0-95ce-4e34-a3fc-a4e496d43aed"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "Approved-RFE",
+    "tech-reviewed"
+  ],
+  "components": [
+    "Documentation",
+    "SDG"
+  ],
+  "created": "2025-12-09T04:53:52.532+0000",
+  "updated": "2026-04-07T08:05:15.631+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-775",
+      "linkedSummary": "Quality-Hardened Multilingual Flow + Knowledge Notebook (SDG Hub)",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Causality",
+      "direction": "outward",
+      "linkedKey": "RHAIENG-3303",
+      "linkedSummary": "Create and validate multilingual knowledge flow",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

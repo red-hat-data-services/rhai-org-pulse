@@ -1,0 +1,237 @@
+{
+  "key": "TEST1-696",
+  "summary": "Implement data cleanup",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Kerry Palmer",
+    "accountId": "70121:60857a87-9351-4d38-bd27-75488f0f04de"
+  },
+  "fixVersions": [],
+  "labels": [
+    "data",
+    "needs-doc",
+    "rhoai-3.0",
+    "should-have"
+  ],
+  "components": [
+    "Documentation",
+    "Model Eval",
+    "Monitoring"
+  ],
+  "created": "2025-04-15T08:49:26.498+0000",
+  "updated": "2026-03-05T16:21:05.767+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-398",
+      "linkedSummary": "Instrument TrustyAI Guardrails to Inform Decision Making",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Account",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-24450",
+      "linkedSummary": "SPIKE: Explore how to instrument TrustyAI (LMEval/Guardrails)  to Inform Decision Making",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-657",
+      "linkedSummary": "Instrument TrustyAI LM-Eval to Inform Decision Making",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Account",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-663",
+      "linkedSummary": "Include TrustyAI Guardrailing and Eval metrics inside the customer monitoring platform",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Cloners",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-204",
+      "linkedSummary": "Instrument TrustyAI LM-Eval to Inform Decision Making",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-28870",
+      "parentKey": "RHAISTRAT-696",
+      "summary": "Implement feature for module",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Person 161",
+      "components": [
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-07-03T13:55:49.340+0000",
+      "updated": "2025-08-07T15:22:37.162+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-28872",
+          "parentKey": "RHOAIENG-28870",
+          "summary": "Add prometheus metrics to trustyai-service-operator ",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Flynn",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-07-03T13:56:54.736+0000",
+          "updated": "2025-07-21T14:16:14.146+0000",
+          "resolutionDate": "2025-07-21T14:16:14.123+0000"
+        },
+        {
+          "key": "RHOAIENG-28873",
+          "parentKey": "RHOAIENG-28870",
+          "summary": "Add LM-Eval usage metrics",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Flynn",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-07-03T13:57:07.602+0000",
+          "updated": "2025-08-07T15:22:39.210+0000",
+          "resolutionDate": "2025-08-07T15:21:59.768+0000"
+        },
+        {
+          "key": "RHOAIENG-31828",
+          "parentKey": "RHOAIENG-28870",
+          "summary": "[Validation] Add LM-Eval usage metrics",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Frankie Flynn",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-08-07T15:22:37.089+0000",
+          "updated": "2025-08-07T15:22:39.195+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-31780",
+      "parentKey": "RHAISTRAT-696",
+      "summary": "Update documentation",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-08-07T11:52:52.557+0000",
+      "updated": "2025-11-24T13:45:05.692+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-39609",
+      "parentKey": "RHAISTRAT-696",
+      "summary": "Fix race condition",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Frankie Jensen",
+      "components": [
+        "AI Evaluations",
+        "AI Safety",
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-11-24T13:45:03.240+0000",
+      "updated": "2025-12-11T00:30:34.355+0000",
+      "issues": []
+    }
+  ],
+  "metrics": {
+    "totalEpics": 3,
+    "totalIssues": 3,
+    "issuesByStatus": {
+      "Resolved": 2,
+      "New": 1
+    },
+    "issuesByCategory": {
+      "Done": 2,
+      "In Progress": 0,
+      "To Do": 1
+    },
+    "totalStoryPoints": 9,
+    "storyPointsDone": 6,
+    "completionPct": 67,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-28870",
+        "summary": "Instrument LM-Eval to inform decision making",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Frankie Flynn",
+        "totalIssues": 3,
+        "doneIssues": 2,
+        "progressPct": 67,
+        "storyPoints": 9,
+        "storyPointsDone": 6,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-31780",
+        "summary": "[QE] Instrument LM-Eval to inform decision making",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-39609",
+        "summary": "[Docs] Instrument LM-Eval to inform decision making",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Gray Rowe",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

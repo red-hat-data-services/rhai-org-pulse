@@ -1,0 +1,89 @@
+{
+  "key": "TEST1-1230",
+  "summary": "Optimize database queries",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Kerry Palmer",
+    "accountId": "70121:60857a87-9351-4d38-bd27-75488f0f04de"
+  },
+  "fixVersions": [],
+  "labels": [
+    "RAG",
+    "mid-term",
+    "needs-tech-review"
+  ],
+  "components": [
+    "RAG"
+  ],
+  "created": "2026-02-21T05:55:31.500+0000",
+  "updated": "2026-02-27T08:37:12.140+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-192",
+      "linkedSummary": "Add OpenAI-Compliant authorization Parameter for MCP Tools in Responses API",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1247",
+      "linkedSummary": "Support Multi-Client Knowledge Context Isolation for AI Interactions (RAG)",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-351",
+      "linkedSummary": "Add OpenAI-Compliant authorization Parameter for MCP Tools in Responses API",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-273",
+      "linkedSummary": "Implement RAG Security and Access Control for LLama Stack ",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-263",
+      "linkedSummary": "Support Multi-Client Knowledge Context Isolation for AI Interactions (RAG)",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Duplicate",
+      "direction": "inward",
+      "linkedKey": "RHOAIRFE-701",
+      "linkedSummary": "Implement RAG Security and Access Control for LLama Stack ",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

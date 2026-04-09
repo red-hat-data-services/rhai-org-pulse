@@ -1,0 +1,282 @@
+{
+  "key": "TEST1-405",
+  "summary": "Update access controls",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Merit Udall",
+    "accountId": "70121:5e822225-2e64-4b3f-a491-76b55b3d07b1"
+  },
+  "fixVersions": [],
+  "labels": [
+    "aicp-team-forge"
+  ],
+  "components": [
+    "AI Core Platform"
+  ],
+  "created": "2025-09-26T15:10:17.369+0000",
+  "updated": "2026-03-23T13:47:12.241+0000",
+  "statusNotes": null,
+  "issueLinks": [],
+  "epics": [
+    {
+      "key": "TEST2-35060",
+      "parentKey": "RHAISTRAT-405",
+      "summary": "Fix timezone handling",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Normal",
+      "assignee": "Person 261",
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [
+        "aicp-team-forge"
+      ],
+      "storyPoints": 0,
+      "created": "2025-09-29T11:51:06.329+0000",
+      "updated": "2026-03-05T12:24:37.079+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-47431",
+          "parentKey": "RHOAIENG-35060",
+          "summary": "Update all onboarding tasks",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Normal",
+          "assignee": "Merit Udall",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-forge"
+          ],
+          "storyPoints": 5,
+          "created": "2026-01-26T08:38:43.281+0000",
+          "updated": "2026-03-30T19:30:29.361+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-47432",
+          "parentKey": "RHOAIENG-35060",
+          "summary": "Refeed NotebookLM with updated tasks",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-forge"
+          ],
+          "storyPoints": 2,
+          "created": "2026-01-26T08:39:17.646+0000",
+          "updated": "2026-03-26T12:59:23.642+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-35061",
+      "parentKey": "RHAISTRAT-405",
+      "summary": "Implement webhook handler",
+      "status": "Backlog",
+      "statusCategory": "To Do",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [
+        "aicp-team-forge"
+      ],
+      "storyPoints": 0,
+      "created": "2025-09-29T12:19:32.615+0000",
+      "updated": "2025-11-25T17:26:20.918+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-35062",
+          "parentKey": "RHOAIENG-35061",
+          "summary": "Add DfFIPS document to NotebookLM and generate steps to implement",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-forge"
+          ],
+          "storyPoints": 0,
+          "created": "2025-09-29T12:26:07.869+0000",
+          "updated": "2026-02-13T21:26:16.906+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-35113",
+          "parentKey": "RHOAIENG-35061",
+          "summary": "Start AI automation",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-forge"
+          ],
+          "storyPoints": 0,
+          "created": "2025-09-30T12:19:41.104+0000",
+          "updated": "2025-12-03T09:32:28.956+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-35082",
+      "parentKey": "RHAISTRAT-405",
+      "summary": "Fix sorting order",
+      "status": "Backlog",
+      "statusCategory": "To Do",
+      "priority": "Normal",
+      "assignee": null,
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [
+        "aicp-team-forge"
+      ],
+      "storyPoints": 0,
+      "created": "2025-09-29T16:59:03.910+0000",
+      "updated": "2025-11-25T17:26:42.442+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-47429",
+      "parentKey": "RHAISTRAT-405",
+      "summary": "Implement search feature",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Person 261",
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [
+        "aicp-team-forge"
+      ],
+      "storyPoints": 0,
+      "created": "2026-01-26T08:34:01.993+0000",
+      "updated": "2026-02-03T11:23:41.786+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-47430",
+          "parentKey": "RHOAIENG-47429",
+          "summary": "Compile a NotebookLM with collected information from all onboarding jira tasks",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Merit Udall",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-forge"
+          ],
+          "storyPoints": 3,
+          "created": "2026-01-26T08:36:20.668+0000",
+          "updated": "2026-01-29T12:35:29.516+0000",
+          "resolutionDate": "2026-01-29T12:35:29.478+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 4,
+    "totalIssues": 5,
+    "issuesByStatus": {
+      "Backlog": 2,
+      "New": 1,
+      "Review": 1,
+      "Resolved": 1
+    },
+    "issuesByCategory": {
+      "Done": 1,
+      "In Progress": 1,
+      "To Do": 3
+    },
+    "totalStoryPoints": 10,
+    "storyPointsDone": 3,
+    "completionPct": 20,
+    "staleCount": 0,
+    "unassignedCount": 3,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-35060",
+        "summary": "Phase 2: Document specific steps for each issue in the templates",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Merit Udall",
+        "totalIssues": 2,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 7,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-35061",
+        "summary": "Automate DfFIPS check",
+        "status": "Backlog",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 2,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-35082",
+        "summary": "Decide where to store the output of the automation",
+        "status": "Backlog",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-47429",
+        "summary": " Phase 1: Capture current state in NotebookLM",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Merit Udall",
+        "totalIssues": 1,
+        "doneIssues": 1,
+        "progressPct": 100,
+        "storyPoints": 3,
+        "storyPointsDone": 3,
+        "health": "GREEN"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

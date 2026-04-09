@@ -1,0 +1,64 @@
+{
+  "key": "TEST1-64",
+  "summary": "Update access controls",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Gray Day",
+    "accountId": "712020:a8b965fb-1129-4541-8501-10ba2e01c8fd"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.2-candidate",
+    "RAG",
+    "agentic",
+    "experience",
+    "watsonx.ai"
+  ],
+  "components": [
+    "RAG",
+    "RAG + Vector DB"
+  ],
+  "created": "2025-09-08T15:29:48.826+0000",
+  "updated": "2025-12-04T19:06:16.275+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-150",
+      "linkedSummary": "Prompt Engineering & Management  - Embed MLFlow UI ",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-377",
+      "linkedSummary": "Streamlined Prompt Management with Llama Stack Responses API",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "key": "TEST1-1247",
+  "summary": "Update API endpoint",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Gray Day",
+    "accountId": "712020:a8b965fb-1129-4541-8501-10ba2e01c8fd"
+  },
+  "fixVersions": [],
+  "labels": [
+    "RAG",
+    "experience",
+    "llama-stack-core",
+    "mid-term"
+  ],
+  "components": [
+    "RAG"
+  ],
+  "created": "2026-02-27T08:37:08.891+0000",
+  "updated": "2026-02-27T08:37:41.902+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1230",
+      "linkedSummary": "Implement RAG Security and Access Control for LLama Stack ",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-273",
+      "linkedSummary": "Implement RAG Security and Access Control for LLama Stack ",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-263",
+      "linkedSummary": "Support Multi-Client Knowledge Context Isolation for AI Interactions (RAG)",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIRFE-593",
+      "linkedSummary": "Ensure Safety/Guardrails are Integrated in the product for RAG/Agentic [Tutorial]",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

@@ -1,0 +1,300 @@
+{
+  "key": "TEST1-576",
+  "summary": "Fix data migration",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Merit Lloyd",
+    "accountId": "5f041b979d9a120029022db8"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "Build and Release",
+    "DevOps"
+  ],
+  "created": "2025-11-10T10:28:00.475+0000",
+  "updated": "2026-03-02T08:24:32.138+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-42317",
+      "linkedSummary": "3rd party RPMs - create a plan (delegate to AIPCC, legal agreements etc.)",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Triggers",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-38497",
+      "linkedSummary": "[SPIKE] Identify RPM usage for Build & Release Security & Compliance Review",
+      "linkedStatus": "Resolved"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-38387",
+      "parentKey": "RHAISTRAT-576",
+      "summary": "Implement data cleanup",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Major",
+      "assignee": null,
+      "components": [
+        "DevOps"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-11-10T10:38:20.608+0000",
+      "updated": "2025-11-10T16:00:33.882+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-38388",
+      "parentKey": "RHAISTRAT-576",
+      "summary": "Add batch processing",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Major",
+      "assignee": null,
+      "components": [
+        "DevOps"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-11-10T10:40:05.236+0000",
+      "updated": "2025-11-10T10:49:20.357+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-38389",
+      "parentKey": "RHAISTRAT-576",
+      "summary": "Fix concurrent access issue",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Major",
+      "assignee": null,
+      "components": [
+        "DevOps"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-11-10T10:40:48.098+0000",
+      "updated": "2025-11-10T10:49:23.111+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-38398",
+      "parentKey": "RHAISTRAT-576",
+      "summary": "Update access controls",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Major",
+      "assignee": null,
+      "components": [
+        "DevOps"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-11-10T10:41:20.859+0000",
+      "updated": "2025-11-10T10:49:25.576+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-38414",
+      "parentKey": "RHAISTRAT-576",
+      "summary": "Implement webhook handler",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Major",
+      "assignee": null,
+      "components": [
+        "DevOps"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-11-10T10:41:50.932+0000",
+      "updated": "2025-11-14T11:33:36.953+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-38426",
+      "parentKey": "RHAISTRAT-576",
+      "summary": "Add export functionality",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Major",
+      "assignee": null,
+      "components": [
+        "DevOps"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-11-10T10:42:44.376+0000",
+      "updated": "2025-11-10T10:49:29.430+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-38427",
+      "parentKey": "RHAISTRAT-576",
+      "summary": "Fix timezone handling",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Major",
+      "assignee": null,
+      "components": [
+        "DevOps"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-11-10T10:44:06.046+0000",
+      "updated": "2025-11-10T10:49:26.868+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-38428",
+      "parentKey": "RHAISTRAT-576",
+      "summary": "Implement webhook handler",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Major",
+      "assignee": null,
+      "components": [
+        "DevOps"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-11-10T10:45:15.756+0000",
+      "updated": "2025-11-10T10:49:21.857+0000",
+      "issues": []
+    }
+  ],
+  "metrics": {
+    "totalEpics": 8,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-38387",
+        "summary": "[CentOS] - Build & Release Security & Compliance Review",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-38388",
+        "summary": "[Intel] - Build & Release Security & Compliance Review",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-38389",
+        "summary": "[Fedora/EPEL] - Build & Release Security & Compliance Review",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-38398",
+        "summary": "[Mellanox] - Build & Release Security & Compliance Review",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-38414",
+        "summary": "[NVIDIA] - Build & Release Security & Compliance Review",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-38426",
+        "summary": "[AMD] - Build & Release Security & Compliance Review",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-38427",
+        "summary": "[Intel/Habana] - Build & Release Security & Compliance Review",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-38428",
+        "summary": "[AIPCC] - Build & Release Security & Compliance Review",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

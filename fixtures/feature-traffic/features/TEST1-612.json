@@ -1,0 +1,54 @@
+{
+  "key": "TEST1-612",
+  "summary": "Add health check endpoint",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Minor",
+  "assignee": {
+    "displayName": "Kerry Kelley",
+    "accountId": "5e95b11a34f7b90c0fb347b3"
+  },
+  "fixVersions": [],
+  "labels": [
+    "GPU-as-a-Service",
+    "tech-reviewed"
+  ],
+  "components": [
+    "KubeRay",
+    "Training Kubeflow"
+  ],
+  "created": "2025-07-08T13:07:16.904+0000",
+  "updated": "2026-01-26T15:01:07.144+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-81",
+      "linkedSummary": "FineTuning workflow using Kubeflow SDK/Trainer V2",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

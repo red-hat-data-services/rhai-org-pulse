@@ -1,0 +1,47 @@
+{
+  "key": "TEST1-187",
+  "summary": "Fix timezone handling",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "Data Processing"
+  ],
+  "created": "2025-11-07T13:53:36.787+0000",
+  "updated": "2026-04-02T19:39:35.081+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-186",
+      "linkedSummary": "Scalable, API-Driven Data Processing",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

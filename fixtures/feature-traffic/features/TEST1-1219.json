@@ -1,0 +1,620 @@
+{
+  "key": "TEST1-1219",
+  "summary": "Update notification system",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Gray James",
+    "accountId": "70121:23a512a5-c133-4a74-8fed-d6bc393846da"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "TestOps"
+  ],
+  "created": "2026-02-17T06:12:45.850+0000",
+  "updated": "2026-03-30T07:44:56.536+0000",
+  "statusNotes": null,
+  "issueLinks": [],
+  "epics": [
+    {
+      "key": "TEST2-27673",
+      "parentKey": "RHAISTRAT-1219",
+      "summary": "Implement feature for module",
+      "status": "Review",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Person 340",
+      "components": [
+        "TestOps"
+      ],
+      "labels": [
+        "refined",
+        "sprint-3.2",
+        "triaged"
+      ],
+      "storyPoints": 0,
+      "created": "2025-06-17T09:43:08.291+0000",
+      "updated": "2026-02-23T05:52:40.667+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-28890",
+          "parentKey": "RHOAIENG-27673",
+          "summary": "Parse test results and return the components having failed tests ",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Normal",
+          "assignee": "Gray James",
+          "components": [
+            "TestOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-07-03T17:10:52.589+0000",
+          "updated": "2025-12-26T20:01:06.096+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-28891",
+          "parentKey": "RHOAIENG-27673",
+          "summary": "Develop TFA Jira creation script for the failed components",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Gray James",
+          "components": [
+            "TestOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-07-03T17:22:55.244+0000",
+          "updated": "2025-12-26T20:00:59.882+0000",
+          "resolutionDate": "2025-12-26T19:49:04.868+0000"
+        },
+        {
+          "key": "RHOAIENG-28892",
+          "parentKey": "RHOAIENG-27673",
+          "summary": "Integrate TFA jira creation at the time of release task generation",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Normal",
+          "assignee": "Gray James",
+          "components": [
+            "TestOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-07-03T17:25:00.919+0000",
+          "updated": "2025-12-26T20:00:27.895+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-43194",
+          "parentKey": "RHOAIENG-27673",
+          "summary": "PoC - Automate TFA Jira creation and auto-update status based on test results",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Gray James",
+          "components": [
+            "TestOps"
+          ],
+          "labels": [
+            "refined",
+            "sprint-3.2",
+            "triaged"
+          ],
+          "storyPoints": 0,
+          "created": "2025-12-26T18:57:27.192+0000",
+          "updated": "2025-12-26T20:01:54.591+0000",
+          "resolutionDate": "2025-12-26T19:20:07.330+0000"
+        },
+        {
+          "key": "RHOAIENG-43195",
+          "parentKey": "RHOAIENG-27673",
+          "summary": "Develop script to update TFA jira status based on the test suite results",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Gray James",
+          "components": [
+            "TestOps"
+          ],
+          "labels": [
+            "refined",
+            "sprint-3.2",
+            "triaged"
+          ],
+          "storyPoints": 0,
+          "created": "2025-12-26T18:59:33.330+0000",
+          "updated": "2025-12-26T19:27:42.470+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-43196",
+          "parentKey": "RHOAIENG-27673",
+          "summary": "Integrate into CI/CD pipeline for automated jira updation during post-test execution",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Gray James",
+          "components": [
+            "TestOps"
+          ],
+          "labels": [
+            "refined",
+            "sprint-3.2",
+            "triaged"
+          ],
+          "storyPoints": 0,
+          "created": "2025-12-26T19:07:21.560+0000",
+          "updated": "2025-12-26T19:29:38.914+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-37993",
+      "parentKey": "RHAISTRAT-1219",
+      "summary": "Implement search feature",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Person 339",
+      "components": [
+        "TestOps"
+      ],
+      "labels": [
+        "triaged"
+      ],
+      "storyPoints": 0,
+      "created": "2025-11-04T11:46:21.750+0000",
+      "updated": "2026-02-23T05:23:56.723+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-37994",
+      "parentKey": "RHAISTRAT-1219",
+      "summary": "Add pagination support",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Person 339",
+      "components": [
+        "TestOps"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-11-04T11:53:48.514+0000",
+      "updated": "2026-02-23T05:24:47.683+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-39214",
+      "parentKey": "RHAISTRAT-1219",
+      "summary": "Update documentation",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Critical",
+      "assignee": "Person 339",
+      "components": [
+        "TestOps"
+      ],
+      "labels": [
+        "triaged"
+      ],
+      "storyPoints": 0,
+      "created": "2025-11-19T09:56:55.796+0000",
+      "updated": "2026-03-27T08:19:11.331+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-42363",
+          "parentKey": "RHOAIENG-39214",
+          "summary": "AI Core Platform team - Create a Generic method to send slack notifications with the jenkins results",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Kerry Chang",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-12-18T12:15:27.348+0000",
+          "updated": "2025-12-19T16:10:23.214+0000",
+          "resolutionDate": "2025-12-19T16:10:23.181+0000"
+        },
+        {
+          "key": "RHOAIENG-43386",
+          "parentKey": "RHOAIENG-39214",
+          "summary": "Collect Test Statistics for every Component according to Junit results",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Bishop",
+          "components": [
+            "TestOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-05T10:25:26.761+0000",
+          "updated": "2026-01-15T17:55:44.866+0000",
+          "resolutionDate": "2026-01-15T17:55:44.834+0000"
+        },
+        {
+          "key": "RHOAIENG-48984",
+          "parentKey": "RHOAIENG-39214",
+          "summary": "Create TFA Notification Channel in Slack for all Components results",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Kerry Bishop",
+          "components": [
+            "TestOps"
+          ],
+          "labels": [
+            "to-refine",
+            "triaged"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-09T11:09:48.995+0000",
+          "updated": "2026-03-27T08:18:14.164+0000",
+          "resolutionDate": "2026-03-27T08:18:14.114+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-46099",
+      "parentKey": "RHAISTRAT-1219",
+      "summary": "Add input validation",
+      "status": "Review",
+      "statusCategory": "In Progress",
+      "priority": "Critical",
+      "assignee": "Person 339",
+      "components": [
+        "TestOps"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-01-19T09:37:57.739+0000",
+      "updated": "2026-03-30T15:34:48.579+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-50493",
+      "parentKey": "RHAISTRAT-1219",
+      "summary": "Implement retry logic",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Critical",
+      "assignee": "Person 339",
+      "components": [
+        "TestOps"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-23T06:11:37.300+0000",
+      "updated": "2026-03-03T20:51:31.977+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50494",
+          "parentKey": "RHOAIENG-50493",
+          "summary": "Decouple the reporting logic from doPostBuildActions()",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Kerry Bishop",
+          "components": [
+            "TestOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-23T06:13:43.182+0000",
+          "updated": "2026-03-08T14:50:24.309+0000",
+          "resolutionDate": "2026-03-08T14:50:24.258+0000"
+        },
+        {
+          "key": "RHOAIENG-50495",
+          "parentKey": "RHOAIENG-50493",
+          "summary": "Replace DataRouter with RP Rest API",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Kerry Bishop",
+          "components": [
+            "TestOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-23T06:15:06.396+0000",
+          "updated": "2026-03-23T13:08:23.242+0000",
+          "resolutionDate": "2026-03-23T13:08:23.214+0000"
+        },
+        {
+          "key": "RHOAIENG-50496",
+          "parentKey": "RHOAIENG-50493",
+          "summary": "Create a separate stage in jenkins test pipelines for reporter.",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Kerry Bishop",
+          "components": [
+            "TestOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-23T06:17:18.205+0000",
+          "updated": "2026-03-19T11:40:16.550+0000",
+          "resolutionDate": "2026-03-19T11:40:16.518+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-50497",
+      "parentKey": "RHAISTRAT-1219",
+      "summary": "Optimize database queries",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Critical",
+      "assignee": "Person 340",
+      "components": [
+        "TestOps"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-23T06:29:53.086+0000",
+      "updated": "2026-02-23T12:33:46.965+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50498",
+          "parentKey": "RHOAIENG-50497",
+          "summary": "Dedicated filter and dashboard to be created for ODH and RHOAI nightlies",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Kerry Bishop",
+          "components": [
+            "TestOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-23T06:32:24.211+0000",
+          "updated": "2026-03-29T14:40:22.561+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-50499",
+          "parentKey": "RHOAIENG-50497",
+          "summary": "Update test results of ODH and RHOAI nightlies on the respective build notifications channel in the same build slack thread",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Major",
+          "assignee": "Kerry Bishop",
+          "components": [
+            "TestOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-23T06:38:24.646+0000",
+          "updated": "2026-02-23T12:33:34.900+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-50541",
+          "parentKey": "RHOAIENG-50497",
+          "summary": "Add Report portal link with actual reason for pipeline failure in ODH autotrigger nightly job",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Gray James",
+          "components": [
+            "TestOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-23T12:32:28.125+0000",
+          "updated": "2026-02-23T12:38:17.152+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-55832",
+      "parentKey": "RHAISTRAT-1219",
+      "summary": "Update configuration settings",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Critical",
+      "assignee": "Person 339",
+      "components": [
+        "TestOps"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-30T05:37:15.266+0000",
+      "updated": "2026-03-30T05:38:20.849+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-55833",
+          "parentKey": "RHOAIENG-55832",
+          "summary": "Create Slack Bot for getting the slack thread ID",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Kerry Bishop",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-30T05:39:26.040+0000",
+          "updated": "2026-03-30T06:01:35.590+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55834",
+          "parentKey": "RHOAIENG-55832",
+          "summary": "Get the slack thread ID from konflux CI event trigger to update the TFA notifications",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Kerry Bishop",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-30T05:40:46.807+0000",
+          "updated": "2026-03-31T08:26:19.390+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 8,
+    "totalIssues": 17,
+    "issuesByStatus": {
+      "Review": 5,
+      "Closed": 3,
+      "Resolved": 5,
+      "New": 1,
+      "In Progress": 3
+    },
+    "issuesByCategory": {
+      "Done": 8,
+      "In Progress": 8,
+      "To Do": 1
+    },
+    "totalStoryPoints": 2,
+    "storyPointsDone": 2,
+    "completionPct": 47,
+    "staleCount": 5,
+    "unassignedCount": 0,
+    "blockerCount": 6,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-27673",
+        "summary": "Automate Creating Jira TFA Tasks",
+        "status": "Review",
+        "statusCategory": "In Progress",
+        "assignee": "Gray James",
+        "totalIssues": 6,
+        "doneIssues": 2,
+        "progressPct": 33,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-37993",
+        "summary": "Create component specific RP launches in jenkins pipelines",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Kerry Bishop",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-37994",
+        "summary": "Create dashboards in Report Portal for every RHOAI release with test execution filters for each component",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Kerry Bishop",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-39214",
+        "summary": "Auto Slack message for RP launches in jenkins pipelines",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Kerry Bishop",
+        "totalIssues": 3,
+        "doneIssues": 3,
+        "progressPct": 100,
+        "storyPoints": 2,
+        "storyPointsDone": 2,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-46099",
+        "summary": "Automate ReportPortal creation via template for every new Release",
+        "status": "Review",
+        "statusCategory": "In Progress",
+        "assignee": "Kerry Bishop",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-50493",
+        "summary": "Develop Extensible Parent Reporting Library - Bot-Ready Architecture",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Kerry Bishop",
+        "totalIssues": 3,
+        "doneIssues": 3,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-50497",
+        "summary": "Create dedicated dashboard/notification for ODH and RHOAI nightlies",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Gray James",
+        "totalIssues": 3,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-55832",
+        "summary": "Update smoke TFA notifications on the build message slack channel",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Kerry Bishop",
+        "totalIssues": 2,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

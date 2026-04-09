@@ -1,0 +1,53 @@
+{
+  "key": "TEST1-1315",
+  "summary": "Update documentation",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Normal",
+  "assignee": {
+    "displayName": "Gray Brock",
+    "accountId": "60ba5c393aa6050068890180"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "needs-tech-review"
+  ],
+  "components": [
+    "Training Hub"
+  ],
+  "created": "2026-03-18T01:05:03.584+0000",
+  "updated": "2026-03-23T21:23:31.569+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1201",
+      "linkedSummary": "Enable Text-Mode Training for Multimodal Models in Training Hub",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "key": "TEST1-854",
+  "summary": "Update API endpoint",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [
+    "field-request"
+  ],
+  "components": [
+    "AI Core Dashboard"
+  ],
+  "created": "2024-06-24T15:01:13.724+0000",
+  "updated": "2025-11-25T21:57:44.273+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-365",
+      "linkedSummary": "Changing which IngressController/Endpoint the RHOAI GUI can be served on.",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

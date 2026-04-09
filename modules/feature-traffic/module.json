@@ -4,7 +4,7 @@
   "description": "Traffic maps showing RHAISTRAT feature delivery across repos and components",
   "icon": "git-branch",
   "order": 15,
-  "defaultEnabled": false,
+  "defaultEnabled": true,
   "requires": [],
   "client": {
     "entry": "./client/index.js",

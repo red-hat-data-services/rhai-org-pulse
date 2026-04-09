@@ -1,0 +1,695 @@
+{
+  "key": "TEST1-1288",
+  "summary": "Update error messages",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Onyx Pierce",
+    "accountId": "557058:ec20c857-da91-474b-990c-82f291123602"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "AI Hub"
+  ],
+  "created": "2026-03-10T19:44:21.311+0000",
+  "updated": "2026-04-03T16:23:24.972+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "date",
+            "attrs": {
+              "timestamp": "1775174400000"
+            }
+          },
+          {
+            "type": "text",
+            "text": ": "
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "🟢 🎯3.4 GA(Stable)"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Implementation completed"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "PM Sign-off completed"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Awaiting release note (which has been provided) completion"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1392",
+      "linkedSummary": "vLLM optimal config recipe — YAML templates in model card readme (Summit tech preview)",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-52916",
+      "linkedSummary": "Platform refinement review [RHAISTRAT-1288] - Tech Preview - vLLM optimal config recipe in RHOAI Catalog",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-52822",
+      "parentKey": "RHAISTRAT-1288",
+      "summary": "Update documentation",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Person 281",
+      "components": [
+        "AI Hub"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-11T20:30:43.456+0000",
+      "updated": "2026-04-03T16:22:46.844+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-52824",
+          "parentKey": "RHOAIENG-52822",
+          "summary": "CLONE - Promote alpha APIs to beta",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T20:30:53.995+0000",
+          "updated": "2026-03-12T17:57:31.312+0000",
+          "resolutionDate": "2026-03-12T17:57:31.275+0000"
+        },
+        {
+          "key": "RHOAIENG-52825",
+          "parentKey": "RHOAIENG-52822",
+          "summary": "CLONE - Build from source (required)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "OpenShift AI Productization"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T20:30:54.006+0000",
+          "updated": "2026-03-12T17:53:57.237+0000",
+          "resolutionDate": "2026-03-12T17:53:57.196+0000"
+        },
+        {
+          "key": "RHOAIENG-52826",
+          "parentKey": "RHOAIENG-52822",
+          "summary": "CLONE - Onboard to RHOAI Build - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T20:30:54.037+0000",
+          "updated": "2026-03-12T17:56:46.933+0000",
+          "resolutionDate": "2026-03-12T17:56:46.897+0000"
+        },
+        {
+          "key": "RHOAIENG-52827",
+          "parentKey": "RHOAIENG-52822",
+          "summary": "vLLM optimal config recipe in RHOAI Catalog - Feature signoff - TP",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Onyx Vance",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [
+            "signoff"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-11T20:30:54.077+0000",
+          "updated": "2026-03-27T19:04:08.286+0000",
+          "resolutionDate": "2026-03-27T19:04:08.075+0000"
+        },
+        {
+          "key": "RHOAIENG-52828",
+          "parentKey": "RHOAIENG-52822",
+          "summary": "CLONE - Feature documented in architecture diagrams",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T20:30:54.121+0000",
+          "updated": "2026-03-12T18:00:19.040+0000",
+          "resolutionDate": "2026-03-12T18:00:19.004+0000"
+        },
+        {
+          "key": "RHOAIENG-52829",
+          "parentKey": "RHOAIENG-52822",
+          "summary": "CLONE - MUST meet designed for FIPS",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T20:30:54.183+0000",
+          "updated": "2026-03-12T18:02:11.035+0000",
+          "resolutionDate": "2026-03-12T18:02:10.997+0000"
+        },
+        {
+          "key": "RHOAIENG-52830",
+          "parentKey": "RHOAIENG-52822",
+          "summary": "vLLM optimal config recipe in RHOAI Catalog - Security requirements",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T20:30:54.193+0000",
+          "updated": "2026-03-12T20:14:23.163+0000",
+          "resolutionDate": "2026-03-12T20:14:23.124+0000"
+        },
+        {
+          "key": "RHOAIENG-52831",
+          "parentKey": "RHOAIENG-52822",
+          "summary": "CLONE - Ensure work with supported lifecyles",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T20:30:54.193+0000",
+          "updated": "2026-03-12T17:59:10.603+0000",
+          "resolutionDate": "2026-03-12T17:59:10.567+0000"
+        },
+        {
+          "key": "RHOAIENG-52832",
+          "parentKey": "RHOAIENG-52822",
+          "summary": "CLONE - Onboard to ODH Build - 2 week notice! ",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T20:30:54.212+0000",
+          "updated": "2026-03-12T18:02:38.470+0000",
+          "resolutionDate": "2026-03-12T18:02:38.431+0000"
+        },
+        {
+          "key": "RHOAIENG-52833",
+          "parentKey": "RHOAIENG-52822",
+          "summary": "vLLM optimal config recipe in RHOAI Catalog - Testing requirements",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Kerry Oliver",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T20:30:54.252+0000",
+          "updated": "2026-04-03T16:08:37.487+0000",
+          "resolutionDate": "2026-04-03T16:08:37.440+0000"
+        },
+        {
+          "key": "RHOAIENG-52834",
+          "parentKey": "RHOAIENG-52822",
+          "summary": "[AI Hub/vLLM optimal config recipe in RHOAI Catalog] - Integration with RHOAI operator - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "no-subteam"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-11T20:30:57.424+0000",
+          "updated": "2026-03-20T19:51:37.082+0000",
+          "resolutionDate": "2026-03-12T13:36:52.342+0000"
+        },
+        {
+          "key": "RHOAIENG-52835",
+          "parentKey": "RHOAIENG-52822",
+          "summary": "[AI Hub/vLLM optimal config recipe in RHOAI Catalog] - Integration with ODH operator - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "no-subteam"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-11T20:30:57.487+0000",
+          "updated": "2026-03-20T19:50:58.785+0000",
+          "resolutionDate": "2026-03-12T13:37:03.288+0000"
+        },
+        {
+          "key": "RHOAIENG-52836",
+          "parentKey": "RHOAIENG-52822",
+          "summary": "CLONE - RHOAI ONLY: AI Platform Core Components (AIPCC) Integration",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T20:30:57.666+0000",
+          "updated": "2026-03-12T18:13:30.116+0000",
+          "resolutionDate": "2026-03-12T18:13:30.079+0000"
+        },
+        {
+          "key": "RHOAIENG-52837",
+          "parentKey": "RHOAIENG-52822",
+          "summary": "CLONE - Test with disconnected environment",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T20:30:57.753+0000",
+          "updated": "2026-03-12T18:05:55.119+0000",
+          "resolutionDate": "2026-03-12T18:05:55.081+0000"
+        },
+        {
+          "key": "RHOAIENG-52838",
+          "parentKey": "RHOAIENG-52822",
+          "summary": "CLONE - Create component in jira",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T20:30:57.766+0000",
+          "updated": "2026-03-12T18:08:18.816+0000",
+          "resolutionDate": "2026-03-12T18:08:18.779+0000"
+        },
+        {
+          "key": "RHOAIENG-52839",
+          "parentKey": "RHOAIENG-52822",
+          "summary": "CLONE - Multi-Architecture Support",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T20:30:57.808+0000",
+          "updated": "2026-03-12T18:06:45.581+0000",
+          "resolutionDate": "2026-03-12T18:06:45.548+0000"
+        },
+        {
+          "key": "RHOAIENG-52840",
+          "parentKey": "RHOAIENG-52822",
+          "summary": "CLONE - Repository added to ODH/RHOAI",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T20:30:57.827+0000",
+          "updated": "2026-03-12T18:08:57.549+0000",
+          "resolutionDate": "2026-03-12T18:08:57.515+0000"
+        },
+        {
+          "key": "RHOAIENG-52841",
+          "parentKey": "RHOAIENG-52822",
+          "summary": "CLONE - Add source repo(s) to Snyk",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T20:30:59.626+0000",
+          "updated": "2026-03-12T18:09:34.569+0000",
+          "resolutionDate": "2026-03-12T18:09:34.519+0000"
+        },
+        {
+          "key": "RHOAIENG-52843",
+          "parentKey": "RHOAIENG-52822",
+          "summary": "CLONE - Add component data to product-definitions for vulnerability tracking",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T20:31:00.539+0000",
+          "updated": "2026-03-12T18:11:18.762+0000",
+          "resolutionDate": "2026-03-12T18:11:18.704+0000"
+        },
+        {
+          "key": "RHOAIENG-52844",
+          "parentKey": "RHOAIENG-52822",
+          "summary": "CLONE - Add component support for must-gather",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T20:31:00.547+0000",
+          "updated": "2026-03-12T18:10:28.461+0000",
+          "resolutionDate": "2026-03-12T18:10:28.418+0000"
+        },
+        {
+          "key": "RHOAIENG-52845",
+          "parentKey": "RHOAIENG-52822",
+          "summary": "[AI Hub/vLLM optimal config recipe in RHOAI Catalog] - Add support for the new component in the QE related repositories",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "no-subteam"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-11T20:31:00.661+0000",
+          "updated": "2026-03-20T19:50:29.394+0000",
+          "resolutionDate": "2026-03-12T13:37:09.391+0000"
+        },
+        {
+          "key": "RHOAIENG-52846",
+          "parentKey": "RHOAIENG-52822",
+          "summary": "CLONE - Add Prometheus (metrics) config for component (optional)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-11T20:31:02.423+0000",
+          "updated": "2026-03-12T18:12:09.478+0000",
+          "resolutionDate": "2026-03-12T18:12:09.444+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-53240",
+      "parentKey": "RHAISTRAT-1288",
+      "summary": "Update dependencies",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": "Gray Ellis",
+      "components": [
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-13T09:15:14.631+0000",
+      "updated": "2026-03-13T09:19:15.967+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-53241",
+          "parentKey": "RHOAIENG-53240",
+          "summary": "[ccs] Draft & review RN for vLLM optimal config recipe in AI Hub - TP 3.4 (May)",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Merit Voss",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-03-13T09:18:05.144+0000",
+          "updated": "2026-03-13T09:18:05.144+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-53242",
+          "parentKey": "RHOAIENG-53240",
+          "summary": "[ccs] Documentation for vLLM optimal config recipe in AI Hub",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Merit Voss",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-03-13T09:19:15.484+0000",
+          "updated": "2026-03-13T09:19:15.484+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-53381",
+      "parentKey": "RHAISTRAT-1288",
+      "summary": "Optimize database queries",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 281",
+      "components": [
+        "AI Hub"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-13T20:20:11.976+0000",
+      "updated": "2026-04-01T12:54:36.301+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-53383",
+          "parentKey": "RHOAIENG-53381",
+          "summary": "Implement vLLM Config Enrichment and README Markdown Generation",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Pierce",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-03-13T20:28:03.056+0000",
+          "updated": "2026-03-31T18:35:10.473+0000",
+          "resolutionDate": "2026-03-31T18:35:10.446+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 3,
+    "totalIssues": 25,
+    "issuesByStatus": {
+      "Closed": 21,
+      "Resolved": 2,
+      "New": 2
+    },
+    "issuesByCategory": {
+      "Done": 23,
+      "In Progress": 0,
+      "To Do": 2
+    },
+    "totalStoryPoints": 12,
+    "storyPointsDone": 6,
+    "completionPct": 92,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 1,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-52822",
+        "summary": "Tech Preview - ODH and RHOAI Integrations [AI Hub/vLLM optimal config recipe in RHOAI Catalog]",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Onyx Pierce",
+        "totalIssues": 22,
+        "doneIssues": 22,
+        "progressPct": 100,
+        "storyPoints": 3,
+        "storyPointsDone": 3,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-53240",
+        "summary": "[ccs Epic] Document vLLM optimal config recipe in AI Hub - TP 3.4",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Merit Voss",
+        "totalIssues": 2,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 6,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-53381",
+        "summary": "vLLM Optimal Config Recipes in RHOAI Catalog",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Onyx Pierce",
+        "totalIssues": 1,
+        "doneIssues": 1,
+        "progressPct": 100,
+        "storyPoints": 3,
+        "storyPointsDone": 3,
+        "health": "GREEN"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

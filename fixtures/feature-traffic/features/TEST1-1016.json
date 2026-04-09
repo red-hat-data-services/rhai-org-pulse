@@ -1,0 +1,94 @@
+{
+  "key": "TEST1-1016",
+  "summary": "Update notification system",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Frankie Clay",
+    "accountId": "70121:0d27b449-e70b-4a5a-819c-628f2b5a8499"
+  },
+  "fixVersions": [
+    "RHAIIS-3.4 EA-2"
+  ],
+  "labels": [],
+  "components": [
+    "INFERENG Midstream"
+  ],
+  "created": "2025-12-11T15:03:46.703+0000",
+  "updated": "2026-03-13T15:06:58.798+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Duplicate",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1015",
+      "linkedSummary": "Add Speculators to RHAIIS for Tech Preview in Release 3.3 - Cloned from RHAIRFE-1047",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "INFERENG-4687",
+      "linkedSummary": "[ccs] Document spec decoding with RHAIIS",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Blocks",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1309",
+      "linkedSummary": "Integrate Speculative Decoding Flow into RHOAI Model Deployment Wizard [3.5 MVP] [TP]",
+      "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1047",
+      "linkedSummary": "Add Speculators to RHAIIS for Tech Preview in Release 3.4 EA2",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "AIPCC-8051",
+      "linkedSummary": "build speculators library for CUDA",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "inward",
+      "linkedKey": "AIPCC-8051",
+      "linkedSummary": "build speculators library for CUDA",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Duplicate",
+      "direction": "inward",
+      "linkedKey": "INFERENG-3495",
+      "linkedSummary": "Add Speculators to RHAIIS for GA Release 3.4",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

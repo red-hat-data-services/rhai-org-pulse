@@ -1,0 +1,741 @@
+{
+  "key": "TEST1-1167",
+  "summary": "Implement data cleanup",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Gray Walsh",
+    "accountId": "5fdb88f09edf280075ce339d"
+  },
+  "fixVersions": [
+    "rhoai-3.4"
+  ],
+  "labels": [
+    "3.4-candidate",
+    "3.4-committed",
+    "dashboard-zaffre-scrum",
+    "requires_architecture_review"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "Documentation",
+    "Model as a Service",
+    "Model Serving",
+    "UXD"
+  ],
+  "created": "2026-01-26T23:39:01.391+0000",
+  "updated": "2026-04-07T20:50:54.105+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Dashboard - Green - "
+          },
+          {
+            "type": "date",
+            "attrs": {
+              "timestamp": "1775520000000"
+            }
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "In Signoffs "
+                  },
+                  {
+                    "type": "inlineCard",
+                    "attrs": {
+                      "url": "https://redhat.atlassian.net/browse/RHOAIENG-56788"
+                    }
+                  },
+                  {
+                    "type": "text",
+                    "text": " "
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Model Serving Runtimes - Green - 2026-03-13"
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "we merged the feature in ODH Kserve and we've got positive feedback when testing it from IBM P and Z teams"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1281",
+      "linkedSummary": "Support Admin Setup of LLMInferenceServiceConfig",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-3191",
+      "linkedSummary": "[ccs Epic] Documentation support for MaaS - Catch-all Epic for 3.4 GA",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Duplicate",
+      "direction": "inward",
+      "linkedKey": "RHOAIUX-1744",
+      "linkedSummary": "Enable vLLM Runtime Support in MaaS",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1170",
+      "linkedSummary": "Enable vLLM Runtime Support in MaaS",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Incorporates",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-37667",
+      "linkedSummary": "Why is MaaS only an option for llm-d and not for vLLM",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-48852",
+      "parentKey": "RHAISTRAT-1167",
+      "summary": "Add unit tests for service",
+      "status": "Review",
+      "statusCategory": "In Progress",
+      "priority": "Critical",
+      "assignee": "Person 220",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-area-maas",
+        "dashboard-area-model-serving",
+        "dashboard-zaffre-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-02-05T20:29:25.437+0000",
+      "updated": "2026-04-02T21:42:59.583+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-48853",
+          "parentKey": "RHOAIENG-48852",
+          "summary": "Design Document - vLLM on MaaS",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Gray Walsh",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-maas",
+            "dashboard-area-model-serving"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-05T20:33:12.183+0000",
+          "updated": "2026-03-02T19:05:02.230+0000",
+          "resolutionDate": "2026-03-02T19:05:02.193+0000"
+        },
+        {
+          "key": "RHOAIENG-50718",
+          "parentKey": "RHOAIENG-48852",
+          "summary": "Epic Signoffs",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Carter",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "template"
+          ],
+          "storyPoints": 1,
+          "created": "2026-02-24T19:39:33.951+0000",
+          "updated": "2026-04-06T19:20:17.875+0000",
+          "resolutionDate": "2026-04-06T19:20:17.852+0000"
+        },
+        {
+          "key": "RHOAIENG-50723",
+          "parentKey": "RHOAIENG-48852",
+          "summary": "QA Verification for this Feature",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Normal",
+          "assignee": "Gray Frost",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-serving",
+            "dashboard-epic-verification"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-24T19:40:04.928+0000",
+          "updated": "2026-04-03T19:14:11.906+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-52199",
+          "parentKey": "RHOAIENG-48852",
+          "summary": "vLLM on MaaS: Add feature flag",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Zimmerman",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-serving"
+          ],
+          "storyPoints": 1,
+          "created": "2026-03-06T16:49:02.546+0000",
+          "updated": "2026-03-12T16:48:53.959+0000",
+          "resolutionDate": "2026-03-12T16:48:53.937+0000"
+        },
+        {
+          "key": "RHOAIENG-52200",
+          "parentKey": "RHOAIENG-48852",
+          "summary": "vLLM on MaaS: Add \"Legacy vLLM\" checkbox",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Zimmerman",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-serving"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-06T16:55:06.793+0000",
+          "updated": "2026-03-18T14:06:27.029+0000",
+          "resolutionDate": "2026-03-18T14:06:27.001+0000"
+        },
+        {
+          "key": "RHOAIENG-52242",
+          "parentKey": "RHOAIENG-48852",
+          "summary": "vLLM on MaaS: \"Legacy vLLM\" option lists only vLLM for servingRuntime",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Zimmerman",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-serving"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-06T18:43:28.347+0000",
+          "updated": "2026-03-20T18:41:28.879+0000",
+          "resolutionDate": "2026-03-20T18:41:28.844+0000"
+        },
+        {
+          "key": "RHOAIENG-52244",
+          "parentKey": "RHOAIENG-48852",
+          "summary": "vLLM on MaaS: List LLMisvConfig instead of Runtimes for Generative",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Carter",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-serving"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-06T18:48:35.178+0000",
+          "updated": "2026-04-07T20:08:03.128+0000",
+          "resolutionDate": "2026-03-23T13:17:17.130+0000"
+        },
+        {
+          "key": "RHOAIENG-52245",
+          "parentKey": "RHOAIENG-48852",
+          "summary": "vLLM on MaaS: Deploy LLMiscvConfig if selected",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Carter",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-serving"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-06T18:54:34.544+0000",
+          "updated": "2026-03-26T18:09:24.020+0000",
+          "resolutionDate": "2026-03-26T18:09:23.997+0000"
+        },
+        {
+          "key": "RHOAIENG-52339",
+          "parentKey": "RHOAIENG-48852",
+          "summary": "vLLM on MaaS: Add View LLMisvConfig role",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Carter",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-serving"
+          ],
+          "storyPoints": 1,
+          "created": "2026-03-09T14:09:40.977+0000",
+          "updated": "2026-03-18T13:20:58.833+0000",
+          "resolutionDate": "2026-03-18T13:20:58.808+0000"
+        },
+        {
+          "key": "RHOAIENG-52368",
+          "parentKey": "RHOAIENG-48852",
+          "summary": "vLLM on MaaS: Update Delete llmInferenceService",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Zimmerman",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-serving"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-09T16:12:00.387+0000",
+          "updated": "2026-03-27T13:23:56.442+0000",
+          "resolutionDate": "2026-03-27T13:23:56.406+0000"
+        },
+        {
+          "key": "RHOAIENG-54340",
+          "parentKey": "RHOAIENG-48852",
+          "summary": "vLLM on MaaS: Add crud LLMisvConfig rbac for odh-admin",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Gray Walsh",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-serving"
+          ],
+          "storyPoints": 1,
+          "created": "2026-03-19T13:29:04.506+0000",
+          "updated": "2026-04-07T20:45:23.655+0000",
+          "resolutionDate": "2026-04-07T20:45:23.620+0000"
+        },
+        {
+          "key": "RHOAIENG-54355",
+          "parentKey": "RHOAIENG-48852",
+          "summary": "vLLM on MaaS: Fitler disabled LLMIsvConfig from UI",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Zimmerman",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-serving"
+          ],
+          "storyPoints": 1,
+          "created": "2026-03-19T14:29:25.957+0000",
+          "updated": "2026-03-30T13:13:16.744+0000",
+          "resolutionDate": "2026-03-30T13:13:16.721+0000"
+        },
+        {
+          "key": "RHOAIENG-55021",
+          "parentKey": "RHOAIENG-48852",
+          "summary": "vLLM on MaaS: Microcopy stuff",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Zimmerman",
+          "components": [],
+          "labels": [
+            "dashboard-area-model-serving"
+          ],
+          "storyPoints": 1,
+          "created": "2026-03-24T18:40:38.693+0000",
+          "updated": "2026-03-30T19:50:41.977+0000",
+          "resolutionDate": "2026-03-30T19:50:41.932+0000"
+        },
+        {
+          "key": "RHOAIENG-56046",
+          "parentKey": "RHOAIENG-48852",
+          "summary": "vLLM on MaaS: e2e test",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Frankie Zimmerman",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-serving"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-30T18:08:00.386+0000",
+          "updated": "2026-04-07T13:03:18.744+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56387",
+          "parentKey": "RHOAIENG-48852",
+          "summary": "update serving runtime text to Deployment resource",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Zimmerman",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-serving"
+          ],
+          "storyPoints": 2,
+          "created": "2026-04-01T20:11:14.702+0000",
+          "updated": "2026-04-07T17:46:47.970+0000",
+          "resolutionDate": "2026-04-07T17:38:51.115+0000"
+        },
+        {
+          "key": "RHOAIENG-56707",
+          "parentKey": "RHOAIENG-48852",
+          "summary": "LLM config info missing from project details overview",
+          "type": "Bug",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Carter",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-serving"
+          ],
+          "storyPoints": 1,
+          "created": "2026-04-03T20:31:13.570+0000",
+          "updated": "2026-04-07T19:54:37.545+0000",
+          "resolutionDate": "2026-04-07T19:54:37.483+0000"
+        },
+        {
+          "key": "RHOAIENG-56788",
+          "parentKey": "RHOAIENG-48852",
+          "summary": "vLLM on MaaS Feature signoff - TP",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Blocker",
+          "assignee": "Merit Carter",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-serving",
+            "signoff"
+          ],
+          "storyPoints": 1,
+          "created": "2026-04-06T19:09:31.820+0000",
+          "updated": "2026-04-08T00:22:24.009+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-49824",
+      "parentKey": "RHAISTRAT-1167",
+      "summary": "Add pagination support",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Person 150",
+      "components": [
+        "IBM P",
+        "IBM Z",
+        "llm-d",
+        "Model as a Service",
+        "Model Runtimes",
+        "Model Serving"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-16T07:05:34.980+0000",
+      "updated": "2026-03-25T13:33:10.269+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-50060",
+          "parentKey": "RHOAIENG-49824",
+          "summary": "Create accelerator-specific LLMInferenceServiceConfig templates with distinguishing labels",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Kerry Mitchell",
+          "components": [
+            "IBM P",
+            "IBM Z",
+            "llm-d",
+            "Model as a Service",
+            "Model Runtimes",
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-02-17T17:33:09.870+0000",
+          "updated": "2026-03-27T19:21:18.396+0000",
+          "resolutionDate": "2026-03-16T15:05:05.788+0000"
+        },
+        {
+          "key": "RHOAIENG-50063",
+          "parentKey": "RHOAIENG-49824",
+          "summary": "Draft migration guide: vLLM InferenceService → LLMInferenceService",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Kerry Mitchell",
+          "components": [
+            "IBM P",
+            "IBM Z",
+            "llm-d",
+            "Model as a Service",
+            "Model Runtimes",
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-02-17T17:55:08.526+0000",
+          "updated": "2026-04-07T17:05:41.596+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-50350",
+          "parentKey": "RHOAIENG-49824",
+          "summary": "Add accelerator vLLM image entries to opendatahub-operator kserve support",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Kerry Mitchell",
+          "components": [
+            "IBM P",
+            "IBM Z",
+            "llm-d",
+            "Model as a Service",
+            "Model Runtimes",
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-02-19T16:49:19.915+0000",
+          "updated": "2026-03-12T16:52:30.749+0000",
+          "resolutionDate": "2026-03-12T16:52:30.711+0000"
+        },
+        {
+          "key": "RHOAIENG-54004",
+          "parentKey": "RHOAIENG-49824",
+          "summary": "Add \"opendatahub.io/recommended-accelerators:\" annotation",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Kerry Mitchell",
+          "components": [
+            "llm-d",
+            "Model Serving"
+          ],
+          "labels": [
+            "llm-d"
+          ],
+          "storyPoints": 1,
+          "created": "2026-03-17T19:43:53.680+0000",
+          "updated": "2026-03-25T11:11:48.258+0000",
+          "resolutionDate": "2026-03-20T14:07:50.819+0000"
+        },
+        {
+          "key": "RHOAIENG-55774",
+          "parentKey": "RHOAIENG-49824",
+          "summary": "Update IBM Spyre accelerator config env vars to target continuous batching defaults",
+          "type": "Task",
+          "status": "Testing",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Kerry Mitchell",
+          "components": [
+            "IBM P",
+            "IBM Z",
+            "llm-d",
+            "Model as a Service",
+            "Model Runtimes",
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-03-27T19:05:37.461+0000",
+          "updated": "2026-04-07T13:43:18.987+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56358",
+          "parentKey": "RHOAIENG-49824",
+          "summary": "Add Intel Gaudi accelerator LLMInferenceServiceConfig template",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Kerry Mitchell",
+          "components": [
+            "llm-d",
+            "Model as a Service",
+            "Model Runtimes",
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-04-01T16:14:30.374+0000",
+          "updated": "2026-04-03T13:24:56.717+0000",
+          "resolutionDate": "2026-04-03T13:24:56.690+0000"
+        },
+        {
+          "key": "RHOAIENG-56360",
+          "parentKey": "RHOAIENG-49824",
+          "summary": "Add Intel Gaudi vLLM image entry to opendatahub-operator kserve support",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Kerry Mitchell",
+          "components": [
+            "llm-d",
+            "Model as a Service",
+            "Model Runtimes",
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-04-01T16:21:24.758+0000",
+          "updated": "2026-04-03T13:24:06.124+0000",
+          "resolutionDate": "2026-04-03T13:24:06.098+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 2,
+    "totalIssues": 24,
+    "issuesByStatus": {
+      "Closed": 13,
+      "Resolved": 6,
+      "Review": 3,
+      "In Progress": 1,
+      "Testing": 1
+    },
+    "issuesByCategory": {
+      "Done": 19,
+      "In Progress": 5,
+      "To Do": 0
+    },
+    "totalStoryPoints": 37,
+    "storyPointsDone": 29,
+    "completionPct": 79,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 2,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-48852",
+        "summary": "vLLM on MaaS",
+        "status": "Review",
+        "statusCategory": "In Progress",
+        "assignee": "Merit Carter",
+        "totalIssues": 17,
+        "doneIssues": 14,
+        "progressPct": 82,
+        "storyPoints": 25,
+        "storyPointsDone": 21,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-49824",
+        "summary": "Enable vLLM Runtime Support in MaaS",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Kerry Mitchell",
+        "totalIssues": 7,
+        "doneIssues": 5,
+        "progressPct": 71,
+        "storyPoints": 12,
+        "storyPointsDone": 8,
+        "health": "GREEN"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

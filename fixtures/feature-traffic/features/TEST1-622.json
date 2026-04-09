@@ -1,0 +1,1275 @@
+{
+  "key": "TEST1-622",
+  "summary": "Fix authentication issue",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Kerry Hill",
+    "accountId": "712020:395040de-1e7a-4630-a23b-c43f216d8baa"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "DevOps"
+  ],
+  "created": "2025-11-07T13:52:08.766+0000",
+  "updated": "2026-04-01T13:07:11.177+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-647",
+      "linkedSummary": "E2E CI/CD Ecosystem across ODH & RHOAI - Phase 3",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-490",
+      "linkedSummary": "ODH Nightlies Konflux Transition: Phase 1 - E2E CI/CD Ecosystem across ODH & RHOAI",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-50796",
+      "parentKey": "RHAISTRAT-622",
+      "summary": "Add filtering options",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Person 351",
+      "components": [
+        "DevOps"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-25T12:01:50.872+0000",
+      "updated": "2026-03-20T12:23:34.892+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-54477",
+      "parentKey": "RHAISTRAT-622",
+      "summary": "Fix race condition",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "DevOps"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-20T08:59:43.573+0000",
+      "updated": "2026-03-20T12:06:33.631+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-54485",
+          "parentKey": "RHOAIENG-54477",
+          "summary": "Audit & inventory all Dockerfiles across ODH & RHOAI",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:00:09.156+0000",
+          "updated": "2026-03-20T09:06:57.336+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54486",
+          "parentKey": "RHOAIENG-54477",
+          "summary": "Design unified Dockerfile parameterization strategy",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:00:13.781+0000",
+          "updated": "2026-03-20T09:06:58.109+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54487",
+          "parentKey": "RHOAIENG-54477",
+          "summary": "Move Dockerfile.konflux files to ODH default branches",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:00:17.253+0000",
+          "updated": "2026-03-20T09:06:58.301+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54488",
+          "parentKey": "RHOAIENG-54477",
+          "summary": "Merge Dockerfiles into single unified Dockerfile per component",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:00:21.206+0000",
+          "updated": "2026-03-20T09:06:57.516+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54489",
+          "parentKey": "RHOAIENG-54477",
+          "summary": "Update Konflux pipelines for new Dockerfile paths",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:00:24.557+0000",
+          "updated": "2026-03-20T09:06:57.672+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54490",
+          "parentKey": "RHOAIENG-54477",
+          "summary": "Component team review of unified Dockerfiles",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:00:27.090+0000",
+          "updated": "2026-03-20T09:06:57.859+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54491",
+          "parentKey": "RHOAIENG-54477",
+          "summary": "Validate unified Dockerfiles for ODH builds (CI + nightlies)",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:00:30.878+0000",
+          "updated": "2026-03-20T09:06:57.720+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54492",
+          "parentKey": "RHOAIENG-54477",
+          "summary": "Validate unified Dockerfiles for RHOAI builds",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:00:33.810+0000",
+          "updated": "2026-03-20T09:06:57.661+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-54478",
+      "parentKey": "RHAISTRAT-622",
+      "summary": "Add input validation",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "DevOps"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-20T08:59:43.701+0000",
+      "updated": "2026-03-20T09:04:43.746+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-54493",
+          "parentKey": "RHOAIENG-54478",
+          "summary": "Design central renovate configuration for ODH",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:00:38.239+0000",
+          "updated": "2026-03-20T09:06:57.804+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54494",
+          "parentKey": "RHOAIENG-54478",
+          "summary": "Configure renovate for all ODH component repos",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:00:40.575+0000",
+          "updated": "2026-03-20T09:06:57.595+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54495",
+          "parentKey": "RHOAIENG-54478",
+          "summary": "Enable auto-merge for renovate PRs on ODH repos",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:00:43.150+0000",
+          "updated": "2026-03-20T09:06:57.928+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54496",
+          "parentKey": "RHOAIENG-54478",
+          "summary": "Disable downstream renovate configuration",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:00:46.919+0000",
+          "updated": "2026-03-20T09:06:57.772+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54497",
+          "parentKey": "RHOAIENG-54478",
+          "summary": "Validate renovate end-to-end flow",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:00:50.640+0000",
+          "updated": "2026-03-20T09:06:57.871+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-54479",
+      "parentKey": "RHAISTRAT-622",
+      "summary": "Update dependencies",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "DevOps"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-20T08:59:43.732+0000",
+      "updated": "2026-03-20T09:04:25.900+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-54534",
+          "parentKey": "RHOAIENG-54479",
+          "summary": "Conduct CoverPort PoC for ODH Nightlies",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:03:18.785+0000",
+          "updated": "2026-03-20T09:09:25.880+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54535",
+          "parentKey": "RHOAIENG-54479",
+          "summary": "Evaluate & document CoverPort findings",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:03:21.437+0000",
+          "updated": "2026-03-20T09:08:29.982+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54536",
+          "parentKey": "RHOAIENG-54479",
+          "summary": "Implement CoverPort integration (if viable)",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:03:25.589+0000",
+          "updated": "2026-03-20T09:08:26.235+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-54480",
+      "parentKey": "RHAISTRAT-622",
+      "summary": "Add health check endpoint",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "DevOps"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-20T08:59:43.968+0000",
+      "updated": "2026-03-20T09:03:51.813+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-54498",
+          "parentKey": "RHOAIENG-54480",
+          "summary": "Design submodule-based repo structure specification",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:01:15.438+0000",
+          "updated": "2026-03-20T09:06:57.880+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54499",
+          "parentKey": "RHOAIENG-54480",
+          "summary": "Create PoC submodule structure for a pilot component",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:01:16.369+0000",
+          "updated": "2026-03-20T09:06:58.411+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54500",
+          "parentKey": "RHOAIENG-54480",
+          "summary": "Develop migration tooling/scripts for RHDS repos",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:01:20.521+0000",
+          "updated": "2026-03-20T09:06:57.629+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54501",
+          "parentKey": "RHOAIENG-54480",
+          "summary": "Migrate all RHDS release branches to submodule structure",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:01:22.418+0000",
+          "updated": "2026-03-20T09:06:58.094+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54502",
+          "parentKey": "RHOAIENG-54480",
+          "summary": "Clean up RHDS main branches",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:01:26.767+0000",
+          "updated": "2026-03-20T09:06:57.474+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54503",
+          "parentKey": "RHOAIENG-54480",
+          "summary": "Handle GitHub workflows and repo-root-only artifacts",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:01:30.218+0000",
+          "updated": "2026-03-20T09:07:15.706+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54504",
+          "parentKey": "RHOAIENG-54480",
+          "summary": "Document submodule-based repo structure and developer workflows",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:01:33.259+0000",
+          "updated": "2026-03-20T09:07:05.648+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54505",
+          "parentKey": "RHOAIENG-54480",
+          "summary": "Validate submodule structure with downstream builds (all components)",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:01:36.204+0000",
+          "updated": "2026-03-20T09:06:58.402+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-54481",
+      "parentKey": "RHAISTRAT-622",
+      "summary": "Fix data migration",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "DevOps"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-20T08:59:44.003+0000",
+      "updated": "2026-03-20T09:04:38.654+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-54525",
+          "parentKey": "RHOAIENG-54481",
+          "summary": "Audit all RHOAI-specific artifacts in RHDS repos",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:02:48.220+0000",
+          "updated": "2026-03-20T09:07:55.569+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54526",
+          "parentKey": "RHOAIENG-54481",
+          "summary": "Move RHOAI-specific artifacts to ODH stable/rhoai branch",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:02:51.941+0000",
+          "updated": "2026-03-20T09:07:58.872+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54527",
+          "parentKey": "RHOAIENG-54481",
+          "summary": "Implement rhoai-params.env pattern for special cases",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:02:54.703+0000",
+          "updated": "2026-03-20T09:08:12.107+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54528",
+          "parentKey": "RHOAIENG-54481",
+          "summary": "Set up auto-nudge mechanism for rhoai-params.env updates",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:02:58.492+0000",
+          "updated": "2026-03-20T09:08:50.111+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54529",
+          "parentKey": "RHOAIENG-54481",
+          "summary": "Configure insta-merge for nudging PRs in ODH repos",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:03:03.141+0000",
+          "updated": "2026-03-20T09:08:24.164+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54530",
+          "parentKey": "RHOAIENG-54481",
+          "summary": "Validate RHOAI-specific artifact promotion flow",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:03:05.276+0000",
+          "updated": "2026-03-20T09:08:36.056+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-54482",
+      "parentKey": "RHAISTRAT-622",
+      "summary": "Update error messages",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "DevOps"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-20T08:59:44.005+0000",
+      "updated": "2026-03-20T09:04:04.816+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-54506",
+          "parentKey": "RHOAIENG-54482",
+          "summary": "Design auto-sync tool specification",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:01:40.169+0000",
+          "updated": "2026-03-20T09:07:39.019+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54507",
+          "parentKey": "RHOAIENG-54482",
+          "summary": "Develop core auto-sync engine (submodule ref update)",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:01:43.959+0000",
+          "updated": "2026-03-20T09:07:28.117+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54508",
+          "parentKey": "RHOAIENG-54482",
+          "summary": "Implement on-cel expression handling in auto-sync",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:01:48.128+0000",
+          "updated": "2026-03-20T09:07:31.085+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54509",
+          "parentKey": "RHOAIENG-54482",
+          "summary": "Implement build-trigger.txt mechanism",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:01:51.717+0000",
+          "updated": "2026-03-20T09:07:36.376+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54510",
+          "parentKey": "RHOAIENG-54482",
+          "summary": "Implement file modification recording in auto-sync",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:01:54.268+0000",
+          "updated": "2026-03-20T09:07:43.625+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54511",
+          "parentKey": "RHOAIENG-54482",
+          "summary": "Support releases.yaml-driven sync flow",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:01:57.902+0000",
+          "updated": "2026-03-20T09:06:58.064+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54512",
+          "parentKey": "RHOAIENG-54482",
+          "summary": "Support multiple auto-sync strategies (configurable src branch)",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:02:02.464+0000",
+          "updated": "2026-03-20T09:07:30.496+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54513",
+          "parentKey": "RHOAIENG-54482",
+          "summary": "Support post-code-freeze sync (odh/rhoai-x.y -> rhds/rhoai-x.y)",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:02:06.816+0000",
+          "updated": "2026-03-20T09:07:54.415+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54514",
+          "parentKey": "RHOAIENG-54482",
+          "summary": "Integrate auto-sync with RHOAI minor version onboarding",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:02:10.009+0000",
+          "updated": "2026-03-20T09:07:37.067+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54515",
+          "parentKey": "RHOAIENG-54482",
+          "summary": "Deprecate and archive the existing auto-merger tool",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:02:14.049+0000",
+          "updated": "2026-03-20T09:07:52.065+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54516",
+          "parentKey": "RHOAIENG-54482",
+          "summary": "End-to-end testing of auto-sync across all strategies",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:02:16.603+0000",
+          "updated": "2026-03-20T09:07:46.823+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-54483",
+      "parentKey": "RHAISTRAT-622",
+      "summary": "Add rate limiting",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "DevOps"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-20T08:59:44.209+0000",
+      "updated": "2026-03-20T09:03:49.970+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-54517",
+          "parentKey": "RHOAIENG-54483",
+          "summary": "Define & document the complete ODH-RHOAI branching policy",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:02:21.457+0000",
+          "updated": "2026-03-20T09:07:18.715+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54518",
+          "parentKey": "RHOAIENG-54483",
+          "summary": "Implement automated odh/rhoai-x.y branch creation at code-freeze",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:02:23.846+0000",
+          "updated": "2026-03-20T09:08:05.189+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54519",
+          "parentKey": "RHOAIENG-54483",
+          "summary": "Set up PR checks and bots for odh/rhoai-x.y branches",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:02:28.154+0000",
+          "updated": "2026-03-20T09:08:08.090+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54520",
+          "parentKey": "RHOAIENG-54483",
+          "summary": "Configure Konflux PR builds for odh/rhoai-x.y branches",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:02:30.976+0000",
+          "updated": "2026-03-20T09:08:14.302+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54521",
+          "parentKey": "RHOAIENG-54483",
+          "summary": "Configure Konflux integration tests for odh/rhoai-x.y branches",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:02:34.598+0000",
+          "updated": "2026-03-20T09:07:57.693+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54522",
+          "parentKey": "RHOAIENG-54483",
+          "summary": "Implement & validate z-stream workflow using odh/rhoai-x.y",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:02:37.422+0000",
+          "updated": "2026-03-20T09:07:47.232+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54523",
+          "parentKey": "RHOAIENG-54483",
+          "summary": "Implement odh/stable -> rhds/rhoai-x.y direct sync (pre-code-freeze)",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:02:41.839+0000",
+          "updated": "2026-03-20T09:08:30.923+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54524",
+          "parentKey": "RHOAIENG-54483",
+          "summary": "Validate end-to-end release flow for a complete RHOAI minor version",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:02:44.931+0000",
+          "updated": "2026-03-20T09:08:45.488+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-54484",
+      "parentKey": "RHAISTRAT-622",
+      "summary": "Fix authentication issue",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "DevOps"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-20T08:59:44.231+0000",
+      "updated": "2026-03-20T09:03:44.950+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-54531",
+          "parentKey": "RHOAIENG-54484",
+          "summary": "Document embargoed fix process with new repo structure",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:03:08.711+0000",
+          "updated": "2026-03-20T09:08:21.083+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54532",
+          "parentKey": "RHOAIENG-54484",
+          "summary": "Create tooling to export odh/rhoai-x.y to flat GitLab repo",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:03:12.458+0000",
+          "updated": "2026-03-20T09:09:05.420+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54533",
+          "parentKey": "RHOAIENG-54484",
+          "summary": "Validate embargoed fix flow end-to-end",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-20T09:03:15.271+0000",
+          "updated": "2026-03-20T09:09:07.508+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 9,
+    "totalIssues": 52,
+    "issuesByStatus": {
+      "New": 52
+    },
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 52
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 52,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-50796",
+        "summary": "Stretch Goal: RHOAI Early Gate Infrastructure",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Kerry Hill",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-54477",
+        "summary": "[Phase 2] Dockerfile Unification & Migration to ODH",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": null,
+        "totalIssues": 8,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-54478",
+        "summary": "[Phase 2] Enable Renovate on ODH (Midstream)",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 5,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-54479",
+        "summary": "[Phase 2] CoverPort PoC/Enablement for ODH Nightlies",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 3,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-54480",
+        "summary": "[Phase 2] Submodule-Based Downstream Repo Structure",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 8,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-54481",
+        "summary": "[Phase 2] RHOAI-Specific Artifacts Migration to ODH",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 6,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-54482",
+        "summary": "[Phase 2] Auto-Sync Tool Development (Replace Auto-Merge)",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 11,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-54483",
+        "summary": "[Phase 2] ODH-RHOAI Branching Scheme & Release Branch Management",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 8,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-54484",
+        "summary": "[Phase 2] Embargoed Security Fix Process Adaptation",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 3,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

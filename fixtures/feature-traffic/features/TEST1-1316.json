@@ -1,0 +1,53 @@
+{
+  "key": "TEST1-1316",
+  "summary": "Add monitoring metrics",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Gray Brock",
+    "accountId": "60ba5c393aa6050068890180"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4-candidate",
+    "needs-tech-review"
+  ],
+  "components": [
+    "Training Hub"
+  ],
+  "created": "2026-03-18T01:06:18.283+0000",
+  "updated": "2026-04-03T21:28:16.230+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1139",
+      "linkedSummary": "Training Hub: First-Class Model Family Support from AI Hub",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

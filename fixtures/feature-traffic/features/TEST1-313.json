@@ -1,0 +1,1150 @@
+{
+  "key": "TEST1-313",
+  "summary": "Add input validation",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Minor",
+  "assignee": {
+    "displayName": "Frankie Rand",
+    "accountId": "712020:6753113a-463c-46c5-9781-9b9d1ca6bd25"
+  },
+  "fixVersions": [],
+  "labels": [
+    "ai-studio",
+    "confidence-yellow",
+    "dashboard-crimson-scrum",
+    "must-have",
+    "needs-doc",
+    "rhoai-3.5"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "AI Safety",
+    "Documentation",
+    "Gen AI Studio",
+    "RAG + Vector DB",
+    "UXD"
+  ],
+  "created": "2025-11-25T14:41:02.411+0000",
+  "updated": "2026-04-05T03:14:23.466+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Yellow",
+            "marks": [
+              {
+                "type": "textColor",
+                "attrs": {
+                  "color": "#ffab00"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Feb 25th Update (Guardrails Strategy Change (3.4))",
+            "marks": [
+              {
+                "type": "strong"
+              }
+            ]
+          },
+          {
+            "type": "hardBreak"
+          },
+          {
+            "type": "text",
+            "text": "Discussion: We are pivoting our Guardrails integration strategy for 3.4. Instead of routing through LlamaStack (LLS) as a proxy to the Guardrails service, we will integrate directly with the Guardrails API (FMS Guardrails Orchestrator)."
+          },
+          {
+            "type": "text",
+            "text": "https://redhat-internal.slack.com/archives/C09S4J8TV5Y/p1771859583834929",
+            "marks": [
+              {
+                "type": "link",
+                "attrs": {
+                  "href": "https://redhat-internal.slack.com/archives/C09S4J8TV5Y/p1771859583834929"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " "
+          }
+        ]
+      },
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Spike has been created around this to understand the re-work needed from bff side"
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1196",
+      "linkedSummary": "A mechanism to pass user-request headers to external llama-stack providers ",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1196",
+      "linkedSummary": "A mechanism to pass user-request headers to external llama-stack providers ",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-314",
+      "linkedSummary": "DUPLICATE-CLOSED-Guardrails – Surface Basic Llama Stack Guardrails in playground (MVP)",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1299",
+      "linkedSummary": "Migrate Guardrails Integration to NeMo Guardrails",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1102",
+      "linkedSummary": "Gen AI studio - 3.4 (Summit) Deliverables",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1156",
+      "linkedSummary": "A mechanism to pass user-request headers to external llama-stack providers ",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-709",
+      "linkedSummary": "Guardrails – Surface Basic Llama Stack Guardrails in playground (MVP)",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1391",
+      "linkedSummary": "Decouple Guardrail Enforcement from Inference Path via Direct NeMo Guardrails Integration",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHOAIUX-1235",
+      "linkedSummary": "llama stack guardrails in playground",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-39868",
+      "linkedSummary": "Build guardrailing bundle for Llama-stack playground",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-51117",
+      "linkedSummary": "[ccs] Document Guardrails surfacing in GenAI Playground - MVP 3.5",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Informs",
+      "direction": "inward",
+      "linkedKey": "UXDR-4848",
+      "linkedSummary": "Provide evals and testing as a dedicated workflow in the platform, with fine-tuning capabilities",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1553",
+      "linkedSummary": "Expand AI Assets Hub in Gen AI Studio to Include Guardrails and Prompts",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-39902",
+      "parentKey": "RHAISTRAT-313",
+      "summary": "Update API endpoint",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 229",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2025-11-28T06:23:25.048+0000",
+      "updated": "2026-03-20T08:12:49.688+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-39903",
+          "parentKey": "RHOAIENG-39902",
+          "summary": "[Spike] Llama Stack Guardrails API Investigations",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2025-11-28T06:26:38.916+0000",
+          "updated": "2026-02-13T10:46:40.300+0000",
+          "resolutionDate": "2026-01-15T11:01:35.083+0000"
+        },
+        {
+          "key": "RHOAIENG-43689",
+          "parentKey": "RHOAIENG-39902",
+          "summary": "Add mocked bff for guardrail",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-07T09:53:43.659+0000",
+          "updated": "2026-03-04T00:36:55.420+0000",
+          "resolutionDate": "2026-01-07T09:54:23.007+0000"
+        },
+        {
+          "key": "RHOAIENG-44398",
+          "parentKey": "RHOAIENG-39902",
+          "summary": "Add mocked Moderation API",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-08T12:44:11.789+0000",
+          "updated": "2026-02-27T00:41:18.124+0000",
+          "resolutionDate": "2026-01-30T06:15:47.848+0000"
+        },
+        {
+          "key": "RHOAIENG-45715",
+          "parentKey": "RHOAIENG-39902",
+          "summary": "Add enable_guardrails flag to LlamaStack Distribution install endpoint",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-15T10:10:21.969+0000",
+          "updated": "2026-02-27T00:40:48.098+0000",
+          "resolutionDate": "2026-01-20T12:05:58.700+0000"
+        },
+        {
+          "key": "RHOAIENG-45722",
+          "parentKey": "RHOAIENG-39902",
+          "summary": "Implement real GuardrailsOrchestrator status endpoint in Gen-AI BFF",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-15T10:39:03.238+0000",
+          "updated": "2026-02-27T00:40:46.247+0000",
+          "resolutionDate": "2026-01-20T12:04:33.228+0000"
+        },
+        {
+          "key": "RHOAIENG-45723",
+          "parentKey": "RHOAIENG-39902",
+          "summary": "Add real time moderation endpoint for input/output guardrails",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-15T11:00:28.793+0000",
+          "updated": "2026-02-27T00:40:44.673+0000",
+          "resolutionDate": "2026-01-30T06:15:09.197+0000"
+        },
+        {
+          "key": "RHOAIENG-46676",
+          "parentKey": "RHOAIENG-39902",
+          "summary": "[Blocked]: Verify MaaS token is passed to llama stack with trustyai provider",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-21T07:01:11.704+0000",
+          "updated": "2026-03-20T08:12:14.609+0000",
+          "resolutionDate": "2026-03-20T08:12:14.582+0000"
+        },
+        {
+          "key": "RHOAIENG-48975",
+          "parentKey": "RHOAIENG-39902",
+          "summary": "Add network access to LlamaStackDistribution resources in Gen AI BFF",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-09T08:37:38.023+0000",
+          "updated": "2026-02-27T00:39:03.297+0000",
+          "resolutionDate": "2026-02-10T07:23:53.347+0000"
+        },
+        {
+          "key": "RHOAIENG-50758",
+          "parentKey": "RHOAIENG-39902",
+          "summary": "SPIKE: Investigate direct Guardrails API integration to replace LLS proxy strategy",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Kerry Archer",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-02-25T06:16:58.581+0000",
+          "updated": "2026-03-12T21:45:46.281+0000",
+          "resolutionDate": "2026-03-12T07:13:19.684+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-39904",
+      "parentKey": "RHAISTRAT-313",
+      "summary": "Improve error handling",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 229",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2025-11-28T06:52:27.726+0000",
+      "updated": "2026-03-20T08:15:58.073+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-39905",
+          "parentKey": "RHOAIENG-39904",
+          "summary": "Add Guardrail Types and API Service",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2025-11-28T06:59:06.462+0000",
+          "updated": "2026-02-27T00:41:51.440+0000",
+          "resolutionDate": "2026-01-29T13:07:19.203+0000"
+        },
+        {
+          "key": "RHOAIENG-43378",
+          "parentKey": "RHOAIENG-39904",
+          "summary": "Implement Guardrails Status Warning in Gen AI Studio Playground",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Merit Stone",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-05T07:58:04.459+0000",
+          "updated": "2026-02-27T00:41:33.697+0000",
+          "resolutionDate": "2026-02-05T13:36:07.389+0000"
+        },
+        {
+          "key": "RHOAIENG-43379",
+          "parentKey": "RHOAIENG-39904",
+          "summary": "Add Guardrails Accordion section to Settings Panel",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-05T08:03:25.512+0000",
+          "updated": "2026-02-27T00:41:32.023+0000",
+          "resolutionDate": "2026-02-03T05:50:32.053+0000"
+        },
+        {
+          "key": "RHOAIENG-43380",
+          "parentKey": "RHOAIENG-39904",
+          "summary": "Integrate Guardrails with Chat Message Flow",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-05T08:06:09.796+0000",
+          "updated": "2026-02-27T00:41:30.430+0000",
+          "resolutionDate": "2026-02-03T05:50:22.612+0000"
+        },
+        {
+          "key": "RHOAIENG-46110",
+          "parentKey": "RHOAIENG-39904",
+          "summary": "Add RBAC permission",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-19T11:04:51.714+0000",
+          "updated": "2026-02-27T00:40:35.979+0000",
+          "resolutionDate": "2026-02-18T10:57:32.124+0000"
+        },
+        {
+          "key": "RHOAIENG-46675",
+          "parentKey": "RHOAIENG-39904",
+          "summary": "Add devflag for guardrails",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-21T06:32:07.250+0000",
+          "updated": "2026-02-27T00:40:21.554+0000",
+          "resolutionDate": "2026-01-29T13:08:23.627+0000"
+        },
+        {
+          "key": "RHOAIENG-48666",
+          "parentKey": "RHOAIENG-39904",
+          "summary": "Add Cypress mocked test for guardrails feature",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-04T13:24:41.642+0000",
+          "updated": "2026-02-27T00:39:25.176+0000",
+          "resolutionDate": "2026-02-10T07:19:36.141+0000"
+        },
+        {
+          "key": "RHOAIENG-48764",
+          "parentKey": "RHOAIENG-39904",
+          "summary": "Minor UI changes",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-05T11:54:17.430+0000",
+          "updated": "2026-02-27T00:39:14.280+0000",
+          "resolutionDate": "2026-02-09T13:16:13.865+0000"
+        },
+        {
+          "key": "RHOAIENG-48794",
+          "parentKey": "RHOAIENG-39904",
+          "summary": "Add Event tracking to Guardrails tab",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Stone",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-05T16:28:23.480+0000",
+          "updated": "2026-03-19T13:49:11.808+0000",
+          "resolutionDate": "2026-03-19T13:49:11.784+0000"
+        },
+        {
+          "key": "RHOAIENG-50125",
+          "parentKey": "RHOAIENG-39904",
+          "summary": "Tech Debt: Add FieldGroupLabelIncon changes to mod-arch",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Stone",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-18T12:58:48.900+0000",
+          "updated": "2026-03-12T16:32:38.511+0000",
+          "resolutionDate": "2026-03-12T16:32:38.476+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-52038",
+      "parentKey": "RHAISTRAT-313",
+      "summary": "Update configuration settings",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Person 165",
+      "components": [
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-05T16:27:22.051+0000",
+      "updated": "2026-03-18T13:16:00.364+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-52040",
+          "parentKey": "RHOAIENG-52038",
+          "summary": "Supply template for PII, HAP, and Prompt Injection guardrails for NeMo",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Merit Young",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-05T16:27:55.735+0000",
+          "updated": "2026-03-05T16:27:55.735+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-54877",
+      "parentKey": "RHAISTRAT-313",
+      "summary": "Implement search feature",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Person 229",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-03-24T09:39:18.394+0000",
+      "updated": "2026-04-01T09:24:54.531+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-54878",
+          "parentKey": "RHOAIENG-54877",
+          "summary": "Guardrails - MUST meet designed for FIPS",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Frankie Rand",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-24T09:39:28.833+0000",
+          "updated": "2026-04-01T09:25:07.011+0000",
+          "resolutionDate": "2026-03-24T10:16:04.789+0000"
+        },
+        {
+          "key": "RHOAIENG-54879",
+          "parentKey": "RHOAIENG-54877",
+          "summary": "Guardrails - Repository added to ODH/RHOAI",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Rand",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-24T09:39:32.361+0000",
+          "updated": "2026-04-01T09:25:11.279+0000",
+          "resolutionDate": "2026-03-24T10:17:11.069+0000"
+        },
+        {
+          "key": "RHOAIENG-54880",
+          "parentKey": "RHOAIENG-54877",
+          "summary": "Guardrails - Ensure work with supported lifecyles",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-24T09:39:35.708+0000",
+          "updated": "2026-04-01T09:25:15.515+0000",
+          "resolutionDate": "2026-03-24T10:18:06.102+0000"
+        },
+        {
+          "key": "RHOAIENG-54881",
+          "parentKey": "RHOAIENG-54877",
+          "summary": "Guardrails - Add source repo(s) to Snyk",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Rand",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-24T09:39:38.975+0000",
+          "updated": "2026-04-01T09:25:20.099+0000",
+          "resolutionDate": "2026-03-24T10:18:25.831+0000"
+        },
+        {
+          "key": "RHOAIENG-54882",
+          "parentKey": "RHOAIENG-54877",
+          "summary": "CLONE - Promote alpha APIs to beta",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Rand",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-24T09:39:42.279+0000",
+          "updated": "2026-04-01T09:25:23.980+0000",
+          "resolutionDate": "2026-03-24T10:18:44.135+0000"
+        },
+        {
+          "key": "RHOAIENG-54883",
+          "parentKey": "RHOAIENG-54877",
+          "summary": "CLONE - Onboard to ODH Build - 2 week notice! ",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Rand",
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-24T09:39:45.397+0000",
+          "updated": "2026-04-01T09:25:27.890+0000",
+          "resolutionDate": "2026-03-24T10:19:01.765+0000"
+        },
+        {
+          "key": "RHOAIENG-54884",
+          "parentKey": "RHOAIENG-54877",
+          "summary": "Guardrails- Test with disconnected environment",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-24T09:39:48.778+0000",
+          "updated": "2026-04-01T09:25:31.787+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54885",
+          "parentKey": "RHOAIENG-54877",
+          "summary": "CLONE - Add component data to product-definitions for vulnerability tracking",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Frankie Rand",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-24T09:39:51.929+0000",
+          "updated": "2026-04-01T09:25:36.539+0000",
+          "resolutionDate": "2026-03-24T10:19:20.944+0000"
+        },
+        {
+          "key": "RHOAIENG-54886",
+          "parentKey": "RHOAIENG-54877",
+          "summary": "CLONE - Add component support for must-gather",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Rand",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-24T09:39:55.204+0000",
+          "updated": "2026-04-01T09:25:40.285+0000",
+          "resolutionDate": "2026-03-24T10:19:39.126+0000"
+        },
+        {
+          "key": "RHOAIENG-54887",
+          "parentKey": "RHOAIENG-54877",
+          "summary": "Guardrails - Security requirements",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": "Frankie Rand",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-24T09:39:58.414+0000",
+          "updated": "2026-04-01T09:25:44.017+0000",
+          "resolutionDate": "2026-03-24T10:19:54.545+0000"
+        },
+        {
+          "key": "RHOAIENG-54888",
+          "parentKey": "RHOAIENG-54877",
+          "summary": "Guardrails - Create component in jira",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Rand",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-24T09:40:01.229+0000",
+          "updated": "2026-04-01T09:25:47.591+0000",
+          "resolutionDate": "2026-03-24T10:22:15.401+0000"
+        },
+        {
+          "key": "RHOAIENG-54889",
+          "parentKey": "RHOAIENG-54877",
+          "summary": "CLONE - Integration with ODH operator - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-24T09:40:04.463+0000",
+          "updated": "2026-04-01T09:25:51.520+0000",
+          "resolutionDate": "2026-03-24T10:23:27.658+0000"
+        },
+        {
+          "key": "RHOAIENG-54890",
+          "parentKey": "RHOAIENG-54877",
+          "summary": "CLONE - RHOAI ONLY: AI Platform Core Components (AIPCC) Integration",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Frankie Rand",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-24T09:40:07.714+0000",
+          "updated": "2026-04-01T09:25:54.926+0000",
+          "resolutionDate": "2026-03-24T10:23:50.753+0000"
+        },
+        {
+          "key": "RHOAIENG-54891",
+          "parentKey": "RHOAIENG-54877",
+          "summary": "Guardrails- Multi-Architecture Support",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-24T09:40:11.228+0000",
+          "updated": "2026-04-01T09:25:58.728+0000",
+          "resolutionDate": "2026-03-24T10:24:59.766+0000"
+        },
+        {
+          "key": "RHOAIENG-54892",
+          "parentKey": "RHOAIENG-54877",
+          "summary": "CLONE - Add Prometheus (metrics) config for component (optional)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Rand",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-24T09:40:14.332+0000",
+          "updated": "2026-04-01T09:26:01.971+0000",
+          "resolutionDate": "2026-03-24T10:25:24.673+0000"
+        },
+        {
+          "key": "RHOAIENG-54893",
+          "parentKey": "RHOAIENG-54877",
+          "summary": "Guardrails - Feature signoff - TP",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Blocker",
+          "assignee": "Frankie Rand",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [
+            "signoff"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-24T09:40:17.511+0000",
+          "updated": "2026-04-01T09:26:05.447+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-54900",
+          "parentKey": "RHOAIENG-54877",
+          "summary": "CLONE - Onboard to RHOAI Build - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Rand",
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-24T09:40:35.451+0000",
+          "updated": "2026-04-01T09:26:25.219+0000",
+          "resolutionDate": "2026-03-24T10:27:18.708+0000"
+        },
+        {
+          "key": "RHOAIENG-54901",
+          "parentKey": "RHOAIENG-54877",
+          "summary": "CLONE - Testing requirements",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Frankie Rand",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-24T09:40:38.449+0000",
+          "updated": "2026-04-01T09:26:28.733+0000",
+          "resolutionDate": "2026-03-24T10:28:46.954+0000"
+        },
+        {
+          "key": "RHOAIENG-54902",
+          "parentKey": "RHOAIENG-54877",
+          "summary": "CLONE - Integration with RHOAI operator - 2 week notice!",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-24T09:40:41.371+0000",
+          "updated": "2026-04-01T09:26:32.007+0000",
+          "resolutionDate": "2026-03-24T10:29:01.990+0000"
+        },
+        {
+          "key": "RHOAIENG-54903",
+          "parentKey": "RHOAIENG-54877",
+          "summary": "CLONE - Build from source (required)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "OpenShift AI Productization"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-24T09:40:44.448+0000",
+          "updated": "2026-04-01T09:26:35.516+0000",
+          "resolutionDate": "2026-03-24T10:29:28.707+0000"
+        },
+        {
+          "key": "RHOAIENG-54904",
+          "parentKey": "RHOAIENG-54877",
+          "summary": "CLONE - Add support for the new component in the QE related repositories",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Rand",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-03-24T09:40:47.535+0000",
+          "updated": "2026-04-01T09:26:38.794+0000",
+          "resolutionDate": "2026-03-24T10:46:14.889+0000"
+        },
+        {
+          "key": "RHOAIENG-54905",
+          "parentKey": "RHOAIENG-54877",
+          "summary": "Guardrails - Feature documented in architecture diagrams",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Frankie Rand",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-24T09:40:50.529+0000",
+          "updated": "2026-04-01T09:26:41.932+0000",
+          "resolutionDate": "2026-03-24T10:45:49.935+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 4,
+    "totalIssues": 42,
+    "issuesByStatus": {
+      "Closed": 32,
+      "Resolved": 7,
+      "New": 2,
+      "In Progress": 1
+    },
+    "issuesByCategory": {
+      "Done": 39,
+      "In Progress": 1,
+      "To Do": 2
+    },
+    "totalStoryPoints": 6,
+    "storyPointsDone": 6,
+    "completionPct": 93,
+    "staleCount": 0,
+    "unassignedCount": 1,
+    "blockerCount": 7,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-39902",
+        "summary": "BFF integration for Basic Guardrails intregations",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Frankie Rand",
+        "totalIssues": 9,
+        "doneIssues": 9,
+        "progressPct": 100,
+        "storyPoints": 3,
+        "storyPointsDone": 3,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-39904",
+        "summary": "UI Guardrails Integrations",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Frankie Rand",
+        "totalIssues": 10,
+        "doneIssues": 10,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-52038",
+        "summary": "Supply NeMo Guardrails configuration templates to UI team",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Merit Young",
+        "totalIssues": 1,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-54877",
+        "summary": "Tech Preview - ODH and RHOAI Integrations [AI Core Dashboard/GenAi - Guardrails]",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Frankie Rand",
+        "totalIssues": 22,
+        "doneIssues": 20,
+        "progressPct": 91,
+        "storyPoints": 3,
+        "storyPointsDone": 3,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

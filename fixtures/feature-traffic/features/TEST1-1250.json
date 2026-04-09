@@ -1,0 +1,116 @@
+{
+  "key": "TEST1-1250",
+  "summary": "Add pagination support",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Onyx Upton",
+    "accountId": "712020:32edded2-aff1-454d-9734-0a31f9cd4a00"
+  },
+  "fixVersions": [],
+  "labels": [
+    "needs-tech-review"
+  ],
+  "components": [
+    "Model Serving"
+  ],
+  "created": "2026-02-27T18:44:12.840+0000",
+  "updated": "2026-03-23T16:17:37.614+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Blocks",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-583",
+      "linkedSummary": "A/B Testing support for KServe",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-454",
+      "linkedSummary": "RawDeployment aka Standard mode for deploying models should support \"Recreate\" deployment strategy",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-392",
+      "linkedSummary": "RawDeployment aka Standard mode for deploying models should support \"Recreate\" deployment strategy",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-78",
+      "linkedSummary": "Enable Canary Rollout Support for RawDeployment Mode in RHOAI’s KServe",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-52959",
+      "linkedSummary": "Spike: Enable Canary Rollout Support for RawDeployment Mode in RHOAI's KServe (RHAISTRAT-1250)",
+      "linkedStatus": "Review"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-56574",
+      "parentKey": "RHAISTRAT-1250",
+      "summary": "Fix data migration",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "Model Serving"
+      ],
+      "labels": [
+        "canary",
+        "gateway-api",
+        "rawdeployment"
+      ],
+      "storyPoints": 0,
+      "created": "2026-04-02T15:40:08.838+0000",
+      "updated": "2026-04-02T15:41:37.614+0000",
+      "issues": []
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-56574",
+        "summary": "Enable canary rollout for InferenceService in RawDeployment mode",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

@@ -1,0 +1,340 @@
+{
+  "key": "TEST1-150",
+  "summary": "Implement data cleanup",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Merit Winn",
+    "accountId": "712020:6933584a-f175-48eb-84b9-47f7bb496833"
+  },
+  "fixVersions": [
+    "rhoai-3.4"
+  ],
+  "labels": [
+    "3.4-candidate",
+    "3.4-committed",
+    "ai-studio",
+    "aicp-team-crucible",
+    "dashboard-razzmatazz-scrum",
+    "prompt-lab"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "Gen AI Studio",
+    "MLflow",
+    "UXD"
+  ],
+  "created": "2025-10-30T20:25:30.710+0000",
+  "updated": "2026-04-07T15:36:46.431+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Monday Mar 9 2026 17:00 Green for 3.4, only CCS/DOCS left to close out. "
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-103",
+      "linkedSummary": "Have full support for GenAI lifecycle management and experiment tracking.",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1112",
+      "linkedSummary": "Prompt Management integration in gen AI studio playground",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-197",
+      "linkedSummary": "Streamlined Prompt Management & Versioning",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-64",
+      "linkedSummary": "Streamlined Prompt Management with Llama Stack Responses API",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1102",
+      "linkedSummary": "Gen AI studio - 3.4 (Summit) Deliverables",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-51118",
+      "linkedSummary": "[ccs] Document Embedding MLFlow to the GenAI Playground - GA 3.4",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIUX-1443",
+      "linkedSummary": "MLFlow - prompt management (phase 1)",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-50150",
+      "linkedSummary": "Load Prompt Modal - Browse and load governed prompts in Playground",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-353",
+      "linkedSummary": "Prompt Versioning with OpenShift AI",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-706",
+      "linkedSummary": "Prompt Engineering & Management – Centralized Authoring, Versioning, and Playground Integration",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHOAIUX-1231",
+      "linkedSummary": "[Orient] WatsonX Promptlab",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Incorporates",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-51359",
+      "linkedSummary": "Feature signoff - GA",
+      "linkedStatus": "Backlog"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1067",
+      "linkedSummary": "Gen AI playground Prompt Lab Feature Parity",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1161",
+      "linkedSummary": "MLFlow integration in RHOAI GA",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1528",
+      "linkedSummary": "MLFlow Prompt Template Integration in gen AI studio",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1433",
+      "linkedSummary": "MLFlow integration in RHOAI (KFP int & Dashboard Work that was targeted for 3.4Stable but not completed by April 3))",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-46607",
+      "parentKey": "RHAISTRAT-150",
+      "summary": "Update error messages",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Person 241",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "3.4-candidate",
+        "3.4-committed",
+        "dashboard-razzmatazz-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-01-20T19:00:32.539+0000",
+      "updated": "2026-03-31T13:32:54.355+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-45791",
+          "parentKey": "RHOAIENG-46607",
+          "summary": "Embed the MLflow UI into the Prompt Management page",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Bennett",
+          "components": [
+            "AI Core Dashboard",
+            "MLflow"
+          ],
+          "labels": [
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 5,
+          "created": "2026-01-15T16:30:41.694+0000",
+          "updated": "2026-03-05T16:27:02.539+0000",
+          "resolutionDate": "2026-03-05T16:27:02.499+0000"
+        },
+        {
+          "key": "RHOAIENG-49159",
+          "parentKey": "RHOAIENG-46607",
+          "summary": "Feature Flags",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Onyx Bennett",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-10T22:01:20.225+0000",
+          "updated": "2026-04-07T19:29:03.649+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-50983",
+          "parentKey": "RHOAIENG-46607",
+          "summary": "Fixes for prompt management embedding",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Onyx Bennett",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-25T17:56:09.528+0000",
+          "updated": "2026-03-19T14:39:01.686+0000",
+          "resolutionDate": "2026-03-19T14:39:01.645+0000"
+        },
+        {
+          "key": "RHOAIENG-51347",
+          "parentKey": "RHOAIENG-46607",
+          "summary": "Add e2e tests for embedded prompt management",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Bennett",
+          "components": [
+            "AI Core Dashboard",
+            "MLflow"
+          ],
+          "labels": [
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-27T16:09:13.257+0000",
+          "updated": "2026-04-06T19:24:58.310+0000",
+          "resolutionDate": "2026-04-06T19:24:58.272+0000"
+        },
+        {
+          "key": "RHOAIENG-52232",
+          "parentKey": "RHOAIENG-46607",
+          "summary": "Followup fixes ",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Bennett",
+          "components": [
+            "AI Core Dashboard",
+            "MLflow"
+          ],
+          "labels": [
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-06T18:21:34.983+0000",
+          "updated": "2026-03-19T14:39:23.253+0000",
+          "resolutionDate": "2026-03-19T14:39:23.217+0000"
+        },
+        {
+          "key": "RHOAIENG-55024",
+          "parentKey": "RHOAIENG-46607",
+          "summary": "Followup fixes 2",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Bennett",
+          "components": [],
+          "labels": [
+            "dashboard-razzmatazz-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-24T19:52:28.717+0000",
+          "updated": "2026-04-01T18:34:00.640+0000",
+          "resolutionDate": "2026-04-01T18:34:00.610+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 6,
+    "issuesByStatus": {
+      "Closed": 5,
+      "Review": 1
+    },
+    "issuesByCategory": {
+      "Done": 5,
+      "In Progress": 1,
+      "To Do": 0
+    },
+    "totalStoryPoints": 5,
+    "storyPointsDone": 5,
+    "completionPct": 83,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 2,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-46607",
+        "summary": "Prompt Management - MLFlow Embedded UI",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Onyx Bennett",
+        "totalIssues": 6,
+        "doneIssues": 5,
+        "progressPct": 83,
+        "storyPoints": 5,
+        "storyPointsDone": 5,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

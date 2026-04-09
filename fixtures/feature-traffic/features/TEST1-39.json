@@ -1,0 +1,113 @@
+{
+  "key": "TEST1-39",
+  "summary": "Update documentation",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Gray Nash",
+    "accountId": "70121:af965fe0-0b18-4a47-a6c5-d9f72177657d"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "core",
+    "mid-term",
+    "needs-doc",
+    "needs-tech-review"
+  ],
+  "components": [
+    "Llama Stack Core",
+    "PerfScale"
+  ],
+  "created": "2025-08-19T12:21:52.049+0000",
+  "updated": "2026-04-03T17:29:47.218+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Causality",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-967",
+      "linkedSummary": " Mandate PostgreSQL for Production and Deprecate SQLite to Improve Scalability and Performance - Cloned from RHAIRFE-821",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-798",
+      "linkedSummary": "[TP] Introduce Llama Stack Support Matrix and Provider/Component Version Compatibility Documentation ",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Causality",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-165",
+      "linkedSummary": "Default to Remote Inference and Model Enhancement to Optimize Embeddings Performance",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Causality",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-821",
+      "linkedSummary": " Mandate PostgreSQL for Production and Deprecate SQLite to Improve Scalability and Performance",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-428",
+      "linkedSummary": "Llama Stack Performance and Capacity Measurement/Documentation",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Account",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-635",
+      "linkedSummary": "Create Deployment Best Practices Guide for the Llama Stack Operator",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIENG-1249",
+      "linkedSummary": "Spike: Check multi-replica LLS setup",
+      "linkedStatus": "Resolved"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-2208",
+      "linkedSummary": "[ccs] Document Llama Stack performance guidelines",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-4118",
+      "linkedSummary": "OpenTelemetry instrumentation packages are missing in downstream image built via Dockerfile.konflux",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

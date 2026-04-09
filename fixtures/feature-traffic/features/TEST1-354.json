@@ -1,0 +1,66 @@
+{
+  "key": "TEST1-354",
+  "summary": "Fix sorting order",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Frankie Gordon",
+    "accountId": "712020:7631c516-db21-4782-b7d9-ddc2a4577676"
+  },
+  "fixVersions": [],
+  "labels": [
+    "Accelerator_Platform"
+  ],
+  "components": [
+    "AI Pipelines"
+  ],
+  "created": "2025-05-22T10:03:37.845+0000",
+  "updated": "2025-11-25T21:36:55.063+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-911",
+      "linkedSummary": "GPU-as-a-Service capabilities",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Causality",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-549",
+      "linkedSummary": "Kueue manages all RHOAI workloads - Kueue integration",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-574",
+      "linkedSummary": "Default Install of AI Features",
+      "linkedStatus": "New"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

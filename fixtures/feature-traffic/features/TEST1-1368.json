@@ -1,0 +1,109 @@
+{
+  "key": "TEST1-1368",
+  "summary": "Add filtering options",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Kerry Evans",
+    "accountId": "63c6c91d6178fcc941d89a42"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "llm-d"
+  ],
+  "components": [
+    "Documentation",
+    "llm-d",
+    "Model Serving"
+  ],
+  "created": "2026-03-20T17:15:57.416+0000",
+  "updated": "2026-03-23T00:22:41.501+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1198",
+      "linkedSummary": "DP-Implement End-to-End Distributed Tracing for llm-d",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Informs",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-1166",
+      "linkedSummary": "Distributed Inference with llm-d: 3.4 Summit 2026 deliverable Outcome",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Triggers",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-930",
+      "linkedSummary": "llm-d: Establish End-to-End Observability (metrics,tracing, monitoring, dashboards)",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Triggers",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-1069",
+      "linkedSummary": "Implement End-to-End Distributed Tracing for llm-d",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-54597",
+      "parentKey": "RHAISTRAT-1368",
+      "summary": "Improve error handling",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": "Merit Dean",
+      "components": [
+        "Documentation",
+        "llm-d"
+      ],
+      "labels": [],
+      "storyPoints": 4,
+      "created": "2026-03-20T17:15:59.746+0000",
+      "updated": "2026-03-20T17:16:03.479+0000",
+      "issues": []
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-54597",
+        "summary": "CLONE - [ccs] Documentation for End-to-End Distributed Tracing for llm-d",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Kerry Emery",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "key": "TEST1-263",
+  "summary": "Update dependencies",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Undefined",
+  "assignee": {
+    "displayName": "Merit Foster",
+    "accountId": "557058:0b07c7e2-d045-47ad-9992-9bc68f5b5df4"
+  },
+  "fixVersions": [
+    "RHELAI-3.2"
+  ],
+  "labels": [
+    "INFERSTRAT_251116"
+  ],
+  "components": [
+    "INFERENG Midstream"
+  ],
+  "created": "2025-11-14T15:30:52.383+0000",
+  "updated": "2026-01-13T10:10:45.069+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-245",
+      "linkedSummary": "RHAIIS 3.2.5 - v0.11.2 vLLM Build & Validation ",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "INFERENG-4011",
+      "linkedSummary": "Document NVIDIA CUDA & AMD ROCm Support updates for RHELAI 3.2",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "AIPCC-7139",
+      "linkedSummary": "RHEL AI 3.2 Release",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "AIPCC-7140",
+      "linkedSummary": "RHEL AI 3.2 Infrastructure",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

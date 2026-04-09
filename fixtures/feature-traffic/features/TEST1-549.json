@@ -1,0 +1,1555 @@
+{
+  "key": "TEST1-549",
+  "summary": "Add unit tests for service",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Onyx Kelley",
+    "accountId": "606b693110a0a9006fd7ca32"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "AI Core Platform",
+    "AI Core Platform Security"
+  ],
+  "created": "2025-10-02T09:44:06.639+0000",
+  "updated": "2026-02-16T21:03:42.387+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-611",
+      "linkedSummary": "RHOAI BYOIDC Feature Hardening",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-36104",
+      "parentKey": "RHAISTRAT-549",
+      "summary": "Update dependencies",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Person 273",
+      "components": [
+        "AI Core Platform",
+        "AI Core Platform Security"
+      ],
+      "labels": [
+        "aicp-team-heimdall"
+      ],
+      "storyPoints": 0,
+      "created": "2025-10-14T12:47:38.382+0000",
+      "updated": "2026-01-22T14:00:59.967+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-37726",
+          "parentKey": "RHOAIENG-36104",
+          "summary": "Create Claude Code subagent to scan for FIPS compliance",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Noble",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-10-31T16:36:12.263+0000",
+          "updated": "2025-11-10T12:45:09.469+0000",
+          "resolutionDate": "2025-11-10T12:45:09.443+0000"
+        },
+        {
+          "key": "RHOAIENG-37728",
+          "parentKey": "RHOAIENG-36104",
+          "summary": "PoC - Scan vllm for FIPS compliance, using dedicated Claude Code subagent",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Noble",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 1,
+          "created": "2025-10-31T16:49:57.197+0000",
+          "updated": "2025-12-10T15:12:44.785+0000",
+          "resolutionDate": "2025-12-10T15:11:27.699+0000"
+        },
+        {
+          "key": "RHOAIENG-38768",
+          "parentKey": "RHOAIENG-36104",
+          "summary": "Set up recurring automation for DfFIPs scans",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Platform",
+            "AI Core Platform Security"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 0,
+          "created": "2025-11-13T10:24:38.587+0000",
+          "updated": "2026-02-13T21:25:17.862+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-38769",
+          "parentKey": "RHOAIENG-36104",
+          "summary": "Model comparison",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Platform",
+            "AI Core Platform Security"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-11-13T10:25:43.015+0000",
+          "updated": "2025-11-19T23:58:30.904+0000",
+          "resolutionDate": "2025-11-19T23:58:30.885+0000"
+        },
+        {
+          "key": "RHOAIENG-39304",
+          "parentKey": "RHOAIENG-36104",
+          "summary": "[Spike] Create scripts for agent to run as part of scanning different language stacks",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Merit Noble",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 0,
+          "created": "2025-11-20T00:49:09.531+0000",
+          "updated": "2026-02-13T21:26:54.036+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-39305",
+          "parentKey": "RHOAIENG-36104",
+          "summary": "[Spike] Find a better home for the agent plugin (GitHub?)",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Noble",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 0,
+          "created": "2025-11-20T00:51:51.387+0000",
+          "updated": "2026-01-02T12:16:33.944+0000",
+          "resolutionDate": "2026-01-02T12:16:33.911+0000"
+        },
+        {
+          "key": "RHOAIENG-39306",
+          "parentKey": "RHOAIENG-36104",
+          "summary": "[Spike] Try to adapt this to other tools, such as gemini-cli?",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Noble",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 0,
+          "created": "2025-11-20T01:00:03.470+0000",
+          "updated": "2026-01-16T13:25:08.375+0000",
+          "resolutionDate": "2026-01-16T13:25:08.333+0000"
+        },
+        {
+          "key": "RHOAIENG-46852",
+          "parentKey": "RHOAIENG-36104",
+          "summary": "Document how to ignore false positives through CLAUDE.md",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Noble",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 2,
+          "created": "2026-01-22T13:51:43.593+0000",
+          "updated": "2026-03-08T23:39:44.840+0000",
+          "resolutionDate": "2026-03-08T23:39:44.821+0000"
+        },
+        {
+          "key": "RHOAIENG-46853",
+          "parentKey": "RHOAIENG-36104",
+          "summary": "FIPS tool should ignore non konflux Dockerfiles if konflux Dockerfiles are present",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-22T13:57:43.581+0000",
+          "updated": "2026-02-13T21:24:48.416+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-46854",
+          "parentKey": "RHOAIENG-36104",
+          "summary": "Ensure ignoring of test and example code works for all language stacks",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-22T14:00:59.543+0000",
+          "updated": "2026-02-13T21:27:03.906+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-37501",
+      "parentKey": "RHAISTRAT-549",
+      "summary": "Implement retry logic",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Person 282",
+      "components": [
+        "AI Core Platform Security"
+      ],
+      "labels": [
+        "aicp-team-heimdall"
+      ],
+      "storyPoints": 0,
+      "created": "2025-10-29T14:09:10.283+0000",
+      "updated": "2026-02-24T15:25:43.332+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-36818",
+          "parentKey": "RHOAIENG-37501",
+          "summary": "Add kube linter to check security best practices",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Vaughn",
+          "components": [
+            "AI Core Platform Security"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 0,
+          "created": "2025-10-21T13:45:48.391+0000",
+          "updated": "2026-01-27T23:52:10.976+0000",
+          "resolutionDate": "2026-01-27T23:52:10.943+0000"
+        },
+        {
+          "key": "RHOAIENG-38196",
+          "parentKey": "RHOAIENG-37501",
+          "summary": "[Spike] CodeRabbit AI configuration and weekly comprehensive security scan",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Gray Vaughn",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 0,
+          "created": "2025-11-06T15:28:59.246+0000",
+          "updated": "2025-12-09T16:22:42.890+0000",
+          "resolutionDate": "2025-12-09T13:32:09.644+0000"
+        },
+        {
+          "key": "RHOAIENG-48037",
+          "parentKey": "RHOAIENG-37501",
+          "summary": "Claude Code Plugin: security-findings-manager for Automated Security Scanning",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Vaughn",
+          "components": [
+            "AI Core Platform",
+            "AI Core Platform Security"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-29T16:18:37.795+0000",
+          "updated": "2026-01-29T16:22:04.085+0000",
+          "resolutionDate": "2026-01-29T16:18:51.324+0000"
+        },
+        {
+          "key": "RHOAIENG-48039",
+          "parentKey": "RHOAIENG-37501",
+          "summary": "NotebookLM Documentation for security-findings-manager Plugin",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Vaughn",
+          "components": [
+            "AI Core Platform",
+            "AI Core Platform Security"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-29T16:21:35.279+0000",
+          "updated": "2026-01-29T16:23:11.244+0000",
+          "resolutionDate": "2026-01-29T16:23:11.214+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-37526",
+      "parentKey": "RHAISTRAT-549",
+      "summary": "Fix memory leak",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "AI Core Platform Security"
+      ],
+      "labels": [
+        "aicp-team-heimdall"
+      ],
+      "storyPoints": 0,
+      "created": "2025-10-29T18:46:04.473+0000",
+      "updated": "2025-11-25T17:38:16.407+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-37527",
+      "parentKey": "RHAISTRAT-549",
+      "summary": "Update documentation",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Person 283",
+      "components": [
+        "AI Core Platform Security"
+      ],
+      "labels": [
+        "aicp-team-heimdall"
+      ],
+      "storyPoints": 0,
+      "created": "2025-10-29T18:47:26.806+0000",
+      "updated": "2026-02-11T12:54:54.249+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-38197",
+          "parentKey": "RHOAIENG-37527",
+          "summary": "Investigate using claude agent for repo security analysis",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Judd",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 0,
+          "created": "2025-11-06T15:31:18.034+0000",
+          "updated": "2026-01-19T12:53:22.696+0000",
+          "resolutionDate": "2026-01-19T12:53:22.675+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-37528",
+      "parentKey": "RHAISTRAT-549",
+      "summary": "Add monitoring metrics",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "AI Core Platform Security"
+      ],
+      "labels": [
+        "aicp-team-heimdall"
+      ],
+      "storyPoints": 0,
+      "created": "2025-10-29T18:48:56.466+0000",
+      "updated": "2025-11-25T17:38:27.278+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-44137",
+      "parentKey": "RHAISTRAT-549",
+      "summary": "Add rate limiting",
+      "status": "Backlog",
+      "statusCategory": "To Do",
+      "priority": "Blocker",
+      "assignee": null,
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [
+        "aicp-team-heimdall"
+      ],
+      "storyPoints": 0,
+      "created": "2026-01-07T13:07:05.018+0000",
+      "updated": "2026-01-20T14:09:14.857+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-44141",
+          "parentKey": "RHOAIENG-44137",
+          "summary": "[AI Core Platform] Provide feedback on Claude Code plugin for FIPS scanning",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-07T13:32:19.592+0000",
+          "updated": "2026-02-13T21:25:00.711+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-44142",
+          "parentKey": "RHOAIENG-44137",
+          "summary": "[AI Core Dashboard] Provide feedback on Claude Code plugin for FIPS scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Merit Winn",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-07T13:52:07.216+0000",
+          "updated": "2026-03-13T20:44:15.526+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-44143",
+          "parentKey": "RHOAIENG-44137",
+          "summary": "[AI Pipelines] Provide feedback on Claude Code plugin for FIPS scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Pipelines"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-07T13:52:10.825+0000",
+          "updated": "2026-02-23T18:24:37.439+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-44144",
+          "parentKey": "RHOAIENG-44137",
+          "summary": "[Model Serving] Provide feedback on Claude Code plugin for FIPS scanning",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Onyx Thorne",
+          "components": [
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-01-07T13:52:14.494+0000",
+          "updated": "2026-01-20T01:57:21.852+0000",
+          "resolutionDate": "2026-01-20T01:57:21.792+0000"
+        },
+        {
+          "key": "RHOAIENG-44145",
+          "parentKey": "RHOAIENG-44137",
+          "summary": "[Model Runtimes] Provide feedback on Claude Code plugin for FIPS scanning",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Frankie Yates",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-07T13:52:17.886+0000",
+          "updated": "2026-03-05T06:50:12.880+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-44146",
+          "parentKey": "RHOAIENG-44137",
+          "summary": "[Notebooks Server] Provide feedback on Claude Code plugin for FIPS scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Critical",
+          "assignee": null,
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_scrum:indigo",
+            "needs-info",
+            "nse_workflow:triaged"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-07T13:52:20.974+0000",
+          "updated": "2026-03-03T14:33:34.004+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-44147",
+          "parentKey": "RHOAIENG-44137",
+          "summary": "[Training Kubeflow] Provide feedback on Claude Code plugin for FIPS scanning",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Frankie Knox",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-01-07T13:52:24.207+0000",
+          "updated": "2026-04-01T13:45:38.395+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-44148",
+          "parentKey": "RHOAIENG-44137",
+          "summary": "[KubeRay] Provide feedback on Claude Code plugin for FIPS scanning",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Gray Dean",
+          "components": [
+            "KubeRay"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-07T13:52:27.805+0000",
+          "updated": "2026-03-31T22:20:29.404+0000",
+          "resolutionDate": "2026-03-31T15:10:54.011+0000"
+        },
+        {
+          "key": "RHOAIENG-44149",
+          "parentKey": "RHOAIENG-44137",
+          "summary": "[Workload Orchestration] Provide feedback on Claude Code plugin for FIPS scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Kerry Dean",
+          "components": [
+            "Workload Orchestration"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-07T13:52:31.247+0000",
+          "updated": "2026-01-07T15:21:23.945+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-44150",
+          "parentKey": "RHOAIENG-44137",
+          "summary": "[AI Hub] Provide feedback on Claude Code plugin for FIPS scanning",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Gold",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-07T13:52:34.378+0000",
+          "updated": "2026-01-19T18:00:09.117+0000",
+          "resolutionDate": "2026-01-19T18:00:09.050+0000"
+        },
+        {
+          "key": "RHOAIENG-44151",
+          "parentKey": "RHOAIENG-44137",
+          "summary": "[AI Safety] Provide feedback on Claude Code plugin for FIPS scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Onyx Finn",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-07T13:52:37.354+0000",
+          "updated": "2026-03-16T22:41:58.483+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-44152",
+          "parentKey": "RHOAIENG-44137",
+          "summary": "[Model Eval] Provide feedback on Claude Code plugin for FIPS scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Onyx Finn",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-07T13:52:40.882+0000",
+          "updated": "2026-03-16T22:41:58.208+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-44153",
+          "parentKey": "RHOAIENG-44137",
+          "summary": "[Feature Store] Provide feedback on Claude Code plugin for FIPS scanning",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Kerry Ellis",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-01-07T13:52:44.433+0000",
+          "updated": "2026-03-23T09:15:25.635+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-44154",
+          "parentKey": "RHOAIENG-44137",
+          "summary": "[LlamaStack] Provide feedback on Claude Code plugin for FIPS scanning",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Judd",
+          "components": [
+            "Llama Stack Core"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-07T13:52:47.503+0000",
+          "updated": "2026-01-22T01:08:07.529+0000",
+          "resolutionDate": "2026-01-07T14:55:46.381+0000"
+        },
+        {
+          "key": "RHOAIENG-44155",
+          "parentKey": "RHOAIENG-44137",
+          "summary": "[Models as a Service] Provide feedback on Claude Code plugin for FIPS scanning",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Ives",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-01-07T13:52:51.947+0000",
+          "updated": "2026-03-19T05:04:18.571+0000",
+          "resolutionDate": "2026-02-10T15:02:34.044+0000"
+        },
+        {
+          "key": "RHOAIENG-46365",
+          "parentKey": "RHOAIENG-44137",
+          "summary": "[Model Serving] Run Claude Code plugin for FIPS scanning",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Onyx Thorne",
+          "components": [
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-01-20T01:31:40.574+0000",
+          "updated": "2026-01-20T01:49:47.819+0000",
+          "resolutionDate": "2026-01-20T01:49:47.773+0000"
+        },
+        {
+          "key": "RHOAIENG-46509",
+          "parentKey": "RHOAIENG-44137",
+          "summary": "[Notebooks Extensions] Provide feedback on Claude Code plugin for FIPS scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Minor",
+          "assignee": null,
+          "components": [
+            "Notebooks Extensions"
+          ],
+          "labels": [
+            "ide_scrum:teal",
+            "needs-info",
+            "nse_workflow:triaged"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-20T14:09:14.759+0000",
+          "updated": "2026-02-24T18:48:41.939+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-44138",
+      "parentKey": "RHAISTRAT-549",
+      "summary": "Fix authentication issue",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Blocker",
+      "assignee": null,
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [
+        "aicp-team-heimdall"
+      ],
+      "storyPoints": 0,
+      "created": "2026-01-07T13:08:41.257+0000",
+      "updated": "2026-01-28T00:06:11.012+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-47823",
+          "parentKey": "RHOAIENG-44138",
+          "summary": "[AI Core Platform] Provide feedback on Claude Code plugin for SAST scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-27T23:04:25.942+0000",
+          "updated": "2026-01-28T14:45:07.966+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-47824",
+          "parentKey": "RHOAIENG-44138",
+          "summary": "[AI Core Dashboard] Provide feedback on Claude Code plugin for SAST scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-27T23:05:11.592+0000",
+          "updated": "2026-01-28T00:10:59.757+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-47825",
+          "parentKey": "RHOAIENG-44138",
+          "summary": "[AI Pipelines] Provide feedback on Claude Code plugin for SAST scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Pipelines"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-27T23:05:13.369+0000",
+          "updated": "2026-03-02T21:12:59.188+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-47826",
+          "parentKey": "RHOAIENG-44138",
+          "summary": "[Model Serving] Provide feedback on Claude Code plugin for SAST scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-27T23:05:14.947+0000",
+          "updated": "2026-01-28T00:19:32.428+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-47827",
+          "parentKey": "RHOAIENG-44138",
+          "summary": "[Model Runtimes] Provide feedback on Claude Code plugin for SAST scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-27T23:05:16.464+0000",
+          "updated": "2026-03-04T15:05:18.196+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-47828",
+          "parentKey": "RHOAIENG-44138",
+          "summary": "[Notebooks Server] Provide feedback on Claude Code plugin for SAST scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "needs-attention",
+            "nse_workflow:triaged"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-27T23:05:18.043+0000",
+          "updated": "2026-03-03T14:33:51.969+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-47829",
+          "parentKey": "RHOAIENG-44138",
+          "summary": "[Training Kubeflow] Provide feedback on Claude Code plugin for SAST scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-27T23:05:19.588+0000",
+          "updated": "2026-04-01T14:35:35.575+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-47830",
+          "parentKey": "RHOAIENG-44138",
+          "summary": "[KubeRay] Provide feedback on Claude Code plugin for SAST scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "KubeRay"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-27T23:05:21.159+0000",
+          "updated": "2026-03-04T07:55:22.070+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-47831",
+          "parentKey": "RHOAIENG-44138",
+          "summary": "[Workload Orchestration] Provide feedback on Claude Code plugin for SAST scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Workload Orchestration"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-27T23:05:22.752+0000",
+          "updated": "2026-01-28T00:20:17.205+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-47832",
+          "parentKey": "RHOAIENG-44138",
+          "summary": "[AI Hub] Provide feedback on Claude Code plugin for SAST scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-27T23:05:24.308+0000",
+          "updated": "2026-01-28T00:20:01.966+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-47833",
+          "parentKey": "RHOAIENG-44138",
+          "summary": "[AI Safety] Provide feedback on Claude Code plugin for SAST scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-27T23:05:25.867+0000",
+          "updated": "2026-01-28T00:23:45.465+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-47834",
+          "parentKey": "RHOAIENG-44138",
+          "summary": "[Model Eval] Provide feedback on Claude Code plugin for SAST scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-27T23:05:27.418+0000",
+          "updated": "2026-01-28T00:22:29.991+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-47835",
+          "parentKey": "RHOAIENG-44138",
+          "summary": "[Feature Store] Provide feedback on Claude Code plugin for SAST scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Minor",
+          "assignee": null,
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-27T23:05:28.976+0000",
+          "updated": "2026-03-19T08:07:02.630+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-47836",
+          "parentKey": "RHOAIENG-44138",
+          "summary": "[LlamaStack] Provide feedback on Claude Code plugin for SAST scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Llama Stack Core"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-27T23:05:30.518+0000",
+          "updated": "2026-01-28T00:21:59.156+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-47837",
+          "parentKey": "RHOAIENG-44138",
+          "summary": "[Models as a Service] Provide feedback on Claude Code plugin for SAST scanning",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Gray Carter",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-27T23:05:32.072+0000",
+          "updated": "2026-02-18T22:02:14.399+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-47838",
+          "parentKey": "RHOAIENG-44138",
+          "summary": "[Notebooks Extensions] Provide feedback on Claude Code plugin for SAST scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Minor",
+          "assignee": null,
+          "components": [
+            "Notebooks Extensions"
+          ],
+          "labels": [
+            "ide_scrum:teal",
+            "needs-attention",
+            "nse_workflow:triaged"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-27T23:05:33.635+0000",
+          "updated": "2026-02-24T14:33:53.770+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-45083",
+      "parentKey": "RHAISTRAT-549",
+      "summary": "Fix authentication issue",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [
+        "aicp-team-heimdall"
+      ],
+      "storyPoints": 0,
+      "created": "2026-01-12T18:26:46.722+0000",
+      "updated": "2026-01-27T23:42:18.476+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-44157",
+          "parentKey": "RHOAIENG-45083",
+          "summary": "[AI Core Platform] Provide feedback on Claude Code plugin for Security scanning",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-heimdall"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-07T13:56:00.579+0000",
+          "updated": "2026-02-13T21:26:28.160+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-44158",
+          "parentKey": "RHOAIENG-45083",
+          "summary": "[AI Core Dashboard] Provide feedback on Claude Code plugin for Security scanning",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Merit Winn",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-07T13:56:04.248+0000",
+          "updated": "2026-01-27T23:01:50.275+0000",
+          "resolutionDate": "2026-01-07T14:47:38.588+0000"
+        },
+        {
+          "key": "RHOAIENG-44159",
+          "parentKey": "RHOAIENG-45083",
+          "summary": "[AI Pipelines] Provide feedback on Claude Code plugin for Security scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Pipelines"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-07T13:56:07.603+0000",
+          "updated": "2026-02-23T18:24:38.706+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-44160",
+          "parentKey": "RHOAIENG-45083",
+          "summary": "[Model Serving] Provide feedback on Claude Code plugin for Security scanning",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Onyx Thorne",
+          "components": [
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-01-07T13:56:10.889+0000",
+          "updated": "2026-01-27T23:01:43.102+0000",
+          "resolutionDate": "2026-01-21T22:42:36.257+0000"
+        },
+        {
+          "key": "RHOAIENG-44161",
+          "parentKey": "RHOAIENG-45083",
+          "summary": "[Model Runtimes] Provide feedback on Claude Code plugin for Security scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Frankie Yates",
+          "components": [
+            "Model Runtimes"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-07T13:56:13.855+0000",
+          "updated": "2026-03-04T15:10:54.052+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-44162",
+          "parentKey": "RHOAIENG-45083",
+          "summary": "[Notebooks Server] Provide feedback on Claude Code plugin for Security scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Critical",
+          "assignee": null,
+          "components": [
+            "Notebooks Server"
+          ],
+          "labels": [
+            "ide_scrum:indigo",
+            "needs-info",
+            "nse_workflow:triaged"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-07T13:56:17.518+0000",
+          "updated": "2026-03-03T14:37:50.073+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-44163",
+          "parentKey": "RHOAIENG-45083",
+          "summary": "[Training Kubeflow] Provide feedback on Claude Code plugin for Security scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-01-07T13:56:21.115+0000",
+          "updated": "2026-04-01T13:45:35.317+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-44164",
+          "parentKey": "RHOAIENG-45083",
+          "summary": "[KubeRay] Provide feedback on Claude Code plugin for Security scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Gray Dean",
+          "components": [
+            "KubeRay"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-01-07T13:56:24.137+0000",
+          "updated": "2026-03-04T07:55:04.017+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-44165",
+          "parentKey": "RHOAIENG-45083",
+          "summary": "[Workload Orchestration] Provide feedback on Claude Code plugin for Security scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Kerry Dean",
+          "components": [
+            "Workload Orchestration"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-07T13:56:27.204+0000",
+          "updated": "2026-01-27T23:01:29.296+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-44166",
+          "parentKey": "RHOAIENG-45083",
+          "summary": "[AI Hub] Provide feedback on Claude Code plugin for Security scanning",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Gold",
+          "components": [
+            "AI Hub"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-07T13:56:30.489+0000",
+          "updated": "2026-01-27T23:01:26.246+0000",
+          "resolutionDate": "2026-01-07T14:49:21.402+0000"
+        },
+        {
+          "key": "RHOAIENG-44167",
+          "parentKey": "RHOAIENG-45083",
+          "summary": "[AI Safety] Provide feedback on Claude Code plugin for Security scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Onyx Finn",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-07T13:56:34.060+0000",
+          "updated": "2026-03-16T22:41:57.804+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-44168",
+          "parentKey": "RHOAIENG-45083",
+          "summary": "[Model Eval] Provide feedback on Claude Code plugin for Security scanning",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Onyx Finn",
+          "components": [
+            "AI Evaluations"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-07T13:56:37.539+0000",
+          "updated": "2026-03-16T22:41:57.977+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-44169",
+          "parentKey": "RHOAIENG-45083",
+          "summary": "[Feature Store] Provide feedback on Claude Code plugin for Security scanning",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Gray Kelley",
+          "components": [
+            "Feature Store"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-01-07T13:56:41.026+0000",
+          "updated": "2026-01-27T23:01:16.575+0000",
+          "resolutionDate": "2026-01-13T16:04:59.317+0000"
+        },
+        {
+          "key": "RHOAIENG-44170",
+          "parentKey": "RHOAIENG-45083",
+          "summary": "[LlamaStack] Provide feedback on Claude Code plugin for Security scanning",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Kerry Torres",
+          "components": [
+            "Llama Stack Core"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-01-07T13:56:44.401+0000",
+          "updated": "2026-03-30T13:58:34.200+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-44172",
+          "parentKey": "RHOAIENG-45083",
+          "summary": "[Models as a Service] Provide feedback on Claude Code plugin for Security scanning",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Ives",
+          "components": [
+            "Model as a Service"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-01-07T13:56:51.646+0000",
+          "updated": "2026-02-13T18:26:14.160+0000",
+          "resolutionDate": "2026-02-10T15:02:25.578+0000"
+        },
+        {
+          "key": "RHOAIENG-46510",
+          "parentKey": "RHOAIENG-45083",
+          "summary": "[Notebooks Extensions] Provide feedback on Claude Code plugin for Security scanning",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Frankie Grant",
+          "components": [
+            "Notebooks Extensions"
+          ],
+          "labels": [
+            "ide_scrum:teal",
+            "needs-info",
+            "nse_workflow:triaged"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-20T14:11:24.328+0000",
+          "updated": "2026-01-28T17:05:51.640+0000",
+          "resolutionDate": "2026-01-28T17:05:46.347+0000"
+        },
+        {
+          "key": "RHOAIENG-47790",
+          "parentKey": "RHOAIENG-45083",
+          "summary": "[AI Core Platform] Security Scanner (SAST) Feedback",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-27T22:51:19.145+0000",
+          "updated": "2026-01-27T23:42:06.811+0000",
+          "resolutionDate": "2026-01-27T23:42:05.210+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 8,
+    "totalIssues": 65,
+    "issuesByStatus": {
+      "Resolved": 10,
+      "Closed": 14,
+      "Backlog": 9,
+      "New": 30,
+      "In Progress": 2
+    },
+    "issuesByCategory": {
+      "Done": 24,
+      "In Progress": 2,
+      "To Do": 39
+    },
+    "totalStoryPoints": 37,
+    "storyPointsDone": 15,
+    "completionPct": 37,
+    "staleCount": 2,
+    "unassignedCount": 26,
+    "blockerCount": 3,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-36104",
+        "summary": "Use AI agent to detect DfFIPS violations",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Merit Noble",
+        "totalIssues": 10,
+        "doneIssues": 6,
+        "progressPct": 60,
+        "storyPoints": 6,
+        "storyPointsDone": 6,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-37501",
+        "summary": "Security scanning automation: PR checks and weekly comprehensive scans",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Gray Vaughn",
+        "totalIssues": 4,
+        "doneIssues": 4,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-37526",
+        "summary": "Automation of PenTesting RHOAI",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-37527",
+        "summary": "PoC for repo security scans",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Gray Palmer",
+        "totalIssues": 1,
+        "doneIssues": 1,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-37528",
+        "summary": "Consolidated security report ",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-44137",
+        "summary": "FIPS scanner feedback",
+        "status": "Backlog",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 17,
+        "doneIssues": 6,
+        "progressPct": 35,
+        "storyPoints": 13,
+        "storyPointsDone": 4,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-44138",
+        "summary": "CodeRabbit and SAST scanner feedback",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 16,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 3,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-45083",
+        "summary": "security scan summary reports",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 17,
+        "doneIssues": 7,
+        "progressPct": 41,
+        "storyPoints": 15,
+        "storyPointsDone": 5,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": [
+      {
+        "url": "github.com/ray-project/kuberay",
+        "issueCount": 3,
+        "components": [
+          "KubeRay"
+        ]
+      }
+    ]
+  }
+}

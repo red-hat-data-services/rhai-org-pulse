@@ -1,0 +1,120 @@
+{
+  "key": "TEST1-583",
+  "summary": "Update documentation",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Normal",
+  "assignee": {
+    "displayName": "Merit Swift",
+    "accountId": "712020:e7bed1f8-6d0c-4b67-95c7-4230210feaea"
+  },
+  "fixVersions": [],
+  "labels": [
+    "dashboard_scrum",
+    "needs-tech-review"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "Model Runtimes",
+    "UXD"
+  ],
+  "created": "2024-02-01T09:16:01.779+0000",
+  "updated": "2026-02-27T19:14:01.867+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-1250",
+      "linkedSummary": "Enable Canary Rollout Support for RawDeployment Mode in RHOAI’s KServe",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-78",
+      "linkedSummary": "Enable Canary Rollout Support for RawDeployment Mode in RHOAI’s KServe",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-10040",
+      "parentKey": "RHAISTRAT-583",
+      "summary": "Implement feature for module",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": null,
+      "components": [
+        "AI Core Dashboard",
+        "Model Runtimes"
+      ],
+      "labels": [
+        "dashboard-area-model-serving"
+      ],
+      "storyPoints": 0,
+      "created": "2024-07-17T23:27:29.909+0000",
+      "updated": "2026-02-20T18:46:44.459+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-10041",
+          "parentKey": "RHOAIENG-10040",
+          "summary": "A/B Testing support for KServe",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-serving"
+          ],
+          "storyPoints": 0,
+          "created": "2024-07-17T23:29:06.784+0000",
+          "updated": "2026-02-20T18:46:29.408+0000",
+          "resolutionDate": "2026-02-20T18:46:29.370+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 1,
+    "issuesByStatus": {
+      "Closed": 1
+    },
+    "issuesByCategory": {
+      "Done": 1,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 100,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-10040",
+        "summary": "A/B Testing support for KServe",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": null,
+        "totalIssues": 1,
+        "doneIssues": 1,
+        "progressPct": 100,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

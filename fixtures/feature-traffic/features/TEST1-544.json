@@ -1,0 +1,73 @@
+{
+  "key": "TEST1-544",
+  "summary": "Add filtering options",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Undefined",
+  "assignee": {
+    "displayName": "Gray Webb",
+    "accountId": "557058:501ca6d5-85be-425d-a151-f0076c0ccd70"
+  },
+  "fixVersions": [],
+  "labels": [
+    "aicp-team-forge"
+  ],
+  "components": [
+    "AI Core Platform"
+  ],
+  "created": "2024-08-07T13:25:38.281+0000",
+  "updated": "2026-01-12T16:33:29.521+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Issue split",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-833",
+      "linkedSummary": "Support RHOAI on Single Node OpenShift",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-610",
+      "linkedSummary": "Support of RHOAI on SNO without any optimization (Phase 2)",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-9806",
+      "linkedSummary": "Resource utilization in RHOAI components",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-8541",
+      "linkedSummary": "[ccs Epic] Document model serving support on single node OpenShift",
+      "linkedStatus": "Backlog"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

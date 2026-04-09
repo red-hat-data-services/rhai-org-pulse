@@ -1,0 +1,278 @@
+{
+  "key": "TEST1-506",
+  "summary": "Update documentation",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Onyx Kelley",
+    "accountId": "606b693110a0a9006fd7ca32"
+  },
+  "fixVersions": [],
+  "labels": [
+    "tech-reviewed"
+  ],
+  "components": [
+    "AI Core Platform"
+  ],
+  "created": "2025-01-21T19:37:16.142+0000",
+  "updated": "2025-11-25T21:43:14.932+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-461",
+      "linkedSummary": "Feature request to allow customers to define namespace Phase 3",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-421",
+      "linkedSummary": "Feature request to allow customers to define namespace",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-18420",
+      "parentKey": "RHAISTRAT-506",
+      "summary": "Fix authentication issue",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": "Person 256",
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-01-20T19:46:21.028+0000",
+      "updated": "2025-09-25T02:12:19.044+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-18422",
+          "parentKey": "RHOAIENG-18420",
+          "summary": "Support Custom Namespaces for Workbench Component",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Onyx Hunt",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "needs-qe-verification"
+          ],
+          "storyPoints": 3,
+          "created": "2025-01-20T20:04:30.313+0000",
+          "updated": "2025-09-25T02:09:02.072+0000",
+          "resolutionDate": "2025-04-07T12:07:42.802+0000"
+        },
+        {
+          "key": "RHOAIENG-19278",
+          "parentKey": "RHOAIENG-18420",
+          "summary": "[Spike] Support Custom Namespaces (Phase 2)",
+          "type": "Story",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Onyx Hunt",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-02-04T14:28:37.270+0000",
+          "updated": "2025-09-25T02:21:45.215+0000",
+          "resolutionDate": "2025-03-04T15:35:54.838+0000"
+        },
+        {
+          "key": "RHOAIENG-22096",
+          "parentKey": "RHOAIENG-18420",
+          "summary": "[QE] Add support for custom workbenches namespace",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Kerry Chang",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2025-03-24T11:50:07.526+0000",
+          "updated": "2025-09-25T01:58:48.511+0000",
+          "resolutionDate": "2025-04-14T07:17:01.594+0000"
+        },
+        {
+          "key": "RHOAIENG-22098",
+          "parentKey": "RHOAIENG-18420",
+          "summary": "Dashboard Support for Custom Namespace for `Start basic workbench` Workbenches (defaults to `rhods-notebooks` in RHOAI)",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Dawson",
+          "components": [
+            "AI Core Dashboard",
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-03-24T12:41:41.129+0000",
+          "updated": "2025-09-25T01:55:57.578+0000",
+          "resolutionDate": "2025-07-01T13:13:55.551+0000"
+        },
+        {
+          "key": "RHOAIENG-26571",
+          "parentKey": "RHOAIENG-18420",
+          "summary": "Add back DSC Workbench Namespace Customization Feature",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Onyx Hunt",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-06-03T09:22:35.138+0000",
+          "updated": "2025-09-25T02:06:07.421+0000",
+          "resolutionDate": "2025-07-01T13:13:36.124+0000"
+        }
+      ]
+    },
+    {
+      "key": "TEST2-26905",
+      "parentKey": "RHAISTRAT-506",
+      "summary": "Add filtering options",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Onyx Ingram",
+      "components": [
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-06-06T13:09:50.366+0000",
+      "updated": "2025-08-20T20:02:40.063+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-20225",
+          "parentKey": "RHOAIENG-26905",
+          "summary": "[ccs] Implement required enhancements on current custom namespace documentation",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Kerry Carter",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [
+            "ContentX_CJ25"
+          ],
+          "storyPoints": 5,
+          "created": "2025-02-19T17:24:16.577+0000",
+          "updated": "2026-03-26T16:57:49.582+0000",
+          "resolutionDate": "2026-03-26T16:57:49.346+0000"
+        },
+        {
+          "key": "RHOAIENG-26907",
+          "parentKey": "RHOAIENG-26905",
+          "summary": "[ccs Spike] Investigate docs support for Namespace Phase 2",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Carter",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [
+            "ContentX_CJ25"
+          ],
+          "storyPoints": 3,
+          "created": "2025-06-06T13:19:39.256+0000",
+          "updated": "2025-08-19T07:28:20.465+0000",
+          "resolutionDate": "2025-07-11T16:55:28.357+0000"
+        },
+        {
+          "key": "RHOAIENG-30438",
+          "parentKey": "RHOAIENG-26905",
+          "summary": "[ccs] Implement doc changes for re-inserting DSC workbench namespace customization feature",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Gray Winn",
+          "components": [
+            "AI Core Platform",
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2025-07-23T15:21:23.949+0000",
+          "updated": "2025-09-25T01:55:28.302+0000",
+          "resolutionDate": "2025-08-11T12:24:20.340+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 2,
+    "totalIssues": 8,
+    "issuesByStatus": {
+      "Resolved": 2,
+      "Closed": 6
+    },
+    "issuesByCategory": {
+      "Done": 8,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 18,
+    "storyPointsDone": 18,
+    "completionPct": 100,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "GREEN",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-18420",
+        "summary": "RHOAI - Custom Namespaces for Workbench Component",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Onyx Lloyd",
+        "totalIssues": 5,
+        "doneIssues": 5,
+        "progressPct": 100,
+        "storyPoints": 8,
+        "storyPointsDone": 8,
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-26905",
+        "summary": "[ccs Epic] Document Namespace feat Phase 2",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Kerry Carter",
+        "totalIssues": 3,
+        "doneIssues": 3,
+        "progressPct": 100,
+        "storyPoints": 10,
+        "storyPointsDone": 10,
+        "health": "GREEN"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

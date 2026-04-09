@@ -1,0 +1,389 @@
+{
+  "key": "TEST1-497",
+  "summary": "Implement feature for module",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Kerry Vale",
+    "accountId": "60a7898adafdf00068c10adc"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "GA",
+    "GPU-as-a-Service",
+    "dashboard-tangerine-scrum",
+    "nse_workflow:strat"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "AI Core Platform",
+    "Notebook Server",
+    "UXD"
+  ],
+  "created": "2025-10-14T15:46:39.304+0000",
+  "updated": "2026-03-23T19:26:49.504+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Green",
+            "marks": [
+              {
+                "type": "strong"
+              },
+              {
+                "type": "textColor",
+                "attrs": {
+                  "color": "#00875a"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " - 2026-03-11"
+          }
+        ]
+      },
+      {
+        "type": "bulletList",
+        "content": [
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Coding has completed"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Due to a new build of RHBoK; we are running into new issues"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Testing and validation efforts are paused"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "moving this to 3.5"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-432",
+      "linkedSummary": "Integrate Kueue Workload Scheduling Information in Model Deployments Overview",
+      "linkedStatus": "Backlog"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHAISTRAT-874",
+      "linkedSummary": "GPUaaS",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-629",
+      "linkedSummary": "Integrate Kueue Workload Scheduling Information in Workbenches Overview",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHOAIUX-1217",
+      "linkedSummary": "UX: Kueue Workload Visibility in Workbench Status",
+      "linkedStatus": "To Do"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-22173",
+      "linkedSummary": "Work with UX on start notebook modal improvements",
+      "linkedStatus": "Backlog"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-47106",
+      "parentKey": "RHAISTRAT-497",
+      "summary": "Add export functionality",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Major",
+      "assignee": "Person 230",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-tangerine-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-01-23T09:09:44.725+0000",
+      "updated": "2026-02-26T10:20:11.419+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-47107",
+          "parentKey": "RHOAIENG-47106",
+          "summary": "Enable Kueue in dashboard feature flag",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Kerry Winn",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-tangerine-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-23T09:11:36.399+0000",
+          "updated": "2026-03-06T05:46:05.125+0000",
+          "resolutionDate": "2026-03-06T05:46:05.084+0000"
+        },
+        {
+          "key": "RHOAIENG-47108",
+          "parentKey": "RHOAIENG-47106",
+          "summary": "Kueue connection with projects, workbenches and HP",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Kerry Jay",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-23T09:11:38.818+0000",
+          "updated": "2026-02-24T14:16:41.464+0000",
+          "resolutionDate": "2026-02-24T14:16:41.443+0000"
+        },
+        {
+          "key": "RHOAIENG-47109",
+          "parentKey": "RHOAIENG-47106",
+          "summary": "Update Workbench status display components",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Kerry Winn",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-23T09:11:40.960+0000",
+          "updated": "2026-02-24T13:23:24.559+0000",
+          "resolutionDate": "2026-02-24T13:23:24.544+0000"
+        },
+        {
+          "key": "RHOAIENG-47110",
+          "parentKey": "RHOAIENG-47106",
+          "summary": "Update hardware profile popover",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Kerry Winn",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-23T09:11:42.971+0000",
+          "updated": "2026-02-16T09:27:58.997+0000",
+          "resolutionDate": "2026-02-16T09:27:58.962+0000"
+        },
+        {
+          "key": "RHOAIENG-47111",
+          "parentKey": "RHOAIENG-47106",
+          "summary": "Add resource tab in workbench status modal",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Kerry Winn",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-tangerine-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-23T09:11:45.134+0000",
+          "updated": "2026-02-16T10:12:29.809+0000",
+          "resolutionDate": "2026-02-16T10:12:29.777+0000"
+        },
+        {
+          "key": "RHOAIENG-47112",
+          "parentKey": "RHOAIENG-47106",
+          "summary": "Content update",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Kerry Winn",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-23T09:11:47.174+0000",
+          "updated": "2026-03-05T14:14:34.427+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-47113",
+          "parentKey": "RHOAIENG-47106",
+          "summary": "Verify status and toast notifications with kueue integrated",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Kerry Jay",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-tangerine-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-01-23T09:25:47.566+0000",
+          "updated": "2026-03-18T13:42:43.705+0000",
+          "resolutionDate": "2026-03-18T13:42:43.679+0000"
+        },
+        {
+          "key": "RHOAIENG-48008",
+          "parentKey": "RHOAIENG-47106",
+          "summary": "QE Verification",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Merit James",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard",
+            "dashboard-tangerine-scrum"
+          ],
+          "storyPoints": 3,
+          "created": "2026-01-29T11:29:34.184+0000",
+          "updated": "2026-02-26T09:51:59.068+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-50647",
+          "parentKey": "RHOAIENG-47106",
+          "summary": "Update Status column + Notebook modal: descriptor colors and danger/warning icons",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Normal",
+          "assignee": "Kerry Winn",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-tangerine-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-02-24T09:59:31.438+0000",
+          "updated": "2026-03-02T14:18:01.960+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 1,
+    "totalIssues": 9,
+    "issuesByStatus": {
+      "Closed": 6,
+      "In Progress": 2,
+      "Review": 1
+    },
+    "issuesByCategory": {
+      "Done": 6,
+      "In Progress": 3,
+      "To Do": 0
+    },
+    "totalStoryPoints": 3,
+    "storyPointsDone": 0,
+    "completionPct": 67,
+    "staleCount": 3,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-47106",
+        "summary": "Kueue integration in Workbench overview",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Kerry Jay",
+        "totalIssues": 9,
+        "doneIssues": 6,
+        "progressPct": 67,
+        "storyPoints": 3,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

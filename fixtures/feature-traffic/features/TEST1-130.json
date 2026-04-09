@@ -1,0 +1,1755 @@
+{
+  "key": "TEST1-130",
+  "summary": "Refactor data handling code",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Onyx Finn",
+    "accountId": "70121:5a9a760a-598b-49c2-af0e-60c52f76c598"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.Next-candidate",
+    "confidence-yellow",
+    "mid-term",
+    "must-have",
+    "needs-doc"
+  ],
+  "components": [
+    "AI Safety",
+    "Documentation",
+    "Model Eval"
+  ],
+  "created": "2025-03-21T09:46:11.921+0000",
+  "updated": "2026-04-07T03:07:14.037+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Blocks",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-502",
+      "linkedSummary": "notify user of unsupported model serving runtime",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Blocks",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-605",
+      "linkedSummary": "Generalized Numeric Data Drift detection",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Blocks",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-693",
+      "linkedSummary": "Feature Description: AI Explainability in RHOAI",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Account",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-21046",
+      "linkedSummary": "Python implementation of metrics for TrustyAI-Service",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Polaris work item link",
+      "direction": "outward",
+      "linkedKey": "RHOAIENG-55574",
+      "linkedSummary": "[TrustyAI Service Python][security] Security Remediation Program",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-18033",
+      "parentKey": "RHAISTRAT-130",
+      "summary": "Add monitoring metrics",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": "Person 162",
+      "components": [
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-01-13T11:21:16.829+0000",
+      "updated": "2025-06-23T09:24:49.647+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-2320",
+          "parentKey": "RHOAIENG-18033",
+          "summary": "Make registered fairness metrics persisted",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Critical",
+          "assignee": "Frankie Flynn",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "mlserving-xai-service"
+          ],
+          "storyPoints": 8,
+          "created": "2024-01-29T16:58:33.522+0000",
+          "updated": "2026-03-16T22:41:58.011+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-18034",
+          "parentKey": "RHOAIENG-18033",
+          "summary": "[SPIKE] Write ADR for Python TrustyAI service implementation",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Finn",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2025-01-13T11:23:48.698+0000",
+          "updated": "2026-03-15T15:26:01.851+0000",
+          "resolutionDate": "2025-06-25T23:23:43.906+0000"
+        },
+        {
+          "key": "RHOAIENG-27964",
+          "parentKey": "RHOAIENG-18033",
+          "summary": "Ensure all storage_interface functions are consistently async",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Merit Reeves",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-06-23T09:23:19.276+0000",
+          "updated": "2026-03-16T22:41:57.846+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-27965",
+          "parentKey": "RHOAIENG-18033",
+          "summary": "Unify partial payload functions for MM and KServe",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Frankie Flynn",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-06-23T09:23:44.672+0000",
+          "updated": "2026-03-16T22:41:58.058+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-27966",
+          "parentKey": "RHOAIENG-18033",
+          "summary": "Ensure testing of both PVC and Maria backends for all data operations",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Merit Reeves",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-06-23T09:24:00.201+0000",
+          "updated": "2026-03-16T22:41:58.630+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-27967",
+          "parentKey": "RHOAIENG-18033",
+          "summary": "Ensure consistent data upload logic for both Maria and PVC",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Merit Reeves",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-06-23T09:24:25.173+0000",
+          "updated": "2026-03-16T22:41:57.568+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-27968",
+          "parentKey": "RHOAIENG-18033",
+          "summary": "Refactor upload endpoint and upload endpoint tests to use correct data abstractions",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Gray Dawson",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-06-23T09:24:49.560+0000",
+          "updated": "2026-03-16T22:41:59.930+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-21041",
+      "parentKey": "RHAISTRAT-130",
+      "summary": "Fix memory leak",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Normal",
+      "assignee": "Person 162",
+      "components": [
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-03-04T14:16:45.710+0000",
+      "updated": "2026-03-30T12:34:12.045+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-21042",
+          "parentKey": "RHOAIENG-21041",
+          "summary": "Payload parsing: KServe",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Frankie Flynn",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-03-04T14:17:52.272+0000",
+          "updated": "2025-04-07T14:09:58.267+0000",
+          "resolutionDate": "2025-04-07T14:09:58.237+0000"
+        },
+        {
+          "key": "RHOAIENG-21043",
+          "parentKey": "RHOAIENG-21041",
+          "summary": "Payload parsing: Modelmesh",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Finn",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "enhancement"
+          ],
+          "storyPoints": 8,
+          "created": "2025-03-04T14:18:05.133+0000",
+          "updated": "2026-03-15T17:15:40.136+0000",
+          "resolutionDate": "2025-05-19T11:51:51.713+0000"
+        },
+        {
+          "key": "RHOAIENG-21044",
+          "parentKey": "RHOAIENG-21041",
+          "summary": "Metrics: Prometheus publishing",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Gray Drake",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-03-04T14:18:19.248+0000",
+          "updated": "2025-07-01T11:38:57.163+0000",
+          "resolutionDate": "2025-07-01T11:38:57.142+0000"
+        },
+        {
+          "key": "RHOAIENG-21045",
+          "parentKey": "RHOAIENG-21041",
+          "summary": "Metrics: Bias computation",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry James",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-03-04T14:18:30.873+0000",
+          "updated": "2025-07-03T21:06:14.498+0000",
+          "resolutionDate": "2025-07-03T21:04:52.273+0000"
+        },
+        {
+          "key": "RHOAIENG-21047",
+          "parentKey": "RHOAIENG-21041",
+          "summary": "Payload Storage: Reading/writing to DB",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Frankie Flynn",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-03-04T14:19:21.910+0000",
+          "updated": "2026-02-13T21:56:38.580+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-21049",
+          "parentKey": "RHOAIENG-21041",
+          "summary": "Endpoints: /metadata",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Gray Drake",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-03-04T14:19:59.151+0000",
+          "updated": "2026-02-13T21:26:24.122+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-21050",
+          "parentKey": "RHOAIENG-21041",
+          "summary": "Endpoints: /data/download and /data/upload",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Merit Reeves",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 9,
+          "created": "2025-03-04T14:20:16.547+0000",
+          "updated": "2026-03-16T22:41:58.764+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-22106",
+          "parentKey": "RHOAIENG-21041",
+          "summary": "Check how TrustyAIService handles invalid TLS certificates",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Onyx Finn",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-03-24T13:56:43.141+0000",
+          "updated": "2025-07-21T14:20:39.559+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-24177",
+          "parentKey": "RHOAIENG-21041",
+          "summary": "Add unit test for Individual Consistency for TrustyAI Python Service",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Nash",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-04-18T15:40:42.099+0000",
+          "updated": "2025-05-12T12:22:38.737+0000",
+          "resolutionDate": "2025-05-12T12:22:38.709+0000"
+        },
+        {
+          "key": "RHOAIENG-24444",
+          "parentKey": "RHOAIENG-21041",
+          "summary": "Implement upstream infrastructure for CI/Image building",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Finn",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-04-24T14:44:52.183+0000",
+          "updated": "2025-05-07T14:27:53.914+0000",
+          "resolutionDate": "2025-05-07T14:27:28.160+0000"
+        },
+        {
+          "key": "RHOAIENG-24896",
+          "parentKey": "RHOAIENG-21041",
+          "summary": "[Python Service] Add TLS support for consumer endpoints",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": "Onyx Finn",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "ai-safety-service",
+            "enhancement",
+            "mlserving-xai-service"
+          ],
+          "storyPoints": 8,
+          "created": "2025-05-05T14:12:34.549+0000",
+          "updated": "2026-03-15T17:15:38.243+0000",
+          "resolutionDate": "2025-10-27T16:15:41.036+0000"
+        },
+        {
+          "key": "RHOAIENG-25336",
+          "parentKey": "RHOAIENG-21041",
+          "summary": "Test trustyai-service on Python 3.12",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Nash",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2025-05-12T13:07:49.451+0000",
+          "updated": "2025-07-16T13:28:40.299+0000",
+          "resolutionDate": "2025-05-29T10:37:02.878+0000"
+        },
+        {
+          "key": "RHOAIENG-35027",
+          "parentKey": "RHOAIENG-21041",
+          "summary": "Address SQL raw query warnings",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Major",
+          "assignee": "Onyx Finn",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [
+            "ai-safety-service"
+          ],
+          "storyPoints": 5,
+          "created": "2025-09-26T07:47:11.913+0000",
+          "updated": "2026-03-16T22:41:57.778+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55556",
+          "parentKey": "RHOAIENG-21041",
+          "summary": "Start onboarding of TrustyAI Service Python onto Konflux",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T15:15:31.145+0000",
+          "updated": "2026-03-26T15:15:33.789+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55914",
+          "parentKey": "RHOAIENG-21041",
+          "summary": "feat(service): implement tag management endpoint (/info/tags)",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-30T12:36:31.727+0000",
+          "updated": "2026-03-30T12:36:34.276+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55915",
+          "parentKey": "RHOAIENG-21041",
+          "summary": "feat(service): implement inference ID retrieval endpoint (/info/inference/ids/{model})",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-30T12:36:35.166+0000",
+          "updated": "2026-03-30T12:36:37.542+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55916",
+          "parentKey": "RHOAIENG-21041",
+          "summary": "feat(service): implement identity metric",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-30T12:36:37.453+0000",
+          "updated": "2026-03-30T12:36:40.404+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55917",
+          "parentKey": "RHOAIENG-21041",
+          "summary": "feat(service): add feature flags for upstream/downstream parity",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-30T12:36:40.983+0000",
+          "updated": "2026-03-30T12:36:43.674+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55918",
+          "parentKey": "RHOAIENG-21041",
+          "summary": "spike(service): investigate pandas as TrustyQL replacement for data filtering",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-30T12:36:43.200+0000",
+          "updated": "2026-03-30T12:36:45.805+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55919",
+          "parentKey": "RHOAIENG-21041",
+          "summary": "refactor(service): drop ModelMesh consumer endpoint support",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-30T12:36:45.340+0000",
+          "updated": "2026-03-30T12:36:47.777+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55920",
+          "parentKey": "RHOAIENG-21041",
+          "summary": "feat(kserve): upstream PR to KServe for auth token support",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-30T12:36:47.398+0000",
+          "updated": "2026-03-30T12:36:49.780+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55921",
+          "parentKey": "RHOAIENG-21041",
+          "summary": "fix(test): investigate drop-in replacement test failure",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-30T12:36:49.086+0000",
+          "updated": "2026-03-30T12:36:51.776+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55922",
+          "parentKey": "RHOAIENG-21041",
+          "summary": "feat(service): add caching layer",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-30T12:36:50.675+0000",
+          "updated": "2026-03-30T12:36:53.158+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55923",
+          "parentKey": "RHOAIENG-21041",
+          "summary": "feat(service): add PostgreSQL support",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-30T12:36:52.403+0000",
+          "updated": "2026-03-30T12:36:55.471+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55924",
+          "parentKey": "RHOAIENG-21041",
+          "summary": "chore(repo): modernise repository infrastructure and tooling",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-30T12:36:54.124+0000",
+          "updated": "2026-03-30T12:36:56.689+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-21046",
+      "parentKey": "RHAISTRAT-130",
+      "summary": "Add input validation",
+      "status": "Closed",
+      "statusCategory": "Done",
+      "priority": "Normal",
+      "assignee": "Person 171",
+      "components": [
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 9,
+      "created": "2025-03-04T14:18:39.592+0000",
+      "updated": "2026-03-26T14:25:57.642+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-23308",
+      "parentKey": "RHAISTRAT-130",
+      "summary": "Refactor data handling code",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Normal",
+      "assignee": "Person 160",
+      "components": [
+        "AI Safety",
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2024-10-04T09:25:58.156+0000",
+      "updated": "2025-04-07T14:48:02.709+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-46335",
+      "parentKey": "RHAISTRAT-130",
+      "summary": "Implement retry logic",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Normal",
+      "assignee": "Person 171",
+      "components": [
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-01-19T17:27:46.736+0000",
+      "updated": "2026-03-26T14:10:27.034+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-43682",
+          "parentKey": "RHOAIENG-46335",
+          "summary": "Kolmogorov–Smirnov test",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Reeves",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-07T09:15:38.485+0000",
+          "updated": "2026-03-26T14:02:06.506+0000",
+          "resolutionDate": "2026-01-22T16:03:58.395+0000"
+        },
+        {
+          "key": "RHOAIENG-43684",
+          "parentKey": "RHOAIENG-46335",
+          "summary": "Jensen–Shannon divergence+distance",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Reeves",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-07T09:22:46.848+0000",
+          "updated": "2026-03-26T14:02:08.602+0000",
+          "resolutionDate": "2026-03-26T13:37:13.783+0000"
+        },
+        {
+          "key": "RHOAIENG-43688",
+          "parentKey": "RHOAIENG-46335",
+          "summary": "Mean shift",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Merit Reeves",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-07T09:45:29.410+0000",
+          "updated": "2026-03-26T14:37:48.807+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-43690",
+          "parentKey": "RHOAIENG-46335",
+          "summary": "Graph Fourier maximal mean discrepancy",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Merit Reeves",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-07T10:02:11.046+0000",
+          "updated": "2026-03-26T15:27:43.726+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-46216",
+          "parentKey": "RHOAIENG-46335",
+          "summary": "Compare means",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Merit Reeves",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-19T13:54:26.663+0000",
+          "updated": "2026-03-26T14:02:12.095+0000",
+          "resolutionDate": "2026-03-26T13:37:22.377+0000"
+        },
+        {
+          "key": "RHOAIENG-46252",
+          "parentKey": "RHOAIENG-46335",
+          "summary": "Streaming Kolmogorov-Smirnov test",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Normal",
+          "assignee": "Merit Reeves",
+          "components": [
+            "AI Safety"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-19T14:07:30.224+0000",
+          "updated": "2026-03-26T17:42:46.531+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55616",
+          "parentKey": "RHOAIENG-46335",
+          "summary": "Fourier maximum mean discrepancy",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:49:26.655+0000",
+          "updated": "2026-03-26T17:55:50.483+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-46337",
+      "parentKey": "RHAISTRAT-130",
+      "summary": "Add input validation",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": "Person 171",
+      "components": [
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-01-19T17:38:14.106+0000",
+      "updated": "2026-03-26T14:33:20.680+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-46338",
+      "parentKey": "RHAISTRAT-130",
+      "summary": "Update dependencies",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": "Person 171",
+      "components": [
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-01-19T17:41:58.487+0000",
+      "updated": "2026-03-26T14:31:51.246+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-46339",
+      "parentKey": "RHAISTRAT-130",
+      "summary": "Optimize database queries",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": "Person 171",
+      "components": [
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-01-19T17:42:49.375+0000",
+      "updated": "2026-03-26T14:30:31.454+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-51105",
+      "parentKey": "RHAISTRAT-130",
+      "summary": "Add pagination support",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Critical",
+      "assignee": "Person 171",
+      "components": [
+        "AI Safety"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-02-26T10:10:39.524+0000",
+      "updated": "2026-02-26T10:11:40.070+0000",
+      "issues": []
+    },
+    {
+      "key": "TEST2-55574",
+      "parentKey": "RHAISTRAT-130",
+      "summary": "Fix concurrent access issue",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Critical",
+      "assignee": "Person 171",
+      "components": [],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-26T16:56:12.059+0000",
+      "updated": "2026-03-26T17:26:15.480+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-55578",
+          "parentKey": "RHOAIENG-55574",
+          "summary": "Security Phase 1A - Upgrade Container Base Image from UBI8 to UBI9",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:06:18.583+0000",
+          "updated": "2026-03-30T14:45:29.360+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55579",
+          "parentKey": "RHOAIENG-55574",
+          "summary": "Security Phase 1B - Update Python Dependencies to Eliminate Critical Vulnerabilities",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:07:03.999+0000",
+          "updated": "2026-03-30T14:47:22.093+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55580",
+          "parentKey": "RHOAIENG-55574",
+          "summary": "Security Phase 2 - Update Build Tools to Resolve pip and uv Vulnerabilities",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:07:06.716+0000",
+          "updated": "2026-03-30T14:45:40.160+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55581",
+          "parentKey": "RHOAIENG-55574",
+          "summary": "Security Phase 3 - Code Security Review and Bandit Static Analysis Remediation",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:07:09.251+0000",
+          "updated": "2026-03-30T14:47:46.773+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56132",
+          "parentKey": "RHOAIENG-55574",
+          "summary": "Replace insecure pickle serialization with JSON+gzip for data storage",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-31T12:12:05.138+0000",
+          "updated": "2026-04-01T13:34:20.217+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-55582",
+      "parentKey": "RHAISTRAT-130",
+      "summary": "Implement feature for module",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Normal",
+      "assignee": "Person 171",
+      "components": [],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-26T17:11:18.242+0000",
+      "updated": "2026-03-26T17:26:41.761+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-55585",
+          "parentKey": "RHOAIENG-55582",
+          "summary": "Optimize Container Build with Layer Caching Strategy",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Normal",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:12:56.827+0000",
+          "updated": "2026-03-30T14:45:46.398+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55586",
+          "parentKey": "RHOAIENG-55582",
+          "summary": "Implement FIPS Compliance with Crypto Policy Configuration",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Minor",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:12:59.439+0000",
+          "updated": "2026-03-30T14:45:55.340+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55587",
+          "parentKey": "RHOAIENG-55582",
+          "summary": "Secure MariaDB Installation - Replace External Script with Verified Approach",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Minor",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:13:02.299+0000",
+          "updated": "2026-03-26T17:28:35.725+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-55583",
+      "parentKey": "RHAISTRAT-130",
+      "summary": "Update access controls",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Normal",
+      "assignee": "Person 171",
+      "components": [],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-26T17:12:13.608+0000",
+      "updated": "2026-03-31T12:28:29.592+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-55588",
+          "parentKey": "RHOAIENG-55583",
+          "summary": "Replace isort and flake8 with Ruff for Linting and Formatting",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:13:36.085+0000",
+          "updated": "2026-03-26T17:24:47.389+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55589",
+          "parentKey": "RHOAIENG-55583",
+          "summary": "Replace mypy with Pyrefly for Faster Type Checking",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:13:38.683+0000",
+          "updated": "2026-03-26T17:24:43.615+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55590",
+          "parentKey": "RHOAIENG-55583",
+          "summary": "Add pytest-xdist for Parallel Test Execution",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:13:41.332+0000",
+          "updated": "2026-03-26T17:24:44.228+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55592",
+          "parentKey": "RHOAIENG-55583",
+          "summary": "Update Pre-commit Hooks Configuration",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:13:46.711+0000",
+          "updated": "2026-03-26T17:24:42.295+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55593",
+          "parentKey": "RHOAIENG-55583",
+          "summary": "Modernize Type Hints to PEP 585/604 Standard",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:13:49.843+0000",
+          "updated": "2026-03-26T17:24:46.146+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55596",
+          "parentKey": "RHOAIENG-55583",
+          "summary": "Optimize GitHub Actions Python Version Test Matrix",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:14:25.829+0000",
+          "updated": "2026-03-30T14:46:17.077+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55597",
+          "parentKey": "RHOAIENG-55583",
+          "summary": "Replace Sourcery with CodeRabbit for AI-Powered Code Review",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:14:28.437+0000",
+          "updated": "2026-03-26T17:24:45.491+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55599",
+          "parentKey": "RHOAIENG-55583",
+          "summary": "Configure GitHub Advanced Security Integration for Bandit",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:14:33.608+0000",
+          "updated": "2026-03-30T14:47:50.882+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55619",
+          "parentKey": "RHOAIENG-55583",
+          "summary": "Add CodeRabbit Pull Request Reviews badge to README.md",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Minor",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T18:13:49.167+0000",
+          "updated": "2026-03-26T18:17:09.790+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-55584",
+      "parentKey": "RHAISTRAT-130",
+      "summary": "Add filtering options",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Normal",
+      "assignee": "Person 171",
+      "components": [],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-26T17:12:16.545+0000",
+      "updated": "2026-03-26T17:26:47.216+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-55600",
+          "parentKey": "RHOAIENG-55584",
+          "summary": "Update Core Documentation to Reflect Modernization Changes",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:15:16.676+0000",
+          "updated": "2026-03-26T17:22:08.406+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55601",
+          "parentKey": "RHOAIENG-55584",
+          "summary": "Create Comprehensive Getting Started Tutorial",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:15:19.744+0000",
+          "updated": "2026-03-26T17:22:09.943+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55602",
+          "parentKey": "RHOAIENG-55584",
+          "summary": "Create System Architecture Diagrams",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Minor",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:15:22.650+0000",
+          "updated": "2026-03-26T17:22:12.632+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55603",
+          "parentKey": "RHOAIENG-55584",
+          "summary": "Create GitHub Issue and PR Templates",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Minor",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:15:25.438+0000",
+          "updated": "2026-03-26T17:22:13.916+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55604",
+          "parentKey": "RHOAIENG-55584",
+          "summary": "Create CODEOWNERS File for Code Review Assignments",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Minor",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:15:28.004+0000",
+          "updated": "2026-03-26T17:22:12.003+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55605",
+          "parentKey": "RHOAIENG-55584",
+          "summary": "Create Drift Metrics Selection User Guide",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Minor",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:16:09.822+0000",
+          "updated": "2026-03-26T17:22:13.262+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55606",
+          "parentKey": "RHOAIENG-55584",
+          "summary": "Create Fairness Metrics Selection User Guide",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Minor",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:16:12.566+0000",
+          "updated": "2026-03-26T17:22:14.570+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55607",
+          "parentKey": "RHOAIENG-55584",
+          "summary": "Create CONTRIBUTING.md Developer Guide",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Minor",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:16:15.160+0000",
+          "updated": "2026-03-26T17:22:10.600+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55608",
+          "parentKey": "RHOAIENG-55584",
+          "summary": "Create API Reference Documentation",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:16:17.458+0000",
+          "updated": "2026-03-26T17:22:11.269+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55609",
+          "parentKey": "RHOAIENG-55584",
+          "summary": "Create Troubleshooting Guide and FAQ",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:16:20.240+0000",
+          "updated": "2026-03-26T17:22:09.270+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-56133",
+      "parentKey": "RHAISTRAT-130",
+      "summary": "Update configuration settings",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Normal",
+      "assignee": "Person 171",
+      "components": [],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-03-31T12:18:31.771+0000",
+      "updated": "2026-03-31T12:28:06.346+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-55591",
+          "parentKey": "RHOAIENG-56133",
+          "summary": "Update pyproject.toml Configuration",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:13:44.079+0000",
+          "updated": "2026-03-31T12:35:30.664+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55595",
+          "parentKey": "RHOAIENG-56133",
+          "summary": "Upgrade Python Version Requirement to 3.12-3.14",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:14:23.266+0000",
+          "updated": "2026-03-31T12:35:33.193+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-55598",
+          "parentKey": "RHOAIENG-56133",
+          "summary": "Apply standard formatting and import sorting to the entire codebase",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-03-26T17:14:30.978+0000",
+          "updated": "2026-03-31T12:36:51.886+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56134",
+          "parentKey": "RHOAIENG-56133",
+          "summary": "Remove lm-eval integration from Python service",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [
+            "cleanup",
+            "tech-debt"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-31T12:23:33.171+0000",
+          "updated": "2026-03-31T12:24:07.185+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56351",
+          "parentKey": "RHOAIENG-56133",
+          "summary": "Refactor hardcoded endpoint paths to centralized constants",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Minor",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-01T15:29:51.047+0000",
+          "updated": "2026-04-01T15:34:24.242+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-56536",
+          "parentKey": "RHOAIENG-56133",
+          "summary": "Replace HTTP status code magic numbers with http.HTTPStatus constants",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Minor",
+          "assignee": "Merit Reeves",
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-02T12:29:10.219+0000",
+          "updated": "2026-04-02T12:30:35.420+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 14,
+    "totalIssues": 72,
+    "issuesByStatus": {
+      "New": 45,
+      "Closed": 7,
+      "Resolved": 5,
+      "Review": 2,
+      "Backlog": 1,
+      "In Progress": 12
+    },
+    "issuesByCategory": {
+      "Done": 12,
+      "In Progress": 14,
+      "To Do": 46
+    },
+    "totalStoryPoints": 43,
+    "storyPointsDone": 21,
+    "completionPct": 17,
+    "staleCount": 14,
+    "unassignedCount": 12,
+    "blockerCount": 5,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-18033",
+        "summary": "Persist Fairness Metrics",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Onyx Finn",
+        "totalIssues": 7,
+        "doneIssues": 1,
+        "progressPct": 14,
+        "storyPoints": 13,
+        "storyPointsDone": 5,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-21041",
+        "summary": "Migrate the TrustyAI service to Python from Java",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Onyx Finn",
+        "totalIssues": 25,
+        "doneIssues": 8,
+        "progressPct": 32,
+        "storyPoints": 30,
+        "storyPointsDone": 16,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-21046",
+        "summary": "Python implementation of metrics for TrustyAI-Service",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Merit Reeves",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-23308",
+        "summary": "Expose KL Divergency metrics for the Trusty AI model drift In the Trusty AI Service",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Kerry Price",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-46335",
+        "summary": "[TrustyAI Service Python][metrics] Drift-detection metrics",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Merit Reeves",
+        "totalIssues": 7,
+        "doneIssues": 3,
+        "progressPct": 43,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-46337",
+        "summary": "[TrustyAI Service Python][metrics] Explainability metrics and framework",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Merit Reeves",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-46338",
+        "summary": "[TrustyAI Service Python][metrics] Anomaly-detection metrics",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Merit Reeves",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-46339",
+        "summary": "[TrustyAI Service Python][metrics] Language metrics",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Merit Reeves",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-51105",
+        "summary": "Support vLLM Payloads inside of the Python TrustyAI Service",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Merit Reeves",
+        "totalIssues": 0,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-55574",
+        "summary": "[TrustyAI Service Python][security] Security Remediation Program",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Merit Reeves",
+        "totalIssues": 5,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-55582",
+        "summary": "[TrustyAI Service Python][container] Container Modernization and Optimization",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Merit Reeves",
+        "totalIssues": 3,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-55583",
+        "summary": "[TrustyAI Service Python][tooling] Development Tooling and CI/CD Modernization",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Merit Reeves",
+        "totalIssues": 9,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-55584",
+        "summary": "[TrustyAI Service Python][docs] Documentation and Developer Experience",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Merit Reeves",
+        "totalIssues": 10,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-56133",
+        "summary": "[TrustyAI Service Python][refactoring] Codebase Refactoring",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Merit Reeves",
+        "totalIssues": 6,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

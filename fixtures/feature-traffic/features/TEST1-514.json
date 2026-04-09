@@ -1,0 +1,94 @@
+{
+  "key": "TEST1-514",
+  "summary": "Optimize database queries",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Blocker",
+  "assignee": {
+    "displayName": "Merit Zimmerman",
+    "accountId": "712020:3f08a403-b52d-4aa7-9212-9ee6dba8bc3b"
+  },
+  "fixVersions": [],
+  "labels": [
+    "tech-reviewed"
+  ],
+  "components": [
+    "Model Runtimes"
+  ],
+  "created": "2025-03-27T18:30:23.469+0000",
+  "updated": "2026-03-17T10:11:58.682+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-4",
+      "linkedSummary": "Video/Audio Models Support",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-380",
+      "linkedSummary": "Video/Audio Models Support",
+      "linkedStatus": "Pending Approval"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "AIPCC-661",
+      "linkedSummary": "AMD GPU - Build vllm 0.8.z for RHEL AI and RHOAI",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "AIPCC-89",
+      "linkedSummary": "CUDA- Build neural magic version of vllm for RHEL AI and RHOAI",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "INFERENG-375",
+      "linkedSummary": "[vLLM] make sure audio and video extras are present in the final images",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "AIPCC-89",
+      "linkedSummary": "CUDA- Build neural magic version of vllm for RHEL AI and RHOAI",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "outward",
+      "linkedKey": "AIPCC-680",
+      "linkedSummary": "Build vllm With Support for Audio and Video Models",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

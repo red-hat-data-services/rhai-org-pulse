@@ -1,0 +1,54 @@
+{
+  "key": "TEST1-1407",
+  "summary": "Fix concurrent access issue",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Gray Day",
+    "accountId": "712020:a8b965fb-1129-4541-8501-10ba2e01c8fd"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.5-candidate",
+    "tool-calling"
+  ],
+  "components": [
+    "AgentDev",
+    "Llama Stack Core"
+  ],
+  "created": "2026-03-27T01:31:33.953+0000",
+  "updated": "2026-04-08T00:57:11.852+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1554",
+      "linkedSummary": "Reliable Multi-Turn Stateful Tool Calling Through Llama Stack Responses API ",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

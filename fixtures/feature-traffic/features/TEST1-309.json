@@ -1,0 +1,731 @@
+{
+  "key": "TEST1-309",
+  "summary": "Update error messages",
+  "status": "Review",
+  "statusCategory": "In Progress",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Onyx Cole",
+    "accountId": "712020:a5f50428-11f6-42e3-b9fa-addfc8f69605"
+  },
+  "fixVersions": [],
+  "labels": [
+    "3.4",
+    "3.4-candidate",
+    "rhoai-3.4"
+  ],
+  "components": [
+    "Training Kubeflow",
+    "UXD"
+  ],
+  "created": "2025-11-24T10:21:31.576+0000",
+  "updated": "2026-04-01T13:00:24.092+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "1 Apr:",
+            "marks": [
+              {
+                "type": "strong"
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " All implementation has been completed. The only remaining work is customer documentation, which has been drafted and is with the Documentation team for review, and will be complete before the documentation freeze."
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-148",
+      "linkedSummary": "Model Checkpointing Support in RHOAI for Kubeflow Trainer (TP)",
+      "linkedStatus": "Closed"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-56",
+      "linkedSummary": "Model Checkpointing Support in RHOAI for Kubeflow Trainer",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Causality",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1108",
+      "linkedSummary": "Enhanced Model Checkpointing with Unified KFT/Ray Support and Data Connection Integration",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-568",
+      "linkedSummary": "Sustainable Checkpointing",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-56",
+      "linkedSummary": "Model Checkpointing Support in RHOAI for Kubeflow Trainer",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-30416",
+      "parentKey": "RHAISTRAT-309",
+      "summary": "Fix bug in processing logic",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Kerry Hayes",
+      "components": [
+        "Documentation",
+        "Training Kubeflow"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-07-23T12:56:18.567+0000",
+      "updated": "2026-04-02T14:37:11.641+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-30417",
+          "parentKey": "RHOAIENG-30416",
+          "summary": "[ccs Spike] Model Checkpointing Support in RHOAI for KubeFlow Trainer",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Oates",
+          "components": [
+            "Documentation",
+            "Training Kubeflow"
+          ],
+          "labels": [
+            "NoDocsQEReview"
+          ],
+          "storyPoints": 3,
+          "created": "2025-07-23T13:00:28.604+0000",
+          "updated": "2026-03-13T15:38:16.096+0000",
+          "resolutionDate": "2026-03-13T15:38:16.046+0000"
+        },
+        {
+          "key": "RHOAIENG-30418",
+          "parentKey": "RHOAIENG-30416",
+          "summary": "[ccs] Docs updates for KubeFlow Trainer model checkpointing",
+          "type": "Story",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Onyx Oates",
+          "components": [
+            "Documentation",
+            "Training Kubeflow"
+          ],
+          "labels": [
+            "3.4-must-docs"
+          ],
+          "storyPoints": 8,
+          "created": "2025-07-23T13:03:44.868+0000",
+          "updated": "2026-04-01T17:39:35.421+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-42169",
+      "parentKey": "RHAISTRAT-309",
+      "summary": "Fix validation issue",
+      "status": "Resolved",
+      "statusCategory": "Done",
+      "priority": "Undefined",
+      "assignee": "Person 294",
+      "components": [
+        "Training Kubeflow"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2025-12-16T08:56:49.923+0000",
+      "updated": "2026-03-26T10:41:21.379+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-35537",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "Create a developer blogpost for Resilient model checkpointing",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Cole",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 2,
+          "created": "2025-10-06T09:07:25.721+0000",
+          "updated": "2026-01-06T10:52:18.012+0000",
+          "resolutionDate": "2026-01-06T10:32:47.104+0000"
+        },
+        {
+          "key": "RHOAIENG-43495",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "Create technical design doc for S3 storage support",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Cole",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-06T10:46:34.995+0000",
+          "updated": "2026-01-15T09:41:12.906+0000",
+          "resolutionDate": "2026-01-15T09:41:12.887+0000"
+        },
+        {
+          "key": "RHOAIENG-44446",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "Optimizer state loading failure (CPU device tags)",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Vale",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-01-08T15:11:45.824+0000",
+          "updated": "2026-02-05T15:46:33.555+0000",
+          "resolutionDate": "2026-02-05T15:46:33.515+0000"
+        },
+        {
+          "key": "RHOAIENG-44450",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "PyTorch 2.4+ weights_only=True breaks checkpoint resume",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Vale",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-01-08T15:37:37.930+0000",
+          "updated": "2026-02-05T11:03:53.836+0000",
+          "resolutionDate": "2026-02-05T11:03:53.798+0000"
+        },
+        {
+          "key": "RHOAIENG-44466",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "JIT checkpoint not triggered when worker pod terminates in multi-node distributed training",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Minor",
+          "assignee": "Onyx Cole",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-08T16:37:24.170+0000",
+          "updated": "2026-03-10T16:47:37.226+0000",
+          "resolutionDate": "2026-03-10T15:57:30.835+0000"
+        },
+        {
+          "key": "RHOAIENG-45693",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "Submit PR to PyTorch to fix torchelastic SIGTERM timeout issue",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Cole",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-01-15T08:20:44.769+0000",
+          "updated": "2026-01-19T10:06:50.781+0000",
+          "resolutionDate": "2026-01-19T10:06:50.762+0000"
+        },
+        {
+          "key": "RHOAIENG-45698",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "[SPIKE] Investigate how to expose S3 credentials",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Vale",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-01-15T09:20:10.005+0000",
+          "updated": "2026-01-22T11:11:47.209+0000",
+          "resolutionDate": "2026-01-22T11:11:47.171+0000"
+        },
+        {
+          "key": "RHOAIENG-45699",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "[SDK] S3 infrastructure volume provisioning",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Vale",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 4,
+          "created": "2026-01-15T09:22:02.452+0000",
+          "updated": "2026-01-28T09:02:35.795+0000",
+          "resolutionDate": "2026-01-26T11:44:22.882+0000"
+        },
+        {
+          "key": "RHOAIENG-45701",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "E2E test: Implement Notebook for FSDP and DeepSpeed (Shared/Full) Checkpoint",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Vale",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-01-15T09:29:28.411+0000",
+          "updated": "2026-02-26T08:15:33.064+0000",
+          "resolutionDate": "2026-02-26T08:15:33.030+0000"
+        },
+        {
+          "key": "RHOAIENG-45702",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "[SDK] checkpoint download/resume",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Cole",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-01-15T09:31:43.940+0000",
+          "updated": "2026-01-30T10:18:55.082+0000",
+          "resolutionDate": "2026-01-30T10:18:30.823+0000"
+        },
+        {
+          "key": "RHOAIENG-45703",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "[SDK] Upload final model to S3 after training",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Cole",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-01-15T09:33:44.982+0000",
+          "updated": "2026-03-09T14:19:57.846+0000",
+          "resolutionDate": "2026-03-09T14:19:57.808+0000"
+        },
+        {
+          "key": "RHOAIENG-45706",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "[SDK] Upload checkpoint to S3 synchronously",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Cole",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [
+            "FailedQA"
+          ],
+          "storyPoints": 2,
+          "created": "2026-01-15T09:36:37.448+0000",
+          "updated": "2026-02-11T10:13:05.961+0000",
+          "resolutionDate": "2026-02-11T10:13:05.923+0000"
+        },
+        {
+          "key": "RHOAIENG-45707",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "[SDK] Make checkpoint upload async with background queue",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Cole",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 6,
+          "created": "2026-01-15T09:37:43.276+0000",
+          "updated": "2026-02-25T15:09:14.428+0000",
+          "resolutionDate": "2026-02-25T15:09:14.392+0000"
+        },
+        {
+          "key": "RHOAIENG-45708",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "[Docs] Add S3 storage usage example to RH-AI examples",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Vale",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-15T09:46:56.472+0000",
+          "updated": "2026-03-24T10:14:28.402+0000",
+          "resolutionDate": "2026-03-24T10:14:28.379+0000"
+        },
+        {
+          "key": "RHOAIENG-45709",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "E2E test: check saving and resuming from checkpoint on s3 ",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Vale",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-15T09:48:21.309+0000",
+          "updated": "2026-02-23T13:54:00.489+0000",
+          "resolutionDate": "2026-02-23T13:00:10.117+0000"
+        },
+        {
+          "key": "RHOAIENG-45710",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "[Trainer] Allow the user to configure pod termination grace period.",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Cole",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-01-15T09:49:14.131+0000",
+          "updated": "2026-03-09T14:19:39.191+0000",
+          "resolutionDate": "2026-03-09T14:19:39.153+0000"
+        },
+        {
+          "key": "RHOAIENG-45711",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "FSDP sharded training resume functionality not working consistently ",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Vale",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 4,
+          "created": "2026-01-15T09:51:01.259+0000",
+          "updated": "2026-03-10T15:21:33.447+0000",
+          "resolutionDate": "2026-03-10T15:21:14.683+0000"
+        },
+        {
+          "key": "RHOAIENG-45712",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "[SPIKE] In FSDP should the checkpoint be written by rank 0 or can each rank write it independently to S3?",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Cole",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 4,
+          "created": "2026-01-15T09:52:14.992+0000",
+          "updated": "2026-01-23T11:16:37.749+0000",
+          "resolutionDate": "2026-01-23T11:16:37.731+0000"
+        },
+        {
+          "key": "RHOAIENG-45713",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "[SPIKE] Confirm if the findings from RHOAIENG-45712 apply for DeepSpeed as well.",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Vale",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-01-15T09:53:14.361+0000",
+          "updated": "2026-01-28T16:46:07.271+0000",
+          "resolutionDate": "2026-01-28T16:46:07.253+0000"
+        },
+        {
+          "key": "RHOAIENG-47674",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "[DW] Update runtime images to install kubeflow-sdk[rhai] dependency",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Cole",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-01-27T14:29:11.519+0000",
+          "updated": "2026-02-19T21:37:41.069+0000",
+          "resolutionDate": "2026-02-19T21:37:41.033+0000"
+        },
+        {
+          "key": "RHOAIENG-47874",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "[Upstream] Create feature request in Transformers for S3 support natively",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Cole",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-28T09:25:41.108+0000",
+          "updated": "2026-03-12T13:02:33.089+0000",
+          "resolutionDate": "2026-03-12T10:20:20.773+0000"
+        },
+        {
+          "key": "RHOAIENG-49120",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "[SPIKE] Reinvestigate how to support checkpointing in S3 ",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Cole",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 7,
+          "created": "2026-02-10T13:23:00.831+0000",
+          "updated": "2026-02-11T12:22:53.294+0000",
+          "resolutionDate": "2026-02-11T10:19:41.227+0000"
+        },
+        {
+          "key": "RHOAIENG-49495",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "[SPIKE] Measure emptyDir storage requirements for various model sizes",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Vale",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-02-12T08:18:39.333+0000",
+          "updated": "2026-03-09T09:02:31.768+0000",
+          "resolutionDate": "2026-03-09T09:02:31.732+0000"
+        },
+        {
+          "key": "RHOAIENG-49498",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "[Docs] Write S3 storage configuration and best practices documentation",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Cole",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-02-12T08:30:10.822+0000",
+          "updated": "2026-03-26T09:53:24.711+0000",
+          "resolutionDate": "2026-03-26T09:53:24.688+0000"
+        },
+        {
+          "key": "RHOAIENG-49504",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "[Testing] Manual stress test with large model training (100GB+ checkpoint)",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Vale",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 2,
+          "created": "2026-02-12T08:38:12.143+0000",
+          "updated": "2026-03-04T16:22:26.236+0000",
+          "resolutionDate": "2026-03-04T16:22:26.202+0000"
+        },
+        {
+          "key": "RHOAIENG-50650",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "[Signoff] PM signoff on feature: Model checkpointing support in RHOAI",
+          "type": "Task",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Kerry Kelley",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-02-24T10:43:01.360+0000",
+          "updated": "2026-03-13T08:38:16.922+0000",
+          "resolutionDate": "2026-03-12T14:46:19.289+0000"
+        },
+        {
+          "key": "RHOAIENG-52491",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "Write release notes for KFT Model Checkpointing — RHOAI 3.4 EA2",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Undefined",
+          "assignee": "Onyx Cole",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [
+            "refined"
+          ],
+          "storyPoints": 2,
+          "created": "2026-03-10T17:06:59.044+0000",
+          "updated": "2026-03-16T12:49:03.103+0000",
+          "resolutionDate": "2026-03-16T12:48:13.128+0000"
+        },
+        {
+          "key": "RHOAIENG-52498",
+          "parentKey": "RHOAIENG-42169",
+          "summary": "Write developer blog post for KFT Model Checkpointing feature",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Onyx Cole",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-03-10T17:11:59.310+0000",
+          "updated": "2026-03-26T09:57:04.467+0000",
+          "resolutionDate": "2026-03-26T09:57:04.437+0000"
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 2,
+    "totalIssues": 30,
+    "issuesByStatus": {
+      "Closed": 3,
+      "In Progress": 1,
+      "Resolved": 26
+    },
+    "issuesByCategory": {
+      "Done": 29,
+      "In Progress": 1,
+      "To Do": 0
+    },
+    "totalStoryPoints": 89,
+    "storyPointsDone": 81,
+    "completionPct": 97,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-30416",
+        "summary": "[ccs epic] Document Model Checkpointing Support in RHOAI for Kubeflow Trainer",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Onyx Oates",
+        "totalIssues": 2,
+        "doneIssues": 1,
+        "progressPct": 50,
+        "storyPoints": 11,
+        "storyPointsDone": 3,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-42169",
+        "summary": "Model Checkpointing for Kubeflow Trainer v2 (GA)",
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Onyx Cole",
+        "totalIssues": 28,
+        "doneIssues": 28,
+        "progressPct": 100,
+        "storyPoints": 78,
+        "storyPointsDone": 78,
+        "health": "GREEN"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

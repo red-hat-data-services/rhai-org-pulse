@@ -1,0 +1,282 @@
+{
+  "key": "TEST1-949",
+  "summary": "Fix sorting order",
+  "status": "Refinement",
+  "statusCategory": "To Do",
+  "priority": "Critical",
+  "assignee": {
+    "displayName": "Onyx Xu",
+    "accountId": "70121:f3dfd35d-9dbc-4225-9e98-a28612802cc7"
+  },
+  "fixVersions": [],
+  "labels": [
+    "Approved-RFE",
+    "aicp-team-crucible",
+    "tech-reviewed"
+  ],
+  "components": [
+    "AI Core Platform",
+    "Documentation"
+  ],
+  "created": "2025-12-03T12:13:27.809+0000",
+  "updated": "2026-04-07T14:15:10.280+0000",
+  "statusNotes": {
+    "type": "doc",
+    "version": 1,
+    "content": [
+      {
+        "type": "paragraph",
+        "content": [
+          {
+            "type": "text",
+            "text": "Chris Sams has put together a "
+          },
+          {
+            "type": "text",
+            "text": "refinement doc",
+            "marks": [
+              {
+                "type": "link",
+                "attrs": {
+                  "href": "https://docs.google.com/document/d/1IO-dRYt8Seg8-mhzJ-ZZdBVeK3F3TkAnqZKxfBS38ik/"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " for the HCP with OCP Virtualization feature that is waiting on a review from PM. We have a setup in progress, but it utilizes direct GPU pass-through to worker VMs; we must obtain a modified HCP with OCP Virt setup to align with the customer's specific request for vGPU provisioning."
+          }
+        ]
+      }
+    ]
+  },
+  "issueLinks": [
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "CNV-49319",
+      "linkedSummary": "[GA] Support GPU workloads on HCP KubeVirt platform",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "NVIDIA-78",
+      "linkedSummary": "NVIDIA GPU Operator support for HCP kubevirt NodePools",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-643",
+      "linkedSummary": "Support RHOAI on HCP on OCP Virt",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "OCPSTRAT-1688",
+      "linkedSummary": "[GA] HCP KubeVirt Nvidia GPU support",
+      "linkedStatus": "Backlog"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "NVIDIA-78",
+      "linkedSummary": "NVIDIA GPU Operator support for HCP kubevirt NodePools",
+      "linkedStatus": "In Progress"
+    }
+  ],
+  "epics": [
+    {
+      "key": "TEST2-46343",
+      "parentKey": "RHAISTRAT-949",
+      "summary": "Fix authentication issue",
+      "status": "Backlog",
+      "statusCategory": "To Do",
+      "priority": "Critical",
+      "assignee": "Person 276",
+      "components": [
+        "AI Core Platform"
+      ],
+      "labels": [
+        "aicp-team-crucible"
+      ],
+      "storyPoints": 0,
+      "created": "2026-01-19T19:13:19.474+0000",
+      "updated": "2026-03-23T13:40:09.732+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-46345",
+          "parentKey": "RHOAIENG-46343",
+          "summary": "Get Access to HCP on OCP Virt Cluster",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Gray Fischer",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-crucible"
+          ],
+          "storyPoints": 5,
+          "created": "2026-01-19T20:16:49.136+0000",
+          "updated": "2026-04-07T15:14:18.206+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-46349",
+          "parentKey": "RHOAIENG-46343",
+          "summary": "Verify that RHOAI 3.x Runs on HCP on OCP Virt",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Critical",
+          "assignee": "Gray Fischer",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-crucible"
+          ],
+          "storyPoints": 3,
+          "created": "2026-01-19T20:27:24.961+0000",
+          "updated": "2026-03-20T17:41:55.583+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-46351",
+          "parentKey": "RHOAIENG-46343",
+          "summary": "Verify that RHOAI 2.x Runs on HCP on OCP Virt",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Gray Fischer",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-crucible"
+          ],
+          "storyPoints": 3,
+          "created": "2026-01-19T20:30:18.841+0000",
+          "updated": "2026-03-07T00:36:08.083+0000",
+          "resolutionDate": "2026-03-06T17:40:23.812+0000"
+        },
+        {
+          "key": "RHOAIENG-52239",
+          "parentKey": "RHOAIENG-46343",
+          "summary": "Verify that Workloads using GPUs Run on HCP on OCP Virt",
+          "type": "Task",
+          "status": "Backlog",
+          "statusCategory": "To Do",
+          "priority": "Critical",
+          "assignee": "Gray Fischer",
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [
+            "aicp-team-crucible"
+          ],
+          "storyPoints": 3,
+          "created": "2026-03-06T18:37:24.035+0000",
+          "updated": "2026-03-31T17:08:56.709+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-46354",
+      "parentKey": "RHAISTRAT-949",
+      "summary": "Fix data migration",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "PXE"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-01-19T20:38:13.284+0000",
+      "updated": "2026-01-22T21:38:57.788+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-46357",
+          "parentKey": "RHOAIENG-46354",
+          "summary": "Document RHOAI Support for OCP on HCP Virt",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "PXE"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-01-19T20:43:41.155+0000",
+          "updated": "2026-01-22T21:39:42.487+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
+  "metrics": {
+    "totalEpics": 2,
+    "totalIssues": 5,
+    "issuesByStatus": {
+      "In Progress": 1,
+      "Backlog": 2,
+      "Resolved": 1,
+      "New": 1
+    },
+    "issuesByCategory": {
+      "Done": 1,
+      "In Progress": 1,
+      "To Do": 3
+    },
+    "totalStoryPoints": 14,
+    "storyPointsDone": 3,
+    "completionPct": 20,
+    "staleCount": 0,
+    "unassignedCount": 1,
+    "blockerCount": 4,
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-46343",
+        "summary": "[AI Core Platform] Verify RHOAI runs on HCP on OCP Virt",
+        "status": "Backlog",
+        "statusCategory": "To Do",
+        "assignee": "Merit Xu",
+        "totalIssues": 4,
+        "doneIssues": 1,
+        "progressPct": 25,
+        "storyPoints": 14,
+        "storyPointsDone": 3,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-46354",
+        "summary": "Document RHOAI on OCP on HCP Virt Support",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 1,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
+  },
+  "topology": {
+    "repos": []
+  }
+}

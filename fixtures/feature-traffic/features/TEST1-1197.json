@@ -1,0 +1,50 @@
+{
+  "key": "TEST1-1197",
+  "summary": "Fix validation issue",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {
+    "displayName": "Frankie Knox",
+    "accountId": "712020:a82ef133-297a-4b90-8dc4-298f69e76aa6"
+  },
+  "fixVersions": [],
+  "labels": [],
+  "components": [
+    "Training Kubeflow"
+  ],
+  "created": "2026-02-10T10:08:38.658+0000",
+  "updated": "2026-02-10T10:10:34.960+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Cloners",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-614",
+      "linkedSummary": "Please update all Torch images to include TorchVision and TorchAudio",
+      "linkedStatus": "Approved"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}
