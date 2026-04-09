@@ -489,9 +489,9 @@ module.exports = function registerRoutes(router, context) {
     async function refreshGitlabUsers(usernames) {
       if (!sources.gitlab || usernames.length === 0) return;
       try {
-        const syncConfig = rosterSyncConfig.loadConfig({ readFromStorage }) || {};
-        const gitlabGroups = syncConfig.gitlabGroups || [];
-        const results = await fetchGitlabData(usernames, { gitlabGroups });
+        const syncConfig = rosterSyncConfig.loadConfig({ readFromStorage, writeToStorage }) || {};
+        const gitlabInstances = syncConfig.gitlabInstances || [];
+        const results = await fetchGitlabData(usernames, { gitlabInstances });
         writeSinglePassResults(results, GITLAB_CACHE_PATH, GITLAB_HISTORY_CACHE_PATH);
         console.log(`[refresh] GitLab: ${Object.keys(results).length} users processed`);
       } catch (err) {
@@ -544,9 +544,9 @@ module.exports = function registerRoutes(router, context) {
 
         if (sources.gitlab && member.gitlabUsername) {
           promises.push((async () => {
-            const syncConfig = rosterSyncConfig.loadConfig({ readFromStorage }) || {};
-            const gitlabGroups = syncConfig.gitlabGroups || [];
-            const glResults = await fetchGitlabData([member.gitlabUsername], { gitlabGroups });
+            const syncConfig = rosterSyncConfig.loadConfig({ readFromStorage, writeToStorage }) || {};
+            const gitlabInstances = syncConfig.gitlabInstances || [];
+            const glResults = await fetchGitlabData([member.gitlabUsername], { gitlabInstances });
             if (glResults[member.gitlabUsername]) {
               writeSinglePassResults(glResults, GITLAB_CACHE_PATH, GITLAB_HISTORY_CACHE_PATH);
               result.gitlab = glResults[member.gitlabUsername];
@@ -1637,7 +1637,7 @@ module.exports = function registerRoutes(router, context) {
    */
   router.post('/admin/roster-sync/config', requireAdmin, function(req, res) {
     try {
-      const { orgRoots, googleSheetId, sheetNames, githubOrgs, gitlabGroups, teamStructure } = req.body;
+      const { orgRoots, googleSheetId, sheetNames, githubOrgs, gitlabGroups, gitlabInstances, teamStructure } = req.body;
 
       if (orgRoots !== undefined) {
         if (!Array.isArray(orgRoots) || orgRoots.length === 0) {
@@ -1646,6 +1646,28 @@ module.exports = function registerRoutes(router, context) {
         for (const root of orgRoots) {
           if (!root.uid || !root.displayName) {
             return res.status(400).json({ error: 'Each org root must have uid and displayName' });
+          }
+        }
+      }
+
+      // Validate gitlabInstances
+      const ENV_VAR_RE = /^[A-Za-z_][A-Za-z0-9_]*$/;
+      if (gitlabInstances !== undefined) {
+        if (!Array.isArray(gitlabInstances)) {
+          return res.status(400).json({ error: 'gitlabInstances must be an array' });
+        }
+        for (const inst of gitlabInstances) {
+          if (!inst.baseUrl || typeof inst.baseUrl !== 'string' || !inst.baseUrl.startsWith('https://')) {
+            return res.status(400).json({ error: 'Each GitLab instance baseUrl must start with https://' });
+          }
+          if (!inst.label || typeof inst.label !== 'string') {
+            return res.status(400).json({ error: 'Each GitLab instance must have a label' });
+          }
+          if (!inst.tokenEnvVar || typeof inst.tokenEnvVar !== 'string' || !ENV_VAR_RE.test(inst.tokenEnvVar)) {
+            return res.status(400).json({ error: 'Each GitLab instance tokenEnvVar must be a valid env var name (alphanumeric + underscore)' });
+          }
+          if (!Array.isArray(inst.groups)) {
+            return res.status(400).json({ error: 'Each GitLab instance groups must be an array' });
           }
         }
       }
@@ -1736,6 +1758,7 @@ module.exports = function registerRoutes(router, context) {
         sheetNames: sheetNames !== undefined ? (sheetNames || []) : (existing.sheetNames || []),
         githubOrgs: githubOrgs !== undefined ? (githubOrgs || []) : (existing.githubOrgs || []),
         gitlabGroups: gitlabGroups !== undefined ? (gitlabGroups || []) : (existing.gitlabGroups || []),
+        gitlabInstances: gitlabInstances !== undefined ? (gitlabInstances || []) : (existing.gitlabInstances || []),
         teamStructure: validatedTeamStructure !== undefined ? validatedTeamStructure : (existing.teamStructure || null),
         customFields: existing.customFields || null,
         lastSyncAt: existing.lastSyncAt || null,
@@ -2221,7 +2244,13 @@ module.exports = function registerRoutes(router, context) {
           teamGroupingColumn: syncConfig.teamStructure?.groupingColumn || null,
           customFieldCount: syncConfig.teamStructure?.customFields?.length || 0,
           githubOrgs: syncConfig.githubOrgs || [],
-          gitlabGroups: syncConfig.gitlabGroups || []
+          gitlabGroups: syncConfig.gitlabGroups || [],
+          gitlabInstances: (syncConfig.gitlabInstances || []).map(i => ({
+            label: i.label,
+            baseUrl: i.baseUrl,
+            tokenEnvVar: i.tokenEnvVar,
+            groupCount: (i.groups || []).length
+          }))
         },
         lastSyncAt: syncConfig.lastSyncAt || null,
         lastSyncStatus: syncConfig.lastSyncStatus || null,
@@ -2301,9 +2330,9 @@ module.exports = function registerRoutes(router, context) {
       // Data health: GitLab
       const gitlabCache = readGitlabCache();
       const gitlabHistoryCache = readGitlabHistoryCache();
+      const gitlabInstancesConfigured = (syncConfig.gitlabInstances || []).some(i => !!process.env[i.tokenEnvVar]);
       const gitlab = {
-        configured: !!process.env.GITLAB_TOKEN,
-        baseUrl: process.env.GITLAB_BASE_URL || 'https://gitlab.com',
+        configured: gitlabInstancesConfigured || !!process.env.GITLAB_TOKEN,
         cacheExists: !!(gitlabCache.fetchedAt),
         userCount: Object.keys(gitlabCache.users || {}).length,
         fetchedAt: gitlabCache.fetchedAt || null,

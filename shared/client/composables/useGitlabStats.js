@@ -36,11 +36,25 @@ export function useGitlabStats() {
     gitlabData.value.users[username] = data
   }
 
+  function getProfileUrls(gitlabUsername) {
+    const contrib = getContributions(gitlabUsername)
+    if (!contrib) return []
+    if (!contrib.instances || contrib.instances.length === 0) {
+      return [{ baseUrl: 'https://gitlab.com', label: 'GitLab', url: `https://gitlab.com/${gitlabUsername}` }]
+    }
+    return contrib.instances.map(i => ({
+      baseUrl: i.baseUrl,
+      label: i.label,
+      url: `${i.baseUrl}/${gitlabUsername}`
+    }))
+  }
+
   return {
     contributionsMap,
     getContributions,
     loadGitlabStats,
     setUserContributions,
+    getProfileUrls,
     loading
   }
 }

@@ -3,7 +3,11 @@
     "bobsmith": {
       "username": "bobsmith",
       "totalContributions": 198,
-      "fetchedAt": "2026-03-10T12:00:00.000Z"
+      "fetchedAt": "2026-03-10T12:00:00.000Z",
+      "instances": [
+        { "baseUrl": "https://gitlab.com", "label": "GitLab.com", "contributions": 150 },
+        { "baseUrl": "https://gitlab.internal.example.com", "label": "Internal GitLab", "contributions": 48 }
+      ]
     },
     "carolw": {
       "username": "carolw",
