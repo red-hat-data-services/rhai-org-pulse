@@ -82,7 +82,8 @@ async function runSync(storage) {
 
       // Phase 4: Username inference (optional)
       let usernamesInferred = { github: 0, gitlab: 0 };
-      if (config.githubOrgs || config.githubOrg || config.gitlabGroups || config.gitlabGroup) {
+      const hasGitlabInstances = Array.isArray(config.gitlabInstances) && config.gitlabInstances.some(i => i.groups && i.groups.length > 0);
+      if (config.githubOrgs || config.githubOrg || config.gitlabGroups || config.gitlabGroup || hasGitlabInstances) {
         try {
           usernamesInferred = await inferUsernames(roster, config);
         } catch (err) {

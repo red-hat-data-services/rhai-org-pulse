@@ -102,7 +102,11 @@ Filename is the person's display name lowercased with non-alphanumeric chars rep
       },
       "fetchedAt": "2026-03-27T06:01:19.791Z",
       "source": "graphql",
-      "username": "username"
+      "username": "username",
+      "instances": [
+        { "baseUrl": "https://gitlab.com", "label": "GitLab.com", "contributions": 20 },
+        { "baseUrl": "https://gitlab.internal.example.com", "label": "Internal", "contributions": 22 }
+      ]
     }
   }
 }
@@ -128,6 +132,8 @@ Filename is the person's display name lowercased with non-alphanumeric chars rep
 
 **Note on `source` field:** In `gitlab-contributions.json`, the `source` field indicates the API used to fetch the data. Currently the only value is `"graphql"` (GitLab GraphQL API).
 
+**Note on `instances` field:** When multi-instance GitLab is configured, each user's entry includes an `instances` array showing per-instance contribution breakdowns. Users with no contributions on a given instance will not have that instance listed. Legacy data without `instances` is treated as a single default gitlab.com instance by the frontend.
+
 ## Roster Sync Config — `data/roster-sync-config.json`
 
 Stores the configuration for automated roster building. Managed via the Settings UI and the `POST /api/admin/roster-sync/config` endpoint.
@@ -141,6 +147,14 @@ Stores the configuration for automated roster building. Managed via the Settings
   "sheetNames": ["Sheet1", "Sheet2"],
   "githubOrgs": ["my-org"],
   "gitlabGroups": ["my-group"],
+  "gitlabInstances": [
+    {
+      "label": "GitLab.com",
+      "baseUrl": "https://gitlab.com",
+      "tokenEnvVar": "GITLAB_TOKEN",
+      "groups": ["my-group"]
+    }
+  ],
   "teamStructure": {
     "nameColumn": "Name",
     "teamGroupingColumn": "Team",
@@ -162,7 +176,8 @@ Stores the configuration for automated roster building. Managed via the Settings
 
 **Notes:**
 - `orgRoots` is required (at least one). Each entry needs `uid` and `displayName`.
-- `googleSheetId`, `sheetNames`, `githubOrgs`, `gitlabGroups` are optional (default to `null` or `[]`).
+- `googleSheetId`, `sheetNames`, `githubOrgs`, `gitlabGroups`, `gitlabInstances` are optional (default to `null` or `[]`).
+- `gitlabInstances` is the preferred way to configure GitLab instances. Legacy `gitlabGroups` is auto-migrated to `gitlabInstances` on first load. Each instance has `label`, `baseUrl` (must start with `https://`), `tokenEnvVar` (name of env var holding the token), and `groups` (array of group paths).
 - `teamStructure` replaces legacy `fieldMapping`/`customFields` via an in-memory migration on load.
 - `customFields` supports up to 20 entries. At most one can have `primaryDisplay: true`.
 - `lastSyncAt`, `lastSyncStatus`, `lastSyncError` are auto-populated during sync runs.

@@ -175,10 +175,15 @@ async function exportGitlabContributions(addFile, readFromStorage, mapping) {
     anonymized.users = {};
     for (const [username, userData] of Object.entries(data.users)) {
       const fakeUsername = mapping.getOrCreateGitlabMapping(username);
-      anonymized.users[fakeUsername] = {
-        ...userData,
-        username: fakeUsername,
-      };
+      const entry = { ...userData, username: fakeUsername };
+      if (entry.instances && Array.isArray(entry.instances)) {
+        entry.instances = entry.instances.map((inst, i) => ({
+          ...inst,
+          baseUrl: `https://gitlab-${i + 1}.example.com`,
+          label: `GitLab Instance ${i + 1}`
+        }));
+      }
+      anonymized.users[fakeUsername] = entry;
     }
   }
   addFile('gitlab-contributions.json', anonymized);
@@ -318,6 +323,15 @@ async function exportRosterSyncConfig(addFile, readFromStorage, mapping) {
   }
   if (anonymized.gitlabGroups && Array.isArray(anonymized.gitlabGroups)) {
     anonymized.gitlabGroups = anonymized.gitlabGroups.map((_, i) => `example-group-${i + 1}`);
+  }
+  if (anonymized.gitlabInstances && Array.isArray(anonymized.gitlabInstances)) {
+    anonymized.gitlabInstances = anonymized.gitlabInstances.map((inst, i) => ({
+      ...inst,
+      label: `GitLab Instance ${i + 1}`,
+      baseUrl: `https://gitlab-${i + 1}.example.com`,
+      tokenEnvVar: `GITLAB_TOKEN_${i + 1}`,
+      groups: (inst.groups || []).map((_, j) => `example-group-${i + 1}-${j + 1}`)
+    }));
   }
 
   addFile('roster-sync-config.json', anonymized);

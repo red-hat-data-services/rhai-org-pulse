@@ -133,17 +133,19 @@ async function fetchGithubOrgMembers(orgName) {
 
 /**
  * Fetch all members of a GitLab group via REST API.
- * Returns array of { username, name }.
+ * @param {string} groupPath
+ * @param {{ baseUrl: string, token: string }} [credentials] - Per-instance credentials
+ * @returns {Array<{username, name}>|null}
  */
-async function fetchGitlabGroupMembers(groupPath) {
-  const token = process.env.GITLAB_TOKEN;
-  const baseUrl = process.env.GITLAB_BASE_URL || 'https://gitlab.com';
+async function fetchGitlabGroupMembers(groupPath, credentials) {
+  const token = credentials?.token || process.env.GITLAB_TOKEN;
+  const baseUrl = credentials?.baseUrl || process.env.GITLAB_BASE_URL || 'https://gitlab.com';
 
   const headers = { 'Accept': 'application/json' };
   if (token) {
     headers['PRIVATE-TOKEN'] = token;
   } else {
-    console.warn('[username-inference] GITLAB_TOKEN not set, skipping GitLab inference');
+    console.warn('[username-inference] No GitLab token available, skipping GitLab inference');
     return null;
   }
 
@@ -188,9 +190,13 @@ async function fetchGitlabGroupMembers(groupPath) {
  */
 async function inferUsernames(roster, config) {
   const githubOrgs = normalizeToArray(config.githubOrgs || config.githubOrg);
-  const gitlabGroups = normalizeToArray(config.gitlabGroups || config.gitlabGroup);
 
-  if (githubOrgs.length === 0 && gitlabGroups.length === 0) {
+  // Resolve GitLab groups: prefer gitlabInstances, fall back to legacy gitlabGroups
+  const gitlabInstances = config.gitlabInstances || [];
+  const legacyGitlabGroups = normalizeToArray(config.gitlabGroups || config.gitlabGroup);
+  const hasGitlabWork = gitlabInstances.some(i => i.groups && i.groups.length > 0) || legacyGitlabGroups.length > 0;
+
+  if (githubOrgs.length === 0 && !hasGitlabWork) {
     return { github: 0, gitlab: 0 };
   }
 
@@ -228,16 +234,37 @@ async function inferUsernames(roster, config) {
     }
   }
 
-  // GitLab inference — fetch members from all groups, then match
-  if (gitlabGroups.length > 0) {
+  // GitLab inference — iterate over instances (or fall back to legacy groups)
+  if (hasGitlabWork) {
     const allGitlabMembers = [];
-    for (const groupPath of gitlabGroups) {
-      const members = await fetchGitlabGroupMembers(groupPath);
-      if (members) allGitlabMembers.push(...members);
+
+    if (gitlabInstances.length > 0) {
+      // New path: per-instance credentials
+      for (const instance of gitlabInstances) {
+        const token = process.env[instance.tokenEnvVar];
+        if (!token) {
+          console.warn(`[username-inference] Token env var ${instance.tokenEnvVar} not set, skipping ${instance.label}`);
+          continue;
+        }
+        for (const groupPath of (instance.groups || [])) {
+          const members = await fetchGitlabGroupMembers(groupPath, { baseUrl: instance.baseUrl, token });
+          if (members) allGitlabMembers.push(...members);
+        }
+      }
+    } else {
+      // Legacy fallback: flat gitlabGroups with env vars
+      for (const groupPath of legacyGitlabGroups) {
+        const members = await fetchGitlabGroupMembers(groupPath);
+        if (members) allGitlabMembers.push(...members);
+      }
     }
+
     if (allGitlabMembers.length > 0) {
       const needsGitlab = allPeople.filter(function(p) { return !p.gitlabUsername; });
-      console.log(`[username-inference] Matching ${needsGitlab.length} people against ${gitlabGroups.length} GitLab group(s)`);
+      const sourceCount = gitlabInstances.length > 0
+        ? `${gitlabInstances.length} GitLab instance(s)`
+        : `${legacyGitlabGroups.length} GitLab group(s)`;
+      console.log(`[username-inference] Matching ${needsGitlab.length} people against ${sourceCount}`);
 
       for (const person of needsGitlab) {
         const match = tryMatch(person, allGitlabMembers);

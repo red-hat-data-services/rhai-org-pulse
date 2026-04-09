@@ -8,7 +8,9 @@ const CONFIG_KEY = 'roster-sync-config.json';
 function loadConfig(storage) {
   const config = storage.readFromStorage(CONFIG_KEY);
   if (config) {
-    return migrateConfig(config);
+    const migrated = migrateConfig(config);
+    const instancesMigrated = migrateGitlabInstances(migrated, storage);
+    return instancesMigrated;
   }
   return config;
 }
@@ -56,6 +58,35 @@ function migrateConfig(config) {
     customFields
   };
 
+  return config;
+}
+
+/**
+ * Migrate legacy gitlabGroups to gitlabInstances.
+ * Writes back to disk immediately so the file reflects runtime state.
+ */
+function migrateGitlabInstances(config, storage) {
+  if (!config) return config;
+  // Already has gitlabInstances — no migration needed
+  if (config.gitlabInstances) return config;
+
+  // No legacy gitlabGroups — nothing to migrate
+  const groups = config.gitlabGroups;
+  if (!groups || !Array.isArray(groups) || groups.length === 0) return config;
+
+  config.gitlabInstances = [{
+    label: 'GitLab.com',
+    baseUrl: process.env.GITLAB_BASE_URL || 'https://gitlab.com',
+    tokenEnvVar: 'GITLAB_TOKEN',
+    groups: [...groups]
+  }];
+
+  // Write back to disk immediately
+  if (storage && storage.writeToStorage) {
+    storage.writeToStorage(CONFIG_KEY, config);
+  }
+
+  console.log(`[roster-sync] Migrated gitlabGroups (${groups.length} groups) to gitlabInstances`);
   return config;
 }
 

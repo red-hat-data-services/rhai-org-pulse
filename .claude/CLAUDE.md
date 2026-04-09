@@ -56,7 +56,7 @@ npm run dev:full       # Starts Vite (5173) + Express (3001)
 - **Roster**: `data/org-roster-full.json` defines all orgs, teams, and members. Built automatically by roster sync (LDAP + Google Sheets). The `deriveRoster()` function transforms this into the API response format.
 - **Person metrics**: Individual Jira stats stored as `data/people/{name}.json`. Fetched via JQL queries against Jira with 365-day lookback.
 - **GitHub contributions**: `data/github-contributions.json` stores contribution counts per user. `data/github-history.json` stores monthly history. Fetched via GitHub GraphQL API with `GITHUB_TOKEN`.
-- **GitLab contributions**: `data/gitlab-contributions.json` and `data/gitlab-history.json`. Fetched via GitLab REST API (`/api/v4/users/:id/events`) with `GITLAB_TOKEN`.
+- **GitLab contributions**: `data/gitlab-contributions.json` and `data/gitlab-history.json`. Fetched via GitLab GraphQL API across one or more configured instances (see `gitlabInstances` in roster-sync-config). Each user entry may include an `instances` array for per-instance contribution breakdowns.
 - **Snapshots**: Monthly metric snapshots stored in `data/snapshots/{sanitized-teamKey}/{YYYY-MM-DD}.json` (teamKey sanitized: `::` → `--`, special chars → `_`). Generated from person metrics + GitHub/GitLab history. Admin can delete all via Settings > Snapshots.
 - **Trends**: Built dynamically from person metric files by bucketing resolved issues by month, with org/team breakdowns.
 - **Composite keys**: Teams are identified by `orgKey::teamName` (e.g., `shgriffi::Model Serving`).
@@ -69,7 +69,7 @@ Automated roster building that replaces manual scripts:
   - Extracts GitHub and GitLab usernames from `rhatSocialUrl` LDAP field.
 - **Google Sheets** (`sheets.js`): Enriches LDAP data with team assignments, focus areas, etc. Sheet names are auto-discovered from the spreadsheet ID.
   - Auth via `GOOGLE_SERVICE_ACCOUNT_KEY_FILE` env var pointing to a service account JSON key.
-- **Username Inference** (`username-inference.js`): Optionally infers missing GitHub/GitLab usernames by fuzzy-matching roster people against GitHub org members or GitLab group members. Configured via Settings UI (`githubOrgs`, `gitlabGroups`).
+- **Username Inference** (`username-inference.js`): Optionally infers missing GitHub/GitLab usernames by fuzzy-matching roster people against GitHub org members or GitLab group members. Configured via Settings UI (`githubOrgs`, `gitlabInstances`). Supports per-instance GitLab credentials; falls back to legacy `gitlabGroups` if `gitlabInstances` is absent.
 - **Config** (`config.js`): Org roots, Google Sheet ID, and username inference settings stored in `data/roster-sync-config.json`, managed via Settings UI.
 - **Scheduler** (`index.js`): Runs sync daily (24h interval). Can be triggered manually via API or Settings UI.
 
@@ -89,10 +89,12 @@ Automated roster building that replaces manual scripts:
 - Functions are async: `fetchContributions(usernames)` and `fetchContributionHistory(usernames)`
 
 ### GitLab Integration (`modules/team-tracker/server/gitlab/contributions.js`)
-- Uses GitLab REST API (`/api/v4/users/:id/events`) via `node-fetch`
-- Auth via `GITLAB_TOKEN` env var (PAT with `read_api` scope). Falls back to unauthenticated (public repos only).
-- `GITLAB_BASE_URL` defaults to `https://gitlab.com`
-- Sequential requests with delays (200ms authenticated, 7s unauthenticated)
+- Uses GitLab GraphQL API (group-level `contributions` query) via `node-fetch`
+- Supports multiple GitLab instances configured via `gitlabInstances` in roster-sync-config (managed in Settings UI)
+- Each instance specifies a `tokenEnvVar` (name of env var holding the PAT with `read_api` scope), `baseUrl`, `label`, and `groups`
+- Instances are fetched in parallel (`Promise.allSettled`) with per-instance 5-minute timeout; within each instance, groups × monthly windows are fetched sequentially with 200ms delays
+- `validateInstances()` validates config at fetch time; invalid entries are skipped with warnings
+- Legacy `gitlabGroups` config is auto-migrated to `gitlabInstances` on first load
 
 ### Module System
 - **Built-in modules** live in `modules/<slug>/` with `module.json` manifests, `client/`, `server/`, and `__tests__/` directories

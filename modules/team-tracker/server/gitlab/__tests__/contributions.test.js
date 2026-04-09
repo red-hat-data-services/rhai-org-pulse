@@ -63,6 +63,152 @@ describe('GitLab generateMonthlyWindows', () => {
   })
 })
 
+describe('validateInstances', () => {
+  let validateInstances
+
+  function setup() {
+    const contribPath = require.resolve('../../gitlab/contributions')
+    delete require.cache[contribPath]
+    const mod = require('../../gitlab/contributions')
+    validateInstances = mod.validateInstances
+    return { contribPath }
+  }
+
+  function cleanup(refs) {
+    delete require.cache[refs.contribPath]
+  }
+
+  it('valid instance passes validation', () => {
+    const refs = setup()
+    try {
+      const result = validateInstances([{
+        label: 'GitLab.com',
+        baseUrl: 'https://gitlab.com',
+        tokenEnvVar: 'GITLAB_TOKEN',
+        groups: ['redhat/rhoai']
+      }])
+      expect(result).toHaveLength(1)
+      expect(result[0].label).toBe('GitLab.com')
+    } finally {
+      cleanup(refs)
+    }
+  })
+
+  it('missing baseUrl is rejected', () => {
+    const refs = setup()
+    try {
+      const result = validateInstances([{
+        label: 'Test',
+        tokenEnvVar: 'TOKEN',
+        groups: []
+      }])
+      expect(result).toHaveLength(0)
+    } finally {
+      cleanup(refs)
+    }
+  })
+
+  it('missing tokenEnvVar is rejected', () => {
+    const refs = setup()
+    try {
+      const result = validateInstances([{
+        label: 'Test',
+        baseUrl: 'https://gitlab.com',
+        groups: []
+      }])
+      expect(result).toHaveLength(0)
+    } finally {
+      cleanup(refs)
+    }
+  })
+
+  it('non-https baseUrl is rejected', () => {
+    const refs = setup()
+    try {
+      const result = validateInstances([{
+        label: 'Test',
+        baseUrl: 'http://gitlab.com',
+        tokenEnvVar: 'TOKEN',
+        groups: []
+      }])
+      expect(result).toHaveLength(0)
+    } finally {
+      cleanup(refs)
+    }
+  })
+
+  it('empty groups array is allowed', () => {
+    const refs = setup()
+    try {
+      const result = validateInstances([{
+        label: 'Test',
+        baseUrl: 'https://gitlab.com',
+        tokenEnvVar: 'TOKEN',
+        groups: []
+      }])
+      expect(result).toHaveLength(1)
+    } finally {
+      cleanup(refs)
+    }
+  })
+
+  it('missing label is rejected', () => {
+    const refs = setup()
+    try {
+      const result = validateInstances([{
+        baseUrl: 'https://gitlab.com',
+        tokenEnvVar: 'TOKEN',
+        groups: []
+      }])
+      expect(result).toHaveLength(0)
+    } finally {
+      cleanup(refs)
+    }
+  })
+
+  it('non-array groups is rejected', () => {
+    const refs = setup()
+    try {
+      const result = validateInstances([{
+        label: 'Test',
+        baseUrl: 'https://gitlab.com',
+        tokenEnvVar: 'TOKEN',
+        groups: 'not-an-array'
+      }])
+      expect(result).toHaveLength(0)
+    } finally {
+      cleanup(refs)
+    }
+  })
+
+  it('returns empty array for non-array input', () => {
+    const refs = setup()
+    try {
+      expect(validateInstances(null)).toEqual([])
+      expect(validateInstances(undefined)).toEqual([])
+      expect(validateInstances('string')).toEqual([])
+    } finally {
+      cleanup(refs)
+    }
+  })
+
+  it('filters out invalid entries while keeping valid ones', () => {
+    const refs = setup()
+    try {
+      const result = validateInstances([
+        { label: 'Valid', baseUrl: 'https://gitlab.com', tokenEnvVar: 'TOKEN', groups: [] },
+        { label: 'Bad URL', baseUrl: 'http://bad.com', tokenEnvVar: 'TOKEN', groups: [] },
+        { label: 'Also Valid', baseUrl: 'https://internal.gl', tokenEnvVar: 'TOKEN2', groups: ['g'] }
+      ])
+      expect(result).toHaveLength(2)
+      expect(result[0].label).toBe('Valid')
+      expect(result[1].label).toBe('Also Valid')
+    } finally {
+      cleanup(refs)
+    }
+  })
+})
+
 describe('fetchGitlabData integration', () => {
   let mockFetch
   let fetchGitlabData
@@ -92,6 +238,16 @@ describe('fetchGitlabData integration', () => {
     }
   }
 
+  function makeInstance(overrides = {}) {
+    return {
+      label: 'Test GitLab',
+      baseUrl: 'https://gitlab.test',
+      tokenEnvVar: 'GITLAB_TOKEN',
+      groups: ['redhat/rhel-ai'],
+      ...overrides
+    }
+  }
+
   function setup() {
     mockFetch = vi.fn()
 
@@ -102,7 +258,6 @@ describe('fetchGitlabData integration', () => {
 
     // Set env vars before loading
     process.env.GITLAB_TOKEN = 'test-token'
-    process.env.GITLAB_BASE_URL = 'https://gitlab.test'
 
     // Clear contributions module cache and reload
     const contribPath = require.resolve('../../gitlab/contributions')
@@ -120,13 +275,11 @@ describe('fetchGitlabData integration', () => {
     }
     delete require.cache[refs.contribPath]
     delete process.env.GITLAB_TOKEN
-    delete process.env.GITLAB_BASE_URL
   }
 
-  it('fetches contributions from groups and returns correct shape', async () => {
+  it('fetches contributions from instances and returns correct shape', async () => {
     const refs = setup()
     try {
-      // Mock all 12 monthly window queries to return dhellmann with some events
       mockFetch.mockImplementation(async () => {
         return makeGraphQLResponse([
           { user: { username: 'dhellmann' }, totalEvents: 100 },
@@ -135,7 +288,7 @@ describe('fetchGitlabData integration', () => {
       })
 
       const results = await fetchGitlabData(['dhellmann'], {
-        gitlabGroups: ['redhat/rhel-ai']
+        gitlabInstances: [makeInstance()]
       })
 
       expect(results.dhellmann).toBeTruthy()
@@ -143,6 +296,11 @@ describe('fetchGitlabData integration', () => {
       expect(results.dhellmann.source).toBe('graphql')
       expect(results.dhellmann.fetchedAt).toBeTruthy()
       expect(Object.keys(results.dhellmann.months).length).toBe(12)
+      // Should have instances array
+      expect(results.dhellmann.instances).toBeTruthy()
+      expect(results.dhellmann.instances).toHaveLength(1)
+      expect(results.dhellmann.instances[0].baseUrl).toBe('https://gitlab.test')
+      expect(results.dhellmann.instances[0].contributions).toBe(1200)
 
       // Should not include otheruser (not in requested usernames)
       expect(results.otheruser).toBeUndefined()
@@ -161,7 +319,7 @@ describe('fetchGitlabData integration', () => {
       })
 
       const results = await fetchGitlabData(['ghostuser'], {
-        gitlabGroups: ['redhat/rhel-ai']
+        gitlabInstances: [makeInstance()]
       })
 
       expect(results.ghostuser).toBeTruthy()
@@ -172,10 +330,10 @@ describe('fetchGitlabData integration', () => {
     }
   })
 
-  it('returns null for all users when no groups configured', async () => {
+  it('returns null for all users when no instances configured', async () => {
     const refs = setup()
     try {
-      const results = await fetchGitlabData(['testuser'], { gitlabGroups: [] })
+      const results = await fetchGitlabData(['testuser'], { gitlabInstances: [] })
 
       expect(results.testuser).toBeNull()
       expect(mockFetch).not.toHaveBeenCalled()
@@ -188,7 +346,7 @@ describe('fetchGitlabData integration', () => {
     const refs = setup()
     try {
       mockFetch.mockImplementation(async () => makeGraphQLResponse([]))
-      const results = await fetchGitlabData([], { gitlabGroups: ['some/group'] })
+      const results = await fetchGitlabData([], { gitlabInstances: [makeInstance()] })
       expect(results).toEqual({})
     } finally {
       cleanup(refs)
@@ -214,7 +372,7 @@ describe('fetchGitlabData integration', () => {
       })
 
       const results = await fetchGitlabData(['testuser'], {
-        gitlabGroups: ['group-a', 'group-b']
+        gitlabInstances: [makeInstance({ groups: ['group-a', 'group-b'] })]
       })
 
       // 10 + 20 = 30 per month, 12 months = 360
@@ -232,7 +390,7 @@ describe('fetchGitlabData integration', () => {
       })
 
       const results = await fetchGitlabData(['testuser'], {
-        gitlabGroups: ['some/group']
+        gitlabInstances: [makeInstance()]
       })
 
       // Should still return a result with 0 contributions (errors are caught per-window)
@@ -263,12 +421,78 @@ describe('fetchGitlabData integration', () => {
       })
 
       const results = await fetchGitlabData(['testuser'], {
-        gitlabGroups: ['some/group']
+        gitlabInstances: [makeInstance()]
       })
 
       // 5 + 3 = 8 per month from pagination, 12 months = 96
       expect(results.testuser.totalContributions).toBe(96)
     } finally {
+      cleanup(refs)
+    }
+  })
+
+  it('skips instances with missing token env var', async () => {
+    const refs = setup()
+    try {
+      delete process.env.MISSING_TOKEN
+
+      mockFetch.mockImplementation(async () => {
+        return makeGraphQLResponse([
+          { user: { username: 'testuser' }, totalEvents: 10 }
+        ])
+      })
+
+      const results = await fetchGitlabData(['testuser'], {
+        gitlabInstances: [
+          makeInstance(),
+          makeInstance({ label: 'No Token', baseUrl: 'https://other.gl', tokenEnvVar: 'MISSING_TOKEN', groups: ['some/group'] })
+        ]
+      })
+
+      // Only the first instance contributes (second is skipped)
+      expect(results.testuser.totalContributions).toBe(120) // 10 * 12
+      expect(results.testuser.instances).toHaveLength(1)
+    } finally {
+      cleanup(refs)
+    }
+  })
+
+  it('merges contributions across multiple instances', async () => {
+    const refs = setup()
+    try {
+      process.env.GITLAB_TOKEN_2 = 'token-2'
+
+      mockFetch.mockImplementation(async (url) => {
+        if (url.startsWith('https://gitlab.test/')) {
+          return makeGraphQLResponse([
+            { user: { username: 'testuser' }, totalEvents: 10 }
+          ])
+        }
+        if (url.startsWith('https://internal.gl/')) {
+          return makeGraphQLResponse([
+            { user: { username: 'testuser' }, totalEvents: 5 }
+          ])
+        }
+        return makeGraphQLResponse([])
+      })
+
+      const results = await fetchGitlabData(['testuser'], {
+        gitlabInstances: [
+          makeInstance(),
+          makeInstance({ label: 'Internal', baseUrl: 'https://internal.gl', tokenEnvVar: 'GITLAB_TOKEN_2', groups: ['internal/proj'] })
+        ]
+      })
+
+      // 10 + 5 = 15 per month, 12 months = 180
+      expect(results.testuser.totalContributions).toBe(180)
+      expect(results.testuser.instances).toHaveLength(2)
+
+      const inst1 = results.testuser.instances.find(i => i.baseUrl === 'https://gitlab.test')
+      const inst2 = results.testuser.instances.find(i => i.baseUrl === 'https://internal.gl')
+      expect(inst1.contributions).toBe(120)
+      expect(inst2.contributions).toBe(60)
+    } finally {
+      delete process.env.GITLAB_TOKEN_2
       cleanup(refs)
     }
   })
