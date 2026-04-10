@@ -25,7 +25,7 @@
     "Llama Stack Core"
   ],
   "created": "2025-12-15T17:17:16.756+0000",
-  "updated": "2026-04-03T15:10:17.829+0000",
+  "updated": "2026-04-08T13:35:25.387+0000",
   "statusNotes": {
     "type": "doc",
     "version": 1,
@@ -77,7 +77,7 @@
       "direction": "outward",
       "linkedKey": "RHAISTRAT-1073",
       "linkedSummary": "Consistent Agentic API: Responses and Inference Parity",
-      "linkedStatus": "In Progress"
+      "linkedStatus": "New"
     },
     {
       "type": "Related",
@@ -99,6 +99,13 @@
       "linkedKey": "RHAIRFE-1037",
       "linkedSummary": "Implement Per-user RBAC and data isolation for stored responses in the responses API ",
       "linkedStatus": "Closed"
+    },
+    {
+      "type": "Depend",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-49767",
+      "linkedSummary": "Surface errors from responses API in Playground UI",
+      "linkedStatus": "Backlog"
     }
   ],
   "epics": [],

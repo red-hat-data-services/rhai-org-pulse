@@ -32,7 +32,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Merit Vale",
+      "assignee": "Former Member 15",
       "components": [
         "Documentation",
         "Workload Orchestration"
@@ -52,7 +52,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Onyx True",
+          "assignee": "Ignas Baranauskas",
           "components": [
             "Workload Orchestration"
           ],
@@ -91,7 +91,7 @@
         "summary": "[ccs Epic] Create documentation for workload priority management",
         "status": "New",
         "statusCategory": "To Do",
-        "assignee": "Gray Adler",
+        "assignee": "Matt Werner",
         "totalIssues": 1,
         "doneIssues": 0,
         "progressPct": 0,

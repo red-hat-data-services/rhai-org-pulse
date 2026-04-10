@@ -5,7 +5,7 @@
   "statusCategory": "In Progress",
   "priority": "Blocker",
   "assignee": {
-    "displayName": "Merit Evans",
+    "displayName": "Ali Maredia",
     "accountId": "5aba8737f4b3dd2a74573cf7"
   },
   "fixVersions": [],
@@ -14,7 +14,7 @@
     "Data Processing"
   ],
   "created": "2026-03-03T16:07:16.876+0000",
-  "updated": "2026-04-07T13:57:44.572+0000",
+  "updated": "2026-04-09T14:49:27.769+0000",
   "statusNotes": null,
   "issueLinks": [
     {
@@ -96,7 +96,7 @@
           "status": "Backlog",
           "statusCategory": "To Do",
           "priority": "Critical",
-          "assignee": "Gray Vale",
+          "assignee": "Shruthi Sankepelly",
           "components": [
             "Data Processing",
             "Kubeflow Spark Operator"
@@ -136,7 +136,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Critical",
-          "assignee": "Merit Evans",
+          "assignee": "Ali Maredia",
           "components": [
             "Data Processing",
             "Kubeflow Spark Operator"
@@ -155,26 +155,26 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Critical",
-          "assignee": "Gray Vale",
+          "assignee": "Shruthi Sankepelly",
           "components": [
             "Data Processing",
             "Kubeflow Spark Operator"
           ],
           "labels": [],
-          "storyPoints": 1,
+          "storyPoints": 3,
           "created": "2026-02-05T19:53:20.591+0000",
-          "updated": "2026-04-02T22:13:52.327+0000",
+          "updated": "2026-04-09T17:42:31.235+0000",
           "resolutionDate": null
         },
         {
           "key": "RHOAIENG-48819",
           "parentKey": "RHOAIENG-48812",
-          "summary": "CLONE - Multi-Architecture Support",
+          "summary": " Multi-Architecture Support",
           "type": "Task",
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Critical",
-          "assignee": "Gray Vale",
+          "assignee": "Shruthi Sankepelly",
           "components": [
             "Data Processing",
             "Kubeflow Spark Operator"
@@ -185,7 +185,7 @@
           ],
           "storyPoints": 1,
           "created": "2026-02-05T19:53:20.633+0000",
-          "updated": "2026-04-02T22:13:50.596+0000",
+          "updated": "2026-04-09T18:04:50.111+0000",
           "resolutionDate": null
         },
         {
@@ -196,7 +196,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Merit Evans",
+          "assignee": "Ali Maredia",
           "components": [
             "Data Processing",
             "Kubeflow Spark Operator"
@@ -204,7 +204,7 @@
           "labels": [],
           "storyPoints": 2,
           "created": "2026-02-05T19:53:22.333+0000",
-          "updated": "2026-03-25T14:54:39.715+0000",
+          "updated": "2026-04-08T20:08:47.937+0000",
           "resolutionDate": "2026-03-25T14:54:39.684+0000"
         },
         {
@@ -215,7 +215,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Gray Vale",
+          "assignee": "Shruthi Sankepelly",
           "components": [
             "Data Processing",
             "Kubeflow Spark Operator"
@@ -226,7 +226,7 @@
           ],
           "storyPoints": 2,
           "created": "2026-02-05T19:53:22.353+0000",
-          "updated": "2026-04-02T14:15:31.407+0000",
+          "updated": "2026-04-08T20:08:46.667+0000",
           "resolutionDate": "2026-04-02T14:15:31.370+0000"
         },
         {
@@ -237,7 +237,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Onyx Ward",
+          "assignee": "Vedant Deshpande",
           "components": [
             "Data Processing",
             "Kubeflow Spark Operator"
@@ -245,7 +245,7 @@
           "labels": [],
           "storyPoints": 2,
           "created": "2026-02-05T19:53:22.358+0000",
-          "updated": "2026-04-02T16:39:41.895+0000",
+          "updated": "2026-04-08T20:08:45.472+0000",
           "resolutionDate": "2026-04-02T16:39:41.867+0000"
         },
         {
@@ -253,10 +253,10 @@
           "parentKey": "RHOAIENG-48812",
           "summary": "CLONE - Add Prometheus config for component",
           "type": "Task",
-          "status": "Review",
-          "statusCategory": "In Progress",
+          "status": "Resolved",
+          "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Merit Evans",
+          "assignee": "Ali Maredia",
           "components": [
             "Data Processing",
             "Kubeflow Spark Operator"
@@ -264,8 +264,8 @@
           "labels": [],
           "storyPoints": 5,
           "created": "2026-02-05T19:53:22.400+0000",
-          "updated": "2026-04-02T22:13:49.246+0000",
-          "resolutionDate": null
+          "updated": "2026-04-09T16:10:13.770+0000",
+          "resolutionDate": "2026-04-09T16:10:13.741+0000"
         },
         {
           "key": "RHOAIENG-48824",
@@ -275,7 +275,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Merit Evans",
+          "assignee": "Ali Maredia",
           "components": [
             "Data Processing",
             "Kubeflow Spark Operator"
@@ -283,7 +283,7 @@
           "labels": [],
           "storyPoints": 1,
           "created": "2026-02-05T19:53:22.865+0000",
-          "updated": "2026-03-27T15:22:10.305+0000",
+          "updated": "2026-04-08T20:08:44.360+0000",
           "resolutionDate": "2026-03-27T15:22:10.269+0000"
         },
         {
@@ -294,7 +294,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Merit Evans",
+          "assignee": "Ali Maredia",
           "components": [
             "Data Processing",
             "Kubeflow Spark Operator"
@@ -302,7 +302,7 @@
           "labels": [],
           "storyPoints": 1,
           "created": "2026-02-05T19:53:22.868+0000",
-          "updated": "2026-03-24T20:24:00.224+0000",
+          "updated": "2026-04-08T20:08:43.095+0000",
           "resolutionDate": "2026-03-24T20:24:00.190+0000"
         },
         {
@@ -409,7 +409,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Gray Sato",
+          "assignee": "Adrian Sanz Gomiz",
           "components": [
             "AI Core Platform"
           ],
@@ -429,7 +429,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Gray Yates",
+          "assignee": "Rishabh Singh",
           "components": [
             "Data Processing",
             "Kubeflow Spark Operator"
@@ -448,7 +448,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Onyx Ward",
+          "assignee": "Vedant Deshpande",
           "components": [
             "Data Processing",
             "Kubeflow Spark Operator"
@@ -467,7 +467,7 @@
           "status": "Backlog",
           "statusCategory": "To Do",
           "priority": "Critical",
-          "assignee": "Merit Evans",
+          "assignee": "Ali Maredia",
           "components": [
             "Data Processing",
             "Kubeflow Spark Operator"
@@ -486,10 +486,10 @@
           "parentKey": "RHOAIENG-48812",
           "summary": "Team Documentation of Customer KSO Installation via RHOAI",
           "type": "Task",
-          "status": "Backlog",
-          "statusCategory": "To Do",
+          "status": "Resolved",
+          "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Gray Vale",
+          "assignee": "Shruthi Sankepelly",
           "components": [
             "Data Processing",
             "Kubeflow Spark Operator"
@@ -500,8 +500,8 @@
           ],
           "storyPoints": 1,
           "created": "2026-03-20T14:45:49.367+0000",
-          "updated": "2026-04-02T22:13:55.615+0000",
-          "resolutionDate": null
+          "updated": "2026-04-09T17:34:48.120+0000",
+          "resolutionDate": "2026-04-09T17:34:47.882+0000"
         },
         {
           "key": "RHOAIENG-56059",
@@ -511,12 +511,33 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Gray Vale",
-          "components": [],
+          "assignee": "Shruthi Sankepelly",
+          "components": [
+            "Data Processing"
+          ],
           "labels": [],
           "storyPoints": 0,
           "created": "2026-03-30T20:11:30.015+0000",
-          "updated": "2026-04-02T22:14:02.132+0000",
+          "updated": "2026-04-09T18:18:22.771+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-57540",
+          "parentKey": "RHOAIENG-48812",
+          "summary": "Setup spark-operator with standard  rhoai processes",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Shruthi Sankepelly",
+          "components": [
+            "Data Processing",
+            "Kubeflow Spark Operator"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-04-09T18:17:03.046+0000",
+          "updated": "2026-04-09T18:20:00.427+0000",
           "resolutionDate": null
         }
       ]
@@ -524,24 +545,23 @@
   ],
   "metrics": {
     "totalEpics": 1,
-    "totalIssues": 24,
+    "totalIssues": 25,
     "issuesByStatus": {
       "Closed": 3,
-      "Resolved": 12,
-      "Backlog": 3,
+      "Resolved": 14,
+      "Backlog": 2,
       "In Progress": 3,
-      "Review": 1,
-      "New": 2
+      "New": 3
     },
     "issuesByCategory": {
-      "Done": 15,
-      "In Progress": 4,
+      "Done": 17,
+      "In Progress": 3,
       "To Do": 5
     },
-    "totalStoryPoints": 29,
-    "storyPointsDone": 17,
-    "completionPct": 63,
-    "staleCount": 0,
+    "totalStoryPoints": 33,
+    "storyPointsDone": 23,
+    "completionPct": 68,
+    "staleCount": 1,
     "unassignedCount": 1,
     "blockerCount": 14,
     "health": "RED",
@@ -551,17 +571,78 @@
         "summary": "Tech Preview - ODH and RHOAI Integrations [Kubeflow Spark Operator]",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Merit Evans",
-        "totalIssues": 24,
-        "doneIssues": 15,
-        "progressPct": 63,
-        "storyPoints": 29,
-        "storyPointsDone": 17,
+        "assignee": "Ali Maredia",
+        "totalIssues": 25,
+        "doneIssues": 17,
+        "progressPct": 68,
+        "storyPoints": 33,
+        "storyPointsDone": 23,
         "health": "RED"
       }
     ]
   },
   "topology": {
-    "repos": []
+    "repos": [
+      {
+        "url": "github.com/red-hat-data-services/data-science-pipelines",
+        "issueCount": 16,
+        "doneIssues": 9,
+        "totalIssues": 16,
+        "components": [
+          "Data Processing"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/pipelines-components",
+        "issueCount": 16,
+        "doneIssues": 9,
+        "totalIssues": 16,
+        "components": [
+          "Data Processing"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/spark-operator",
+        "issueCount": 18,
+        "doneIssues": 12,
+        "totalIssues": 18,
+        "components": [
+          "Kubeflow Spark Operator"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/RHOAI-Build-Config",
+        "issueCount": 2,
+        "doneIssues": 2,
+        "totalIssues": 2,
+        "components": [
+          "DevOps"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/rhods-operator",
+        "issueCount": 3,
+        "doneIssues": 3,
+        "totalIssues": 3,
+        "components": [
+          "AI Core Platform"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/opendatahub-io/opendatahub-operator",
+        "issueCount": 3,
+        "doneIssues": 3,
+        "totalIssues": 3,
+        "components": [
+          "AI Core Platform"
+        ],
+        "lane": "upstream"
+      }
+    ]
   }
 }

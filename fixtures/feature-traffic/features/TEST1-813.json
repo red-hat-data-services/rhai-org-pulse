@@ -5,7 +5,7 @@
   "statusCategory": "In Progress",
   "priority": "Critical",
   "assignee": {
-    "displayName": "Gray Graham",
+    "displayName": "Matteo Mortari",
     "accountId": "5b6859ac36d4343beb82c7a7"
   },
   "fixVersions": [],
@@ -23,7 +23,7 @@
     "UXD"
   ],
   "created": "2025-01-28T03:33:05.912+0000",
-  "updated": "2026-04-01T14:21:16.521+0000",
+  "updated": "2026-04-08T09:12:20.619+0000",
   "statusNotes": {
     "type": "doc",
     "version": 1,
@@ -37,24 +37,12 @@
             "marks": [
               {
                 "type": "strong"
-              },
-              {
-                "type": "textColor",
-                "attrs": {
-                  "color": "#00875a"
-                }
               }
             ]
           },
           {
             "type": "text",
-            "text": " - "
-          },
-          {
-            "type": "date",
-            "attrs": {
-              "timestamp": "1775001600000"
-            }
+            "text": " - 2026-04-08"
           }
         ]
       },
@@ -69,40 +57,35 @@
                 "content": [
                   {
                     "type": "text",
-                    "text": "🟢 🎯 3.4 Stable"
+                    "text": "signoff completed already"
                   }
                 ]
-              },
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
               {
-                "type": "bulletList",
+                "type": "paragraph",
                 "content": [
                   {
-                    "type": "listItem",
-                    "content": [
-                      {
-                        "type": "paragraph",
-                        "content": [
-                          {
-                            "type": "text",
-                            "text": "Namespace selector bug still needs to merge – CI is having troubles"
-                          }
-                        ]
-                      }
-                    ]
-                  },
+                    "type": "text",
+                    "text": "BACKEND work completed since, no relevant threads from UI team wrt any further questions/issues/doubts"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
                   {
-                    "type": "listItem",
-                    "content": [
-                      {
-                        "type": "paragraph",
-                        "content": [
-                          {
-                            "type": "text",
-                            "text": "Signoffs are complete"
-                          }
-                        ]
-                      }
-                    ]
+                    "type": "text",
+                    "text": "UI minor bug followup"
                   }
                 ]
               }
@@ -206,7 +189,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Undefined",
-      "assignee": "Gray Ellis",
+      "assignee": "Former Member 1",
       "components": [
         "AI Hub",
         "Documentation"
@@ -224,7 +207,7 @@
           "status": "Backlog",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Merit Voss",
+          "assignee": "Stephen McCarthy",
           "components": [
             "AI Hub",
             "Documentation"
@@ -245,7 +228,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Merit Voss",
+          "assignee": "Stephen McCarthy",
           "components": [
             "AI Hub",
             "Documentation"
@@ -264,7 +247,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Merit Voss",
+          "assignee": "Stephen McCarthy",
           "components": [
             "Documentation"
           ],
@@ -300,7 +283,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Onyx Gold",
+          "assignee": "Luca Giorgi",
           "components": [
             "AI Hub"
           ],
@@ -318,7 +301,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Minor",
-          "assignee": "Onyx Gold",
+          "assignee": "Luca Giorgi",
           "components": [
             "AI Hub"
           ],
@@ -338,7 +321,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Minor",
-          "assignee": "Onyx Gold",
+          "assignee": "Luca Giorgi",
           "components": [
             "AI Hub"
           ],
@@ -358,7 +341,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Minor",
-          "assignee": "Onyx Gold",
+          "assignee": "Luca Giorgi",
           "components": [
             "AI Hub"
           ],
@@ -378,7 +361,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Gray Thorne",
+          "assignee": "Federico Mosca",
           "components": [
             "AI Hub"
           ],
@@ -436,7 +419,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Gray Graham",
+          "assignee": "Matteo Mortari",
           "components": [
             "AI Hub"
           ],
@@ -472,7 +455,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Gray Graham",
+          "assignee": "Matteo Mortari",
           "components": [
             "AI Hub"
           ],
@@ -490,7 +473,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Gray Graham",
+          "assignee": "Matteo Mortari",
           "components": [
             "AI Hub"
           ],
@@ -526,7 +509,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Gray Graham",
+          "assignee": "Matteo Mortari",
           "components": [
             "AI Hub"
           ],
@@ -544,7 +527,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Nash",
+          "assignee": "Eric Dobroveanu",
           "components": [
             "AI Hub"
           ],
@@ -562,7 +545,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Nash",
+          "assignee": "Eric Dobroveanu",
           "components": [
             "AI Hub"
           ],
@@ -580,7 +563,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Nash",
+          "assignee": "Eric Dobroveanu",
           "components": [
             "AI Hub"
           ],
@@ -598,7 +581,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Nash",
+          "assignee": "Eric Dobroveanu",
           "components": [
             "AI Hub"
           ],
@@ -634,7 +617,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Gray Irving",
+          "assignee": "Jon Burdo",
           "components": [
             "AI Hub"
           ],
@@ -652,7 +635,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Gray Irving",
+          "assignee": "Jon Burdo",
           "components": [
             "AI Hub"
           ],
@@ -670,7 +653,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Gray Irving",
+          "assignee": "Jon Burdo",
           "components": [
             "AI Hub"
           ],
@@ -688,7 +671,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Nash",
+          "assignee": "Eric Dobroveanu",
           "components": [
             "AI Hub"
           ],
@@ -706,7 +689,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Gray Graham",
+          "assignee": "Matteo Mortari",
           "components": [
             "AI Hub"
           ],
@@ -724,7 +707,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Nash",
+          "assignee": "Eric Dobroveanu",
           "components": [
             "AI Hub"
           ],
@@ -742,7 +725,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Gray Mead",
+          "assignee": "Sidney Glinton",
           "components": [
             "AI Hub"
           ],
@@ -760,7 +743,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Nash",
+          "assignee": "Eric Dobroveanu",
           "components": [
             "AI Hub"
           ],
@@ -778,7 +761,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Gray Irving",
+          "assignee": "Jon Burdo",
           "components": [
             "AI Hub"
           ],
@@ -796,7 +779,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Nash",
+          "assignee": "Eric Dobroveanu",
           "components": [
             "AI Hub"
           ],
@@ -814,7 +797,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Gray Graham",
+          "assignee": "Matteo Mortari",
           "components": [
             "AI Hub"
           ],
@@ -832,7 +815,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Gray Irving",
+          "assignee": "Jon Burdo",
           "components": [
             "AI Hub"
           ],
@@ -850,7 +833,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Nash",
+          "assignee": "Eric Dobroveanu",
           "components": [
             "AI Hub"
           ],
@@ -868,7 +851,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Gray Irving",
+          "assignee": "Jon Burdo",
           "components": [
             "AI Hub"
           ],
@@ -886,7 +869,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Nash",
+          "assignee": "Eric Dobroveanu",
           "components": [
             "AI Hub"
           ],
@@ -904,7 +887,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Gray Graham",
+          "assignee": "Matteo Mortari",
           "components": [
             "AI Hub"
           ],
@@ -922,7 +905,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Gray Graham",
+          "assignee": "Matteo Mortari",
           "components": [
             "AI Hub"
           ],
@@ -940,7 +923,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Gray Irving",
+          "assignee": "Jon Burdo",
           "components": [
             "AI Hub"
           ],
@@ -958,7 +941,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Blocker",
-          "assignee": "Gray Graham",
+          "assignee": "Matteo Mortari",
           "components": [
             "AI Hub"
           ],
@@ -976,7 +959,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Gray Irving",
+          "assignee": "Jon Burdo",
           "components": [
             "AI Hub"
           ],
@@ -994,7 +977,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Gray Irving",
+          "assignee": "Jon Burdo",
           "components": [
             "AI Hub"
           ],
@@ -1012,7 +995,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Gray Irving",
+          "assignee": "Jon Burdo",
           "components": [
             "AI Hub"
           ],
@@ -1040,7 +1023,7 @@
       ],
       "storyPoints": 0,
       "created": "2025-06-23T14:10:16.940+0000",
-      "updated": "2026-04-01T12:32:54.600+0000",
+      "updated": "2026-04-06T19:24:31.126+0000",
       "issues": [
         {
           "key": "RHOAIENG-27993",
@@ -1050,7 +1033,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Minor",
-          "assignee": "Merit Park",
+          "assignee": "Philip Carneiro",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1071,7 +1054,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Ingram",
+          "assignee": "Mike Turley",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1111,7 +1094,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Kerry Ingram",
+          "assignee": "Mike Turley",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1131,7 +1114,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Fischer",
+          "assignee": "Arsheen Taj Syed",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1151,7 +1134,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Kerry Ingram",
+          "assignee": "Mike Turley",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1191,7 +1174,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Knox",
+          "assignee": "Manaswini Das",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1211,7 +1194,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Kerry Ingram",
+          "assignee": "Mike Turley",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1231,7 +1214,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Thorne",
+          "assignee": "Yulia Krimerman",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1251,7 +1234,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Chang",
+          "assignee": "Pushpa Padti",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1271,7 +1254,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Park",
+          "assignee": "Philip Carneiro",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1291,7 +1274,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Knox",
+          "assignee": "Manaswini Das",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1311,7 +1294,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Knox",
+          "assignee": "Manaswini Das",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1331,7 +1314,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Knox",
+          "assignee": "Manaswini Das",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1351,7 +1334,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Kerry Ingram",
+          "assignee": "Mike Turley",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1372,7 +1355,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Thorne",
+          "assignee": "Yulia Krimerman",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1392,7 +1375,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Chang",
+          "assignee": "Pushpa Padti",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1412,7 +1395,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Knox",
+          "assignee": "Manaswini Das",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1432,7 +1415,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Chang",
+          "assignee": "Pushpa Padti",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1452,7 +1435,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Park",
+          "assignee": "Philip Carneiro",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1472,7 +1455,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Critical",
-          "assignee": "Merit James",
+          "assignee": "Conor O'Malley",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1493,7 +1476,7 @@
           "status": "Review",
           "statusCategory": "In Progress",
           "priority": "Critical",
-          "assignee": "Frankie Fischer",
+          "assignee": "Arsheen Taj Syed",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1534,7 +1517,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Knox",
+          "assignee": "Manaswini Das",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1554,7 +1537,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Kerry Ingram",
+          "assignee": "Mike Turley",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1567,6 +1550,27 @@
           "resolutionDate": "2026-03-13T13:31:50.698+0000"
         },
         {
+          "key": "RHOAIENG-51790",
+          "parentKey": "RHOAIENG-27992",
+          "summary": "'Register and Store' OCI permissions not working",
+          "type": "Bug",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Critical",
+          "assignee": "Mike Turley",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "FailedQA",
+            "dashboard-area-model-registry"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-04T14:05:00.818+0000",
+          "updated": "2026-04-07T15:54:55.576+0000",
+          "resolutionDate": null
+        },
+        {
           "key": "RHOAIENG-51798",
           "parentKey": "RHOAIENG-27992",
           "summary": "Model transfer jobs: broken links for create-version intent, missing display names, namespace filtering issues",
@@ -1574,7 +1578,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Chang",
+          "assignee": "Pushpa Padti",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1594,7 +1598,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Merit Chang",
+          "assignee": "Pushpa Padti",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1614,7 +1618,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Ingram",
+          "assignee": "Mike Turley",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1634,7 +1638,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Knox",
+          "assignee": "Manaswini Das",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1654,7 +1658,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Kerry Ingram",
+          "assignee": "Mike Turley",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1674,7 +1678,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Merit Thorne",
+          "assignee": "Yulia Krimerman",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1714,7 +1718,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Fischer",
+          "assignee": "Arsheen Taj Syed",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1734,7 +1738,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Minor",
-          "assignee": "Merit Chang",
+          "assignee": "Pushpa Padti",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1754,7 +1758,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Ingram",
+          "assignee": "Mike Turley",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1775,7 +1779,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Knox",
+          "assignee": "Manaswini Das",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1795,7 +1799,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Kerry Ingram",
+          "assignee": "Mike Turley",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1815,7 +1819,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Kerry Ingram",
+          "assignee": "Mike Turley",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1835,7 +1839,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Ingram",
+          "assignee": "Mike Turley",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1855,7 +1859,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Kerry Ingram",
+          "assignee": "Mike Turley",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1875,7 +1879,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Kerry Ingram",
+          "assignee": "Mike Turley",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1914,7 +1918,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Minor",
-          "assignee": "Gray Irving",
+          "assignee": "Jon Burdo",
           "components": [
             "AI Hub"
           ],
@@ -1950,7 +1954,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Normal",
-          "assignee": "Onyx Nash",
+          "assignee": "Eric Dobroveanu",
           "components": [
             "AI Hub"
           ],
@@ -2004,7 +2008,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Gray Tate",
+          "assignee": "Adysen Rothman",
           "components": [
             "AI Hub"
           ],
@@ -2052,7 +2056,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Gray Irving",
+          "assignee": "Jon Burdo",
           "components": [
             "AI Hub"
           ],
@@ -2124,7 +2128,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Gray Irving",
+          "assignee": "Jon Burdo",
           "components": [
             "AI Hub"
           ],
@@ -2154,14 +2158,14 @@
       "labels": [],
       "storyPoints": 0,
       "created": "2026-02-27T05:10:15.159+0000",
-      "updated": "2026-04-01T09:25:01.439+0000",
+      "updated": "2026-04-08T19:57:41.764+0000",
       "issues": []
     },
     {
       "key": "TEST2-52298",
       "parentKey": "RHAISTRAT-813",
       "summary": "Fix concurrent access issue",
-      "status": "In Progress",
+      "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
       "assignee": "Person 215",
@@ -2171,7 +2175,7 @@
       "labels": [],
       "storyPoints": 0,
       "created": "2026-03-09T08:37:15.801+0000",
-      "updated": "2026-04-01T09:25:00.066+0000",
+      "updated": "2026-04-08T19:57:39.463+0000",
       "issues": [
         {
           "key": "RHOAIENG-52300",
@@ -2253,7 +2257,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Blocker",
-          "assignee": "Kerry Ingram",
+          "assignee": "Mike Turley",
           "components": [
             "AI Core Dashboard"
           ],
@@ -2270,19 +2274,19 @@
   ],
   "metrics": {
     "totalEpics": 11,
-    "totalIssues": 97,
+    "totalIssues": 98,
     "issuesByStatus": {
       "Backlog": 1,
       "New": 15,
       "Closed": 62,
       "Resolved": 14,
       "In Progress": 3,
-      "Review": 1,
+      "Review": 2,
       "Testing": 1
     },
     "issuesByCategory": {
       "Done": 76,
-      "In Progress": 5,
+      "In Progress": 6,
       "To Do": 16
     },
     "totalStoryPoints": 253,
@@ -2290,7 +2294,7 @@
     "completionPct": 78,
     "staleCount": 4,
     "unassignedCount": 10,
-    "blockerCount": 11,
+    "blockerCount": 12,
     "health": "RED",
     "epicMetrics": [
       {
@@ -2298,7 +2302,7 @@
         "summary": "[ccs Epic] Document OCI Compliant Storage layer for Model Registry",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Merit Voss",
+        "assignee": "Stephen McCarthy",
         "totalIssues": 3,
         "doneIssues": 0,
         "progressPct": 0,
@@ -2311,7 +2315,7 @@
         "summary": "Test Plan - Storage Layer for Model Registry",
         "status": "New",
         "statusCategory": "To Do",
-        "assignee": "Onyx Gold",
+        "assignee": "Luca Giorgi",
         "totalIssues": 6,
         "doneIssues": 3,
         "progressPct": 50,
@@ -2324,7 +2328,7 @@
         "summary": "Assess blocking requirements and Record decision how to persist attached Storages to a Model Registry",
         "status": "Closed",
         "statusCategory": "Done",
-        "assignee": "Gray Graham",
+        "assignee": "Matteo Mortari",
         "totalIssues": 1,
         "doneIssues": 1,
         "progressPct": 100,
@@ -2337,7 +2341,7 @@
         "summary": "Cross-components/Cross-Teams requests (phase 2 of OCI Storage)",
         "status": "Closed",
         "statusCategory": "Done",
-        "assignee": "Gray Graham",
+        "assignee": "Matteo Mortari",
         "totalIssues": 2,
         "doneIssues": 2,
         "progressPct": 100,
@@ -2350,7 +2354,7 @@
         "summary": "Design and Implement a K8s Job to produce ModelCar",
         "status": "Closed",
         "statusCategory": "Done",
-        "assignee": "Gray Graham",
+        "assignee": "Matteo Mortari",
         "totalIssues": 28,
         "doneIssues": 28,
         "progressPct": 100,
@@ -2363,10 +2367,10 @@
         "summary": "Dashboard - OCI Compliant Storage layer for Model Registry",
         "status": "Review",
         "statusCategory": "In Progress",
-        "assignee": "Kerry Ingram",
-        "totalIssues": 42,
+        "assignee": "Mike Turley",
+        "totalIssues": 43,
         "doneIssues": 39,
-        "progressPct": 93,
+        "progressPct": 91,
         "storyPoints": 118,
         "storyPointsDone": 111,
         "health": "RED"
@@ -2376,7 +2380,7 @@
         "summary": "followup from phase 1 of Create an OCI Compliant Storage layer for Model Registry",
         "status": "Closed",
         "statusCategory": "Done",
-        "assignee": "Gray Irving",
+        "assignee": "Jon Burdo",
         "totalIssues": 1,
         "doneIssues": 1,
         "progressPct": 100,
@@ -2389,7 +2393,7 @@
         "summary": "Async-upload Job Backend nice-to-have(s)",
         "status": "New",
         "statusCategory": "To Do",
-        "assignee": "Gray Graham",
+        "assignee": "Matteo Mortari",
         "totalIssues": 6,
         "doneIssues": 2,
         "progressPct": 33,
@@ -2426,9 +2430,9 @@
       {
         "key": "RHOAIENG-52298",
         "summary": "GA - ODH and RHOAI Integrations [AI Core Dashboard/AI Hub - OCI Compliant Storage layer for MR]",
-        "status": "In Progress",
+        "status": "Review",
         "statusCategory": "In Progress",
-        "assignee": "Kerry Ingram",
+        "assignee": "Mike Turley",
         "totalIssues": 5,
         "doneIssues": 0,
         "progressPct": 0,

@@ -1,0 +1,65 @@
+{
+  "key": "TEST1-1455",
+  "summary": "Update documentation",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Undefined",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": [
+    "ai-hub",
+    "dashboard-green-scrum"
+  ],
+  "components": [
+    "AI Core Dashboard",
+    "AI Hub"
+  ],
+  "created": "2026-04-08T14:38:19.526+0000",
+  "updated": "2026-04-08T15:19:53.668+0000",
+  "statusNotes": null,
+  "issueLinks": [
+    {
+      "type": "Blocks",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-224",
+      "linkedSummary": "Integrate Model Validation Performance Data in RHOAI Dashboard",
+      "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-581",
+      "linkedSummary": "Advanced Model Validation filters for Model Catalog",
+      "linkedStatus": "Review"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAISTRAT-445",
+      "linkedSummary": "Integrate Model Validation Performance Data in RHOAI",
+      "linkedStatus": "Closed"
+    }
+  ],
+  "epics": [],
+  "metrics": {
+    "totalEpics": 0,
+    "totalIssues": 0,
+    "issuesByStatus": {},
+    "issuesByCategory": {
+      "Done": 0,
+      "In Progress": 0,
+      "To Do": 0
+    },
+    "totalStoryPoints": 0,
+    "storyPointsDone": 0,
+    "completionPct": 0,
+    "staleCount": 0,
+    "unassignedCount": 0,
+    "blockerCount": 0,
+    "health": "YELLOW",
+    "epicMetrics": []
+  },
+  "topology": {
+    "repos": []
+  }
+}

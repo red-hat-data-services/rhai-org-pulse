@@ -1,31 +1,31 @@
 {
-  "key": "TEST1-1452",
-  "summary": "Implement search feature",
+  "key": "TEST1-1457",
+  "summary": "Implement retry logic",
   "status": "New",
   "statusCategory": "To Do",
   "priority": "Undefined",
-  "assignee": {
-    "displayName": "Kerry Abbott",
-    "accountId": "70121:5380001f-abed-4903-804d-7df9a1ab5f83"
-  },
+  "assignee": null,
   "fixVersions": [],
-  "labels": [
-    "3.5-candidate",
-    "rfe-creator-autofix-rubric-pass",
-    "tool-calling"
-  ],
+  "labels": [],
   "components": [
-    "vLLM Runtime"
+    "Tooling Experience"
   ],
-  "created": "2026-04-08T00:44:10.712+0000",
-  "updated": "2026-04-08T12:07:07.792+0000",
+  "created": "2026-02-17T12:50:48.165+0000",
+  "updated": "2026-04-08T18:21:28.575+0000",
   "statusNotes": null,
   "issueLinks": [
     {
-      "type": "Cloners",
+      "type": "Related",
       "direction": "outward",
-      "linkedKey": "RHAIRFE-1432",
-      "linkedSummary": "Structured Output Enforcement for Auto Tool Calls",
+      "linkedKey": "RHAISTRAT-1192",
+      "linkedSummary": "Bring your Langflow agent to RH AI ",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "outward",
+      "linkedKey": "RHAIRFE-1172",
+      "linkedSummary": "Bring your agent built on your laptop with Langchain & Langgraph SDK to RH AI ",
       "linkedStatus": "Approved"
     }
   ],

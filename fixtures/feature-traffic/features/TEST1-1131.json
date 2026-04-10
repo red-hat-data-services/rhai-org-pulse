@@ -1,11 +1,11 @@
 {
   "key": "TEST1-1131",
   "summary": "Implement webhook handler",
-  "status": "In Progress",
+  "status": "Review",
   "statusCategory": "In Progress",
   "priority": "Major",
   "assignee": {
-    "displayName": "Kerry Ellis",
+    "displayName": "Aniket Paluskar",
     "accountId": "712020:dfc9ab32-d4ac-427e-8ef1-bb2ab45a1696"
   },
   "fixVersions": [],
@@ -17,7 +17,7 @@
     "Feature Store"
   ],
   "created": "2026-01-19T07:51:34.948+0000",
-  "updated": "2026-04-03T20:39:23.486+0000",
+  "updated": "2026-04-09T10:30:21.594+0000",
   "statusNotes": {
     "type": "doc",
     "version": 1,
@@ -31,7 +31,7 @@
           },
           {
             "type": "text",
-            "text": "25th March",
+            "text": "8 April",
             "marks": [
               {
                 "type": "strong"
@@ -40,7 +40,7 @@
           },
           {
             "type": "text",
-            "text": "] Operator Changes Completed - Testing in Progress"
+            "text": "] Development Completed - Comprehensive testing in progress"
           }
         ]
       }
@@ -74,7 +74,7 @@
       "key": "TEST2-46058",
       "parentKey": "RHAISTRAT-1131",
       "summary": "Fix sorting order",
-      "status": "In Progress",
+      "status": "Testing",
       "statusCategory": "In Progress",
       "priority": "Major",
       "assignee": "Person 291",
@@ -86,7 +86,7 @@
       ],
       "storyPoints": 1,
       "created": "2026-01-19T08:05:12.899+0000",
-      "updated": "2026-03-09T09:48:29.587+0000",
+      "updated": "2026-04-08T15:59:41.521+0000",
       "issues": [
         {
           "key": "RHOAIENG-46059",
@@ -96,7 +96,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Ellis",
+          "assignee": "Aniket Paluskar",
           "components": [
             "Feature Store"
           ],
@@ -111,54 +111,70 @@
           "parentKey": "RHOAIENG-46058",
           "summary": "SDK: Support reading OIDC token from environment variable and user_token config field",
           "type": "Story",
-          "status": "Review",
-          "statusCategory": "In Progress",
+          "status": "Closed",
+          "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Ellis",
+          "assignee": "Aniket Paluskar",
           "components": [
             "Feature Store"
           ],
           "labels": [],
           "storyPoints": 5,
           "created": "2026-03-06T12:26:28.826+0000",
-          "updated": "2026-03-23T09:10:47.018+0000",
-          "resolutionDate": null
+          "updated": "2026-04-08T08:30:17.626+0000",
+          "resolutionDate": "2026-04-08T08:17:16.947+0000"
         },
         {
           "key": "RHOAIENG-52166",
           "parentKey": "RHOAIENG-46058",
           "summary": "SDK: Extract groups, namespaces, and realm roles from OIDC JWT tokens",
           "type": "Story",
-          "status": "Review",
-          "statusCategory": "In Progress",
+          "status": "Closed",
+          "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Ellis",
+          "assignee": "Aniket Paluskar",
           "components": [
             "Feature Store"
           ],
           "labels": [],
           "storyPoints": 5,
           "created": "2026-03-06T13:23:53.111+0000",
-          "updated": "2026-03-20T07:47:35.469+0000",
-          "resolutionDate": null
+          "updated": "2026-04-08T08:30:13.068+0000",
+          "resolutionDate": "2026-04-08T08:17:22.895+0000"
         },
         {
           "key": "RHOAIENG-52167",
           "parentKey": "RHOAIENG-46058",
           "summary": "Operator: Use server-only OIDC properties and support configurable token env var",
           "type": "Story",
-          "status": "Review",
-          "statusCategory": "In Progress",
+          "status": "Closed",
+          "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Ellis",
+          "assignee": "Aniket Paluskar",
           "components": [
             "Feature Store"
           ],
           "labels": [],
           "storyPoints": 5,
           "created": "2026-03-06T13:26:28.069+0000",
-          "updated": "2026-03-24T19:07:49.769+0000",
-          "resolutionDate": null
+          "updated": "2026-04-08T08:30:08.247+0000",
+          "resolutionDate": "2026-04-08T08:17:28.519+0000"
+        },
+        {
+          "key": "RHOAIENG-57101",
+          "parentKey": "RHOAIENG-46058",
+          "summary": "Handle Self-signed Certificates and Integration with ODH",
+          "type": "Story",
+          "status": "Closed",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": "Aniket Paluskar",
+          "components": [],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-04-08T08:16:17.021+0000",
+          "updated": "2026-04-08T08:30:23.323+0000",
+          "resolutionDate": "2026-04-08T08:17:10.457+0000"
         }
       ]
     },
@@ -168,15 +184,15 @@
       "summary": "Fix authentication issue",
       "status": "In Progress",
       "statusCategory": "In Progress",
-      "priority": "Undefined",
-      "assignee": "Kerry Joyce",
+      "priority": "Major",
+      "assignee": "Former Member 4",
       "components": [
         "Documentation"
       ],
       "labels": [],
       "storyPoints": 0,
       "created": "2026-03-10T11:24:40.729+0000",
-      "updated": "2026-03-23T20:38:40.931+0000",
+      "updated": "2026-04-08T08:47:11.952+0000",
       "issues": [
         {
           "key": "RHOAIENG-52455",
@@ -186,7 +202,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Merit Fischer",
+          "assignee": "Dana Brown",
           "components": [
             "Documentation"
           ],
@@ -204,7 +220,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Merit Fischer",
+          "assignee": "Dana Brown",
           "components": [
             "Documentation"
           ],
@@ -240,7 +256,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry North",
+          "assignee": "Srihari Venkataramaiah",
           "components": [
             "Feature Store"
           ],
@@ -274,10 +290,10 @@
       "key": "TEST2-55765",
       "parentKey": "RHAISTRAT-1131",
       "summary": "Add export functionality",
-      "status": "New",
-      "statusCategory": "To Do",
+      "status": "Resolved",
+      "statusCategory": "Done",
       "priority": "Undefined",
-      "assignee": null,
+      "assignee": "Person 263",
       "components": [
         "AI Core Platform"
       ],
@@ -286,17 +302,17 @@
       ],
       "storyPoints": 0,
       "created": "2026-03-27T18:11:39.490+0000",
-      "updated": "2026-03-27T18:40:19.674+0000",
+      "updated": "2026-04-09T08:17:18.849+0000",
       "issues": [
         {
           "key": "RHOAIENG-55767",
           "parentKey": "RHOAIENG-55765",
           "summary": "Pass JWKS/Discovery URI from ODH operator to Feature Store via params overrides",
           "type": "Story",
-          "status": "Review",
-          "statusCategory": "In Progress",
+          "status": "Resolved",
+          "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Onyx Tate",
+          "assignee": "Gowtham Shanmugasundaram",
           "components": [
             "AI Core Platform"
           ],
@@ -305,46 +321,45 @@
           ],
           "storyPoints": 5,
           "created": "2026-03-27T18:35:08.832+0000",
-          "updated": "2026-04-02T21:52:29.259+0000",
-          "resolutionDate": null
+          "updated": "2026-04-09T08:18:40.862+0000",
+          "resolutionDate": "2026-04-09T08:18:40.823+0000"
         }
       ]
     }
   ],
   "metrics": {
     "totalEpics": 4,
-    "totalIssues": 9,
+    "totalIssues": 10,
     "issuesByStatus": {
-      "Closed": 1,
-      "Review": 4,
+      "Closed": 5,
       "In Progress": 1,
       "New": 2,
-      "Resolved": 1
+      "Resolved": 2
     },
     "issuesByCategory": {
-      "Done": 2,
-      "In Progress": 5,
+      "Done": 7,
+      "In Progress": 1,
       "To Do": 2
     },
-    "totalStoryPoints": 41,
-    "storyPointsDone": 10,
-    "completionPct": 22,
-    "staleCount": 4,
+    "totalStoryPoints": 46,
+    "storyPointsDone": 35,
+    "completionPct": 70,
+    "staleCount": 1,
     "unassignedCount": 1,
-    "blockerCount": 0,
+    "blockerCount": 1,
     "health": "RED",
     "epicMetrics": [
       {
         "key": "RHOAIENG-46058",
         "summary": "Feature Store OIDC Authentication Support",
-        "status": "In Progress",
+        "status": "Testing",
         "statusCategory": "In Progress",
-        "assignee": "Kerry Ellis",
-        "totalIssues": 4,
-        "doneIssues": 1,
-        "progressPct": 25,
-        "storyPoints": 23,
-        "storyPointsDone": 8,
+        "assignee": "Aniket Paluskar",
+        "totalIssues": 5,
+        "doneIssues": 5,
+        "progressPct": 100,
+        "storyPoints": 28,
+        "storyPointsDone": 28,
         "health": "RED"
       },
       {
@@ -352,20 +367,20 @@
         "summary": "[ccs Epic] Document Feature Store OIDC Authentication",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Merit Fischer",
+        "assignee": "Dana Brown",
         "totalIssues": 2,
         "doneIssues": 0,
         "progressPct": 0,
         "storyPoints": 8,
         "storyPointsDone": 0,
-        "health": "YELLOW"
+        "health": "RED"
       },
       {
         "key": "RHOAIENG-52472",
         "summary": "Feature Store OIDC Authentication Support Testing",
         "status": "New",
         "statusCategory": "To Do",
-        "assignee": "Kerry North",
+        "assignee": "Srihari Venkataramaiah",
         "totalIssues": 2,
         "doneIssues": 1,
         "progressPct": 50,
@@ -376,19 +391,70 @@
       {
         "key": "RHOAIENG-55765",
         "summary": "Platform enablement for Feature Store OIDC Authentication Support",
-        "status": "New",
-        "statusCategory": "To Do",
-        "assignee": null,
+        "status": "Resolved",
+        "statusCategory": "Done",
+        "assignee": "Gowtham Shanmugasundaram",
         "totalIssues": 1,
-        "doneIssues": 0,
-        "progressPct": 0,
+        "doneIssues": 1,
+        "progressPct": 100,
         "storyPoints": 5,
-        "storyPointsDone": 0,
-        "health": "RED"
+        "storyPointsDone": 5,
+        "health": "GREEN"
       }
     ]
   },
   "topology": {
-    "repos": []
+    "repos": [
+      {
+        "url": "github.com/red-hat-data-services/feast",
+        "issueCount": 6,
+        "doneIssues": 5,
+        "totalIssues": 6,
+        "components": [
+          "Feature Store"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/feast-dev/feast",
+        "issueCount": 6,
+        "doneIssues": 5,
+        "totalIssues": 6,
+        "components": [
+          "Feature Store"
+        ],
+        "lane": "upstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/odh-dashboard",
+        "issueCount": 2,
+        "doneIssues": 0,
+        "totalIssues": 2,
+        "components": [
+          "Documentation"
+        ],
+        "lane": "destination"
+      },
+      {
+        "url": "github.com/red-hat-data-services/rhods-operator",
+        "issueCount": 1,
+        "doneIssues": 1,
+        "totalIssues": 1,
+        "components": [
+          "AI Core Platform"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/opendatahub-io/opendatahub-operator",
+        "issueCount": 1,
+        "doneIssues": 1,
+        "totalIssues": 1,
+        "components": [
+          "AI Core Platform"
+        ],
+        "lane": "upstream"
+      }
+    ]
   }
 }

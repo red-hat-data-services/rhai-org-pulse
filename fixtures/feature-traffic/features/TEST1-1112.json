@@ -1,11 +1,11 @@
 {
   "key": "TEST1-1112",
   "summary": "Update documentation",
-  "status": "In Progress",
+  "status": "Review",
   "statusCategory": "In Progress",
   "priority": "Critical",
   "assignee": {
-    "displayName": "Merit Jay",
+    "displayName": "Danny Pierce",
     "accountId": "712020:f6a72143-e1ad-4089-b050-1c4b9a926b3b"
   },
   "fixVersions": [
@@ -28,7 +28,7 @@
     "UXD"
   ],
   "created": "2026-01-12T19:45:53.300+0000",
-  "updated": "2026-04-07T15:24:26.795+0000",
+  "updated": "2026-04-09T11:22:16.073+0000",
   "statusNotes": {
     "type": "doc",
     "version": 1,
@@ -179,7 +179,14 @@
       "direction": "inward",
       "linkedKey": "RHAIENG-4140",
       "linkedSummary": "[ccs Epic] Document prompt management in the GenAI Studio playground",
-      "linkedStatus": "New"
+      "linkedStatus": "Backlog"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-57334",
+      "linkedSummary": "Newly saved version of prompt not default selected in dropdown",
+      "linkedStatus": "Testing"
     }
   ],
   "epics": [
@@ -187,8 +194,8 @@
       "key": "TEST2-47880",
       "parentKey": "RHAISTRAT-1112",
       "summary": "Fix data migration",
-      "status": "Review",
-      "statusCategory": "In Progress",
+      "status": "Closed",
+      "statusCategory": "Done",
       "priority": "Critical",
       "assignee": "Person 211",
       "components": [
@@ -200,7 +207,7 @@
       ],
       "storyPoints": 0,
       "created": "2026-01-28T09:57:54.778+0000",
-      "updated": "2026-03-31T13:30:41.391+0000",
+      "updated": "2026-04-09T12:14:57.763+0000",
       "issues": [
         {
           "key": "RHOAIENG-47775",
@@ -231,7 +238,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Vaughn",
+          "assignee": "Eder Ignatowicz",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -252,7 +259,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Vaughn",
+          "assignee": "Eder Ignatowicz",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -273,7 +280,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Jay",
+          "assignee": "Danny Pierce",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -294,7 +301,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Vaughn",
+          "assignee": "Eder Ignatowicz",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -315,7 +322,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Merit Jay",
+          "assignee": "Danny Pierce",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -327,27 +334,6 @@
           "created": "2026-02-16T15:47:08.426+0000",
           "updated": "2026-03-25T12:21:18.041+0000",
           "resolutionDate": "2026-03-25T12:21:18.016+0000"
-        },
-        {
-          "key": "RHOAIENG-56097",
-          "parentKey": "RHOAIENG-47880",
-          "summary": "RHAISTRAT-1112 Feature signoff - TP",
-          "type": "Task",
-          "status": "Backlog",
-          "statusCategory": "To Do",
-          "priority": "Blocker",
-          "assignee": "Merit Jay",
-          "components": [
-            "AI Core Dashboard"
-          ],
-          "labels": [
-            "dashboard-crimson-scrum",
-            "signoff"
-          ],
-          "storyPoints": 0,
-          "created": "2026-03-31T09:19:28.586+0000",
-          "updated": "2026-04-01T15:00:30.407+0000",
-          "resolutionDate": null
         }
       ]
     },
@@ -378,7 +364,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Vaughn",
+          "assignee": "Eder Ignatowicz",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -399,7 +385,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Vaughn",
+          "assignee": "Eder Ignatowicz",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -420,7 +406,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Vaughn",
+          "assignee": "Eder Ignatowicz",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -441,7 +427,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Vaughn",
+          "assignee": "Eder Ignatowicz",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -462,7 +448,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Vaughn",
+          "assignee": "Eder Ignatowicz",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -483,7 +469,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Vaughn",
+          "assignee": "Eder Ignatowicz",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -504,7 +490,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Vaughn",
+          "assignee": "Eder Ignatowicz",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -525,7 +511,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Vaughn",
+          "assignee": "Eder Ignatowicz",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -546,7 +532,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Vaughn",
+          "assignee": "Eder Ignatowicz",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -588,7 +574,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Jay",
+          "assignee": "Danny Pierce",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -651,7 +637,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Jay",
+          "assignee": "Danny Pierce",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -672,7 +658,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Jay",
+          "assignee": "Danny Pierce",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -693,7 +679,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Jay",
+          "assignee": "Danny Pierce",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -735,7 +721,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Jay",
+          "assignee": "Danny Pierce",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -756,7 +742,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Jay",
+          "assignee": "Danny Pierce",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -777,7 +763,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Jay",
+          "assignee": "Danny Pierce",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -798,7 +784,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Jay",
+          "assignee": "Danny Pierce",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -819,7 +805,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Jay",
+          "assignee": "Danny Pierce",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -840,7 +826,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Jay",
+          "assignee": "Danny Pierce",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -861,7 +847,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Jay",
+          "assignee": "Danny Pierce",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -882,7 +868,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Jay",
+          "assignee": "Danny Pierce",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -924,7 +910,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Jay",
+          "assignee": "Danny Pierce",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -1008,7 +994,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Jay",
+          "assignee": "Danny Pierce",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -1050,7 +1036,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Jay",
+          "assignee": "Danny Pierce",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -1113,7 +1099,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Jay",
+          "assignee": "Danny Pierce",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -1197,7 +1183,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Jay",
+          "assignee": "Danny Pierce",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -1281,7 +1267,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Jay",
+          "assignee": "Danny Pierce",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -1302,7 +1288,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Archer",
+          "assignee": "Divyanshi Gupta",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -1323,7 +1309,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Archer",
+          "assignee": "Divyanshi Gupta",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -1344,7 +1330,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Archer",
+          "assignee": "Divyanshi Gupta",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1362,8 +1348,8 @@
       "key": "TEST2-50296",
       "parentKey": "RHAISTRAT-1112",
       "summary": "Fix validation issue",
-      "status": "Backlog",
-      "statusCategory": "To Do",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
       "priority": "Minor",
       "assignee": "Person 211",
       "components": [
@@ -1375,7 +1361,7 @@
       ],
       "storyPoints": 0,
       "created": "2026-02-19T12:13:45.968+0000",
-      "updated": "2026-03-18T22:11:08.387+0000",
+      "updated": "2026-04-09T12:29:31.894+0000",
       "issues": [
         {
           "key": "RHOAIENG-50283",
@@ -1406,7 +1392,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Archer",
+          "assignee": "Divyanshi Gupta",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -1424,10 +1410,10 @@
           "parentKey": "RHOAIENG-50296",
           "summary": "Add usage tracking to prompt management feature",
           "type": "Story",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
+          "status": "Resolved",
+          "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Jay",
+          "assignee": "Danny Pierce",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -1437,24 +1423,8 @@
           ],
           "storyPoints": 0,
           "created": "2026-03-19T12:41:54.042+0000",
-          "updated": "2026-04-07T13:33:56.678+0000",
-          "resolutionDate": null
-        },
-        {
-          "key": "RHOAIENG-54938",
-          "parentKey": "RHOAIENG-50296",
-          "summary": "Update placeholder name to be something generic like 'New Prompt' rather than timestamp",
-          "type": "Story",
-          "status": "New",
-          "statusCategory": "To Do",
-          "priority": "Normal",
-          "assignee": null,
-          "components": [],
-          "labels": [],
-          "storyPoints": 0,
-          "created": "2026-03-24T10:34:16.709+0000",
-          "updated": "2026-03-24T17:26:26.228+0000",
-          "resolutionDate": null
+          "updated": "2026-04-08T12:18:02.020+0000",
+          "resolutionDate": "2026-04-08T08:46:13.465+0000"
         },
         {
           "key": "RHOAIENG-55013",
@@ -1464,7 +1434,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Archer",
+          "assignee": "Divyanshi Gupta",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1475,27 +1445,6 @@
           "created": "2026-03-24T17:26:16.231+0000",
           "updated": "2026-03-31T13:15:13.543+0000",
           "resolutionDate": "2026-03-31T13:15:13.518+0000"
-        },
-        {
-          "key": "RHOAIENG-55155",
-          "parentKey": "RHOAIENG-50296",
-          "summary": "Inconsistent saved state when navigating back to the playground",
-          "type": "Task",
-          "status": "New",
-          "statusCategory": "To Do",
-          "priority": "Normal",
-          "assignee": null,
-          "components": [
-            "AI Core Dashboard",
-            "Gen AI Studio"
-          ],
-          "labels": [
-            "dashboard-crimson-scrum"
-          ],
-          "storyPoints": 0,
-          "created": "2026-03-25T14:08:13.329+0000",
-          "updated": "2026-04-01T14:59:07.296+0000",
-          "resolutionDate": null
         },
         {
           "key": "RHOAIENG-55456",
@@ -1521,7 +1470,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Jay",
+          "assignee": "Danny Pierce",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -1539,10 +1488,10 @@
           "parentKey": "RHOAIENG-50296",
           "summary": "Prompt management displays incorrect prompt name and version when using chat comparison",
           "type": "Bug",
-          "status": "Review",
-          "statusCategory": "In Progress",
+          "status": "Resolved",
+          "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Jay",
+          "assignee": "Danny Pierce",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -1552,45 +1501,127 @@
           ],
           "storyPoints": 0,
           "created": "2026-03-26T13:16:16.893+0000",
-          "updated": "2026-04-01T16:09:58.450+0000",
+          "updated": "2026-04-08T12:40:33.589+0000",
+          "resolutionDate": "2026-04-08T12:40:33.549+0000"
+        },
+        {
+          "key": "RHOAIENG-57325",
+          "parentKey": "RHOAIENG-50296",
+          "summary": "Load prompt button should be disabled when no prompt is selected",
+          "type": "Bug",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-04-08T20:31:25.398+0000",
+          "updated": "2026-04-09T14:03:57.093+0000",
+          "resolutionDate": "2026-04-09T14:03:57.067+0000"
+        },
+        {
+          "key": "RHOAIENG-57334",
+          "parentKey": "RHOAIENG-50296",
+          "summary": "Newly saved version of prompt not default selected in dropdown",
+          "type": "Bug",
+          "status": "Testing",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard",
+            "Gen AI Studio"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum",
+            "prompt-management"
+          ],
+          "storyPoints": 0,
+          "created": "2026-04-08T20:55:22.937+0000",
+          "updated": "2026-04-09T13:37:21.352+0000",
+          "resolutionDate": null
+        }
+      ]
+    },
+    {
+      "key": "TEST2-57451",
+      "parentKey": "RHAISTRAT-1112",
+      "summary": "Update notification system",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Person 211",
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "labels": [
+        "dashboard-crimson-scrum"
+      ],
+      "storyPoints": 0,
+      "created": "2026-04-09T12:13:14.084+0000",
+      "updated": "2026-04-09T12:15:22.233+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-56097",
+          "parentKey": "RHOAIENG-57451",
+          "summary": "RHAISTRAT-1112 Feature signoff - TP",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Blocker",
+          "assignee": "Danny Pierce",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-crimson-scrum",
+            "signoff"
+          ],
+          "storyPoints": 0,
+          "created": "2026-03-31T09:19:28.586+0000",
+          "updated": "2026-04-09T13:37:48.990+0000",
           "resolutionDate": null
         }
       ]
     }
   ],
   "metrics": {
-    "totalEpics": 6,
+    "totalEpics": 7,
     "totalIssues": 60,
     "issuesByStatus": {
       "Closed": 17,
-      "Resolved": 38,
-      "In Progress": 1,
-      "New": 2,
-      "Review": 1,
-      "Backlog": 1
+      "Resolved": 41,
+      "Testing": 1,
+      "In Progress": 1
     },
     "issuesByCategory": {
-      "Done": 55,
+      "Done": 58,
       "In Progress": 2,
-      "To Do": 3
+      "To Do": 0
     },
     "totalStoryPoints": 43,
     "storyPointsDone": 43,
-    "completionPct": 92,
+    "completionPct": 97,
     "staleCount": 0,
-    "unassignedCount": 2,
+    "unassignedCount": 0,
     "blockerCount": 3,
     "health": "RED",
     "epicMetrics": [
       {
         "key": "RHOAIENG-47880",
         "summary": "Integrate Prompt Management in the GenAI Playground",
-        "status": "Review",
-        "statusCategory": "In Progress",
-        "assignee": "Merit Jay",
-        "totalIssues": 7,
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Danny Pierce",
+        "totalIssues": 6,
         "doneIssues": 6,
-        "progressPct": 86,
+        "progressPct": 100,
         "storyPoints": 15,
         "storyPointsDone": 15,
         "health": "RED"
@@ -1600,7 +1631,7 @@
         "summary": "Create mlflow-go sdk and create APIs for Prompt management",
         "status": "Resolved",
         "statusCategory": "Done",
-        "assignee": "Frankie Vaughn",
+        "assignee": "Eder Ignatowicz",
         "totalIssues": 9,
         "doneIssues": 9,
         "progressPct": 100,
@@ -1613,7 +1644,7 @@
         "summary": "Load Prompt Modal - Browse and load governed prompts in Playground",
         "status": "Resolved",
         "statusCategory": "Done",
-        "assignee": "Merit Jay",
+        "assignee": "Danny Pierce",
         "totalIssues": 15,
         "doneIssues": 15,
         "progressPct": 100,
@@ -1626,7 +1657,7 @@
         "summary": "Prompt State & Editing - Track provenance and enable safe editing",
         "status": "Resolved",
         "statusCategory": "Done",
-        "assignee": "Merit Jay",
+        "assignee": "Danny Pierce",
         "totalIssues": 11,
         "doneIssues": 11,
         "progressPct": 100,
@@ -1639,7 +1670,7 @@
         "summary": "Save Prompt - Persist prompts to registry with versioning",
         "status": "Resolved",
         "statusCategory": "Done",
-        "assignee": "Merit Jay",
+        "assignee": "Danny Pierce",
         "totalIssues": 9,
         "doneIssues": 9,
         "progressPct": 100,
@@ -1650,19 +1681,54 @@
       {
         "key": "RHOAIENG-50296",
         "summary": "Prompt management follow up stories",
-        "status": "Backlog",
-        "statusCategory": "To Do",
-        "assignee": "Merit Jay",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Danny Pierce",
         "totalIssues": 9,
-        "doneIssues": 5,
-        "progressPct": 56,
+        "doneIssues": 8,
+        "progressPct": 89,
         "storyPoints": 4,
         "storyPointsDone": 4,
-        "health": "YELLOW"
+        "health": "GREEN"
+      },
+      {
+        "key": "RHOAIENG-57451",
+        "summary": "Tech Preview - ODH and RHOAI Integrations [AI Core Dashboard - Prompt Integration]",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Danny Pierce",
+        "totalIssues": 1,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
       }
     ]
   },
   "topology": {
-    "repos": []
+    "repos": [
+      {
+        "url": "github.com/red-hat-data-services/odh-dashboard",
+        "issueCount": 115,
+        "doneIssues": 112,
+        "totalIssues": 115,
+        "components": [
+          "AI Core Dashboard",
+          "Gen AI Studio"
+        ],
+        "lane": "destination"
+      },
+      {
+        "url": "github.com/opendatahub-io/odh-dashboard",
+        "issueCount": 59,
+        "doneIssues": 57,
+        "totalIssues": 59,
+        "components": [
+          "AI Core Dashboard"
+        ],
+        "lane": "upstream"
+      }
+    ]
   }
 }

@@ -5,7 +5,7 @@
   "statusCategory": "To Do",
   "priority": "Major",
   "assignee": {
-    "displayName": "Merit Ives",
+    "displayName": "Leslie Matzinger",
     "accountId": "712020:0733ae37-05ae-485e-be87-bd2967b416c8"
   },
   "fixVersions": [
@@ -50,7 +50,7 @@
       "status": "Closed",
       "statusCategory": "Done",
       "priority": "Major",
-      "assignee": "Onyx Reeves",
+      "assignee": "Former Member 18",
       "components": [
         "Documentation"
       ],
@@ -67,7 +67,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Onyx Park",
+          "assignee": "Jennifer Ciroli",
           "components": [
             "Documentation"
           ],
@@ -126,7 +126,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Onyx Reeves",
+      "assignee": "Former Member 18",
       "components": [
         "Documentation"
       ],
@@ -143,7 +143,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Onyx Reeves",
+      "assignee": "Former Member 18",
       "components": [
         "Documentation"
       ],
@@ -179,7 +179,7 @@
         "summary": "(Phase 1) Accelerator content hub: Discovery & research",
         "status": "Closed",
         "statusCategory": "Done",
-        "assignee": "Onyx Park",
+        "assignee": "Jennifer Ciroli",
         "totalIssues": 3,
         "doneIssues": 1,
         "progressPct": 33,
@@ -192,7 +192,7 @@
         "summary": "(Phase 2) Accelerator content hub: Strategy & design",
         "status": "New",
         "statusCategory": "To Do",
-        "assignee": "Onyx Park",
+        "assignee": "Jennifer Ciroli",
         "totalIssues": 0,
         "doneIssues": 0,
         "progressPct": 0,
@@ -205,7 +205,7 @@
         "summary": "(Phase 3) Accelerator content hub: Implementation",
         "status": "New",
         "statusCategory": "To Do",
-        "assignee": "Onyx Park",
+        "assignee": "Jennifer Ciroli",
         "totalIssues": 0,
         "doneIssues": 0,
         "progressPct": 0,

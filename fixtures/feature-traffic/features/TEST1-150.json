@@ -26,7 +26,7 @@
     "UXD"
   ],
   "created": "2025-10-30T20:25:30.710+0000",
-  "updated": "2026-04-07T15:36:46.431+0000",
+  "updated": "2026-04-09T21:00:33.893+0000",
   "statusNotes": {
     "type": "doc",
     "version": 1,
@@ -55,7 +55,7 @@
       "direction": "outward",
       "linkedKey": "RHAISTRAT-1112",
       "linkedSummary": "Prompt Management integration in gen AI studio playground",
-      "linkedStatus": "In Progress"
+      "linkedStatus": "Review"
     },
     {
       "type": "Depend",
@@ -203,8 +203,8 @@
           "parentKey": "RHOAIENG-46607",
           "summary": "Feature Flags",
           "type": "Task",
-          "status": "Review",
-          "statusCategory": "In Progress",
+          "status": "Closed",
+          "statusCategory": "Done",
           "priority": "Critical",
           "assignee": "Onyx Bennett",
           "components": [
@@ -213,8 +213,8 @@
           "labels": [],
           "storyPoints": 0,
           "created": "2026-02-10T22:01:20.225+0000",
-          "updated": "2026-04-07T19:29:03.649+0000",
-          "resolutionDate": null
+          "updated": "2026-04-09T21:42:01.631+0000",
+          "resolutionDate": "2026-04-09T21:42:01.408+0000"
         },
         {
           "key": "RHOAIENG-50983",
@@ -303,17 +303,16 @@
     "totalEpics": 1,
     "totalIssues": 6,
     "issuesByStatus": {
-      "Closed": 5,
-      "Review": 1
+      "Closed": 6
     },
     "issuesByCategory": {
-      "Done": 5,
-      "In Progress": 1,
+      "Done": 6,
+      "In Progress": 0,
       "To Do": 0
     },
     "totalStoryPoints": 5,
     "storyPointsDone": 5,
-    "completionPct": 83,
+    "completionPct": 100,
     "staleCount": 0,
     "unassignedCount": 0,
     "blockerCount": 2,
@@ -326,8 +325,8 @@
         "statusCategory": "In Progress",
         "assignee": "Onyx Bennett",
         "totalIssues": 6,
-        "doneIssues": 5,
-        "progressPct": 83,
+        "doneIssues": 6,
+        "progressPct": 100,
         "storyPoints": 5,
         "storyPointsDone": 5,
         "health": "RED"
@@ -335,6 +334,47 @@
     ]
   },
   "topology": {
-    "repos": []
+    "repos": [
+      {
+        "url": "github.com/red-hat-data-services/odh-dashboard",
+        "issueCount": 5,
+        "doneIssues": 5,
+        "totalIssues": 5,
+        "components": [
+          "AI Core Dashboard"
+        ],
+        "lane": "destination"
+      },
+      {
+        "url": "github.com/opendatahub-io/odh-dashboard",
+        "issueCount": 5,
+        "doneIssues": 5,
+        "totalIssues": 5,
+        "components": [
+          "AI Core Dashboard"
+        ],
+        "lane": "upstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/mlflow",
+        "issueCount": 3,
+        "doneIssues": 3,
+        "totalIssues": 3,
+        "components": [
+          "MLflow"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/mlflow-operator",
+        "issueCount": 3,
+        "doneIssues": 3,
+        "totalIssues": 3,
+        "components": [
+          "MLflow"
+        ],
+        "lane": "midstream"
+      }
+    ]
   }
 }

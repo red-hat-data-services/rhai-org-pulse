@@ -1,7 +1,7 @@
 {
   "key": "TEST1-545",
   "summary": "Update access controls",
-  "status": "In Progress",
+  "status": "Review",
   "statusCategory": "In Progress",
   "priority": "Major",
   "assignee": {
@@ -29,7 +29,7 @@
     "UXD"
   ],
   "created": "2025-07-23T10:50:24.134+0000",
-  "updated": "2026-04-07T17:38:53.830+0000",
+  "updated": "2026-04-09T11:22:11.977+0000",
   "statusNotes": {
     "type": "doc",
     "version": 1,
@@ -433,26 +433,6 @@
       ]
     },
     {
-      "key": "TEST2-51777",
-      "parentKey": "RHAISTRAT-545",
-      "summary": "Add pagination support",
-      "status": "Backlog",
-      "statusCategory": "To Do",
-      "priority": "Major",
-      "assignee": null,
-      "components": [
-        "AI Core Dashboard",
-        "Gen AI Studio"
-      ],
-      "labels": [
-        "dashboard-crimson-scrum"
-      ],
-      "storyPoints": 0,
-      "created": "2026-03-04T12:12:11.876+0000",
-      "updated": "2026-03-18T14:00:14.689+0000",
-      "issues": []
-    },
-    {
       "key": "TEST2-51779",
       "parentKey": "RHAISTRAT-545",
       "summary": "Update documentation",
@@ -622,10 +602,10 @@
       "key": "TEST2-57009",
       "parentKey": "RHAISTRAT-545",
       "summary": "Fix concurrent access issue",
-      "status": "In Progress",
+      "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": null,
+      "assignee": "Person 210",
       "components": [
         "AI Core Dashboard"
       ],
@@ -635,14 +615,14 @@
       ],
       "storyPoints": 0,
       "created": "2026-04-07T16:37:45.776+0000",
-      "updated": "2026-04-07T17:10:01.307+0000",
+      "updated": "2026-04-09T08:20:17.749+0000",
       "issues": [
         {
           "key": "RHOAIENG-57010",
           "parentKey": "RHOAIENG-57009",
           "summary": "CLONE - Feature signoff - DP",
           "type": "Task",
-          "status": "In Progress",
+          "status": "Review",
           "statusCategory": "In Progress",
           "priority": "Blocker",
           "assignee": "Gray Swift",
@@ -655,7 +635,7 @@
           ],
           "storyPoints": 0,
           "created": "2026-04-07T16:38:11.347+0000",
-          "updated": "2026-04-07T17:20:15.127+0000",
+          "updated": "2026-04-09T08:31:18.955+0000",
           "resolutionDate": null
         },
         {
@@ -735,8 +715,8 @@
           "parentKey": "RHOAIENG-57009",
           "summary": "CLONE - Installation, usage, contact information",
           "type": "Task",
-          "status": "New",
-          "statusCategory": "To Do",
+          "status": "Closed",
+          "statusCategory": "Done",
           "priority": "Normal",
           "assignee": null,
           "components": [
@@ -745,8 +725,8 @@
           "labels": [],
           "storyPoints": 0,
           "created": "2026-04-07T16:38:52.505+0000",
-          "updated": "2026-04-07T16:38:56.426+0000",
-          "resolutionDate": null
+          "updated": "2026-04-09T08:34:57.950+0000",
+          "resolutionDate": "2026-04-09T08:34:57.914+0000"
         },
         {
           "key": "RHOAIENG-57023",
@@ -860,24 +840,24 @@
     }
   ],
   "metrics": {
-    "totalEpics": 9,
+    "totalEpics": 8,
     "totalIssues": 26,
     "issuesByStatus": {
       "Resolved": 6,
-      "Closed": 17,
-      "New": 2,
-      "In Progress": 1
+      "Closed": 18,
+      "New": 1,
+      "Review": 1
     },
     "issuesByCategory": {
-      "Done": 23,
+      "Done": 24,
       "In Progress": 1,
-      "To Do": 2
+      "To Do": 1
     },
     "totalStoryPoints": 4,
     "storyPointsDone": 4,
-    "completionPct": 88,
+    "completionPct": 92,
     "staleCount": 0,
-    "unassignedCount": 2,
+    "unassignedCount": 1,
     "blockerCount": 6,
     "health": "RED",
     "epicMetrics": [
@@ -934,19 +914,6 @@
         "health": "GREEN"
       },
       {
-        "key": "RHOAIENG-51777",
-        "summary": "Surface Vector Store Errors in the Playground UI",
-        "status": "Backlog",
-        "statusCategory": "To Do",
-        "assignee": null,
-        "totalIssues": 0,
-        "doneIssues": 0,
-        "progressPct": 0,
-        "storyPoints": 0,
-        "storyPointsDone": 0,
-        "health": "RED"
-      },
-      {
         "key": "RHOAIENG-51779",
         "summary": "Add External Vector Stores to AI Asset Endpoints (AAE) and update Configure Playground modal",
         "status": "Closed",
@@ -988,12 +955,12 @@
       {
         "key": "RHOAIENG-57009",
         "summary": "Dev Preview - ODH and RHOAI Integrations [Gen-AI External Vector Stores]",
-        "status": "In Progress",
+        "status": "Review",
         "statusCategory": "In Progress",
-        "assignee": null,
+        "assignee": "John Haran",
         "totalIssues": 12,
-        "doneIssues": 10,
-        "progressPct": 83,
+        "doneIssues": 11,
+        "progressPct": 92,
         "storyPoints": 0,
         "storyPointsDone": 0,
         "health": "RED"
@@ -1001,6 +968,58 @@
     ]
   },
   "topology": {
-    "repos": []
+    "repos": [
+      {
+        "url": "github.com/red-hat-data-services/odh-dashboard",
+        "issueCount": 25,
+        "doneIssues": 24,
+        "totalIssues": 25,
+        "components": [
+          "AI Core Dashboard",
+          "Gen AI Studio"
+        ],
+        "lane": "destination"
+      },
+      {
+        "url": "github.com/opendatahub-io/odh-dashboard",
+        "issueCount": 13,
+        "doneIssues": 12,
+        "totalIssues": 13,
+        "components": [
+          "AI Core Dashboard"
+        ],
+        "lane": "upstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/RHOAI-Build-Config",
+        "issueCount": 2,
+        "doneIssues": 2,
+        "totalIssues": 2,
+        "components": [
+          "DevOps"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/rhods-operator",
+        "issueCount": 2,
+        "doneIssues": 2,
+        "totalIssues": 2,
+        "components": [
+          "AI Core Platform"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/opendatahub-io/opendatahub-operator",
+        "issueCount": 2,
+        "doneIssues": 2,
+        "totalIssues": 2,
+        "components": [
+          "AI Core Platform"
+        ],
+        "lane": "upstream"
+      }
+    ]
   }
 }

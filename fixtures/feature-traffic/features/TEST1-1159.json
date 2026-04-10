@@ -9,7 +9,7 @@
     "accountId": "70121:0d27b449-e70b-4a5a-819c-628f2b5a8499"
   },
   "fixVersions": [
-    "RHAIIS-3.4 GA"
+    "RHAII-3.4 GA"
   ],
   "labels": [
     "Approved-RFE"
@@ -18,7 +18,7 @@
     "INFERENG Midstream"
   ],
   "created": "2026-01-26T13:25:43.534+0000",
-  "updated": "2026-03-31T14:17:14.356+0000",
+  "updated": "2026-04-09T12:56:53.244+0000",
   "statusNotes": null,
   "issueLinks": [
     {
@@ -61,7 +61,7 @@
       "direction": "inward",
       "linkedKey": "AIPCC-12533",
       "linkedSummary": "Upgrade GCC in builder to support AVX-512 for cpu-ubi9",
-      "linkedStatus": "In Progress"
+      "linkedStatus": "Closed"
     }
   ],
   "epics": [],

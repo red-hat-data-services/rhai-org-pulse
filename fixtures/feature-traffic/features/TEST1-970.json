@@ -19,7 +19,7 @@
     "Model Eval"
   ],
   "created": "2025-12-08T15:49:05.092+0000",
-  "updated": "2026-04-07T03:07:12.139+0000",
+  "updated": "2026-04-10T03:09:05.984+0000",
   "statusNotes": null,
   "issueLinks": [
     {
@@ -175,6 +175,99 @@
     ]
   },
   "topology": {
-    "repos": []
+    "repos": [
+      {
+        "url": "github.com/red-hat-data-services/eval-hub",
+        "issueCount": 2,
+        "doneIssues": 2,
+        "totalIssues": 2,
+        "components": [
+          "AI Evaluations"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/lm-evaluation-harness",
+        "issueCount": 2,
+        "doneIssues": 2,
+        "totalIssues": 2,
+        "components": [
+          "AI Evaluations"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/fms-guardrails-orchestrator",
+        "issueCount": 3,
+        "doneIssues": 3,
+        "totalIssues": 3,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/guardrails-detectors",
+        "issueCount": 3,
+        "doneIssues": 3,
+        "totalIssues": 3,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/guardrails-regex-detector",
+        "issueCount": 3,
+        "doneIssues": 3,
+        "totalIssues": 3,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/NeMo-Guardrails",
+        "issueCount": 3,
+        "doneIssues": 3,
+        "totalIssues": 3,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/NVIDIA-NeMo/Guardrails",
+        "issueCount": 3,
+        "doneIssues": 3,
+        "totalIssues": 3,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "upstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/rhods-operator",
+        "issueCount": 2,
+        "doneIssues": 2,
+        "totalIssues": 2,
+        "components": [
+          "AI Core Platform",
+          "AI Core Platform Security"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/opendatahub-io/opendatahub-operator",
+        "issueCount": 2,
+        "doneIssues": 2,
+        "totalIssues": 2,
+        "components": [
+          "AI Core Platform",
+          "AI Core Platform Security"
+        ],
+        "lane": "upstream"
+      }
+    ]
   }
 }

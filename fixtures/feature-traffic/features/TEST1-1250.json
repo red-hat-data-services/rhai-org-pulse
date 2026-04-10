@@ -16,7 +16,7 @@
     "Model Serving"
   ],
   "created": "2026-02-27T18:44:12.840+0000",
-  "updated": "2026-03-23T16:17:37.614+0000",
+  "updated": "2026-04-09T11:38:07.740+0000",
   "statusNotes": null,
   "issueLinks": [
     {
@@ -52,7 +52,7 @@
       "direction": "outward",
       "linkedKey": "RHOAIENG-52959",
       "linkedSummary": "Spike: Enable Canary Rollout Support for RawDeployment Mode in RHOAI's KServe (RHAISTRAT-1250)",
-      "linkedStatus": "Review"
+      "linkedStatus": "Closed"
     }
   ],
   "epics": [
@@ -74,26 +74,47 @@
       ],
       "storyPoints": 0,
       "created": "2026-04-02T15:40:08.838+0000",
-      "updated": "2026-04-02T15:41:37.614+0000",
-      "issues": []
+      "updated": "2026-04-09T11:38:01.261+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-56732",
+          "parentKey": "RHOAIENG-56574",
+          "summary": "Design decision: canary rollout architecture for RawDeployment",
+          "type": "Task",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
+          "priority": "Major",
+          "assignee": "Michael Skarbek",
+          "components": [
+            "Model Serving"
+          ],
+          "labels": [],
+          "storyPoints": 2,
+          "created": "2026-04-06T14:02:33.532+0000",
+          "updated": "2026-04-08T23:05:27.030+0000",
+          "resolutionDate": null
+        }
+      ]
     }
   ],
   "metrics": {
     "totalEpics": 1,
-    "totalIssues": 0,
-    "issuesByStatus": {},
+    "totalIssues": 1,
+    "issuesByStatus": {
+      "In Progress": 1
+    },
     "issuesByCategory": {
       "Done": 0,
-      "In Progress": 0,
+      "In Progress": 1,
       "To Do": 0
     },
-    "totalStoryPoints": 0,
+    "totalStoryPoints": 2,
     "storyPointsDone": 0,
     "completionPct": 0,
     "staleCount": 0,
     "unassignedCount": 0,
     "blockerCount": 0,
-    "health": "YELLOW",
+    "health": "RED",
     "epicMetrics": [
       {
         "key": "RHOAIENG-56574",
@@ -101,16 +122,47 @@
         "status": "New",
         "statusCategory": "To Do",
         "assignee": null,
-        "totalIssues": 0,
+        "totalIssues": 1,
         "doneIssues": 0,
         "progressPct": 0,
-        "storyPoints": 0,
+        "storyPoints": 2,
         "storyPointsDone": 0,
-        "health": "YELLOW"
+        "health": "RED"
       }
     ]
   },
   "topology": {
-    "repos": []
+    "repos": [
+      {
+        "url": "github.com/red-hat-data-services/kserve",
+        "issueCount": 1,
+        "doneIssues": 0,
+        "totalIssues": 1,
+        "components": [
+          "Model Serving"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/odh-model-controller",
+        "issueCount": 1,
+        "doneIssues": 0,
+        "totalIssues": 1,
+        "components": [
+          "Model Serving"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/kserve/kserve",
+        "issueCount": 1,
+        "doneIssues": 0,
+        "totalIssues": 1,
+        "components": [
+          "Model Serving"
+        ],
+        "lane": "upstream"
+      }
+    ]
   }
 }

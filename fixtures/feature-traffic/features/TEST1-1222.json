@@ -17,15 +17,22 @@
     "KubeRay"
   ],
   "created": "2026-02-17T16:13:55.380+0000",
-  "updated": "2026-02-17T16:13:55.380+0000",
+  "updated": "2026-04-09T12:02:46.503+0000",
   "statusNotes": null,
   "issueLinks": [
     {
       "type": "Related",
       "direction": "inward",
       "linkedKey": "RHAIRFE-1300",
-      "linkedSummary": "Enable use of RayData for distributed large-scale data processing - via examples, documentation and perf testing ",
+      "linkedSummary": "Supported, validated path for distributed large-scale data processing with Ray Data on RHOAI",
       "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-57442",
+      "linkedSummary": "[Autoscaling] Ray cluster autoscaling — validation, tests, and docs",
+      "linkedStatus": "New"
     }
   ],
   "epics": [],

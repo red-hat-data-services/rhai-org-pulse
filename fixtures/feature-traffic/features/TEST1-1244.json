@@ -8,13 +8,15 @@
     "displayName": "Onyx Pierce",
     "accountId": "557058:ec20c857-da91-474b-990c-82f291123602"
   },
-  "fixVersions": [],
+  "fixVersions": [
+    "rhoai-3.4.EA2"
+  ],
   "labels": [],
   "components": [
     "AI Hub"
   ],
   "created": "2026-02-25T15:53:53.303+0000",
-  "updated": "2026-04-03T13:43:49.040+0000",
+  "updated": "2026-04-08T12:46:21.455+0000",
   "statusNotes": {
     "type": "doc",
     "version": 1,
@@ -25,7 +27,7 @@
           {
             "type": "date",
             "attrs": {
-              "timestamp": "1775174400000"
+              "timestamp": "1775606400000"
             }
           },
           {

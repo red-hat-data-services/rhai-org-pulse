@@ -1,11 +1,11 @@
 {
   "key": "TEST1-313",
   "summary": "Add input validation",
-  "status": "In Progress",
-  "statusCategory": "In Progress",
+  "status": "Backlog",
+  "statusCategory": "To Do",
   "priority": "Minor",
   "assignee": {
-    "displayName": "Frankie Rand",
+    "displayName": "Purva Naik",
     "accountId": "712020:6753113a-463c-46c5-9781-9b9d1ca6bd25"
   },
   "fixVersions": [],
@@ -26,7 +26,7 @@
     "UXD"
   ],
   "created": "2025-11-25T14:41:02.411+0000",
-  "updated": "2026-04-05T03:14:23.466+0000",
+  "updated": "2026-04-10T03:09:27.703+0000",
   "statusNotes": {
     "type": "doc",
     "version": 1,
@@ -216,7 +216,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "AI Core Dashboard"
           ],
@@ -236,7 +236,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "AI Core Dashboard"
           ],
@@ -256,7 +256,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "AI Core Dashboard"
           ],
@@ -276,7 +276,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "AI Core Dashboard"
           ],
@@ -296,7 +296,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "AI Core Dashboard"
           ],
@@ -316,7 +316,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "AI Core Dashboard"
           ],
@@ -356,7 +356,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "AI Core Dashboard"
           ],
@@ -376,7 +376,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Kerry Archer",
+          "assignee": "Divyanshi Gupta",
           "components": [
             "AI Core Dashboard"
           ],
@@ -416,7 +416,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "AI Core Dashboard"
           ],
@@ -436,7 +436,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Stone",
+          "assignee": "Tobias Klumpp",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -457,7 +457,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "AI Core Dashboard"
           ],
@@ -477,7 +477,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "AI Core Dashboard"
           ],
@@ -497,7 +497,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "AI Core Dashboard"
           ],
@@ -517,7 +517,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "AI Core Dashboard"
           ],
@@ -537,7 +537,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "AI Core Dashboard"
           ],
@@ -557,7 +557,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "AI Core Dashboard"
           ],
@@ -577,7 +577,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Stone",
+          "assignee": "Tobias Klumpp",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -598,7 +598,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Stone",
+          "assignee": "Tobias Klumpp",
           "components": [
             "AI Core Dashboard",
             "Gen AI Studio"
@@ -637,7 +637,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Merit Young",
+          "assignee": "Mac Misiura",
           "components": [
             "AI Safety"
           ],
@@ -653,19 +653,20 @@
       "key": "TEST2-54877",
       "parentKey": "RHAISTRAT-313",
       "summary": "Implement search feature",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
+      "status": "Backlog",
+      "statusCategory": "To Do",
       "priority": "Undefined",
       "assignee": "Person 229",
       "components": [
         "AI Core Dashboard"
       ],
       "labels": [
+        "3.5-ea1-candidate",
         "dashboard-crimson-scrum"
       ],
       "storyPoints": 0,
       "created": "2026-03-24T09:39:18.394+0000",
-      "updated": "2026-04-01T09:24:54.531+0000",
+      "updated": "2026-04-09T13:34:44.268+0000",
       "issues": [
         {
           "key": "RHOAIENG-54878",
@@ -675,7 +676,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Blocker",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "Update This Field With Components"
           ],
@@ -693,7 +694,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "Update This Field With Components"
           ],
@@ -711,7 +712,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "Update This Field With Components"
           ],
@@ -729,7 +730,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "Update This Field With Components"
           ],
@@ -747,7 +748,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "Update This Field With Components"
           ],
@@ -765,7 +766,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "DevOps"
           ],
@@ -801,7 +802,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Blocker",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "Update This Field With Components"
           ],
@@ -819,7 +820,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "Update This Field With Components"
           ],
@@ -837,7 +838,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Blocker",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "Update This Field With Components"
           ],
@@ -855,7 +856,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "Update This Field With Components"
           ],
@@ -873,7 +874,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "AI Core Platform"
           ],
@@ -891,7 +892,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "Update This Field With Components"
           ],
@@ -927,7 +928,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "Update This Field With Components"
           ],
@@ -942,10 +943,10 @@
           "parentKey": "RHOAIENG-54877",
           "summary": "Guardrails - Feature signoff - TP",
           "type": "Task",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
+          "status": "New",
+          "statusCategory": "To Do",
           "priority": "Blocker",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "Update This Field With Components"
           ],
@@ -954,7 +955,7 @@
           ],
           "storyPoints": 0,
           "created": "2026-03-24T09:40:17.511+0000",
-          "updated": "2026-04-01T09:26:05.447+0000",
+          "updated": "2026-04-09T13:33:50.020+0000",
           "resolutionDate": null
         },
         {
@@ -965,7 +966,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "DevOps"
           ],
@@ -983,7 +984,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "Update This Field With Components"
           ],
@@ -1001,7 +1002,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "AI Core Platform"
           ],
@@ -1037,7 +1038,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "AI Core Platform"
           ],
@@ -1055,7 +1056,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Frankie Rand",
+          "assignee": "Purva Naik",
           "components": [
             "Update This Field With Components"
           ],
@@ -1074,13 +1075,12 @@
     "issuesByStatus": {
       "Closed": 32,
       "Resolved": 7,
-      "New": 2,
-      "In Progress": 1
+      "New": 3
     },
     "issuesByCategory": {
       "Done": 39,
-      "In Progress": 1,
-      "To Do": 2
+      "In Progress": 0,
+      "To Do": 3
     },
     "totalStoryPoints": 6,
     "storyPointsDone": 6,
@@ -1095,7 +1095,7 @@
         "summary": "BFF integration for Basic Guardrails intregations",
         "status": "Closed",
         "statusCategory": "Done",
-        "assignee": "Frankie Rand",
+        "assignee": "Purva Naik",
         "totalIssues": 9,
         "doneIssues": 9,
         "progressPct": 100,
@@ -1108,7 +1108,7 @@
         "summary": "UI Guardrails Integrations",
         "status": "Closed",
         "statusCategory": "Done",
-        "assignee": "Frankie Rand",
+        "assignee": "Purva Naik",
         "totalIssues": 10,
         "doneIssues": 10,
         "progressPct": 100,
@@ -1121,7 +1121,7 @@
         "summary": "Supply NeMo Guardrails configuration templates to UI team",
         "status": "Resolved",
         "statusCategory": "Done",
-        "assignee": "Merit Young",
+        "assignee": "Mac Misiura",
         "totalIssues": 1,
         "doneIssues": 0,
         "progressPct": 0,
@@ -1132,9 +1132,9 @@
       {
         "key": "RHOAIENG-54877",
         "summary": "Tech Preview - ODH and RHOAI Integrations [AI Core Dashboard/GenAi - Guardrails]",
-        "status": "In Progress",
-        "statusCategory": "In Progress",
-        "assignee": "Frankie Rand",
+        "status": "Backlog",
+        "statusCategory": "To Do",
+        "assignee": "Purva Naik",
         "totalIssues": 22,
         "doneIssues": 20,
         "progressPct": 91,
@@ -1145,6 +1145,108 @@
     ]
   },
   "topology": {
-    "repos": []
+    "repos": [
+      {
+        "url": "github.com/red-hat-data-services/odh-dashboard",
+        "issueCount": 22,
+        "doneIssues": 22,
+        "totalIssues": 22,
+        "components": [
+          "AI Core Dashboard",
+          "Gen AI Studio"
+        ],
+        "lane": "destination"
+      },
+      {
+        "url": "github.com/opendatahub-io/odh-dashboard",
+        "issueCount": 19,
+        "doneIssues": 19,
+        "totalIssues": 19,
+        "components": [
+          "AI Core Dashboard"
+        ],
+        "lane": "upstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/fms-guardrails-orchestrator",
+        "issueCount": 1,
+        "doneIssues": 0,
+        "totalIssues": 1,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/guardrails-detectors",
+        "issueCount": 1,
+        "doneIssues": 0,
+        "totalIssues": 1,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/guardrails-regex-detector",
+        "issueCount": 1,
+        "doneIssues": 0,
+        "totalIssues": 1,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/NeMo-Guardrails",
+        "issueCount": 1,
+        "doneIssues": 0,
+        "totalIssues": 1,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/NVIDIA-NeMo/Guardrails",
+        "issueCount": 1,
+        "doneIssues": 0,
+        "totalIssues": 1,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "upstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/RHOAI-Build-Config",
+        "issueCount": 2,
+        "doneIssues": 2,
+        "totalIssues": 2,
+        "components": [
+          "DevOps"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/rhods-operator",
+        "issueCount": 3,
+        "doneIssues": 3,
+        "totalIssues": 3,
+        "components": [
+          "AI Core Platform"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/opendatahub-io/opendatahub-operator",
+        "issueCount": 3,
+        "doneIssues": 3,
+        "totalIssues": 3,
+        "components": [
+          "AI Core Platform"
+        ],
+        "lane": "upstream"
+      }
+    ]
   }
 }

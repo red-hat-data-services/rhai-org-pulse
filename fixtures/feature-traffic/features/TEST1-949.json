@@ -19,7 +19,7 @@
     "Documentation"
   ],
   "created": "2025-12-03T12:13:27.809+0000",
-  "updated": "2026-04-07T14:15:10.280+0000",
+  "updated": "2026-04-09T16:41:49.807+0000",
   "statusNotes": {
     "type": "doc",
     "version": 1,
@@ -86,6 +86,13 @@
       "linkedKey": "NVIDIA-78",
       "linkedSummary": "NVIDIA GPU Operator support for HCP kubevirt NodePools",
       "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Blocks",
+      "direction": "inward",
+      "linkedKey": "PWO-191",
+      "linkedSummary": "GPU Resource Request for jeyoung",
+      "linkedStatus": "To Do"
     }
   ],
   "epics": [
@@ -184,7 +191,7 @@
           ],
           "storyPoints": 3,
           "created": "2026-03-06T18:37:24.035+0000",
-          "updated": "2026-03-31T17:08:56.709+0000",
+          "updated": "2026-04-08T23:46:52.174+0000",
           "resolutionDate": null
         }
       ]
@@ -277,6 +284,27 @@
     ]
   },
   "topology": {
-    "repos": []
+    "repos": [
+      {
+        "url": "github.com/red-hat-data-services/rhods-operator",
+        "issueCount": 4,
+        "doneIssues": 1,
+        "totalIssues": 4,
+        "components": [
+          "AI Core Platform"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/opendatahub-io/opendatahub-operator",
+        "issueCount": 4,
+        "doneIssues": 1,
+        "totalIssues": 4,
+        "components": [
+          "AI Core Platform"
+        ],
+        "lane": "upstream"
+      }
+    ]
   }
 }

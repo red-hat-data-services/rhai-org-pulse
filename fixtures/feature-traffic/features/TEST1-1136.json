@@ -5,7 +5,7 @@
   "statusCategory": "In Progress",
   "priority": "Critical",
   "assignee": {
-    "displayName": "Merit Winn",
+    "displayName": "Bob Gregor",
     "accountId": "712020:6933584a-f175-48eb-84b9-47f7bb496833"
   },
   "fixVersions": [],
@@ -25,7 +25,7 @@
     "UXD"
   ],
   "created": "2026-01-19T20:40:55.175+0000",
-  "updated": "2026-04-07T16:20:17.989+0000",
+  "updated": "2026-04-09T19:41:15.682+0000",
   "statusNotes": {
     "type": "doc",
     "version": 1,
@@ -124,7 +124,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Hale",
+          "assignee": "Anish Surti",
           "components": [
             "AI Core Dashboard"
           ],
@@ -142,7 +142,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Nolan",
+          "assignee": "Juntao Wang",
           "components": [
             "AI Core Dashboard"
           ],
@@ -160,7 +160,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Nolan",
+          "assignee": "Juntao Wang",
           "components": [
             "AI Core Dashboard"
           ],
@@ -178,7 +178,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Nolan",
+          "assignee": "Juntao Wang",
           "components": [
             "AI Core Dashboard"
           ],
@@ -196,7 +196,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Nolan",
+          "assignee": "Juntao Wang",
           "components": [
             "AI Core Dashboard"
           ],
@@ -232,7 +232,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Nolan",
+          "assignee": "Juntao Wang",
           "components": [
             "AI Core Dashboard"
           ],
@@ -250,7 +250,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Nolan",
+          "assignee": "Juntao Wang",
           "components": [
             "AI Core Dashboard"
           ],
@@ -268,7 +268,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Nolan",
+          "assignee": "Juntao Wang",
           "components": [
             "AI Core Dashboard"
           ],
@@ -286,7 +286,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Nolan",
+          "assignee": "Juntao Wang",
           "components": [
             "AI Core Dashboard"
           ],
@@ -304,7 +304,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Nolan",
+          "assignee": "Juntao Wang",
           "components": [
             "AI Core Dashboard"
           ],
@@ -322,7 +322,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Frankie Nolan",
+          "assignee": "Juntao Wang",
           "components": [
             "AI Core Dashboard"
           ],
@@ -340,8 +340,8 @@
       "key": "TEST2-53947",
       "parentKey": "RHAISTRAT-1136",
       "summary": "Fix sorting order",
-      "status": "New",
-      "statusCategory": "To Do",
+      "status": "Closed",
+      "statusCategory": "Done",
       "priority": "Major",
       "assignee": "Person 239",
       "components": [
@@ -350,7 +350,7 @@
       "labels": [],
       "storyPoints": 0,
       "created": "2026-03-17T15:08:35.253+0000",
-      "updated": "2026-04-06T14:48:00.782+0000",
+      "updated": "2026-04-09T19:15:13.843+0000",
       "issues": []
     },
     {
@@ -370,7 +370,7 @@
       ],
       "storyPoints": 0,
       "created": "2026-04-06T15:18:10.020+0000",
-      "updated": "2026-04-07T19:00:01.565+0000",
+      "updated": "2026-04-08T21:07:40.817+0000",
       "issues": [
         {
           "key": "RHOAIENG-56765",
@@ -393,16 +393,16 @@
           "parentKey": "RHOAIENG-56763",
           "summary": "Quality Engineering (QE) signoff",
           "type": "Task",
-          "status": "New",
-          "statusCategory": "To Do",
+          "status": "Closed",
+          "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Kerry Ives",
+          "assignee": "Federico Alonso",
           "components": [],
           "labels": [],
           "storyPoints": 0,
           "created": "2026-04-06T15:24:27.581+0000",
-          "updated": "2026-04-06T15:28:09.424+0000",
-          "resolutionDate": null
+          "updated": "2026-04-08T15:10:51.717+0000",
+          "resolutionDate": "2026-04-08T15:10:41.550+0000"
         },
         {
           "key": "RHOAIENG-56767",
@@ -428,7 +428,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Winn",
+          "assignee": "Bob Gregor",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -476,7 +476,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Gray Bennett",
+          "assignee": "Jenny Yi",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -501,23 +501,77 @@
           "resolutionDate": null
         }
       ]
+    },
+    {
+      "key": "TEST2-57428",
+      "parentKey": "RHAISTRAT-1136",
+      "summary": "Add caching mechanism",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": "Former Member 6",
+      "components": [
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-04-09T10:34:30.920+0000",
+      "updated": "2026-04-09T10:35:04.585+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-57429",
+          "parentKey": "RHOAIENG-57428",
+          "summary": "[ccs] Elaborate GA documentation for MVP Granular RBAC - 3.4 GA",
+          "type": "Story",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Olivia Brown",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 8,
+          "created": "2026-04-09T10:35:44.786+0000",
+          "updated": "2026-04-09T10:36:50.753+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-57430",
+          "parentKey": "RHOAIENG-57428",
+          "summary": "[ccs] Perform full review using CQA tools",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Olivia Brown",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-04-09T10:36:04.176+0000",
+          "updated": "2026-04-09T10:37:45.392+0000",
+          "resolutionDate": null
+        }
+      ]
     }
   ],
   "metrics": {
-    "totalEpics": 3,
-    "totalIssues": 20,
+    "totalEpics": 4,
+    "totalIssues": 22,
     "issuesByStatus": {
-      "Closed": 14,
-      "New": 6
+      "Closed": 15,
+      "New": 7
     },
     "issuesByCategory": {
-      "Done": 14,
+      "Done": 15,
       "In Progress": 0,
-      "To Do": 6
+      "To Do": 7
     },
-    "totalStoryPoints": 24,
+    "totalStoryPoints": 35,
     "storyPointsDone": 24,
-    "completionPct": 70,
+    "completionPct": 68,
     "staleCount": 0,
     "unassignedCount": 4,
     "blockerCount": 0,
@@ -528,7 +582,7 @@
         "summary": "Project permissions – Assign/Manage roles flow",
         "status": "Resolved",
         "statusCategory": "Done",
-        "assignee": "Frankie Nolan",
+        "assignee": "Juntao Wang",
         "totalIssues": 12,
         "doneIssues": 12,
         "progressPct": 100,
@@ -539,9 +593,9 @@
       {
         "key": "RHOAIENG-53947",
         "summary": "General Availability - ODH and RHOAI Integrations [Project RBAC MVP]",
-        "status": "New",
-        "statusCategory": "To Do",
-        "assignee": "Frankie Nolan",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Juntao Wang",
         "totalIssues": 0,
         "doneIssues": 0,
         "progressPct": 0,
@@ -554,17 +608,52 @@
         "summary": "Feature signoff - GA",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Merit Winn",
+        "assignee": "Bob Gregor",
         "totalIssues": 8,
-        "doneIssues": 2,
-        "progressPct": 25,
+        "doneIssues": 3,
+        "progressPct": 38,
         "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
+      },
+      {
+        "key": "RHOAIENG-57428",
+        "summary": "[ccs Epic] Document MVP Granular RBAC - 3.4",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Olivia Brown",
+        "totalIssues": 2,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 11,
         "storyPointsDone": 0,
         "health": "YELLOW"
       }
     ]
   },
   "topology": {
-    "repos": []
+    "repos": [
+      {
+        "url": "github.com/red-hat-data-services/odh-dashboard",
+        "issueCount": 14,
+        "doneIssues": 12,
+        "totalIssues": 14,
+        "components": [
+          "AI Core Dashboard",
+          "Documentation"
+        ],
+        "lane": "destination"
+      },
+      {
+        "url": "github.com/opendatahub-io/odh-dashboard",
+        "issueCount": 12,
+        "doneIssues": 12,
+        "totalIssues": 12,
+        "components": [
+          "AI Core Dashboard"
+        ],
+        "lane": "upstream"
+      }
+    ]
   }
 }

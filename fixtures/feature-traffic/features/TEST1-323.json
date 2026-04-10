@@ -1,7 +1,7 @@
 {
   "key": "TEST1-323",
   "summary": "Fix validation issue",
-  "status": "New",
+  "status": "Refinement",
   "statusCategory": "To Do",
   "priority": "Critical",
   "assignee": null,
@@ -10,10 +10,11 @@
     "telco"
   ],
   "components": [
+    "Documentation",
     "KubeRay"
   ],
   "created": "2024-09-02T11:42:00.576+0000",
-  "updated": "2026-03-18T10:57:27.555+0000",
+  "updated": "2026-04-09T14:31:27.652+0000",
   "statusNotes": null,
   "issueLinks": [
     {
@@ -22,28 +23,217 @@
       "linkedKey": "RHAIRFE-548",
       "linkedSummary": "Support Autoscaling for ray distributed workloads ",
       "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-57442",
+      "linkedSummary": "[Autoscaling] Ray cluster autoscaling — validation, tests, and docs",
+      "linkedStatus": "New"
     }
   ],
-  "epics": [],
+  "epics": [
+    {
+      "key": "TEST2-57442",
+      "parentKey": "RHAISTRAT-323",
+      "summary": "Fix data migration",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": null,
+      "components": [
+        "KubeRay"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-04-09T11:56:15.471+0000",
+      "updated": "2026-04-09T14:31:27.609+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-57443",
+          "parentKey": "RHOAIENG-57442",
+          "summary": "[Autoscaling] Add autoscaler egress rule to ODH network policy controller and validate end-to-end",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "KubeRay"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-09T11:56:26.678+0000",
+          "updated": "2026-04-09T11:58:14.299+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-57444",
+          "parentKey": "RHOAIENG-57442",
+          "summary": "[Autoscaling] CodeFlare SDK: block autoscaling when Kueue is detected",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "KubeRay"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-09T11:56:57.386+0000",
+          "updated": "2026-04-09T11:56:59.852+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-57445",
+          "parentKey": "RHOAIENG-57442",
+          "summary": "[Autoscaling] Define and implement E2E test scenarios (non-Kueue)",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "KubeRay"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-09T11:57:01.607+0000",
+          "updated": "2026-04-09T11:57:04.147+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-57446",
+          "parentKey": "RHOAIENG-57442",
+          "summary": "[Autoscaling] Integrate autoscaling E2E tests into Konflux CI pipeline",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "KubeRay"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-09T11:57:04.510+0000",
+          "updated": "2026-04-09T11:57:07.141+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-57447",
+          "parentKey": "RHOAIENG-57442",
+          "summary": "[Autoscaling] Write user-facing docs and add example notebook",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "KubeRay"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-09T11:57:08.556+0000",
+          "updated": "2026-04-09T11:57:11.480+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-57448",
+          "parentKey": "RHOAIENG-57442",
+          "summary": "[Autoscaling] Coordinate docs review with Saanchi Sampath and get TW sign-off",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "KubeRay"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-09T11:57:12.071+0000",
+          "updated": "2026-04-09T11:57:14.816+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-57450",
+          "parentKey": "RHOAIENG-57442",
+          "summary": "[Autoscaling] CodeFlare SDK: expose autoscaling configuration in ClusterConfiguration",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [
+            "KubeRay"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-09T11:59:38.069+0000",
+          "updated": "2026-04-09T11:59:40.883+0000",
+          "resolutionDate": null
+        }
+      ]
+    }
+  ],
   "metrics": {
-    "totalEpics": 0,
-    "totalIssues": 0,
-    "issuesByStatus": {},
+    "totalEpics": 1,
+    "totalIssues": 7,
+    "issuesByStatus": {
+      "New": 7
+    },
     "issuesByCategory": {
       "Done": 0,
       "In Progress": 0,
-      "To Do": 0
+      "To Do": 7
     },
     "totalStoryPoints": 0,
     "storyPointsDone": 0,
     "completionPct": 0,
     "staleCount": 0,
-    "unassignedCount": 0,
+    "unassignedCount": 7,
     "blockerCount": 0,
-    "health": "YELLOW",
-    "epicMetrics": []
+    "health": "RED",
+    "epicMetrics": [
+      {
+        "key": "RHOAIENG-57442",
+        "summary": "[Autoscaling] Ray cluster autoscaling — validation, tests, and docs",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": null,
+        "totalIssues": 7,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 0,
+        "storyPointsDone": 0,
+        "health": "RED"
+      }
+    ]
   },
   "topology": {
-    "repos": []
+    "repos": [
+      {
+        "url": "github.com/red-hat-data-services/kuberay",
+        "issueCount": 7,
+        "doneIssues": 0,
+        "totalIssues": 7,
+        "components": [
+          "KubeRay"
+        ],
+        "lane": "upstream"
+      },
+      {
+        "url": "github.com/ray-project/kuberay",
+        "issueCount": 7,
+        "doneIssues": 0,
+        "totalIssues": 7,
+        "components": [
+          "KubeRay"
+        ],
+        "lane": "upstream"
+      }
+    ]
   }
 }

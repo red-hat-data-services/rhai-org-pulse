@@ -5,7 +5,7 @@
   "statusCategory": "In Progress",
   "priority": "Major",
   "assignee": {
-    "displayName": "Frankie Knox",
+    "displayName": "Rob Bell",
     "accountId": "712020:a82ef133-297a-4b90-8dc4-298f69e76aa6"
   },
   "fixVersions": [],
@@ -19,7 +19,7 @@
     "Training Kubeflow"
   ],
   "created": "2025-10-29T13:23:42.892+0000",
-  "updated": "2026-04-03T20:39:16.107+0000",
+  "updated": "2026-04-09T14:59:12.797+0000",
   "statusNotes": {
     "type": "doc",
     "version": 1,
@@ -815,7 +815,7 @@
       "type": "Document",
       "direction": "inward",
       "linkedKey": "RHAIENG-3586",
-      "linkedSummary": "[ccs Epic] KFT Training - Distr. WL - 3.4 Deliverables (EA1 EA2 GA)",
+      "linkedSummary": "[ccs Epic] KFT Training - Distr. WL - 3.5 Deliverables (EA1 EA2 GA)",
       "linkedStatus": "New"
     },
     {
@@ -858,7 +858,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Gordon",
+          "assignee": "Kapil Nema",
           "components": [
             "Training Kubeflow"
           ],
@@ -894,7 +894,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Merit Gordon",
+          "assignee": "Kapil Nema",
           "components": [
             "Training Kubeflow"
           ],
@@ -930,7 +930,7 @@
           "status": "Testing",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Merit Oliver",
+          "assignee": "Karel Suta",
           "components": [
             "Training Kubeflow"
           ],
@@ -948,7 +948,7 @@
           "status": "Testing",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Merit Gordon",
+          "assignee": "Kapil Nema",
           "components": [
             "Training Kubeflow"
           ],
@@ -968,7 +968,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Oliver",
+          "assignee": "Karel Suta",
           "components": [
             "Training Kubeflow"
           ],
@@ -986,7 +986,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Gordon",
+          "assignee": "Kapil Nema",
           "components": [
             "Training Kubeflow"
           ],
@@ -1022,7 +1022,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Oliver",
+          "assignee": "Karel Suta",
           "components": [
             "Training Kubeflow"
           ],
@@ -1040,7 +1040,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Oliver",
+          "assignee": "Karel Suta",
           "components": [
             "Training Kubeflow"
           ],
@@ -1058,14 +1058,14 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": null,
+          "assignee": "Kapil Nema",
           "components": [
             "Training Kubeflow"
           ],
           "labels": [],
           "storyPoints": 2,
           "created": "2026-02-10T12:22:45.271+0000",
-          "updated": "2026-03-12T12:54:08.715+0000",
+          "updated": "2026-04-08T07:57:55.368+0000",
           "resolutionDate": null
         },
         {
@@ -1076,7 +1076,7 @@
           "status": "Testing",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Merit Gordon",
+          "assignee": "Kapil Nema",
           "components": [
             "Training Kubeflow"
           ],
@@ -1101,7 +1101,7 @@
           "labels": [],
           "storyPoints": 4,
           "created": "2026-02-10T12:22:59.471+0000",
-          "updated": "2026-02-11T11:19:48.191+0000",
+          "updated": "2026-04-08T11:54:25.998+0000",
           "resolutionDate": null
         },
         {
@@ -1130,7 +1130,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Gordon",
+          "assignee": "Kapil Nema",
           "components": [
             "Training Kubeflow"
           ],
@@ -1156,7 +1156,7 @@
       "labels": [],
       "storyPoints": 0,
       "created": "2026-02-02T10:48:02.523+0000",
-      "updated": "2026-03-20T08:52:09.963+0000",
+      "updated": "2026-04-07T09:42:53.848+0000",
       "issues": [
         {
           "key": "RHOAIENG-49103",
@@ -1184,7 +1184,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Tate",
+          "assignee": "Sridhar Pillai",
           "components": [
             "Training Kubeflow"
           ],
@@ -1235,35 +1235,35 @@
           "parentKey": "RHOAIENG-48293",
           "summary": "[SPIKE] Choose algorithm and dataset for a real-world representative benchmark",
           "type": "Task",
-          "status": "Review",
-          "statusCategory": "In Progress",
+          "status": "Resolved",
+          "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Kerry Grant",
+          "assignee": "Shilpa Chugh",
           "components": [
             "Training Kubeflow"
           ],
           "labels": [],
           "storyPoints": 5,
           "created": "2026-02-26T09:30:19.815+0000",
-          "updated": "2026-03-24T15:01:52.904+0000",
-          "resolutionDate": null
+          "updated": "2026-04-08T10:09:20.603+0000",
+          "resolutionDate": "2026-04-08T10:09:20.563+0000"
         },
         {
           "key": "RHOAIENG-51103",
           "parentKey": "RHOAIENG-48293",
           "summary": "Create real-world representative benchmark",
           "type": "Task",
-          "status": "Review",
+          "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Kerry Grant",
+          "assignee": "Shilpa Chugh",
           "components": [
             "Training Kubeflow"
           ],
           "labels": [],
-          "storyPoints": 5,
+          "storyPoints": 3,
           "created": "2026-02-26T09:40:12.723+0000",
-          "updated": "2026-03-31T08:56:22.996+0000",
+          "updated": "2026-04-08T10:09:04.302+0000",
           "resolutionDate": null
         },
         {
@@ -1271,17 +1271,17 @@
           "parentKey": "RHOAIENG-48293",
           "summary": "create a script for PSAP team to validate benchmarks and security requirements for MPI",
           "type": "Task",
-          "status": "New",
-          "statusCategory": "To Do",
+          "status": "Review",
+          "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Merit Gordon",
+          "assignee": "Kapil Nema",
           "components": [
             "Training Kubeflow"
           ],
           "labels": [],
-          "storyPoints": 5,
+          "storyPoints": 0,
           "created": "2026-03-20T08:53:59.330+0000",
-          "updated": "2026-03-24T03:02:27.403+0000",
+          "updated": "2026-04-09T09:26:45.109+0000",
           "resolutionDate": null
         },
         {
@@ -1292,12 +1292,14 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": null,
-          "components": [],
+          "assignee": "Shilpa Chugh",
+          "components": [
+            "Training Kubeflow"
+          ],
           "labels": [],
-          "storyPoints": 0,
+          "storyPoints": 2,
           "created": "2026-03-31T08:50:22.661+0000",
-          "updated": "2026-03-31T09:01:53.003+0000",
+          "updated": "2026-04-08T07:57:22.124+0000",
           "resolutionDate": null
         },
         {
@@ -1315,6 +1317,42 @@
           "created": "2026-03-31T09:00:43.896+0000",
           "updated": "2026-03-31T09:02:40.902+0000",
           "resolutionDate": "2026-03-31T09:02:40.861+0000"
+        },
+        {
+          "key": "RHOAIENG-56514",
+          "parentKey": "RHOAIENG-48293",
+          "summary": "Productize OSU MPI Benchmark image: migrate to shared registry, add Makefile targets and CI",
+          "type": "Task",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Sridhar Pillai",
+          "components": [
+            "Training Kubeflow"
+          ],
+          "labels": [
+            "benchmarking"
+          ],
+          "storyPoints": 2,
+          "created": "2026-04-02T07:06:45.559+0000",
+          "updated": "2026-04-08T10:40:43.073+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-57059",
+          "parentKey": "RHOAIENG-48293",
+          "summary": "Monitor upstream Kubeflow Trainer PR #3368 for MPI SSH secret permissions",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [],
+          "labels": [],
+          "storyPoints": 1,
+          "created": "2026-04-07T20:55:42.130+0000",
+          "updated": "2026-04-07T20:57:11.262+0000",
+          "resolutionDate": null
         }
       ]
     },
@@ -1325,7 +1363,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Undefined",
-      "assignee": "Kerry Hayes",
+      "assignee": "Former Member 14",
       "components": [
         "Documentation",
         "Training Kubeflow"
@@ -1333,7 +1371,7 @@
       "labels": [],
       "storyPoints": 0,
       "created": "2026-02-02T10:52:46.273+0000",
-      "updated": "2026-03-25T15:29:07.297+0000",
+      "updated": "2026-04-09T11:07:03.827+0000",
       "issues": [
         {
           "key": "RHOAIENG-49084",
@@ -1343,7 +1381,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Frankie Knox",
+          "assignee": "Rob Bell",
           "components": [
             "Training Kubeflow"
           ],
@@ -1361,7 +1399,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Onyx Oates",
+          "assignee": "Saanchi Sampath",
           "components": [
             "Documentation"
           ],
@@ -1379,7 +1417,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Onyx Oates",
+          "assignee": "Saanchi Sampath",
           "components": [
             "Documentation"
           ],
@@ -1397,7 +1435,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Onyx Oates",
+          "assignee": "Saanchi Sampath",
           "components": [
             "Documentation"
           ],
@@ -1531,7 +1569,7 @@
           "status": "Testing",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Merit Oliver",
+          "assignee": "Karel Suta",
           "components": [
             "DevOps",
             "Training Kubeflow"
@@ -1539,7 +1577,7 @@
           "labels": [],
           "storyPoints": 2,
           "created": "2026-02-02T10:55:18.552+0000",
-          "updated": "2026-03-12T11:07:23.076+0000",
+          "updated": "2026-04-08T09:59:54.172+0000",
           "resolutionDate": null
         },
         {
@@ -1550,7 +1588,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Merit Gordon",
+          "assignee": "Kapil Nema",
           "components": [
             "DevOps",
             "Training Kubeflow"
@@ -1558,7 +1596,7 @@
           "labels": [],
           "storyPoints": 2,
           "created": "2026-02-02T10:55:18.588+0000",
-          "updated": "2026-03-24T10:45:28.866+0000",
+          "updated": "2026-04-08T09:59:53.786+0000",
           "resolutionDate": null
         },
         {
@@ -1569,7 +1607,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Onyx Noble",
+          "assignee": "Owen Watkins",
           "components": [
             "Training Kubeflow"
           ],
@@ -1776,7 +1814,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Merit Oliver",
+          "assignee": "Karel Suta",
           "components": [
             "DevOps",
             "Training Kubeflow"
@@ -1793,8 +1831,8 @@
       "key": "TEST2-51776",
       "parentKey": "RHAISTRAT-152",
       "summary": "Implement search feature",
-      "status": "New",
-      "statusCategory": "To Do",
+      "status": "Testing",
+      "statusCategory": "In Progress",
       "priority": "Major",
       "assignee": null,
       "components": [
@@ -1803,17 +1841,17 @@
       "labels": [
         "devops-onboarding"
       ],
-      "storyPoints": 0,
+      "storyPoints": 2,
       "created": "2026-03-04T12:04:12.886+0000",
-      "updated": "2026-03-31T11:55:45.414+0000",
+      "updated": "2026-04-08T07:19:39.426+0000",
       "issues": []
     },
     {
       "key": "TEST2-54866",
       "parentKey": "RHAISTRAT-152",
       "summary": "Update documentation",
-      "status": "New",
-      "statusCategory": "To Do",
+      "status": "Testing",
+      "statusCategory": "In Progress",
       "priority": "Undefined",
       "assignee": "Person 295",
       "components": [
@@ -1822,7 +1860,7 @@
       "labels": [],
       "storyPoints": 0,
       "created": "2026-03-24T02:51:41.538+0000",
-      "updated": "2026-03-24T02:52:00.630+0000",
+      "updated": "2026-04-07T09:45:40.865+0000",
       "issues": [
         {
           "key": "RHOAIENG-48300",
@@ -1938,8 +1976,8 @@
       "key": "TEST2-54925",
       "parentKey": "RHAISTRAT-152",
       "summary": "Fix authentication issue",
-      "status": "New",
-      "statusCategory": "To Do",
+      "status": "Testing",
+      "statusCategory": "In Progress",
       "priority": "Major",
       "assignee": null,
       "components": [
@@ -1948,33 +1986,33 @@
       "labels": [
         "devops-onboarding"
       ],
-      "storyPoints": 0,
+      "storyPoints": 2,
       "created": "2026-03-24T09:47:20.140+0000",
-      "updated": "2026-03-31T11:59:35.237+0000",
+      "updated": "2026-04-08T07:20:25.278+0000",
       "issues": []
     }
   ],
   "metrics": {
     "totalEpics": 8,
-    "totalIssues": 54,
+    "totalIssues": 56,
     "issuesByStatus": {
       "Testing": 4,
-      "In Progress": 2,
-      "Resolved": 8,
+      "In Progress": 3,
+      "Resolved": 9,
       "Closed": 5,
       "New": 33,
       "Review": 2
     },
     "issuesByCategory": {
-      "Done": 13,
-      "In Progress": 8,
+      "Done": 14,
+      "In Progress": 9,
       "To Do": 33
     },
-    "totalStoryPoints": 101,
-    "storyPointsDone": 24,
-    "completionPct": 24,
-    "staleCount": 6,
-    "unassignedCount": 26,
+    "totalStoryPoints": 99,
+    "storyPointsDone": 29,
+    "completionPct": 25,
+    "staleCount": 4,
+    "unassignedCount": 25,
     "blockerCount": 0,
     "health": "RED",
     "epicMetrics": [
@@ -1983,7 +2021,7 @@
         "summary": "KFTv2 MPI works on OpenShift",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Merit Gordon",
+        "assignee": "Kapil Nema",
         "totalIssues": 8,
         "doneIssues": 3,
         "progressPct": 38,
@@ -1996,7 +2034,7 @@
         "summary": "Create OpenMPI Cluster Training Runtime",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Merit Oliver",
+        "assignee": "Karel Suta",
         "totalIssues": 7,
         "doneIssues": 3,
         "progressPct": 43,
@@ -2009,12 +2047,12 @@
         "summary": "Create OpenMPI benchmarks",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Merit Gordon",
-        "totalIssues": 9,
-        "doneIssues": 2,
-        "progressPct": 22,
-        "storyPoints": 19,
-        "storyPointsDone": 2,
+        "assignee": "Kapil Nema",
+        "totalIssues": 11,
+        "doneIssues": 3,
+        "progressPct": 27,
+        "storyPoints": 17,
+        "storyPointsDone": 7,
         "health": "RED"
       },
       {
@@ -2022,7 +2060,7 @@
         "summary": "[ccs Epic] Documentation for MPI workloads in KFTv2",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Onyx Oates",
+        "assignee": "Saanchi Sampath",
         "totalIssues": 10,
         "doneIssues": 0,
         "progressPct": 0,
@@ -2035,7 +2073,7 @@
         "summary": "Tech Preview - ODH and RHOAI Integrations [Kubeflow Trainer MPI Images]",
         "status": "New",
         "statusCategory": "To Do",
-        "assignee": "Merit Oliver",
+        "assignee": "Karel Suta",
         "totalIssues": 14,
         "doneIssues": 5,
         "progressPct": 36,
@@ -2046,8 +2084,8 @@
       {
         "key": "RHOAIENG-51776",
         "summary": "RHOAI Konflux Onboarding [MPI training images]",
-        "status": "New",
-        "statusCategory": "To Do",
+        "status": "Testing",
+        "statusCategory": "In Progress",
         "assignee": null,
         "totalIssues": 0,
         "doneIssues": 0,
@@ -2059,9 +2097,9 @@
       {
         "key": "RHOAIENG-54866",
         "summary": "Tech Preview MPI - Phase 2",
-        "status": "New",
-        "statusCategory": "To Do",
-        "assignee": "Merit Gordon",
+        "status": "Testing",
+        "statusCategory": "In Progress",
+        "assignee": "Kapil Nema",
         "totalIssues": 6,
         "doneIssues": 0,
         "progressPct": 0,
@@ -2072,8 +2110,8 @@
       {
         "key": "RHOAIENG-54925",
         "summary": "ODH Konflux CI Build Onboarding [MPI training images]",
-        "status": "New",
-        "statusCategory": "To Do",
+        "status": "Testing",
+        "statusCategory": "In Progress",
         "assignee": null,
         "totalIssues": 0,
         "doneIssues": 0,
@@ -2085,6 +2123,87 @@
     ]
   },
   "topology": {
-    "repos": []
+    "repos": [
+      {
+        "url": "github.com/red-hat-data-services/trainer",
+        "issueCount": 45,
+        "doneIssues": 13,
+        "totalIssues": 45,
+        "components": [
+          "Training Kubeflow"
+        ],
+        "lane": "upstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/training-operator",
+        "issueCount": 45,
+        "doneIssues": 13,
+        "totalIssues": 45,
+        "components": [
+          "Training Kubeflow"
+        ],
+        "lane": "upstream"
+      },
+      {
+        "url": "github.com/kubeflow/trainer",
+        "issueCount": 45,
+        "doneIssues": 13,
+        "totalIssues": 45,
+        "components": [
+          "Training Kubeflow"
+        ],
+        "lane": "upstream"
+      },
+      {
+        "url": "github.com/kubeflow/training-operator",
+        "issueCount": 45,
+        "doneIssues": 13,
+        "totalIssues": 45,
+        "components": [
+          "Training Kubeflow"
+        ],
+        "lane": "upstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/odh-dashboard",
+        "issueCount": 3,
+        "doneIssues": 0,
+        "totalIssues": 3,
+        "components": [
+          "Documentation"
+        ],
+        "lane": "destination"
+      },
+      {
+        "url": "github.com/red-hat-data-services/RHOAI-Build-Config",
+        "issueCount": 3,
+        "doneIssues": 0,
+        "totalIssues": 3,
+        "components": [
+          "DevOps"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/rhods-operator",
+        "issueCount": 3,
+        "doneIssues": 0,
+        "totalIssues": 3,
+        "components": [
+          "AI Core Platform"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/opendatahub-io/opendatahub-operator",
+        "issueCount": 3,
+        "doneIssues": 0,
+        "totalIssues": 3,
+        "components": [
+          "AI Core Platform"
+        ],
+        "lane": "upstream"
+      }
+    ]
   }
 }

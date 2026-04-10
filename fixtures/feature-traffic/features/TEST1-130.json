@@ -5,7 +5,7 @@
   "statusCategory": "In Progress",
   "priority": "Major",
   "assignee": {
-    "displayName": "Onyx Finn",
+    "displayName": "Rui Vieira",
     "accountId": "70121:5a9a760a-598b-49c2-af0e-60c52f76c598"
   },
   "fixVersions": [],
@@ -22,7 +22,7 @@
     "Model Eval"
   ],
   "created": "2025-03-21T09:46:11.921+0000",
-  "updated": "2026-04-07T03:07:14.037+0000",
+  "updated": "2026-04-10T03:09:29.777+0000",
   "statusNotes": null,
   "issueLinks": [
     {
@@ -86,7 +86,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Critical",
-          "assignee": "Frankie Flynn",
+          "assignee": "Rob Geada",
           "components": [
             "AI Safety"
           ],
@@ -106,7 +106,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Finn",
+          "assignee": "Rui Vieira",
           "components": [
             "AI Safety"
           ],
@@ -124,7 +124,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [
             "AI Safety"
           ],
@@ -142,7 +142,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Frankie Flynn",
+          "assignee": "Rob Geada",
           "components": [
             "AI Safety"
           ],
@@ -160,7 +160,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [
             "AI Safety"
           ],
@@ -178,7 +178,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [
             "AI Safety"
           ],
@@ -196,7 +196,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Gray Dawson",
+          "assignee": "Neri",
           "components": [
             "AI Safety"
           ],
@@ -232,7 +232,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Flynn",
+          "assignee": "Rob Geada",
           "components": [
             "AI Safety"
           ],
@@ -250,7 +250,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Onyx Finn",
+          "assignee": "Rui Vieira",
           "components": [
             "AI Safety"
           ],
@@ -270,7 +270,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Gray Drake",
+          "assignee": "Sai Chandra Pandraju",
           "components": [
             "AI Safety"
           ],
@@ -288,7 +288,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Kerry James",
+          "assignee": "Christina Xu",
           "components": [
             "AI Safety"
           ],
@@ -306,7 +306,7 @@
           "status": "Review",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Frankie Flynn",
+          "assignee": "Rob Geada",
           "components": [
             "AI Safety"
           ],
@@ -324,7 +324,7 @@
           "status": "Backlog",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Gray Drake",
+          "assignee": "Sai Chandra Pandraju",
           "components": [
             "AI Safety"
           ],
@@ -342,7 +342,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [
             "AI Safety"
           ],
@@ -360,7 +360,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Onyx Finn",
+          "assignee": "Rui Vieira",
           "components": [
             "AI Safety"
           ],
@@ -378,7 +378,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Nash",
+          "assignee": "Artem Surzhenko",
           "components": [
             "AI Safety"
           ],
@@ -396,7 +396,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Onyx Finn",
+          "assignee": "Rui Vieira",
           "components": [
             "AI Safety"
           ],
@@ -414,7 +414,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Onyx Finn",
+          "assignee": "Rui Vieira",
           "components": [
             "AI Safety"
           ],
@@ -436,7 +436,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Nash",
+          "assignee": "Artem Surzhenko",
           "components": [
             "AI Safety"
           ],
@@ -454,7 +454,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Major",
-          "assignee": "Onyx Finn",
+          "assignee": "Rui Vieira",
           "components": [
             "AI Safety"
           ],
@@ -743,7 +743,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [
             "AI Safety"
           ],
@@ -761,7 +761,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [
             "AI Safety"
           ],
@@ -779,7 +779,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [
             "AI Safety"
           ],
@@ -797,7 +797,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [
             "AI Safety"
           ],
@@ -815,7 +815,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [
             "AI Safety"
           ],
@@ -833,7 +833,7 @@
           "status": "Review",
           "statusCategory": "In Progress",
           "priority": "Normal",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [
             "AI Safety"
           ],
@@ -851,7 +851,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Normal",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -948,64 +948,64 @@
           "parentKey": "RHOAIENG-55574",
           "summary": "Security Phase 1A - Upgrade Container Base Image from UBI8 to UBI9",
           "type": "Task",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
+          "status": "Resolved",
+          "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
           "created": "2026-03-26T17:06:18.583+0000",
-          "updated": "2026-03-30T14:45:29.360+0000",
-          "resolutionDate": null
+          "updated": "2026-04-08T10:03:19.090+0000",
+          "resolutionDate": "2026-04-08T10:03:19.057+0000"
         },
         {
           "key": "RHOAIENG-55579",
           "parentKey": "RHOAIENG-55574",
           "summary": "Security Phase 1B - Update Python Dependencies to Eliminate Critical Vulnerabilities",
           "type": "Task",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
+          "status": "Resolved",
+          "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
           "created": "2026-03-26T17:07:03.999+0000",
-          "updated": "2026-03-30T14:47:22.093+0000",
-          "resolutionDate": null
+          "updated": "2026-04-08T10:03:26.832+0000",
+          "resolutionDate": "2026-04-08T10:03:26.800+0000"
         },
         {
           "key": "RHOAIENG-55580",
           "parentKey": "RHOAIENG-55574",
           "summary": "Security Phase 2 - Update Build Tools to Resolve pip and uv Vulnerabilities",
           "type": "Task",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
+          "status": "Resolved",
+          "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
           "created": "2026-03-26T17:07:06.716+0000",
-          "updated": "2026-03-30T14:45:40.160+0000",
-          "resolutionDate": null
+          "updated": "2026-04-08T10:03:34.272+0000",
+          "resolutionDate": "2026-04-08T10:03:34.236+0000"
         },
         {
           "key": "RHOAIENG-55581",
           "parentKey": "RHOAIENG-55574",
           "summary": "Security Phase 3 - Code Security Review and Bandit Static Analysis Remediation",
           "type": "Task",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
+          "status": "Resolved",
+          "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
           "created": "2026-03-26T17:07:09.251+0000",
-          "updated": "2026-03-30T14:47:46.773+0000",
-          "resolutionDate": null
+          "updated": "2026-04-08T10:03:38.989+0000",
+          "resolutionDate": "2026-04-08T10:03:38.957+0000"
         },
         {
           "key": "RHOAIENG-56132",
@@ -1015,7 +1015,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1029,47 +1029,47 @@
       "key": "TEST2-55582",
       "parentKey": "RHAISTRAT-130",
       "summary": "Implement feature for module",
-      "status": "New",
-      "statusCategory": "To Do",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
       "priority": "Normal",
       "assignee": "Person 171",
       "components": [],
       "labels": [],
       "storyPoints": 0,
       "created": "2026-03-26T17:11:18.242+0000",
-      "updated": "2026-03-26T17:26:41.761+0000",
+      "updated": "2026-04-09T11:08:05.743+0000",
       "issues": [
         {
           "key": "RHOAIENG-55585",
           "parentKey": "RHOAIENG-55582",
           "summary": "Optimize Container Build with Layer Caching Strategy",
           "type": "Task",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
+          "status": "Resolved",
+          "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
           "created": "2026-03-26T17:12:56.827+0000",
-          "updated": "2026-03-30T14:45:46.398+0000",
-          "resolutionDate": null
+          "updated": "2026-04-09T11:07:24.560+0000",
+          "resolutionDate": "2026-04-09T11:07:24.520+0000"
         },
         {
           "key": "RHOAIENG-55586",
           "parentKey": "RHOAIENG-55582",
           "summary": "Implement FIPS Compliance with Crypto Policy Configuration",
           "type": "Task",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
+          "status": "Resolved",
+          "statusCategory": "Done",
           "priority": "Minor",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
           "created": "2026-03-26T17:12:59.439+0000",
-          "updated": "2026-03-30T14:45:55.340+0000",
-          "resolutionDate": null
+          "updated": "2026-04-09T11:07:32.531+0000",
+          "resolutionDate": "2026-04-09T11:07:32.491+0000"
         },
         {
           "key": "RHOAIENG-55587",
@@ -1079,7 +1079,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Minor",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1093,15 +1093,15 @@
       "key": "TEST2-55583",
       "parentKey": "RHAISTRAT-130",
       "summary": "Update access controls",
-      "status": "New",
-      "statusCategory": "To Do",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
       "priority": "Normal",
       "assignee": "Person 171",
       "components": [],
       "labels": [],
       "storyPoints": 0,
       "created": "2026-03-26T17:12:13.608+0000",
-      "updated": "2026-03-31T12:28:29.592+0000",
+      "updated": "2026-04-09T11:08:10.493+0000",
       "issues": [
         {
           "key": "RHOAIENG-55588",
@@ -1111,7 +1111,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Normal",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1127,7 +1127,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Normal",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1143,7 +1143,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Normal",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1159,7 +1159,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Normal",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1175,7 +1175,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Normal",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1191,7 +1191,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Normal",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1207,7 +1207,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Normal",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1223,7 +1223,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Normal",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1239,7 +1239,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Minor",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1271,7 +1271,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Normal",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1287,7 +1287,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Normal",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1303,7 +1303,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Minor",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1319,7 +1319,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Minor",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1335,7 +1335,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Minor",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1351,7 +1351,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Minor",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1367,7 +1367,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Minor",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1383,7 +1383,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Minor",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1399,7 +1399,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Normal",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1415,7 +1415,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Normal",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1447,7 +1447,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Normal",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1463,7 +1463,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Normal",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1479,7 +1479,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Normal",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1495,7 +1495,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [
             "cleanup",
@@ -1514,7 +1514,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Minor",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1530,7 +1530,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Minor",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1547,20 +1547,20 @@
     "issuesByStatus": {
       "New": 45,
       "Closed": 7,
-      "Resolved": 5,
+      "Resolved": 11,
       "Review": 2,
       "Backlog": 1,
-      "In Progress": 12
+      "In Progress": 6
     },
     "issuesByCategory": {
-      "Done": 12,
-      "In Progress": 14,
+      "Done": 18,
+      "In Progress": 8,
       "To Do": 46
     },
     "totalStoryPoints": 43,
     "storyPointsDone": 21,
-    "completionPct": 17,
-    "staleCount": 14,
+    "completionPct": 25,
+    "staleCount": 8,
     "unassignedCount": 12,
     "blockerCount": 5,
     "health": "RED",
@@ -1570,7 +1570,7 @@
         "summary": "Persist Fairness Metrics",
         "status": "New",
         "statusCategory": "To Do",
-        "assignee": "Onyx Finn",
+        "assignee": "Rui Vieira",
         "totalIssues": 7,
         "doneIssues": 1,
         "progressPct": 14,
@@ -1583,7 +1583,7 @@
         "summary": "Migrate the TrustyAI service to Python from Java",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Onyx Finn",
+        "assignee": "Rui Vieira",
         "totalIssues": 25,
         "doneIssues": 8,
         "progressPct": 32,
@@ -1596,7 +1596,7 @@
         "summary": "Python implementation of metrics for TrustyAI-Service",
         "status": "Closed",
         "statusCategory": "Done",
-        "assignee": "Merit Reeves",
+        "assignee": "Sudip Sinha",
         "totalIssues": 0,
         "doneIssues": 0,
         "progressPct": 0,
@@ -1609,7 +1609,7 @@
         "summary": "Expose KL Divergency metrics for the Trusty AI model drift In the Trusty AI Service",
         "status": "New",
         "statusCategory": "To Do",
-        "assignee": "Kerry Price",
+        "assignee": "Dominik Dahlem",
         "totalIssues": 0,
         "doneIssues": 0,
         "progressPct": 0,
@@ -1622,7 +1622,7 @@
         "summary": "[TrustyAI Service Python][metrics] Drift-detection metrics",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Merit Reeves",
+        "assignee": "Sudip Sinha",
         "totalIssues": 7,
         "doneIssues": 3,
         "progressPct": 43,
@@ -1635,7 +1635,7 @@
         "summary": "[TrustyAI Service Python][metrics] Explainability metrics and framework",
         "status": "New",
         "statusCategory": "To Do",
-        "assignee": "Merit Reeves",
+        "assignee": "Sudip Sinha",
         "totalIssues": 0,
         "doneIssues": 0,
         "progressPct": 0,
@@ -1648,7 +1648,7 @@
         "summary": "[TrustyAI Service Python][metrics] Anomaly-detection metrics",
         "status": "New",
         "statusCategory": "To Do",
-        "assignee": "Merit Reeves",
+        "assignee": "Sudip Sinha",
         "totalIssues": 0,
         "doneIssues": 0,
         "progressPct": 0,
@@ -1661,7 +1661,7 @@
         "summary": "[TrustyAI Service Python][metrics] Language metrics",
         "status": "New",
         "statusCategory": "To Do",
-        "assignee": "Merit Reeves",
+        "assignee": "Sudip Sinha",
         "totalIssues": 0,
         "doneIssues": 0,
         "progressPct": 0,
@@ -1674,7 +1674,7 @@
         "summary": "Support vLLM Payloads inside of the Python TrustyAI Service",
         "status": "New",
         "statusCategory": "To Do",
-        "assignee": "Merit Reeves",
+        "assignee": "Sudip Sinha",
         "totalIssues": 0,
         "doneIssues": 0,
         "progressPct": 0,
@@ -1687,10 +1687,10 @@
         "summary": "[TrustyAI Service Python][security] Security Remediation Program",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Merit Reeves",
+        "assignee": "Sudip Sinha",
         "totalIssues": 5,
-        "doneIssues": 0,
-        "progressPct": 0,
+        "doneIssues": 4,
+        "progressPct": 80,
         "storyPoints": 0,
         "storyPointsDone": 0,
         "health": "RED"
@@ -1698,12 +1698,12 @@
       {
         "key": "RHOAIENG-55582",
         "summary": "[TrustyAI Service Python][container] Container Modernization and Optimization",
-        "status": "New",
-        "statusCategory": "To Do",
-        "assignee": "Merit Reeves",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Sudip Sinha",
         "totalIssues": 3,
-        "doneIssues": 0,
-        "progressPct": 0,
+        "doneIssues": 2,
+        "progressPct": 67,
         "storyPoints": 0,
         "storyPointsDone": 0,
         "health": "YELLOW"
@@ -1711,9 +1711,9 @@
       {
         "key": "RHOAIENG-55583",
         "summary": "[TrustyAI Service Python][tooling] Development Tooling and CI/CD Modernization",
-        "status": "New",
-        "statusCategory": "To Do",
-        "assignee": "Merit Reeves",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Sudip Sinha",
         "totalIssues": 9,
         "doneIssues": 0,
         "progressPct": 0,
@@ -1726,7 +1726,7 @@
         "summary": "[TrustyAI Service Python][docs] Documentation and Developer Experience",
         "status": "New",
         "statusCategory": "To Do",
-        "assignee": "Merit Reeves",
+        "assignee": "Sudip Sinha",
         "totalIssues": 10,
         "doneIssues": 0,
         "progressPct": 0,
@@ -1739,7 +1739,7 @@
         "summary": "[TrustyAI Service Python][refactoring] Codebase Refactoring",
         "status": "New",
         "statusCategory": "To Do",
-        "assignee": "Merit Reeves",
+        "assignee": "Sudip Sinha",
         "totalIssues": 6,
         "doneIssues": 0,
         "progressPct": 0,
@@ -1750,6 +1750,67 @@
     ]
   },
   "topology": {
-    "repos": []
+    "repos": [
+      {
+        "url": "github.com/red-hat-data-services/fms-guardrails-orchestrator",
+        "issueCount": 38,
+        "doneIssues": 12,
+        "totalIssues": 38,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/guardrails-detectors",
+        "issueCount": 38,
+        "doneIssues": 12,
+        "totalIssues": 38,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/guardrails-regex-detector",
+        "issueCount": 38,
+        "doneIssues": 12,
+        "totalIssues": 38,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/NeMo-Guardrails",
+        "issueCount": 38,
+        "doneIssues": 12,
+        "totalIssues": 38,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/NVIDIA-NeMo/Guardrails",
+        "issueCount": 38,
+        "doneIssues": 12,
+        "totalIssues": 38,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "upstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/odh-dashboard",
+        "issueCount": 0,
+        "doneIssues": 0,
+        "totalIssues": 0,
+        "components": [
+          "Documentation"
+        ],
+        "lane": "destination"
+      }
+    ]
   }
 }

@@ -5,7 +5,7 @@
   "statusCategory": "In Progress",
   "priority": "Critical",
   "assignee": {
-    "displayName": "Merit Webb",
+    "displayName": "Stuart Battersby",
     "accountId": "712020:d1f056a6-a23c-41b9-99b1-6d58953ce814"
   },
   "fixVersions": [],
@@ -21,7 +21,7 @@
     "Documentation"
   ],
   "created": "2026-02-02T11:37:35.637+0000",
-  "updated": "2026-04-07T03:07:07.244+0000",
+  "updated": "2026-04-10T03:09:23.740+0000",
   "statusNotes": null,
   "issueLinks": [
     {
@@ -79,7 +79,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Emery",
+          "assignee": "Alessandro Beltramo",
           "components": [
             "AI Safety"
           ],
@@ -95,8 +95,8 @@
       "key": "TEST2-52135",
       "parentKey": "RHAISTRAT-1180",
       "summary": "Add health check endpoint",
-      "status": "New",
-      "statusCategory": "To Do",
+      "status": "Closed",
+      "statusCategory": "Done",
       "priority": "Critical",
       "assignee": "Person 163",
       "components": [
@@ -106,7 +106,7 @@
       "labels": [],
       "storyPoints": 0,
       "created": "2026-03-06T09:41:39.017+0000",
-      "updated": "2026-03-18T14:31:36.624+0000",
+      "updated": "2026-04-07T09:26:00.688+0000",
       "issues": []
     },
     {
@@ -152,7 +152,7 @@
         "summary": "Create HTML report for Garak output",
         "status": "Closed",
         "statusCategory": "Done",
-        "assignee": "Onyx Zimmerman",
+        "assignee": "Henrique Nunes",
         "totalIssues": 1,
         "doneIssues": 1,
         "progressPct": 100,
@@ -163,9 +163,9 @@
       {
         "key": "RHOAIENG-52135",
         "summary": "QE for HTML report generation",
-        "status": "New",
-        "statusCategory": "To Do",
-        "assignee": "Kerry Cross",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Karishma Punwatkar",
         "totalIssues": 0,
         "doneIssues": 0,
         "progressPct": 0,
@@ -178,7 +178,7 @@
         "summary": "Implement generation of Garak intent typology and stub files from a red-teaming dataset and generate risk-based assessment report from Garak results.",
         "status": "Closed",
         "statusCategory": "Done",
-        "assignee": "Onyx Zimmerman",
+        "assignee": "Henrique Nunes",
         "totalIssues": 0,
         "doneIssues": 0,
         "progressPct": 0,
@@ -189,6 +189,77 @@
     ]
   },
   "topology": {
-    "repos": []
+    "repos": [
+      {
+        "url": "github.com/red-hat-data-services/eval-hub",
+        "issueCount": 0,
+        "doneIssues": 0,
+        "totalIssues": 0,
+        "components": [
+          "AI Evaluations"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/lm-evaluation-harness",
+        "issueCount": 0,
+        "doneIssues": 0,
+        "totalIssues": 0,
+        "components": [
+          "AI Evaluations"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/fms-guardrails-orchestrator",
+        "issueCount": 1,
+        "doneIssues": 1,
+        "totalIssues": 1,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/guardrails-detectors",
+        "issueCount": 1,
+        "doneIssues": 1,
+        "totalIssues": 1,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/guardrails-regex-detector",
+        "issueCount": 1,
+        "doneIssues": 1,
+        "totalIssues": 1,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/NeMo-Guardrails",
+        "issueCount": 1,
+        "doneIssues": 1,
+        "totalIssues": 1,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/NVIDIA-NeMo/Guardrails",
+        "issueCount": 1,
+        "doneIssues": 1,
+        "totalIssues": 1,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "upstream"
+      }
+    ]
   }
 }

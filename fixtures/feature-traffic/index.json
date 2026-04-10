@@ -1,7 +1,7 @@
 {
-  "fetchedAt": "2026-04-08T06:10:47.405Z",
+  "fetchedAt": "2026-04-10T06:09:29.084Z",
   "schemaVersion": "v1",
-  "featureCount": 461,
+  "featureCount": 460,
   "features": [
     {
       "key": "TEST1-15",
@@ -9,7 +9,7 @@
       "status": "Refinement",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Merit Bennett",
+      "assignee": "Frank Jansen",
       "fixVersions": [],
       "labels": [
         "Gaudi",
@@ -28,7 +28,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Gray Nash",
+      "assignee": "Alex Calhoun",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -42,7 +42,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T17:29:47.218+0000"
+      "lastUpdated": "2026-04-09T20:35:08.968+0000"
     },
     {
       "key": "TEST1-44",
@@ -50,7 +50,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Kerry Kane",
+      "assignee": "Paul McCarthy",
       "fixVersions": [],
       "labels": [
         "GPU-as-a-Service",
@@ -61,7 +61,7 @@
       "issueCount": 31,
       "blockerCount": 0,
       "health": "GREEN",
-      "lastUpdated": "2026-03-24T01:57:09.925+0000"
+      "lastUpdated": "2026-04-09T14:55:51.340+0000"
     },
     {
       "key": "TEST1-47",
@@ -69,7 +69,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Kerry Kane",
+      "assignee": "Paul McCarthy",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -85,7 +85,7 @@
       "status": "Refinement",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Merit Ives",
+      "assignee": "Leslie Matzinger",
       "fixVersions": [
         "rhoai-3.0"
       ],
@@ -105,7 +105,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Onyx Park",
+      "assignee": "Jennifer Ciroli",
       "fixVersions": [],
       "labels": [],
       "completionPct": 100,
@@ -121,7 +121,7 @@
       "status": "Refinement",
       "statusCategory": "To Do",
       "priority": "Blocker",
-      "assignee": "Gray Day",
+      "assignee": "Francisco Arceo",
       "fixVersions": [],
       "labels": [
         "data-processing",
@@ -141,7 +141,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Frankie Frost",
+      "assignee": "Jehlum Vitasta Pandit",
       "fixVersions": [
         "rhoai-3.0"
       ],
@@ -163,7 +163,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Kerry Webb",
+      "assignee": "Bill Murdock",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -186,7 +186,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Onyx Finn",
+      "assignee": "Rui Vieira",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -206,7 +206,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Gray Day",
+      "assignee": "Francisco Arceo",
       "fixVersions": [],
       "labels": [
         "3.2-candidate",
@@ -228,7 +228,7 @@
       "status": "Refinement",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Gray Bishop",
+      "assignee": "Eoin Fennessy",
       "fixVersions": [],
       "labels": [
         "UX",
@@ -388,30 +388,12 @@
       "lastUpdated": "2025-09-18T12:31:09.450+0000"
     },
     {
-      "key": "TEST1-75",
-      "summary": "Implement data cleanup",
-      "status": "Refinement",
-      "statusCategory": "To Do",
-      "priority": "Critical",
-      "assignee": "Merit Kirk",
-      "fixVersions": [],
-      "labels": [
-        "tech-reviewed"
-      ],
-      "completionPct": 0,
-      "epicCount": 5,
-      "issueCount": 0,
-      "blockerCount": 0,
-      "health": "RED",
-      "lastUpdated": "2026-03-02T15:37:28.589+0000"
-    },
-    {
       "key": "TEST1-82",
       "summary": "Add health check endpoint",
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Onyx Finn",
+      "assignee": "Rui Vieira",
       "fixVersions": [],
       "labels": [
         "needs-doc",
@@ -432,7 +414,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Frankie Xu",
+      "assignee": "Shivchander Sudalairaj",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -448,7 +430,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Onyx Irving",
+      "assignee": "Adam Miller",
       "fixVersions": [],
       "labels": [
         "disconnected",
@@ -483,7 +465,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Frankie Park",
+      "assignee": "Luca Burgazzoli",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -510,7 +492,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T17:29:52.437+0000"
+      "lastUpdated": "2026-04-09T20:43:48.593+0000"
     },
     {
       "key": "TEST1-99",
@@ -518,13 +500,11 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Frankie Dean",
+      "assignee": "Nick Ommen",
       "fixVersions": [],
       "labels": [
-        "Notebooks",
         "disconnected",
         "documentation",
-        "ide_scrum:indigo",
         "platform",
         "tech-reviewed"
       ],
@@ -533,7 +513,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-02-19T18:33:29.466+0000"
+      "lastUpdated": "2026-04-09T17:32:17.068+0000"
     },
     {
       "key": "TEST1-102",
@@ -560,7 +540,7 @@
       "status": "Refinement",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Kerry Palmer",
+      "assignee": "Adel Zaalouk",
       "fixVersions": [],
       "labels": [
         "core",
@@ -599,7 +579,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Kerry Hunt",
+      "assignee": "Myriam Fentanes Gutierrez",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -607,7 +587,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-23T10:55:13.228+0000"
+      "lastUpdated": "2026-04-09T20:31:41.479+0000"
     },
     {
       "key": "TEST1-129",
@@ -615,7 +595,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Onyx Mitchell",
+      "assignee": "Dimitri Saridakis",
       "fixVersions": [],
       "labels": [
         "needs-tech-review",
@@ -626,7 +606,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-02T09:53:09.499+0000"
+      "lastUpdated": "2026-04-10T03:13:02.918+0000"
     },
     {
       "key": "TEST1-130",
@@ -634,7 +614,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Onyx Finn",
+      "assignee": "Rui Vieira",
       "fixVersions": [],
       "labels": [
         "3.Next-candidate",
@@ -643,12 +623,12 @@
         "must-have",
         "needs-doc"
       ],
-      "completionPct": 17,
+      "completionPct": 25,
       "epicCount": 14,
       "issueCount": 72,
       "blockerCount": 5,
       "health": "RED",
-      "lastUpdated": "2026-04-07T03:07:14.037+0000"
+      "lastUpdated": "2026-04-10T03:09:29.777+0000"
     },
     {
       "key": "TEST1-131",
@@ -656,7 +636,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Onyx Hart",
+      "assignee": "Kyle Walker",
       "fixVersions": [],
       "labels": [
         "GPU-as-a-Service",
@@ -675,7 +655,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Onyx Underwood",
+      "assignee": "Darach Cawley",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -688,7 +668,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-29T03:09:02.714+0000"
+      "lastUpdated": "2026-04-09T03:11:15.319+0000"
     },
     {
       "key": "TEST1-138",
@@ -696,7 +676,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Gray Mitchell",
+      "assignee": "Ramesh Reddy",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -711,7 +691,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-04T11:37:45.352+0000"
+      "lastUpdated": "2026-04-09T17:41:33.711+0000"
     },
     {
       "key": "TEST1-143",
@@ -719,7 +699,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Undefined",
-      "assignee": "Frankie Clay",
+      "assignee": "Selbi Siddiqi",
       "fixVersions": [
         "RHAIIS-3.4"
       ],
@@ -737,7 +717,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Merit Winn",
+      "assignee": "Bob Gregor",
       "fixVersions": [
         "rhoai-3.4"
       ],
@@ -749,12 +729,12 @@
         "dashboard-razzmatazz-scrum",
         "prompt-lab"
       ],
-      "completionPct": 83,
+      "completionPct": 100,
       "epicCount": 1,
       "issueCount": 6,
       "blockerCount": 2,
       "health": "RED",
-      "lastUpdated": "2026-04-07T15:36:46.431+0000"
+      "lastUpdated": "2026-04-09T21:00:33.893+0000"
     },
     {
       "key": "TEST1-152",
@@ -762,18 +742,18 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Frankie Knox",
+      "assignee": "Rob Bell",
       "fixVersions": [],
       "labels": [
         "GPU-as-a-Service",
         "requires_architecture_review"
       ],
-      "completionPct": 24,
+      "completionPct": 25,
       "epicCount": 8,
-      "issueCount": 54,
+      "issueCount": 56,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-04-03T20:39:16.107+0000"
+      "lastUpdated": "2026-04-09T14:59:12.797+0000"
     },
     {
       "key": "TEST1-156",
@@ -815,7 +795,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Merit Gibbs",
+      "assignee": "Amita Sharma",
       "fixVersions": [],
       "labels": [
         "GPU-as-a-Service"
@@ -833,7 +813,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Merit Gibbs",
+      "assignee": "Amita Sharma",
       "fixVersions": [],
       "labels": [
         "tech-reviewed"
@@ -851,7 +831,7 @@
       "status": "Refinement",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Kerry Udall",
+      "assignee": "Modassar Rana",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -865,7 +845,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T17:29:47.867+0000"
+      "lastUpdated": "2026-04-10T03:13:22.349+0000"
     },
     {
       "key": "TEST1-161",
@@ -873,7 +853,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Normal",
-      "assignee": "Onyx Drake",
+      "assignee": "Varad Ahirwadkar",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -886,7 +866,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T17:29:48.829+0000"
+      "lastUpdated": "2026-04-10T03:13:24.615+0000"
     },
     {
       "key": "TEST1-164",
@@ -894,7 +874,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Frankie Vaughn",
+      "assignee": "Eder Ignatowicz",
       "fixVersions": [],
       "labels": [
         "3.Next-candidate",
@@ -917,7 +897,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Gray Walsh",
+      "assignee": "Andrew Ballantyne",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -937,7 +917,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Gray Walsh",
+      "assignee": "Andrew Ballantyne",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -957,7 +937,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Onyx Anderson",
+      "assignee": "Nick Gagan",
       "fixVersions": [
         "rhoai-3.4"
       ],
@@ -982,7 +962,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Frankie Drake",
+      "assignee": "Alessandro Lazarotti",
       "fixVersions": [
         "rhoai-3.3"
       ],
@@ -1004,7 +984,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Gray Knox",
+      "assignee": "Yi Zheng",
       "fixVersions": [
         "rhoai-3.5"
       ],
@@ -1024,7 +1004,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Gray Knox",
+      "assignee": "Yi Zheng",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -1058,7 +1038,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Merit Dunn",
+      "assignee": "Ashish Kamra",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -1074,7 +1054,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Onyx Evans",
+      "assignee": "Roland Huss",
       "fixVersions": [],
       "labels": [
         "3.Next-candidate",
@@ -1128,7 +1108,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Gray Dean",
+      "assignee": "Laura Fitzgerald",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -1167,7 +1147,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Gray Brock",
+      "assignee": "Mustafa Eyceoz",
       "fixVersions": [
         "rhoai-3.5"
       ],
@@ -1185,7 +1165,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Normal",
-      "assignee": "Gray Brock",
+      "assignee": "Mustafa Eyceoz",
       "fixVersions": [
         "rhoai-3.4"
       ],
@@ -1203,7 +1183,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Gray Dean",
+      "assignee": "Laura Fitzgerald",
       "fixVersions": [],
       "labels": [
         "tech-reviewed"
@@ -1221,7 +1201,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Onyx Mitchell",
+      "assignee": "Dimitri Saridakis",
       "fixVersions": [
         "rhoai-3.5"
       ],
@@ -1235,7 +1215,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T14:59:08.903+0000"
+      "lastUpdated": "2026-04-09T03:10:54.432+0000"
     },
     {
       "key": "TEST1-211",
@@ -1243,7 +1223,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Merit Ingram",
+      "assignee": "Umberto Manganiello",
       "fixVersions": [],
       "labels": [
         "GPU-as-a-Service",
@@ -1262,7 +1242,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Onyx Dunn",
+      "assignee": "Erwan Gallen",
       "fixVersions": [],
       "labels": [
         "INFERSTRAT_251116"
@@ -1280,7 +1260,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Frankie Ward",
+      "assignee": "Andy Linfoot",
       "fixVersions": [],
       "labels": [
         "INFERSTRAT_251116",
@@ -1317,7 +1297,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Onyx Dunn",
+      "assignee": "Erwan Gallen",
       "fixVersions": [
         "RHAIIS-3.2.5"
       ],
@@ -1337,7 +1317,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Undefined",
-      "assignee": "Merit Rand",
+      "assignee": "Taneem Ibrahim",
       "fixVersions": [
         "RHAIIS-3.4EA1"
       ],
@@ -1359,7 +1339,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Kerry Gold",
+      "assignee": "Michael Goin",
       "fixVersions": [],
       "labels": [
         "INFERSTRAT_251116"
@@ -1395,7 +1375,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Undefined",
-      "assignee": "Merit Foster",
+      "assignee": "Klara Bezdekova",
       "fixVersions": [
         "RHELAI-3.2"
       ],
@@ -1433,7 +1413,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Onyx Dunn",
+      "assignee": "Erwan Gallen",
       "fixVersions": [],
       "labels": [
         "INFERSTRAT_251116",
@@ -1471,7 +1451,7 @@
       "status": "Backlog",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Onyx Kelley",
+      "assignee": "Jay Koehler",
       "fixVersions": [],
       "labels": [
         "Approved-RFE",
@@ -1491,7 +1471,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Gray Knox",
+      "assignee": "Yi Zheng",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -1503,7 +1483,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T08:08:33.212+0000"
+      "lastUpdated": "2026-04-09T10:19:52.299+0000"
     },
     {
       "key": "TEST1-293",
@@ -1511,7 +1491,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Merit Zimmerman",
+      "assignee": "Adam Bellusci",
       "fixVersions": [],
       "labels": [
         "tech-reviewed"
@@ -1529,7 +1509,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Merit Zimmerman",
+      "assignee": "Adam Bellusci",
       "fixVersions": [],
       "labels": [
         "Approved-RFE",
@@ -1548,7 +1528,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Onyx Upton",
+      "assignee": "Mahmoud Alhaj",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -1564,7 +1544,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Gray Walsh",
+      "assignee": "Andrew Ballantyne",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -1575,12 +1555,12 @@
         "needs-uxd",
         "tech-reviewed"
       ],
-      "completionPct": 70,
+      "completionPct": 64,
       "epicCount": 5,
-      "issueCount": 10,
+      "issueCount": 11,
       "blockerCount": 1,
       "health": "RED",
-      "lastUpdated": "2026-04-07T21:00:58.887+0000"
+      "lastUpdated": "2026-04-09T21:44:23.829+0000"
     },
     {
       "key": "TEST1-298",
@@ -1588,7 +1568,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Gray Evans",
+      "assignee": "Imran Khalidi",
       "fixVersions": [],
       "labels": [
         "Approved-RFE",
@@ -1609,7 +1589,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Kerry Lane",
+      "assignee": "Anish Asthana",
       "fixVersions": [],
       "labels": [
         "Approved-RFE",
@@ -1629,7 +1609,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Kerry Lane",
+      "assignee": "Anish Asthana",
       "fixVersions": [],
       "labels": [
         "Approved-RFE",
@@ -1650,7 +1630,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Merit Dunn",
+      "assignee": "Ashish Kamra",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -1671,7 +1651,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Merit Zimmerman",
+      "assignee": "Adam Bellusci",
       "fixVersions": [],
       "labels": [
         "Approved-RFE",
@@ -1690,7 +1670,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Merit Zimmerman",
+      "assignee": "Adam Bellusci",
       "fixVersions": [],
       "labels": [
         "tech-reviewed"
@@ -1708,7 +1688,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Onyx Cole",
+      "assignee": "Esa Fazal",
       "fixVersions": [],
       "labels": [
         "3.4",
@@ -1720,15 +1700,15 @@
       "issueCount": 30,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-01T13:00:24.092+0000"
+      "lastUpdated": "2026-04-08T08:46:51.199+0000"
     },
     {
       "key": "TEST1-313",
       "summary": "Add input validation",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
+      "status": "Backlog",
+      "statusCategory": "To Do",
       "priority": "Minor",
-      "assignee": "Frankie Rand",
+      "assignee": "Purva Naik",
       "fixVersions": [],
       "labels": [
         "ai-studio",
@@ -1743,7 +1723,7 @@
       "issueCount": 42,
       "blockerCount": 7,
       "health": "RED",
-      "lastUpdated": "2026-04-05T03:14:23.466+0000"
+      "lastUpdated": "2026-04-10T03:09:27.703+0000"
     },
     {
       "key": "TEST1-316",
@@ -1751,7 +1731,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Merit Kirk",
+      "assignee": "Kezia Cook",
       "fixVersions": [],
       "labels": [
         "field-request"
@@ -1769,7 +1749,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Merit Zimmerman",
+      "assignee": "Adam Bellusci",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -1800,7 +1780,7 @@
     {
       "key": "TEST1-323",
       "summary": "Fix validation issue",
-      "status": "New",
+      "status": "Refinement",
       "statusCategory": "To Do",
       "priority": "Critical",
       "assignee": null,
@@ -1809,11 +1789,11 @@
         "telco"
       ],
       "completionPct": 0,
-      "epicCount": 0,
-      "issueCount": 0,
+      "epicCount": 1,
+      "issueCount": 7,
       "blockerCount": 0,
-      "health": "YELLOW",
-      "lastUpdated": "2026-03-18T10:57:27.555+0000"
+      "health": "RED",
+      "lastUpdated": "2026-04-09T14:31:27.652+0000"
     },
     {
       "key": "TEST1-332",
@@ -1876,7 +1856,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Gray Walsh",
+      "assignee": "Andrew Ballantyne",
       "fixVersions": [
         "rhoai-3.3"
       ],
@@ -1898,7 +1878,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Gray Dean",
+      "assignee": "Laura Fitzgerald",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -1914,7 +1894,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Frankie Gordon",
+      "assignee": "Ana Biazetti",
       "fixVersions": [],
       "labels": [
         "Accelerator_Platform"
@@ -1984,7 +1964,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Merit Zimmerman",
+      "assignee": "Adam Bellusci",
       "fixVersions": [],
       "labels": [
         "enhancement"
@@ -2002,7 +1982,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Blocker",
-      "assignee": "Onyx Sato",
+      "assignee": "Stefan Mattejiet",
       "fixVersions": [],
       "labels": [],
       "completionPct": 88,
@@ -2018,7 +1998,7 @@
       "status": "Backlog",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Onyx Quinn",
+      "assignee": "Bryan Keane",
       "fixVersions": [],
       "labels": [
         "3.4",
@@ -2030,7 +2010,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-18T10:58:48.894+0000"
+      "lastUpdated": "2026-04-09T15:50:25.766+0000"
     },
     {
       "key": "TEST1-405",
@@ -2038,7 +2018,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Merit Udall",
+      "assignee": "Andrej Smigala",
       "fixVersions": [],
       "labels": [
         "aicp-team-forge"
@@ -2056,7 +2036,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Frankie Park",
+      "assignee": "Luca Burgazzoli",
       "fixVersions": [],
       "labels": [
         "Accelerator_Platform",
@@ -2075,7 +2055,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Gray Walsh",
+      "assignee": "Andrew Ballantyne",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -2091,7 +2071,7 @@
       "status": "Refinement",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Frankie Mead",
+      "assignee": "Roy Nissim",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -2128,7 +2108,7 @@
       "status": "Backlog",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Kerry Vale",
+      "assignee": "Adnan Khan",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -2170,7 +2150,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Frankie Flynn",
+      "assignee": "Rob Geada",
       "fixVersions": [],
       "labels": [],
       "completionPct": 50,
@@ -2186,7 +2166,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Merit Kirk",
+      "assignee": "Kezia Cook",
       "fixVersions": [],
       "labels": [
         "field-request",
@@ -2205,7 +2185,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Merit Zimmerman",
+      "assignee": "Adam Bellusci",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -2239,7 +2219,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Frankie Mead",
+      "assignee": "Roy Nissim",
       "fixVersions": [],
       "labels": [
         "llm-d",
@@ -2276,7 +2256,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Kerry Fischer",
+      "assignee": "Georgios Zaronikas Karagiannis",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -2375,7 +2355,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Merit Zane",
+      "assignee": "Dana Gutride",
       "fixVersions": [],
       "labels": [
         "Notebooks2.0-related"
@@ -2393,7 +2373,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Kerry Price",
+      "assignee": "Dominik Dahlem",
       "fixVersions": [],
       "labels": [
         "3.Next-candidate",
@@ -2416,7 +2396,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Frankie Abbott",
+      "assignee": "Jeff DeMoss",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -2432,7 +2412,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Kerry Vale",
+      "assignee": "Adnan Khan",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -2454,7 +2434,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Onyx Xu",
+      "assignee": "Lindani Phiri",
       "fixVersions": [
         "RHAIIS-3.2.5"
       ],
@@ -2508,7 +2488,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Onyx Kelley",
+      "assignee": "Jay Koehler",
       "fixVersions": [],
       "labels": [
         "tech-reviewed"
@@ -2526,7 +2506,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Merit Zimmerman",
+      "assignee": "Adam Bellusci",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -2542,7 +2522,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Kerry Yates",
+      "assignee": "Chris Sams",
       "fixVersions": [],
       "labels": [
         "needs-tech-review",
@@ -2561,7 +2541,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Blocker",
-      "assignee": "Merit Zimmerman",
+      "assignee": "Adam Bellusci",
       "fixVersions": [],
       "labels": [
         "tech-reviewed"
@@ -2579,7 +2559,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Merit North",
+      "assignee": "Dhiraj Bokde",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -2595,7 +2575,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Kerry Tate",
+      "assignee": "Catherine Weeks",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -2630,7 +2610,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Onyx Finn",
+      "assignee": "Rui Vieira",
       "fixVersions": [],
       "labels": [
         "3.Next-candidate",
@@ -2649,7 +2629,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Gray Webb",
+      "assignee": "Marian Macik",
       "fixVersions": [],
       "labels": [
         "aicp-team-forge"
@@ -2664,10 +2644,10 @@
     {
       "key": "TEST1-545",
       "summary": "Update access controls",
-      "status": "In Progress",
+      "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Gray Swift",
+      "assignee": "John Haran",
       "fixVersions": [
         "rhoai-3.4"
       ],
@@ -2682,12 +2662,12 @@
         "prompt-lab",
         "tech-reviewed"
       ],
-      "completionPct": 88,
-      "epicCount": 9,
+      "completionPct": 92,
+      "epicCount": 8,
       "issueCount": 26,
       "blockerCount": 6,
       "health": "RED",
-      "lastUpdated": "2026-04-07T17:38:53.830+0000"
+      "lastUpdated": "2026-04-09T11:22:11.977+0000"
     },
     {
       "key": "TEST1-547",
@@ -2711,7 +2691,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Minor",
-      "assignee": "Gray Bennett",
+      "assignee": "Jenny Yi",
       "fixVersions": [],
       "labels": [
         "branding",
@@ -2732,7 +2712,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Onyx Kelley",
+      "assignee": "Jay Koehler",
       "fixVersions": [],
       "labels": [],
       "completionPct": 37,
@@ -2780,7 +2760,7 @@
       "status": "Refinement",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Merit Lloyd",
+      "assignee": "Matej Horinek",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -2796,7 +2776,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Merit Zimmerman",
+      "assignee": "Adam Bellusci",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -2812,7 +2792,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Kerry Foster",
+      "assignee": "Paul Boyd",
       "fixVersions": [
         "rhoai-3.3"
       ],
@@ -2827,7 +2807,7 @@
       "issueCount": 56,
       "blockerCount": 4,
       "health": "RED",
-      "lastUpdated": "2026-02-25T15:18:18.734+0000"
+      "lastUpdated": "2026-04-08T14:51:53.783+0000"
     },
     {
       "key": "TEST1-583",
@@ -2835,7 +2815,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Merit Swift",
+      "assignee": "Yuan Tang",
       "fixVersions": [],
       "labels": [
         "dashboard_scrum",
@@ -2854,7 +2834,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Kerry Lane",
+      "assignee": "Anish Asthana",
       "fixVersions": [],
       "labels": [
         "llm-d"
@@ -2872,7 +2852,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Blocker",
-      "assignee": "Merit Zimmerman",
+      "assignee": "Adam Bellusci",
       "fixVersions": [],
       "labels": [
         "tech-reviewed"
@@ -2908,7 +2888,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Onyx Emery",
+      "assignee": "Gaurav Kamathe",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -2924,7 +2904,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Merit Zane",
+      "assignee": "Dana Gutride",
       "fixVersions": [],
       "labels": [
         "eng",
@@ -2960,7 +2940,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Kerry Lambert",
+      "assignee": "Jonathan Zarecki",
       "fixVersions": [],
       "labels": [
         "needs-tech-review"
@@ -3012,7 +2992,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Frankie Mead",
+      "assignee": "Roy Nissim",
       "fixVersions": [],
       "labels": [],
       "completionPct": 85,
@@ -3028,7 +3008,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Frankie Flynn",
+      "assignee": "Rob Geada",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -3044,7 +3024,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Onyx Xu",
+      "assignee": "Lindani Phiri",
       "fixVersions": [],
       "labels": [
         "RH-request",
@@ -3063,7 +3043,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Minor",
-      "assignee": "Kerry Kelley",
+      "assignee": "Christoph Goern",
       "fixVersions": [],
       "labels": [
         "GPU-as-a-Service",
@@ -3098,7 +3078,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Gray Bennett",
+      "assignee": "Jenny Yi",
       "fixVersions": [],
       "labels": [
         "needs-tech-review",
@@ -3117,7 +3097,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Kerry Kelley",
+      "assignee": "Christoph Goern",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -3133,7 +3113,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Kerry Hill",
+      "assignee": "Deepak Chourasia",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -3149,7 +3129,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Merit Zimmerman",
+      "assignee": "Adam Bellusci",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -3165,7 +3145,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Merit Zimmerman",
+      "assignee": "Adam Bellusci",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -3181,7 +3161,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Onyx Xu",
+      "assignee": "Lindani Phiri",
       "fixVersions": [],
       "labels": [
         "p0"
@@ -3199,7 +3179,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Kerry Hill",
+      "assignee": "Deepak Chourasia",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -3231,7 +3211,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Gray Park",
+      "assignee": "Steven Grubb",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -3279,7 +3259,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Merit Zimmerman",
+      "assignee": "Adam Bellusci",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -3295,7 +3275,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Minor",
-      "assignee": "Kerry Kelley",
+      "assignee": "Christoph Goern",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -3359,7 +3339,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Normal",
-      "assignee": "Onyx Finn",
+      "assignee": "Rui Vieira",
       "fixVersions": [],
       "labels": [],
       "completionPct": 50,
@@ -3375,7 +3355,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Kerry Pierce",
+      "assignee": "Naina Singh",
       "fixVersions": [],
       "labels": [
         "PSAP",
@@ -3417,7 +3397,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Kerry Palmer",
+      "assignee": "Adel Zaalouk",
       "fixVersions": [],
       "labels": [
         "data",
@@ -3438,7 +3418,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Blocker",
-      "assignee": "Merit Zimmerman",
+      "assignee": "Adam Bellusci",
       "fixVersions": [],
       "labels": [
         "ai-hub",
@@ -3457,7 +3437,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Gray Bennett",
+      "assignee": "Jenny Yi",
       "fixVersions": [],
       "labels": [
         "FY22",
@@ -3479,7 +3459,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Gray Dean",
+      "assignee": "Laura Fitzgerald",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -3495,7 +3475,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Merit Zimmerman",
+      "assignee": "Adam Bellusci",
       "fixVersions": [],
       "labels": [
         "tech-reviewed"
@@ -3513,7 +3493,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Merit Ingram",
+      "assignee": "Umberto Manganiello",
       "fixVersions": [],
       "labels": [
         "GPU-as-a-Service"
@@ -3531,7 +3511,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Kerry Hunt",
+      "assignee": "Myriam Fentanes Gutierrez",
       "fixVersions": [],
       "labels": [
         "GPU-as-a-Service"
@@ -3585,7 +3565,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Gray Dean",
+      "assignee": "Laura Fitzgerald",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -3601,7 +3581,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Kerry Rowe",
+      "assignee": "Kevin Howell",
       "fixVersions": [],
       "labels": [
         "aicp-team-compass",
@@ -3686,18 +3666,18 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Frankie Mead",
+      "assignee": "Roy Nissim",
       "fixVersions": [],
       "labels": [
         "aicp-team-compass",
         "tech-reviewed"
       ],
-      "completionPct": 50,
-      "epicCount": 1,
-      "issueCount": 2,
+      "completionPct": 25,
+      "epicCount": 2,
+      "issueCount": 4,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-04-03T20:39:12.910+0000"
+      "lastUpdated": "2026-04-09T09:03:32.010+0000"
     },
     {
       "key": "TEST1-754",
@@ -3705,7 +3685,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Gray Shaw",
+      "assignee": "Duncan Hardie",
       "fixVersions": [],
       "labels": [
         "Accelerator_Platform"
@@ -3723,7 +3703,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Merit Kane",
+      "assignee": "William Eaton",
       "fixVersions": [],
       "labels": [
         "llm-d"
@@ -3741,7 +3721,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Kerry Walsh",
+      "assignee": "Rishab Prasad",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -3757,7 +3737,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Onyx Kelley",
+      "assignee": "Jay Koehler",
       "fixVersions": [],
       "labels": [
         "SDElements",
@@ -3793,7 +3773,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Kerry Hill",
+      "assignee": "Deepak Chourasia",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -3809,7 +3789,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Merit Zimmerman",
+      "assignee": "Adam Bellusci",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -3825,7 +3805,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Gray Graham",
+      "assignee": "Matteo Mortari",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -3836,10 +3816,10 @@
       ],
       "completionPct": 78,
       "epicCount": 11,
-      "issueCount": 97,
-      "blockerCount": 11,
+      "issueCount": 98,
+      "blockerCount": 12,
       "health": "RED",
-      "lastUpdated": "2026-04-01T14:21:16.521+0000"
+      "lastUpdated": "2026-04-08T09:12:20.619+0000"
     },
     {
       "key": "TEST1-814",
@@ -3847,7 +3827,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Frankie Abbott",
+      "assignee": "Jeff DeMoss",
       "fixVersions": [],
       "labels": [],
       "completionPct": 100,
@@ -3879,7 +3859,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Merit Walsh",
+      "assignee": "Adriel Paredes",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -3899,7 +3879,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Kerry Lane",
+      "assignee": "Anish Asthana",
       "fixVersions": [],
       "labels": [
         "llm-d"
@@ -3917,7 +3897,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Kerry Hunt",
+      "assignee": "Myriam Fentanes Gutierrez",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -3933,7 +3913,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Onyx Upton",
+      "assignee": "Mahmoud Alhaj",
       "fixVersions": [],
       "labels": [
         "tech-reviewed"
@@ -3943,7 +3923,7 @@
       "issueCount": 14,
       "blockerCount": 9,
       "health": "RED",
-      "lastUpdated": "2026-04-03T20:39:17.879+0000"
+      "lastUpdated": "2026-04-09T10:12:36.591+0000"
     },
     {
       "key": "TEST1-854",
@@ -4001,7 +3981,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Kerry Lane",
+      "assignee": "Anish Asthana",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -4022,7 +4002,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Gray Cole",
+      "assignee": "Brian Gallagher",
       "fixVersions": [],
       "labels": [
         "Approved-RFE",
@@ -4034,7 +4014,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-02-23T09:21:21.821+0000"
+      "lastUpdated": "2026-04-09T08:26:00.097+0000"
     },
     {
       "key": "TEST1-948",
@@ -4060,7 +4040,7 @@
       "status": "Refinement",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Onyx Xu",
+      "assignee": "Lindani Phiri",
       "fixVersions": [],
       "labels": [
         "Approved-RFE",
@@ -4072,7 +4052,7 @@
       "issueCount": 5,
       "blockerCount": 4,
       "health": "RED",
-      "lastUpdated": "2026-04-07T14:15:10.280+0000"
+      "lastUpdated": "2026-04-09T16:41:49.807+0000"
     },
     {
       "key": "TEST1-951",
@@ -4080,7 +4060,7 @@
       "status": "Backlog",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Merit Adler",
+      "assignee": "Kelly Brown",
       "fixVersions": [],
       "labels": [
         "Approved-RFE"
@@ -4098,7 +4078,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Kerry Lane",
+      "assignee": "Anish Asthana",
       "fixVersions": [],
       "labels": [
         "llm-d"
@@ -4116,7 +4096,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Onyx Dunn",
+      "assignee": "Erwan Gallen",
       "fixVersions": [
         "RHAIIS-3.3"
       ],
@@ -4128,7 +4108,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-09T14:28:08.063+0000"
+      "lastUpdated": "2026-04-09T12:56:52.494+0000"
     },
     {
       "key": "TEST1-960",
@@ -4136,7 +4116,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Frankie Hayes",
+      "assignee": "Peter Double",
       "fixVersions": [],
       "labels": [
         "Approved-RFE",
@@ -4161,7 +4141,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Frankie Xu",
+      "assignee": "Shivchander Sudalairaj",
       "fixVersions": [],
       "labels": [
         "Approved-RFE",
@@ -4172,7 +4152,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T21:21:37.288+0000"
+      "lastUpdated": "2026-04-09T10:21:44.325+0000"
     },
     {
       "key": "TEST1-968",
@@ -4180,7 +4160,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Kerry Abbott",
+      "assignee": "Russell Bryant",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -4219,7 +4199,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Onyx Finn",
+      "assignee": "Rui Vieira",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -4231,7 +4211,7 @@
       "issueCount": 4,
       "blockerCount": 3,
       "health": "RED",
-      "lastUpdated": "2026-04-07T03:07:12.139+0000"
+      "lastUpdated": "2026-04-10T03:09:05.984+0000"
     },
     {
       "key": "TEST1-971",
@@ -4239,7 +4219,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Frankie Clay",
+      "assignee": "Selbi Siddiqi",
       "fixVersions": [
         "RHAIIS-3.4 EA-2"
       ],
@@ -4254,7 +4234,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-01T10:06:02.039+0000"
+      "lastUpdated": "2026-04-08T10:10:51.415+0000"
     },
     {
       "key": "TEST1-973",
@@ -4262,7 +4242,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Gray Cross",
+      "assignee": "William Caban Babilonia",
       "fixVersions": [],
       "labels": [
         "3.Next-candidate",
@@ -4282,7 +4262,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Gray Stone",
+      "assignee": "Eshwar Prasad Sivaramakrishnan",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -4294,7 +4274,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T08:05:15.631+0000"
+      "lastUpdated": "2026-04-09T10:19:53.193+0000"
     },
     {
       "key": "TEST1-976",
@@ -4302,7 +4282,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Onyx Stone",
+      "assignee": "Aditi Saluja",
       "fixVersions": [],
       "labels": [
         "Approved-RFE",
@@ -4321,7 +4301,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Merit Ingram",
+      "assignee": "Umberto Manganiello",
       "fixVersions": [],
       "labels": [
         "GPU-as-a-Service"
@@ -4339,7 +4319,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Onyx Finn",
+      "assignee": "Rui Vieira",
       "fixVersions": [
         "rhoai-3.4.EA2"
       ],
@@ -4361,7 +4341,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Frankie Clay",
+      "assignee": "Selbi Siddiqi",
       "fixVersions": [],
       "labels": [
         "INFERSTRAT_251116"
@@ -4371,7 +4351,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-12T05:08:44.299+0000"
+      "lastUpdated": "2026-04-09T12:56:52.017+0000"
     },
     {
       "key": "TEST1-983",
@@ -4379,7 +4359,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Frankie Judd",
+      "assignee": "Douglas Edgar",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -4439,7 +4419,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Merit Shaw",
+      "assignee": "Aileen O'Connor",
       "fixVersions": [],
       "labels": [
         "Approved-RFE"
@@ -4457,7 +4437,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Merit Shaw",
+      "assignee": "Aileen O'Connor",
       "fixVersions": [],
       "labels": [
         "Approved-RFE"
@@ -4493,7 +4473,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Merit Ingram",
+      "assignee": "Umberto Manganiello",
       "fixVersions": [],
       "labels": [
         "needs-RICE",
@@ -4512,7 +4492,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Frankie Clay",
+      "assignee": "Selbi Siddiqi",
       "fixVersions": [
         "RHAIIS-3.4 EA-2"
       ],
@@ -4530,7 +4510,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Onyx Finn",
+      "assignee": "Rui Vieira",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -4549,7 +4529,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Gray Walsh",
+      "assignee": "Andrew Ballantyne",
       "fixVersions": [],
       "labels": [
         "tech-reviewed"
@@ -4567,7 +4547,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Frankie Flynn",
+      "assignee": "Rob Geada",
       "fixVersions": [
         "rhoai-3.4"
       ],
@@ -4580,12 +4560,12 @@
         "tech-preview",
         "tech-reviewed"
       ],
-      "completionPct": 55,
+      "completionPct": 100,
       "epicCount": 1,
-      "issueCount": 11,
+      "issueCount": 9,
       "blockerCount": 1,
       "health": "RED",
-      "lastUpdated": "2026-04-07T10:33:57.288+0000"
+      "lastUpdated": "2026-04-10T03:09:04.382+0000"
     },
     {
       "key": "TEST1-1053",
@@ -4593,7 +4573,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Onyx Quinn",
+      "assignee": "Bryan Keane",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -4601,7 +4581,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-18T10:58:59.237+0000"
+      "lastUpdated": "2026-04-09T15:50:34.999+0000"
     },
     {
       "key": "TEST1-1054",
@@ -4609,7 +4589,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Gray Jay",
+      "assignee": "Justin Sun",
       "fixVersions": [
         "rhoai-3.4"
       ],
@@ -4626,27 +4606,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T15:10:17.829+0000"
-    },
-    {
-      "key": "TEST1-1057",
-      "summary": "Fix validation issue",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "Undefined",
-      "assignee": "Onyx Cross",
-      "fixVersions": [
-        "RHAIIS-3.3"
-      ],
-      "labels": [
-        "Approved-RFE"
-      ],
-      "completionPct": 0,
-      "epicCount": 0,
-      "issueCount": 0,
-      "blockerCount": 0,
-      "health": "YELLOW",
-      "lastUpdated": "2026-04-07T08:08:32.401+0000"
+      "lastUpdated": "2026-04-08T13:35:25.387+0000"
     },
     {
       "key": "TEST1-1059",
@@ -4654,7 +4614,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Gray Knox",
+      "assignee": "Yi Zheng",
       "fixVersions": [],
       "labels": [
         "Approved-RFE",
@@ -4673,7 +4633,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Merit Yates",
+      "assignee": "Vaishnavi Hire",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -4694,7 +4654,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Gray Knox",
+      "assignee": "Yi Zheng",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -4713,7 +4673,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Frankie Park",
+      "assignee": "Luca Burgazzoli",
       "fixVersions": [],
       "labels": [
         "aicp-team-compass"
@@ -4723,7 +4683,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-02-18T21:03:29.679+0000"
+      "lastUpdated": "2026-04-08T12:50:54.856+0000"
     },
     {
       "key": "TEST1-1065",
@@ -4731,7 +4691,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Kerry Zane",
+      "assignee": "Humair Khan",
       "fixVersions": [],
       "labels": [
         "Approved-RFE"
@@ -4749,7 +4709,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Merit Winn",
+      "assignee": "Bob Gregor",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -4768,7 +4728,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Frankie Xu",
+      "assignee": "Shivchander Sudalairaj",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -4780,7 +4740,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T08:08:32.213+0000"
+      "lastUpdated": "2026-04-09T10:28:21.072+0000"
     },
     {
       "key": "TEST1-1082",
@@ -4788,7 +4748,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Gray Dean",
+      "assignee": "Laura Fitzgerald",
       "fixVersions": [],
       "labels": [
         "Approved-RFE",
@@ -4808,7 +4768,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Onyx Pierce",
+      "assignee": "Chris Hambridge",
       "fixVersions": [
         "rhoai-3.4"
       ],
@@ -4823,12 +4783,12 @@
         "needs-documentation",
         "rhoai-3.4"
       ],
-      "completionPct": 87,
+      "completionPct": 89,
       "epicCount": 6,
-      "issueCount": 91,
-      "blockerCount": 19,
+      "issueCount": 93,
+      "blockerCount": 20,
       "health": "RED",
-      "lastUpdated": "2026-04-06T17:05:06.945+0000"
+      "lastUpdated": "2026-04-08T14:56:00.602+0000"
     },
     {
       "key": "TEST1-1085",
@@ -4836,7 +4796,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Kerry Dean",
+      "assignee": "Varsha Prasad Narsing",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -4855,7 +4815,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Gray Dean",
+      "assignee": "Laura Fitzgerald",
       "fixVersions": [],
       "labels": [
         "Approved-RFE",
@@ -4875,7 +4835,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Kerry Stone",
+      "assignee": "Sebastien Han",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -4895,19 +4855,19 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Normal",
-      "assignee": "Gray Graham",
+      "assignee": "Matteo Mortari",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
         "3.4-committed",
         "tech-reviewed"
       ],
-      "completionPct": 100,
-      "epicCount": 2,
-      "issueCount": 4,
-      "blockerCount": 0,
+      "completionPct": 92,
+      "epicCount": 3,
+      "issueCount": 26,
+      "blockerCount": 6,
       "health": "RED",
-      "lastUpdated": "2026-04-03T13:37:51.550+0000"
+      "lastUpdated": "2026-04-08T14:36:24.909+0000"
     },
     {
       "key": "TEST1-1111",
@@ -4915,7 +4875,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Kerry Palmer",
+      "assignee": "Adel Zaalouk",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -4928,15 +4888,15 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T03:06:26.828+0000"
+      "lastUpdated": "2026-04-09T03:10:52.574+0000"
     },
     {
       "key": "TEST1-1112",
       "summary": "Update documentation",
-      "status": "In Progress",
+      "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Merit Jay",
+      "assignee": "Danny Pierce",
       "fixVersions": [
         "rhoai-3.4"
       ],
@@ -4950,12 +4910,12 @@
         "playground",
         "tech-reviewed"
       ],
-      "completionPct": 92,
-      "epicCount": 6,
+      "completionPct": 97,
+      "epicCount": 7,
       "issueCount": 60,
       "blockerCount": 3,
       "health": "RED",
-      "lastUpdated": "2026-04-07T15:24:26.795+0000"
+      "lastUpdated": "2026-04-09T11:22:16.073+0000"
     },
     {
       "key": "TEST1-1115",
@@ -4963,7 +4923,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Merit Kirk",
+      "assignee": "Kezia Cook",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -4984,7 +4944,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Blocker",
-      "assignee": "Frankie Mead",
+      "assignee": "Roy Nissim",
       "fixVersions": [
         "rhoai-3.4"
       ],
@@ -5007,7 +4967,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Kerry Zane",
+      "assignee": "Humair Khan",
       "fixVersions": [],
       "labels": [
         "3.5-candidate"
@@ -5025,7 +4985,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Frankie Mead",
+      "assignee": "Roy Nissim",
       "fixVersions": [
         "rhoai-3.4"
       ],
@@ -5048,7 +5008,7 @@
       "status": "Refinement",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Onyx Clay",
+      "assignee": "David Tam",
       "fixVersions": [],
       "labels": [
         "3.Next-candidate",
@@ -5065,20 +5025,20 @@
     {
       "key": "TEST1-1129",
       "summary": "Fix race condition",
-      "status": "In Progress",
+      "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Merit Emery",
+      "assignee": "Nikhil Kathole",
       "fixVersions": [],
       "labels": [
         "3.4-candidate"
       ],
-      "completionPct": 90,
+      "completionPct": 95,
       "epicCount": 3,
       "issueCount": 21,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-04-07T13:58:26.380+0000"
+      "lastUpdated": "2026-04-09T10:29:54.029+0000"
     },
     {
       "key": "TEST1-1130",
@@ -5086,7 +5046,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Gray Kelley",
+      "assignee": "Jitendra Yejare",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -5102,21 +5062,21 @@
     {
       "key": "TEST1-1131",
       "summary": "Implement webhook handler",
-      "status": "In Progress",
+      "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Kerry Ellis",
+      "assignee": "Aniket Paluskar",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
         "feature-store"
       ],
-      "completionPct": 22,
+      "completionPct": 70,
       "epicCount": 4,
-      "issueCount": 9,
-      "blockerCount": 0,
+      "issueCount": 10,
+      "blockerCount": 1,
       "health": "RED",
-      "lastUpdated": "2026-04-03T20:39:23.486+0000"
+      "lastUpdated": "2026-04-09T10:30:21.594+0000"
     },
     {
       "key": "TEST1-1132",
@@ -5124,7 +5084,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Undefined",
-      "assignee": "Onyx Finn",
+      "assignee": "Rui Vieira",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -5140,10 +5100,10 @@
     {
       "key": "TEST1-1134",
       "summary": "Update error messages",
-      "status": "In Progress",
+      "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Merit Bishop",
+      "assignee": "Emmanuel Ikeola",
       "fixVersions": [
         "rhoai-3.4"
       ],
@@ -5154,12 +5114,12 @@
         "needs-ux",
         "tech-reviewed"
       ],
-      "completionPct": 95,
+      "completionPct": 99,
       "epicCount": 15,
-      "issueCount": 75,
-      "blockerCount": 11,
+      "issueCount": 80,
+      "blockerCount": 12,
       "health": "RED",
-      "lastUpdated": "2026-04-01T15:09:30.356+0000"
+      "lastUpdated": "2026-04-09T11:22:20.228+0000"
     },
     {
       "key": "TEST1-1136",
@@ -5167,7 +5127,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Merit Winn",
+      "assignee": "Bob Gregor",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -5177,12 +5137,12 @@
         "nse_workflow:strat",
         "ux-debt"
       ],
-      "completionPct": 70,
-      "epicCount": 3,
-      "issueCount": 20,
+      "completionPct": 68,
+      "epicCount": 4,
+      "issueCount": 22,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T16:20:17.989+0000"
+      "lastUpdated": "2026-04-09T19:41:15.682+0000"
     },
     {
       "key": "TEST1-1143",
@@ -5190,7 +5150,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Merit Ingram",
+      "assignee": "Umberto Manganiello",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -5198,7 +5158,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-20T09:43:46.459+0000"
+      "lastUpdated": "2026-04-08T09:49:41.318+0000"
     },
     {
       "key": "TEST1-1144",
@@ -5206,7 +5166,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Frankie Knox",
+      "assignee": "Rob Bell",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -5222,7 +5182,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Frankie Frost",
+      "assignee": "Jehlum Vitasta Pandit",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -5238,7 +5198,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Frankie Frost",
+      "assignee": "Jehlum Vitasta Pandit",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -5254,7 +5214,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Merit Vaughn",
+      "assignee": "Julian Payne",
       "fixVersions": [],
       "labels": [
         "3.4-candidate"
@@ -5272,18 +5232,18 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Kerry Torres",
+      "assignee": "Derek Higgins",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
         "confidence-red"
       ],
-      "completionPct": 68,
+      "completionPct": 73,
       "epicCount": 1,
       "issueCount": 22,
       "blockerCount": 1,
       "health": "RED",
-      "lastUpdated": "2026-04-06T11:38:35.140+0000"
+      "lastUpdated": "2026-04-09T10:42:09.088+0000"
     },
     {
       "key": "TEST1-1149",
@@ -5291,7 +5251,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Kerry Webb",
+      "assignee": "Bill Murdock",
       "fixVersions": [
         "rhoai-3.4"
       ],
@@ -5313,7 +5273,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T15:46:32.344+0000"
+      "lastUpdated": "2026-04-08T15:30:02.377+0000"
     },
     {
       "key": "TEST1-1150",
@@ -5321,7 +5281,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Onyx Clay",
+      "assignee": "David Tam",
       "fixVersions": [
         "rhoai-3.4"
       ],
@@ -5333,32 +5293,12 @@
         "tech-reviewed",
         "watsonx.ai"
       ],
-      "completionPct": 73,
+      "completionPct": 78,
       "epicCount": 12,
-      "issueCount": 70,
+      "issueCount": 72,
       "blockerCount": 4,
       "health": "RED",
-      "lastUpdated": "2026-04-03T21:49:20.216+0000"
-    },
-    {
-      "key": "TEST1-1151",
-      "summary": "Add filtering options",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
-      "priority": "Critical",
-      "assignee": "Gray Evans",
-      "fixVersions": [
-        "rhoai-3.4"
-      ],
-      "labels": [
-        "3.4-candidate"
-      ],
-      "completionPct": 81,
-      "epicCount": 5,
-      "issueCount": 26,
-      "blockerCount": 0,
-      "health": "RED",
-      "lastUpdated": "2026-04-07T05:47:19.294+0000"
+      "lastUpdated": "2026-04-08T15:30:02.513+0000"
     },
     {
       "key": "TEST1-1153",
@@ -5366,7 +5306,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Gray Kelley",
+      "assignee": "Jitendra Yejare",
       "fixVersions": [],
       "labels": [
         "3.5-candidate"
@@ -5384,9 +5324,9 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Frankie Clay",
+      "assignee": "Selbi Siddiqi",
       "fixVersions": [
-        "RHAIIS-3.4 GA"
+        "RHAII-3.4 GA"
       ],
       "labels": [
         "Approved-RFE"
@@ -5396,7 +5336,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-31T14:17:14.356+0000"
+      "lastUpdated": "2026-04-09T12:56:53.244+0000"
     },
     {
       "key": "TEST1-1161",
@@ -5404,7 +5344,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Gray Foster",
+      "assignee": "Demethria Ramseur",
       "fixVersions": [
         "rhoai-3.4"
       ],
@@ -5427,7 +5367,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Frankie Park",
+      "assignee": "Luca Burgazzoli",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -5439,7 +5379,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-30T21:32:18.385+0000"
+      "lastUpdated": "2026-04-09T13:23:04.372+0000"
     },
     {
       "key": "TEST1-1165",
@@ -5447,7 +5387,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Kerry Clay",
+      "assignee": "Aviran Badli",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -5463,7 +5403,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Gray Walsh",
+      "assignee": "Andrew Ballantyne",
       "fixVersions": [
         "rhoai-3.4"
       ],
@@ -5473,12 +5413,12 @@
         "dashboard-zaffre-scrum",
         "requires_architecture_review"
       ],
-      "completionPct": 79,
+      "completionPct": 80,
       "epicCount": 2,
-      "issueCount": 24,
+      "issueCount": 25,
       "blockerCount": 2,
       "health": "RED",
-      "lastUpdated": "2026-04-07T20:50:54.105+0000"
+      "lastUpdated": "2026-04-09T20:33:40.836+0000"
     },
     {
       "key": "TEST1-1168",
@@ -5486,7 +5426,7 @@
       "status": "Refinement",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Merit Kelley",
+      "assignee": "Arik Hadas",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -5524,7 +5464,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Kerry Reed",
+      "assignee": "Jen Albertson",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -5544,7 +5484,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Frankie Flynn",
+      "assignee": "Rob Geada",
       "fixVersions": [],
       "labels": [
         "confidence-yellow",
@@ -5557,7 +5497,7 @@
       "issueCount": 7,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-04-07T03:06:39.747+0000"
+      "lastUpdated": "2026-04-10T03:08:58.400+0000"
     },
     {
       "key": "TEST1-1175",
@@ -5565,7 +5505,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Merit Gibbs",
+      "assignee": "Amita Sharma",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -5581,7 +5521,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Merit Blake",
+      "assignee": "Daniel Ryszka",
       "fixVersions": [
         "rhoai-3.4"
       ],
@@ -5603,7 +5543,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Merit Webb",
+      "assignee": "Stuart Battersby",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -5612,12 +5552,12 @@
         "needs-tech-review",
         "summit-2026"
       ],
-      "completionPct": 83,
+      "completionPct": 93,
       "epicCount": 5,
       "issueCount": 41,
       "blockerCount": 7,
       "health": "RED",
-      "lastUpdated": "2026-04-07T03:07:10.582+0000"
+      "lastUpdated": "2026-04-10T03:09:00.090+0000"
     },
     {
       "key": "TEST1-1179",
@@ -5625,7 +5565,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Merit Webb",
+      "assignee": "Adel Zaalouk",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -5635,12 +5575,12 @@
         "needs-tech-review",
         "summit-2026"
       ],
-      "completionPct": 70,
+      "completionPct": 76,
       "epicCount": 3,
-      "issueCount": 27,
+      "issueCount": 25,
       "blockerCount": 4,
       "health": "RED",
-      "lastUpdated": "2026-04-07T03:07:09.014+0000"
+      "lastUpdated": "2026-04-10T03:09:21.814+0000"
     },
     {
       "key": "TEST1-1180",
@@ -5648,7 +5588,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Merit Webb",
+      "assignee": "Stuart Battersby",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -5662,7 +5602,7 @@
       "issueCount": 1,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-04-07T03:07:07.244+0000"
+      "lastUpdated": "2026-04-10T03:09:23.740+0000"
     },
     {
       "key": "TEST1-1181",
@@ -5670,19 +5610,18 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Gray Knox",
+      "assignee": "Yi Zheng",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
-        "confidence-green",
-        "needs-tech-review"
+        "confidence-green"
       ],
       "completionPct": 0,
       "epicCount": 0,
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T03:07:05.125+0000"
+      "lastUpdated": "2026-04-10T03:09:36.727+0000"
     },
     {
       "key": "TEST1-1182",
@@ -5690,7 +5629,7 @@
       "status": "Refinement",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Merit Walsh",
+      "assignee": "Adriel Paredes",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -5704,7 +5643,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T03:24:55.462+0000"
+      "lastUpdated": "2026-04-08T12:45:45.543+0000"
     },
     {
       "key": "TEST1-1183",
@@ -5712,9 +5651,9 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Onyx Dunn",
+      "assignee": "Erwan Gallen",
       "fixVersions": [
-        "RHAIIS-3.4 EA-1"
+        "RHAII-3.4 EA1"
       ],
       "labels": [
         "INFERSTRAT_251116"
@@ -5724,7 +5663,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-26T17:44:50.733+0000"
+      "lastUpdated": "2026-04-09T12:55:02.892+0000"
     },
     {
       "key": "TEST1-1190",
@@ -5748,7 +5687,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Merit Blake",
+      "assignee": "Daniel Ryszka",
       "fixVersions": [
         "rhoai-3.4"
       ],
@@ -5763,7 +5702,7 @@
       "issueCount": 21,
       "blockerCount": 8,
       "health": "RED",
-      "lastUpdated": "2026-04-06T13:17:48.853+0000"
+      "lastUpdated": "2026-04-08T15:30:02.676+0000"
     },
     {
       "key": "TEST1-1192",
@@ -5771,7 +5710,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Frankie Dean",
+      "assignee": "Nick Ommen",
       "fixVersions": [],
       "labels": [
         "tech-reviewed"
@@ -5781,7 +5720,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-06T11:54:51.741+0000"
+      "lastUpdated": "2026-04-09T10:53:39.657+0000"
     },
     {
       "key": "TEST1-1195",
@@ -5807,7 +5746,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Onyx Edge",
+      "assignee": "Sumanth Kamenani",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -5826,7 +5765,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Frankie Knox",
+      "assignee": "Rob Bell",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -5842,7 +5781,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Kerry Evans",
+      "assignee": "Greg Pereira",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -5862,7 +5801,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Frankie Mead",
+      "assignee": "Roy Nissim",
       "fixVersions": [
         "rhoai-3.4"
       ],
@@ -5884,7 +5823,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Gray Walsh",
+      "assignee": "Andrew Ballantyne",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -5900,7 +5839,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Gray Graham",
+      "assignee": "Matteo Mortari",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -5912,7 +5851,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T16:48:02.077+0000"
+      "lastUpdated": "2026-04-08T16:00:30.008+0000"
     },
     {
       "key": "TEST1-1204",
@@ -5920,7 +5859,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Onyx Clay",
+      "assignee": "David Tam",
       "fixVersions": [
         "rhoai-3.4"
       ],
@@ -5931,12 +5870,12 @@
         "dashboard-purple-scrum",
         "tech-reviewed"
       ],
-      "completionPct": 76,
+      "completionPct": 84,
       "epicCount": 11,
-      "issueCount": 62,
+      "issueCount": 63,
       "blockerCount": 4,
       "health": "RED",
-      "lastUpdated": "2026-04-06T13:17:48.770+0000"
+      "lastUpdated": "2026-04-08T15:30:02.892+0000"
     },
     {
       "key": "TEST1-1208",
@@ -5944,7 +5883,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Kerry Finn",
+      "assignee": "Aneesh Puttur",
       "fixVersions": [
         "rhoai-3.4"
       ],
@@ -5960,7 +5899,7 @@
       "issueCount": 1,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-04-06T20:17:37.774+0000"
+      "lastUpdated": "2026-04-08T16:15:48.017+0000"
     },
     {
       "key": "TEST1-1209",
@@ -5968,7 +5907,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Kerry Lane",
+      "assignee": "Anish Asthana",
       "fixVersions": [],
       "labels": [
         "Approved-RFE",
@@ -5987,7 +5926,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Onyx Mitchell",
+      "assignee": "Dimitri Saridakis",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -6001,7 +5940,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T14:56:00.173+0000"
+      "lastUpdated": "2026-04-09T10:30:22.806+0000"
     },
     {
       "key": "TEST1-1214",
@@ -6009,7 +5948,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Onyx Mitchell",
+      "assignee": "Dimitri Saridakis",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -6021,7 +5960,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T16:42:24.425+0000"
+      "lastUpdated": "2026-04-09T08:11:04.974+0000"
     },
     {
       "key": "TEST1-1215",
@@ -6029,7 +5968,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Onyx Mitchell",
+      "assignee": "Dimitri Saridakis",
       "fixVersions": [],
       "labels": [
         "3.Next-candidate",
@@ -6048,7 +5987,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Onyx Mitchell",
+      "assignee": "Dimitri Saridakis",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -6062,7 +6001,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T14:54:45.459+0000"
+      "lastUpdated": "2026-04-09T14:31:19.979+0000"
     },
     {
       "key": "TEST1-1218",
@@ -6070,7 +6009,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Onyx Irving",
+      "assignee": "Adam Miller",
       "fixVersions": [],
       "labels": [
         "autorag",
@@ -6092,7 +6031,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Gray James",
+      "assignee": "Arthy Loganathan",
       "fixVersions": [],
       "labels": [],
       "completionPct": 47,
@@ -6108,7 +6047,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Gray James",
+      "assignee": "Arthy Loganathan",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -6124,7 +6063,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Frankie Frost",
+      "assignee": "Jehlum Vitasta Pandit",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -6135,7 +6074,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-02-17T16:13:55.380+0000"
+      "lastUpdated": "2026-04-09T12:02:46.503+0000"
     },
     {
       "key": "TEST1-1226",
@@ -6143,7 +6082,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Frankie Dean",
+      "assignee": "Nick Ommen",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -6151,7 +6090,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T18:14:22.502+0000"
+      "lastUpdated": "2026-04-09T17:34:55.673+0000"
     },
     {
       "key": "TEST1-1228",
@@ -6159,7 +6098,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Kerry Rand",
+      "assignee": "Charlie Doern",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -6172,7 +6111,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T03:06:28.472+0000"
+      "lastUpdated": "2026-04-09T20:42:03.313+0000"
     },
     {
       "key": "TEST1-1230",
@@ -6180,7 +6119,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Kerry Palmer",
+      "assignee": "Adel Zaalouk",
       "fixVersions": [],
       "labels": [
         "RAG",
@@ -6212,7 +6151,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T03:09:49.872+0000"
+      "lastUpdated": "2026-04-10T03:09:58.877+0000"
     },
     {
       "key": "TEST1-1232",
@@ -6230,28 +6169,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T03:09:37.440+0000"
-    },
-    {
-      "key": "TEST1-1233",
-      "summary": "Update API endpoint",
-      "status": "Review",
-      "statusCategory": "In Progress",
-      "priority": "Major",
-      "assignee": "Frankie Flynn",
-      "fixVersions": [],
-      "labels": [
-        "3.5-candidate",
-        "aicp-team-crucible",
-        "confidence-yellow",
-        "needs-tech-review"
-      ],
-      "completionPct": 100,
-      "epicCount": 2,
-      "issueCount": 3,
-      "blockerCount": 2,
-      "health": "RED",
-      "lastUpdated": "2026-04-07T10:33:58.810+0000"
+      "lastUpdated": "2026-04-10T03:09:47.068+0000"
     },
     {
       "key": "TEST1-1235",
@@ -6259,7 +6177,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Blocker",
-      "assignee": "Frankie Mead",
+      "assignee": "Roy Nissim",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -6281,7 +6199,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Undefined",
-      "assignee": "Merit Clay",
+      "assignee": "Nicolo Lucchesi",
       "fixVersions": [],
       "labels": [
         "Approved-RFE"
@@ -6291,7 +6209,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-18T16:06:35.539+0000"
+      "lastUpdated": "2026-04-09T12:56:52.275+0000"
     },
     {
       "key": "TEST1-1237",
@@ -6299,7 +6217,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Undefined",
-      "assignee": "Gray Hale",
+      "assignee": "Tyler Smith",
       "fixVersions": [],
       "labels": [
         "Approved-RFE"
@@ -6309,7 +6227,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-19T15:07:22.213+0000"
+      "lastUpdated": "2026-04-09T12:56:53.621+0000"
     },
     {
       "key": "TEST1-1238",
@@ -6317,7 +6235,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Undefined",
-      "assignee": "Gray Hale",
+      "assignee": "Tyler Smith",
       "fixVersions": [],
       "labels": [
         "Approved-RFE"
@@ -6327,7 +6245,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-18T16:05:17.839+0000"
+      "lastUpdated": "2026-04-09T12:56:52.873+0000"
     },
     {
       "key": "TEST1-1239",
@@ -6335,7 +6253,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Merit Walsh",
+      "assignee": "Adriel Paredes",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -6348,7 +6266,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-30T20:49:53.163+0000"
+      "lastUpdated": "2026-04-08T20:02:59.622+0000"
     },
     {
       "key": "TEST1-1243",
@@ -6356,15 +6274,17 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Normal",
-      "assignee": "Onyx Pierce",
-      "fixVersions": [],
+      "assignee": "Chris Hambridge",
+      "fixVersions": [
+        "rhoai-3.4.EA2"
+      ],
       "labels": [],
       "completionPct": 100,
       "epicCount": 2,
       "issueCount": 3,
       "blockerCount": 1,
       "health": "RED",
-      "lastUpdated": "2026-04-03T13:44:24.002+0000"
+      "lastUpdated": "2026-04-09T16:09:19.995+0000"
     },
     {
       "key": "TEST1-1244",
@@ -6372,15 +6292,17 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Onyx Pierce",
-      "fixVersions": [],
+      "assignee": "Chris Hambridge",
+      "fixVersions": [
+        "rhoai-3.4.EA2"
+      ],
       "labels": [],
       "completionPct": 93,
       "epicCount": 3,
       "issueCount": 27,
       "blockerCount": 1,
       "health": "RED",
-      "lastUpdated": "2026-04-03T13:43:49.040+0000"
+      "lastUpdated": "2026-04-08T12:46:21.455+0000"
     },
     {
       "key": "TEST1-1245",
@@ -6388,7 +6310,7 @@
       "status": "Refinement",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Merit York",
+      "assignee": "Nathan Weinberg",
       "fixVersions": [],
       "labels": [
         "3.5-candidate"
@@ -6406,7 +6328,7 @@
       "status": "Refinement",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Kerry Torres",
+      "assignee": "Derek Higgins",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -6425,7 +6347,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Gray Day",
+      "assignee": "Francisco Arceo",
       "fixVersions": [],
       "labels": [
         "RAG",
@@ -6446,7 +6368,7 @@
       "status": "Refinement",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Kerry Nolan",
+      "assignee": "Matt Leader",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -6458,7 +6380,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T17:29:47.016+0000"
+      "lastUpdated": "2026-04-09T20:35:01.584+0000"
     },
     {
       "key": "TEST1-1250",
@@ -6466,17 +6388,17 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Onyx Upton",
+      "assignee": "Mahmoud Alhaj",
       "fixVersions": [],
       "labels": [
         "needs-tech-review"
       ],
       "completionPct": 0,
       "epicCount": 1,
-      "issueCount": 0,
+      "issueCount": 1,
       "blockerCount": 0,
-      "health": "YELLOW",
-      "lastUpdated": "2026-03-23T16:17:37.614+0000"
+      "health": "RED",
+      "lastUpdated": "2026-04-09T11:38:07.740+0000"
     },
     {
       "key": "TEST1-1251",
@@ -6484,7 +6406,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Onyx Finn",
+      "assignee": "Rui Vieira",
       "fixVersions": [],
       "labels": [
         "3.4-candidate"
@@ -6521,7 +6443,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Onyx Finn",
+      "assignee": "Rui Vieira",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -6534,7 +6456,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T03:06:44.310+0000"
+      "lastUpdated": "2026-04-10T03:09:02.711+0000"
     },
     {
       "key": "TEST1-1255",
@@ -6542,7 +6464,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Kerry Ward",
+      "assignee": "Deepak Jha",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -6558,7 +6480,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Onyx Stone",
+      "assignee": "Aditi Saluja",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -6574,7 +6496,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Gray Tate",
+      "assignee": "Adysen Rothman",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -6595,7 +6517,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Onyx Mitchell",
+      "assignee": "Dimitri Saridakis",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -6607,7 +6529,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T14:53:46.594+0000"
+      "lastUpdated": "2026-04-09T10:30:07.486+0000"
     },
     {
       "key": "TEST1-1260",
@@ -6615,7 +6537,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Frankie Vaughn",
+      "assignee": "Eder Ignatowicz",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -6638,7 +6560,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Onyx Pierce",
+      "assignee": "Chris Hambridge",
       "fixVersions": [],
       "labels": [
         "model-catalog",
@@ -6657,15 +6579,15 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Blocker",
-      "assignee": "Merit Evans",
+      "assignee": "Ali Maredia",
       "fixVersions": [],
       "labels": [],
-      "completionPct": 63,
+      "completionPct": 68,
       "epicCount": 1,
-      "issueCount": 24,
+      "issueCount": 25,
       "blockerCount": 14,
       "health": "RED",
-      "lastUpdated": "2026-04-07T13:57:44.572+0000"
+      "lastUpdated": "2026-04-09T14:49:27.769+0000"
     },
     {
       "key": "TEST1-1266",
@@ -6673,7 +6595,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Merit Jensen",
+      "assignee": "Alex Brooks",
       "fixVersions": [],
       "labels": [
         "3.5-candidate"
@@ -6691,7 +6613,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Onyx Walsh",
+      "assignee": "Christian Vogt",
       "fixVersions": [],
       "labels": [
         "3.5-ea1-candidate",
@@ -6711,7 +6633,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Kerry Lane",
+      "assignee": "Anish Asthana",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -6732,7 +6654,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Kerry Lane",
+      "assignee": "Anish Asthana",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -6754,7 +6676,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Kerry Lane",
+      "assignee": "Anish Asthana",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -6776,7 +6698,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Kerry Voss",
+      "assignee": "Witold Nowogorski",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -6792,7 +6714,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Kerry Lane",
+      "assignee": "Anish Asthana",
       "fixVersions": [],
       "labels": [
         "Approved-RFE",
@@ -6811,7 +6733,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Gray Walsh",
+      "assignee": "Andrew Ballantyne",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -6827,7 +6749,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Onyx Xu",
+      "assignee": "Lindani Phiri",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -6846,7 +6768,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Frankie Dean",
+      "assignee": "Nick Ommen",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -6854,7 +6776,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T18:05:21.886+0000"
+      "lastUpdated": "2026-04-08T20:06:52.626+0000"
     },
     {
       "key": "TEST1-1284",
@@ -6862,7 +6784,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Frankie Vaughn",
+      "assignee": "Eder Ignatowicz",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -6882,7 +6804,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Onyx Price",
+      "assignee": "Muneeza Azmat",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -6902,7 +6824,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Merit Evans",
+      "assignee": "Ali Maredia",
       "fixVersions": [],
       "labels": [
         "needs-refinement",
@@ -6937,7 +6859,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Onyx Pierce",
+      "assignee": "Chris Hambridge",
       "fixVersions": [],
       "labels": [],
       "completionPct": 92,
@@ -6953,7 +6875,7 @@
       "status": "Refinement",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Frankie Dean",
+      "assignee": "Nick Ommen",
       "fixVersions": [],
       "labels": [
         "3.4-arch-walkthrough",
@@ -6974,7 +6896,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Frankie Dean",
+      "assignee": "Nick Ommen",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -6982,7 +6904,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T18:14:31.672+0000"
+      "lastUpdated": "2026-04-09T17:35:00.743+0000"
     },
     {
       "key": "TEST1-1295",
@@ -6990,7 +6912,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Frankie Mead",
+      "assignee": "Roy Nissim",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -7001,15 +6923,15 @@
       "issueCount": 27,
       "blockerCount": 6,
       "health": "RED",
-      "lastUpdated": "2026-04-07T20:57:05.656+0000"
+      "lastUpdated": "2026-04-09T20:55:01.262+0000"
     },
     {
       "key": "TEST1-1297",
       "summary": "Add export functionality",
-      "status": "In Progress",
+      "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Frankie Dean",
+      "assignee": "Nick Ommen",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -7017,7 +6939,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T18:16:22.697+0000"
+      "lastUpdated": "2026-04-09T14:54:30.839+0000"
     },
     {
       "key": "TEST1-1299",
@@ -7025,7 +6947,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Kerry Archer",
+      "assignee": "Divyanshi Gupta",
       "fixVersions": [],
       "labels": [
         "ai-studio",
@@ -7041,7 +6963,7 @@
       "issueCount": 6,
       "blockerCount": 6,
       "health": "RED",
-      "lastUpdated": "2026-04-06T03:14:02.567+0000"
+      "lastUpdated": "2026-04-09T03:10:39.498+0000"
     },
     {
       "key": "TEST1-1301",
@@ -7049,7 +6971,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Onyx Vance",
+      "assignee": "Rob Greenberg",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -7057,7 +6979,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T21:11:10.500+0000"
+      "lastUpdated": "2026-04-09T09:09:56.573+0000"
     },
     {
       "key": "TEST1-1302",
@@ -7075,7 +6997,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T21:51:52.862+0000"
+      "lastUpdated": "2026-04-09T12:56:52.679+0000"
     },
     {
       "key": "TEST1-1306",
@@ -7083,22 +7005,22 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Onyx Pierce",
+      "assignee": "Chris Hambridge",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
-        "confidence-yellow",
+        "confidence-red",
         "mcp",
         "mcp-catalog",
-        "should-do",
-        "yellow"
+        "red",
+        "should-do"
       ],
       "completionPct": 93,
       "epicCount": 2,
       "issueCount": 15,
       "blockerCount": 1,
       "health": "RED",
-      "lastUpdated": "2026-04-06T14:14:08.956+0000"
+      "lastUpdated": "2026-04-09T14:12:44.185+0000"
     },
     {
       "key": "TEST1-1309",
@@ -7106,7 +7028,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Normal",
-      "assignee": "Onyx Pierce",
+      "assignee": "Chris Hambridge",
       "fixVersions": [
         "rhoai-3.5.EA1"
       ],
@@ -7124,7 +7046,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Frankie Frost",
+      "assignee": "Jehlum Vitasta Pandit",
       "fixVersions": [],
       "labels": [
         "3.5-candidate"
@@ -7142,7 +7064,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Frankie Mead",
+      "assignee": "Roy Nissim",
       "fixVersions": [],
       "labels": [
         "3.5-candidate"
@@ -7152,7 +7074,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-06T07:47:18.961+0000"
+      "lastUpdated": "2026-04-08T14:06:33.173+0000"
     },
     {
       "key": "TEST1-1315",
@@ -7160,7 +7082,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Normal",
-      "assignee": "Gray Brock",
+      "assignee": "Mustafa Eyceoz",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -7179,7 +7101,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Gray Brock",
+      "assignee": "Mustafa Eyceoz",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -7198,7 +7120,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Undefined",
-      "assignee": "Kerry Frost",
+      "assignee": "Diego Maniloff",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -7214,7 +7136,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Undefined",
-      "assignee": "Kerry Frost",
+      "assignee": "Diego Maniloff",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -7230,7 +7152,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Kerry Upton",
+      "assignee": "Nir Rozenbaum",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -7241,15 +7163,15 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-01T23:51:25.347+0000"
+      "lastUpdated": "2026-04-09T12:47:50.769+0000"
     },
     {
       "key": "TEST1-1321",
       "summary": "Add health check endpoint",
-      "status": "New",
-      "statusCategory": "To Do",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Onyx Edge",
+      "assignee": "Sumanth Kamenani",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -7260,7 +7182,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-06T03:13:45.960+0000"
+      "lastUpdated": "2026-04-09T20:39:38.763+0000"
     },
     {
       "key": "TEST1-1322",
@@ -7268,7 +7190,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Onyx Irving",
+      "assignee": "Adam Miller",
       "fixVersions": [],
       "labels": [
         "navigator"
@@ -7306,7 +7228,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Kerry Bennett",
+      "assignee": "Rishabh Saini",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -7327,7 +7249,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Kerry Ward",
+      "assignee": "Deepak Jha",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -7382,7 +7304,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Frankie Flynn",
+      "assignee": "Rob Geada",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -7402,7 +7324,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Onyx Edge",
+      "assignee": "Sumanth Kamenani",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -7414,7 +7336,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T12:32:12.084+0000"
+      "lastUpdated": "2026-04-09T20:34:11.222+0000"
     },
     {
       "key": "TEST1-1362",
@@ -7422,7 +7344,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Frankie Judd",
+      "assignee": "Douglas Edgar",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -7434,7 +7356,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T03:07:17.687+0000"
+      "lastUpdated": "2026-04-09T20:34:15.061+0000"
     },
     {
       "key": "TEST1-1363",
@@ -7442,7 +7364,7 @@
       "status": "Backlog",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Frankie Dean",
+      "assignee": "Nick Ommen",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -7458,7 +7380,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Frankie Dean",
+      "assignee": "Nick Ommen",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -7466,7 +7388,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-06T14:53:42.940+0000"
+      "lastUpdated": "2026-04-09T13:52:57.984+0000"
     },
     {
       "key": "TEST1-1365",
@@ -7474,7 +7396,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Gray Brock",
+      "assignee": "Mustafa Eyceoz",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -7485,7 +7407,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T21:28:34.724+0000"
+      "lastUpdated": "2026-04-08T13:44:30.492+0000"
     },
     {
       "key": "TEST1-1366",
@@ -7493,7 +7415,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Onyx Irving",
+      "assignee": "Adam Miller",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -7514,7 +7436,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Onyx Finn",
+      "assignee": "Rui Vieira",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -7533,7 +7455,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Kerry Evans",
+      "assignee": "Greg Pereira",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -7625,7 +7547,7 @@
       "status": "Refinement",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Merit Yates",
+      "assignee": "Vaishnavi Hire",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -7637,15 +7559,15 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-06T03:13:39.293+0000"
+      "lastUpdated": "2026-04-09T03:10:33.628+0000"
     },
     {
       "key": "TEST1-1374",
       "summary": "Add logging for debugging",
-      "status": "New",
+      "status": "Refinement",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Merit York",
+      "assignee": "Nathan Weinberg",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -7657,7 +7579,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T12:08:07.398+0000"
+      "lastUpdated": "2026-04-09T12:36:12.396+0000"
     },
     {
       "key": "TEST1-1375",
@@ -7665,7 +7587,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Frankie Walsh",
+      "assignee": "Alina Ryan",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -7684,7 +7606,7 @@
       "status": "Refinement",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Frankie Dean",
+      "assignee": "Nick Ommen",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -7704,7 +7626,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Kerry Lambert",
+      "assignee": "Jonathan Zarecki",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -7724,7 +7646,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Frankie Vaughn",
+      "assignee": "Eder Ignatowicz",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -7744,7 +7666,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Blocker",
-      "assignee": "Frankie Park",
+      "assignee": "Luca Burgazzoli",
       "fixVersions": [],
       "labels": [
         "3.4-committed"
@@ -7762,7 +7684,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Gray Graham",
+      "assignee": null,
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -7774,7 +7696,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-06T18:01:05.909+0000"
+      "lastUpdated": "2026-04-08T15:59:03.155+0000"
     },
     {
       "key": "TEST1-1383",
@@ -7782,7 +7704,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Frankie Clay",
+      "assignee": "Selbi Siddiqi",
       "fixVersions": [
         "RHAIIS-3.5"
       ],
@@ -7802,7 +7724,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Frankie Clay",
+      "assignee": "Selbi Siddiqi",
       "fixVersions": [
         "RHAIIS-3.4"
       ],
@@ -7823,7 +7745,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Frankie Clay",
+      "assignee": "Selbi Siddiqi",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -7855,7 +7777,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Normal",
-      "assignee": "Onyx Finn",
+      "assignee": "Rui Vieira",
       "fixVersions": [],
       "labels": [
         "3.4-candidate"
@@ -7873,7 +7795,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Frankie Clay",
+      "assignee": "Selbi Siddiqi",
       "fixVersions": [
         "RHAIIS-3.4"
       ],
@@ -7894,7 +7816,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Kerry Gold",
+      "assignee": "Michael Goin",
       "fixVersions": [],
       "labels": [
         "needs-tech-review"
@@ -7912,7 +7834,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Gray Knox",
+      "assignee": "Yi Zheng",
       "fixVersions": [
         "rhoai-3.5"
       ],
@@ -7930,7 +7852,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Frankie Dean",
+      "assignee": "Nick Ommen",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -7946,7 +7868,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Minor",
-      "assignee": "Frankie Frost",
+      "assignee": "Jehlum Vitasta Pandit",
       "fixVersions": [],
       "labels": [
         "3.Next-candidate"
@@ -7964,21 +7886,19 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Onyx Oliver",
+      "assignee": "Killian Golds",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
-        "AIPCC",
         "llm-d",
-        "needs-tech-review",
-        "vLLM"
+        "needs-tech-review"
       ],
       "completionPct": 0,
       "epicCount": 0,
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-31T19:40:48.143+0000"
+      "lastUpdated": "2026-04-08T14:38:20.832+0000"
     },
     {
       "key": "TEST1-1397",
@@ -7986,7 +7906,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Gray Day",
+      "assignee": "Francisco Arceo",
       "fixVersions": [],
       "labels": [
         "3.Next-candidate",
@@ -7997,7 +7917,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-06T03:13:26.044+0000"
+      "lastUpdated": "2026-04-09T03:49:12.216+0000"
     },
     {
       "key": "TEST1-1398",
@@ -8023,7 +7943,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Onyx Price",
+      "assignee": "Muneeza Azmat",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -8039,7 +7959,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Gray Day",
+      "assignee": "Francisco Arceo",
       "fixVersions": [],
       "labels": [
         "3.Next-candidate"
@@ -8057,9 +7977,9 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Onyx Dunn",
+      "assignee": "Erwan Gallen",
       "fixVersions": [
-        "RHAIIS-3.4 EA-1"
+        "RHAII-3.4 EA1"
       ],
       "labels": [
         "INFERSTRAT_251116"
@@ -8069,7 +7989,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-26T17:44:51.842+0000"
+      "lastUpdated": "2026-04-09T12:55:02.685+0000"
     },
     {
       "key": "TEST1-1406",
@@ -8077,7 +7997,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Kerry Lambert",
+      "assignee": "Jonathan Zarecki",
       "fixVersions": [],
       "labels": [
         "3.4-candidate",
@@ -8097,7 +8017,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Gray Day",
+      "assignee": "Francisco Arceo",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -8108,7 +8028,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T00:57:11.852+0000"
+      "lastUpdated": "2026-04-10T03:09:45.089+0000"
     },
     {
       "key": "TEST1-1408",
@@ -8116,7 +8036,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Gray Vale",
+      "assignee": "Shruthi Sankepelly",
       "fixVersions": [],
       "labels": [
         "rhoai-3.5"
@@ -8134,7 +8054,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Blocker",
-      "assignee": "Gray Yates",
+      "assignee": "Rishabh Singh",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -8153,7 +8073,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Frankie Walsh",
+      "assignee": "Alina Ryan",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -8164,7 +8084,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-06T03:13:30.733+0000"
+      "lastUpdated": "2026-04-09T03:10:25.158+0000"
     },
     {
       "key": "TEST1-1412",
@@ -8172,7 +8092,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Blocker",
-      "assignee": "Onyx Kelley",
+      "assignee": "Jay Koehler",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -8188,7 +8108,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Frankie Gordon",
+      "assignee": "Ana Biazetti",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -8207,7 +8127,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Frankie Gordon",
+      "assignee": "Ana Biazetti",
       "fixVersions": [],
       "labels": [
         "3.5",
@@ -8247,7 +8167,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Kerry Rand",
+      "assignee": "Charlie Doern",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -8260,7 +8180,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-06T13:04:01.932+0000"
+      "lastUpdated": "2026-04-09T03:10:14.740+0000"
     },
     {
       "key": "TEST1-1418",
@@ -8280,7 +8200,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-06T03:13:18.662+0000"
+      "lastUpdated": "2026-04-09T20:34:18.334+0000"
     },
     {
       "key": "TEST1-1420",
@@ -8288,7 +8208,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Kerry Webb",
+      "assignee": "Bill Murdock",
       "fixVersions": [],
       "labels": [
         "3.Next-candidate",
@@ -8299,7 +8219,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T03:09:47.553+0000"
+      "lastUpdated": "2026-04-10T03:10:00.543+0000"
     },
     {
       "key": "TEST1-1422",
@@ -8307,7 +8227,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Merit Walsh",
+      "assignee": "Adriel Paredes",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -8326,7 +8246,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Gray Zimmerman",
+      "assignee": "Lukasz Cmielowski",
       "fixVersions": [
         "rhoai-3.5"
       ],
@@ -8346,7 +8266,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Gray Zimmerman",
+      "assignee": "Lukasz Cmielowski",
       "fixVersions": [
         "rhoai-3.5"
       ],
@@ -8366,7 +8286,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Gray Zimmerman",
+      "assignee": "Lukasz Cmielowski",
       "fixVersions": [
         "rhoai-3.5"
       ],
@@ -8386,7 +8306,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Gray Zimmerman",
+      "assignee": "Lukasz Cmielowski",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -8405,7 +8325,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Kerry Webb",
+      "assignee": "Bill Murdock",
       "fixVersions": [],
       "labels": [
         "3.Next-candidate",
@@ -8424,10 +8344,11 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Frankie Vaughn",
+      "assignee": "Eder Ignatowicz",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
+        "needs-uxd",
         "strat-creator-needs-revision",
         "strat-creator-refined"
       ],
@@ -8436,7 +8357,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T20:55:07.107+0000"
+      "lastUpdated": "2026-04-08T18:36:14.671+0000"
     },
     {
       "key": "TEST1-1432",
@@ -8444,7 +8365,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Onyx Finn",
+      "assignee": "Rui Vieira",
       "fixVersions": [
         "rhoai-3.4"
       ],
@@ -8465,7 +8386,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
-      "assignee": "Gray Grant",
+      "assignee": "Nelesh Singla",
       "fixVersions": [],
       "labels": [
         "MLflow",
@@ -8485,7 +8406,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Onyx Dunn",
+      "assignee": "Erwan Gallen",
       "fixVersions": [],
       "labels": [
         "tech-reviewed"
@@ -8521,7 +8442,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T03:08:46.465+0000"
+      "lastUpdated": "2026-04-08T19:33:47.203+0000"
     },
     {
       "key": "TEST1-1437",
@@ -8529,7 +8450,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Normal",
-      "assignee": "Onyx Finn",
+      "assignee": "Rui Vieira",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -8549,7 +8470,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Frankie Flynn",
+      "assignee": "Rob Geada",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -8562,7 +8483,7 @@
       "issueCount": 1,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-04-07T10:33:58.030+0000"
+      "lastUpdated": "2026-04-09T00:31:09.743+0000"
     },
     {
       "key": "TEST1-1441",
@@ -8577,10 +8498,10 @@
       ],
       "completionPct": 0,
       "epicCount": 1,
-      "issueCount": 4,
+      "issueCount": 5,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-04-08T03:08:49.366+0000"
+      "lastUpdated": "2026-04-09T03:12:08.072+0000"
     },
     {
       "key": "TEST1-1443",
@@ -8588,7 +8509,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Frankie Clay",
+      "assignee": "Selbi Siddiqi",
       "fixVersions": [],
       "labels": [
         "needs-tech-review",
@@ -8608,7 +8529,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Merit Kirk",
+      "assignee": "Kezia Cook",
       "fixVersions": [],
       "labels": [],
       "completionPct": 0,
@@ -8624,7 +8545,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Critical",
-      "assignee": "Merit Zimmerman",
+      "assignee": "Andrew Ballantyne",
       "fixVersions": [],
       "labels": [
         "NIM",
@@ -8636,7 +8557,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T14:18:28.910+0000"
+      "lastUpdated": "2026-04-09T18:08:37.706+0000"
     },
     {
       "key": "TEST1-1451",
@@ -8644,7 +8565,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Major",
-      "assignee": "Gray Hale",
+      "assignee": "Tyler Smith",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -8657,7 +8578,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T00:36:16.300+0000"
+      "lastUpdated": "2026-04-08T12:06:55.878+0000"
     },
     {
       "key": "TEST1-1452",
@@ -8665,7 +8586,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Kerry Abbott",
+      "assignee": "Russell Bryant",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -8677,7 +8598,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T00:46:20.877+0000"
+      "lastUpdated": "2026-04-08T12:07:07.792+0000"
     },
     {
       "key": "TEST1-1453",
@@ -8685,7 +8606,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Onyx Blake",
+      "assignee": "Sida Feng",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -8700,12 +8621,69 @@
       "lastUpdated": "2026-04-08T01:00:33.322+0000"
     },
     {
-      "key": "TEST1-1454",
-      "summary": "Fix memory leak",
+      "key": "TEST1-1455",
+      "summary": "Update documentation",
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Onyx Blake",
+      "assignee": null,
+      "fixVersions": [],
+      "labels": [
+        "ai-hub",
+        "dashboard-green-scrum"
+      ],
+      "completionPct": 0,
+      "epicCount": 0,
+      "issueCount": 0,
+      "blockerCount": 0,
+      "health": "YELLOW",
+      "lastUpdated": "2026-04-08T15:19:53.668+0000"
+    },
+    {
+      "key": "TEST1-1456",
+      "summary": "Add monitoring metrics",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Critical",
+      "assignee": "Francisco Arceo",
+      "fixVersions": [],
+      "labels": [
+        "LlamaStack",
+        "needs-tech-review",
+        "rfe-creator-autofix-rubric-pass",
+        "rfe-creator-needs-attention",
+        "tool-calling"
+      ],
+      "completionPct": 0,
+      "epicCount": 0,
+      "issueCount": 0,
+      "blockerCount": 0,
+      "health": "YELLOW",
+      "lastUpdated": "2026-04-09T20:42:43.051+0000"
+    },
+    {
+      "key": "TEST1-1457",
+      "summary": "Implement retry logic",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": null,
+      "fixVersions": [],
+      "labels": [],
+      "completionPct": 0,
+      "epicCount": 0,
+      "issueCount": 0,
+      "blockerCount": 0,
+      "health": "YELLOW",
+      "lastUpdated": "2026-04-08T18:21:28.575+0000"
+    },
+    {
+      "key": "TEST1-1461",
+      "summary": "Add health check endpoint",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Major",
+      "assignee": "Sida Feng",
       "fixVersions": [],
       "labels": [
         "3.5-candidate",
@@ -8717,7 +8695,7 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T01:05:32.146+0000"
+      "lastUpdated": "2026-04-09T16:55:39.299+0000"
     }
   ]
 }

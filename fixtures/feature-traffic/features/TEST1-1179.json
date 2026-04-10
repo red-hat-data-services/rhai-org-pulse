@@ -5,8 +5,8 @@
   "statusCategory": "In Progress",
   "priority": "Critical",
   "assignee": {
-    "displayName": "Merit Webb",
-    "accountId": "712020:d1f056a6-a23c-41b9-99b1-6d58953ce814"
+    "displayName": "Adel Zaalouk",
+    "accountId": "70121:60857a87-9351-4d38-bd27-75488f0f04de"
   },
   "fixVersions": [],
   "labels": [
@@ -22,7 +22,7 @@
     "Documentation"
   ],
   "created": "2026-02-02T11:36:32.199+0000",
-  "updated": "2026-04-07T03:07:09.014+0000",
+  "updated": "2026-04-10T03:09:21.814+0000",
   "statusNotes": null,
   "issueLinks": [
     {
@@ -66,8 +66,8 @@
       "key": "TEST2-52113",
       "parentKey": "RHAISTRAT-1179",
       "summary": "Add pagination support",
-      "status": "New",
-      "statusCategory": "To Do",
+      "status": "Closed",
+      "statusCategory": "Done",
       "priority": "Critical",
       "assignee": "Person 163",
       "components": [
@@ -77,15 +77,15 @@
       "labels": [],
       "storyPoints": 0,
       "created": "2026-03-06T08:10:22.140+0000",
-      "updated": "2026-03-24T10:34:36.043+0000",
+      "updated": "2026-04-07T09:24:36.459+0000",
       "issues": []
     },
     {
       "key": "TEST2-52114",
       "parentKey": "RHAISTRAT-1179",
       "summary": "Fix memory leak",
-      "status": "In Progress",
-      "statusCategory": "In Progress",
+      "status": "Closed",
+      "statusCategory": "Done",
       "priority": "Critical",
       "assignee": "Person 172",
       "components": [
@@ -95,7 +95,7 @@
       "labels": [],
       "storyPoints": 0,
       "created": "2026-03-05T17:49:10.019+0000",
-      "updated": "2026-03-18T14:05:55.758+0000",
+      "updated": "2026-04-07T09:22:15.188+0000",
       "issues": [
         {
           "key": "RHOAIENG-52139",
@@ -105,7 +105,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Emery",
+          "assignee": "Alessandro Beltramo",
           "components": [
             "AI Evaluations",
             "AI Safety"
@@ -124,7 +124,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Emery",
+          "assignee": "Alessandro Beltramo",
           "components": [
             "AI Evaluations",
             "AI Safety"
@@ -143,7 +143,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Zimmerman",
+          "assignee": "Henrique Nunes",
           "components": [
             "AI Evaluations",
             "AI Safety"
@@ -162,7 +162,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Emery",
+          "assignee": "Alessandro Beltramo",
           "components": [
             "AI Evaluations",
             "AI Safety"
@@ -181,7 +181,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Zimmerman",
+          "assignee": "Henrique Nunes",
           "components": [
             "AI Evaluations",
             "AI Safety"
@@ -200,7 +200,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Zimmerman",
+          "assignee": "Henrique Nunes",
           "components": [
             "AI Evaluations",
             "AI Safety"
@@ -219,7 +219,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Zimmerman",
+          "assignee": "Henrique Nunes",
           "components": [
             "AI Evaluations",
             "AI Safety"
@@ -238,7 +238,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Zimmerman",
+          "assignee": "Henrique Nunes",
           "components": [
             "AI Evaluations",
             "AI Safety"
@@ -257,7 +257,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Emery",
+          "assignee": "Alessandro Beltramo",
           "components": [
             "AI Evaluations",
             "AI Safety"
@@ -276,7 +276,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Zimmerman",
+          "assignee": "Henrique Nunes",
           "components": [
             "AI Evaluations",
             "AI Safety"
@@ -288,25 +288,6 @@
           "resolutionDate": "2026-03-31T09:23:13.334+0000"
         },
         {
-          "key": "RHOAIENG-53502",
-          "parentKey": "RHOAIENG-52114",
-          "summary": "Rebase midstream Garak on upstream",
-          "type": "Task",
-          "status": "Backlog",
-          "statusCategory": "To Do",
-          "priority": "Undefined",
-          "assignee": "Frankie Emery",
-          "components": [
-            "AI Evaluations",
-            "AI Safety"
-          ],
-          "labels": [],
-          "storyPoints": 0,
-          "created": "2026-03-16T16:05:22.139+0000",
-          "updated": "2026-03-18T08:37:29.961+0000",
-          "resolutionDate": null
-        },
-        {
           "key": "RHOAIENG-53784",
           "parentKey": "RHOAIENG-52114",
           "summary": "Check output jsonl file contains model responses and detections",
@@ -314,7 +295,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Frankie Emery",
+          "assignee": "Alessandro Beltramo",
           "components": [
             "AI Evaluations",
             "AI Safety"
@@ -333,7 +314,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Frankie Emery",
+          "assignee": "Alessandro Beltramo",
           "components": [
             "AI Evaluations",
             "AI Safety"
@@ -352,7 +333,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Frankie Emery",
+          "assignee": "Alessandro Beltramo",
           "components": [
             "AI Evaluations",
             "AI Safety"
@@ -371,7 +352,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Merit Reeves",
+          "assignee": "Sudip Sinha",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -387,7 +368,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Emery",
+          "assignee": "Alessandro Beltramo",
           "components": [
             "AI Safety"
           ],
@@ -405,7 +386,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Zimmerman",
+          "assignee": "Henrique Nunes",
           "components": [
             "AI Safety"
           ],
@@ -425,7 +406,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Zimmerman",
+          "assignee": "Henrique Nunes",
           "components": [
             "AI Evaluations",
             "AI Safety"
@@ -435,44 +416,6 @@
           "created": "2026-03-25T13:51:06.317+0000",
           "updated": "2026-03-31T09:23:36.650+0000",
           "resolutionDate": "2026-03-31T09:23:36.597+0000"
-        },
-        {
-          "key": "RHOAIENG-55756",
-          "parentKey": "RHOAIENG-52114",
-          "summary": "Errors from Garak aren't logged in the ODH KFP step. ",
-          "type": "Bug",
-          "status": "New",
-          "statusCategory": "To Do",
-          "priority": "Normal",
-          "assignee": null,
-          "components": [
-            "AI Evaluations",
-            "AI Safety"
-          ],
-          "labels": [],
-          "storyPoints": 0,
-          "created": "2026-03-27T15:28:08.315+0000",
-          "updated": "2026-04-01T19:56:46.919+0000",
-          "resolutionDate": null
-        },
-        {
-          "key": "RHOAIENG-56380",
-          "parentKey": "RHOAIENG-52114",
-          "summary": "Surface complied prompts to hitlog.jsonl",
-          "type": "Task",
-          "status": "New",
-          "statusCategory": "To Do",
-          "priority": "Normal",
-          "assignee": null,
-          "components": [
-            "AI Evaluations",
-            "AI Safety"
-          ],
-          "labels": [],
-          "storyPoints": 0,
-          "created": "2026-04-01T19:42:08.690+0000",
-          "updated": "2026-04-01T19:52:23.406+0000",
-          "resolutionDate": null
         }
       ]
     },
@@ -483,7 +426,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Undefined",
-      "assignee": "Frankie Jensen",
+      "assignee": "Former Member 9",
       "components": [
         "AI Evaluations",
         "AI Safety",
@@ -495,7 +438,7 @@
       ],
       "storyPoints": 0,
       "created": "2026-02-24T14:11:51.136+0000",
-      "updated": "2026-04-01T14:05:37.588+0000",
+      "updated": "2026-04-09T14:01:58.247+0000",
       "issues": [
         {
           "key": "RHOAIENG-54748",
@@ -505,7 +448,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Zimmerman",
+          "assignee": "Henrique Nunes",
           "components": [
             "AI Evaluations",
             "AI Safety"
@@ -524,7 +467,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Onyx Zimmerman",
+          "assignee": "Henrique Nunes",
           "components": [
             "AI Evaluations",
             "AI Safety"
@@ -543,7 +486,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Emery",
+          "assignee": "Alessandro Beltramo",
           "components": [
             "AI Evaluations",
             "AI Safety"
@@ -559,10 +502,10 @@
           "parentKey": "RHOAIENG-52132",
           "summary": "Document how to run on disconnected clusters",
           "type": "Task",
-          "status": "New",
-          "statusCategory": "To Do",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
           "priority": "Normal",
-          "assignee": null,
+          "assignee": "Henrique Nunes",
           "components": [
             "AI Evaluations",
             "AI Safety"
@@ -570,7 +513,7 @@
           "labels": [],
           "storyPoints": 0,
           "created": "2026-03-31T12:50:01.928+0000",
-          "updated": "2026-03-31T12:59:30.498+0000",
+          "updated": "2026-04-09T13:40:00.358+0000",
           "resolutionDate": null
         },
         {
@@ -578,10 +521,10 @@
           "parentKey": "RHOAIENG-52132",
           "summary": "Point to section from “Enforcing AI safety”",
           "type": "Task",
-          "status": "New",
-          "statusCategory": "To Do",
+          "status": "Review",
+          "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": null,
+          "assignee": "Henrique Nunes",
           "components": [
             "AI Evaluations",
             "AI Safety"
@@ -589,7 +532,7 @@
           "labels": [],
           "storyPoints": 0,
           "created": "2026-04-01T11:40:04.488+0000",
-          "updated": "2026-04-01T11:43:19.999+0000",
+          "updated": "2026-04-07T10:31:21.850+0000",
           "resolutionDate": null
         },
         {
@@ -616,10 +559,10 @@
           "parentKey": "RHOAIENG-52132",
           "summary": "Add pre-reqs on OAI pipelines",
           "type": "Task",
-          "status": "New",
-          "statusCategory": "To Do",
+          "status": "Review",
+          "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": null,
+          "assignee": "Henrique Nunes",
           "components": [
             "AI Evaluations",
             "AI Safety"
@@ -627,7 +570,23 @@
           "labels": [],
           "storyPoints": 0,
           "created": "2026-04-01T11:47:54.539+0000",
-          "updated": "2026-04-01T11:49:51.078+0000",
+          "updated": "2026-04-07T10:31:01.291+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-57457",
+          "parentKey": "RHOAIENG-52132",
+          "summary": "[ccs] Review SME-drafted chatterbox docs",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Em Turner",
+          "components": [],
+          "labels": [],
+          "storyPoints": 5,
+          "created": "2026-04-09T12:49:54.953+0000",
+          "updated": "2026-04-09T14:51:34.578+0000",
           "resolutionDate": null
         }
       ]
@@ -635,33 +594,33 @@
   ],
   "metrics": {
     "totalEpics": 3,
-    "totalIssues": 27,
+    "totalIssues": 25,
     "issuesByStatus": {
       "Closed": 16,
-      "Backlog": 1,
       "Resolved": 3,
-      "In Progress": 1,
-      "New": 6
+      "In Progress": 2,
+      "Review": 3,
+      "New": 1
     },
     "issuesByCategory": {
       "Done": 19,
-      "In Progress": 1,
-      "To Do": 7
+      "In Progress": 5,
+      "To Do": 1
     },
-    "totalStoryPoints": 0,
+    "totalStoryPoints": 5,
     "storyPointsDone": 0,
-    "completionPct": 70,
+    "completionPct": 76,
     "staleCount": 1,
-    "unassignedCount": 6,
+    "unassignedCount": 1,
     "blockerCount": 4,
     "health": "RED",
     "epicMetrics": [
       {
         "key": "RHOAIENG-52113",
         "summary": "QE for new Garak implementations",
-        "status": "New",
-        "statusCategory": "To Do",
-        "assignee": "Kerry Cross",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Karishma Punwatkar",
         "totalIssues": 0,
         "doneIssues": 0,
         "progressPct": 0,
@@ -672,12 +631,12 @@
       {
         "key": "RHOAIENG-52114",
         "summary": "Update midstream garak with automated red teaming logic",
-        "status": "In Progress",
-        "statusCategory": "In Progress",
-        "assignee": "Onyx Zimmerman",
-        "totalIssues": 20,
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Henrique Nunes",
+        "totalIssues": 17,
         "doneIssues": 17,
-        "progressPct": 85,
+        "progressPct": 100,
         "storyPoints": 0,
         "storyPointsDone": 0,
         "health": "RED"
@@ -687,17 +646,98 @@
         "summary": "[ccs Epic] Document Chatterbox integration with Garak ",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Gray Rowe",
-        "totalIssues": 7,
+        "assignee": "Bronagh Synnott",
+        "totalIssues": 8,
         "doneIssues": 2,
-        "progressPct": 29,
-        "storyPoints": 0,
+        "progressPct": 25,
+        "storyPoints": 5,
         "storyPointsDone": 0,
         "health": "RED"
       }
     ]
   },
   "topology": {
-    "repos": []
+    "repos": [
+      {
+        "url": "github.com/red-hat-data-services/eval-hub",
+        "issueCount": 21,
+        "doneIssues": 16,
+        "totalIssues": 21,
+        "components": [
+          "AI Evaluations"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/lm-evaluation-harness",
+        "issueCount": 21,
+        "doneIssues": 16,
+        "totalIssues": 21,
+        "components": [
+          "AI Evaluations"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/fms-guardrails-orchestrator",
+        "issueCount": 23,
+        "doneIssues": 18,
+        "totalIssues": 23,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/guardrails-detectors",
+        "issueCount": 23,
+        "doneIssues": 18,
+        "totalIssues": 23,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/guardrails-regex-detector",
+        "issueCount": 23,
+        "doneIssues": 18,
+        "totalIssues": 23,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/NeMo-Guardrails",
+        "issueCount": 23,
+        "doneIssues": 18,
+        "totalIssues": 23,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/NVIDIA-NeMo/Guardrails",
+        "issueCount": 23,
+        "doneIssues": 18,
+        "totalIssues": 23,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "upstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/odh-dashboard",
+        "issueCount": 0,
+        "doneIssues": 0,
+        "totalIssues": 0,
+        "components": [
+          "Documentation"
+        ],
+        "lane": "destination"
+      }
+    ]
   }
 }

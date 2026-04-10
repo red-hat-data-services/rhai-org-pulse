@@ -5,7 +5,7 @@
   "statusCategory": "In Progress",
   "priority": "Critical",
   "assignee": {
-    "displayName": "Onyx Park",
+    "displayName": "Jennifer Ciroli",
     "accountId": "70121:5ac25270-120c-4194-b019-f4faf2dc692a"
   },
   "fixVersions": [],
@@ -23,7 +23,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Normal",
-      "assignee": "Onyx Reeves",
+      "assignee": "Former Member 18",
       "components": [
         "Documentation"
       ],
@@ -43,7 +43,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Park",
+          "assignee": "Jennifer Ciroli",
           "components": [
             "Internal Processes & Documentation"
           ],
@@ -61,7 +61,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Park",
+          "assignee": "Jennifer Ciroli",
           "components": [
             "Documentation"
           ],
@@ -81,7 +81,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Blocker",
-          "assignee": "Onyx Park",
+          "assignee": "Jennifer Ciroli",
           "components": [
             "Documentation"
           ],
@@ -121,7 +121,7 @@
         "summary": "[ccs internal] Explore IA / nav options for RH AI docs",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Onyx Park",
+        "assignee": "Jennifer Ciroli",
         "totalIssues": 3,
         "doneIssues": 3,
         "progressPct": 100,

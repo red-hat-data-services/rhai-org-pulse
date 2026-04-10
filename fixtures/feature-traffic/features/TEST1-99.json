@@ -10,10 +10,8 @@
   },
   "fixVersions": [],
   "labels": [
-    "Notebooks",
     "disconnected",
     "documentation",
-    "ide_scrum:indigo",
     "platform",
     "tech-reviewed"
   ],
@@ -21,7 +19,7 @@
     "Notebooks Images"
   ],
   "created": "2025-09-25T14:22:55.103+0000",
-  "updated": "2026-02-19T18:33:29.466+0000",
+  "updated": "2026-04-09T17:32:17.068+0000",
   "statusNotes": null,
   "issueLinks": [
     {

@@ -1,9 +1,9 @@
 {
-  "team-tracker": true,
-  "org-roster": true,
+  "upstream-pulse": true,
   "ai-impact": true,
-  "feature-traffic": true,
+  "org-roster": true,
   "release-analysis": true,
-  "allocation-tracker": true,
-  "upstream-pulse": true
+  "team-tracker": true,
+  "feature-traffic": true,
+  "allocation-tracker": true
 }

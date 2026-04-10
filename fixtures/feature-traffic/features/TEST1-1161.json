@@ -5,7 +5,7 @@
   "statusCategory": "In Progress",
   "priority": "Critical",
   "assignee": {
-    "displayName": "Gray Foster",
+    "displayName": "Demethria Ramseur",
     "accountId": "60d3b72ad5dde80071971572"
   },
   "fixVersions": [
@@ -247,7 +247,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Foster",
+          "assignee": "Vani Haripriya Mudadla",
           "components": [
             "MLflow"
           ],
@@ -265,7 +265,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Knox",
+          "assignee": "Anya Kramar",
           "components": [
             "MLflow"
           ],
@@ -303,7 +303,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Merit Dawson",
+          "assignee": "Gage Krumbach",
           "components": [
             "AI Core Dashboard"
           ],
@@ -378,7 +378,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Nolan",
+          "assignee": "Juntao Wang",
           "components": [
             "AI Core Dashboard"
           ],
@@ -398,7 +398,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Gray Rand",
+          "assignee": "Anthony Coughlin",
           "components": [
             "AI Core Dashboard"
           ],
@@ -420,7 +420,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Nolan",
+          "assignee": "Juntao Wang",
           "components": [
             "AI Core Dashboard"
           ],
@@ -438,7 +438,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Onyx Bennett",
+          "assignee": "Nana Nosirova",
           "components": [
             "AI Core Dashboard"
           ],
@@ -458,7 +458,7 @@
           "status": "Backlog",
           "statusCategory": "To Do",
           "priority": "Major",
-          "assignee": "Onyx Bennett",
+          "assignee": "Nana Nosirova",
           "components": [
             "AI Core Dashboard"
           ],
@@ -478,7 +478,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Onyx Bennett",
+          "assignee": "Nana Nosirova",
           "components": [
             "AI Core Dashboard"
           ],
@@ -496,7 +496,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Sato",
+          "assignee": "Guilherme Caponetto",
           "components": [
             "AI Core Dashboard"
           ],
@@ -516,7 +516,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Vaughn",
+          "assignee": "Eder Ignatowicz",
           "components": [
             "AI Core Dashboard"
           ],
@@ -536,7 +536,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Vaughn",
+          "assignee": "Eder Ignatowicz",
           "components": [
             "AI Core Dashboard"
           ],
@@ -577,7 +577,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Critical",
-          "assignee": "Onyx Bennett",
+          "assignee": "Nana Nosirova",
           "components": [
             "AI Core Dashboard",
             "AI Pipelines",
@@ -600,7 +600,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Onyx Bennett",
+          "assignee": "Nana Nosirova",
           "components": [
             "AI Core Dashboard",
             "Notebooks Server"
@@ -645,7 +645,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Onyx Zane",
+          "assignee": "Harshad Reddy Nalla",
           "components": [
             "Notebooks Server"
           ],
@@ -666,7 +666,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Onyx Zane",
+          "assignee": "Harshad Reddy Nalla",
           "components": [
             "Notebooks Server"
           ],
@@ -687,7 +687,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Onyx Zane",
+          "assignee": "Harshad Reddy Nalla",
           "components": [
             "AI Core Platform",
             "Notebooks Server"
@@ -708,7 +708,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Onyx Zane",
+          "assignee": "Harshad Reddy Nalla",
           "components": [
             "Documentation",
             "Notebooks Server"
@@ -731,7 +731,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Normal",
-      "assignee": "Merit Marsh",
+      "assignee": "Former Member 8",
       "components": [
         "Documentation"
       ],
@@ -748,7 +748,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Merit Hayes",
+          "assignee": "Linda Alexander",
           "components": [
             "Documentation"
           ],
@@ -766,7 +766,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Hayes",
+          "assignee": "Linda Alexander",
           "components": [
             "Documentation"
           ],
@@ -784,7 +784,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Merit Hayes",
+          "assignee": "Linda Alexander",
           "components": [
             "Documentation",
             "MLflow"
@@ -805,7 +805,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Kerry Carter",
+          "assignee": "Manushri Pandya",
           "components": [
             "AI Pipelines",
             "Documentation"
@@ -826,7 +826,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Gray Lowe",
+          "assignee": "Matt Prahl",
           "components": [
             "MLflow"
           ],
@@ -844,7 +844,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Frankie Finn",
+          "assignee": "Olivia Brown",
           "components": [
             "Documentation",
             "MLflow"
@@ -865,7 +865,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Onyx Oates",
+          "assignee": "Saanchi Sampath",
           "components": [
             "Documentation"
           ],
@@ -906,7 +906,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Sato",
+          "assignee": "Guilherme Caponetto",
           "components": [
             "AI Core Dashboard"
           ],
@@ -926,7 +926,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Merit Sato",
+          "assignee": "Guilherme Caponetto",
           "components": [
             "AI Core Dashboard"
           ],
@@ -946,7 +946,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Merit Sato",
+          "assignee": "Guilherme Caponetto",
           "components": [
             "AI Core Dashboard"
           ],
@@ -966,7 +966,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Merit Sato",
+          "assignee": "Guilherme Caponetto",
           "components": [
             "AI Core Dashboard"
           ],
@@ -986,7 +986,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Sato",
+          "assignee": "Guilherme Caponetto",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1006,7 +1006,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Sato",
+          "assignee": "Guilherme Caponetto",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1026,7 +1026,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Sato",
+          "assignee": "Guilherme Caponetto",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1046,7 +1046,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Sato",
+          "assignee": "Guilherme Caponetto",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1126,7 +1126,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Blocker",
-          "assignee": "Gray Lowe",
+          "assignee": "Matt Prahl",
           "components": [
             "MLflow"
           ],
@@ -1292,7 +1292,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Blocker",
-          "assignee": "Kerry Hunt",
+          "assignee": "Myriam Fentanes Gutierrez",
           "components": [
             "MLflow"
           ],
@@ -1310,7 +1310,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Blocker",
-          "assignee": "Kerry Dawson",
+          "assignee": "Alex Corvin",
           "components": [],
           "labels": [],
           "storyPoints": 0,
@@ -1326,7 +1326,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Merit Winn",
+          "assignee": "Bob Gregor",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1369,7 +1369,7 @@
         "summary": "Implement MLflow Kubernetes workspace provider to support per workspace artifact locations",
         "status": "Closed",
         "statusCategory": "Done",
-        "assignee": "Gray Lowe",
+        "assignee": "Matt Prahl",
         "totalIssues": 2,
         "doneIssues": 2,
         "progressPct": 100,
@@ -1382,7 +1382,7 @@
         "summary": "[Dashboard] MLflow Integration- GA",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Onyx Bennett",
+        "assignee": "Nana Nosirova",
         "totalIssues": 16,
         "doneIssues": 13,
         "progressPct": 81,
@@ -1395,7 +1395,7 @@
         "summary": "Workbenches MLFlow SDK Support",
         "status": "Resolved",
         "statusCategory": "Done",
-        "assignee": "Kerry Edge",
+        "assignee": "Andy Stoneberg",
         "totalIssues": 4,
         "doneIssues": 4,
         "progressPct": 100,
@@ -1408,7 +1408,7 @@
         "summary": "[ccs Epic] Document MLflow integration in RHOAI (GA)",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Merit Hayes",
+        "assignee": "Linda Alexander",
         "totalIssues": 7,
         "doneIssues": 2,
         "progressPct": 29,
@@ -1421,7 +1421,7 @@
         "summary": "Dashboard MLFlow BFF - Deployment",
         "status": "Resolved",
         "statusCategory": "Done",
-        "assignee": "Merit Sato",
+        "assignee": "Guilherme Caponetto",
         "totalIssues": 8,
         "doneIssues": 8,
         "progressPct": 100,
@@ -1434,7 +1434,7 @@
         "summary": "ODH Konflux Release Build Onboarding [MLflow]",
         "status": "Resolved",
         "statusCategory": "Done",
-        "assignee": "Merit Graham",
+        "assignee": "Alex Fan",
         "totalIssues": 0,
         "doneIssues": 0,
         "progressPct": 0,
@@ -1447,7 +1447,7 @@
         "summary": "RHOAI Konflux Onboarding [MLflow]",
         "status": "Resolved",
         "statusCategory": "Done",
-        "assignee": "Merit Graham",
+        "assignee": "Alex Fan",
         "totalIssues": 0,
         "doneIssues": 0,
         "progressPct": 0,
@@ -1460,7 +1460,7 @@
         "summary": "General Availability - ODH and RHOAI Integrations [MLflow]",
         "status": "Closed",
         "statusCategory": "Done",
-        "assignee": "Gray Lowe",
+        "assignee": "Matt Prahl",
         "totalIssues": 4,
         "doneIssues": 4,
         "progressPct": 100,

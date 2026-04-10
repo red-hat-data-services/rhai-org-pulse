@@ -5,7 +5,7 @@
   "statusCategory": "In Progress",
   "priority": "Major",
   "assignee": {
-    "displayName": "Gray Dean",
+    "displayName": "Laura Fitzgerald",
     "accountId": "5cc0716350ff750e510131cf"
   },
   "fixVersions": [],
@@ -189,7 +189,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Blocker",
-          "assignee": "Gray Dean",
+          "assignee": "Laura Fitzgerald",
           "components": [
             "KubeRay"
           ],
@@ -209,7 +209,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Blocker",
-          "assignee": "Gray Dean",
+          "assignee": "Laura Fitzgerald",
           "components": [
             "KubeRay"
           ],
@@ -229,7 +229,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Gray Dean",
+          "assignee": "Laura Fitzgerald",
           "components": [
             "KubeRay"
           ],
@@ -249,7 +249,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Gray Dean",
+          "assignee": "Laura Fitzgerald",
           "components": [
             "KubeRay"
           ],
@@ -269,7 +269,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Gray Dean",
+          "assignee": "Laura Fitzgerald",
           "components": [
             "KubeRay"
           ],
@@ -308,7 +308,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Undefined",
-      "assignee": "Kerry Hayes",
+      "assignee": "Former Member 14",
       "components": [
         "Documentation"
       ],
@@ -325,7 +325,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Onyx Oates",
+          "assignee": "Saanchi Sampath",
           "components": [
             "Documentation"
           ],
@@ -343,7 +343,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Onyx Oates",
+          "assignee": "Saanchi Sampath",
           "components": [
             "Documentation"
           ],
@@ -361,7 +361,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Onyx Oates",
+          "assignee": "Saanchi Sampath",
           "components": [
             "Documentation"
           ],
@@ -379,7 +379,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Onyx Oates",
+          "assignee": "Saanchi Sampath",
           "components": [
             "Documentation"
           ],
@@ -417,7 +417,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Jay",
+          "assignee": "Dipanshu Gupta",
           "components": [
             "AI Core Dashboard"
           ],
@@ -437,7 +437,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Jay",
+          "assignee": "Dipanshu Gupta",
           "components": [
             "AI Core Dashboard"
           ],
@@ -457,7 +457,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Winn",
+          "assignee": "Claudia Alphonse",
           "components": [
             "AI Core Dashboard"
           ],
@@ -477,7 +477,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Winn",
+          "assignee": "Claudia Alphonse",
           "components": [
             "AI Core Dashboard"
           ],
@@ -497,7 +497,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Jay",
+          "assignee": "Dipanshu Gupta",
           "components": [
             "AI Core Dashboard"
           ],
@@ -517,7 +517,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Jay",
+          "assignee": "Dipanshu Gupta",
           "components": [
             "AI Core Dashboard"
           ],
@@ -537,7 +537,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Jay",
+          "assignee": "Dipanshu Gupta",
           "components": [
             "AI Core Dashboard"
           ],
@@ -557,7 +557,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Jay",
+          "assignee": "Dipanshu Gupta",
           "components": [
             "AI Core Dashboard"
           ],
@@ -577,7 +577,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Kerry Winn",
+          "assignee": "Claudia Alphonse",
           "components": [
             "AI Core Dashboard"
           ],
@@ -597,7 +597,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Kerry Winn",
+          "assignee": "Claudia Alphonse",
           "components": [
             "AI Core Dashboard"
           ],
@@ -617,7 +617,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Gray Upton",
+          "assignee": "Premved Dhote",
           "components": [
             "AI Core Dashboard"
           ],
@@ -637,7 +637,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Kerry Winn",
+          "assignee": "Claudia Alphonse",
           "components": [
             "AI Core Dashboard",
             "Documentation"
@@ -658,7 +658,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Kerry Jay",
+          "assignee": "Dipanshu Gupta",
           "components": [
             "AI Core Dashboard"
           ],
@@ -678,7 +678,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Kerry Winn",
+          "assignee": "Claudia Alphonse",
           "components": [
             "AI Core Dashboard"
           ],
@@ -717,7 +717,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Blocker",
-          "assignee": "Kerry Winn",
+          "assignee": "Claudia Alphonse",
           "components": [
             "Update This Field With Components"
           ],
@@ -756,7 +756,7 @@
       "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Undefined",
-      "assignee": "Gray Jensen",
+      "assignee": "Former Member 16",
       "components": [
         "AI Core Dashboard"
       ],
@@ -776,7 +776,7 @@
           "status": "Review",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Gray Upton",
+          "assignee": "Premved Dhote",
           "components": [
             "AI Core Dashboard",
             "Training Kubeflow"
@@ -798,7 +798,7 @@
           "status": "Review",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Onyx Kirk",
+          "assignee": "Kanishka Panwar",
           "components": [
             "AI Core Dashboard",
             "Training Kubeflow"
@@ -821,7 +821,7 @@
           "status": "Review",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Onyx Kirk",
+          "assignee": "Kanishka Panwar",
           "components": [
             "AI Core Dashboard",
             "Training Kubeflow"
@@ -866,7 +866,7 @@
         "summary": "Backend work for supporting RayJobs in the Training Dashboard",
         "status": "Resolved",
         "statusCategory": "Done",
-        "assignee": "Gray Dean",
+        "assignee": "Laura Fitzgerald",
         "totalIssues": 6,
         "doneIssues": 6,
         "progressPct": 100,
@@ -879,7 +879,7 @@
         "summary": "[ccs] Document RayJobs on Dashboard",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Onyx Oates",
+        "assignee": "Saanchi Sampath",
         "totalIssues": 4,
         "doneIssues": 0,
         "progressPct": 0,
@@ -892,7 +892,7 @@
         "summary": "Ray Jobs in Dashboard jobs page",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Kerry Jay",
+        "assignee": "Dipanshu Gupta",
         "totalIssues": 14,
         "doneIssues": 14,
         "progressPct": 100,
@@ -905,7 +905,7 @@
         "summary": "General Availability - ODH and RHOAI Integrations [Dashboard/RayJobs]",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Kerry Winn",
+        "assignee": "Claudia Alphonse",
         "totalIssues": 2,
         "doneIssues": 0,
         "progressPct": 0,
@@ -918,7 +918,7 @@
         "summary": "[Cypress-e2e] Dashboard UI tests - Ray jobs",
         "status": "Review",
         "statusCategory": "In Progress",
-        "assignee": "Onyx Kirk",
+        "assignee": "Kanishka Panwar",
         "totalIssues": 3,
         "doneIssues": 0,
         "progressPct": 0,

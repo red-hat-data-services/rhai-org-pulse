@@ -21,7 +21,7 @@
     "Tooling Experience"
   ],
   "created": "2026-02-14T10:38:33.161+0000",
-  "updated": "2026-04-03T14:54:45.459+0000",
+  "updated": "2026-04-09T14:31:19.979+0000",
   "statusNotes": {
     "type": "doc",
     "version": 1,
@@ -119,7 +119,7 @@
       "direction": "inward",
       "linkedKey": "RHAISTRAT-1376",
       "linkedSummary": "Agent Template & Demo Discovery via Dashboard Learning Resources",
-      "linkedStatus": "New"
+      "linkedStatus": "Refinement"
     },
     {
       "type": "Blocks",

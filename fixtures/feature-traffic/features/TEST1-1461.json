@@ -1,38 +1,39 @@
 {
-  "key": "TEST1-1365",
-  "summary": "Fix bug in processing logic",
-  "status": "Review",
-  "statusCategory": "In Progress",
+  "key": "TEST1-1461",
+  "summary": "Add health check endpoint",
+  "status": "New",
+  "statusCategory": "To Do",
   "priority": "Major",
   "assignee": {
-    "displayName": "Gray Brock",
-    "accountId": "60ba5c393aa6050068890180"
+    "displayName": "Sida Feng",
+    "accountId": "712020:66926ca7-cab4-4e90-9968-83d2e986e8fc"
   },
   "fixVersions": [],
   "labels": [
-    "3.4-candidate",
-    "needs-review"
+    "3.5-candidate",
+    "rfe-creator-autofix-rubric-pass",
+    "tool-calling"
   ],
   "components": [
-    "Training Hub"
+    "vLLM Runtime"
   ],
-  "created": "2026-03-19T20:15:54.475+0000",
-  "updated": "2026-04-08T13:44:30.492+0000",
+  "created": "2026-04-08T01:07:37.540+0000",
+  "updated": "2026-04-09T16:55:39.299+0000",
   "statusNotes": null,
   "issueLinks": [
     {
       "type": "Cloners",
       "direction": "outward",
-      "linkedKey": "RHAIRFE-1473",
-      "linkedSummary": "MLflow Experiment Tracking Integration for Training Hub",
+      "linkedKey": "RHAIRFE-1433",
+      "linkedSummary": "Responses API Tool Calling Parity with Chat Completions",
       "linkedStatus": "Approved"
     },
     {
-      "type": "Document",
+      "type": "Cloners",
       "direction": "inward",
-      "linkedKey": "RHOAIENG-56219",
-      "linkedSummary": "[ccs] Document impact of MLFlow integration to Kubeflow-specific docs",
-      "linkedStatus": "New"
+      "linkedKey": "RHAIRFE-1826",
+      "linkedSummary": "Responses API Tool Calling Parity with Chat Completions",
+      "linkedStatus": "Closed"
     }
   ],
   "epics": [],

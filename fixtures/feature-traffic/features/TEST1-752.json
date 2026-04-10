@@ -19,7 +19,7 @@
     "UXD"
   ],
   "created": "2025-06-25T14:05:10.385+0000",
-  "updated": "2026-04-03T20:39:12.910+0000",
+  "updated": "2026-04-09T09:03:32.010+0000",
   "statusNotes": {
     "type": "doc",
     "version": 1,
@@ -110,25 +110,78 @@
           "resolutionDate": "2025-12-30T08:07:50.807+0000"
         }
       ]
+    },
+    {
+      "key": "TEST2-57414",
+      "parentKey": "RHAISTRAT-752",
+      "summary": "Add caching mechanism",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Undefined",
+      "assignee": "Former Member 11",
+      "components": [
+        "Documentation"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-04-09T09:05:40.844+0000",
+      "updated": "2026-04-09T09:06:18.338+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-57415",
+          "parentKey": "RHOAIENG-57414",
+          "summary": "[ccs Spike] Evaluate docs impact of Centralized Platform Adoption Metrics - 3.5 EA1",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": "Manushri Pandya",
+          "components": [
+            "Documentation"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-04-09T09:06:54.198+0000",
+          "updated": "2026-04-09T09:07:56.562+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-57416",
+          "parentKey": "RHOAIENG-57414",
+          "summary": "[ccs] Conduct review using CQA",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Undefined",
+          "assignee": null,
+          "components": [],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-09T09:07:12.894+0000",
+          "updated": "2026-04-09T09:07:15.567+0000",
+          "resolutionDate": null
+        }
+      ]
     }
   ],
   "metrics": {
-    "totalEpics": 1,
-    "totalIssues": 2,
+    "totalEpics": 2,
+    "totalIssues": 4,
     "issuesByStatus": {
       "Backlog": 1,
-      "Closed": 1
+      "Closed": 1,
+      "New": 2
     },
     "issuesByCategory": {
       "Done": 1,
       "In Progress": 0,
-      "To Do": 1
+      "To Do": 3
     },
-    "totalStoryPoints": 8,
+    "totalStoryPoints": 11,
     "storyPointsDone": 4,
-    "completionPct": 50,
+    "completionPct": 25,
     "staleCount": 0,
-    "unassignedCount": 0,
+    "unassignedCount": 1,
     "blockerCount": 0,
     "health": "RED",
     "epicMetrics": [
@@ -144,10 +197,74 @@
         "storyPoints": 8,
         "storyPointsDone": 4,
         "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-57414",
+        "summary": "[ccs Epic] Document Centralized Platform Adoption Metrics - 3.5",
+        "status": "New",
+        "statusCategory": "To Do",
+        "assignee": "Manushri Pandya",
+        "totalIssues": 2,
+        "doneIssues": 0,
+        "progressPct": 0,
+        "storyPoints": 3,
+        "storyPointsDone": 0,
+        "health": "YELLOW"
       }
     ]
   },
   "topology": {
-    "repos": []
+    "repos": [
+      {
+        "url": "github.com/red-hat-data-services/rhods-operator",
+        "issueCount": 1,
+        "doneIssues": 1,
+        "totalIssues": 1,
+        "components": [
+          "AI Core Platform"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/opendatahub-io/opendatahub-operator",
+        "issueCount": 1,
+        "doneIssues": 1,
+        "totalIssues": 1,
+        "components": [
+          "AI Core Platform"
+        ],
+        "lane": "upstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/kserve",
+        "issueCount": 2,
+        "doneIssues": 1,
+        "totalIssues": 2,
+        "components": [
+          "Inference Extensions"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/vllm-orchestrator-gateway",
+        "issueCount": 2,
+        "doneIssues": 1,
+        "totalIssues": 2,
+        "components": [
+          "Inference Extensions"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/odh-dashboard",
+        "issueCount": 1,
+        "doneIssues": 0,
+        "totalIssues": 1,
+        "components": [
+          "Documentation"
+        ],
+        "lane": "destination"
+      }
+    ]
   }
 }

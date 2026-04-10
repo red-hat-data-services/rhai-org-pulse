@@ -1,31 +1,33 @@
 {
-  "key": "TEST1-1452",
-  "summary": "Implement search feature",
+  "key": "TEST1-1456",
+  "summary": "Add monitoring metrics",
   "status": "New",
   "statusCategory": "To Do",
-  "priority": "Undefined",
+  "priority": "Critical",
   "assignee": {
-    "displayName": "Kerry Abbott",
-    "accountId": "70121:5380001f-abed-4903-804d-7df9a1ab5f83"
+    "displayName": "Francisco Arceo",
+    "accountId": "712020:a8b965fb-1129-4541-8501-10ba2e01c8fd"
   },
   "fixVersions": [],
   "labels": [
-    "3.5-candidate",
+    "LlamaStack",
+    "needs-tech-review",
     "rfe-creator-autofix-rubric-pass",
+    "rfe-creator-needs-attention",
     "tool-calling"
   ],
   "components": [
-    "vLLM Runtime"
+    "Llama Stack Core"
   ],
-  "created": "2026-04-08T00:44:10.712+0000",
-  "updated": "2026-04-08T12:07:07.792+0000",
+  "created": "2026-04-08T17:09:12.305+0000",
+  "updated": "2026-04-09T20:42:43.051+0000",
   "statusNotes": null,
   "issueLinks": [
     {
       "type": "Cloners",
       "direction": "outward",
-      "linkedKey": "RHAIRFE-1432",
-      "linkedSummary": "Structured Output Enforcement for Auto Tool Calls",
+      "linkedKey": "RHAIRFE-1779",
+      "linkedSummary": "LlamaStack Support for OpenAI Codex Agent SDK",
       "linkedStatus": "Approved"
     }
   ],

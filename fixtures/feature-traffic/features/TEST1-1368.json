@@ -5,7 +5,7 @@
   "statusCategory": "To Do",
   "priority": "Critical",
   "assignee": {
-    "displayName": "Kerry Evans",
+    "displayName": "Greg Pereira",
     "accountId": "63c6c91d6178fcc941d89a42"
   },
   "fixVersions": [],
@@ -59,7 +59,7 @@
       "status": "New",
       "statusCategory": "To Do",
       "priority": "Undefined",
-      "assignee": "Merit Dean",
+      "assignee": "Former Member 13",
       "components": [
         "Documentation",
         "llm-d"
@@ -93,7 +93,7 @@
         "summary": "CLONE - [ccs] Documentation for End-to-End Distributed Tracing for llm-d",
         "status": "New",
         "statusCategory": "To Do",
-        "assignee": "Kerry Emery",
+        "assignee": "Sara Thomas",
         "totalIssues": 0,
         "doneIssues": 0,
         "progressPct": 0,

@@ -18,7 +18,7 @@
     "Llama Stack Core"
   ],
   "created": "2026-01-22T09:55:10.068+0000",
-  "updated": "2026-04-06T11:38:35.140+0000",
+  "updated": "2026-04-09T10:42:09.088+0000",
   "statusNotes": {
     "type": "doc",
     "version": 1,
@@ -60,7 +60,7 @@
       "type": "Document",
       "direction": "inward",
       "linkedKey": "RHAIENG-3595",
-      "linkedSummary": "[ccs] Document Core Access Control Policy Engine for Llama Stack - TP 3.4 EA2",
+      "linkedSummary": "[ccs] Document Core Access Control Policy Engine for Llama Stack - TP 3.4",
       "linkedStatus": "New"
     }
   ],
@@ -214,8 +214,8 @@
           "parentKey": "RHOAIENG-53296",
           "summary": "[Llamastack ABAC] Security requirements",
           "type": "Task",
-          "status": "Backlog",
-          "statusCategory": "To Do",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
           "priority": "Undefined",
           "assignee": "Kerry Torres",
           "components": [
@@ -224,7 +224,7 @@
           "labels": [],
           "storyPoints": 1,
           "created": "2026-03-13T14:19:21.847+0000",
-          "updated": "2026-04-03T01:53:07.968+0000",
+          "updated": "2026-04-07T20:42:43.156+0000",
           "resolutionDate": null
         },
         {
@@ -358,8 +358,8 @@
           "parentKey": "RHOAIENG-53296",
           "summary": "[Llamastack ABAC] Add support for the new component in the QE related repositories",
           "type": "Task",
-          "status": "Backlog",
-          "statusCategory": "To Do",
+          "status": "Closed",
+          "statusCategory": "Done",
           "priority": "Normal",
           "assignee": "Kerry Torres",
           "components": [
@@ -368,16 +368,16 @@
           "labels": [],
           "storyPoints": 3,
           "created": "2026-03-13T14:19:27.205+0000",
-          "updated": "2026-04-03T01:57:42.361+0000",
-          "resolutionDate": null
+          "updated": "2026-04-07T20:35:11.861+0000",
+          "resolutionDate": "2026-04-07T20:35:11.592+0000"
         },
         {
           "key": "RHOAIENG-53325",
           "parentKey": "RHOAIENG-53296",
           "summary": "[Llamastack ABAC] Add source repo(s) to Snyk",
           "type": "Task",
-          "status": "Backlog",
-          "statusCategory": "To Do",
+          "status": "In Progress",
+          "statusCategory": "In Progress",
           "priority": "Undefined",
           "assignee": "Kerry Torres",
           "components": [
@@ -386,7 +386,7 @@
           "labels": [],
           "storyPoints": 1,
           "created": "2026-03-13T14:19:27.424+0000",
-          "updated": "2026-04-03T01:58:19.311+0000",
+          "updated": "2026-04-07T14:51:26.141+0000",
           "resolutionDate": null
         },
         {
@@ -486,17 +486,18 @@
     "totalEpics": 1,
     "totalIssues": 22,
     "issuesByStatus": {
-      "Closed": 15,
-      "Backlog": 7
+      "Closed": 16,
+      "Backlog": 4,
+      "In Progress": 2
     },
     "issuesByCategory": {
-      "Done": 15,
-      "In Progress": 0,
-      "To Do": 7
+      "Done": 16,
+      "In Progress": 2,
+      "To Do": 4
     },
     "totalStoryPoints": 11,
-    "storyPointsDone": 0,
-    "completionPct": 68,
+    "storyPointsDone": 3,
+    "completionPct": 73,
     "staleCount": 0,
     "unassignedCount": 0,
     "blockerCount": 1,
@@ -509,15 +510,46 @@
         "statusCategory": "In Progress",
         "assignee": "Kerry Torres",
         "totalIssues": 22,
-        "doneIssues": 15,
-        "progressPct": 68,
+        "doneIssues": 16,
+        "progressPct": 73,
         "storyPoints": 11,
-        "storyPointsDone": 0,
+        "storyPointsDone": 3,
         "health": "RED"
       }
     ]
   },
   "topology": {
-    "repos": []
+    "repos": [
+      {
+        "url": "github.com/red-hat-data-services/llama-stack-distribution",
+        "issueCount": 22,
+        "doneIssues": 16,
+        "totalIssues": 22,
+        "components": [
+          "Llama Stack Core"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/llama-stack-k8s-operator",
+        "issueCount": 22,
+        "doneIssues": 16,
+        "totalIssues": 22,
+        "components": [
+          "Llama Stack Core"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/meta-llama/llama-stack",
+        "issueCount": 22,
+        "doneIssues": 16,
+        "totalIssues": 22,
+        "components": [
+          "Llama Stack Core"
+        ],
+        "lane": "upstream"
+      }
+    ]
   }
 }

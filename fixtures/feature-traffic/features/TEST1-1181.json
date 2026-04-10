@@ -11,8 +11,7 @@
   "fixVersions": [],
   "labels": [
     "3.4-candidate",
-    "confidence-green",
-    "needs-tech-review"
+    "confidence-green"
   ],
   "components": [
     "AI Safety",
@@ -20,7 +19,7 @@
     "SDG"
   ],
   "created": "2026-02-02T11:38:48.165+0000",
-  "updated": "2026-04-07T03:07:05.125+0000",
+  "updated": "2026-04-10T03:09:36.727+0000",
   "statusNotes": null,
   "issueLinks": [
     {
@@ -64,6 +63,13 @@
       "linkedKey": "RHAIRFE-1381",
       "linkedSummary": "Expand Garak with agent-specific probes that test tool-call hijacking, multi-turn escalation, and delegation abuse through agent protocols",
       "linkedStatus": "Stakeholder review"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-4351",
+      "linkedSummary": "[ccs Epic] Document SDG features released with 3.4",
+      "linkedStatus": "New"
     }
   ],
   "epics": [],
