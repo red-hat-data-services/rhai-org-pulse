@@ -225,36 +225,29 @@ docs/
   MODULES.md            # Module development guide
   module-template/      # Starter template for new modules
 
+.github/
+  instructions/
+    review.instructions.md  # Shared code review criteria
+  workflows/                # CI/CD workflows
+
+AGENTS.md           # Vendor-neutral AI agent conventions
 data/               # Local dev data (gitignored)
 secrets/            # Service account keys (gitignored)
 ```
 
-## Code Style
+## Code Style, Testing & Documentation
 
-- Use `<script setup>` for new Vue components
-- CommonJS (`require`) for server-side code
-- ES modules (`import`) for frontend code
-- No TypeScript — plain JavaScript throughout
-- Prefer composables (`src/composables/`) for shared state logic
-- Tailwind utility classes for styling; custom `primary` color palette defined in tailwind.config.mjs
-- **Always run `npm run lint` before committing** — CI will reject lint failures. A pre-commit hook (`lint-staged` + `husky`) auto-runs ESLint on staged files, but verify manually if unsure.
+See [`AGENTS.md`](../AGENTS.md) for code style, testing, and documentation
+maintenance conventions. Those apply to all AI agents and are the single source
+of truth. A pre-commit hook (`lint-staged` + `husky`) auto-runs ESLint on staged
+files, but always verify with `npm run lint` before committing.
 
-## Testing
+## Code Review
 
-- Vitest + @vue/test-utils for frontend tests in `src/__tests__/` and `modules/*/__tests__/client/`
-- Vitest for backend unit tests in `modules/*/__tests__/server/`
-- Module manifest validation: `npm run validate:modules`
-- Run `npm test` before committing
-
-## Documentation Maintenance
-
-Keep docs in sync with code changes. When making changes, update the relevant docs in the same PR:
-
-- **Data format changes** (how JSON is read/written in `data/`): Update `docs/DATA-FORMATS.md` AND the corresponding `fixtures/` files to match
-- **New or changed API routes**: Update the API Routes section in this file
-- **New data files or storage paths**: Update the Data Flow section in this file and add schema to `docs/DATA-FORMATS.md`
-- **New shared exports**: Update `shared/API.md`
-- **Module system changes**: Update `docs/MODULES.md`
+Review criteria are centralized in
+[`.github/instructions/review.instructions.md`](../.github/instructions/review.instructions.md).
+This file is used by the CI review workflow, the `/pr-review` slash command, and
+GitHub Copilot code review.
 
 ## API Routes
 

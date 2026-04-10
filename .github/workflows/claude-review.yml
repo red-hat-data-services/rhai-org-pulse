@@ -138,12 +138,8 @@ jobs:
                  post a comment explaining that no PR was found and exit.
                - Run `gh pr checkout <PR_NUMBER>` to switch to the PR branch.
 
-            2. **Review** the PR diff for:
-               - Code quality and maintainability
-               - Security vulnerabilities (OWASP top 10, injection, XSS, etc.)
-               - Potential bugs and edge cases
-               - Adherence to project conventions (see CLAUDE.md)
-               - Performance concerns
+            2. **Review** the PR diff. Read `.github/instructions/review.instructions.md`
+               for the full review checklist. Apply all criteria from that file.
 
             3. **Fix** any issues you find by editing the files directly:
                - Use Edit/Write tools to modify the source files
@@ -313,12 +309,8 @@ jobs:
             1. Run `gh pr diff ${{ github.event.pull_request.number }}` to get the
                full diff of the PR.
 
-            2. **Review** the diff for:
-               - Code quality and maintainability
-               - Security vulnerabilities (OWASP top 10, injection, XSS, etc.)
-               - Potential bugs and edge cases
-               - Adherence to project conventions (see CLAUDE.md)
-               - Performance concerns
+            2. **Review** the diff. Read `.github/instructions/review.instructions.md`
+               for the full review checklist. Apply all criteria from that file.
 
             3. **Report** your findings:
                - Use inline comments for specific issues in the diff

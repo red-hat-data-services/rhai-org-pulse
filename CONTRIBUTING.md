@@ -122,6 +122,10 @@ Use descriptive branch names:
 5. Run `npm run build` to confirm the production build works
 6. Open a PR against `main`
 
+PRs receive an automated Claude code review that can fix minor issues directly.
+The review criteria are defined in
+[`.github/instructions/review.instructions.md`](.github/instructions/review.instructions.md).
+
 ### Code style
 
 - `<script setup>` for new Vue components
