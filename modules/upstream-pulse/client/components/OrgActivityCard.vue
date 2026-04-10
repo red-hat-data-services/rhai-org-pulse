@@ -4,14 +4,20 @@
     :class="{ 'cursor-pointer': clickable }"
     @click="$emit('click')"
   >
-    <!-- Row 1: Name + engagement badge + hover chevron -->
+    <!-- Row 1: Name + engagement status + hover chevron -->
     <div class="flex items-start justify-between mb-3">
       <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">{{ orgName }}</h3>
-      <ChevronRightIcon
-        v-if="clickable"
-        :size="16"
-        class="shrink-0 ml-2 text-gray-300 dark:text-gray-600 opacity-0 group-hover/card:opacity-100 transition-opacity duration-200"
-      />
+      <div class="flex items-center gap-2 shrink-0 ml-2">
+        <span :class="engagementStatus.classes"
+              class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap border">
+          {{ engagementStatus.label }}
+        </span>
+        <ChevronRightIcon
+          v-if="clickable"
+          :size="16"
+          class="text-gray-300 dark:text-gray-600 opacity-0 group-hover/card:opacity-100 transition-opacity duration-200"
+        />
+      </div>
     </div>
 
     <!-- Row 2: Contribution count + trend -->
@@ -77,6 +83,8 @@ defineEmits(['click'])
 
 const props = defineProps({
   orgName: { type: String, default: '' },
+  strategicParticipation: { type: String, default: null },
+  strategicLeadership: { type: String, default: null },
   teamContributions: { type: Number, default: 0 },
   totalContributions: { type: Number, default: 0 },
   teamSharePercent: { type: Number, default: 0 },
@@ -90,6 +98,34 @@ const props = defineProps({
 })
 
 const teamShareLabel = computed(() => Number(props.teamSharePercent).toFixed(1))
+
+const engagementStatus = computed(() => {
+  const hasGovernance = props.leadershipCount > 0 || props.maintainerCount > 0
+  const highGovernance = props.leadershipCount >= 3 || props.maintainerCount >= 5
+
+  if (props.teamContributions === 0 && !hasGovernance) {
+    return {
+      label: 'New Entrant',
+      classes: 'text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600'
+    }
+  }
+  if (highGovernance) {
+    return {
+      label: 'Established Leader',
+      classes: 'text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700'
+    }
+  }
+  if (hasGovernance) {
+    return {
+      label: 'Core Contributor',
+      classes: 'text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700'
+    }
+  }
+  return {
+    label: 'Active',
+    classes: 'text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600'
+  }
+})
 
 const trendArrow = computed(() => {
   if (props.percentChange > 0) return '↑'

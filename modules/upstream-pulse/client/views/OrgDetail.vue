@@ -10,7 +10,51 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
       <div>
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ displayName }}</h2>
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ displayName }}</h2>
+
+          <!-- Engagement Status Badge with Tooltip -->
+          <div v-if="dashboard" class="relative group/engagement">
+            <span
+              :class="engagementStatus.classes"
+              class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border"
+            >
+              {{ engagementStatus.label }}
+            </span>
+            <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover/engagement:opacity-100 group-hover/engagement:visible transition-all duration-200 pointer-events-none whitespace-nowrap z-50">
+              {{ engagementStatus.description }}
+              <div class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-900 dark:border-t-gray-700"></div>
+            </div>
+          </div>
+
+          <!-- Strategic Leadership Badge with Tooltip -->
+          <div v-if="strategicLeadership" class="relative group/leadership">
+            <span
+              class="px-3 py-1 rounded-full text-xs font-semibold"
+              :class="getStrategicBadgeClass(strategicLeadership)"
+            >
+              {{ getStrategicLabel(strategicLeadership, 'leadership') }}
+            </span>
+            <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover/leadership:opacity-100 group-hover/leadership:visible transition-all duration-200 pointer-events-none whitespace-nowrap z-50">
+              {{ getStrategicDescription(strategicLeadership) }}
+              <div class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-900 dark:border-t-gray-700"></div>
+            </div>
+          </div>
+
+          <!-- Strategic Participation Badge with Tooltip -->
+          <div v-if="strategicParticipation" class="relative group/participation">
+            <span
+              class="px-3 py-1 rounded-full text-xs font-semibold"
+              :class="getStrategicBadgeClass(strategicParticipation)"
+            >
+              {{ getStrategicLabel(strategicParticipation, 'participation') }}
+            </span>
+            <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover/participation:opacity-100 group-hover/participation:visible transition-all duration-200 pointer-events-none whitespace-nowrap z-50">
+              {{ getStrategicDescription(strategicParticipation) }}
+              <div class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-900 dark:border-t-gray-700"></div>
+            </div>
+          </div>
+        </div>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Team engagement in {{ displayName }} projects</p>
       </div>
       <div class="flex items-center gap-3">
@@ -484,6 +528,10 @@ const periodOptions = [
 
 const githubOrg = computed(() => nav.params.value?.org || '')
 const displayName = ref('')
+const strategicParticipation = ref(null)
+const strategicLeadership = ref(null)
+const orgLeadershipCount = ref(0)
+const orgMaintainerCount = ref(0)
 
 const selectedDays = ref('30')
 const loading = ref(true)
@@ -496,6 +544,43 @@ const leadership = ref(null)
 const membersExpanded = ref(false)
 const governanceExpanded = ref(false)
 const orgProjects = ref([])
+
+function getStrategicLabel(strategic, _type) {
+  if (!strategic) return ''
+  const labels = {
+    'evaluating_participation': 'Evaluating Participation',
+    'sustaining_participation': 'Sustaining Participation',
+    'increasing_participation': 'Increasing Participation',
+    'evaluating_leadership': 'Evaluating Leadership',
+    'sustaining_leadership': 'Sustaining Leadership',
+    'increasing_leadership': 'Increasing Leadership',
+  }
+  return labels[strategic] || strategic
+}
+
+function getStrategicBadgeClass(strategic) {
+  const classes = {
+    'evaluating_participation': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+    'sustaining_participation': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+    'increasing_participation': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    'evaluating_leadership': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+    'sustaining_leadership': 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+    'increasing_leadership': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+  }
+  return classes[strategic] || ''
+}
+
+function getStrategicDescription(strategic) {
+  const descriptions = {
+    'evaluating_participation': 'Red Hat is evaluating whether to increase participation in this project',
+    'sustaining_participation': 'Red Hat is sustaining current participation levels in this project',
+    'increasing_participation': 'Red Hat is actively increasing participation in this project',
+    'evaluating_leadership': 'Red Hat is evaluating whether to pursue leadership positions in this project',
+    'sustaining_leadership': 'Red Hat is sustaining current leadership presence in this project',
+    'increasing_leadership': 'Red Hat is actively pursuing more leadership positions in this project',
+  }
+  return descriptions[strategic] || ''
+}
 
 const visibleContributors = computed(() => {
   if (contributorsExpanded.value) return contributors.value
@@ -617,6 +702,42 @@ const totalGovernancePositions = computed(() => {
   return count
 })
 
+const engagementStatus = computed(() => {
+  const leadershipCount = orgLeadershipCount.value
+  const maintainerCount = orgMaintainerCount.value
+  const teamContributions = dashboard.value?.contributions?.all?.team || 0
+
+  const hasGovernance = leadershipCount > 0 || maintainerCount > 0
+  const highGovernance = leadershipCount >= 3 || maintainerCount >= 5
+
+  if (teamContributions === 0 && !hasGovernance) {
+    return {
+      label: 'New Entrant',
+      classes: 'text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600',
+      description: 'No contributions or governance positions yet'
+    }
+  }
+  if (highGovernance) {
+    return {
+      label: 'Established Leader',
+      classes: 'text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700',
+      description: 'Significant influence with 3+ leadership positions or 5+ maintainers'
+    }
+  }
+  if (hasGovernance) {
+    return {
+      label: 'Core Contributor',
+      classes: 'text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700',
+      description: 'Active participation with leadership or maintainer positions'
+    }
+  }
+  return {
+    label: 'Active',
+    classes: 'text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600',
+    description: 'Contributing code without formal governance positions'
+  }
+})
+
 const projectCoveragePercent = computed(() => {
   if (!leadership.value?.summary || !dashboard.value?.summary) return 0
   const covered = leadership.value.summary.projectsWithTeamLeadership || 0
@@ -652,6 +773,10 @@ async function loadData() {
 
     const match = orgsData.orgs?.find(o => o.githubOrg === org)
     displayName.value = match?.name || org
+    strategicParticipation.value = match?.strategicParticipation || null
+    strategicLeadership.value = match?.strategicLeadership || null
+    orgLeadershipCount.value = match?.leadershipCount || 0
+    orgMaintainerCount.value = match?.maintainerCount || 0
 
     const topProjects = dashData.topProjects || []
     const metricsById = new Map()
