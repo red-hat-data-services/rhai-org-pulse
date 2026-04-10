@@ -263,6 +263,14 @@
                   <td class="px-6 py-4">
                     <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ org.name }}</span>
                   </td>
+                  <td class="px-6 py-4">
+                    <span
+                      :class="getEngagementStatus(org.leadershipCount || 0, org.maintainerCount || 0, org.contributionCount || 0).classes"
+                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap border"
+                    >
+                      {{ getEngagementStatus(org.leadershipCount || 0, org.maintainerCount || 0, org.contributionCount || 0).label }}
+                    </span>
+                  </td>
                   <td class="px-6 py-4 text-right">
                     <span class="text-sm font-bold text-gray-900 dark:text-gray-100 tabular-nums">{{ (org.contributionCount || 0).toLocaleString() }}</span>
                     <span
@@ -525,11 +533,13 @@ const orgSortOptions = [
   { label: 'Contributions', value: 'contributionCount' },
   { label: 'Team Share', value: 'teamSharePercent' },
   { label: 'Active Members', value: 'activeTeamMembers' },
+  { label: 'Strategic Importance', value: 'strategicImportance' },
   { label: 'Name', value: 'name' },
 ]
 
 const orgTableColumns = [
   { label: 'Organization', field: 'name', align: 'left' },
+  { label: 'Engagement Status', field: 'engagementStatus', align: 'left' },
   { label: 'Contributions', field: 'contributionCount', align: 'right' },
   { label: 'Team Share', field: 'teamSharePercent', align: 'right' },
   { label: 'Members', field: 'activeTeamMembers', align: 'right' },
@@ -592,7 +602,7 @@ watch(searchInput, (val) => {
 watch(orgPageSize, () => { orgCurrentPage.value = 1 })
 watch(projectPageSize, () => { projectCurrentPage.value = 1 })
 watch(orgSortField, (field) => {
-  orgSortDirection.value = field === 'name' ? 'asc' : 'desc'
+  orgSortDirection.value = (field === 'name') ? 'asc' : 'desc'
   orgCurrentPage.value = 1
 })
 
@@ -605,7 +615,7 @@ function handleOrgTableSort(field) {
     orgSortDirection.value = orgSortDirection.value === 'asc' ? 'desc' : 'asc'
   } else {
     orgSortField.value = field
-    orgSortDirection.value = field === 'name' ? 'asc' : 'desc'
+    orgSortDirection.value = (field === 'name') ? 'asc' : 'desc'
   }
   orgCurrentPage.value = 1
 }
@@ -634,6 +644,20 @@ const sortedOrgsList = computed(() => {
     const field = orgSortField.value
     if (field === 'name') {
       const cmp = (a.name || '').localeCompare(b.name || '')
+      return orgSortDirection.value === 'asc' ? cmp : -cmp
+    }
+    if (field === 'engagementStatus') {
+      const statusOrder = {
+        'Established Leader': 4,
+        'Core Contributor': 3,
+        'Active': 2,
+        'New Entrant': 1
+      }
+      const aStatus = getEngagementStatus(a.leadershipCount || 0, a.maintainerCount || 0, a.contributionCount || 0).label
+      const bStatus = getEngagementStatus(b.leadershipCount || 0, b.maintainerCount || 0, b.contributionCount || 0).label
+      const aVal = statusOrder[aStatus] || 0
+      const bVal = statusOrder[bStatus] || 0
+      const cmp = aVal - bVal
       return orgSortDirection.value === 'asc' ? cmp : -cmp
     }
     const cmp = (a[field] || 0) - (b[field] || 0)
@@ -711,6 +735,34 @@ function handleProjectSort(field) {
     projectSortDirection.value = field === 'teamContributions' ? 'desc' : 'asc'
   }
   projectCurrentPage.value = 1
+}
+
+function getEngagementStatus(leadershipCount, maintainerCount, total) {
+  const hasGovernance = leadershipCount > 0 || maintainerCount > 0
+  const highGovernance = leadershipCount >= 3 || maintainerCount >= 5
+
+  if (total === 0 && !hasGovernance) {
+    return {
+      label: 'New Entrant',
+      classes: 'text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600'
+    }
+  }
+  if (highGovernance) {
+    return {
+      label: 'Established Leader',
+      classes: 'text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700'
+    }
+  }
+  if (hasGovernance) {
+    return {
+      label: 'Core Contributor',
+      classes: 'text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700'
+    }
+  }
+  return {
+    label: 'Active',
+    classes: 'text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600'
+  }
 }
 
 async function loadData() {

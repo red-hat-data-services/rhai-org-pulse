@@ -194,9 +194,11 @@
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <OrgActivityCard
-            v-for="activity in orgActivity"
+            v-for="activity in orgActivity.slice(0, 4)"
             :key="activity.org"
             :org-name="activity.orgName"
+            :strategic-participation="activity.strategicParticipation"
+            :strategic-leadership="activity.strategicLeadership"
             :team-contributions="activity.total || 0"
             :total-contributions="activity.totalContributions || 0"
             :team-share-percent="activity.teamSharePercent || 0"
@@ -345,6 +347,15 @@
           <p class="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">Team influence in upstream governance</p>
         </div>
 
+        <!-- Leadership Strategy -->
+        <div v-if="orgActivity.length" class="mb-6">
+          <h4 class="text-base font-semibold text-gray-700 dark:text-gray-300 mb-3">Leadership Strategy</h4>
+          <LeadershipStrategy
+            :org-activity="orgActivity"
+            @org-click="(org) => nav.navigateTo('org-detail', { org })"
+          />
+        </div>
+
         <div v-if="!leadership && !communityOrgs.length" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 p-8 text-center">
           <p class="text-sm text-gray-500 dark:text-gray-400">No leadership data available</p>
         </div>
@@ -392,7 +403,7 @@
                       <p class="text-xs text-gray-500 dark:text-gray-400">{{ leader.positionCount === 1 ? 'position' : 'positions' }}</p>
                     </div>
                   </div>
-                  <div class="hidden group-hover:block pl-16 pr-4 pb-3">
+                  <div class="pl-16 pr-4 pb-3 pt-1">
                     <div class="flex flex-wrap gap-1.5">
                       <span
                         v-for="detail in leader.roleDetails"
@@ -549,6 +560,7 @@ import LeadershipCard from '../components/LeadershipCard.vue'
 import ContributionTrendChart from '../components/ContributionTrendChart.vue'
 import OrgActivityCard from '../components/OrgActivityCard.vue'
 import ProjectCard from '../components/ProjectCard.vue'
+import LeadershipStrategy from '../components/LeadershipStrategy.vue'
 import AddProjectModal from '../components/AddProjectModal.vue'
 import { StatCardSkeleton, ContributionCardSkeleton, OrgCardSkeleton, ProjectCardSkeleton, ContributorRowSkeleton } from '../components/SkeletonLoaders.vue'
 import { useGovernanceCards, uniqueRoles } from '../composables/useGovernanceCards.js'
