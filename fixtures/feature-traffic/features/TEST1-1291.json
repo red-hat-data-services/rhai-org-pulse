@@ -14,7 +14,7 @@
     "Notebooks Images"
   ],
   "created": "2026-03-12T15:18:23.210+0000",
-  "updated": "2026-04-07T18:14:31.672+0000",
+  "updated": "2026-04-09T17:35:00.743+0000",
   "statusNotes": {
     "type": "doc",
     "version": 1,
@@ -86,7 +86,15 @@
       }
     ]
   },
-  "issueLinks": [],
+  "issueLinks": [
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-55575",
+      "linkedSummary": "[ccs] Draft & review RN for AIPCC wheels in Notebook images - TP in 3.4 EA2",
+      "linkedStatus": "New"
+    }
+  ],
   "epics": [],
   "metrics": {
     "totalEpics": 0,

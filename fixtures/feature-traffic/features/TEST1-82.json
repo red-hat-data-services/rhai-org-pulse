@@ -5,7 +5,7 @@
   "statusCategory": "In Progress",
   "priority": "Major",
   "assignee": {
-    "displayName": "Onyx Finn",
+    "displayName": "Rui Vieira",
     "accountId": "70121:5a9a760a-598b-49c2-af0e-60c52f76c598"
   },
   "fixVersions": [],
@@ -55,7 +55,7 @@
           "status": "Review",
           "statusCategory": "In Progress",
           "priority": "Major",
-          "assignee": "Onyx Finn",
+          "assignee": "Rui Vieira",
           "components": [
             "AI Core Dashboard",
             "AI Safety"
@@ -74,7 +74,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Onyx Finn",
+          "assignee": "Rui Vieira",
           "components": [
             "AI Safety"
           ],
@@ -92,7 +92,7 @@
           "status": "Review",
           "statusCategory": "In Progress",
           "priority": "Major",
-          "assignee": "Onyx Finn",
+          "assignee": "Rui Vieira",
           "components": [
             "AI Core Dashboard",
             "AI Evaluations",
@@ -130,7 +130,7 @@
       "status": "Closed",
       "statusCategory": "Done",
       "priority": "Undefined",
-      "assignee": "Frankie Jensen",
+      "assignee": "Former Member 9",
       "components": [
         "AI Safety"
       ],
@@ -166,7 +166,7 @@
         "summary": "[Eng] TrustyAI Service v1alpha1 Deprecation",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Onyx Finn",
+        "assignee": "Rui Vieira",
         "totalIssues": 3,
         "doneIssues": 1,
         "progressPct": 33,
@@ -192,7 +192,7 @@
         "summary": "[Docs] TrustyAI Service v1alpha1 Deprecation",
         "status": "Closed",
         "statusCategory": "Done",
-        "assignee": "Gray Rowe",
+        "assignee": "Bronagh Synnott",
         "totalIssues": 0,
         "doneIssues": 0,
         "progressPct": 0,

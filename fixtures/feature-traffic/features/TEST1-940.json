@@ -19,7 +19,7 @@
     "Training Kubeflow"
   ],
   "created": "2025-12-02T15:28:11.205+0000",
-  "updated": "2026-02-23T09:21:21.821+0000",
+  "updated": "2026-04-09T08:26:00.097+0000",
   "statusNotes": null,
   "issueLinks": [
     {
@@ -49,6 +49,20 @@
       "linkedKey": "RHAIRFE-979",
       "linkedSummary": "Kubeflow Trainer v2 OIDC Support",
       "linkedStatus": "Approved"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-57411",
+      "linkedSummary": "[SPIKE] Investigate (BYO)OIDC additions for kubeflow trainer",
+      "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Related",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-51367",
+      "linkedSummary": "Review: Adopt kube-authkit as officially supported client library for Red Hat AI",
+      "linkedStatus": "New"
     }
   ],
   "epics": [],

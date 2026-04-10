@@ -1,7 +1,7 @@
 {
   "key": "TEST1-1129",
   "summary": "Fix race condition",
-  "status": "In Progress",
+  "status": "Review",
   "statusCategory": "In Progress",
   "priority": "Critical",
   "assignee": {
@@ -17,7 +17,7 @@
     "Feature Store"
   ],
   "created": "2026-01-19T07:41:56.167+0000",
-  "updated": "2026-04-07T13:58:26.380+0000",
+  "updated": "2026-04-09T10:29:54.029+0000",
   "statusNotes": {
     "type": "doc",
     "version": 1,
@@ -133,7 +133,7 @@
       "key": "TEST2-46061",
       "parentKey": "RHAISTRAT-1129",
       "summary": "Fix validation issue",
-      "status": "In Progress",
+      "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
       "assignee": "Person 289",
@@ -143,7 +143,7 @@
       "labels": [],
       "storyPoints": 0,
       "created": "2026-01-19T08:14:33.303+0000",
-      "updated": "2026-03-23T12:31:47.295+0000",
+      "updated": "2026-04-08T15:59:54.139+0000",
       "issues": [
         {
           "key": "RHOAIENG-46062",
@@ -402,8 +402,8 @@
           "parentKey": "RHOAIENG-46061",
           "summary": "Validate and benchmark on-demand transformation modes (Pandas, Python)",
           "type": "Task",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
+          "status": "Resolved",
+          "statusCategory": "Done",
           "priority": "Major",
           "assignee": "Merit Rowe",
           "components": [
@@ -412,8 +412,8 @@
           "labels": [],
           "storyPoints": 5,
           "created": "2026-02-17T08:57:37.748+0000",
-          "updated": "2026-04-07T15:50:21.247+0000",
-          "resolutionDate": null
+          "updated": "2026-04-08T08:27:50.876+0000",
+          "resolutionDate": "2026-04-08T08:27:50.831+0000"
         },
         {
           "key": "RHOAIENG-50023",
@@ -567,17 +567,17 @@
     "totalIssues": 21,
     "issuesByStatus": {
       "Closed": 11,
-      "Resolved": 8,
-      "In Progress": 2
+      "Resolved": 9,
+      "In Progress": 1
     },
     "issuesByCategory": {
-      "Done": 19,
-      "In Progress": 2,
+      "Done": 20,
+      "In Progress": 1,
       "To Do": 0
     },
     "totalStoryPoints": 109,
-    "storyPointsDone": 96,
-    "completionPct": 90,
+    "storyPointsDone": 101,
+    "completionPct": 95,
     "staleCount": 1,
     "unassignedCount": 0,
     "blockerCount": 0,
@@ -586,14 +586,14 @@
       {
         "key": "RHOAIENG-46061",
         "summary": "Feast Feature Server & On-Demand Transformations Performance Optimization",
-        "status": "In Progress",
+        "status": "Review",
         "statusCategory": "In Progress",
         "assignee": "Merit Emery",
         "totalIssues": 19,
-        "doneIssues": 18,
-        "progressPct": 95,
+        "doneIssues": 19,
+        "progressPct": 100,
         "storyPoints": 96,
-        "storyPointsDone": 91,
+        "storyPointsDone": 96,
         "health": "GREEN"
       },
       {
@@ -625,6 +625,37 @@
     ]
   },
   "topology": {
-    "repos": []
+    "repos": [
+      {
+        "url": "github.com/red-hat-data-services/feast",
+        "issueCount": 19,
+        "doneIssues": 19,
+        "totalIssues": 19,
+        "components": [
+          "Feature Store"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/feast-dev/feast",
+        "issueCount": 19,
+        "doneIssues": 19,
+        "totalIssues": 19,
+        "components": [
+          "Feature Store"
+        ],
+        "lane": "upstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/odh-dashboard",
+        "issueCount": 2,
+        "doneIssues": 1,
+        "totalIssues": 2,
+        "components": [
+          "Documentation"
+        ],
+        "lane": "destination"
+      }
+    ]
   }
 }

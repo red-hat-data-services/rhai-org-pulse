@@ -5,7 +5,7 @@
   "statusCategory": "In Progress",
   "priority": "Major",
   "assignee": {
-    "displayName": "Kerry Rowe",
+    "displayName": "Kevin Howell",
     "accountId": "70121:9b26500c-6ffe-42f2-bf41-fcf3a5849077"
   },
   "fixVersions": [],
@@ -71,7 +71,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Joyce",
+          "assignee": "Dayakar Maruboena",
           "components": [
             "AI Core Platform"
           ],
@@ -89,7 +89,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Nolan",
+          "assignee": "Denis Moskalenko",
           "components": [
             "AI Core Platform"
           ],
@@ -107,7 +107,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Onyx Nolan",
+          "assignee": "Denis Moskalenko",
           "components": [
             "AI Core Platform"
           ],
@@ -128,7 +128,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Gray Webb",
+          "assignee": "Marian Macik",
           "components": [
             "AI Core Platform"
           ],
@@ -146,7 +146,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Chang",
+          "assignee": "Cesar Francisco San Nicolas Martinez",
           "components": [
             "AI Core Platform"
           ],
@@ -164,7 +164,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Day",
+          "assignee": "Wen Zhou",
           "components": [
             "AI Core Platform"
           ],
@@ -182,7 +182,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Joyce",
+          "assignee": "Dayakar Maruboena",
           "components": [
             "AI Core Platform"
           ],
@@ -202,7 +202,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Nolan",
+          "assignee": "Denis Moskalenko",
           "components": [
             "AI Core Platform"
           ],
@@ -220,7 +220,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Day",
+          "assignee": "Wen Zhou",
           "components": [
             "AI Core Platform"
           ],
@@ -238,7 +238,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Nolan",
+          "assignee": "Denis Moskalenko",
           "components": [
             "AI Core Platform"
           ],
@@ -259,7 +259,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Gray Finn",
+          "assignee": "Steven Tobin",
           "components": [
             "AI Core Platform"
           ],
@@ -279,7 +279,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Gray Finn",
+          "assignee": "Steven Tobin",
           "components": [
             "AI Core Platform"
           ],
@@ -297,7 +297,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Day",
+          "assignee": "Wen Zhou",
           "components": [
             "AI Core Platform"
           ],
@@ -315,7 +315,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Kerry York",
+          "assignee": "Filip Roman",
           "components": [
             "AI Core Platform"
           ],
@@ -336,7 +336,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Normal",
-      "assignee": "Onyx Ingram",
+      "assignee": "Former Member 11",
       "components": [
         "Documentation"
       ],
@@ -353,7 +353,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Kerry Carter",
+          "assignee": "Manushri Pandya",
           "components": [
             "Documentation"
           ],
@@ -371,7 +371,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Normal",
-          "assignee": "Kerry Carter",
+          "assignee": "Manushri Pandya",
           "components": [
             "Documentation"
           ],
@@ -410,7 +410,7 @@
         "summary": "Enhance centralized RHOAI monitoring",
         "status": "Resolved",
         "statusCategory": "Done",
-        "assignee": "Kerry Rowe",
+        "assignee": "Kevin Howell",
         "totalIssues": 14,
         "doneIssues": 14,
         "progressPct": 100,
@@ -423,7 +423,7 @@
         "summary": "[ccs Epic] Enhance centralized RHOAI monitoring",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Kerry Carter",
+        "assignee": "Manushri Pandya",
         "totalIssues": 2,
         "doneIssues": 1,
         "progressPct": 50,

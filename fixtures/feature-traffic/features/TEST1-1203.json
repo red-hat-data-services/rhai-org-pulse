@@ -19,7 +19,7 @@
     "Model Eval"
   ],
   "created": "2026-02-11T19:48:29.801+0000",
-  "updated": "2026-04-03T16:48:02.077+0000",
+  "updated": "2026-04-08T16:00:30.008+0000",
   "statusNotes": {
     "type": "doc",
     "version": 1,
@@ -29,7 +29,7 @@
         "content": [
           {
             "type": "text",
-            "text": "2026-03-17: the "
+            "text": "2026-04-08: Wrapped up the development based on the "
           },
           {
             "type": "text",
@@ -45,7 +45,7 @@
           },
           {
             "type": "text",
-            "text": " is validated for the Summit timeframe, wrapping "
+            "text": " which was validated for the Summit timeframe, wrapping "
           },
           {
             "type": "text",
@@ -58,7 +58,23 @@
           },
           {
             "type": "text",
-            "text": " for a demo; starting assessment wrt connection to MCP Gateway related discussion for authn/z/tenants with Architects."
+            "text": "; post 3.4 a "
+          },
+          {
+            "type": "text",
+            "text": "separate Strat was raised",
+            "marks": [
+              {
+                "type": "link",
+                "attrs": {
+                  "href": "https://redhat.atlassian.net/browse/RHAISTRAT-1381"
+                }
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "text": " to rework MCP from the server-side end"
           }
         ]
       }
@@ -76,7 +92,7 @@
       "type": "Related",
       "direction": "inward",
       "linkedKey": "RHAIRFE-1160",
-      "linkedSummary": "Agent Skills for Eval-Hub (for evalhub cli)",
+      "linkedSummary": "Enable Agent-Discoverable Evaluations (Agent Skills) for Eval-Hub",
       "linkedStatus": "Stakeholder review"
     },
     {

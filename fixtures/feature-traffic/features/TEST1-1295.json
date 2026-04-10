@@ -19,7 +19,7 @@
     "Model as a Service"
   ],
   "created": "2026-03-12T18:57:02.188+0000",
-  "updated": "2026-04-07T20:57:05.656+0000",
+  "updated": "2026-04-09T20:55:01.262+0000",
   "statusNotes": null,
   "issueLinks": [
     {
@@ -61,7 +61,7 @@
       ],
       "storyPoints": 0,
       "created": "2026-03-22T20:41:07.071+0000",
-      "updated": "2026-04-05T00:34:52.620+0000",
+      "updated": "2026-04-09T07:04:30.504+0000",
       "issues": []
     },
     {
@@ -80,7 +80,7 @@
       ],
       "storyPoints": 0,
       "created": "2026-03-23T21:35:55.238+0000",
-      "updated": "2026-04-07T16:38:08.321+0000",
+      "updated": "2026-04-08T19:57:45.583+0000",
       "issues": [
         {
           "key": "RHOAIENG-54834",
@@ -574,7 +574,7 @@
       "key": "TEST2-55187",
       "parentKey": "RHAISTRAT-1295",
       "summary": "Add health check endpoint",
-      "status": "In Progress",
+      "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
       "assignee": "Person 346",
@@ -586,7 +586,7 @@
       ],
       "storyPoints": 0,
       "created": "2026-03-25T15:58:36.170+0000",
-      "updated": "2026-04-07T11:36:30.745+0000",
+      "updated": "2026-04-09T15:53:03.705+0000",
       "issues": []
     }
   ],
@@ -641,7 +641,7 @@
       {
         "key": "RHOAIENG-55187",
         "summary": "RHOAI Konflux Onboarding [AI-Gateway-Payload-Processing]",
-        "status": "In Progress",
+        "status": "Review",
         "statusCategory": "In Progress",
         "assignee": "Kerry Xu",
         "totalIssues": 0,
@@ -654,6 +654,57 @@
     ]
   },
   "topology": {
-    "repos": []
+    "repos": [
+      {
+        "url": "github.com/red-hat-data-services/RHOAI-Build-Config",
+        "issueCount": 2,
+        "doneIssues": 1,
+        "totalIssues": 2,
+        "components": [
+          "DevOps"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/models-as-a-service",
+        "issueCount": 1,
+        "doneIssues": 1,
+        "totalIssues": 1,
+        "components": [
+          "Model as a Service"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/odh-dashboard",
+        "issueCount": 1,
+        "doneIssues": 1,
+        "totalIssues": 1,
+        "components": [
+          "Model as a Service"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/rhods-operator",
+        "issueCount": 3,
+        "doneIssues": 0,
+        "totalIssues": 3,
+        "components": [
+          "AI Core Platform"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/opendatahub-io/opendatahub-operator",
+        "issueCount": 3,
+        "doneIssues": 0,
+        "totalIssues": 3,
+        "components": [
+          "AI Core Platform"
+        ],
+        "lane": "upstream"
+      }
+    ]
   }
 }

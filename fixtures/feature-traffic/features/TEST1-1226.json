@@ -14,7 +14,7 @@
     "Notebooks Images"
   ],
   "created": "2026-02-18T17:06:24.045+0000",
-  "updated": "2026-04-07T18:14:22.502+0000",
+  "updated": "2026-04-09T17:34:55.673+0000",
   "statusNotes": {
     "type": "doc",
     "version": 1,
@@ -39,7 +39,7 @@
           },
           {
             "type": "text",
-            "text": " as of 07-Apr-2026."
+            "text": " as of 09-Apr-2026."
           }
         ]
       },
@@ -48,7 +48,7 @@
         "content": [
           {
             "type": "text",
-            "text": "Updates remain on track for GA code freeze and will request to bring back into 3.4. De-scoped RStudio updates since RStudio will be removed in 3.5."
+            "text": "Updates remain on track for GA code freeze and requested to bring back into 3.4. De-scoped RStudio updates since RStudio will be removed in 3.5. Docs confirmed OK to readd to 3.4."
           }
         ]
       }
@@ -67,6 +67,13 @@
       "direction": "inward",
       "linkedKey": "RHAIRFE-1041",
       "linkedSummary": "Release 3.4 OOTB Workbenches",
+      "linkedStatus": "New"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-57433",
+      "linkedSummary": "[ccs] Document Notebooks images 3.4 updates - 3.4 GA",
       "linkedStatus": "New"
     }
   ],

@@ -5,7 +5,7 @@
   "statusCategory": "In Progress",
   "priority": "Critical",
   "assignee": {
-    "displayName": "Onyx Kelley",
+    "displayName": "Jay Koehler",
     "accountId": "606b693110a0a9006fd7ca32"
   },
   "fixVersions": [],
@@ -59,7 +59,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Hunt",
+          "assignee": "Max Whittingham",
           "components": [
             "AI Core Platform"
           ],
@@ -79,7 +79,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Hunt",
+          "assignee": "Max Whittingham",
           "components": [
             "AI Core Platform"
           ],
@@ -97,7 +97,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Kerry Chang",
+          "assignee": "Cesar Francisco San Nicolas Martinez",
           "components": [
             "AI Core Platform"
           ],
@@ -115,7 +115,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Dawson",
+          "assignee": "Gage Krumbach",
           "components": [
             "AI Core Dashboard",
             "AI Core Platform"
@@ -134,7 +134,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Hunt",
+          "assignee": "Max Whittingham",
           "components": [
             "AI Core Platform"
           ],
@@ -153,7 +153,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Undefined",
-      "assignee": "Onyx Ingram",
+      "assignee": "Former Member 11",
       "components": [
         "Documentation"
       ],
@@ -170,7 +170,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Carter",
+          "assignee": "Manushri Pandya",
           "components": [
             "Documentation"
           ],
@@ -190,7 +190,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Kerry Carter",
+          "assignee": "Manushri Pandya",
           "components": [
             "Documentation"
           ],
@@ -210,7 +210,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Gray Winn",
+          "assignee": "Amy Duquette",
           "components": [
             "AI Core Platform",
             "Documentation"
@@ -249,7 +249,7 @@
         "summary": "RHOAI - Custom Namespaces for Workbench Component",
         "status": "Closed",
         "statusCategory": "Done",
-        "assignee": "Onyx Lloyd",
+        "assignee": "Tramaine Darby",
         "totalIssues": 5,
         "doneIssues": 5,
         "progressPct": 100,
@@ -262,7 +262,7 @@
         "summary": "[ccs Epic] Document Namespace feat Phase 2",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Kerry Carter",
+        "assignee": "Manushri Pandya",
         "totalIssues": 3,
         "doneIssues": 3,
         "progressPct": 100,

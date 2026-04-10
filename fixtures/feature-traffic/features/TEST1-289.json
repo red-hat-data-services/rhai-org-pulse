@@ -18,7 +18,7 @@
     "SDG"
   ],
   "created": "2025-11-20T20:05:38.666+0000",
-  "updated": "2026-04-07T08:08:33.212+0000",
+  "updated": "2026-04-09T10:19:52.299+0000",
   "statusNotes": null,
   "issueLinks": [
     {
@@ -41,6 +41,13 @@
       "linkedKey": "RHAIRFE-214",
       "linkedSummary": "End-to-end model customization pipeline orchestration for RHOAI",
       "linkedStatus": "Approved"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-4351",
+      "linkedSummary": "[ccs Epic] Document SDG features released with 3.4",
+      "linkedStatus": "New"
     }
   ],
   "epics": [],

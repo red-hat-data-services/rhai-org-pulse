@@ -5,7 +5,7 @@
   "statusCategory": "In Progress",
   "priority": "Major",
   "assignee": {
-    "displayName": "Onyx Clay",
+    "displayName": "David Tam",
     "accountId": "712020:7c27708d-5dea-459a-a695-d0cfc6e36a1b"
   },
   "fixVersions": [
@@ -24,7 +24,7 @@
     "Training Kubeflow"
   ],
   "created": "2026-02-12T01:12:38.355+0000",
-  "updated": "2026-04-06T13:17:48.770+0000",
+  "updated": "2026-04-08T15:30:02.892+0000",
   "statusNotes": null,
   "issueLinks": [
     {
@@ -77,7 +77,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Gray Oates",
+          "assignee": "Nick Mazzitelli",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -98,7 +98,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Gray Oates",
+          "assignee": "Nick Mazzitelli",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -119,7 +119,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Bishop",
+          "assignee": "Jeffrey Ho",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -140,7 +140,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Gray Oates",
+          "assignee": "Nick Mazzitelli",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -183,7 +183,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Gray Young",
+          "assignee": "Christopher Jones",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -195,6 +195,27 @@
           "created": "2026-03-27T19:37:37.970+0000",
           "updated": "2026-04-01T13:49:03.550+0000",
           "resolutionDate": "2026-04-01T13:49:03.522+0000"
+        },
+        {
+          "key": "RHOAIENG-57037",
+          "parentKey": "RHOAIENG-50343",
+          "summary": "[AutoML] Show input parameters drawer on results screen",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Undefined",
+          "assignee": "Jeffrey Ho",
+          "components": [
+            "AI Core Dashboard",
+            "AutoML"
+          ],
+          "labels": [
+            "dashboard-purple-scrum"
+          ],
+          "storyPoints": 0,
+          "created": "2026-04-07T17:59:31.769+0000",
+          "updated": "2026-04-08T19:33:12.188+0000",
+          "resolutionDate": null
         }
       ]
     },
@@ -225,7 +246,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Gray Young",
+          "assignee": "Christopher Jones",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -246,7 +267,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Gray Oates",
+          "assignee": "Nick Mazzitelli",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -267,7 +288,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Gray Young",
+          "assignee": "Christopher Jones",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -285,10 +306,10 @@
           "parentKey": "RHOAIENG-50351",
           "summary": "Enhance documentation to support running and testing BFF locally",
           "type": "Task",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
+          "status": "Resolved",
+          "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Gray Young",
+          "assignee": "Christopher Jones",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -298,8 +319,8 @@
           ],
           "storyPoints": 0,
           "created": "2026-03-30T19:53:14.164+0000",
-          "updated": "2026-03-30T20:09:52.283+0000",
-          "resolutionDate": null
+          "updated": "2026-04-07T15:56:23.121+0000",
+          "resolutionDate": "2026-04-07T15:56:23.061+0000"
         }
       ]
     },
@@ -330,7 +351,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Hale",
+          "assignee": "Daniel Duong",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -351,7 +372,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Jay",
+          "assignee": "Matthew Thompson",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -372,7 +393,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Mead",
+          "assignee": "Gustavo Murcia",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -393,7 +414,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Mead",
+          "assignee": "Gustavo Murcia",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -403,7 +424,7 @@
           ],
           "storyPoints": 0,
           "created": "2026-02-19T17:00:27.126+0000",
-          "updated": "2026-04-02T14:45:47.119+0000",
+          "updated": "2026-04-08T19:10:54.012+0000",
           "resolutionDate": "2026-04-02T14:45:47.052+0000"
         },
         {
@@ -414,7 +435,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Bishop",
+          "assignee": "Jeffrey Ho",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -432,10 +453,10 @@
           "parentKey": "RHOAIENG-50361",
           "summary": "[AutoML] Create component to drag and drop file to selected s3 connection",
           "type": "Story",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
+          "status": "Resolved",
+          "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Jay",
+          "assignee": "Matthew Thompson",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -445,8 +466,8 @@
           ],
           "storyPoints": 0,
           "created": "2026-02-19T17:00:27.176+0000",
-          "updated": "2026-04-02T15:03:33.619+0000",
-          "resolutionDate": null
+          "updated": "2026-04-08T14:24:47.895+0000",
+          "resolutionDate": "2026-04-08T14:24:47.865+0000"
         }
       ]
     },
@@ -477,7 +498,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Flynn",
+          "assignee": "Julia Kyaw",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -498,7 +519,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Hale",
+          "assignee": "Daniel Duong",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -538,7 +559,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Gray Oates",
+          "assignee": "Nick Mazzitelli",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -559,7 +580,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Kerry Hale",
+          "assignee": "Anish Surti",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -580,7 +601,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Gray Young",
+          "assignee": "Christopher Jones",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -622,7 +643,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Gray Young",
+          "assignee": "Christopher Jones",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -664,7 +685,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Gray Young",
+          "assignee": "Christopher Jones",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -685,7 +706,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Gray Oates",
+          "assignee": "Nick Mazzitelli",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -727,7 +748,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Gray Oates",
+          "assignee": "Nick Mazzitelli",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -748,7 +769,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Mead",
+          "assignee": "Gustavo Murcia",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -769,7 +790,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Gray Oates",
+          "assignee": "Nick Mazzitelli",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -790,7 +811,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Gray Oates",
+          "assignee": "Nick Mazzitelli",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -811,7 +832,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Jay",
+          "assignee": "Matthew Thompson",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -854,7 +875,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Gray Young",
+          "assignee": "Christopher Jones",
           "components": [
             "AI Core Dashboard"
           ],
@@ -874,7 +895,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Gray Young",
+          "assignee": "Christopher Jones",
           "components": [
             "AI Core Dashboard"
           ],
@@ -894,7 +915,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Gray Oates",
+          "assignee": "Nick Mazzitelli",
           "components": [
             "AI Core Dashboard"
           ],
@@ -914,7 +935,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Onyx Clay",
+          "assignee": "David Tam",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -935,7 +956,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Onyx Clay",
+          "assignee": "David Tam",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -956,7 +977,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Onyx Clay",
+          "assignee": "David Tam",
           "components": [
             "AI Core Dashboard"
           ],
@@ -976,7 +997,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Onyx Clay",
+          "assignee": "David Tam",
           "components": [
             "AI Core Dashboard"
           ],
@@ -996,7 +1017,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Onyx Clay",
+          "assignee": "David Tam",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -1082,7 +1103,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Clay",
+          "assignee": "David Tam",
           "components": [
             "OpenShift AI Productization"
           ],
@@ -1100,7 +1121,7 @@
           "status": "Backlog",
           "statusCategory": "To Do",
           "priority": "Blocker",
-          "assignee": "Onyx Clay",
+          "assignee": "David Tam",
           "components": [
             "Update This Field With Components"
           ],
@@ -1120,7 +1141,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Clay",
+          "assignee": "David Tam",
           "components": [
             "AutoML",
             "DevOps"
@@ -1139,7 +1160,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Clay",
+          "assignee": "David Tam",
           "components": [
             "DevOps"
           ],
@@ -1157,7 +1178,7 @@
           "status": "Review",
           "statusCategory": "In Progress",
           "priority": "Normal",
-          "assignee": "Onyx Clay",
+          "assignee": "David Tam",
           "components": [
             "AutoML"
           ],
@@ -1175,7 +1196,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Webb",
+          "assignee": "Mhamad Chamseddin",
           "components": [
             "AutoML"
           ],
@@ -1193,7 +1214,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Normal",
-          "assignee": "Kerry Gibbs",
+          "assignee": "Nikhil Sharma",
           "components": [
             "Update This Field With Components"
           ],
@@ -1211,7 +1232,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Clay",
+          "assignee": "David Tam",
           "components": [
             "Update This Field With Components"
           ],
@@ -1229,7 +1250,7 @@
           "status": "Backlog",
           "statusCategory": "To Do",
           "priority": "Normal",
-          "assignee": "Gray Young",
+          "assignee": "Christopher Jones",
           "components": [
             "Update This Field With Components"
           ],
@@ -1244,8 +1265,8 @@
           "parentKey": "RHOAIENG-51833",
           "summary": "AutoML UI - RHOAI ONLY: AI Platform Core Components (AIPCC) Integration",
           "type": "Task",
-          "status": "New",
-          "statusCategory": "To Do",
+          "status": "Closed",
+          "statusCategory": "Done",
           "priority": "Normal",
           "assignee": null,
           "components": [
@@ -1254,8 +1275,8 @@
           "labels": [],
           "storyPoints": 0,
           "created": "2026-03-04T16:29:41.124+0000",
-          "updated": "2026-03-30T12:12:34.334+0000",
-          "resolutionDate": null
+          "updated": "2026-04-08T19:57:46.219+0000",
+          "resolutionDate": "2026-04-08T19:57:45.862+0000"
         },
         {
           "key": "RHOAIENG-51845",
@@ -1265,7 +1286,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Clay",
+          "assignee": "David Tam",
           "components": [
             "Update This Field With Components"
           ],
@@ -1280,18 +1301,18 @@
           "parentKey": "RHOAIENG-51833",
           "summary": "[AutoML UI] - Integration with ODH operator - 2 week notice!",
           "type": "Task",
-          "status": "New",
-          "statusCategory": "To Do",
+          "status": "Closed",
+          "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Clay",
+          "assignee": "David Tam",
           "components": [
             "AutoML"
           ],
           "labels": [],
           "storyPoints": 0,
           "created": "2026-03-04T16:29:45.473+0000",
-          "updated": "2026-04-01T21:24:44.430+0000",
-          "resolutionDate": null
+          "updated": "2026-04-07T19:22:09.159+0000",
+          "resolutionDate": "2026-04-07T19:22:09.114+0000"
         },
         {
           "key": "RHOAIENG-51847",
@@ -1319,7 +1340,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Clay",
+          "assignee": "David Tam",
           "components": [
             "Update This Field With Components"
           ],
@@ -1334,18 +1355,18 @@
           "parentKey": "RHOAIENG-51833",
           "summary": "AutoML UI - Add source repo(s) to Snyk",
           "type": "Task",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
+          "status": "Closed",
+          "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Clay",
+          "assignee": "David Tam",
           "components": [
             "Update This Field With Components"
           ],
           "labels": [],
           "storyPoints": 0,
           "created": "2026-03-04T16:29:45.902+0000",
-          "updated": "2026-03-30T12:12:46.208+0000",
-          "resolutionDate": null
+          "updated": "2026-04-07T17:32:37.042+0000",
+          "resolutionDate": "2026-04-07T17:32:36.819+0000"
         },
         {
           "key": "RHOAIENG-51850",
@@ -1355,14 +1376,14 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Normal",
-          "assignee": null,
+          "assignee": "Nikhil Sharma",
           "components": [
             "Update This Field With Components"
           ],
           "labels": [],
           "storyPoints": 0,
           "created": "2026-03-04T16:29:46.108+0000",
-          "updated": "2026-03-30T12:12:44.241+0000",
+          "updated": "2026-04-07T17:19:52.120+0000",
           "resolutionDate": null
         },
         {
@@ -1373,7 +1394,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Clay",
+          "assignee": "David Tam",
           "components": [
             "AutoML",
             "Update This Field With Components"
@@ -1389,18 +1410,18 @@
           "parentKey": "RHOAIENG-51833",
           "summary": "AutoML UI - Add component data to product-definitions for vulnerability tracking",
           "type": "Task",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
+          "status": "Closed",
+          "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Clay",
+          "assignee": "David Tam",
           "components": [
             "Update This Field With Components"
           ],
           "labels": [],
           "storyPoints": 0,
           "created": "2026-03-04T16:29:49.124+0000",
-          "updated": "2026-04-01T19:49:59.136+0000",
-          "resolutionDate": null
+          "updated": "2026-04-08T19:51:14.154+0000",
+          "resolutionDate": "2026-04-08T19:51:13.837+0000"
         },
         {
           "key": "RHOAIENG-51853",
@@ -1446,7 +1467,7 @@
           "status": "Backlog",
           "statusCategory": "To Do",
           "priority": "Normal",
-          "assignee": "Gray Sato",
+          "assignee": "Adrian Sanz Gomiz",
           "components": [
             "AI Core Platform"
           ],
@@ -1487,7 +1508,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Flynn",
+          "assignee": "Julia Kyaw",
           "components": [
             "AI Core Dashboard",
             "AutoML"
@@ -1508,7 +1529,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Gray Young",
+          "assignee": "Christopher Jones",
           "components": [],
           "labels": [
             "dashboard-purple-scrum"
@@ -1523,25 +1544,24 @@
   ],
   "metrics": {
     "totalEpics": 11,
-    "totalIssues": 62,
+    "totalIssues": 63,
     "issuesByStatus": {
-      "Resolved": 27,
-      "Closed": 20,
-      "In Progress": 4,
+      "Resolved": 29,
+      "Closed": 24,
       "Backlog": 4,
-      "New": 6,
-      "Review": 1
+      "New": 4,
+      "Review": 2
     },
     "issuesByCategory": {
-      "Done": 47,
-      "In Progress": 5,
-      "To Do": 10
+      "Done": 53,
+      "In Progress": 2,
+      "To Do": 8
     },
     "totalStoryPoints": 43,
     "storyPointsDone": 37,
-    "completionPct": 76,
-    "staleCount": 3,
-    "unassignedCount": 5,
+    "completionPct": 84,
+    "staleCount": 1,
+    "unassignedCount": 3,
     "blockerCount": 4,
     "health": "RED",
     "epicMetrics": [
@@ -1550,10 +1570,10 @@
         "summary": "[3.3] [AutoML UI] Results & Evaluation UI",
         "status": "Resolved",
         "statusCategory": "Done",
-        "assignee": "Gray Oates",
-        "totalIssues": 6,
+        "assignee": "Nick Mazzitelli",
+        "totalIssues": 7,
         "doneIssues": 5,
-        "progressPct": 83,
+        "progressPct": 71,
         "storyPoints": 3,
         "storyPointsDone": 3,
         "health": "GREEN"
@@ -1563,23 +1583,23 @@
         "summary": "[1.0] [AutoML UI] Foundation & Navigation Setup",
         "status": "Resolved",
         "statusCategory": "Done",
-        "assignee": "Gray Young",
+        "assignee": "Christopher Jones",
         "totalIssues": 4,
-        "doneIssues": 3,
-        "progressPct": 75,
+        "doneIssues": 4,
+        "progressPct": 100,
         "storyPoints": 0,
         "storyPointsDone": 0,
-        "health": "YELLOW"
+        "health": "GREEN"
       },
       {
         "key": "RHOAIENG-50361",
         "summary": "[3.2] [AutoML UI] Create & Configure Experiment Flow",
         "status": "Resolved",
         "statusCategory": "Done",
-        "assignee": "Onyx Jay",
+        "assignee": "Matthew Thompson",
         "totalIssues": 6,
-        "doneIssues": 5,
-        "progressPct": 83,
+        "doneIssues": 6,
+        "progressPct": 100,
         "storyPoints": 0,
         "storyPointsDone": 0,
         "health": "GREEN"
@@ -1589,7 +1609,7 @@
         "summary": "[3.1] [AutoML UI] Landing Page & Run List UI",
         "status": "Resolved",
         "statusCategory": "Done",
-        "assignee": "Onyx Flynn",
+        "assignee": "Julia Kyaw",
         "totalIssues": 2,
         "doneIssues": 2,
         "progressPct": 100,
@@ -1602,7 +1622,7 @@
         "summary": "[2.2] [AutoML UI] Pipeline Management BFF",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Gray Young",
+        "assignee": "Christopher Jones",
         "totalIssues": 8,
         "doneIssues": 7,
         "progressPct": 88,
@@ -1615,7 +1635,7 @@
         "summary": "[2.3] [AutoML UI] S3 Storage & Connections BFF",
         "status": "Resolved",
         "statusCategory": "Done",
-        "assignee": "Merit Mead",
+        "assignee": "Gustavo Murcia",
         "totalIssues": 5,
         "doneIssues": 5,
         "progressPct": 100,
@@ -1628,7 +1648,7 @@
         "summary": "Dashboard AutoML - Deployment",
         "status": "Closed",
         "statusCategory": "Done",
-        "assignee": "Onyx Clay",
+        "assignee": "David Tam",
         "totalIssues": 8,
         "doneIssues": 8,
         "progressPct": 100,
@@ -1641,7 +1661,7 @@
         "summary": "ODH Konflux Release Build Onboarding [AutoML]",
         "status": "Resolved",
         "statusCategory": "Done",
-        "assignee": "Onyx Webb",
+        "assignee": "Mhamad Chamseddin",
         "totalIssues": 0,
         "doneIssues": 0,
         "progressPct": 0,
@@ -1654,7 +1674,7 @@
         "summary": "RHOAI Konflux Onboarding [AutoML]",
         "status": "Resolved",
         "statusCategory": "Done",
-        "assignee": "Onyx Webb",
+        "assignee": "Mhamad Chamseddin",
         "totalIssues": 0,
         "doneIssues": 0,
         "progressPct": 0,
@@ -1667,10 +1687,10 @@
         "summary": "Tech Preview - ODH and RHOAI Integrations [AutoML UI]",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Onyx Clay",
+        "assignee": "David Tam",
         "totalIssues": 21,
-        "doneIssues": 10,
-        "progressPct": 48,
+        "doneIssues": 14,
+        "progressPct": 67,
         "storyPoints": 3,
         "storyPointsDone": 0,
         "health": "RED"
@@ -1680,7 +1700,7 @@
         "summary": "[2.4] [AutoML UI] Model Registry BFF",
         "status": "Resolved",
         "statusCategory": "Done",
-        "assignee": "Gray Young",
+        "assignee": "Christopher Jones",
         "totalIssues": 2,
         "doneIssues": 2,
         "progressPct": 100,

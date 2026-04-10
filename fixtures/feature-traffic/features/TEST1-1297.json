@@ -1,7 +1,7 @@
 {
   "key": "TEST1-1297",
   "summary": "Add export functionality",
-  "status": "In Progress",
+  "status": "Review",
   "statusCategory": "In Progress",
   "priority": "Major",
   "assignee": {
@@ -14,7 +14,7 @@
     "Notebooks Images"
   ],
   "created": "2026-03-12T20:09:07.278+0000",
-  "updated": "2026-04-07T18:16:22.697+0000",
+  "updated": "2026-04-09T14:54:30.839+0000",
   "statusNotes": {
     "type": "doc",
     "version": 1,
@@ -39,7 +39,7 @@
           },
           {
             "type": "text",
-            "text": " as of 07-Apr-2026."
+            "text": " as of 09-Apr-2026."
           }
         ]
       },
@@ -48,7 +48,7 @@
         "content": [
           {
             "type": "text",
-            "text": "Packages updated in LLM Compressor images and in testing. Will have images available for PM review 08-Apr. Will request feature return to 3.4 GA as all work will be completed by code freeze."
+            "text": "Images include requested page updates and is undergoing PM review. Requested to bring back into 3.4."
           }
         ]
       },
@@ -90,6 +90,13 @@
       "linkedKey": "RHAIRFE-1054",
       "linkedSummary": "[RHOAI 3.3 Target] - Leverage model-opt image with LLM Compressor (and dependencies) in RHOAI Workbench/Runtime Images",
       "linkedStatus": "Closed"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-57433",
+      "linkedSummary": "[ccs] Document Notebooks images 3.4 updates - 3.4 GA",
+      "linkedStatus": "New"
     }
   ],
   "epics": [],

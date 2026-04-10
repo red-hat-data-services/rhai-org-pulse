@@ -5,7 +5,7 @@
   "statusCategory": "In Progress",
   "priority": "Critical",
   "assignee": {
-    "displayName": "Frankie Drake",
+    "displayName": "Alessandro Lazarotti",
     "accountId": "557058:726798a7-3ce4-4fb6-920c-40b6dca747da"
   },
   "fixVersions": [
@@ -500,7 +500,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Oliver",
+          "assignee": "Brent Salisbury",
           "components": [
             "Model as a Service"
           ],
@@ -536,7 +536,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Blocker",
-          "assignee": "Frankie Oliver",
+          "assignee": "Brent Salisbury",
           "components": [
             "Model as a Service"
           ],
@@ -554,7 +554,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Gray Carter",
+          "assignee": "Wen Liang",
           "components": [
             "Model as a Service"
           ],
@@ -572,7 +572,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Gray Carter",
+          "assignee": "Wen Liang",
           "components": [
             "Model as a Service",
             "Model Serving"
@@ -591,7 +591,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Quinn",
+          "assignee": "Bartosz Majsak",
           "components": [
             "Model as a Service",
             "Model Serving"
@@ -610,7 +610,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Quinn",
+          "assignee": "Bartosz Majsak",
           "components": [
             "Model as a Service"
           ],
@@ -647,7 +647,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Udall",
+          "assignee": "Dmytro Zaharnytskyi",
           "components": [
             "Model as a Service",
             "Model Serving"
@@ -666,7 +666,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Quinn",
+          "assignee": "Bartosz Majsak",
           "components": [
             "Model as a Service"
           ],
@@ -684,7 +684,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Young",
+          "assignee": "Edgar Hernandez Garcia",
           "components": [
             "Model as a Service"
           ],
@@ -702,7 +702,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Voss",
+          "assignee": "Jamie Land",
           "components": [
             "Model as a Service"
           ],
@@ -720,7 +720,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Quinn",
+          "assignee": "Bartosz Majsak",
           "components": [
             "Model as a Service"
           ],
@@ -738,7 +738,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Oliver",
+          "assignee": "Brent Salisbury",
           "components": [
             "Model as a Service"
           ],
@@ -756,7 +756,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Dawson",
+          "assignee": "Noy Itzikowitz",
           "components": [
             "Model as a Service"
           ],
@@ -774,7 +774,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Oliver",
+          "assignee": "Brent Salisbury",
           "components": [
             "Model as a Service"
           ],
@@ -812,7 +812,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Voss",
+          "assignee": "Jamie Land",
           "components": [
             "Model as a Service"
           ],
@@ -832,7 +832,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Udall",
+          "assignee": "Dmytro Zaharnytskyi",
           "components": [
             "Model as a Service"
           ],
@@ -852,7 +852,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Udall",
+          "assignee": "Dmytro Zaharnytskyi",
           "components": [
             "Model as a Service"
           ],
@@ -872,7 +872,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Udall",
+          "assignee": "Dmytro Zaharnytskyi",
           "components": [
             "Model as a Service"
           ],
@@ -892,7 +892,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Gray Carter",
+          "assignee": "Wen Liang",
           "components": [
             "Model as a Service"
           ],
@@ -910,7 +910,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Udall",
+          "assignee": "Dmytro Zaharnytskyi",
           "components": [
             "Model as a Service"
           ],
@@ -928,7 +928,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Udall",
+          "assignee": "Dmytro Zaharnytskyi",
           "components": [
             "Model as a Service"
           ],
@@ -946,7 +946,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Ives",
+          "assignee": "Chaitanya Kulkarni",
           "components": [
             "Model as a Service"
           ],
@@ -982,7 +982,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Blocker",
-          "assignee": "Onyx Udall",
+          "assignee": "Dmytro Zaharnytskyi",
           "components": [
             "Model as a Service"
           ],
@@ -1000,7 +1000,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Quinn",
+          "assignee": "Bartosz Majsak",
           "components": [
             "Model as a Service"
           ],
@@ -1018,7 +1018,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Ives",
+          "assignee": "Chaitanya Kulkarni",
           "components": [
             "Model as a Service"
           ],
@@ -1036,7 +1036,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Quinn",
+          "assignee": "Bartosz Majsak",
           "components": [
             "Model as a Service"
           ],
@@ -1073,7 +1073,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Tate",
+          "assignee": "Swati Mukund Bagal",
           "components": [
             "Model as a Service",
             "TestOps"
@@ -1092,7 +1092,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Tate",
+          "assignee": "Swati Mukund Bagal",
           "components": [
             "Model as a Service"
           ],
@@ -1110,7 +1110,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Tate",
+          "assignee": "Swati Mukund Bagal",
           "components": [
             "Model as a Service"
           ],
@@ -1128,7 +1128,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Ives",
+          "assignee": "Chaitanya Kulkarni",
           "components": [
             "CI/CD",
             "Model as a Service"
@@ -1258,7 +1258,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Ives",
+          "assignee": "Chaitanya Kulkarni",
           "components": [
             "Model as a Service"
           ],
@@ -1276,7 +1276,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Tate",
+          "assignee": "Swati Mukund Bagal",
           "components": [
             "Model as a Service"
           ],
@@ -1294,7 +1294,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Tate",
+          "assignee": "Swati Mukund Bagal",
           "components": [
             "Model as a Service"
           ],
@@ -1312,7 +1312,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Tate",
+          "assignee": "Swati Mukund Bagal",
           "components": [
             "Model as a Service"
           ],
@@ -1330,7 +1330,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Ives",
+          "assignee": "Chaitanya Kulkarni",
           "components": [
             "Model as a Service"
           ],
@@ -1348,7 +1348,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Hayes",
+          "assignee": "Somya Bhatnagar",
           "components": [
             "Model as a Service"
           ],
@@ -1387,7 +1387,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Gray Carter",
+          "assignee": "Wen Liang",
           "components": [
             "Model as a Service"
           ],
@@ -1405,7 +1405,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Onyx Xu",
+          "assignee": "Lindani Phiri",
           "components": [
             "Model as a Service"
           ],
@@ -1423,7 +1423,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Gray Carter",
+          "assignee": "Wen Liang",
           "components": [
             "Model as a Service"
           ],
@@ -1441,7 +1441,7 @@
           "status": "Testing",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Onyx Voss",
+          "assignee": "Jamie Land",
           "components": [
             "Model as a Service"
           ],
@@ -1459,7 +1459,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Voss",
+          "assignee": "Jamie Land",
           "components": [
             "AI Core Platform",
             "Model as a Service"
@@ -1478,7 +1478,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Ives",
+          "assignee": "Chaitanya Kulkarni",
           "components": [
             "Model as a Service"
           ],
@@ -1496,7 +1496,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Quinn",
+          "assignee": "Bartosz Majsak",
           "components": [
             "Model as a Service"
           ],
@@ -1514,7 +1514,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Ives",
+          "assignee": "Chaitanya Kulkarni",
           "components": [
             "Model as a Service"
           ],
@@ -1532,7 +1532,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Gray Carter",
+          "assignee": "Wen Liang",
           "components": [
             "Model as a Service"
           ],
@@ -1569,7 +1569,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Kerry Underwood",
+          "assignee": "Corey Goodfred",
           "components": [
             "AI Core Platform",
             "Model as a Service"
@@ -1610,7 +1610,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Young",
+          "assignee": "Edgar Hernandez Garcia",
           "components": [
             "AI Core Platform",
             "Model as a Service"
@@ -1650,7 +1650,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Kerry Underwood",
+          "assignee": "Corey Goodfred",
           "components": [
             "AI Core Platform",
             "Model as a Service"
@@ -1671,7 +1671,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Day",
+          "assignee": "Wen Zhou",
           "components": [
             "Model as a Service"
           ],
@@ -1689,7 +1689,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Onyx Ives",
+          "assignee": "Chaitanya Kulkarni",
           "components": [
             "Model as a Service"
           ],
@@ -1707,7 +1707,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Underwood",
+          "assignee": "Corey Goodfred",
           "components": [
             "AI Core Platform"
           ],
@@ -1747,7 +1747,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Voss",
+          "assignee": "Jamie Land",
           "components": [
             "Model as a Service",
             "Model Serving"
@@ -1766,7 +1766,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Voss",
+          "assignee": "Jamie Land",
           "components": [
             "Model as a Service",
             "Model Serving"
@@ -1785,7 +1785,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Graham",
+          "assignee": "Alex Fan",
           "components": [
             "Model as a Service"
           ],
@@ -1805,7 +1805,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Onyx Hayes",
+          "assignee": "Somya Bhatnagar",
           "components": [
             "Model as a Service"
           ],
@@ -1823,7 +1823,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Voss",
+          "assignee": "Jamie Land",
           "components": [
             "Model as a Service"
           ],
@@ -1841,7 +1841,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Kerry Oates",
+          "assignee": "Ishita Sequeira",
           "components": [
             "Model as a Service"
           ],
@@ -1859,7 +1859,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Oates",
+          "assignee": "Ishita Sequeira",
           "components": [
             "Model as a Service"
           ],
@@ -1877,7 +1877,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Oates",
+          "assignee": "Ishita Sequeira",
           "components": [
             "Model as a Service"
           ],
@@ -1895,7 +1895,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Ives",
+          "assignee": "Chaitanya Kulkarni",
           "components": [
             "Model as a Service"
           ],
@@ -1933,7 +1933,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Kerry Day",
+          "assignee": "Griffin Sullivan",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1953,7 +1953,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Gray Frost",
+          "assignee": "Sri Sai Sowjanya Darna",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1975,7 +1975,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Gray Walsh",
+          "assignee": "Andrew Ballantyne",
           "components": [
             "AI Core Dashboard"
           ],
@@ -1995,7 +1995,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Kerry Day",
+          "assignee": "Griffin Sullivan",
           "components": [
             "AI Core Dashboard"
           ],
@@ -2015,7 +2015,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Kerry Day",
+          "assignee": "Griffin Sullivan",
           "components": [
             "AI Core Dashboard"
           ],
@@ -2035,7 +2035,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Young",
+          "assignee": "Edgar Hernandez Garcia",
           "components": [
             "AI Core Dashboard",
             "Model as a Service"
@@ -2056,7 +2056,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Young",
+          "assignee": "Edgar Hernandez Garcia",
           "components": [
             "AI Core Dashboard",
             "Model as a Service"
@@ -2077,7 +2077,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Kerry Day",
+          "assignee": "Griffin Sullivan",
           "components": [
             "AI Core Dashboard"
           ],
@@ -2097,7 +2097,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Young",
+          "assignee": "Edgar Hernandez Garcia",
           "components": [
             "AI Core Dashboard",
             "Model as a Service"
@@ -2118,7 +2118,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Carter",
+          "assignee": "Emily Samoylov",
           "components": [
             "AI Core Dashboard"
           ],
@@ -2138,7 +2138,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Kerry Day",
+          "assignee": "Griffin Sullivan",
           "components": [
             "AI Core Dashboard"
           ],
@@ -2158,7 +2158,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Abbott",
+          "assignee": "Katelynn Perry",
           "components": [
             "AI Core Dashboard"
           ],
@@ -2178,7 +2178,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Kerry Day",
+          "assignee": "Griffin Sullivan",
           "components": [
             "AI Core Dashboard"
           ],
@@ -2198,7 +2198,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Kerry Day",
+          "assignee": "Griffin Sullivan",
           "components": [
             "AI Core Dashboard"
           ],
@@ -2218,7 +2218,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Zimmerman",
+          "assignee": "Ashley McEntee",
           "components": [
             "AI Core Dashboard"
           ],
@@ -2258,7 +2258,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Zimmerman",
+          "assignee": "Ashley McEntee",
           "components": [
             "AI Core Dashboard"
           ],
@@ -2278,7 +2278,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Young",
+          "assignee": "Edgar Hernandez Garcia",
           "components": [
             "AI Core Dashboard"
           ],
@@ -2298,7 +2298,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Kerry Day",
+          "assignee": "Griffin Sullivan",
           "components": [
             "AI Core Dashboard"
           ],
@@ -2318,7 +2318,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Blocker",
-          "assignee": "Gray Finn",
+          "assignee": "Steven Tobin",
           "components": [
             "AI Core Dashboard",
             "AI Core Platform",
@@ -2341,7 +2341,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Normal",
-          "assignee": "Kerry Day",
+          "assignee": "Griffin Sullivan",
           "components": [
             "AI Core Dashboard"
           ],
@@ -2362,7 +2362,7 @@
       "status": "Closed",
       "statusCategory": "Done",
       "priority": "Undefined",
-      "assignee": "Gray Noble",
+      "assignee": "Former Member 7",
       "components": [
         "Documentation"
       ],
@@ -2379,7 +2379,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Kerry Lloyd",
+          "assignee": "Shumaila Yaseen",
           "components": [
             "Documentation",
             "Model as a Service"
@@ -2398,7 +2398,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Kerry Lloyd",
+          "assignee": "Shumaila Yaseen",
           "components": [
             "Documentation"
           ],
@@ -2435,7 +2435,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Gray Carter",
+          "assignee": "Wen Liang",
           "components": [
             "Model as a Service",
             "Model Serving"
@@ -2454,7 +2454,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Gray Carter",
+          "assignee": "Wen Liang",
           "components": [
             "Model as a Service",
             "Model Serving"
@@ -2473,7 +2473,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Gray Carter",
+          "assignee": "Wen Liang",
           "components": [
             "Model as a Service",
             "Model Serving"
@@ -2512,7 +2512,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Bishop",
+          "assignee": "Emmanuel Ikeola",
           "components": [
             "AI Core Dashboard"
           ],
@@ -2532,7 +2532,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Bishop",
+          "assignee": "Emmanuel Ikeola",
           "components": [
             "AI Core Dashboard"
           ],
@@ -2594,7 +2594,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Kerry Day",
+          "assignee": "Griffin Sullivan",
           "components": [
             "AI Core Dashboard"
           ],
@@ -2614,7 +2614,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Kerry Day",
+          "assignee": "Griffin Sullivan",
           "components": [
             "AI Core Dashboard"
           ],
@@ -2654,7 +2654,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Day",
+          "assignee": "Griffin Sullivan",
           "components": [
             "AI Core Dashboard"
           ],
@@ -2674,7 +2674,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Day",
+          "assignee": "Griffin Sullivan",
           "components": [
             "AI Core Dashboard"
           ],
@@ -2694,7 +2694,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Day",
+          "assignee": "Griffin Sullivan",
           "components": [
             "AI Core Dashboard"
           ],
@@ -2772,7 +2772,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Merit Tate",
+          "assignee": "Swati Mukund Bagal",
           "components": [
             "Model as a Service"
           ],
@@ -2790,7 +2790,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Merit Tate",
+          "assignee": "Swati Mukund Bagal",
           "components": [
             "Model as a Service"
           ],
@@ -2808,7 +2808,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Tate",
+          "assignee": "Swati Mukund Bagal",
           "components": [
             "Model as a Service"
           ],
@@ -2826,7 +2826,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Tate",
+          "assignee": "Swati Mukund Bagal",
           "components": [
             "Model as a Service"
           ],
@@ -2844,7 +2844,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Tate",
+          "assignee": "Swati Mukund Bagal",
           "components": [
             "Model as a Service"
           ],
@@ -2880,7 +2880,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Tate",
+          "assignee": "Swati Mukund Bagal",
           "components": [
             "Model as a Service"
           ],
@@ -2898,7 +2898,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Onyx Ives",
+          "assignee": "Chaitanya Kulkarni",
           "components": [
             "Model as a Service"
           ],
@@ -2916,7 +2916,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Merit Tate",
+          "assignee": "Swati Mukund Bagal",
           "components": [
             "Model as a Service"
           ],
@@ -2934,7 +2934,7 @@
           "status": "Review",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Merit Tate",
+          "assignee": "Swati Mukund Bagal",
           "components": [
             "Model as a Service"
           ],
@@ -2952,7 +2952,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Tate",
+          "assignee": "Swati Mukund Bagal",
           "components": [
             "Model as a Service"
           ],
@@ -2970,7 +2970,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Tate",
+          "assignee": "Swati Mukund Bagal",
           "components": [
             "Model as a Service"
           ],
@@ -3043,7 +3043,7 @@
         "summary": "Model-as-a-Service - Validate Functionality",
         "status": "Closed",
         "statusCategory": "Done",
-        "assignee": "Merit Tate",
+        "assignee": "Swati Mukund Bagal",
         "totalIssues": 16,
         "doneIssues": 16,
         "progressPct": 100,
@@ -3069,7 +3069,7 @@
         "summary": "UI for MaaS Tiers",
         "status": "Closed",
         "statusCategory": "Done",
-        "assignee": "Kerry Day",
+        "assignee": "Griffin Sullivan",
         "totalIssues": 21,
         "doneIssues": 20,
         "progressPct": 95,
@@ -3082,7 +3082,7 @@
         "summary": "[ccs Epic] Document Models-as-a-Service (MaaS) Tech Preview",
         "status": "Closed",
         "statusCategory": "Done",
-        "assignee": "Kerry Lloyd",
+        "assignee": "Shumaila Yaseen",
         "totalIssues": 2,
         "doneIssues": 2,
         "progressPct": 100,
@@ -3108,7 +3108,7 @@
         "summary": "UI GenAI Studio MaaS Enhancements",
         "status": "Resolved",
         "statusCategory": "Done",
-        "assignee": "Merit Bishop",
+        "assignee": "Emmanuel Ikeola",
         "totalIssues": 2,
         "doneIssues": 2,
         "progressPct": 100,
@@ -3121,7 +3121,7 @@
         "summary": "Dashboard MaaS - Deployment",
         "status": "Closed",
         "statusCategory": "Done",
-        "assignee": "Kerry Day",
+        "assignee": "Griffin Sullivan",
         "totalIssues": 8,
         "doneIssues": 8,
         "progressPct": 100,
@@ -3134,7 +3134,7 @@
         "summary": "RHOAI Konflux Onboarding - MaaS Dashboard Modular Architecture",
         "status": "Resolved",
         "statusCategory": "Done",
-        "assignee": "Merit Graham",
+        "assignee": "Alex Fan",
         "totalIssues": 0,
         "doneIssues": 0,
         "progressPct": 0,
@@ -3147,7 +3147,7 @@
         "summary": "Model-as-a-Service - Validate Functionality 3.4",
         "status": "New",
         "statusCategory": "To Do",
-        "assignee": "Merit Tate",
+        "assignee": "Swati Mukund Bagal",
         "totalIssues": 13,
         "doneIssues": 8,
         "progressPct": 62,

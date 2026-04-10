@@ -19,7 +19,7 @@
     "Model Eval"
   ],
   "created": "2026-01-12T16:04:51.111+0000",
-  "updated": "2026-04-03T13:37:51.550+0000",
+  "updated": "2026-04-08T14:36:24.909+0000",
   "statusNotes": {
     "type": "doc",
     "version": 1,
@@ -73,7 +73,7 @@
       "direction": "inward",
       "linkedKey": "RHAISTRAT-513",
       "linkedSummary": "(persistent Storage/OCI) Integrate LM-Eval with Model CarD, OCI, and Model Registry/Catalog in TrustyAI",
-      "linkedStatus": "Release Pending"
+      "linkedStatus": "Closed"
     },
     {
       "type": "Cloners",
@@ -81,6 +81,13 @@
       "linkedKey": "RHAIRFE-1018",
       "linkedSummary": "Integrate eval-hub Evaluation Scores with OCI for Dynamic Model Cards",
       "linkedStatus": "Approved"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-51201",
+      "linkedSummary": "[ccs Epic] Document Eval Hub across 3.4 releases",
+      "linkedStatus": "New"
     }
   ],
   "epics": [
@@ -190,25 +197,443 @@
       "created": "2026-01-22T15:56:16.573+0000",
       "updated": "2026-03-18T10:06:16.355+0000",
       "issues": []
+    },
+    {
+      "key": "TEST2-57118",
+      "parentKey": "RHAISTRAT-1109",
+      "summary": "Add pagination support",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Person 157",
+      "components": [
+        "Update This Field With Components"
+      ],
+      "labels": [],
+      "storyPoints": 0,
+      "created": "2026-04-08T11:11:45.104+0000",
+      "updated": "2026-04-08T19:57:47.700+0000",
+      "issues": [
+        {
+          "key": "RHOAIENG-57119",
+          "parentKey": "RHOAIENG-57118",
+          "summary": "CLONE - MUST meet designed for FIPS",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-08T11:12:05.150+0000",
+          "updated": "2026-04-08T11:16:48.643+0000",
+          "resolutionDate": "2026-04-08T11:16:48.602+0000"
+        },
+        {
+          "key": "RHOAIENG-57120",
+          "parentKey": "RHOAIENG-57118",
+          "summary": "CLONE - Repository added to ODH/RHOAI",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-08T11:12:09.198+0000",
+          "updated": "2026-04-08T11:17:12.684+0000",
+          "resolutionDate": "2026-04-08T11:17:12.638+0000"
+        },
+        {
+          "key": "RHOAIENG-57121",
+          "parentKey": "RHOAIENG-57118",
+          "summary": "CLONE - Ensure work with supported lifecyles",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-08T11:12:13.705+0000",
+          "updated": "2026-04-08T11:22:14.891+0000",
+          "resolutionDate": "2026-04-08T11:22:14.840+0000"
+        },
+        {
+          "key": "RHOAIENG-57122",
+          "parentKey": "RHOAIENG-57118",
+          "summary": "CLONE - Add source repo(s) to Snyk",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-08T11:12:17.518+0000",
+          "updated": "2026-04-08T11:18:00.335+0000",
+          "resolutionDate": "2026-04-08T11:18:00.294+0000"
+        },
+        {
+          "key": "RHOAIENG-57123",
+          "parentKey": "RHOAIENG-57118",
+          "summary": "CLONE - Promote alpha APIs to beta",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-08T11:12:21.034+0000",
+          "updated": "2026-04-08T11:22:37.303+0000",
+          "resolutionDate": "2026-04-08T11:22:37.254+0000"
+        },
+        {
+          "key": "RHOAIENG-57124",
+          "parentKey": "RHOAIENG-57118",
+          "summary": "CLONE - Onboard to ODH Build - 2 week notice! ",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-08T11:12:24.592+0000",
+          "updated": "2026-04-08T11:22:49.232+0000",
+          "resolutionDate": "2026-04-08T11:22:49.193+0000"
+        },
+        {
+          "key": "RHOAIENG-57125",
+          "parentKey": "RHOAIENG-57118",
+          "summary": "CLONE - Test with disconnected environment",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-08T11:12:29.261+0000",
+          "updated": "2026-04-08T11:23:23.010+0000",
+          "resolutionDate": "2026-04-08T11:23:22.974+0000"
+        },
+        {
+          "key": "RHOAIENG-57126",
+          "parentKey": "RHOAIENG-57118",
+          "summary": "CLONE - Add component data to product-definitions for vulnerability tracking",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-08T11:12:32.634+0000",
+          "updated": "2026-04-08T11:24:04.959+0000",
+          "resolutionDate": "2026-04-08T11:24:04.917+0000"
+        },
+        {
+          "key": "RHOAIENG-57127",
+          "parentKey": "RHOAIENG-57118",
+          "summary": "CLONE - Add component support for must-gather",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-08T11:12:36.464+0000",
+          "updated": "2026-04-08T11:24:54.598+0000",
+          "resolutionDate": "2026-04-08T11:24:54.565+0000"
+        },
+        {
+          "key": "RHOAIENG-57128",
+          "parentKey": "RHOAIENG-57118",
+          "summary": "CLONE - Security requirements",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-08T11:12:40.134+0000",
+          "updated": "2026-04-08T11:25:17.463+0000",
+          "resolutionDate": "2026-04-08T11:25:17.430+0000"
+        },
+        {
+          "key": "RHOAIENG-57129",
+          "parentKey": "RHOAIENG-57118",
+          "summary": "CLONE - Create component in jira",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-08T11:12:43.465+0000",
+          "updated": "2026-04-08T11:25:43.355+0000",
+          "resolutionDate": "2026-04-08T11:25:43.307+0000"
+        },
+        {
+          "key": "RHOAIENG-57130",
+          "parentKey": "RHOAIENG-57118",
+          "summary": "CLONE - Integration with ODH operator - 2 week notice!",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-08T11:12:46.790+0000",
+          "updated": "2026-04-08T11:26:51.386+0000",
+          "resolutionDate": "2026-04-08T11:26:51.346+0000"
+        },
+        {
+          "key": "RHOAIENG-57131",
+          "parentKey": "RHOAIENG-57118",
+          "summary": "CLONE - RHOAI ONLY: AI Platform Core Components (AIPCC) Integration",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Major",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-08T11:12:50.584+0000",
+          "updated": "2026-04-08T11:27:29.366+0000",
+          "resolutionDate": "2026-04-08T11:27:29.318+0000"
+        },
+        {
+          "key": "RHOAIENG-57132",
+          "parentKey": "RHOAIENG-57118",
+          "summary": "CLONE - Multi-Architecture Support",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Blocker",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-08T11:12:57.513+0000",
+          "updated": "2026-04-08T11:28:03.418+0000",
+          "resolutionDate": "2026-04-08T11:28:03.382+0000"
+        },
+        {
+          "key": "RHOAIENG-57133",
+          "parentKey": "RHOAIENG-57118",
+          "summary": "CLONE - Add Prometheus (metrics) config for component (optional)",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-08T11:13:00.740+0000",
+          "updated": "2026-04-08T11:28:29.433+0000",
+          "resolutionDate": "2026-04-08T11:28:29.392+0000"
+        },
+        {
+          "key": "RHOAIENG-57134",
+          "parentKey": "RHOAIENG-57118",
+          "summary": "CLONE - Onboard to RHOAI Build - 2 week notice!",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "DevOps"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-08T11:13:04.134+0000",
+          "updated": "2026-04-08T11:35:12.187+0000",
+          "resolutionDate": "2026-04-08T11:35:12.136+0000"
+        },
+        {
+          "key": "RHOAIENG-57135",
+          "parentKey": "RHOAIENG-57118",
+          "summary": "CLONE - Testing requirements",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Critical",
+          "assignee": null,
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-08T11:13:07.548+0000",
+          "updated": "2026-04-08T11:35:50.162+0000",
+          "resolutionDate": "2026-04-08T11:35:50.065+0000"
+        },
+        {
+          "key": "RHOAIENG-57136",
+          "parentKey": "RHOAIENG-57118",
+          "summary": "CLONE - Integration with RHOAI operator - 2 week notice!",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-08T11:13:11.122+0000",
+          "updated": "2026-04-08T11:36:29.746+0000",
+          "resolutionDate": "2026-04-08T11:36:29.702+0000"
+        },
+        {
+          "key": "RHOAIENG-57137",
+          "parentKey": "RHOAIENG-57118",
+          "summary": "CLONE - Build from source (required)",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "OpenShift AI Productization"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-08T11:13:14.529+0000",
+          "updated": "2026-04-08T11:36:56.544+0000",
+          "resolutionDate": "2026-04-08T11:36:56.488+0000"
+        },
+        {
+          "key": "RHOAIENG-57138",
+          "parentKey": "RHOAIENG-57118",
+          "summary": "CLONE - Add support for the new component in the QE related repositories",
+          "type": "Task",
+          "status": "Resolved",
+          "statusCategory": "Done",
+          "priority": "Normal",
+          "assignee": null,
+          "components": [
+            "AI Core Platform"
+          ],
+          "labels": [],
+          "storyPoints": 3,
+          "created": "2026-04-08T11:13:17.915+0000",
+          "updated": "2026-04-08T11:37:20.920+0000",
+          "resolutionDate": "2026-04-08T11:37:20.865+0000"
+        },
+        {
+          "key": "RHOAIENG-57139",
+          "parentKey": "RHOAIENG-57118",
+          "summary": "CLONE - Feature documented in architecture diagrams",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Normal",
+          "assignee": "Matteo Mortari",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [],
+          "storyPoints": 0,
+          "created": "2026-04-08T11:13:21.868+0000",
+          "updated": "2026-04-08T11:38:03.104+0000",
+          "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-57140",
+          "parentKey": "RHOAIENG-57118",
+          "summary": "CLONE - Feature signoff - TP",
+          "type": "Task",
+          "status": "New",
+          "statusCategory": "To Do",
+          "priority": "Blocker",
+          "assignee": "Matteo Mortari",
+          "components": [
+            "Update This Field With Components"
+          ],
+          "labels": [
+            "signoff"
+          ],
+          "storyPoints": 0,
+          "created": "2026-04-08T11:13:25.428+0000",
+          "updated": "2026-04-08T11:38:04.466+0000",
+          "resolutionDate": null
+        }
+      ]
     }
   ],
   "metrics": {
-    "totalEpics": 2,
-    "totalIssues": 4,
+    "totalEpics": 3,
+    "totalIssues": 26,
     "issuesByStatus": {
-      "Closed": 4
+      "Closed": 4,
+      "Resolved": 20,
+      "New": 2
     },
     "issuesByCategory": {
-      "Done": 4,
+      "Done": 24,
       "In Progress": 0,
-      "To Do": 0
+      "To Do": 2
     },
-    "totalStoryPoints": 3,
-    "storyPointsDone": 3,
-    "completionPct": 100,
+    "totalStoryPoints": 6,
+    "storyPointsDone": 6,
+    "completionPct": 92,
     "staleCount": 0,
     "unassignedCount": 0,
-    "blockerCount": 0,
+    "blockerCount": 6,
     "health": "RED",
     "epicMetrics": [
       {
@@ -235,6 +660,19 @@
         "progressPct": 0,
         "storyPoints": 0,
         "storyPointsDone": 0,
+        "health": "RED"
+      },
+      {
+        "key": "RHOAIENG-57118",
+        "summary": "SIGN-OFF for RHAISTRAT-1109 (feat) Integrate eval-hub Evaluation Scores with OCI for Dynamic Model Cards - cloned from RHAIRFE-1018 - [Template] Tech Preview - ODH and RHOAI Integrations [Component/feature Name]",
+        "status": "In Progress",
+        "statusCategory": "In Progress",
+        "assignee": "Matteo Mortari",
+        "totalIssues": 22,
+        "doneIssues": 20,
+        "progressPct": 91,
+        "storyPoints": 3,
+        "storyPointsDone": 3,
         "health": "RED"
       }
     ]

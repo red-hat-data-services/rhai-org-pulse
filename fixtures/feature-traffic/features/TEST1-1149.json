@@ -30,7 +30,7 @@
     "Documentation"
   ],
   "created": "2026-01-22T14:23:32.528+0000",
-  "updated": "2026-04-03T15:46:32.344+0000",
+  "updated": "2026-04-08T15:30:02.377+0000",
   "statusNotes": {
     "type": "doc",
     "version": 1,
@@ -59,7 +59,7 @@
       "direction": "outward",
       "linkedKey": "RHAISTRAT-1084",
       "linkedSummary": "Dev Preview - MCP Catalog – Enterprise Control of MCP Assets",
-      "linkedStatus": "In Progress"
+      "linkedStatus": "Review"
     },
     {
       "type": "Document",

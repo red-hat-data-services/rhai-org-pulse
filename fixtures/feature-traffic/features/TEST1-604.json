@@ -5,7 +5,7 @@
   "statusCategory": "In Progress",
   "priority": "Major",
   "assignee": {
-    "displayName": "Frankie Mead",
+    "displayName": "Roy Nissim",
     "accountId": "712020:3e6483d7-a7f9-4847-950f-102899cadf8f"
   },
   "fixVersions": [],
@@ -137,7 +137,7 @@
           "status": "Backlog",
           "statusCategory": "To Do",
           "priority": "Critical",
-          "assignee": "Onyx Thorne",
+          "assignee": "Filippe Spolti",
           "components": [
             "Model Serving"
           ],
@@ -157,7 +157,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Onyx Thorne",
+          "assignee": "Filippe Spolti",
           "components": [
             "Model Serving"
           ],
@@ -175,7 +175,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Onyx Thorne",
+          "assignee": "Filippe Spolti",
           "components": [
             "Model Serving"
           ],
@@ -193,7 +193,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Onyx Thorne",
+          "assignee": "Filippe Spolti",
           "components": [
             "Documentation",
             "Model Serving"
@@ -212,7 +212,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Onyx Thorne",
+          "assignee": "Filippe Spolti",
           "components": [
             "Documentation",
             "Model Serving"
@@ -231,7 +231,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Onyx Thorne",
+          "assignee": "Filippe Spolti",
           "components": [
             "Model Serving"
           ],
@@ -249,7 +249,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Onyx Thorne",
+          "assignee": "Filippe Spolti",
           "components": [
             "Model Serving"
           ],
@@ -267,7 +267,7 @@
           "status": "Backlog",
           "statusCategory": "To Do",
           "priority": "Critical",
-          "assignee": "Onyx Thorne",
+          "assignee": "Filippe Spolti",
           "components": [
             "Model Serving"
           ],
@@ -285,7 +285,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Onyx Thorne",
+          "assignee": "Filippe Spolti",
           "components": [
             "Model Serving"
           ],
@@ -304,7 +304,7 @@
       "status": "Closed",
       "statusCategory": "Done",
       "priority": "Undefined",
-      "assignee": "Kerry Drake",
+      "assignee": "Former Member 10",
       "components": [
         "Documentation"
       ],
@@ -321,7 +321,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Hart",
+          "assignee": "Em Turner",
           "components": [
             "Documentation"
           ],
@@ -341,7 +341,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Frankie Hart",
+          "assignee": "Em Turner",
           "components": [
             "Documentation",
             "Model Serving"
@@ -360,7 +360,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Hart",
+          "assignee": "Em Turner",
           "components": [
             "Documentation"
           ],
@@ -378,7 +378,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Hart",
+          "assignee": "Em Turner",
           "components": [
             "Documentation"
           ],
@@ -417,7 +417,7 @@
         "summary": "[Backend] GPU/LLM Performance Metrics",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Onyx Thorne",
+        "assignee": "Filippe Spolti",
         "totalIssues": 9,
         "doneIssues": 7,
         "progressPct": 78,
@@ -430,7 +430,7 @@
         "summary": "[ccs Epic] Document KServe Metrics - GPU Utilization",
         "status": "Closed",
         "statusCategory": "Done",
-        "assignee": "Frankie Hart",
+        "assignee": "Em Turner",
         "totalIssues": 4,
         "doneIssues": 4,
         "progressPct": 100,

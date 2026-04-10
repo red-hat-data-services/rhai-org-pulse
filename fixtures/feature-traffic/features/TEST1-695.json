@@ -121,7 +121,7 @@
       "status": "Closed",
       "statusCategory": "Done",
       "priority": "Undefined",
-      "assignee": "Kerry Vaughn",
+      "assignee": "Former Member 6",
       "components": [
         "Documentation"
       ],
@@ -138,7 +138,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Finn",
+          "assignee": "Olivia Brown",
           "components": [
             "Documentation",
             "Notebooks Server"
@@ -159,7 +159,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Frankie Finn",
+          "assignee": "Olivia Brown",
           "components": [
             "Documentation",
             "Notebooks Server"
@@ -197,7 +197,7 @@
         "summary": "[ccs Epic] Document pip repositories configuration in the workbenches",
         "status": "Closed",
         "statusCategory": "Done",
-        "assignee": "Frankie Finn",
+        "assignee": "Olivia Brown",
         "totalIssues": 2,
         "doneIssues": 2,
         "progressPct": 100,

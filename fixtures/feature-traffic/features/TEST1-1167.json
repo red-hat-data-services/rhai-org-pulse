@@ -5,7 +5,7 @@
   "statusCategory": "In Progress",
   "priority": "Major",
   "assignee": {
-    "displayName": "Gray Walsh",
+    "displayName": "Andrew Ballantyne",
     "accountId": "5fdb88f09edf280075ce339d"
   },
   "fixVersions": [
@@ -25,7 +25,7 @@
     "UXD"
   ],
   "created": "2026-01-26T23:39:01.391+0000",
-  "updated": "2026-04-07T20:50:54.105+0000",
+  "updated": "2026-04-09T20:33:40.836+0000",
   "statusNotes": {
     "type": "doc",
     "version": 1,
@@ -79,7 +79,7 @@
         "content": [
           {
             "type": "text",
-            "text": "Model Serving Runtimes - Green - 2026-03-13"
+            "text": "Model Serving Runtimes - Yellow - 2026-03-13"
           }
         ]
       },
@@ -95,6 +95,20 @@
                   {
                     "type": "text",
                     "text": "we merged the feature in ODH Kserve and we've got positive feedback when testing it from IBM P and Z teams"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "listItem",
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "There are some testing concerns in the IBM P & Z side of things"
                   }
                 ]
               }
@@ -170,7 +184,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Blocker",
-          "assignee": "Gray Walsh",
+          "assignee": "Andrew Ballantyne",
           "components": [
             "AI Core Dashboard"
           ],
@@ -191,7 +205,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Carter",
+          "assignee": "Emily Samoylov",
           "components": [
             "AI Core Dashboard"
           ],
@@ -208,10 +222,10 @@
           "parentKey": "RHOAIENG-48852",
           "summary": "QA Verification for this Feature",
           "type": "Task",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
+          "status": "Closed",
+          "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Gray Frost",
+          "assignee": "Sri Sai Sowjanya Darna",
           "components": [
             "AI Core Dashboard"
           ],
@@ -221,8 +235,8 @@
           ],
           "storyPoints": 3,
           "created": "2026-02-24T19:40:04.928+0000",
-          "updated": "2026-04-03T19:14:11.906+0000",
-          "resolutionDate": null
+          "updated": "2026-04-08T19:31:07.445+0000",
+          "resolutionDate": "2026-04-08T12:01:28.862+0000"
         },
         {
           "key": "RHOAIENG-52199",
@@ -232,7 +246,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Frankie Zimmerman",
+          "assignee": "Ashley McEntee",
           "components": [
             "AI Core Dashboard"
           ],
@@ -252,7 +266,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Frankie Zimmerman",
+          "assignee": "Ashley McEntee",
           "components": [
             "AI Core Dashboard"
           ],
@@ -272,7 +286,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Frankie Zimmerman",
+          "assignee": "Ashley McEntee",
           "components": [
             "AI Core Dashboard"
           ],
@@ -292,7 +306,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Carter",
+          "assignee": "Emily Samoylov",
           "components": [
             "AI Core Dashboard"
           ],
@@ -312,7 +326,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Carter",
+          "assignee": "Emily Samoylov",
           "components": [
             "AI Core Dashboard"
           ],
@@ -332,7 +346,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Carter",
+          "assignee": "Emily Samoylov",
           "components": [
             "AI Core Dashboard"
           ],
@@ -352,7 +366,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Frankie Zimmerman",
+          "assignee": "Ashley McEntee",
           "components": [
             "AI Core Dashboard"
           ],
@@ -372,7 +386,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Gray Walsh",
+          "assignee": "Andrew Ballantyne",
           "components": [
             "AI Core Dashboard"
           ],
@@ -392,7 +406,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Frankie Zimmerman",
+          "assignee": "Ashley McEntee",
           "components": [
             "AI Core Dashboard"
           ],
@@ -412,7 +426,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Frankie Zimmerman",
+          "assignee": "Ashley McEntee",
           "components": [],
           "labels": [
             "dashboard-area-model-serving"
@@ -430,7 +444,7 @@
           "status": "Review",
           "statusCategory": "In Progress",
           "priority": "Undefined",
-          "assignee": "Frankie Zimmerman",
+          "assignee": "Ashley McEntee",
           "components": [
             "AI Core Dashboard"
           ],
@@ -447,10 +461,10 @@
           "parentKey": "RHOAIENG-48852",
           "summary": "update serving runtime text to Deployment resource",
           "type": "Bug",
-          "status": "Resolved",
+          "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Frankie Zimmerman",
+          "assignee": "Ashley McEntee",
           "components": [
             "AI Core Dashboard"
           ],
@@ -459,7 +473,7 @@
           ],
           "storyPoints": 2,
           "created": "2026-04-01T20:11:14.702+0000",
-          "updated": "2026-04-07T17:46:47.970+0000",
+          "updated": "2026-04-08T19:31:12.533+0000",
           "resolutionDate": "2026-04-07T17:38:51.115+0000"
         },
         {
@@ -470,7 +484,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Carter",
+          "assignee": "Emily Samoylov",
           "components": [
             "AI Core Dashboard"
           ],
@@ -490,7 +504,7 @@
           "status": "Review",
           "statusCategory": "In Progress",
           "priority": "Blocker",
-          "assignee": "Merit Carter",
+          "assignee": "Emily Samoylov",
           "components": [
             "AI Core Dashboard"
           ],
@@ -502,6 +516,26 @@
           "created": "2026-04-06T19:09:31.820+0000",
           "updated": "2026-04-08T00:22:24.009+0000",
           "resolutionDate": null
+        },
+        {
+          "key": "RHOAIENG-57293",
+          "parentKey": "RHOAIENG-48852",
+          "summary": "vLLM on MaaS: remove scheduler",
+          "type": "Story",
+          "status": "Review",
+          "statusCategory": "In Progress",
+          "priority": "Normal",
+          "assignee": "Emily Samoylov",
+          "components": [
+            "AI Core Dashboard"
+          ],
+          "labels": [
+            "dashboard-area-model-serving"
+          ],
+          "storyPoints": 1,
+          "created": "2026-04-08T19:31:40.469+0000",
+          "updated": "2026-04-08T19:36:00.663+0000",
+          "resolutionDate": null
         }
       ]
     },
@@ -509,7 +543,7 @@
       "key": "TEST2-49824",
       "parentKey": "RHAISTRAT-1167",
       "summary": "Add pagination support",
-      "status": "In Progress",
+      "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
       "assignee": "Person 150",
@@ -524,7 +558,7 @@
       "labels": [],
       "storyPoints": 0,
       "created": "2026-02-16T07:05:34.980+0000",
-      "updated": "2026-03-25T13:33:10.269+0000",
+      "updated": "2026-04-09T15:18:08.922+0000",
       "issues": [
         {
           "key": "RHOAIENG-50060",
@@ -534,7 +568,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Mitchell",
+          "assignee": "Killian Golds",
           "components": [
             "IBM P",
             "IBM Z",
@@ -557,7 +591,7 @@
           "status": "Review",
           "statusCategory": "In Progress",
           "priority": "Major",
-          "assignee": "Kerry Mitchell",
+          "assignee": "Killian Golds",
           "components": [
             "IBM P",
             "IBM Z",
@@ -569,7 +603,7 @@
           "labels": [],
           "storyPoints": 3,
           "created": "2026-02-17T17:55:08.526+0000",
-          "updated": "2026-04-07T17:05:41.596+0000",
+          "updated": "2026-04-09T16:17:49.590+0000",
           "resolutionDate": null
         },
         {
@@ -580,7 +614,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Mitchell",
+          "assignee": "Killian Golds",
           "components": [
             "IBM P",
             "IBM Z",
@@ -603,7 +637,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Mitchell",
+          "assignee": "Killian Golds",
           "components": [
             "llm-d",
             "Model Serving"
@@ -624,7 +658,7 @@
           "status": "Testing",
           "statusCategory": "In Progress",
           "priority": "Major",
-          "assignee": "Kerry Mitchell",
+          "assignee": "Killian Golds",
           "components": [
             "IBM P",
             "IBM Z",
@@ -647,7 +681,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Mitchell",
+          "assignee": "Killian Golds",
           "components": [
             "llm-d",
             "Model as a Service",
@@ -668,7 +702,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry Mitchell",
+          "assignee": "Killian Golds",
           "components": [
             "llm-d",
             "Model as a Service",
@@ -686,22 +720,21 @@
   ],
   "metrics": {
     "totalEpics": 2,
-    "totalIssues": 24,
+    "totalIssues": 25,
     "issuesByStatus": {
-      "Closed": 13,
-      "Resolved": 6,
-      "Review": 3,
-      "In Progress": 1,
+      "Closed": 15,
+      "Resolved": 5,
+      "Review": 4,
       "Testing": 1
     },
     "issuesByCategory": {
-      "Done": 19,
+      "Done": 20,
       "In Progress": 5,
       "To Do": 0
     },
-    "totalStoryPoints": 37,
-    "storyPointsDone": 29,
-    "completionPct": 79,
+    "totalStoryPoints": 38,
+    "storyPointsDone": 32,
+    "completionPct": 80,
     "staleCount": 0,
     "unassignedCount": 0,
     "blockerCount": 2,
@@ -712,20 +745,20 @@
         "summary": "vLLM on MaaS",
         "status": "Review",
         "statusCategory": "In Progress",
-        "assignee": "Merit Carter",
-        "totalIssues": 17,
-        "doneIssues": 14,
-        "progressPct": 82,
-        "storyPoints": 25,
-        "storyPointsDone": 21,
+        "assignee": "Emily Samoylov",
+        "totalIssues": 18,
+        "doneIssues": 15,
+        "progressPct": 83,
+        "storyPoints": 26,
+        "storyPointsDone": 24,
         "health": "RED"
       },
       {
         "key": "RHOAIENG-49824",
         "summary": "Enable vLLM Runtime Support in MaaS",
-        "status": "In Progress",
+        "status": "Review",
         "statusCategory": "In Progress",
-        "assignee": "Kerry Mitchell",
+        "assignee": "Killian Golds",
         "totalIssues": 7,
         "doneIssues": 5,
         "progressPct": 71,
@@ -736,6 +769,128 @@
     ]
   },
   "topology": {
-    "repos": []
+    "repos": [
+      {
+        "url": "github.com/red-hat-data-services/odh-dashboard",
+        "issueCount": 23,
+        "doneIssues": 18,
+        "totalIssues": 23,
+        "components": [
+          "AI Core Dashboard",
+          "Model as a Service"
+        ],
+        "lane": "destination"
+      },
+      {
+        "url": "github.com/opendatahub-io/odh-dashboard",
+        "issueCount": 17,
+        "doneIssues": 14,
+        "totalIssues": 17,
+        "components": [
+          "AI Core Dashboard"
+        ],
+        "lane": "upstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/llm-d-inference-scheduler",
+        "issueCount": 7,
+        "doneIssues": 5,
+        "totalIssues": 7,
+        "components": [
+          "llm-d"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/llm-d-kv-cache",
+        "issueCount": 7,
+        "doneIssues": 5,
+        "totalIssues": 7,
+        "components": [
+          "llm-d"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/models-as-a-service",
+        "issueCount": 6,
+        "doneIssues": 4,
+        "totalIssues": 6,
+        "components": [
+          "Model as a Service"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/MLServer",
+        "issueCount": 6,
+        "doneIssues": 4,
+        "totalIssues": 6,
+        "components": [
+          "Model Runtimes"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/openvino_model_server",
+        "issueCount": 6,
+        "doneIssues": 4,
+        "totalIssues": 6,
+        "components": [
+          "Model Runtimes"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/SeldonIO/MLServer",
+        "issueCount": 6,
+        "doneIssues": 4,
+        "totalIssues": 6,
+        "components": [
+          "Model Runtimes"
+        ],
+        "lane": "upstream"
+      },
+      {
+        "url": "github.com/openvinotoolkit/model_server",
+        "issueCount": 6,
+        "doneIssues": 4,
+        "totalIssues": 6,
+        "components": [
+          "Model Runtimes"
+        ],
+        "lane": "upstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/kserve",
+        "issueCount": 7,
+        "doneIssues": 5,
+        "totalIssues": 7,
+        "components": [
+          "Model Serving"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/odh-model-controller",
+        "issueCount": 7,
+        "doneIssues": 5,
+        "totalIssues": 7,
+        "components": [
+          "Model Serving"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/kserve/kserve",
+        "issueCount": 7,
+        "doneIssues": 5,
+        "totalIssues": 7,
+        "components": [
+          "Model Serving"
+        ],
+        "lane": "upstream"
+      }
+    ]
   }
 }

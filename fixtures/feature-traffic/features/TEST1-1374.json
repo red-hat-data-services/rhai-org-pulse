@@ -1,7 +1,7 @@
 {
   "key": "TEST1-1374",
   "summary": "Add logging for debugging",
-  "status": "New",
+  "status": "Refinement",
   "statusCategory": "To Do",
   "priority": "Critical",
   "assignee": {
@@ -18,7 +18,7 @@
     "Llama Stack Core"
   ],
   "created": "2026-03-22T18:52:46.525+0000",
-  "updated": "2026-04-07T12:08:07.398+0000",
+  "updated": "2026-04-09T12:36:12.396+0000",
   "statusNotes": null,
   "issueLinks": [
     {

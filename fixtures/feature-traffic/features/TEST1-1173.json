@@ -5,7 +5,7 @@
   "statusCategory": "In Progress",
   "priority": "Critical",
   "assignee": {
-    "displayName": "Frankie Flynn",
+    "displayName": "Rob Geada",
     "accountId": "5e258328a7b9540e76f44821"
   },
   "fixVersions": [],
@@ -20,7 +20,7 @@
     "Documentation"
   ],
   "created": "2026-01-27T14:14:34.582+0000",
-  "updated": "2026-04-07T03:06:39.747+0000",
+  "updated": "2026-04-10T03:08:58.400+0000",
   "statusNotes": null,
   "issueLinks": [
     {
@@ -39,7 +39,7 @@
       "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Major",
-      "assignee": "Frankie Jensen",
+      "assignee": "Former Member 9",
       "components": [
         "AI Safety",
         "Documentation"
@@ -57,7 +57,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Gray Rowe",
+          "assignee": "Bronagh Synnott",
           "components": [
             "AI Safety",
             "Documentation"
@@ -76,7 +76,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Gray Rowe",
+          "assignee": "Bronagh Synnott",
           "components": [
             "AI Safety",
             "Documentation"
@@ -95,7 +95,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Gray Rowe",
+          "assignee": "Bronagh Synnott",
           "components": [
             "AI Safety",
             "Documentation"
@@ -114,7 +114,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Gray Rowe",
+          "assignee": "Bronagh Synnott",
           "components": [
             "AI Safety",
             "Documentation"
@@ -223,7 +223,7 @@
         "summary": "[ccs Epic] Document 'Lemonade stand' / AI Safety Starter Kit for AISafety-TrustyAI",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Gray Rowe",
+        "assignee": "Bronagh Synnott",
         "totalIssues": 4,
         "doneIssues": 3,
         "progressPct": 75,
@@ -247,6 +247,67 @@
     ]
   },
   "topology": {
-    "repos": []
+    "repos": [
+      {
+        "url": "github.com/red-hat-data-services/fms-guardrails-orchestrator",
+        "issueCount": 6,
+        "doneIssues": 3,
+        "totalIssues": 6,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/guardrails-detectors",
+        "issueCount": 6,
+        "doneIssues": 3,
+        "totalIssues": 6,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/guardrails-regex-detector",
+        "issueCount": 6,
+        "doneIssues": 3,
+        "totalIssues": 6,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/NeMo-Guardrails",
+        "issueCount": 6,
+        "doneIssues": 3,
+        "totalIssues": 6,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/NVIDIA-NeMo/Guardrails",
+        "issueCount": 6,
+        "doneIssues": 3,
+        "totalIssues": 6,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "upstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/odh-dashboard",
+        "issueCount": 4,
+        "doneIssues": 3,
+        "totalIssues": 4,
+        "components": [
+          "Documentation"
+        ],
+        "lane": "destination"
+      }
+    ]
   }
 }

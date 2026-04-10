@@ -5,7 +5,7 @@
   "statusCategory": "In Progress",
   "priority": "Critical",
   "assignee": {
-    "displayName": "Kerry Palmer",
+    "displayName": "Adel Zaalouk",
     "accountId": "70121:60857a87-9351-4d38-bd27-75488f0f04de"
   },
   "fixVersions": [],
@@ -85,7 +85,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Flynn",
+          "assignee": "Rob Geada",
           "components": [
             "AI Safety"
           ],
@@ -103,7 +103,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Flynn",
+          "assignee": "Rob Geada",
           "components": [
             "AI Safety"
           ],
@@ -121,7 +121,7 @@
           "status": "New",
           "statusCategory": "To Do",
           "priority": "Undefined",
-          "assignee": "Frankie Flynn",
+          "assignee": "Rob Geada",
           "components": [
             "AI Safety"
           ],
@@ -157,7 +157,7 @@
       "status": "Closed",
       "statusCategory": "Done",
       "priority": "Undefined",
-      "assignee": "Frankie Jensen",
+      "assignee": "Former Member 9",
       "components": [
         "AI Evaluations",
         "AI Safety",
@@ -195,7 +195,7 @@
         "summary": "Instrument LM-Eval to inform decision making",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Frankie Flynn",
+        "assignee": "Rob Geada",
         "totalIssues": 3,
         "doneIssues": 2,
         "progressPct": 67,
@@ -221,7 +221,7 @@
         "summary": "[Docs] Instrument LM-Eval to inform decision making",
         "status": "Closed",
         "statusCategory": "Done",
-        "assignee": "Gray Rowe",
+        "assignee": "Bronagh Synnott",
         "totalIssues": 0,
         "doneIssues": 0,
         "progressPct": 0,

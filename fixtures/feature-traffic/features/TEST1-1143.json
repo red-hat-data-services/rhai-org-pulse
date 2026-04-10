@@ -16,7 +16,7 @@
     "Training Kubeflow"
   ],
   "created": "2026-01-21T14:46:09.598+0000",
-  "updated": "2026-03-20T09:43:46.459+0000",
+  "updated": "2026-04-08T09:49:41.318+0000",
   "statusNotes": null,
   "issueLinks": [
     {
@@ -32,6 +32,13 @@
       "linkedKey": "RHOAIENG-49115",
       "linkedSummary": "Create MlFlow guided example in distribute mode (with kubeflow trainer)",
       "linkedStatus": "New"
+    },
+    {
+      "type": "Causality",
+      "direction": "inward",
+      "linkedKey": "RHAIRFE-745",
+      "linkedSummary": "MLFlow integration in RHOAI",
+      "linkedStatus": "Approved"
     }
   ],
   "epics": [],

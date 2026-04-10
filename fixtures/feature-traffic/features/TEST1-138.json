@@ -23,7 +23,7 @@
     "AI Hub"
   ],
   "created": "2025-10-22T16:17:16.165+0000",
-  "updated": "2026-04-04T11:37:45.352+0000",
+  "updated": "2026-04-09T17:41:33.711+0000",
   "statusNotes": null,
   "issueLinks": [
     {
@@ -38,7 +38,7 @@
       "direction": "outward",
       "linkedKey": "RHAISTRAT-1084",
       "linkedSummary": "Dev Preview - MCP Catalog – Enterprise Control of MCP Assets",
-      "linkedStatus": "In Progress"
+      "linkedStatus": "Review"
     },
     {
       "type": "Related",
@@ -73,7 +73,7 @@
       "direction": "outward",
       "linkedKey": "RHAIRFE-437",
       "linkedSummary": "Integrate, Validate, and Certify MCP Servers (and ISVs) + Explore Integration with Model Registry",
-      "linkedStatus": "Approved"
+      "linkedStatus": "Closed"
     },
     {
       "type": "Related",

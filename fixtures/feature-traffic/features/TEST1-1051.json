@@ -5,7 +5,7 @@
   "statusCategory": "In Progress",
   "priority": "Critical",
   "assignee": {
-    "displayName": "Frankie Flynn",
+    "displayName": "Rob Geada",
     "accountId": "5e258328a7b9540e76f44821"
   },
   "fixVersions": [
@@ -25,7 +25,7 @@
     "Documentation"
   ],
   "created": "2025-12-14T15:45:57.992+0000",
-  "updated": "2026-04-07T10:33:57.288+0000",
+  "updated": "2026-04-10T03:09:04.382+0000",
   "statusNotes": null,
   "issueLinks": [
     {
@@ -55,6 +55,13 @@
       "linkedKey": "OCPSTRAT-2841",
       "linkedSummary": "OpenShift 5.0 Applied/Agentic AI Experience",
       "linkedStatus": "In Progress"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHOAIENG-57462",
+      "linkedSummary": "[ccs] Finalize GA documentation for NeMo Guardrails - 3.5 EA1",
+      "linkedStatus": "New"
     }
   ],
   "epics": [
@@ -62,7 +69,7 @@
       "key": "TEST2-50657",
       "parentKey": "RHAISTRAT-1051",
       "summary": "Fix sorting order",
-      "status": "In Progress",
+      "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Undefined",
       "assignee": "Person 161",
@@ -72,7 +79,7 @@
       "labels": [],
       "storyPoints": 0,
       "created": "2026-02-24T11:32:01.886+0000",
-      "updated": "2026-03-30T15:42:28.830+0000",
+      "updated": "2026-04-09T15:12:23.832+0000",
       "issues": [
         {
           "key": "RHOAIENG-50658",
@@ -82,7 +89,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Young",
+          "assignee": "Mac Misiura",
           "components": [
             "AI Safety"
           ],
@@ -100,7 +107,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Kerry James",
+          "assignee": "Christina Xu",
           "components": [
             "AI Safety"
           ],
@@ -118,7 +125,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Young",
+          "assignee": "Mac Misiura",
           "components": [
             "AI Safety"
           ],
@@ -129,22 +136,6 @@
           "resolutionDate": "2026-03-16T16:04:33.995+0000"
         },
         {
-          "key": "RHOAIENG-53503",
-          "parentKey": "RHOAIENG-50657",
-          "summary": "Set up an auto-forwarding of all headers to all models",
-          "type": "Task",
-          "status": "Review",
-          "statusCategory": "In Progress",
-          "priority": "Undefined",
-          "assignee": "Merit Young",
-          "components": [],
-          "labels": [],
-          "storyPoints": 9,
-          "created": "2026-03-16T16:06:12.086+0000",
-          "updated": "2026-04-01T10:11:28.465+0000",
-          "resolutionDate": null
-        },
-        {
           "key": "RHOAIENG-54329",
           "parentKey": "RHOAIENG-50657",
           "summary": "NeMO guardrails image is incorrect in the trustyai-service-operator-config ConfigMap",
@@ -152,7 +143,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Blocker",
-          "assignee": "Kerry Sato",
+          "assignee": "Shelton Cyril",
           "components": [
             "AI Safety"
           ],
@@ -167,50 +158,34 @@
           "parentKey": "RHOAIENG-50657",
           "summary": "Bugfix: Fix disconnected cluster embedding model downloads",
           "type": "Bug",
-          "status": "Review",
-          "statusCategory": "In Progress",
+          "status": "Resolved",
+          "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Young",
+          "assignee": "Mac Misiura",
           "components": [
             "AI Safety"
           ],
           "labels": [],
           "storyPoints": 5,
           "created": "2026-03-20T11:45:06.835+0000",
-          "updated": "2026-04-07T10:19:32.265+0000",
-          "resolutionDate": null
-        },
-        {
-          "key": "RHOAIENG-54749",
-          "parentKey": "RHOAIENG-50657",
-          "summary": "Multi-part content format (OpenAI spec) causes garbled prompts and TypeError crash",
-          "type": "Bug",
-          "status": "In Progress",
-          "statusCategory": "In Progress",
-          "priority": "Undefined",
-          "assignee": "Merit Young",
-          "components": [],
-          "labels": [],
-          "storyPoints": 5,
-          "created": "2026-03-23T14:51:25.379+0000",
-          "updated": "2026-03-30T08:36:09.082+0000",
-          "resolutionDate": null
+          "updated": "2026-04-08T15:12:01.324+0000",
+          "resolutionDate": "2026-04-08T15:12:01.292+0000"
         },
         {
           "key": "RHOAIENG-54750",
           "parentKey": "RHOAIENG-50657",
           "summary": "Jailbreak rail is not fully operational without a pre-trained rf classider",
           "type": "Bug",
-          "status": "Review",
-          "statusCategory": "In Progress",
+          "status": "Resolved",
+          "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Young",
+          "assignee": "Mac Misiura",
           "components": [],
           "labels": [],
           "storyPoints": 3,
           "created": "2026-03-23T14:54:57.001+0000",
-          "updated": "2026-04-07T10:20:27.125+0000",
-          "resolutionDate": null
+          "updated": "2026-04-08T15:12:10.972+0000",
+          "resolutionDate": "2026-04-08T15:12:10.940+0000"
         },
         {
           "key": "RHOAIENG-54931",
@@ -220,7 +195,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Frankie Flynn",
+          "assignee": "Rob Geada",
           "components": [
             "AI Safety"
           ],
@@ -238,7 +213,7 @@
           "status": "Resolved",
           "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Young",
+          "assignee": "Mac Misiura",
           "components": [],
           "labels": [],
           "storyPoints": 3,
@@ -251,37 +226,35 @@
           "parentKey": "RHOAIENG-50657",
           "summary": "OpenTelemetry auto-instrumentation support not working due to missing packages and entrypoint not being configured",
           "type": "Bug",
-          "status": "Review",
-          "statusCategory": "In Progress",
+          "status": "Resolved",
+          "statusCategory": "Done",
           "priority": "Undefined",
-          "assignee": "Merit Young",
+          "assignee": "Mac Misiura",
           "components": [],
           "labels": [],
           "storyPoints": 3,
           "created": "2026-04-07T13:10:31.709+0000",
-          "updated": "2026-04-07T14:10:05.546+0000",
-          "resolutionDate": null
+          "updated": "2026-04-08T15:12:16.939+0000",
+          "resolutionDate": "2026-04-08T15:12:16.913+0000"
         }
       ]
     }
   ],
   "metrics": {
     "totalEpics": 1,
-    "totalIssues": 11,
+    "totalIssues": 9,
     "issuesByStatus": {
-      "Resolved": 6,
-      "Review": 4,
-      "In Progress": 1
+      "Resolved": 9
     },
     "issuesByCategory": {
-      "Done": 6,
-      "In Progress": 5,
+      "Done": 9,
+      "In Progress": 0,
       "To Do": 0
     },
-    "totalStoryPoints": 48,
-    "storyPointsDone": 23,
-    "completionPct": 55,
-    "staleCount": 1,
+    "totalStoryPoints": 34,
+    "storyPointsDone": 34,
+    "completionPct": 100,
+    "staleCount": 0,
     "unassignedCount": 0,
     "blockerCount": 1,
     "health": "RED",
@@ -289,19 +262,70 @@
       {
         "key": "RHOAIENG-50657",
         "summary": "NeMo Guardrails: Provide features for 3.4 GA release",
-        "status": "In Progress",
+        "status": "Review",
         "statusCategory": "In Progress",
-        "assignee": "Frankie Flynn",
-        "totalIssues": 11,
-        "doneIssues": 6,
-        "progressPct": 55,
-        "storyPoints": 48,
-        "storyPointsDone": 23,
+        "assignee": "Rob Geada",
+        "totalIssues": 9,
+        "doneIssues": 9,
+        "progressPct": 100,
+        "storyPoints": 34,
+        "storyPointsDone": 34,
         "health": "RED"
       }
     ]
   },
   "topology": {
-    "repos": []
+    "repos": [
+      {
+        "url": "github.com/red-hat-data-services/fms-guardrails-orchestrator",
+        "issueCount": 6,
+        "doneIssues": 6,
+        "totalIssues": 6,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/guardrails-detectors",
+        "issueCount": 6,
+        "doneIssues": 6,
+        "totalIssues": 6,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/guardrails-regex-detector",
+        "issueCount": 6,
+        "doneIssues": 6,
+        "totalIssues": 6,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/NeMo-Guardrails",
+        "issueCount": 6,
+        "doneIssues": 6,
+        "totalIssues": 6,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/NVIDIA-NeMo/Guardrails",
+        "issueCount": 6,
+        "doneIssues": 6,
+        "totalIssues": 6,
+        "components": [
+          "AI Safety"
+        ],
+        "lane": "upstream"
+      }
+    ]
   }
 }

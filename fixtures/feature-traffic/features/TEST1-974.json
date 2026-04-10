@@ -19,7 +19,7 @@
     "SDG"
   ],
   "created": "2025-12-09T04:53:52.532+0000",
-  "updated": "2026-04-07T08:05:15.631+0000",
+  "updated": "2026-04-09T10:19:53.193+0000",
   "statusNotes": null,
   "issueLinks": [
     {
@@ -35,6 +35,13 @@
       "linkedKey": "RHAIENG-3303",
       "linkedSummary": "Create and validate multilingual knowledge flow",
       "linkedStatus": "Closed"
+    },
+    {
+      "type": "Document",
+      "direction": "inward",
+      "linkedKey": "RHAIENG-4351",
+      "linkedSummary": "[ccs Epic] Document SDG features released with 3.4",
+      "linkedStatus": "New"
     }
   ],
   "epics": [],

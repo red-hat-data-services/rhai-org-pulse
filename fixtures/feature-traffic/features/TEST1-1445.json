@@ -5,8 +5,8 @@
   "statusCategory": "To Do",
   "priority": "Critical",
   "assignee": {
-    "displayName": "Merit Zimmerman",
-    "accountId": "712020:3f08a403-b52d-4aa7-9212-9ee6dba8bc3b"
+    "displayName": "Andrew Ballantyne",
+    "accountId": "5fdb88f09edf280075ce339d"
   },
   "fixVersions": [],
   "labels": [
@@ -20,7 +20,7 @@
     "Model Serving"
   ],
   "created": "2026-04-07T14:13:28.069+0000",
-  "updated": "2026-04-07T14:18:28.910+0000",
+  "updated": "2026-04-09T18:08:37.706+0000",
   "statusNotes": null,
   "issueLinks": [
     {
@@ -28,7 +28,7 @@
       "direction": "outward",
       "linkedKey": "RHAIRFE-256",
       "linkedSummary": "Provisioning NVIDIA NIM Operator for Red Hat OpenShift AI",
-      "linkedStatus": "New"
+      "linkedStatus": "Stakeholder review"
     },
     {
       "type": "Incorporates",

@@ -5,7 +5,7 @@
   "statusCategory": "In Progress",
   "priority": "Major",
   "assignee": {
-    "displayName": "Merit Blake",
+    "displayName": "Daniel Ryszka",
     "accountId": "712020:456909bf-a7c9-40b8-8f28-212fbfbf495a"
   },
   "fixVersions": [
@@ -23,7 +23,7 @@
     "Model Serving"
   ],
   "created": "2026-02-04T16:38:59.450+0000",
-  "updated": "2026-04-06T13:17:48.853+0000",
+  "updated": "2026-04-08T15:30:02.676+0000",
   "statusNotes": null,
   "issueLinks": [
     {
@@ -102,8 +102,8 @@
       "key": "TEST2-51258",
       "parentKey": "RHAISTRAT-1191",
       "summary": "Implement search feature",
-      "status": "Review",
-      "statusCategory": "In Progress",
+      "status": "Closed",
+      "statusCategory": "Done",
       "priority": "Major",
       "assignee": "Person 129",
       "components": [
@@ -116,14 +116,14 @@
       ],
       "storyPoints": 0,
       "created": "2026-02-27T02:24:00.970+0000",
-      "updated": "2026-04-01T14:44:13.031+0000",
+      "updated": "2026-04-08T11:01:40.359+0000",
       "issues": []
     },
     {
       "key": "TEST2-51290",
       "parentKey": "RHAISTRAT-1191",
       "summary": "Fix validation issue",
-      "status": "Testing",
+      "status": "Review",
       "statusCategory": "In Progress",
       "priority": "Major",
       "assignee": "Person 129",
@@ -139,15 +139,15 @@
       ],
       "storyPoints": 0,
       "created": "2026-02-27T10:39:11.970+0000",
-      "updated": "2026-03-31T18:33:47.287+0000",
+      "updated": "2026-04-08T09:18:26.811+0000",
       "issues": []
     },
     {
       "key": "TEST2-51291",
       "parentKey": "RHAISTRAT-1191",
       "summary": "Update API endpoint",
-      "status": "Review",
-      "statusCategory": "In Progress",
+      "status": "Closed",
+      "statusCategory": "Done",
       "priority": "Normal",
       "assignee": "Person 129",
       "components": [
@@ -160,7 +160,7 @@
       ],
       "storyPoints": 0,
       "created": "2026-02-27T10:39:27.967+0000",
-      "updated": "2026-04-03T10:00:58.302+0000",
+      "updated": "2026-04-08T11:02:43.355+0000",
       "issues": []
     },
     {
@@ -190,7 +190,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Merit Blake",
+          "assignee": "Daniel Ryszka",
           "components": [
             "AutoML",
             "DevOps"
@@ -232,7 +232,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Critical",
-          "assignee": "Merit Blake",
+          "assignee": "Daniel Ryszka",
           "components": [
             "AutoML",
             "DevOps"
@@ -253,7 +253,7 @@
           "status": "Review",
           "statusCategory": "In Progress",
           "priority": "Blocker",
-          "assignee": "Merit Blake",
+          "assignee": "Daniel Ryszka",
           "components": [
             "AutoML"
           ],
@@ -274,7 +274,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Blake",
+          "assignee": "Daniel Ryszka",
           "components": [
             "AutoML"
           ],
@@ -294,7 +294,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Gray Zimmerman",
+          "assignee": "Lukasz Cmielowski",
           "components": [
             "AutoML"
           ],
@@ -314,7 +314,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Blake",
+          "assignee": "Daniel Ryszka",
           "components": [
             "AutoML"
           ],
@@ -334,7 +334,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Blocker",
-          "assignee": "Merit Blake",
+          "assignee": "Daniel Ryszka",
           "components": [
             "AutoML"
           ],
@@ -354,7 +354,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Blocker",
-          "assignee": "Merit Blake",
+          "assignee": "Daniel Ryszka",
           "components": [
             "AutoML"
           ],
@@ -436,7 +436,7 @@
           "status": "In Progress",
           "statusCategory": "In Progress",
           "priority": "Normal",
-          "assignee": "Gray Udall",
+          "assignee": "Dorota Laczak",
           "components": [
             "AutoML"
           ],
@@ -518,7 +518,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Major",
-          "assignee": "Merit Blake",
+          "assignee": "Daniel Ryszka",
           "components": [
             "AutoML"
           ],
@@ -538,7 +538,7 @@
           "status": "Backlog",
           "statusCategory": "To Do",
           "priority": "Normal",
-          "assignee": "Merit Blake",
+          "assignee": "Daniel Ryszka",
           "components": [
             "AutoML"
           ],
@@ -558,7 +558,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Blake",
+          "assignee": "Daniel Ryszka",
           "components": [
             "AutoML"
           ],
@@ -578,7 +578,7 @@
           "status": "Closed",
           "statusCategory": "Done",
           "priority": "Normal",
-          "assignee": "Merit Blake",
+          "assignee": "Daniel Ryszka",
           "components": [
             "AutoML"
           ],
@@ -598,7 +598,7 @@
           "status": "Backlog",
           "statusCategory": "To Do",
           "priority": "Normal",
-          "assignee": "Gray Sato",
+          "assignee": "Adrian Sanz Gomiz",
           "components": [
             "AI Core Platform",
             "AutoML"
@@ -632,7 +632,7 @@
     "totalStoryPoints": 3,
     "storyPointsDone": 0,
     "completionPct": 43,
-    "staleCount": 7,
+    "staleCount": 9,
     "unassignedCount": 7,
     "blockerCount": 8,
     "health": "RED",
@@ -642,7 +642,7 @@
         "summary": "ODH Konflux Release Build Onboarding [AutoML Backend]",
         "status": "Closed",
         "statusCategory": "Done",
-        "assignee": "Onyx Webb",
+        "assignee": "Mhamad Chamseddin",
         "totalIssues": 0,
         "doneIssues": 0,
         "progressPct": 0,
@@ -653,9 +653,9 @@
       {
         "key": "RHOAIENG-51258",
         "summary": "RHOAI Konflux Onboarding [AutoML Backend]",
-        "status": "Review",
-        "statusCategory": "In Progress",
-        "assignee": "Onyx Webb",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Mhamad Chamseddin",
         "totalIssues": 0,
         "doneIssues": 0,
         "progressPct": 0,
@@ -666,9 +666,9 @@
       {
         "key": "RHOAIENG-51290",
         "summary": "RHOAI Konflux Onboarding [AutoGluon KServe Runtime for AutoML]",
-        "status": "Testing",
+        "status": "Review",
         "statusCategory": "In Progress",
-        "assignee": "Onyx Webb",
+        "assignee": "Mhamad Chamseddin",
         "totalIssues": 0,
         "doneIssues": 0,
         "progressPct": 0,
@@ -679,9 +679,9 @@
       {
         "key": "RHOAIENG-51291",
         "summary": "ODH Konflux Release Build Onboarding [AutoGluon KServe Runtime for AutoML]",
-        "status": "Review",
-        "statusCategory": "In Progress",
-        "assignee": "Onyx Webb",
+        "status": "Closed",
+        "statusCategory": "Done",
+        "assignee": "Mhamad Chamseddin",
         "totalIssues": 0,
         "doneIssues": 0,
         "progressPct": 0,
@@ -694,7 +694,7 @@
         "summary": "Tech Preview - ODH and RHOAI Integrations [AutoML Backend]",
         "status": "In Progress",
         "statusCategory": "In Progress",
-        "assignee": "Merit Blake",
+        "assignee": "Daniel Ryszka",
         "totalIssues": 21,
         "doneIssues": 9,
         "progressPct": 43,

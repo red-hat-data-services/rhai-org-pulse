@@ -16,7 +16,7 @@
     "Model Serving"
   ],
   "created": "2025-07-29T15:46:17.500+0000",
-  "updated": "2026-04-03T20:39:17.879+0000",
+  "updated": "2026-04-09T10:12:36.591+0000",
   "statusNotes": null,
   "issueLinks": [
     {
@@ -63,7 +63,7 @@
       "labels": [],
       "storyPoints": 0,
       "created": "2025-08-11T12:17:06.199+0000",
-      "updated": "2026-04-01T19:43:46.810+0000",
+      "updated": "2026-04-08T14:37:08.231+0000",
       "issues": [
         {
           "key": "RHOAIENG-31930",
@@ -193,7 +193,7 @@
           "labels": [],
           "storyPoints": 1,
           "created": "2025-09-09T17:25:10.055+0000",
-          "updated": "2026-04-02T14:17:46.080+0000",
+          "updated": "2026-04-07T13:04:09.527+0000",
           "resolutionDate": null
         },
         {
@@ -303,7 +303,7 @@
           "labels": [],
           "storyPoints": 1,
           "created": "2026-02-02T01:04:11.838+0000",
-          "updated": "2026-04-01T13:52:44.082+0000",
+          "updated": "2026-04-06T18:29:40.104+0000",
           "resolutionDate": null
         },
         {
@@ -365,6 +365,57 @@
     ]
   },
   "topology": {
-    "repos": []
+    "repos": [
+      {
+        "url": "github.com/red-hat-data-services/kserve",
+        "issueCount": 14,
+        "doneIssues": 11,
+        "totalIssues": 14,
+        "components": [
+          "Model Serving"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/odh-model-controller",
+        "issueCount": 14,
+        "doneIssues": 11,
+        "totalIssues": 14,
+        "components": [
+          "Model Serving"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/kserve/kserve",
+        "issueCount": 14,
+        "doneIssues": 11,
+        "totalIssues": 14,
+        "components": [
+          "Model Serving"
+        ],
+        "lane": "upstream"
+      },
+      {
+        "url": "github.com/red-hat-data-services/rhods-operator",
+        "issueCount": 1,
+        "doneIssues": 0,
+        "totalIssues": 1,
+        "components": [
+          "AI Core Platform"
+        ],
+        "lane": "midstream"
+      },
+      {
+        "url": "github.com/opendatahub-io/opendatahub-operator",
+        "issueCount": 1,
+        "doneIssues": 0,
+        "totalIssues": 1,
+        "components": [
+          "AI Core Platform"
+        ],
+        "lane": "upstream"
+      }
+    ]
   }
 }
