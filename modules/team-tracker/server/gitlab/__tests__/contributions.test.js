@@ -294,6 +294,7 @@ describe('fetchGitlabData integration', () => {
       expect(results.dhellmann).toBeTruthy()
       expect(results.dhellmann.totalContributions).toBe(1200) // 100 * 12 months
       expect(results.dhellmann.source).toBe('graphql')
+      expect(results.dhellmann.instances).toBeDefined()
       expect(results.dhellmann.fetchedAt).toBeTruthy()
       expect(Object.keys(results.dhellmann.months).length).toBe(12)
       // Should have instances array

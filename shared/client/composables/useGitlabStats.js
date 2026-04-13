@@ -15,6 +15,31 @@ export function useGitlabStats() {
     return contributionsMap.value[gitlabUsername] || null
   }
 
+  /**
+   * Returns contributions for a specific instance URL, or null if not available.
+   * @param {string} gitlabUsername
+   * @param {string} baseUrl - e.g. "https://gitlab.cee.redhat.com"
+   */
+  function getInstanceContributions(gitlabUsername, baseUrl) {
+    if (!gitlabUsername) return null
+    return contributionsMap.value[gitlabUsername]?.instances?.[baseUrl] || null
+  }
+
+  /**
+   * Returns the list of instance baseUrls that have data for at least one user.
+   */
+  const knownInstances = computed(() => {
+    const instanceSet = new Set()
+    for (const userData of Object.values(contributionsMap.value)) {
+      if (userData?.instances) {
+        for (const baseUrl of Object.keys(userData.instances)) {
+          instanceSet.add(baseUrl)
+        }
+      }
+    }
+    return [...instanceSet]
+  })
+
   async function loadGitlabStats() {
     if (gitlabData.value) return
     loading.value = true
@@ -52,6 +77,8 @@ export function useGitlabStats() {
   return {
     contributionsMap,
     getContributions,
+    getInstanceContributions,
+    knownInstances,
     loadGitlabStats,
     setUserContributions,
     getProfileUrls,
