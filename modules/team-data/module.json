@@ -1,0 +1,20 @@
+{
+  "name": "Team Data",
+  "slug": "team-data",
+  "description": "People registry powered by IPA/LDAP with GitHub and GitLab identity tracking",
+  "icon": "database",
+  "order": 2,
+  "client": {
+    "entry": "./client/index.js",
+    "navItems": [
+      { "id": "people", "label": "People", "icon": "Users", "default": true },
+      { "id": "org-explorer", "label": "Org Explorer", "icon": "Network" }
+    ],
+    "settingsComponent": "./client/components/TeamDataSettings.vue"
+  },
+  "server": {
+    "entry": "./server/index.js"
+  },
+  "defaultEnabled": false,
+  "requires": []
+}
