@@ -165,6 +165,7 @@
 import { ref, computed } from 'vue'
 import ProductReleaseCard from './ProductReleaseCard.vue'
 import { extractProduct } from '../composables/useReleaseFilter'
+import { gammaSample } from '../utils/monteCarlo'
 
 const ITERATIONS = 1000
 const MAX_DAYS = 730
@@ -191,27 +192,6 @@ const completionPct = computed(() => {
 })
 
 // ── Monte Carlo simulation (per-product independent, take max per iteration) ──
-
-function boxMullerNormal() {
-  const u1 = Math.random()
-  const u2 = Math.random()
-  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2)
-}
-
-function gammaSample(shape, scale) {
-  if (shape < 1) return gammaSample(shape + 1, scale) * Math.pow(Math.random(), 1 / shape)
-  const d = shape - 1 / 3
-  const c = 1 / Math.sqrt(9 * d)
-  for (let iter = 0; iter < 1000; iter++) {
-    let x, v
-    do { x = boxMullerNormal(); v = 1 + c * x } while (v <= 0)
-    v = v * v * v
-    const u = Math.random()
-    if (u < 1 - 0.0331 * x * x * x * x) return d * v * scale
-    if (Math.log(u) < 0.5 * x * x + d * (1 - v + Math.log(v))) return d * v * scale
-  }
-  return shape * scale
-}
 
 function getToday() { const d = new Date(); d.setHours(0, 0, 0, 0); return d }
 function addDays(date, days) { const d = new Date(date); d.setDate(d.getDate() + days); return d }

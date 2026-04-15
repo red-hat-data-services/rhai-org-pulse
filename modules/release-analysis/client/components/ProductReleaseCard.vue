@@ -311,6 +311,7 @@
 import { computed, ref } from 'vue'
 import MonteCarloChart from './MonteCarloChart.vue'
 import { extractProduct } from '../composables/useReleaseFilter'
+import { gammaSample } from '../utils/monteCarlo'
 
 const props = defineProps({
   release: { type: Object, required: true },
@@ -349,27 +350,6 @@ const releaseHasNoIssues = computed(() => issueSum.value === 0)
 
 const MC_ITERATIONS = 1000
 const MC_MAX_DAYS = 730
-
-function boxMullerNormal() {
-  const u1 = Math.random()
-  const u2 = Math.random()
-  return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2)
-}
-
-function gammaSample(shape, scale) {
-  if (shape < 1) return gammaSample(shape + 1, scale) * Math.pow(Math.random(), 1 / shape)
-  const d = shape - 1 / 3
-  const c = 1 / Math.sqrt(9 * d)
-  for (let iter = 0; iter < 1000; iter++) {
-    let x, v
-    do { x = boxMullerNormal(); v = 1 + c * x } while (v <= 0)
-    v = v * v * v
-    const u = Math.random()
-    if (u < 1 - 0.0331 * x * x * x * x) return d * v * scale
-    if (Math.log(u) < 0.5 * x * x + d * (1 - v + Math.log(v))) return d * v * scale
-  }
-  return shape * scale
-}
 
 const predictedDate = computed(() => {
   const mc = props.mcInputs
