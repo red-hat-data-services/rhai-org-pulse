@@ -31,9 +31,9 @@
       {{ error }}
     </div>
 
-    <div v-if="loading && !analysis" class="text-sm text-gray-500 dark:text-gray-400">Loading release analytics...</div>
+    <div v-if="(loading || refreshing) && !analysis" class="text-sm text-gray-500 dark:text-gray-400">Loading release analytics...</div>
 
-    <template v-if="!loading && analysis">
+    <template v-if="analysis">
       <div
         v-if="analysis.warning"
         class="rounded-lg border border-yellow-300 bg-yellow-50 text-yellow-800 px-4 py-3 text-sm"
@@ -50,15 +50,11 @@
       </div>
 
       <ReleaseFilterBar
-        :selected-products="selectedProducts"
         :selected-versions="selectedVersions"
-        :visible-products="visibleProducts"
         :visible-versions="visibleVersions"
         :filtered-count="enrichedReleases.length"
         :total-count="allReleases.length"
-        :toggle-product="toggleProduct"
         :toggle-version="toggleVersion"
-        :clear-products="clearProducts"
         :clear-versions="clearVersions"
         :reset-filters="resetFilters"
       />
@@ -386,14 +382,10 @@ function normalizeType(t) { return (t || '').toLowerCase().trim() }
 const allReleases = computed(() => analysis.value?.releases || [])
 
 const {
-  selectedProducts,
   selectedVersions,
-  visibleProducts,
   visibleVersions,
   filteredReleases,
-  toggleProduct,
   toggleVersion,
-  clearProducts,
   clearVersions,
   resetFilters
 } = useReleaseFilter(allReleases)

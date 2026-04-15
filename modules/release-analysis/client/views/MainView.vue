@@ -31,9 +31,9 @@
       {{ error }}
     </div>
 
-    <div v-if="loading && !analysis" class="text-sm text-gray-500 dark:text-gray-400">Loading release analytics...</div>
+    <div v-if="(loading || refreshing) && !analysis" class="text-sm text-gray-500 dark:text-gray-400">Loading release analytics...</div>
 
-    <template v-if="!loading && analysis">
+    <template v-if="analysis">
       <div
         v-if="analysis.warning"
         class="rounded-lg border border-yellow-300 bg-yellow-50 text-yellow-800 px-4 py-3 text-sm"
