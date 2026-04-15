@@ -1,15 +1,39 @@
 import { computed, reactive, watch } from 'vue'
 
-function extractProduct(releaseNumber) {
+export function extractProduct(releaseNumber) {
   const s = (releaseNumber || '').toLowerCase()
   const dash = s.indexOf('-')
   return dash > 0 ? s.slice(0, dash) : s
 }
 
-function extractVersion(releaseNumber) {
+export function extractVersion(releaseNumber) {
   const s = releaseNumber || ''
   const dash = s.indexOf('-')
   return dash > 0 ? s.slice(dash + 1) : s
+}
+
+
+function aggregateRisk(releases) {
+  if (releases.some(r => r.risk === 'red')) return 'red'
+  if (releases.some(r => r.risk === 'yellow')) return 'yellow'
+  return 'green'
+}
+
+function aggregateTotals(releases) {
+  const agg = { to_do: 0, doing: 0, done: 0, remaining: 0, total: 0, issues: 0, issues_to_do: 0, issues_doing: 0, issues_done: 0 }
+  for (const r of releases) {
+    const t = r.totals || {}
+    agg.to_do += t.to_do || 0
+    agg.doing += t.doing || 0
+    agg.done += t.done || 0
+    agg.remaining += t.remaining || 0
+    agg.total += t.total || 0
+    agg.issues += t.issues || 0
+    agg.issues_to_do += t.issues_to_do || 0
+    agg.issues_doing += t.issues_doing || 0
+    agg.issues_done += t.issues_done || 0
+  }
+  return agg
 }
 
 /**
@@ -79,6 +103,51 @@ export function useReleaseFilter(allReleases) {
     })
   })
 
+  const groupedByVersion = computed(() => {
+    const map = new Map()
+    for (const r of filteredReleases.value) {
+      const majorVer = extractVersion(r.releaseNumber)
+      if (!map.has(majorVer)) map.set(majorVer, [])
+      map.get(majorVer).push(r)
+    }
+
+    const groups = []
+    for (const [version, releases] of map) {
+      const earliest = releases.reduce((min, r) => {
+        const d = new Date(r.dueDate)
+        return d < min ? d : min
+      }, new Date('9999-12-31'))
+
+      const cfDates = releases.map(r => r.codeFreezeDate).filter(Boolean)
+      const earliestCodeFreeze = cfDates.length
+        ? cfDates.reduce((min, d) => (new Date(d) < new Date(min) ? d : min))
+        : null
+
+      const dueDates = releases.map(r => r.dueDate).filter(Boolean)
+      const earliestRelease = dueDates.length
+        ? dueDates.reduce((min, d) => (new Date(d) < new Date(min) ? d : min))
+        : null
+
+      const products = [...new Set(releases.map(r => extractProduct(r.releaseNumber)))]
+
+      groups.push({
+        version,
+        releases,
+        risk: aggregateRisk(releases),
+        totals: aggregateTotals(releases),
+        earliestDue: earliest,
+        earliestCodeFreeze,
+        earliestRelease,
+        productCount: products.length,
+        productNames: products,
+        releaseCount: releases.length
+      })
+    }
+
+    groups.sort((a, b) => a.version.localeCompare(b.version, undefined, { numeric: true }))
+    return groups
+  })
+
   function clearProducts() {
     selectedProducts.clear()
   }
@@ -100,6 +169,7 @@ export function useReleaseFilter(allReleases) {
     visibleProducts,
     visibleVersions,
     filteredReleases,
+    groupedByVersion,
     toggleProduct,
     toggleVersion,
     clearProducts,

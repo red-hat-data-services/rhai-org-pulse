@@ -9,18 +9,29 @@
       </div>
       <button
         class="px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
-        :disabled="loading"
+        :disabled="loading || refreshing"
         @click="refreshAnalysis"
       >
-        {{ loading ? 'Refreshing...' : 'Refresh' }}
+        {{ loading ? 'Loading...' : refreshing ? 'Updating...' : 'Refresh' }}
       </button>
+    </div>
+
+    <div
+      v-if="refreshing && analysis"
+      class="flex items-center gap-2 rounded-lg border border-indigo-200 dark:border-indigo-700/50 bg-indigo-50/60 dark:bg-indigo-900/20 px-4 py-2.5 text-sm text-indigo-700 dark:text-indigo-300"
+    >
+      <svg class="animate-spin h-4 w-4 shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+      </svg>
+      Updating data in the background — you can keep working with the current data.
     </div>
 
     <div v-if="error" class="rounded-lg border border-red-300 bg-red-50 text-red-700 px-4 py-3 text-sm">
       {{ error }}
     </div>
 
-    <div v-if="loading" class="text-sm text-gray-500 dark:text-gray-400">Loading release analytics...</div>
+    <div v-if="loading && !analysis" class="text-sm text-gray-500 dark:text-gray-400">Loading release analytics...</div>
 
     <template v-if="!loading && analysis">
       <div
@@ -368,7 +379,7 @@ const expandedProjects = reactive(new Set())
 const expandedComponents = reactive(new Set())
 const expandedStrategic = reactive(new Set())
 
-const { loading, error, analysis, refreshAnalysis } = useReleaseAnalysis()
+const { loading, refreshing, error, analysis, refreshAnalysis } = useReleaseAnalysis()
 
 function normalizeType(t) { return (t || '').toLowerCase().trim() }
 

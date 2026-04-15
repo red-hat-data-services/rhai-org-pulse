@@ -1072,6 +1072,33 @@ module.exports = function registerRoutes(router, context) {
 
   let refreshState = { running: false, lastResult: null }
 
+  function triggerBackgroundRefresh() {
+    if (refreshState.running) return
+    refreshState = { running: true, startedAt: new Date().toISOString(), lastResult: refreshState.lastResult }
+    const config = getConfig(readFromStorage)
+    runFullAnalysis(storage, config)
+      .then(result => {
+        writeToStorage('release-analysis/analysis-cache.json', {
+          cachedAt: new Date().toISOString(),
+          data: result
+        })
+        refreshState.lastResult = {
+          status: 'success',
+          message: `Analysis generated with ${result.releases?.length || 0} release(s)`,
+          completedAt: new Date().toISOString()
+        }
+      })
+      .catch(err => {
+        console.error('[release-analysis] Background refresh failed:', err)
+        refreshState.lastResult = {
+          status: 'error',
+          message: err.message,
+          completedAt: new Date().toISOString()
+        }
+      })
+      .finally(() => { refreshState.running = false })
+  }
+
   // --- Config routes ---
 
   router.get('/config', requireAdmin, function(req, res) {
@@ -1116,74 +1143,71 @@ module.exports = function registerRoutes(router, context) {
 
   // --- Refresh routes ---
 
-  router.get('/refresh/status', requireAdmin, function(req, res) {
+  router.get('/refresh/status', requireAuth, function(req, res) {
     res.json(refreshState)
   })
 
-  router.post('/refresh', requireAdmin, async function(req, res) {
+  router.post('/refresh', requireAdmin, function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Refresh disabled in demo mode' })
     }
     if (refreshState.running) {
       return res.json({ status: 'already_running' })
     }
-    refreshState = { running: true, startedAt: new Date().toISOString(), lastResult: refreshState.lastResult }
+    triggerBackgroundRefresh()
     res.json({ status: 'started' })
-
-    try {
-      const config = getConfig(readFromStorage)
-      const result = await runFullAnalysis(storage, config)
-      writeToStorage('release-analysis/analysis-cache.json', {
-        cachedAt: new Date().toISOString(),
-        data: result
-      })
-      refreshState.lastResult = {
-        status: 'success',
-        message: `Analysis generated with ${result.releases?.length || 0} release(s)`,
-        completedAt: new Date().toISOString()
-      }
-    } catch (err) {
-      console.error('[release-analysis] Refresh failed:', err)
-      refreshState.lastResult = {
-        status: 'error',
-        message: err.message,
-        completedAt: new Date().toISOString()
-      }
-    } finally {
-      refreshState.running = false
-    }
   })
 
-  // --- Analysis route ---
+  // --- Analysis route (stale-while-revalidate) ---
 
-  router.get('/analysis', requireAuth, async function(req, res) {
+  router.get('/analysis', requireAuth, function(req, res) {
     try {
-      const config = getConfig(readFromStorage)
       const forceRefresh = req.query.refresh === 'true'
+      const cached = readFromStorage('release-analysis/analysis-cache.json')
+      const hasCachedData = cached?.data && cached.cachedAt
 
-      // Serve from cache if fresh
-      if (!forceRefresh) {
-        const cached = readFromStorage('release-analysis/analysis-cache.json')
-        if (cached?.data && cached.cachedAt) {
-          const age = Date.now() - new Date(cached.cachedAt).getTime()
-          if (age < CACHE_MAX_AGE_MS) {
-            return res.json(cached.data)
-          }
+      if (hasCachedData) {
+        const age = Date.now() - new Date(cached.cachedAt).getTime()
+        const isStale = age >= CACHE_MAX_AGE_MS
+
+        if (isStale || forceRefresh) {
+          triggerBackgroundRefresh()
         }
+
+        const payload = {
+          ...cached.data,
+          _cacheStale: isStale || forceRefresh,
+          _refreshing: refreshState.running
+        }
+        return res.json(payload)
       }
 
-      const result = await runFullAnalysis(storage, config)
-      // Update cache on live fetch so both refresh paths stay consistent
-      writeToStorage('release-analysis/analysis-cache.json', {
-        cachedAt: new Date().toISOString(),
-        data: result
+      // No cache at all — trigger background refresh, return a waiting status
+      triggerBackgroundRefresh()
+      res.status(202).json({
+        _cacheStale: true,
+        _refreshing: true,
+        _noCache: true,
+        releases: [],
+        warning: 'Analysis is being generated for the first time. This may take a few minutes.'
       })
-      res.json(result)
     } catch (error) {
       console.error('[release-analysis] analysis error:', error)
       res.status(500).json({ error: error.message })
     }
   })
+
+  // --- Startup cache seeding ---
+  // Warm the cache in the background so the first user request is instant
+  if (!DEMO_MODE) {
+    const existing = readFromStorage('release-analysis/analysis-cache.json')
+    const hasFreshCache = existing?.data && existing.cachedAt &&
+      (Date.now() - new Date(existing.cachedAt).getTime()) < CACHE_MAX_AGE_MS
+    if (!hasFreshCache) {
+      console.log('[release-analysis] No fresh cache found — seeding analysis in background')
+      setTimeout(() => triggerBackgroundRefresh(), 2000)
+    }
+  }
 
   router.post('/admin/releases', requireAdmin, function(req, res) {
     try {

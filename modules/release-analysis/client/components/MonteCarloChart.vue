@@ -69,7 +69,9 @@ const props = defineProps({
   notDoneCount: { type: Number, required: true },
   velocity: { type: Number, required: true },
   dueDate: { type: String, required: true },
-  deadlineLabel: { type: String, default: 'Due Date' }
+  deadlineLabel: { type: String, default: 'Due Date' },
+  codeFreezeDate: { type: String, default: null },
+  releaseDate: { type: String, default: null }
 })
 
 // ── Random sampling ──
@@ -208,11 +210,30 @@ onUnmounted(() => { if (pendingIdleId != null) cancelIdle(pendingIdleId) })
 
 // ── Histogram binning ──
 
+const secondaryDates = computed(() => {
+  if (!sim.value) return { cfDays: null, relDays: null }
+  const t = getToday()
+  let cfDays = null
+  let relDays = null
+  if (props.codeFreezeDate && props.codeFreezeDate !== props.dueDate) {
+    const d = new Date(props.codeFreezeDate + 'T00:00:00')
+    if (!isNaN(d.getTime())) cfDays = daysBetween(t, d)
+  }
+  if (props.releaseDate && props.releaseDate !== props.dueDate) {
+    const d = new Date(props.releaseDate + 'T00:00:00')
+    if (!isNaN(d.getTime())) relDays = daysBetween(t, d)
+  }
+  return { cfDays, relDays }
+})
+
 const histogram = computed(() => {
   if (!sim.value) return null
   const { completionDays, minDays, maxDays, daysToDeadline, p85Days, p95Days } = sim.value
+  const { cfDays, relDays } = secondaryDates.value
 
   const allKeyDays = [minDays, maxDays, daysToDeadline, p85Days, p95Days]
+  if (cfDays != null) allKeyDays.push(cfDays)
+  if (relDays != null) allKeyDays.push(relDays)
   const effectiveMin = Math.max(0, Math.min(...allKeyDays))
   const effectiveMax = Math.min(MAX_DAYS, Math.max(...allKeyDays))
   const range = effectiveMax - effectiveMin
@@ -253,7 +274,9 @@ const histogram = computed(() => {
     firstBin,
     dueDateIdx: toChartIdx(daysToDeadline),
     p85Idx: toChartIdx(p85Days),
-    p95Idx: toChartIdx(p95Days)
+    p95Idx: toChartIdx(p95Days),
+    cfIdx: cfDays != null ? toChartIdx(cfDays) : null,
+    relIdx: relDays != null ? toChartIdx(relDays) : null
   }
 })
 
@@ -282,7 +305,7 @@ const markerPlugin = {
   id: 'monteCarloMarkers',
   afterDraw(chart) {
     if (!histogram.value) return
-    const { dueDateIdx, p85Idx, p95Idx } = histogram.value
+    const { dueDateIdx, p85Idx, p95Idx, cfIdx, relIdx } = histogram.value
     const { ctx, chartArea } = chart
     if (!chartArea) return
 
@@ -292,6 +315,13 @@ const markerPlugin = {
       { idx: p85Idx, color: '#f59e0b', dash: [4, 4], label: '85%', width: 2 },
       { idx: p95Idx, color: '#14b8a6', dash: [4, 4], label: '95%', width: 2 }
     ]
+
+    if (cfIdx != null) {
+      markers.push({ idx: cfIdx, color: '#ec4899', dash: [6, 3], label: 'Code Freeze', width: 2 })
+    }
+    if (relIdx != null) {
+      markers.push({ idx: relIdx, color: '#ef4444', dash: [6, 3], label: 'GA', width: 2 })
+    }
 
     for (const m of markers) {
       const px = xScale.getPixelForValue(m.idx)
