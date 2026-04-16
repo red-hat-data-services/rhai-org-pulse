@@ -194,7 +194,7 @@
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <OrgActivityCard
-            v-for="activity in orgActivity.slice(0, 4)"
+            v-for="activity in orgActivity.slice(0, DASHBOARD_ORG_LIMIT)"
             :key="activity.org"
             :org-name="activity.orgName"
             :strategic-participation="activity.strategicParticipation"
@@ -569,6 +569,8 @@ const nav = inject('moduleNav')
 const { isAdmin } = useAuth()
 const showAddProject = ref(false)
 const MODULE_API = '/modules/upstream-pulse'
+
+const DASHBOARD_ORG_LIMIT = 4
 
 const periodOptions = [
   { label: '30d', value: '30' },

@@ -78,6 +78,7 @@ import {
   Shield as ShieldIcon,
   ChevronRight as ChevronRightIcon,
 } from 'lucide-vue-next'
+import { getEngagementStatus } from '../composables/useStrategicClassification.js'
 
 defineEmits(['click'])
 
@@ -99,33 +100,9 @@ const props = defineProps({
 
 const teamShareLabel = computed(() => Number(props.teamSharePercent).toFixed(1))
 
-const engagementStatus = computed(() => {
-  const hasGovernance = props.leadershipCount > 0 || props.maintainerCount > 0
-  const highGovernance = props.leadershipCount >= 3 || props.maintainerCount >= 5
-
-  if (props.teamContributions === 0 && !hasGovernance) {
-    return {
-      label: 'New Entrant',
-      classes: 'text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600'
-    }
-  }
-  if (highGovernance) {
-    return {
-      label: 'Established Leader',
-      classes: 'text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700'
-    }
-  }
-  if (hasGovernance) {
-    return {
-      label: 'Core Contributor',
-      classes: 'text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700'
-    }
-  }
-  return {
-    label: 'Active',
-    classes: 'text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600'
-  }
-})
+const engagementStatus = computed(() =>
+  getEngagementStatus(props.leadershipCount, props.maintainerCount, props.teamContributions)
+)
 
 const trendArrow = computed(() => {
   if (props.percentChange > 0) return '↑'

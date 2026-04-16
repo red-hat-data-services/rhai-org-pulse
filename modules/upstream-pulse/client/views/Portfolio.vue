@@ -515,6 +515,7 @@ import { useAuth } from '@shared/client/composables/useAuth'
 import OrgActivityCard from '../components/OrgActivityCard.vue'
 import AddProjectModal from '../components/AddProjectModal.vue'
 import { OrgCardSkeleton, StatCardSkeleton, TableRowSkeleton } from '../components/SkeletonLoaders.vue'
+import { getEngagementStatus } from '../composables/useStrategicClassification.js'
 
 const nav = inject('moduleNav')
 const { isAdmin } = useAuth()
@@ -660,6 +661,17 @@ const sortedOrgsList = computed(() => {
       const cmp = aVal - bVal
       return orgSortDirection.value === 'asc' ? cmp : -cmp
     }
+    if (field === 'strategicImportance') {
+      const importanceOrder = {
+        increasing_leadership: 6, increasing_participation: 5,
+        sustaining_leadership: 4, sustaining_participation: 3,
+        evaluating_leadership: 2, evaluating_participation: 1,
+      }
+      const aVal = Math.max(importanceOrder[a.strategicLeadership] || 0, importanceOrder[a.strategicParticipation] || 0)
+      const bVal = Math.max(importanceOrder[b.strategicLeadership] || 0, importanceOrder[b.strategicParticipation] || 0)
+      const cmp = aVal - bVal
+      return orgSortDirection.value === 'asc' ? cmp : -cmp
+    }
     const cmp = (a[field] || 0) - (b[field] || 0)
     return orgSortDirection.value === 'asc' ? cmp : -cmp
   })
@@ -735,34 +747,6 @@ function handleProjectSort(field) {
     projectSortDirection.value = field === 'teamContributions' ? 'desc' : 'asc'
   }
   projectCurrentPage.value = 1
-}
-
-function getEngagementStatus(leadershipCount, maintainerCount, total) {
-  const hasGovernance = leadershipCount > 0 || maintainerCount > 0
-  const highGovernance = leadershipCount >= 3 || maintainerCount >= 5
-
-  if (total === 0 && !hasGovernance) {
-    return {
-      label: 'New Entrant',
-      classes: 'text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600'
-    }
-  }
-  if (highGovernance) {
-    return {
-      label: 'Established Leader',
-      classes: 'text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700'
-    }
-  }
-  if (hasGovernance) {
-    return {
-      label: 'Core Contributor',
-      classes: 'text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 border-indigo-200 dark:border-indigo-700'
-    }
-  }
-  return {
-    label: 'Active',
-    classes: 'text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-600'
-  }
 }
 
 async function loadData() {
