@@ -3,7 +3,7 @@ name: Build & Push Images
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, preprod]
     paths:
       # Backend
       - 'server/**'
@@ -27,7 +27,7 @@ on:
       - 'package*.json'
 
 concurrency:
-  group: build-images
+  group: build-images-${{ github.ref_name }}
   cancel-in-progress: true
 
 env:
@@ -139,9 +139,10 @@ jobs:
 
       - name: Push image
         run: |
-          docker tag ${{ env.BACKEND_IMAGE }}:${{ github.sha }} ${{ env.BACKEND_IMAGE }}:latest
+          BRANCH_TAG=${{ github.ref_name == 'preprod' && 'preprod' || 'latest' }}
+          docker tag ${{ env.BACKEND_IMAGE }}:${{ github.sha }} ${{ env.BACKEND_IMAGE }}:${BRANCH_TAG}
           docker push ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
-          docker push ${{ env.BACKEND_IMAGE }}:latest
+          docker push ${{ env.BACKEND_IMAGE }}:${BRANCH_TAG}
 
   build-frontend:
     name: Build & Push Frontend
@@ -193,9 +194,10 @@ jobs:
 
       - name: Push image
         run: |
-          docker tag ${{ env.FRONTEND_IMAGE }}:${{ github.sha }} ${{ env.FRONTEND_IMAGE }}:latest
+          BRANCH_TAG=${{ github.ref_name == 'preprod' && 'preprod' || 'latest' }}
+          docker tag ${{ env.FRONTEND_IMAGE }}:${{ github.sha }} ${{ env.FRONTEND_IMAGE }}:${BRANCH_TAG}
           docker push ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
-          docker push ${{ env.FRONTEND_IMAGE }}:latest
+          docker push ${{ env.FRONTEND_IMAGE }}:${BRANCH_TAG}
 
   update-prod-image:
     name: Update Prod Image Tags

@@ -9,3 +9,9 @@ resources:
 patches:
   - path: route-patch.yaml
   - path: api-route-patch.yaml
+
+images:
+- name: quay.io/org-pulse/team-tracker-backend
+  newTag: preprod
+- name: quay.io/org-pulse/team-tracker-frontend
+  newTag: preprod
