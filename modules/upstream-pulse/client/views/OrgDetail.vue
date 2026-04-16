@@ -552,7 +552,6 @@ const membersExpanded = ref(false)
 const governanceExpanded = ref(false)
 const orgProjects = ref([])
 
-
 const visibleContributors = computed(() => {
   if (contributorsExpanded.value) return contributors.value
   return contributors.value.slice(0, 5)

@@ -84,8 +84,6 @@ defineEmits(['click'])
 
 const props = defineProps({
   orgName: { type: String, default: '' },
-  strategicParticipation: { type: String, default: null },
-  strategicLeadership: { type: String, default: null },
   teamContributions: { type: Number, default: 0 },
   totalContributions: { type: Number, default: 0 },
   teamSharePercent: { type: Number, default: 0 },

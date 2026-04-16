@@ -197,8 +197,6 @@
             v-for="activity in orgActivity.slice(0, DASHBOARD_ORG_LIMIT)"
             :key="activity.org"
             :org-name="activity.orgName"
-            :strategic-participation="activity.strategicParticipation"
-            :strategic-leadership="activity.strategicLeadership"
             :team-contributions="activity.total || 0"
             :total-contributions="activity.totalContributions || 0"
             :team-share-percent="activity.teamSharePercent || 0"
