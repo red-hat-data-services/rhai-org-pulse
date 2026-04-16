@@ -4,7 +4,7 @@ import { describe, it, expect, vi } from 'vitest'
 const mockModuleState = {}
 const mockModules = [
   { slug: 'team-tracker', name: 'Team Tracker', requires: [], defaultEnabled: true },
-  { slug: 'org-roster', name: 'Org Roster', requires: [], defaultEnabled: true }
+  { slug: 'release-analysis', name: 'Release Analysis', requires: [], defaultEnabled: true }
 ]
 
 vi.mock('../module-loader', () => ({
@@ -44,18 +44,18 @@ describe('Module API logic', () => {
     const { getEffectiveState } = require('../module-loader')
     const result = getEffectiveState(mockModules, { 'team-tracker': false })
     expect(result['team-tracker']).toBe(false)
-    expect(result['org-roster']).toBe(true)
+    expect(result['release-analysis']).toBe(true)
   })
 
   it('resolveEnableOrder returns toEnable list', () => {
     const { resolveEnableOrder } = require('../module-loader')
-    const result = resolveEnableOrder('team-tracker', mockModules, { 'team-tracker': false, 'org-roster': true })
+    const result = resolveEnableOrder('team-tracker', mockModules, { 'team-tracker': false, 'release-analysis': true })
     expect(result.toEnable).toContain('team-tracker')
   })
 
   it('checkDisableAllowed returns allowed when no dependents', () => {
     const { checkDisableAllowed } = require('../module-loader')
-    const result = checkDisableAllowed('team-tracker', mockModules, { 'team-tracker': true, 'org-roster': true })
+    const result = checkDisableAllowed('team-tracker', mockModules, { 'team-tracker': true, 'release-analysis': true })
     expect(result.allowed).toBe(true)
   })
 
@@ -63,6 +63,6 @@ describe('Module API logic', () => {
     const { computeRequiredBy } = require('../module-loader')
     const result = computeRequiredBy(mockModules)
     expect(result['team-tracker']).toEqual([])
-    expect(result['org-roster']).toEqual([])
+    expect(result['release-analysis']).toEqual([])
   })
 })

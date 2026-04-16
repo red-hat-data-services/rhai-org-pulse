@@ -316,7 +316,7 @@ function anonymizePath(value, mapping) {
     { re: /^\/api\/modules\/team-tracker\/person\/([^/]+)(.*)$/, fn: function(m) { return '/api/modules/team-tracker/person/' + mapping.getOrCreateNameMapping(decodeURIComponent(m[1])) + m[2] } },
     { re: /^\/api\/github\/contributions\/([^/]+)(.*)$/, fn: function(m) { return '/api/github/contributions/' + mapping.getOrCreateGithubMapping(decodeURIComponent(m[1])) + m[2] } },
     { re: /^\/api\/gitlab\/contributions\/([^/]+)(.*)$/, fn: function(m) { return '/api/gitlab/contributions/' + mapping.getOrCreateGitlabMapping(decodeURIComponent(m[1])) + m[2] } },
-    { re: /^\/api\/modules\/org-roster\/teams\/([^/]+)(.*)$/, fn: function(m) { return '/api/modules/org-roster/teams/' + anonymizeTeamKey(decodeURIComponent(m[1]), mapping) + m[2] } },
+    { re: /^\/api\/modules\/team-tracker\/org-teams\/([^/]+)(.*)$/, fn: function(m) { return '/api/modules/team-tracker/org-teams/' + anonymizeTeamKey(decodeURIComponent(m[1]), mapping) + m[2] } },
     { re: /^\/api\/team\/([^/]+)(.*)$/, fn: function(m) { return '/api/team/' + anonymizeTeamKey(decodeURIComponent(m[1]), mapping) + m[2] } }
   ]
 
