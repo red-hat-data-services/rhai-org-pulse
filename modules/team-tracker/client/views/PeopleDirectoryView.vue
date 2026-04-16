@@ -9,6 +9,7 @@ const { isAdmin } = useAuth()
 const people = ref([])
 const stats = ref(null)
 const syncStatus = ref(null)
+const orgDisplayNames = ref({})
 const loading = ref(true)
 const search = ref('')
 const filterOrg = ref('')
@@ -34,6 +35,7 @@ async function loadData() {
     people.value = peopleRes.people || []
     stats.value = statsRes
     syncStatus.value = syncRes
+    orgDisplayNames.value = statsRes.orgDisplayNames || {}
   } catch {
     people.value = []
   } finally {
@@ -41,12 +43,18 @@ async function loadData() {
   }
 }
 
+function orgName(uid) {
+  return orgDisplayNames.value[uid] || uid
+}
+
 const orgs = computed(() => {
   const set = new Set()
   for (const p of people.value) {
     if (p.orgRoot) set.add(p.orgRoot)
   }
-  return Array.from(set).sort()
+  return Array.from(set)
+    .map(uid => ({ uid, name: orgName(uid) }))
+    .sort((a, b) => a.name.localeCompare(b.name))
 })
 
 const geos = computed(() => {
@@ -233,7 +241,7 @@ onMounted(loadData)
       <div class="flex flex-wrap gap-2">
         <select v-model="filterOrg" class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
           <option value="">All Orgs</option>
-          <option v-for="org in orgs" :key="org" :value="org">{{ org }}</option>
+          <option v-for="org in orgs" :key="org.uid" :value="org.uid">{{ org.name }}</option>
         </select>
         <select v-model="filterGeo" class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300">
           <option value="">All Geos</option>

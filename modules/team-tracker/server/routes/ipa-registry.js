@@ -368,7 +368,18 @@ module.exports = function registerIpaRegistryRoutes(router, context) {
         byGeo[geo] = (byGeo[geo] || 0) + 1;
       } else { inactive++; }
     }
-    res.json({ total: uids.length, active: active, inactive: inactive, coverage: computeCoverage(people), byOrg: byOrg, byGeo: byGeo });
+    var rosterSyncConfig = require('../../../../shared/server/roster-sync/config');
+    var orgDisplayNames = rosterSyncConfig.getOrgDisplayNames(storage);
+
+    var ipaConfig = loadIpaConfig(storage);
+    for (var r = 0; r < (ipaConfig.orgRoots || []).length; r++) {
+      var root = ipaConfig.orgRoots[r];
+      if (root.uid && !orgDisplayNames[root.uid]) {
+        orgDisplayNames[root.uid] = root.displayName || root.name || root.uid;
+      }
+    }
+
+    res.json({ total: uids.length, active: active, inactive: inactive, coverage: computeCoverage(people), byOrg: byOrg, byGeo: byGeo, orgDisplayNames: orgDisplayNames });
   });
 
   // ─── Auto-sync scheduling ───
