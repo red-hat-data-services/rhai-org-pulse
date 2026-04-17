@@ -95,8 +95,8 @@ export function useOrgRoster() {
     }
   }
 
-  async function loadTeamDetail(teamKey) {
-    return cachedRequest(`team:${teamKey}`, `/org-teams/${encodeURIComponent(teamKey)}`)
+  async function loadTeamDetail(teamKey, onData) {
+    return cachedRequest(`team:${teamKey}`, `/org-teams/${encodeURIComponent(teamKey)}`, onData)
   }
 
   async function loadTeamMembers(teamKey) {

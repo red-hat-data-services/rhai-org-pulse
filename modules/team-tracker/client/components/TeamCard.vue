@@ -22,17 +22,6 @@
       </div>
     </div>
 
-    <!-- Role breakdown badges -->
-    <div v-if="topRoles.length > 0" class="flex flex-wrap gap-1.5 mb-3">
-      <span
-        v-for="role in topRoles"
-        :key="role.name"
-        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-      >
-        {{ role.count }} {{ role.name }}
-      </span>
-    </div>
-
     <!-- Components -->
     <div v-if="team.components && team.components.length > 0" class="flex flex-wrap gap-1 mb-3">
       <span
@@ -78,20 +67,8 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
-
-const props = defineProps({
+defineProps({
   team: { type: Object, required: true }
 })
 defineEmits(['select'])
-
-const topRoles = computed(() => {
-  const hc = props.team.headcount?.byRole
-  if (!hc) return []
-  return Object.entries(hc)
-    .filter(([, count]) => count > 0)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3)
-    .map(([name, count]) => ({ name, count }))
-})
 </script>
