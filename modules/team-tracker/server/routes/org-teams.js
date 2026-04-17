@@ -14,6 +14,13 @@ let orgSyncInProgress = false;
 let orgDailyTimer = null;
 const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
 
+// Module-level holder for the triggerOrgSync function, assigned inside registerOrgTeamsRoutes
+let _triggerOrgSync = null;
+
+function isOrgSyncInProgress() {
+  return orgSyncInProgress;
+}
+
 module.exports = function registerOrgTeamsRoutes(router, context) {
   const { storage, requireAdmin } = context;
   const { readFromStorage, writeToStorage } = storage;
@@ -383,18 +390,17 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
     }
   });
 
-  router.post('/org-sync/trigger', requireAdmin, async function(req, res) {
-    if (orgSyncInProgress) return res.status(409).json({ error: 'Sync already in progress' });
+  async function triggerOrgSync() {
+    if (orgSyncInProgress) return { status: 'already_running' };
     orgSyncInProgress = true;
 
     const sheetId = getSheetId();
     if (!sheetId) {
       orgSyncInProgress = false;
-      return res.status(400).json({ error: 'No Google Sheet ID configured.' });
+      return { status: 'skipped', reason: 'No Google Sheet ID configured.' };
     }
 
     const config = getOrgConfig();
-    res.json({ status: 'started' });
 
     try {
       await runSync(storage, sheetId, config);
@@ -410,12 +416,29 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
       } catch (rfeErr) {
         console.warn('[team-tracker] RFE refresh failed:', rfeErr.message);
       }
+      return { status: 'success' };
     } catch (err) {
       console.error('[team-tracker] Org sync error:', err.message);
       writeToStorage('org-roster/sync-status.json', { lastSyncAt: new Date().toISOString(), status: 'error', error: err.message });
+      return { status: 'error', error: err.message };
     } finally {
       orgSyncInProgress = false;
     }
+  }
+
+  // Export triggerOrgSync for unified endpoint
+  _triggerOrgSync = triggerOrgSync;
+
+  router.post('/org-sync/trigger', requireAdmin, async function(req, res) {
+    if (orgSyncInProgress) return res.status(409).json({ error: 'Sync already in progress' });
+
+    const sheetId = getSheetId();
+    if (!sheetId) {
+      return res.status(400).json({ error: 'No Google Sheet ID configured.' });
+    }
+
+    res.json({ status: 'started' });
+    triggerOrgSync();
   });
 
   // ─── Schedule org sync ───
@@ -424,48 +447,24 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
     setTimeout(function() {
       const sheetId = getSheetId();
       if (sheetId) {
-        if (!orgSyncInProgress) {
-          const rosterData = readFromStorage('org-roster-full.json');
-          if (rosterData) {
-            orgSyncInProgress = true;
-            const config = getOrgConfig();
-            runSync(storage, sheetId, config)
-              .then(function() {
-                const { teams } = buildEnrichedTeams();
-                const allComponents = [...new Set(teams.flatMap(t => t.components || []))];
-                if (allComponents.length > 0) {
-                  return fetchAllRfeBacklog(allComponents, teams, {
-                    jiraProject: config.jiraProject, rfeIssueType: config.rfeIssueType, componentMapping: config.componentMapping
-                  }).then(function(rfeResult) {
-                    writeToStorage('org-roster/rfe-backlog.json', { fetchedAt: new Date().toISOString(), ...rfeResult });
-                  });
-                }
-              })
-              .catch(function(err) { console.error('[team-tracker] Initial org sync error:', err.message); })
-              .finally(function() { orgSyncInProgress = false; });
-          }
+        const rosterData = readFromStorage('org-roster-full.json');
+        if (rosterData) {
+          triggerOrgSync().catch(function(err) {
+            console.error('[team-tracker] Initial org sync error:', err.message);
+          });
         }
 
         if (orgDailyTimer) clearInterval(orgDailyTimer);
-        orgDailyTimer = setInterval(async function() {
-          if (orgSyncInProgress) return;
-          orgSyncInProgress = true;
-          try {
-            const config = getOrgConfig();
-            await runSync(storage, sheetId, config);
-            const { teams } = buildEnrichedTeams();
-            const allComponents = [...new Set(teams.flatMap(t => t.components || []))];
-            if (allComponents.length > 0) {
-              const rfeResult = await fetchAllRfeBacklog(allComponents, teams, {
-                jiraProject: config.jiraProject, rfeIssueType: config.rfeIssueType, componentMapping: config.componentMapping
-              });
-              writeToStorage('org-roster/rfe-backlog.json', { fetchedAt: new Date().toISOString(), ...rfeResult });
-            }
-          } catch (err) { console.error('[team-tracker] Scheduled org sync error:', err.message); }
-          finally { orgSyncInProgress = false; }
+        orgDailyTimer = setInterval(function() {
+          triggerOrgSync().catch(function(err) {
+            console.error('[team-tracker] Scheduled org sync error:', err.message);
+          });
         }, TWENTY_FOUR_HOURS);
         if (orgDailyTimer.unref) orgDailyTimer.unref();
       }
     }, 5 * 60 * 1000);
   }
 };
+
+module.exports.isOrgSyncInProgress = isOrgSyncInProgress;
+module.exports.getTriggerOrgSync = function() { return _triggerOrgSync; };

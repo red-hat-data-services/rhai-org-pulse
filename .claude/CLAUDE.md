@@ -268,7 +268,7 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/trends` — monthly Jira + GitHub + GitLab trend data
 - `/api/allowlist` — authorized email list
 - `/api/admin/roster-sync/config` — roster sync configuration
-- `/api/admin/roster-sync/status` — sync status (running/last result)
+- `/api/admin/roster-sync/status` — sync status (running/last result, includes `phase`, `phaseLabel`, `metadataSync`, `stale` fields)
 - `/api/modules/team-tracker/sheets/discover` — discover sheet names in a Google Spreadsheet (admin, requires `spreadsheetId` query param)
 - `/api/modules/release-analysis/product-pages/products` — Product Pages product list for autocomplete (admin, includes authStatus)
 - `/api/modules/feature-traffic/features` — list features with filters (status, version, health, sort)
@@ -293,6 +293,7 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/trends/gitlab/refresh` — refresh GitLab history
 - `/api/admin/roster-sync/config` — save roster sync configuration
 - `/api/admin/roster-sync/trigger` — trigger manual roster sync
+- `/api/admin/roster-sync/unified` — trigger unified roster + metadata sync (admin)
 - `/api/allowlist` — update authorized email list
 - `/api/modules/team-tracker/snapshots/generate` — generate snapshots for all teams (admin)
 - `/api/modules/feature-traffic/refresh` — trigger manual data refresh from GitLab CI (admin)

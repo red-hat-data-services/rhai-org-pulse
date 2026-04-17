@@ -284,6 +284,15 @@ export async function getRosterSyncStatus() {
   return apiRequest('/admin/roster-sync/status')
 }
 
+// ─── Unified Sync ───
+
+export async function triggerUnifiedSync() {
+  return apiRequest('/admin/roster-sync/unified', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  })
+}
+
 // ─── Jira Sync Admin ───
 
 export async function getJiraSyncConfig() {

@@ -17,6 +17,15 @@ module.exports = function registerRoutes(router, context) {
   const sheetsModule = require('../../../shared/server/roster-sync/sheets');
   const snapshots = require('./snapshots');
 
+  // ─── Unified Sync State ───
+
+  const STALENESS_THRESHOLD_MS = 48 * 60 * 60 * 1000;
+  const unifiedSyncState = {
+    inProgress: false,
+    currentPhase: null,
+    phaseLabel: null
+  };
+
   // ─── Refresh State Tracker ───
 
   const refreshState = {
@@ -2024,15 +2033,43 @@ module.exports = function registerRoutes(router, context) {
    *       403:
    *         description: Forbidden — admin access required
    */
+  // Status handler — uses unifiedSyncState which is set after org-teams routes register
   router.get('/admin/roster-sync/status', requireAdmin, function(req, res) {
     try {
       const config = rosterSyncConfig.loadConfig(storage);
+      const metadataSyncStatus = readFromStorage('org-roster/sync-status.json');
+      const uState = unifiedSyncState;
+
+      const syncing = uState.inProgress || rosterSync.isSyncInProgress();
+      const now = Date.now();
+      const rosterLastSync = config?.lastSyncAt ? new Date(config.lastSyncAt).getTime() : 0;
+      const metadataLastSync = metadataSyncStatus?.lastSyncAt ? new Date(metadataSyncStatus.lastSyncAt).getTime() : 0;
+
       res.json({
         configured: rosterSyncConfig.isConfigured(storage),
-        syncing: rosterSync.isSyncInProgress(),
+        syncing,
+        phase: uState.inProgress ? uState.currentPhase : null,
+        phaseLabel: uState.inProgress ? uState.phaseLabel : null,
+        phases: ['roster', 'metadata'],
         lastSyncAt: config ? config.lastSyncAt : null,
         lastSyncStatus: config ? config.lastSyncStatus : null,
-        lastSyncError: config ? config.lastSyncError : null
+        lastSyncError: config ? config.lastSyncError : null,
+        rosterSync: {
+          lastSyncAt: config?.lastSyncAt || null,
+          lastSyncStatus: config?.lastSyncStatus || null,
+          lastSyncError: config?.lastSyncError || null
+        },
+        metadataSync: {
+          lastSyncAt: metadataSyncStatus?.lastSyncAt || null,
+          status: metadataSyncStatus?.status || null,
+          error: metadataSyncStatus?.error || null,
+          teamCount: metadataSyncStatus?.teamCount || 0,
+          componentCount: metadataSyncStatus?.componentCount || 0
+        },
+        stale: {
+          roster: rosterLastSync > 0 ? (now - rosterLastSync) > STALENESS_THRESHOLD_MS : false,
+          metadata: metadataLastSync > 0 ? (now - metadataLastSync) > STALENESS_THRESHOLD_MS : false
+        }
       });
     } catch (error) {
       console.error('Roster-sync status error:', error);
@@ -2487,9 +2524,64 @@ module.exports = function registerRoutes(router, context) {
 
   const registerIpaRegistryRoutes = require('./routes/ipa-registry');
   const registerOrgTeamsRoutes = require('./routes/org-teams');
+  const { isOrgSyncInProgress, getTriggerOrgSync } = require('./routes/org-teams');
 
   registerIpaRegistryRoutes(router, context);
   registerOrgTeamsRoutes(router, context);
+
+  // ─── Unified Sync ───
+
+  router.post('/admin/roster-sync/unified', requireAdmin, function(req, res) {
+    if (DEMO_MODE) {
+      return res.json({ status: 'skipped', message: 'Sync disabled in demo mode' });
+    }
+
+    if (unifiedSyncState.inProgress) {
+      return res.status(409).json({ error: 'Unified sync already in progress' });
+    }
+    if (rosterSync.isSyncInProgress()) {
+      return res.status(409).json({ error: 'Roster sync already in progress' });
+    }
+    if (isOrgSyncInProgress()) {
+      return res.status(409).json({ error: 'Org metadata sync already in progress' });
+    }
+
+    unifiedSyncState.inProgress = true;
+    unifiedSyncState.currentPhase = 'roster';
+    unifiedSyncState.phaseLabel = 'Syncing people (LDAP + Sheets)...';
+    res.json({ status: 'started' });
+
+    (async function() {
+      try {
+        // Phase 1: Roster sync
+        const rosterResult = await rosterSync.runSync(storage);
+        if (rosterResult.status === 'skipped' || rosterResult.status === 'error') {
+          console.warn('[unified-sync] Roster sync did not succeed:', rosterResult.status, rosterResult.error || '');
+          return;
+        }
+
+        // Phase 2: Org metadata sync
+        unifiedSyncState.currentPhase = 'metadata';
+        unifiedSyncState.phaseLabel = 'Syncing team metadata...';
+
+        if (isOrgSyncInProgress()) {
+          console.warn('[unified-sync] Org sync became active between phases, skipping Phase 2');
+          return;
+        }
+
+        const triggerOrgSync = getTriggerOrgSync();
+        if (triggerOrgSync) {
+          await triggerOrgSync();
+        }
+      } catch (err) {
+        console.error('[unified-sync] Error:', err.message);
+      } finally {
+        unifiedSyncState.inProgress = false;
+        unifiedSyncState.currentPhase = null;
+        unifiedSyncState.phaseLabel = null;
+      }
+    })();
+  });
 
   // ─── Startup: schedule roster sync ───
 
