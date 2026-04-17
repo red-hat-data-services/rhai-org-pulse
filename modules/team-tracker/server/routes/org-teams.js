@@ -4,10 +4,11 @@
  * sheets sync, components, and org-level config.
  */
 
-const { runSync, calculateHeadcountByRole } = require('../org-sync');
+const { runSync, calculateHeadcountByRole, parseTeamBoardsTab } = require('../org-sync');
 const { fetchAllRfeBacklog } = require('../rfe');
 const { getAllPeople, getTeamRollup } = require('../../../../shared/server/roster');
 const { getOrgDisplayNames } = require('../../../../shared/server/roster-sync/config');
+const { fetchRawSheet } = require('../../../../shared/server/google-sheets');
 
 let orgSyncInProgress = false;
 let orgDailyTimer = null;
@@ -330,6 +331,44 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
       res.json({ status: 'saved', config });
     } catch {
       res.status(500).json({ error: 'Failed to save configuration' });
+    }
+  });
+
+  // ─── Sheet Orgs & Configured Orgs (for org name mapping UI) ───
+
+  router.get('/sheet-orgs', requireAdmin, async function(req, res) {
+    try {
+      const config = getOrgConfig();
+      const tabName = config.teamBoardsTab;
+
+      if (tabName) {
+        const sheetId = getSheetId();
+        if (!sheetId) {
+          return res.status(400).json({ error: 'No Google Sheet ID configured.' });
+        }
+        const boardData = await fetchRawSheet(sheetId, tabName);
+        const teams = parseTeamBoardsTab(boardData.headers, boardData.rows);
+        const sheetOrgs = [...new Set(teams.map(t => t.org))].sort();
+        return res.json({ sheetOrgs });
+      }
+
+      const displayNames = getOrgDisplayNames(storage);
+      const sheetOrgs = Object.values(displayNames).sort();
+      res.json({ sheetOrgs });
+    } catch (error) {
+      console.error('[team-tracker] GET /sheet-orgs error:', error);
+      res.status(500).json({ error: 'Failed to fetch org names from sheet' });
+    }
+  });
+
+  router.get('/configured-orgs', function(req, res) {
+    try {
+      const displayNames = buildOrgKeyToDisplayName();
+      const orgs = Object.values(displayNames).sort();
+      res.json({ configuredOrgs: orgs });
+    } catch (error) {
+      console.error('[team-tracker] GET /configured-orgs error:', error);
+      res.status(500).json({ error: 'Failed to load configured orgs' });
     }
   });
 
