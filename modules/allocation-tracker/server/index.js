@@ -238,7 +238,8 @@ module.exports = function registerRoutes(router, context) {
           orgName: 'AI Engineering',
           projects: [
             { key: 'RHOAIENG', name: 'OpenShift AI Engineering', pillar: 'OpenShift AI' },
-            { key: 'AIPCC', name: 'AI Platform Core Components', pillar: 'OpenShift AI' }
+            { key: 'AIPCC', name: 'AI Platform Core Components', pillar: 'AIPCC' },
+            { key: 'INFERENG', name: 'Inference Engineering', pillar: 'INFERENG' }
           ]
         });
       }
