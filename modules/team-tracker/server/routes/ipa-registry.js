@@ -159,7 +159,7 @@ async function runIpaSync(storage) {
   }
 }
 
-module.exports = function registerIpaRegistryRoutes(router, context) {
+function registerIpaRegistryRoutes(router, context) {
   var storage = context.storage;
   var requireAdmin = context.requireAdmin;
   var DEMO_MODE = process.env.DEMO_MODE === 'true';
@@ -399,4 +399,8 @@ module.exports = function registerIpaRegistryRoutes(router, context) {
   if (!DEMO_MODE) {
     scheduleAutoSync(loadIpaConfig(storage));
   }
-};
+}
+
+module.exports = registerIpaRegistryRoutes;
+module.exports.runIpaSync = runIpaSync;
+module.exports.isIpaSyncInProgress = function() { return ipaSyncRunning; };

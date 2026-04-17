@@ -2547,6 +2547,7 @@ module.exports = function registerRoutes(router, context) {
   // ─── Absorbed routes from org-roster and team-data ───
 
   const registerIpaRegistryRoutes = require('./routes/ipa-registry');
+  const { runIpaSync, isIpaSyncInProgress } = require('./routes/ipa-registry');
   const registerOrgTeamsRoutes = require('./routes/org-teams');
   const { isOrgSyncInProgress, getTriggerOrgSync } = require('./routes/org-teams');
 
@@ -2568,6 +2569,9 @@ module.exports = function registerRoutes(router, context) {
     }
     if (isOrgSyncInProgress()) {
       return res.status(409).json({ error: 'Org metadata sync already in progress' });
+    }
+    if (isIpaSyncInProgress()) {
+      return res.status(409).json({ error: 'IPA registry sync already in progress' });
     }
 
     unifiedSyncState.inProgress = true;
@@ -2596,6 +2600,26 @@ module.exports = function registerRoutes(router, context) {
         const triggerOrgSync = getTriggerOrgSync();
         if (triggerOrgSync) {
           await triggerOrgSync();
+        }
+
+        // Phase 3: IPA registry sync
+        unifiedSyncState.currentPhase = 'registry';
+        unifiedSyncState.phaseLabel = 'Syncing people registry...';
+
+        if (isIpaSyncInProgress()) {
+          console.warn('[unified-sync] IPA sync became active between phases, skipping Phase 3');
+        } else {
+          // Seed IPA config org roots from roster sync config if not configured
+          const ipaConfig = storage.readFromStorage('team-data/config.json');
+          if (!ipaConfig || !ipaConfig.orgRoots || ipaConfig.orgRoots.length === 0) {
+            const rosterConfig = rosterSyncConfig.loadConfig(storage);
+            if (rosterConfig && rosterConfig.orgRoots && rosterConfig.orgRoots.length > 0) {
+              const seeded = Object.assign({}, ipaConfig || {}, { orgRoots: rosterConfig.orgRoots });
+              storage.writeToStorage('team-data/config.json', seeded);
+              console.log('[unified-sync] Seeded IPA registry config with roster sync org roots');
+            }
+          }
+          await runIpaSync(storage);
         }
       } catch (err) {
         console.error('[unified-sync] Error:', err.message);
