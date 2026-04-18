@@ -42,9 +42,9 @@ describe('MetricCard', () => {
     expect(wrapper.text()).toContain('pts')
   })
 
-  it('emits click event', async () => {
+  it('emits click event when clickable', async () => {
     const wrapper = mount(MetricCard, {
-      props: { label: 'Velocity', value: 42 }
+      props: { label: 'Velocity', value: 42, clickable: true }
     })
     await wrapper.trigger('click')
     expect(wrapper.emitted('click')).toHaveLength(1)

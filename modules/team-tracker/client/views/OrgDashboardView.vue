@@ -34,8 +34,6 @@
 
     <template v-if="summary && !loading && !error">
       <!-- Stats cards -->
-
-      <!-- Stats cards -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         <button
           @click="goToTeamDirectory"

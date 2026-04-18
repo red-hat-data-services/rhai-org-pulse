@@ -5,11 +5,6 @@ import TeamDeliveryTab from '../../client/components/TeamDeliveryTab.vue'
 
 // --- Mocks ---
 
-const mockViewPref = ref('table')
-vi.mock('../../client/composables/useViewPreference', () => ({
-  useViewPreference: () => ({ viewPreference: mockViewPref })
-}))
-
 const mockGhContributions = {}
 vi.mock('@shared/client/composables/useGithubStats', () => ({
   useGithubStats: () => ({
@@ -84,7 +79,6 @@ function mountTab(overrides = {}) {
 describe('TeamDeliveryTab', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockViewPref.value = 'table'
     Object.keys(mockGhContributions).forEach(k => delete mockGhContributions[k])
     Object.keys(mockGlContributions).forEach(k => delete mockGlContributions[k])
     mockGetTeamSnapshots.mockResolvedValue({ snapshots: [] })
@@ -258,32 +252,11 @@ describe('TeamDeliveryTab', () => {
     })
   })
 
-  // --- 5. View toggle ---
-  describe('view toggle', () => {
-    it('shows PersonTable by default (table view)', () => {
-      mockViewPref.value = 'table'
+  // --- 5. Always shows PersonTable ---
+  describe('person table', () => {
+    it('shows PersonTable', () => {
       const wrapper = mountTab()
       expect(wrapper.findComponent({ name: 'PersonTable' }).exists()).toBe(true)
-      expect(wrapper.findComponent({ name: 'PersonCard' }).exists()).toBe(false)
-    })
-
-    it('shows PersonCards in cards view', () => {
-      mockViewPref.value = 'cards'
-      const wrapper = mountTab()
-      expect(wrapper.findComponent({ name: 'PersonCard' }).exists()).toBe(true)
-    })
-
-    it('switches view when ViewToggle emits update', async () => {
-      mockViewPref.value = 'table'
-      const wrapper = mountTab()
-      expect(wrapper.findComponent({ name: 'PersonTable' }).exists()).toBe(true)
-
-      // Click "Cards" button in ViewToggle
-      const cardsBtn = wrapper.findAll('button').find(b => b.text().includes('Cards'))
-      await cardsBtn.trigger('click')
-
-      // ViewToggle updates the ref via v-model
-      expect(mockViewPref.value).toBe('cards')
     })
   })
 
@@ -297,7 +270,6 @@ describe('TeamDeliveryTab', () => {
           { name: 'Alice Smith', jiraDisplayName: 'Alice Smith', githubUsername: 'alice-gh', gitlabUsername: 'alice-gl' },
         ]
       }
-      mockViewPref.value = 'table'
       const wrapper = mountTab({ team: dupeTeam })
       // Should still show 3 unique members, not 4
       const personTable = wrapper.findComponent({ name: 'PersonTable' })

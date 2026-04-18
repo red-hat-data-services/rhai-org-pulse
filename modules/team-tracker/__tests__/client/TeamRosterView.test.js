@@ -130,30 +130,21 @@ describe('TeamRosterView', () => {
     expect(wrapper.text()).toContain('5 open RFEs')
   })
 
-  it('renders all 4 tabs when boards are available', async () => {
+  it('renders all 3 tabs', async () => {
     const wrapper = mountView()
     await flushPromises()
     const tabButtons = wrapper.findAll('nav button')
     const tabLabels = tabButtons.map(b => b.text())
     expect(tabLabels).toContain('Overview')
     expect(tabLabels).toContain('Delivery')
-    expect(tabLabels).toContain('Backlog')
-    expect(tabLabels).toContain('Sprints')
+    expect(tabLabels).toContain('RFE Backlog')
   })
 
-  it('hides Sprints tab when no boards', async () => {
-    setupMockLoadTeamDetail({
-      name: 'Model Serving',
-      boards: [],
-      rfeCount: 0,
-      rfeIssues: [],
-      components: [],
-      headcount: null
-    })
+  it('always shows all 3 tabs', async () => {
     const wrapper = mountView()
     await flushPromises()
     const tabLabels = wrapper.findAll('nav button').map(b => b.text())
-    expect(tabLabels).not.toContain('Sprints')
+    expect(tabLabels).toHaveLength(3)
   })
 
   it('switches tabs when tab buttons are clicked', async () => {
@@ -183,12 +174,8 @@ describe('TeamRosterView', () => {
     expect(wrapper.text()).not.toContain('PM:')
     expect(wrapper.text()).not.toContain('Eng Lead:')
 
-    // Only 3 tabs (no Sprints)
-    const tabLabels = wrapper.findAll('nav button').map(b => b.text())
-    expect(tabLabels).not.toContain('Sprints')
-
-    // Backlog tab shows fallback
-    const backlogTab = wrapper.findAll('nav button').find(b => b.text() === 'Backlog')
+    // RFE Backlog tab shows fallback
+    const backlogTab = wrapper.findAll('nav button').find(b => b.text() === 'RFE Backlog')
     await backlogTab.trigger('click')
     expect(wrapper.text()).toContain('not yet available')
   })
