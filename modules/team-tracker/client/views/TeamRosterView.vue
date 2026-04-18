@@ -96,8 +96,8 @@
             @click="activeTab = tab.id"
             class="flex items-center gap-2 pb-3 pt-1 text-base font-medium border-b-2 -mb-[2px] transition-colors"
             :class="activeTab === tab.id
-              ? 'border-primary-600 text-primary-600'
-              : 'border-transparent text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'"
+              ? 'border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400'
+              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'"
           >
             <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" v-html="tab.icon"></svg>
             {{ tab.label }}
