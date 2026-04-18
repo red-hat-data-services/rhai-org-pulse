@@ -306,7 +306,11 @@ watch(activeTab, (tab) => {
 
 // --- Navigation ---
 function handleSelectPerson(member) {
-  nav.navigateTo('person-detail', { teamKey: team.value?.key, person: member.jiraDisplayName || member.name })
+  if (member.uid) {
+    nav.navigateTo('person-detail', { uid: member.uid })
+  } else {
+    nav.navigateTo('person-detail', { teamKey: team.value?.key, person: member.jiraDisplayName || member.name })
+  }
 }
 
 // --- Refresh ---

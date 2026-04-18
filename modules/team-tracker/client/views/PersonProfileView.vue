@@ -3,10 +3,24 @@ import { ref, computed, onMounted, watch, inject } from 'vue'
 import { apiRequest } from '@shared/client/services/api.js'
 import { useAuth } from '@shared/client/composables/useAuth.js'
 import { useRoster } from '@shared/client/composables/useRoster.js'
+import { useGithubStats } from '@shared/client/composables/useGithubStats.js'
+import { useGitlabStats } from '@shared/client/composables/useGitlabStats.js'
 
 const nav = inject('moduleNav')
 const { isAdmin } = useAuth()
 const { getTeamsForPerson, teams: allTeams } = useRoster()
+const { getContributions: getGithubContributions } = useGithubStats()
+const { getContributions: getGitlabContributions, loadGitlabStats } = useGitlabStats()
+
+const githubContribs = computed(() => {
+  const username = person.value?.github?.username || rosterMember.value?.githubUsername
+  return username ? getGithubContributions(username) : null
+})
+
+const gitlabContribs = computed(() => {
+  const username = person.value?.gitlab?.username || rosterMember.value?.gitlabUsername
+  return username ? getGitlabContributions(username) : null
+})
 
 const personTeams = computed(() => {
   if (!person.value) return []
@@ -141,7 +155,10 @@ function sourceLabel(source) {
 }
 
 watch([uid, personName], loadPerson)
-onMounted(loadPerson)
+onMounted(() => {
+  loadPerson()
+  loadGitlabStats()
+})
 </script>
 
 <template>
@@ -249,21 +266,35 @@ onMounted(loadPerson)
             </div>
           </div>
 
-          <!-- Jira Metrics (cross-module from team-tracker) -->
-          <div v-if="jiraMetrics && !jiraMetrics.nameNotFound" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4 uppercase tracking-wider">Jira Metrics (90 days)</h3>
-            <div class="grid grid-cols-3 gap-4">
-              <div>
-                <div class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ jiraMetrics.resolved?.issues?.length || 0 }}</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">Resolved Issues</div>
+          <!-- Metrics -->
+          <div v-if="(jiraMetrics && !jiraMetrics.nameNotFound) || githubContribs || gitlabContribs" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4 uppercase tracking-wider">Metrics</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+              <template v-if="jiraMetrics && !jiraMetrics.nameNotFound">
+                <div>
+                  <div class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ jiraMetrics.resolved?.issues?.length || 0 }}</div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400">Resolved Issues</div>
+                  <div class="text-[10px] text-gray-400 dark:text-gray-500">90 days</div>
+                </div>
+                <div>
+                  <div class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ jiraMetrics.resolved?.totalPoints || 0 }}</div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400">Story Points</div>
+                  <div class="text-[10px] text-gray-400 dark:text-gray-500">90 days</div>
+                </div>
+                <div>
+                  <div class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ jiraMetrics.cycleTime?.averageDays != null ? jiraMetrics.cycleTime.averageDays + 'd' : '—' }}</div>
+                  <div class="text-xs text-gray-500 dark:text-gray-400">Avg Cycle Time</div>
+                </div>
+              </template>
+              <div v-if="person.github?.username">
+                <div class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ githubContribs?.totalContributions ?? '—' }}</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">GitHub Contributions</div>
+                <div class="text-[10px] text-gray-400 dark:text-gray-500">Last year</div>
               </div>
-              <div>
-                <div class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ jiraMetrics.resolved?.totalPoints || 0 }}</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">Story Points</div>
-              </div>
-              <div>
-                <div class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ jiraMetrics.cycleTime?.averageDays != null ? jiraMetrics.cycleTime.averageDays + 'd' : '—' }}</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400">Avg Cycle Time</div>
+              <div v-if="person.gitlab?.username">
+                <div class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ gitlabContribs?.totalContributions ?? '—' }}</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">GitLab Contributions</div>
+                <div class="text-[10px] text-gray-400 dark:text-gray-500">Last year</div>
               </div>
             </div>
           </div>

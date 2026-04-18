@@ -245,6 +245,17 @@ function registerIpaRegistryRoutes(router, context) {
   router.get('/registry/people/:uid', function(req, res) {
     var people = getPeopleMap();
     var person = people[req.params.uid];
+    // Fallback: if not found by UID key, try matching by name
+    if (!person) {
+      var uidsAll = Object.keys(people);
+      for (var j = 0; j < uidsAll.length; j++) {
+        var candidate = people[uidsAll[j]];
+        if (candidate.name === req.params.uid) {
+          person = candidate;
+          break;
+        }
+      }
+    }
     if (!person) return res.status(404).json({ error: 'Person not found' });
 
     var managerChain = [];
