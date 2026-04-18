@@ -34,7 +34,7 @@ module.exports = function registerRoutes(router, context) {
       return res.json({
         fetchedAt: null,
         jiraHost: JIRA_HOST,
-        metrics: { createdPct: 0, revisedPct: 0, createdChange: 0, revisedChange: 0, trend: 'stable', windowTotal: 0, totalRFEs: 0 },
+        metrics: { createdPct: 0, createdChange: 0, trend: 'stable', revisedCount: 0, priorRevisedCount: 0, windowTotal: 0, totalRFEs: 0 },
         trendData: [],
         breakdown: [],
         issues: []

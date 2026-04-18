@@ -10,7 +10,57 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
       <div>
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ displayName }}</h2>
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ displayName }}</h2>
+
+          <!-- Engagement Status Badge with Tooltip -->
+          <div v-if="dashboard" class="relative group/engagement">
+            <span
+              :class="engagementStatus.classes"
+              :title="engagementStatus.description"
+              :aria-label="engagementStatus.description"
+              class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border"
+            >
+              {{ engagementStatus.label }}
+            </span>
+            <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover/engagement:opacity-100 group-hover/engagement:visible transition-all duration-200 pointer-events-none whitespace-nowrap z-50">
+              {{ engagementStatus.description }}
+              <div class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-900 dark:border-t-gray-700"></div>
+            </div>
+          </div>
+
+          <!-- Strategic Leadership Badge with Tooltip -->
+          <div v-if="strategicLeadership" class="relative group/leadership">
+            <span
+              class="px-3 py-1 rounded-full text-xs font-semibold"
+              :class="getStrategicBadgeClass(strategicLeadership)"
+              :title="getStrategicDescription(strategicLeadership)"
+              :aria-label="getStrategicDescription(strategicLeadership)"
+            >
+              {{ getStrategicLabel(strategicLeadership) }}
+            </span>
+            <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover/leadership:opacity-100 group-hover/leadership:visible transition-all duration-200 pointer-events-none whitespace-nowrap z-50">
+              {{ getStrategicDescription(strategicLeadership) }}
+              <div class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-900 dark:border-t-gray-700"></div>
+            </div>
+          </div>
+
+          <!-- Strategic Participation Badge with Tooltip -->
+          <div v-if="strategicParticipation" class="relative group/participation">
+            <span
+              class="px-3 py-1 rounded-full text-xs font-semibold"
+              :class="getStrategicBadgeClass(strategicParticipation)"
+              :title="getStrategicDescription(strategicParticipation)"
+              :aria-label="getStrategicDescription(strategicParticipation)"
+            >
+              {{ getStrategicLabel(strategicParticipation) }}
+            </span>
+            <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover/participation:opacity-100 group-hover/participation:visible transition-all duration-200 pointer-events-none whitespace-nowrap z-50">
+              {{ getStrategicDescription(strategicParticipation) }}
+              <div class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-900 dark:border-t-gray-700"></div>
+            </div>
+          </div>
+        </div>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Team engagement in {{ displayName }} projects</p>
       </div>
       <div class="flex items-center gap-3">
@@ -470,6 +520,7 @@ import LeadershipCard from '../components/LeadershipCard.vue'
 import ContributionTrendChart from '../components/ContributionTrendChart.vue'
 import ImpactBanner from '../components/ImpactBanner.vue'
 import { useGovernanceCards, uniqueRoles } from '../composables/useGovernanceCards.js'
+import { getStrategicLabel, getStrategicBadgeClass, getStrategicDescription, getEngagementStatus } from '../composables/useStrategicClassification.js'
 
 const nav = inject('moduleNav')
 
@@ -484,6 +535,10 @@ const periodOptions = [
 
 const githubOrg = computed(() => nav.params.value?.org || '')
 const displayName = ref('')
+const strategicParticipation = ref(null)
+const strategicLeadership = ref(null)
+const orgLeadershipCount = ref(0)
+const orgMaintainerCount = ref(0)
 
 const selectedDays = ref('30')
 const loading = ref(true)
@@ -617,6 +672,13 @@ const totalGovernancePositions = computed(() => {
   return count
 })
 
+const engagementStatus = computed(() => {
+  const leadershipCount = orgLeadershipCount.value
+  const maintainerCount = orgMaintainerCount.value
+  const teamContributions = dashboard.value?.contributions?.all?.team || 0
+  return getEngagementStatus(leadershipCount, maintainerCount, teamContributions)
+})
+
 const projectCoveragePercent = computed(() => {
   if (!leadership.value?.summary || !dashboard.value?.summary) return 0
   const covered = leadership.value.summary.projectsWithTeamLeadership || 0
@@ -652,6 +714,10 @@ async function loadData() {
 
     const match = orgsData.orgs?.find(o => o.githubOrg === org)
     displayName.value = match?.name || org
+    strategicParticipation.value = match?.strategicParticipation || null
+    strategicLeadership.value = match?.strategicLeadership || null
+    orgLeadershipCount.value = match?.leadershipCount || 0
+    orgMaintainerCount.value = match?.maintainerCount || 0
 
     const topProjects = dashData.topProjects || []
     const metricsById = new Map()

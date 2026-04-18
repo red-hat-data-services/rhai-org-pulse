@@ -66,16 +66,17 @@ describe('MetricsRow', () => {
   it('renders metrics when data is loaded', () => {
     const metrics = {
       createdPct: 77,
-      revisedPct: 69,
       createdChange: 5,
-      revisedChange: 3,
       trend: 'growing',
+      revisedCount: 14,
+      priorRevisedCount: 11,
       windowTotal: 20,
       totalRFEs: 62
     }
     const wrapper = mount(MetricsRow, { props: { metrics } })
     expect(wrapper.text()).toContain('77%')
-    expect(wrapper.text()).toContain('69%')
+    expect(wrapper.text()).toContain('14')
+    expect(wrapper.text()).toContain('11 prev period')
     expect(wrapper.text()).toContain('20')
     expect(wrapper.text()).toContain('growing')
   })

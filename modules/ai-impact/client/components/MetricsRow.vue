@@ -58,18 +58,9 @@ function formatChange(change) {
           Revised with AI
         </p>
         <div class="flex items-baseline gap-2">
-          <span class="text-3xl font-bold dark:text-gray-100">{{ metrics.revisedPct }}%</span>
-          <span class="text-sm flex items-center gap-1" :class="getTrendClass(metrics.revisedTrend)">
-            <svg v-if="metrics.revisedTrend === 'growing'" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-            </svg>
-            <svg v-else-if="metrics.revisedTrend === 'declining'" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
-            </svg>
-            <svg v-else class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
-            </svg>
-            {{ formatChange(metrics.revisedChange) }}
+          <span class="text-3xl font-bold dark:text-gray-100">{{ metrics.revisedCount }}</span>
+          <span v-if="metrics.priorRevisedCount != null" class="text-xs text-gray-400 dark:text-gray-500">
+            {{ metrics.priorRevisedCount }} prev period
           </span>
         </div>
       </div>

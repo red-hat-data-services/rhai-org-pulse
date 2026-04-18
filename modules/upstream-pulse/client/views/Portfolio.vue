@@ -263,6 +263,14 @@
                   <td class="px-6 py-4">
                     <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ org.name }}</span>
                   </td>
+                  <td class="px-6 py-4">
+                    <span
+                      :class="getEngagementStatus(org.leadershipCount || 0, org.maintainerCount || 0, org.contributionCount || 0).classes"
+                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap border"
+                    >
+                      {{ getEngagementStatus(org.leadershipCount || 0, org.maintainerCount || 0, org.contributionCount || 0).label }}
+                    </span>
+                  </td>
                   <td class="px-6 py-4 text-right">
                     <span class="text-sm font-bold text-gray-900 dark:text-gray-100 tabular-nums">{{ (org.contributionCount || 0).toLocaleString() }}</span>
                     <span
@@ -507,6 +515,7 @@ import { useAuth } from '@shared/client/composables/useAuth'
 import OrgActivityCard from '../components/OrgActivityCard.vue'
 import AddProjectModal from '../components/AddProjectModal.vue'
 import { OrgCardSkeleton, StatCardSkeleton, TableRowSkeleton } from '../components/SkeletonLoaders.vue'
+import { getEngagementStatus } from '../composables/useStrategicClassification.js'
 
 const nav = inject('moduleNav')
 const { isAdmin } = useAuth()
@@ -525,11 +534,13 @@ const orgSortOptions = [
   { label: 'Contributions', value: 'contributionCount' },
   { label: 'Team Share', value: 'teamSharePercent' },
   { label: 'Active Members', value: 'activeTeamMembers' },
+  { label: 'Strategic Importance', value: 'strategicImportance' },
   { label: 'Name', value: 'name' },
 ]
 
 const orgTableColumns = [
   { label: 'Organization', field: 'name', align: 'left' },
+  { label: 'Engagement Status', field: 'engagementStatus', align: 'left' },
   { label: 'Contributions', field: 'contributionCount', align: 'right' },
   { label: 'Team Share', field: 'teamSharePercent', align: 'right' },
   { label: 'Members', field: 'activeTeamMembers', align: 'right' },
@@ -592,7 +603,7 @@ watch(searchInput, (val) => {
 watch(orgPageSize, () => { orgCurrentPage.value = 1 })
 watch(projectPageSize, () => { projectCurrentPage.value = 1 })
 watch(orgSortField, (field) => {
-  orgSortDirection.value = field === 'name' ? 'asc' : 'desc'
+  orgSortDirection.value = (field === 'name') ? 'asc' : 'desc'
   orgCurrentPage.value = 1
 })
 
@@ -605,7 +616,7 @@ function handleOrgTableSort(field) {
     orgSortDirection.value = orgSortDirection.value === 'asc' ? 'desc' : 'asc'
   } else {
     orgSortField.value = field
-    orgSortDirection.value = field === 'name' ? 'asc' : 'desc'
+    orgSortDirection.value = (field === 'name') ? 'asc' : 'desc'
   }
   orgCurrentPage.value = 1
 }
@@ -634,6 +645,31 @@ const sortedOrgsList = computed(() => {
     const field = orgSortField.value
     if (field === 'name') {
       const cmp = (a.name || '').localeCompare(b.name || '')
+      return orgSortDirection.value === 'asc' ? cmp : -cmp
+    }
+    if (field === 'engagementStatus') {
+      const statusOrder = {
+        'Established Leader': 4,
+        'Core Contributor': 3,
+        'Active': 2,
+        'New Entrant': 1
+      }
+      const aStatus = getEngagementStatus(a.leadershipCount || 0, a.maintainerCount || 0, a.contributionCount || 0).label
+      const bStatus = getEngagementStatus(b.leadershipCount || 0, b.maintainerCount || 0, b.contributionCount || 0).label
+      const aVal = statusOrder[aStatus] || 0
+      const bVal = statusOrder[bStatus] || 0
+      const cmp = aVal - bVal
+      return orgSortDirection.value === 'asc' ? cmp : -cmp
+    }
+    if (field === 'strategicImportance') {
+      const importanceOrder = {
+        increasing_leadership: 6, increasing_participation: 5,
+        sustaining_leadership: 4, sustaining_participation: 3,
+        evaluating_leadership: 2, evaluating_participation: 1,
+      }
+      const aVal = Math.max(importanceOrder[a.strategicLeadership] || 0, importanceOrder[a.strategicParticipation] || 0)
+      const bVal = Math.max(importanceOrder[b.strategicLeadership] || 0, importanceOrder[b.strategicParticipation] || 0)
+      const cmp = aVal - bVal
       return orgSortDirection.value === 'asc' ? cmp : -cmp
     }
     const cmp = (a[field] || 0) - (b[field] || 0)

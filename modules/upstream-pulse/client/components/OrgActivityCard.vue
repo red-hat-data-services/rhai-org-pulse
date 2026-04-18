@@ -4,14 +4,20 @@
     :class="{ 'cursor-pointer': clickable }"
     @click="$emit('click')"
   >
-    <!-- Row 1: Name + engagement badge + hover chevron -->
+    <!-- Row 1: Name + engagement status + hover chevron -->
     <div class="flex items-start justify-between mb-3">
       <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">{{ orgName }}</h3>
-      <ChevronRightIcon
-        v-if="clickable"
-        :size="16"
-        class="shrink-0 ml-2 text-gray-300 dark:text-gray-600 opacity-0 group-hover/card:opacity-100 transition-opacity duration-200"
-      />
+      <div class="flex items-center gap-2 shrink-0 ml-2">
+        <span :class="engagementStatus.classes"
+              class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap border">
+          {{ engagementStatus.label }}
+        </span>
+        <ChevronRightIcon
+          v-if="clickable"
+          :size="16"
+          class="text-gray-300 dark:text-gray-600 opacity-0 group-hover/card:opacity-100 transition-opacity duration-200"
+        />
+      </div>
     </div>
 
     <!-- Row 2: Contribution count + trend -->
@@ -72,6 +78,7 @@ import {
   Shield as ShieldIcon,
   ChevronRight as ChevronRightIcon,
 } from 'lucide-vue-next'
+import { getEngagementStatus } from '../composables/useStrategicClassification.js'
 
 defineEmits(['click'])
 
@@ -90,6 +97,10 @@ const props = defineProps({
 })
 
 const teamShareLabel = computed(() => Number(props.teamSharePercent).toFixed(1))
+
+const engagementStatus = computed(() =>
+  getEngagementStatus(props.leadershipCount, props.maintainerCount, props.teamContributions)
+)
 
 const trendArrow = computed(() => {
   if (props.percentChange > 0) return '↑'

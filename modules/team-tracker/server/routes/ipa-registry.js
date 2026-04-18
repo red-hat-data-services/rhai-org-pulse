@@ -172,7 +172,7 @@ function registerIpaRegistryRoutes(router, context) {
 
   function writePeopleUpdate(uid, updater) {
     var reg = loadRegistry(storage);
-    if (!reg.people || !reg.people[uid]) return null;
+    if (!reg.people || !Object.prototype.hasOwnProperty.call(reg.people, uid)) return null;
     updater(reg.people[uid]);
     storage.writeToStorage(REGISTRY_KEY, reg);
     return reg.people[uid];
@@ -261,7 +261,7 @@ function registerIpaRegistryRoutes(router, context) {
 
   router.get('/registry/people/:uid', function(req, res) {
     var people = getPeopleMap();
-    var person = people[req.params.uid];
+    var person = Object.prototype.hasOwnProperty.call(people, req.params.uid) ? people[req.params.uid] : undefined;
     // Fallback: if not found by UID key, try matching by name
     if (!person) {
       var uidsAll = Object.keys(people);
@@ -342,7 +342,7 @@ function registerIpaRegistryRoutes(router, context) {
 
   router.delete('/registry/people/:uid', requireAdmin, function(req, res) {
     var reg = loadRegistry(storage);
-    if (!reg.people || !reg.people[req.params.uid]) return res.status(404).json({ error: 'Person not found' });
+    if (!reg.people || !Object.prototype.hasOwnProperty.call(reg.people, req.params.uid)) return res.status(404).json({ error: 'Person not found' });
     delete reg.people[req.params.uid];
     storage.writeToStorage(REGISTRY_KEY, reg);
     res.json({ status: 'purged' });
