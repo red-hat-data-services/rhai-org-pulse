@@ -73,10 +73,19 @@
               Unconfirmed
             </span>
           </td>
-          <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ member.managerUid || member.manager || '—' }}</td>
+          <td class="px-4 py-3 text-sm whitespace-nowrap">
+            <a
+              v-if="managerLink(member)"
+              :href="managerLink(member)"
+              class="text-primary-600 hover:underline"
+              @click.stop
+            >{{ getManagerName(member) }}</a>
+            <span v-else class="text-gray-600 dark:text-gray-400">{{ getManagerName(member) }}</span>
+          </td>
           <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ getSpecialty(member) }}</td>
           <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{{ getComponent(member) }}</td>
           <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ member.geo || member.region || '—' }}</td>
+          <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ getLocation(member) }}</td>
         </tr>
       </tbody>
     </table>
@@ -90,19 +99,47 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useModuleLink } from '@shared/client/composables/useModuleLink'
+import { useRoster } from '@shared/client/composables/useRoster'
 
 const { linkTo } = useModuleLink()
+const { teams: allTeams } = useRoster()
 
 const props = defineProps({
   members: { type: Array, required: true }
 })
+
+const uidToMember = computed(() => {
+  const map = new Map()
+  for (const t of allTeams.value) {
+    for (const m of t.members) {
+      if (m.uid) map.set(m.uid, m)
+    }
+  }
+  return map
+})
+
+function getManagerName(member) {
+  const uid = member.managerUid || member.manager
+  if (!uid) return '—'
+  const mgr = uidToMember.value.get(uid)
+  return mgr?.name || uid
+}
+
+function managerLink(member) {
+  const uid = member.managerUid || member.manager
+  if (!uid) return null
+  const mgr = uidToMember.value.get(uid)
+  if (mgr?.uid) return linkTo('team-tracker', 'person-detail', { uid: mgr.uid })
+  return null
+}
 
 const columns = [
   { key: 'name', label: 'Name' },
   { key: 'manager', label: 'Manager' },
   { key: 'specialty', label: 'Role' },
   { key: 'component', label: 'Component' },
-  { key: 'geo', label: 'Location' },
+  { key: 'geo', label: 'Region' },
+  { key: 'location', label: 'Location' },
 ]
 
 function personLink(member) {
@@ -122,6 +159,13 @@ function getStatus(member) {
 
 function getComponent(member) {
   return member.component || '—'
+}
+
+function getLocation(member) {
+  const city = member.city
+  const country = member.country
+  if (city && country) return `${city}, ${country}`
+  return city || country || '—'
 }
 
 const sortKey = ref('name')
@@ -153,10 +197,11 @@ const sortedMembers = computed(() => {
     const q = searchQuery.value.toLowerCase()
     result = result.filter(m =>
       (m.name || '').toLowerCase().includes(q) ||
-      (m.managerUid || m.manager || '').toLowerCase().includes(q) ||
+      getManagerName(m).toLowerCase().includes(q) ||
       getSpecialty(m).toLowerCase().includes(q) ||
       getComponent(m).toLowerCase().includes(q) ||
-      (m.geo || m.region || '').toLowerCase().includes(q)
+      (m.geo || m.region || '').toLowerCase().includes(q) ||
+      getLocation(m).toLowerCase().includes(q)
     )
   }
   if (roleFilter.value) {
@@ -172,11 +217,14 @@ const sortedMembers = computed(() => {
       aVal = getComponent(a)
       bVal = getComponent(b)
     } else if (sortKey.value === 'manager') {
-      aVal = a.managerUid || a.manager
-      bVal = b.managerUid || b.manager
+      aVal = getManagerName(a)
+      bVal = getManagerName(b)
     } else if (sortKey.value === 'geo') {
       aVal = a.geo || a.region
       bVal = b.geo || b.region
+    } else if (sortKey.value === 'location') {
+      aVal = getLocation(a)
+      bVal = getLocation(b)
     } else {
       aVal = a[sortKey.value]
       bVal = b[sortKey.value]
