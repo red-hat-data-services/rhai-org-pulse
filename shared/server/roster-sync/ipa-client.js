@@ -43,7 +43,7 @@ const BUNDLED_CA_PATH = path.join(__dirname, '..', '..', '..', 'deploy', 'certs'
 const LDAP_ATTRS = [
   'cn', 'uid', 'mail', 'title', 'l', 'co',
   'manager', 'rhatGeo', 'rhatLocation', 'rhatOfficeLocation',
-  'rhatCostCenter', 'rhatSocialUrl'
+  'rhatCostCenter', 'rhatSocialUrl', 'memberOf'
 ];
 
 function getConfig() {
@@ -222,6 +222,9 @@ async function traverseOrg(client, baseDn, rootUid, excludedTitles) {
     var reports = await searchEntries(client, baseDn, filter);
 
     for (var i = 0; i < reports.length; i++) {
+      // Skip deprovisioned accounts (no group memberships in IPA)
+      if (!reports[i].memberOf) continue;
+
       var person = entryToPerson(reports[i]);
 
       if (excludedTitles && excludedTitles.length > 0) {
