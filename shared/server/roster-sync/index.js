@@ -4,10 +4,11 @@
  */
 
 const { loadConfig, updateSyncStatus } = require('./config');
-const ldapModule = require('./ldap');
+const ipaClient = require('./ipa-client');
 const { fetchSheetData } = require('./sheets');
 const { buildRoster } = require('./merge');
 const { inferUsernames } = require('./username-inference');
+const { DEFAULT_EXCLUDED_TITLES } = require('./constants');
 
 let syncInProgress = false;
 let dailyTimer = null;
@@ -31,35 +32,42 @@ async function runSync(storage) {
   console.log('[roster-sync] Starting sync...');
 
   try {
-    // Phase 1: LDAP traversal
-    console.log('[roster-sync] Connecting to LDAP...');
-    const client = ldapModule.createClient();
-    const ldapOrgs = {};
-    let totalPeople = 0;
+    // Phase 1: LDAP traversal via IPA
+    console.log('[roster-sync] Connecting to IPA LDAP...');
+    const conn = ipaClient.createClient();
+    const client = conn.client;
+    const baseDn = conn.config.baseDn;
 
     try {
+      await ipaClient.bindClient(client, conn.config.bindDn, conn.config.bindPassword);
+      const ldapOrgs = {};
+      let totalPeople = 0;
+
+      const excludedTitles = config.excludedTitles?.length ? config.excludedTitles : DEFAULT_EXCLUDED_TITLES;
       // Look up VP (manager of first org root)
       let vpInfo = null;
       const firstRoot = config.orgRoots[0];
-      const firstRootResult = await ldapModule.traverseOrg(client, firstRoot.uid);
+      const firstRootResult = await ipaClient.traverseOrg(client, baseDn, firstRoot.uid, excludedTitles);
+      const firstMembers = firstRootResult.people.filter(p => p.uid !== firstRootResult.leader.uid);
       if (firstRootResult.leader.managerUid) {
-        const vp = await ldapModule.lookupPerson(client, firstRootResult.leader.managerUid);
+        const vp = await ipaClient.lookupPerson(client, baseDn, firstRootResult.leader.managerUid);
         if (vp) {
           vpInfo = { name: vp.name, uid: vp.uid };
         }
       }
-      ldapOrgs[firstRoot.uid] = firstRootResult;
-      totalPeople += firstRootResult.members.length + 1;
-      console.log(`[roster-sync] ${firstRoot.uid}: ${firstRootResult.members.length} members`);
+      ldapOrgs[firstRoot.uid] = { leader: firstRootResult.leader, members: firstMembers };
+      totalPeople += firstMembers.length + 1;
+      console.log(`[roster-sync] ${firstRoot.uid}: ${firstMembers.length} members`);
 
       // Remaining org roots
       for (let i = 1; i < config.orgRoots.length; i++) {
         const root = config.orgRoots[i];
         try {
-          const orgData = await ldapModule.traverseOrg(client, root.uid);
-          ldapOrgs[root.uid] = orgData;
-          totalPeople += orgData.members.length + 1;
-          console.log(`[roster-sync] ${root.uid}: ${orgData.members.length} members`);
+          const orgData = await ipaClient.traverseOrg(client, baseDn, root.uid, excludedTitles);
+          const members = orgData.people.filter(p => p.uid !== orgData.leader.uid);
+          ldapOrgs[root.uid] = { leader: orgData.leader, members };
+          totalPeople += members.length + 1;
+          console.log(`[roster-sync] ${root.uid}: ${members.length} members`);
         } catch (err) {
           console.error(`[roster-sync] Failed to traverse ${root.uid}: ${err.message}`);
         }

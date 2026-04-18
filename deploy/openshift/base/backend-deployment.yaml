@@ -75,6 +75,18 @@ spec:
                   name: proxy-auth-secret
                   key: secret
                   optional: true
+            - name: IPA_BIND_DN
+              valueFrom:
+                secretKeyRef:
+                  name: ipa-credentials
+                  key: IPA_BIND_DN
+                  optional: true
+            - name: IPA_BIND_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: ipa-credentials
+                  key: IPA_BIND_PASSWORD
+                  optional: true
           volumeMounts:
             - name: data
               mountPath: /app/data

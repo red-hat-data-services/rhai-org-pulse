@@ -17,7 +17,7 @@ function makeModules() {
   return [
     {
       slug: 'team-tracker',
-      name: 'Team Tracker',
+      name: 'People & Teams',
       description: 'Delivery metrics',
       icon: 'BarChart3',
       order: 1,
@@ -181,6 +181,6 @@ describe('must-gather collect', () => {
     })
 
     expect(bundle.builtInModules.enabledState['team-tracker']).toBe(true)
-    expect(bundle.builtInModules.moduleManifests['team-tracker'].name).toBe('Team Tracker')
+    expect(bundle.builtInModules.moduleManifests['team-tracker'].name).toBe('People & Teams')
   })
 })

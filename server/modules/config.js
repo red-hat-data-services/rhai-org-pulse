@@ -12,7 +12,7 @@ const VALID_TYPES = ['built-in', 'git-static'];
 
 const DEFAULT_CONFIG = {
   modules: [{
-    name: 'Team Tracker',
+    name: 'People & Teams',
     slug: 'team-tracker',
     type: 'built-in',
     description: 'Delivery metrics, sprint tracking, and team insights',
@@ -35,7 +35,7 @@ function seedIfMissing(storage) {
   const existing = loadModulesConfig(storage);
   if (!existing) {
     saveModulesConfig(storage, DEFAULT_CONFIG);
-    console.log('Modules config: seeded with Team Tracker built-in module');
+    console.log('Modules config: seeded with People & Teams built-in module');
     return DEFAULT_CONFIG;
   }
   return existing;

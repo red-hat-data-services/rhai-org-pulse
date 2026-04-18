@@ -1,4 +1,4 @@
-# Contributing to Team Tracker
+# Contributing to People & Teams
 
 ## Prerequisites
 

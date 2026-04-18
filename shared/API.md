@@ -51,7 +51,7 @@ Core team owns `shared/` via CODEOWNERS. Changes require core team review.
 | `demoStorage` | `{ readFromStorage, writeToStorage, listStorageFiles, deleteStorageDirectory }` — fixture-backed read-only storage for demo mode |
 | `createAuthMiddleware(readFromStorage, writeToStorage)` | Factory returning `{ authMiddleware, requireAdmin, isAdmin, seedAdminList }` |
 | `googleSheets` | `{ getAuth, discoverSheetNames, fetchRawSheet }` — Google Sheets auth and raw data fetching |
-| `roster` | `{ EXCLUDED_TITLES, readRosterFull, getAllPeople, getPeopleByOrg, getOrgKeys, getTeamRollup, getOrgDisplayNames }` — shared roster data access (getAllPeople and getPeopleByOrg filter out EXCLUDED_TITLES) |
+| `roster` | `{ readRosterFull, getAllPeople, getPeopleByOrg, getOrgKeys, getTeamRollup, getOrgDisplayNames }` — shared roster data access |
 | `rosterSync` | `{ runSync, scheduleSync, ... }` — roster sync engine (LDAP + Google Sheets). Sub-modules: `roster-sync/config` (loadConfig, saveConfig, isConfigured, getOrgDisplayNames, updateSyncStatus), `roster-sync/constants`, `roster-sync/ldap`, `roster-sync/sheets`, `roster-sync/merge`, `roster-sync/username-inference` |
 | `jira` | `{ JIRA_HOST, getJiraAuth, jiraRequest, fetchAllJqlResults }` — Jira Cloud API helpers: auth (Basic via `JIRA_TOKEN`/`JIRA_EMAIL` env vars), request wrapper with 429 retry, cursor-based JQL pagination via `/rest/api/3/search/jql` |
 

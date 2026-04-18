@@ -1,4 +1,4 @@
-Bootstrap a new built-in module for the Team Tracker app.
+Bootstrap a new built-in module for the People & Teams app.
 
 Ask the user for:
 

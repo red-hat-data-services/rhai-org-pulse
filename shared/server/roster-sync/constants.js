@@ -2,17 +2,7 @@
  * Shared constants for roster sync.
  */
 
-const LDAP_HOST = 'ldap://ldap.corp.redhat.com';
-const LDAP_BASE = 'dc=redhat,dc=com';
-const LDAP_USER_BASE = 'ou=users,dc=redhat,dc=com';
-
-const LDAP_ATTRS = [
-  'cn', 'uid', 'mail', 'title', 'l', 'co',
-  'manager', 'rhatGeo', 'rhatLocation', 'rhatOfficeLocation',
-  'rhatCostCenter', 'rhatSocialUrl'
-];
-
-const { EXCLUDED_TITLES } = require('../roster');
+const DEFAULT_EXCLUDED_TITLES = ['Intern', 'Collaborative Partner', 'Independent Contractor'];
 
 /**
  * Build effective column mapping from user-configured custom fields.
@@ -83,11 +73,7 @@ function getEffectiveColumnsFromTeamStructure(teamStructure) {
 }
 
 module.exports = {
-  LDAP_HOST,
-  LDAP_BASE,
-  LDAP_USER_BASE,
-  LDAP_ATTRS,
-  EXCLUDED_TITLES,
+  DEFAULT_EXCLUDED_TITLES,
   RESERVED_KEYS,
   getEffectiveColumns,
   getEffectiveColumnsFromTeamStructure,
