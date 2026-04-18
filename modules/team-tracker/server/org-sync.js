@@ -170,7 +170,7 @@ function calculateHeadcountByRole(people) {
   let totalFte = 0;
 
   for (const person of people) {
-    const role = person.engineeringSpeciality || person.specialty || person.title || 'Unspecified';
+    const role = person.engineeringSpeciality || person.specialty || 'Unspecified';
     headcount[role] = (headcount[role] || 0) + 1;
     totalHeadcount++;
 

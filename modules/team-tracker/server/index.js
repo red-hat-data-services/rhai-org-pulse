@@ -150,6 +150,7 @@ module.exports = function registerRoutes(router, context) {
           location: person.location || null,
           country: person.country || null,
           city: person.city || null,
+          engineeringSpeciality: person.engineeringSpeciality || null,
           customFields: {}
         };
 

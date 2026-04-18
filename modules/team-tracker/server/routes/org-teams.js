@@ -222,7 +222,7 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
       const roleHeadcount = {};
       const roleFte = {};
       for (const person of orgPeople) {
-        const role = person.engineeringSpeciality || person.specialty || person.title || 'Unspecified';
+        const role = person.engineeringSpeciality || person.specialty || 'Unspecified';
         roleHeadcount[role] = (roleHeadcount[role] || 0) + 1;
         const miroTeam = person._teamGrouping || person.miroTeam || '';
         const teamCount = miroTeam ? miroTeam.split(',').filter(t => t.trim()).length : 1;
