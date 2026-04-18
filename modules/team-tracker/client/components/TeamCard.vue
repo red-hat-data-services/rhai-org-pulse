@@ -1,16 +1,25 @@
 <template>
   <div
-    class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 cursor-pointer hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all"
+    class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 border-t-4 p-5 cursor-pointer hover:shadow-lg hover:-translate-y-0.5 transition-all"
+    :style="{ borderTopColor: accentColor }"
     @click="$emit('select', team)"
   >
     <!-- Header -->
-    <div class="flex items-start justify-between mb-2">
-      <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">{{ team.name }}</h3>
-      <span class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ team.memberCount || 0 }} members</span>
-    </div>
-    <div class="flex items-start gap-1.5 text-xs text-gray-500 dark:text-gray-400 mb-3">
-      <span class="text-gray-400 dark:text-gray-500 shrink-0">Org:</span>
-      <span>{{ team.org }}</span>
+    <div class="flex items-start gap-3 mb-2">
+      <div
+        class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-white font-bold text-sm"
+        :style="{ backgroundColor: accentColor }"
+      >
+        {{ initials }}
+      </div>
+      <div class="flex-1 min-w-0">
+        <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">{{ team.name }}</h3>
+        <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+          <span>{{ team.org }}</span>
+          <span class="text-gray-300 dark:text-gray-600">·</span>
+          <span>{{ team.memberCount || 0 }} members</span>
+        </div>
+      </div>
     </div>
 
     <!-- PMs & Eng Lead -->
@@ -73,8 +82,40 @@
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue'
+
+const props = defineProps({
   team: { type: Object, required: true }
 })
 defineEmits(['select'])
+
+const COLORS = [
+  '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981',
+  '#06b6d4', '#6366f1', '#f43f5e', '#84cc16', '#14b8a6',
+  '#e11d48', '#7c3aed', '#0ea5e9', '#d97706', '#059669',
+]
+
+function hashString(str) {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i)
+    hash |= 0
+  }
+  return Math.abs(hash)
+}
+
+const accentColor = computed(() => {
+  const key = `${props.team.org}::${props.team.name}`
+  return COLORS[hashString(key) % COLORS.length]
+})
+
+const initials = computed(() => {
+  return props.team.name
+    .split(/[\s\-/+]+/)
+    .filter(w => w.length > 0)
+    .map(w => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+})
 </script>
