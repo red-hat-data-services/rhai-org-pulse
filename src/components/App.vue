@@ -690,7 +690,17 @@ export default {
       this.showRefreshModal = false
       this.isRefreshing = true
       try {
-        await refreshMetrics({ scope: 'all', force, sources })
+        const refreshes = [refreshMetrics({ scope: 'all', force, sources })]
+        if (this.enabledBuiltInSlugs.includes('allocation-tracker')) {
+          refreshes.push(
+            apiRequest('/modules/allocation-tracker/refresh', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ hardRefresh: force })
+            }).catch(err => console.error('Allocation tracker refresh failed:', err))
+          )
+        }
+        await Promise.all(refreshes)
         this.showToast('Refresh started — data will update shortly')
       } catch (err) {
         console.error('Failed to start refresh:', err)
