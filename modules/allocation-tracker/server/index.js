@@ -220,7 +220,8 @@ module.exports = function registerRoutes(router, context) {
             fetchFilterJql: jiraClient.fetchFilterJql,
             fetchIssuesByJql: jiraClient.fetchIssuesByJql,
             readStorage: moduleRead,
-            writeStorage: moduleWrite
+            writeStorage: moduleWrite,
+            getDeps: getDepsForProject
           });
 
           const totalBoards = result.projects.reduce((sum, p) => sum + (p.boardCount || 0), 0);
