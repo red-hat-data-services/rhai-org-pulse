@@ -5,33 +5,13 @@
  */
 
 const ipaClient = require('../../../../shared/server/roster-sync/ipa-client');
-const { mergePerson, computeCoverage, processLifecycle } = require('../../../../shared/server/roster-sync/lifecycle');
+const { computeCoverage } = require('../../../../shared/server/roster-sync/lifecycle');
 const { getAllPeople } = require('../../../../shared/server/roster');
-const { getOrgDisplayNames } = require('../../../../shared/server/roster-sync/config');
+const { loadConfig, getOrgDisplayNames } = require('../../../../shared/server/roster-sync/config');
+const { runConsolidatedSync, isSyncInProgress: isConsolidatedSyncInProgress } = require('../../../../shared/server/roster-sync/consolidated-sync');
 
 const REGISTRY_KEY = 'team-data/registry.json';
 const SYNC_LOG_KEY = 'team-data/sync-log.json';
-const IPA_CONFIG_KEY = 'team-data/config.json';
-
-const IPA_CONFIG_DEFAULTS = {
-  orgRoots: [],
-  gracePeriodDays: 30,
-  autoSync: { enabled: false, intervalHours: 24 },
-  excludedTitles: ['Intern - No Work Location']
-};
-
-let ipaSyncRunning = false;
-let ipaSyncStartedAt = null;
-
-function loadIpaConfig(storage) {
-  var config = storage.readFromStorage(IPA_CONFIG_KEY);
-  if (!config) return Object.assign({}, IPA_CONFIG_DEFAULTS);
-  return Object.assign({}, IPA_CONFIG_DEFAULTS, config);
-}
-
-function saveIpaConfig(storage, config) {
-  storage.writeToStorage(IPA_CONFIG_KEY, config);
-}
 
 function loadRegistry(storage) {
   return storage.readFromStorage(REGISTRY_KEY) || { meta: null, people: {} };
@@ -39,126 +19,6 @@ function loadRegistry(storage) {
 
 function loadSyncLog(storage) {
   return storage.readFromStorage(SYNC_LOG_KEY) || null;
-}
-
-async function runIpaSync(storage) {
-  if (ipaSyncRunning) {
-    return { status: 'skipped', message: 'Sync already in progress' };
-  }
-
-  var config = loadIpaConfig(storage);
-  if (!config.orgRoots || config.orgRoots.length === 0) {
-    return { status: 'error', message: 'No org roots configured' };
-  }
-
-  ipaSyncRunning = true;
-  ipaSyncStartedAt = new Date().toISOString();
-  var startTime = Date.now();
-  console.log('[team-tracker/ipa] Starting sync...');
-
-  try {
-    var existing = loadRegistry(storage);
-    var existingPeople = existing.people || {};
-
-    var conn = ipaClient.createClient();
-    var freshPeopleMap = {};
-    var vpInfo = null;
-
-    try {
-      await ipaClient.bindClient(conn.client, conn.config.bindDn, conn.config.bindPassword);
-
-      for (var i = 0; i < config.orgRoots.length; i++) {
-        var root = config.orgRoots[i];
-        try {
-          var result = await ipaClient.traverseOrg(
-            conn.client, conn.config.baseDn, root.uid, config.excludedTitles
-          );
-
-          if (i === 0 && result.leader.managerUid && !vpInfo) {
-            var vp = await ipaClient.lookupPerson(conn.client, conn.config.baseDn, result.leader.managerUid);
-            if (vp) vpInfo = { uid: vp.uid, name: vp.name };
-          }
-
-          for (var j = 0; j < result.people.length; j++) {
-            var p = result.people[j];
-            freshPeopleMap[p.uid] = { person: p, orgRoot: root.uid };
-          }
-
-          console.log('[team-tracker/ipa] ' + root.uid + ': ' + result.people.length + ' people');
-        } catch (err) {
-          console.error('[team-tracker/ipa] Failed to traverse ' + root.uid + ': ' + err.message);
-        }
-      }
-    } finally {
-      conn.client.unbind(function() {});
-    }
-
-    var now = new Date().toISOString();
-    var merged = {};
-    var changelog = { joined: [], left: [], reactivated: [], changed: [] };
-
-    var freshUids = Object.keys(freshPeopleMap);
-    for (var k = 0; k < freshUids.length; k++) {
-      var uid = freshUids[k];
-      var entry = freshPeopleMap[uid];
-      var mergeResult = mergePerson(existingPeople[uid], entry.person, entry.orgRoot, now);
-      merged[uid] = mergeResult.person;
-
-      if (mergeResult.isNew) {
-        changelog.joined.push(uid);
-      } else if (existingPeople[uid] && existingPeople[uid].status === 'inactive') {
-        changelog.reactivated.push(uid);
-      }
-      if (mergeResult.changes.length > 0) {
-        changelog.changed = changelog.changed.concat(mergeResult.changes);
-      }
-    }
-
-    processLifecycle(existingPeople, freshPeopleMap, merged, changelog, config.gracePeriodDays, now);
-
-    var activeCount = 0, inactiveCount = 0;
-    var mergedUids = Object.keys(merged);
-    for (var n = 0; n < mergedUids.length; n++) {
-      if (merged[mergedUids[n]].status === 'active') activeCount++;
-      else inactiveCount++;
-    }
-
-    var registry = {
-      meta: {
-        generatedAt: now, provider: 'ipa',
-        orgRoots: config.orgRoots.map(function(r) { return r.uid; }),
-        vp: vpInfo
-      },
-      people: merged
-    };
-
-    var syncLog = {
-      completedAt: now, status: 'success', duration: Date.now() - startTime,
-      summary: {
-        total: mergedUids.length, active: activeCount, inactive: inactiveCount,
-        joined: changelog.joined, left: changelog.left,
-        reactivated: changelog.reactivated, changed: changelog.changed
-      },
-      coverage: computeCoverage(merged)
-    };
-
-    storage.writeToStorage(REGISTRY_KEY, registry);
-    storage.writeToStorage(SYNC_LOG_KEY, syncLog);
-
-    console.log('[team-tracker/ipa] Sync complete: ' + mergedUids.length + ' people');
-    return syncLog;
-  } catch (err) {
-    console.error('[team-tracker/ipa] Sync failed:', err.message);
-    var errorLog = {
-      completedAt: new Date().toISOString(), status: 'error',
-      duration: Date.now() - startTime, message: err.message
-    };
-    storage.writeToStorage(SYNC_LOG_KEY, errorLog);
-    return errorLog;
-  } finally {
-    ipaSyncRunning = false;
-    ipaSyncStartedAt = null;
-  }
 }
 
 function registerIpaRegistryRoutes(router, context) {
@@ -181,17 +41,18 @@ function registerIpaRegistryRoutes(router, context) {
   // ─── IPA Config ───
 
   router.get('/ipa/config', requireAdmin, function(req, res) {
-    res.json({ config: loadIpaConfig(storage), ipa: ipaClient.getIpaStatus() });
+    res.json({ config: loadConfig(storage), ipa: ipaClient.getIpaStatus() });
   });
 
   router.post('/ipa/config', requireAdmin, function(req, res) {
-    var config = loadIpaConfig(storage);
+    var config = loadConfig(storage) || {};
     var body = req.body;
     if (body.orgRoots !== undefined) config.orgRoots = body.orgRoots;
     if (body.gracePeriodDays !== undefined) config.gracePeriodDays = body.gracePeriodDays;
     if (body.autoSync !== undefined) config.autoSync = body.autoSync;
     if (body.excludedTitles !== undefined) config.excludedTitles = body.excludedTitles;
-    saveIpaConfig(storage, config);
+    var rosterSyncConfig = require('../../../../shared/server/roster-sync/config');
+    rosterSyncConfig.saveConfig(storage, config);
     res.json({ status: 'saved', config: config });
   });
 
@@ -209,7 +70,7 @@ function registerIpaRegistryRoutes(router, context) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Sync disabled in demo mode' });
     }
-    runIpaSync(storage).then(function(result) {
+    runConsolidatedSync(storage).then(function(result) {
       res.json(result);
     }).catch(function(err) {
       res.status(500).json({ status: 'error', message: err.message });
@@ -218,7 +79,7 @@ function registerIpaRegistryRoutes(router, context) {
 
   router.get('/ipa/sync/status', function(req, res) {
     var log = loadSyncLog(storage);
-    res.json({ running: ipaSyncRunning, startedAt: ipaSyncStartedAt, lastResult: log });
+    res.json({ running: isConsolidatedSyncInProgress(), startedAt: null, lastResult: log });
   });
 
   // ─── People Registry ───
@@ -228,7 +89,9 @@ function registerIpaRegistryRoutes(router, context) {
     var result = [];
     var uids = Object.keys(people);
 
-    // Build team lookup from roster data
+    // Build team lookup — after consolidation, enrichment fields are directly
+    // on registry people, so we can read them directly rather than going
+    // through getAllPeople(). But we still use getAllPeople for backward compat.
     var orgDisplayNames = getOrgDisplayNames(storage);
     var rosterPeople = getAllPeople(storage);
     var teamsByUid = {};
@@ -396,16 +259,7 @@ function registerIpaRegistryRoutes(router, context) {
         byGeo[geo] = (byGeo[geo] || 0) + 1;
       } else { inactive++; }
     }
-    var rosterSyncConfig = require('../../../../shared/server/roster-sync/config');
-    var orgDisplayNames = rosterSyncConfig.getOrgDisplayNames(storage);
-
-    var ipaConfig = loadIpaConfig(storage);
-    for (var r = 0; r < (ipaConfig.orgRoots || []).length; r++) {
-      var root = ipaConfig.orgRoots[r];
-      if (root.uid && !orgDisplayNames[root.uid]) {
-        orgDisplayNames[root.uid] = root.displayName || root.name || root.uid;
-      }
-    }
+    var orgDisplayNames = getOrgDisplayNames(storage);
 
     res.json({ total: uids.length, active: active, inactive: inactive, coverage: computeCoverage(people), byOrg: byOrg, byGeo: byGeo, orgDisplayNames: orgDisplayNames });
   });
@@ -419,16 +273,16 @@ function registerIpaRegistryRoutes(router, context) {
     var intervalMs = (config.autoSync.intervalHours || 24) * 60 * 60 * 1000;
     autoSyncTimer = setInterval(function() {
       console.log('[team-tracker/ipa] Running scheduled auto-sync...');
-      runIpaSync(storage).catch(function(err) { console.error('[team-tracker/ipa] Auto-sync error:', err); });
+      runConsolidatedSync(storage).catch(function(err) { console.error('[team-tracker/ipa] Auto-sync error:', err); });
     }, intervalMs);
     if (autoSyncTimer.unref) autoSyncTimer.unref();
   }
 
   if (!DEMO_MODE) {
-    scheduleAutoSync(loadIpaConfig(storage));
+    scheduleAutoSync(loadConfig(storage) || {});
   }
 }
 
 module.exports = registerIpaRegistryRoutes;
-module.exports.runIpaSync = runIpaSync;
-module.exports.isIpaSyncInProgress = function() { return ipaSyncRunning; };
+module.exports.runConsolidatedSync = runConsolidatedSync;
+module.exports.isIpaSyncInProgress = isConsolidatedSyncInProgress;

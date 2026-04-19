@@ -23,7 +23,7 @@
   "export": {
     "customHandler": true,
     "files": [
-      { "path": "org-roster-full.json", "notes": "Nested VP/orgs/leaders/members" },
+      { "path": "team-data/registry.json", "notes": "People registry (lifecycle, identities, enrichment)" },
       { "path": "people/*.json", "notes": "Per-person Jira metrics" },
       { "path": "github-contributions.json", "notes": "GitHub contribution counts" },
       { "path": "github-history.json", "notes": "Monthly GitHub history" },

@@ -1093,7 +1093,7 @@ const { handleExport } = require('./export');
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-app.get('/api/export/test-data', function(req, res) {
+app.get('/api/export/test-data', requireAdmin, function(req, res) {
   handleExport(req, res, storageModule, builtInModules);
 });
 

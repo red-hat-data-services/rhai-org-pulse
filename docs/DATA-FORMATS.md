@@ -148,9 +148,9 @@ Platform-level configuration for the site. Created when an admin saves settings 
 - `titlePrefix` is a string (max 100 characters). When non-empty, it's shown as a subtitle in the sidebar and prepended to the page title.
 - If this file doesn't exist, `titlePrefix` defaults to `""` (empty string).
 
-## Roster Sync Config — `data/roster-sync-config.json`
+## Roster Sync Config — `data/team-data/config.json`
 
-Stores the configuration for automated roster building. Managed via the Settings UI and the `POST /api/admin/roster-sync/config` endpoint.
+Stores the consolidated configuration for automated roster building (merged from the former `roster-sync-config.json` and IPA config). Managed via the Settings UI and the `POST /api/admin/roster-sync/config` endpoint.
 
 ```json
 {
@@ -183,19 +183,53 @@ Stores the configuration for automated roster building. Managed via the Settings
       }
     ]
   },
+  "gracePeriodDays": 30,
+  "autoSync": { "enabled": false, "intervalHours": 24 },
   "lastSyncAt": "2026-03-27T06:00:00.000Z",
   "lastSyncStatus": "success",
-  "lastSyncError": null
+  "lastSyncError": null,
+  "_migratedFrom": "roster-sync-config.json"
 }
 ```
 
 **Notes:**
-- `orgRoots` is required (at least one). Each entry needs `uid` and `displayName`.
+- `orgRoots` is required (at least one). Each entry needs `uid` and `displayName`. UIDs must match `/^[a-zA-Z0-9._-]+$/`.
 - `googleSheetId`, `sheetNames`, `githubOrgs`, `gitlabGroups`, `gitlabInstances` are optional (default to `null` or `[]`).
 - `gitlabInstances` is the preferred way to configure GitLab instances. Legacy `gitlabGroups` is auto-migrated to `gitlabInstances` on first load. Each instance has `label`, `baseUrl` (must start with `https://`), `tokenEnvVar` (name of env var holding the token), `groups` (array of group paths), and optional `excludeGroups` (array of group paths to skip when fetching contributions, e.g., mirror repositories).
 - `teamStructure` replaces legacy `fieldMapping`/`customFields` via an in-memory migration on load.
 - `customFields` supports up to 20 entries. At most one can have `primaryDisplay: true`.
+- `gracePeriodDays` controls how long inactive people are retained before purging (default 30).
+- `autoSync` controls the automatic sync scheduler (default disabled).
 - `lastSyncAt`, `lastSyncStatus`, `lastSyncError` are auto-populated during sync runs.
+- `_migratedFrom` is set to `"roster-sync-config.json"` after one-time migration from the legacy config file. The old file is never deleted (rollback safety net).
+
+## Sync Log — `data/team-data/sync-log.json`
+
+Written after each consolidated sync run. Contains the result of the most recent sync.
+
+```json
+{
+  "completedAt": "2026-03-27T06:00:12.345Z",
+  "status": "success",
+  "duration": 12345,
+  "stats": {
+    "totalPeople": 42,
+    "active": 40,
+    "inactive": 2,
+    "newlyAdded": 3,
+    "reactivated": 0,
+    "changed": 5,
+    "sheetsEnriched": 38,
+    "githubInferred": 2,
+    "gitlabInferred": 1
+  },
+  "coverage": { "github": 0.85, "gitlab": 0.78 }
+}
+```
+
+**Notes:**
+- On error, the log contains `status: "error"`, `message`, `duration`, and `completedAt` — no `stats` or `coverage`.
+- Overwritten on each sync run (not appended).
 
 ## Module State — `data/modules-state.json`
 
@@ -255,12 +289,47 @@ Team key is sanitized: `::` becomes `--`, special chars become `_`. The filename
 }
 ```
 
-## Roster — `data/org-roster-full.json`
+## People Registry — `data/team-data/registry.json`
 
-Large file containing the full org/team hierarchy with members. See `shared/server/roster-sync/` for the code that builds it.
+The single source of truth for all people data. Built by the consolidated sync pipeline (`shared/server/roster-sync/consolidated-sync.js`) which combines LDAP traversal, Google Sheets enrichment, username inference, and lifecycle tracking.
+
+```json
+{
+  "meta": {
+    "generatedAt": "2026-03-27T06:00:00.000Z",
+    "provider": "ipa",
+    "orgRoots": ["jsmith"],
+    "vp": { "name": "VP Name", "uid": "vpuid" }
+  },
+  "people": {
+    "jsmith": {
+      "uid": "jsmith",
+      "name": "Jane Smith",
+      "email": "jsmith@example.com",
+      "title": "Engineering Manager",
+      "managerUid": "vpuid",
+      "orgRoot": "jsmith",
+      "github": { "username": "janesmith", "source": "ldap" },
+      "gitlab": { "username": "janesmith", "source": "ldap" },
+      "status": "active",
+      "firstSeenAt": "2026-01-01T00:00:00.000Z",
+      "lastSeenAt": "2026-03-27T06:00:00.000Z",
+      "inactiveSince": null,
+      "jiraTeam": "Platform",
+      "specialty": "backend"
+    }
+  }
+}
+```
+
+**Notes:**
+- `people` is a flat `{ uid: person }` map with structured `github`/`gitlab` fields and lifecycle tracking (`status`, `firstSeenAt`, `lastSeenAt`, `inactiveSince`).
+- `readRosterFull()` in `shared/server/roster.js` transforms this into the legacy `{ orgs: { key: { leader, members } } }` format for backward compatibility with `deriveRoster()` and downstream consumers.
+- Leaders are identified by matching a person's `uid` against the configured `orgRoots[].uid` values.
+- Enrichment fields from Google Sheets (`_teamGrouping`, `specialty`, `jiraTeam`, etc.) are stored as top-level fields on person records.
 
 **Derived roster API response (`GET /api/roster`):**
-- When multiple org roots share the same explicitly-configured `displayName` in roster-sync-config, `deriveRoster()` merges them into a single org entry.
+- When multiple org roots share the same explicitly-configured `displayName` in config, `deriveRoster()` merges them into a single org entry.
 - The merged org's `key` is the alphabetically-first root UID among the merged roots.
 - Merged orgs include a `mergedKeys` array (sorted alphabetically) listing all root UIDs that were combined.
 - Non-merged orgs do not have a `mergedKeys` field.

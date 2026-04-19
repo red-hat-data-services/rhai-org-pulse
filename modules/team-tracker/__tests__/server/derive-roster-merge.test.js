@@ -44,6 +44,70 @@ function makeMember(name, uid, opts = {}) {
   }
 }
 
+/**
+ * Convert old roster format + config to registry format for tests.
+ * Takes { vp, orgs } and config.orgRoots and produces
+ * { 'team-data/registry.json': {...}, 'team-data/config.json': {...} }
+ */
+function toRegistryData(rosterData, configData) {
+  const people = {}
+  const orgRootUids = (configData?.orgRoots || []).map(r => r.uid)
+
+  if (rosterData && rosterData.orgs) {
+    for (const [orgKey, org] of Object.entries(rosterData.orgs)) {
+      if (org.leader) {
+        const p = { ...org.leader }
+        p.orgRoot = orgKey
+        p.status = 'active'
+        p.firstSeenAt = '2026-01-01T00:00:00.000Z'
+        p.lastSeenAt = '2026-01-15T00:00:00.000Z'
+        p.inactiveSince = null
+        p.managerUid = p.managerUid || null
+        p.github = p.githubUsername ? { username: p.githubUsername, source: 'ldap' } : null
+        p.gitlab = p.gitlabUsername ? { username: p.gitlabUsername, source: 'ldap' } : null
+        people[p.uid] = p
+      }
+      if (org.members) {
+        for (const m of org.members) {
+          const p = { ...m }
+          p.orgRoot = orgKey
+          p.status = 'active'
+          p.firstSeenAt = '2026-01-01T00:00:00.000Z'
+          p.lastSeenAt = '2026-01-15T00:00:00.000Z'
+          p.inactiveSince = null
+          p.managerUid = p.managerUid || null
+          p.github = p.githubUsername ? { username: p.githubUsername, source: 'ldap' } : null
+          p.gitlab = p.gitlabUsername ? { username: p.gitlabUsername, source: 'ldap' } : null
+          people[p.uid] = p
+        }
+      }
+    }
+  }
+
+  const result = {
+    'team-data/registry.json': {
+      meta: {
+        generatedAt: '2026-01-15T00:00:00.000Z',
+        provider: 'test',
+        orgRoots: orgRootUids.length > 0 ? orgRootUids : Object.keys(rosterData?.orgs || {}),
+        vp: rosterData?.vp || null
+      },
+      people
+    }
+  }
+
+  if (configData) {
+    result['team-data/config.json'] = configData
+  } else {
+    // Build minimal config with orgRoots from roster keys
+    result['team-data/config.json'] = {
+      orgRoots: Object.keys(rosterData?.orgs || {}).map(uid => ({ uid }))
+    }
+  }
+
+  return result
+}
+
 const http = require('http')
 
 function createTestServer(storageData) {
@@ -90,27 +154,26 @@ describe('deriveRoster org merging', () => {
   })
 
   it('merges orgs with the same explicitly-configured displayName', async () => {
-    const app = createTestServer({
-      'org-roster-full.json': {
-        vp: { name: 'VP', uid: 'vp1', title: 'VP' },
-        orgs: {
-          uid_beta: {
-            leader: { name: 'Leader B', uid: 'uid_beta', title: 'Manager' },
-            members: [makeMember('Alice', 'alice', { miroTeam: 'TeamA' })]
-          },
-          uid_alpha: {
-            leader: { name: 'Leader A', uid: 'uid_alpha', title: 'Manager' },
-            members: [makeMember('Bob', 'bob', { miroTeam: 'TeamB' })]
-          }
+    const config = {
+      orgRoots: [
+        { uid: 'uid_beta', displayName: 'Platform Team' },
+        { uid: 'uid_alpha', displayName: 'Platform Team' }
+      ]
+    }
+    const roster = {
+      vp: { name: 'VP', uid: 'vp1', title: 'VP' },
+      orgs: {
+        uid_beta: {
+          leader: { name: 'Leader B', uid: 'uid_beta', title: 'Manager' },
+          members: [makeMember('Alice', 'alice', { miroTeam: 'TeamA' })]
+        },
+        uid_alpha: {
+          leader: { name: 'Leader A', uid: 'uid_alpha', title: 'Manager' },
+          members: [makeMember('Bob', 'bob', { miroTeam: 'TeamB' })]
         }
-      },
-      'roster-sync-config.json': {
-        orgRoots: [
-          { uid: 'uid_beta', displayName: 'Platform Team' },
-          { uid: 'uid_alpha', displayName: 'Platform Team' }
-        ]
       }
-    })
+    }
+    const app = createTestServer(toRegistryData(roster, config))
 
     const { status, body } = await requestGet(app, '/roster')
     expect(status).toBe(200)
@@ -127,55 +190,52 @@ describe('deriveRoster org merging', () => {
   })
 
   it('does not merge orgs without explicit displayName', async () => {
-    const app = createTestServer({
-      'org-roster-full.json': {
-        vp: { name: 'VP', uid: 'vp1', title: 'VP' },
-        orgs: {
-          uid_x: {
-            leader: { name: 'Same Name', uid: 'uid_x', title: 'Manager' },
-            members: [makeMember('Alice', 'alice')]
-          },
-          uid_y: {
-            leader: { name: 'Same Name', uid: 'uid_y', title: 'Manager' },
-            members: [makeMember('Bob', 'bob')]
-          }
+    const roster = {
+      vp: { name: 'VP', uid: 'vp1', title: 'VP' },
+      orgs: {
+        uid_x: {
+          leader: { name: 'Same Name', uid: 'uid_x', title: 'Manager' },
+          members: [makeMember('Alice', 'alice')]
+        },
+        uid_y: {
+          leader: { name: 'Same Name', uid: 'uid_y', title: 'Manager' },
+          members: [makeMember('Bob', 'bob')]
         }
       }
-      // No roster-sync-config
-    })
+    }
+    const app = createTestServer(toRegistryData(roster, null))
 
     const { body } = await requestGet(app, '/roster')
     expect(body.orgs).toHaveLength(2)
   })
 
   it('handles team name collision by deduplicating members', async () => {
-    const app = createTestServer({
-      'org-roster-full.json': {
-        vp: { name: 'VP', uid: 'vp1', title: 'VP' },
-        orgs: {
-          uid_a: {
-            leader: { name: 'Leader A', uid: 'uid_a', title: 'Manager' },
-            members: [
-              makeMember('Alice', 'alice', { miroTeam: 'Shared' }),
-              makeMember('Common Person', 'common', { miroTeam: 'Shared' })
-            ]
-          },
-          uid_b: {
-            leader: { name: 'Leader B', uid: 'uid_b', title: 'Manager' },
-            members: [
-              makeMember('Bob', 'bob', { miroTeam: 'Shared' }),
-              makeMember('Common Person', 'common2', { miroTeam: 'Shared' })
-            ]
-          }
+    const config = {
+      orgRoots: [
+        { uid: 'uid_a', displayName: 'Merged' },
+        { uid: 'uid_b', displayName: 'Merged' }
+      ]
+    }
+    const roster = {
+      vp: { name: 'VP', uid: 'vp1', title: 'VP' },
+      orgs: {
+        uid_a: {
+          leader: { name: 'Leader A', uid: 'uid_a', title: 'Manager' },
+          members: [
+            makeMember('Alice', 'alice', { miroTeam: 'Shared' }),
+            makeMember('Common Person', 'common', { miroTeam: 'Shared' })
+          ]
+        },
+        uid_b: {
+          leader: { name: 'Leader B', uid: 'uid_b', title: 'Manager' },
+          members: [
+            makeMember('Bob', 'bob', { miroTeam: 'Shared' }),
+            makeMember('Common Person', 'common2', { miroTeam: 'Shared' })
+          ]
         }
-      },
-      'roster-sync-config.json': {
-        orgRoots: [
-          { uid: 'uid_a', displayName: 'Merged' },
-          { uid: 'uid_b', displayName: 'Merged' }
-        ]
       }
-    })
+    }
+    const app = createTestServer(toRegistryData(roster, config))
 
     const { body } = await requestGet(app, '/roster')
     const merged = body.orgs[0]
@@ -187,27 +247,26 @@ describe('deriveRoster org merging', () => {
   })
 
   it('uses alphabetically first UID as canonical key', async () => {
-    const app = createTestServer({
-      'org-roster-full.json': {
-        vp: { name: 'VP', uid: 'vp1', title: 'VP' },
-        orgs: {
-          uid_zebra: {
-            leader: { name: 'Leader Z', uid: 'uid_zebra', title: 'Manager' },
-            members: []
-          },
-          uid_alpha: {
-            leader: { name: 'Leader A', uid: 'uid_alpha', title: 'Manager' },
-            members: []
-          }
+    const config = {
+      orgRoots: [
+        { uid: 'uid_zebra', displayName: 'Same' },
+        { uid: 'uid_alpha', displayName: 'Same' }
+      ]
+    }
+    const roster = {
+      vp: { name: 'VP', uid: 'vp1', title: 'VP' },
+      orgs: {
+        uid_zebra: {
+          leader: { name: 'Leader Z', uid: 'uid_zebra', title: 'Manager' },
+          members: []
+        },
+        uid_alpha: {
+          leader: { name: 'Leader A', uid: 'uid_alpha', title: 'Manager' },
+          members: []
         }
-      },
-      'roster-sync-config.json': {
-        orgRoots: [
-          { uid: 'uid_zebra', displayName: 'Same' },
-          { uid: 'uid_alpha', displayName: 'Same' }
-        ]
       }
-    })
+    }
+    const app = createTestServer(toRegistryData(roster, config))
 
     const { body } = await requestGet(app, '/roster')
     const merged = body.orgs[0]
@@ -216,47 +275,45 @@ describe('deriveRoster org merging', () => {
   })
 
   it('does not include mergedKeyMap in API response', async () => {
-    const app = createTestServer({
-      'org-roster-full.json': {
-        vp: { name: 'VP', uid: 'vp1', title: 'VP' },
-        orgs: {
-          uid_a: {
-            leader: { name: 'Leader', uid: 'uid_a', title: 'Manager' },
-            members: []
-          }
+    const config = {
+      orgRoots: [{ uid: 'uid_a', displayName: 'Org' }]
+    }
+    const roster = {
+      vp: { name: 'VP', uid: 'vp1', title: 'VP' },
+      orgs: {
+        uid_a: {
+          leader: { name: 'Leader', uid: 'uid_a', title: 'Manager' },
+          members: []
         }
-      },
-      'roster-sync-config.json': {
-        orgRoots: [{ uid: 'uid_a', displayName: 'Org' }]
       }
-    })
+    }
+    const app = createTestServer(toRegistryData(roster, config))
 
     const { body } = await requestGet(app, '/roster')
     expect(body).not.toHaveProperty('mergedKeyMap')
   })
 
   it('resolves secondary key in team metrics lookup', async () => {
-    const app = createTestServer({
-      'org-roster-full.json': {
-        vp: { name: 'VP', uid: 'vp1', title: 'VP' },
-        orgs: {
-          uid_alpha: {
-            leader: { name: 'Leader A', uid: 'uid_alpha', title: 'Manager' },
-            members: [makeMember('Alice', 'alice', { miroTeam: 'TeamA' })]
-          },
-          uid_beta: {
-            leader: { name: 'Leader B', uid: 'uid_beta', title: 'Manager' },
-            members: [makeMember('Bob', 'bob', { miroTeam: 'TeamB' })]
-          }
+    const config = {
+      orgRoots: [
+        { uid: 'uid_alpha', displayName: 'Merged' },
+        { uid: 'uid_beta', displayName: 'Merged' }
+      ]
+    }
+    const roster = {
+      vp: { name: 'VP', uid: 'vp1', title: 'VP' },
+      orgs: {
+        uid_alpha: {
+          leader: { name: 'Leader A', uid: 'uid_alpha', title: 'Manager' },
+          members: [makeMember('Alice', 'alice', { miroTeam: 'TeamA' })]
+        },
+        uid_beta: {
+          leader: { name: 'Leader B', uid: 'uid_beta', title: 'Manager' },
+          members: [makeMember('Bob', 'bob', { miroTeam: 'TeamB' })]
         }
-      },
-      'roster-sync-config.json': {
-        orgRoots: [
-          { uid: 'uid_alpha', displayName: 'Merged' },
-          { uid: 'uid_beta', displayName: 'Merged' }
-        ]
       }
-    })
+    }
+    const app = createTestServer(toRegistryData(roster, config))
 
     // Access using secondary key uid_beta::TeamB
     const { status, body } = await requestGet(app, '/team/' + encodeURIComponent('uid_beta::TeamB') + '/metrics')
@@ -267,47 +324,45 @@ describe('deriveRoster org merging', () => {
   })
 
   it('keeps orgs with different displayNames separate', async () => {
-    const app = createTestServer({
-      'org-roster-full.json': {
-        vp: { name: 'VP', uid: 'vp1', title: 'VP' },
-        orgs: {
-          uid_a: {
-            leader: { name: 'Leader A', uid: 'uid_a', title: 'Manager' },
-            members: []
-          },
-          uid_b: {
-            leader: { name: 'Leader B', uid: 'uid_b', title: 'Manager' },
-            members: []
-          }
+    const config = {
+      orgRoots: [
+        { uid: 'uid_a', displayName: 'Team Alpha' },
+        { uid: 'uid_b', displayName: 'Team Beta' }
+      ]
+    }
+    const roster = {
+      vp: { name: 'VP', uid: 'vp1', title: 'VP' },
+      orgs: {
+        uid_a: {
+          leader: { name: 'Leader A', uid: 'uid_a', title: 'Manager' },
+          members: []
+        },
+        uid_b: {
+          leader: { name: 'Leader B', uid: 'uid_b', title: 'Manager' },
+          members: []
         }
-      },
-      'roster-sync-config.json': {
-        orgRoots: [
-          { uid: 'uid_a', displayName: 'Team Alpha' },
-          { uid: 'uid_b', displayName: 'Team Beta' }
-        ]
       }
-    })
+    }
+    const app = createTestServer(toRegistryData(roster, config))
 
     const { body } = await requestGet(app, '/roster')
     expect(body.orgs).toHaveLength(2)
   })
 
   it('does not add mergedKeys to non-merged orgs', async () => {
-    const app = createTestServer({
-      'org-roster-full.json': {
-        vp: { name: 'VP', uid: 'vp1', title: 'VP' },
-        orgs: {
-          uid_only: {
-            leader: { name: 'Leader', uid: 'uid_only', title: 'Manager' },
-            members: []
-          }
+    const config = {
+      orgRoots: [{ uid: 'uid_only', displayName: 'Solo Org' }]
+    }
+    const roster = {
+      vp: { name: 'VP', uid: 'vp1', title: 'VP' },
+      orgs: {
+        uid_only: {
+          leader: { name: 'Leader', uid: 'uid_only', title: 'Manager' },
+          members: []
         }
-      },
-      'roster-sync-config.json': {
-        orgRoots: [{ uid: 'uid_only', displayName: 'Solo Org' }]
       }
-    })
+    }
+    const app = createTestServer(toRegistryData(roster, config))
 
     const { body } = await requestGet(app, '/roster')
     expect(body.orgs[0]).not.toHaveProperty('mergedKeys')

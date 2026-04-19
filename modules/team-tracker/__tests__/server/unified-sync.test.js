@@ -13,26 +13,29 @@ const storageMock = {
 }
 
 // Use vi.hoisted so the mock state is available when vi.mock factories run (they are hoisted above declarations)
-const mockRosterSync = vi.hoisted(() => ({
+const mockConsolidatedSync = vi.hoisted(() => ({
   syncInProgress: false,
   runSyncResult: { status: 'success' }
 }))
 
+vi.mock('../../../../shared/server/roster-sync/consolidated-sync', () => ({
+  isSyncInProgress: vi.fn(() => mockConsolidatedSync.syncInProgress),
+  runConsolidatedSync: vi.fn(async () => mockConsolidatedSync.runSyncResult),
+}))
+
 vi.mock('../../../../shared/server/roster-sync', () => ({
-  loadConfig: vi.fn((storage) => storage.readFromStorage('roster-sync-config.json')),
-  saveConfig: vi.fn((storage, config) => storage.writeToStorage('roster-sync-config.json', config)),
-  isConfigured: vi.fn(() => true),
-  isSyncInProgress: vi.fn(() => mockRosterSync.syncInProgress),
-  runSync: vi.fn(async () => mockRosterSync.runSyncResult),
-  scheduleDaily: vi.fn()
+  runSync: vi.fn(async () => mockConsolidatedSync.runSyncResult),
+  isSyncInProgress: vi.fn(() => mockConsolidatedSync.syncInProgress),
 }))
 
 vi.mock('../../../../shared/server/roster-sync/config', () => ({
   loadConfig: vi.fn((storage) => {
-    return storage.readFromStorage('roster-sync-config.json') || {}
+    return storage.readFromStorage('team-data/config.json') || {}
   }),
   isConfigured: vi.fn(() => true),
-  getOrgDisplayNames: vi.fn(() => ({}))
+  getOrgDisplayNames: vi.fn(() => ({})),
+  saveConfig: vi.fn(),
+  clearDisplayNamesCache: vi.fn()
 }))
 
 vi.mock('../../../../shared/server/roster-sync/constants', () => ({
@@ -129,8 +132,8 @@ function makeRequest(app, method, path, body) {
 describe('Unified Sync Endpoint', () => {
   beforeEach(() => {
     Object.keys(mockStorage).forEach(key => delete mockStorage[key])
-    mockRosterSync.syncInProgress = false
-    mockRosterSync.runSyncResult = { status: 'success' }
+    mockConsolidatedSync.syncInProgress = false
+    mockConsolidatedSync.runSyncResult = { status: 'success' }
     storageMock.readFromStorage.mockImplementation((key) => mockStorage[key] || null)
     storageMock.writeToStorage.mockImplementation((key, data) => { mockStorage[key] = data })
   })
@@ -169,22 +172,20 @@ describe('Unified Sync Endpoint', () => {
     }
   })
 
-  it('returns 409 when roster sync is already in progress', async () => {
-    // Directly override on the module object that server/index.js will require
-    const rosterSync = require('../../../../shared/server/roster-sync')
-    rosterSync.isSyncInProgress = vi.fn(() => true)
+  it('returns 409 when consolidated sync is already in progress', async () => {
+    const consolidatedSync = require('../../../../shared/server/roster-sync/consolidated-sync')
+    consolidatedSync.isSyncInProgress = vi.fn(() => true)
     try {
       const app = createApp()
       const { status, data } = await makeRequest(app, 'POST', '/api/modules/team-tracker/admin/roster-sync/unified')
       expect(status).toBe(409)
-      expect(data.error).toContain('Roster sync already in progress')
+      expect(data.error).toContain('sync already in progress')
     } finally {
-      rosterSync.isSyncInProgress = vi.fn(() => false)
+      consolidatedSync.isSyncInProgress = vi.fn(() => false)
     }
   })
 
   it('returns 409 when org metadata sync is already in progress', async () => {
-    // Manipulate the real module's state directly
     const orgTeams = require('../../server/routes/org-teams')
     const origIsOrgSync = orgTeams.isOrgSyncInProgress
     orgTeams.isOrgSyncInProgress = () => true
@@ -199,11 +200,10 @@ describe('Unified Sync Endpoint', () => {
   })
 
   it('returns 409 when unified sync is already in progress', async () => {
-    // Make runSync hang so the first request keeps unifiedSyncInProgress=true
     let resolveSync
-    const rosterSync = require('../../../../shared/server/roster-sync')
-    const origRunSync = rosterSync.runSync
-    rosterSync.runSync = () => new Promise(r => { resolveSync = r })
+    const consolidatedSync = require('../../../../shared/server/roster-sync/consolidated-sync')
+    const origRunSync = consolidatedSync.runConsolidatedSync
+    consolidatedSync.runConsolidatedSync = () => new Promise(r => { resolveSync = r })
 
     try {
       const app = createApp()
@@ -225,14 +225,14 @@ describe('Unified Sync Endpoint', () => {
       if (resolveSync) resolveSync({ status: 'success' })
       await new Promise(r => setTimeout(r, 100))
     } finally {
-      rosterSync.runSync = origRunSync
+      consolidatedSync.runConsolidatedSync = origRunSync
     }
   })
 
   it('skips Phase 2 when Phase 1 returns error', async () => {
-    const rosterSync = require('../../../../shared/server/roster-sync')
-    const origRunSync = rosterSync.runSync
-    rosterSync.runSync = vi.fn(async () => ({ status: 'error', error: 'LDAP timeout' }))
+    const consolidatedSync = require('../../../../shared/server/roster-sync/consolidated-sync')
+    const origRunSync = consolidatedSync.runConsolidatedSync
+    consolidatedSync.runConsolidatedSync = vi.fn(async () => ({ status: 'error', message: 'LDAP timeout' }))
 
     const orgTeams = require('../../server/routes/org-teams')
     let phase2Called = false
@@ -250,15 +250,15 @@ describe('Unified Sync Endpoint', () => {
 
       expect(phase2Called).toBe(false)
     } finally {
-      rosterSync.runSync = origRunSync
+      consolidatedSync.runConsolidatedSync = origRunSync
       orgTeams.getTriggerOrgSync = origGetTrigger
     }
   })
 
   it('skips Phase 2 when Phase 1 returns skipped', async () => {
-    const rosterSync = require('../../../../shared/server/roster-sync')
-    const origRunSync = rosterSync.runSync
-    rosterSync.runSync = vi.fn(async () => ({ status: 'skipped' }))
+    const consolidatedSync = require('../../../../shared/server/roster-sync/consolidated-sync')
+    const origRunSync = consolidatedSync.runConsolidatedSync
+    consolidatedSync.runConsolidatedSync = vi.fn(async () => ({ status: 'skipped' }))
 
     const orgTeams = require('../../server/routes/org-teams')
     let phase2Called = false
@@ -275,15 +275,15 @@ describe('Unified Sync Endpoint', () => {
 
       expect(phase2Called).toBe(false)
     } finally {
-      rosterSync.runSync = origRunSync
+      consolidatedSync.runConsolidatedSync = origRunSync
       orgTeams.getTriggerOrgSync = origGetTrigger
     }
   })
 
   it('calls Phase 2 when Phase 1 succeeds', async () => {
-    const rosterSync = require('../../../../shared/server/roster-sync')
-    const origRunSync = rosterSync.runSync
-    rosterSync.runSync = vi.fn(async () => ({ status: 'success' }))
+    const consolidatedSync = require('../../../../shared/server/roster-sync/consolidated-sync')
+    const origRunSync = consolidatedSync.runConsolidatedSync
+    consolidatedSync.runConsolidatedSync = vi.fn(async () => ({ status: 'success' }))
 
     const orgTeams = require('../../server/routes/org-teams')
     let phase2Called = false
@@ -300,7 +300,7 @@ describe('Unified Sync Endpoint', () => {
 
       expect(phase2Called).toBe(true)
     } finally {
-      rosterSync.runSync = origRunSync
+      consolidatedSync.runConsolidatedSync = origRunSync
       orgTeams.getTriggerOrgSync = origGetTrigger
     }
   })
@@ -309,13 +309,13 @@ describe('Unified Sync Endpoint', () => {
 describe('Extended Status Endpoint', () => {
   beforeEach(() => {
     Object.keys(mockStorage).forEach(key => delete mockStorage[key])
-    mockRosterSync.syncInProgress = false
+    mockConsolidatedSync.syncInProgress = false
     storageMock.readFromStorage.mockImplementation((key) => mockStorage[key] || null)
     storageMock.writeToStorage.mockImplementation((key, data) => { mockStorage[key] = data })
   })
 
   it('returns extended status with phases and staleness', async () => {
-    mockStorage['roster-sync-config.json'] = {
+    mockStorage['team-data/config.json'] = {
       orgRoots: [{ uid: 'test', displayName: 'Test' }],
       lastSyncAt: new Date().toISOString(),
       lastSyncStatus: 'success',
@@ -350,7 +350,7 @@ describe('Extended Status Endpoint', () => {
 
   it('reports stale when sync timestamps are old', async () => {
     const oldDate = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() // 3 days ago
-    mockStorage['roster-sync-config.json'] = {
+    mockStorage['team-data/config.json'] = {
       orgRoots: [{ uid: 'test', displayName: 'Test' }],
       lastSyncAt: oldDate,
       lastSyncStatus: 'success'

@@ -10,7 +10,7 @@ const FIXTURES_DIR = path.join(__dirname, '..', '..', 'fixtures');
 
 /**
  * Read JSON from fixtures directory
- * @param {string} key - Path relative to fixtures/ (e.g., 'org-roster-full.json' or 'people/name.json')
+ * @param {string} key - Path relative to fixtures/ (e.g., 'team-data/registry.json' or 'people/name.json')
  * @returns {object|null} Parsed JSON or null if not found
  */
 function readFromStorage(key) {

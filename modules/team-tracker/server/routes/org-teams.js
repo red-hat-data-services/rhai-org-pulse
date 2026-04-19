@@ -27,7 +27,8 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
   const DEMO_MODE = process.env.DEMO_MODE === 'true';
 
   function getSheetId() {
-    const config = readFromStorage('roster-sync-config.json');
+    const rosterSyncConfig = require('../../../../shared/server/roster-sync/config');
+    const config = rosterSyncConfig.loadConfig(storage);
     return config?.googleSheetId || null;
   }
 
@@ -459,7 +460,7 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
 
   if (!DEMO_MODE) {
     setTimeout(function() {
-      const rosterData = readFromStorage('org-roster-full.json');
+      const rosterData = readFromStorage('team-data/registry.json');
       if (rosterData) {
         triggerOrgSync().catch(function(err) {
           console.error('[team-tracker] Initial org sync error:', err.message);

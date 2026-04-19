@@ -208,7 +208,8 @@ function redactBundle(bundle, mode, storageModule) {
   }
 
   // Aggressive: build mapping from roster, then walk the tree
-  const roster = storageModule.readFromStorage('org-roster-full.json')
+  const { readRosterFull } = require('../shared/server/roster')
+  const roster = readRosterFull(storageModule)
   const mapping = roster ? buildMapping(roster) : null
   const stripped = stripSecrets(bundle)
   if (!mapping) return stripped

@@ -55,10 +55,10 @@ npm run dev:full       # Starts Vite (5173) + Express (3001)
 ## Key Concepts
 
 ### Data Flow
-- **Roster**: `data/org-roster-full.json` defines all orgs, teams, and members. Built automatically by roster sync (LDAP + Google Sheets). The `deriveRoster()` function transforms this into the API response format.
+- **Roster**: `data/team-data/registry.json` is the single source of truth for all people data (built by consolidated sync: LDAP + Google Sheets + lifecycle tracking). `readRosterFull()` in `shared/server/roster.js` transforms this into the legacy `{ orgs: { key: { leader, members } } }` shape, which `deriveRoster()` then transforms into the API response format.
 - **Person metrics**: Individual Jira stats stored as `data/people/{name}.json`. Fetched via JQL queries against Jira with 365-day lookback.
 - **GitHub contributions**: `data/github-contributions.json` stores contribution counts per user. `data/github-history.json` stores monthly history. Fetched via GitHub GraphQL API with `GITHUB_TOKEN`.
-- **GitLab contributions**: `data/gitlab-contributions.json` and `data/gitlab-history.json`. Fetched via GitLab GraphQL API across one or more configured instances (see `gitlabInstances` in roster-sync-config). Each user entry may include an `instances` array for per-instance contribution breakdowns.
+- **GitLab contributions**: `data/gitlab-contributions.json` and `data/gitlab-history.json`. Fetched via GitLab GraphQL API across one or more configured instances (see `gitlabInstances` in `team-data/config.json`). Each user entry may include an `instances` array for per-instance contribution breakdowns.
 - **Snapshots**: Monthly metric snapshots stored in `data/snapshots/{sanitized-teamKey}/{YYYY-MM-DD}.json` (teamKey sanitized: `::` → `--`, special chars → `_`). Generated from person metrics + GitHub/GitLab history. Admin can delete all via Settings > Snapshots.
 - **Trends**: Built dynamically from person metric files by bucketing resolved issues by month, with org/team breakdowns.
 - **Site config**: `data/site-config.json` stores platform-level settings (title prefix). Editable by admins via Settings > General.
@@ -73,8 +73,8 @@ Automated roster building that replaces manual scripts:
 - **Google Sheets** (`sheets.js`): Enriches LDAP data with team assignments, focus areas, etc. Sheet names are auto-discovered from the spreadsheet ID.
   - Auth via `GOOGLE_SERVICE_ACCOUNT_KEY_FILE` env var pointing to a service account JSON key.
 - **Username Inference** (`username-inference.js`): Optionally infers missing GitHub/GitLab usernames by fuzzy-matching roster people against GitHub org members or GitLab group members. Configured via Settings UI (`githubOrgs`, `gitlabInstances`). Supports per-instance GitLab credentials; falls back to legacy `gitlabGroups` if `gitlabInstances` is absent.
-- **Config** (`config.js`): Org roots, Google Sheet ID, username inference settings, and excluded job titles stored in `data/roster-sync-config.json`, managed via Settings UI.
-- **Scheduler** (`index.js`): Runs sync daily (24h interval). Can be triggered manually via API or Settings UI.
+- **Config** (`config.js`): Org roots, Google Sheet ID, username inference settings, excluded job titles, `gracePeriodDays`, and `autoSync` stored in `data/team-data/config.json`, managed via Settings UI. Legacy `roster-sync-config.json` is auto-migrated on first load (idempotent, guarded by `_migratedFrom` flag).
+- **Consolidated Sync** (`consolidated-sync.js`): Single sync pipeline replacing both the old `index.js` roster sync and `ipa-registry.js` IPA sync. Handles LDAP traversal, Sheets enrichment, username inference, lifecycle merge, and registry write. `index.js` is a barrel re-export. Can be triggered manually via API or Settings UI.
 
 ### Jira Integration (Jira Cloud — redhat.atlassian.net)
 - Auth: Basic auth with `JIRA_EMAIL` + `JIRA_TOKEN` (API token), base64-encoded

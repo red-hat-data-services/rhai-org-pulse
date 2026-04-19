@@ -1,16 +1,53 @@
 /**
  * Shared roster data access layer.
- * Reads org-roster-full.json and provides query functions
- * for use by any module that needs roster/people data.
+ * Reads team-data/registry.json and transforms to the legacy
+ * org-roster-full.json shape for backward compatibility.
  */
 
+const { loadConfig, getOrgDisplayNames } = require('./roster-sync/config');
+
 /**
- * Read the raw org-roster-full.json data.
+ * Read registry data and transform to the legacy roster format.
+ * Returns { orgs: { orgKey: { leader, members } }, generatedAt, vp }
+ * with flat githubUsername/gitlabUsername fields for compatibility.
+ *
  * @param {{ readFromStorage: Function }} storage
  * @returns {object|null}
  */
 function readRosterFull(storage) {
-  return storage.readFromStorage('org-roster-full.json');
+  const registry = storage.readFromStorage('team-data/registry.json');
+  if (!registry || !registry.people) return null;
+
+  const config = loadConfig(storage);
+  const orgRootUids = new Set((config?.orgRoots || []).map(r => r.uid));
+
+  // Group active people by orgRoot
+  const orgMap = {};
+  for (const [uid, person] of Object.entries(registry.people)) {
+    if (person.status !== 'active') continue;
+    const orgKey = person.orgRoot || 'unknown';
+    if (!orgMap[orgKey]) orgMap[orgKey] = { leader: null, members: [] };
+
+    // Transform structured github/gitlab back to flat fields
+    const flat = {
+      ...person,
+      githubUsername: person.github?.username || null,
+      gitlabUsername: person.gitlab?.username || null,
+    };
+
+    // Leader = person whose uid matches a configured orgRoot
+    if (orgRootUids.has(uid)) {
+      orgMap[orgKey].leader = flat;
+    } else {
+      orgMap[orgKey].members.push(flat);
+    }
+  }
+
+  return {
+    orgs: orgMap,
+    generatedAt: registry.meta?.generatedAt,
+    vp: registry.meta?.vp
+  };
 }
 
 /**
@@ -26,7 +63,7 @@ function getAllPeople(storage) {
   for (const [orgKey, orgData] of Object.entries(full.orgs)) {
     const allMembers = [orgData.leader, ...orgData.members];
     for (const person of allMembers) {
-      people.push({ ...person, orgKey });
+      if (person) people.push({ ...person, orgKey });
     }
   }
   return people;
@@ -43,6 +80,7 @@ function getPeopleByOrg(storage, orgKey) {
   if (!full || !full.orgs || !full.orgs[orgKey]) return [];
   const orgData = full.orgs[orgKey];
   return [orgData.leader, ...orgData.members]
+    .filter(Boolean)
     .map(p => ({ ...p, orgKey }));
 }
 
@@ -80,8 +118,6 @@ function getTeamRollup(people, fieldName) {
   }
   return [...values].sort();
 }
-
-const { getOrgDisplayNames } = require('./roster-sync/config');
 
 module.exports = {
   readRosterFull,
