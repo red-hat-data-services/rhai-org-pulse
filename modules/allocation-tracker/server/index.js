@@ -47,7 +47,8 @@ module.exports = function registerRoutes(router, context) {
     if (project && project !== 'RHOAIENG') {
       return moduleRead(`data/${project}/${key}`);
     }
-    return moduleRead(`data/RHOAIENG/${key}`) || moduleRead(key);
+    // RHOAIENG uses root-level storage (legacy); data/RHOAIENG/ is only a fallback
+    return moduleRead(key) || moduleRead(`data/RHOAIENG/${key}`);
   }
 
   /**

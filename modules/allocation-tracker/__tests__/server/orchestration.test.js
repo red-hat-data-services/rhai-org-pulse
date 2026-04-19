@@ -851,6 +851,32 @@ describe('performMultiProjectRefresh', () => {
     expect(result.projects[0].success).toBe(false);
     expect(result.projects[1].success).toBe(true);
   });
+
+  it('uses getDeps when provided instead of default prefix logic', async () => {
+    const customRead = vi.fn().mockImplementation((key) => {
+      if (key === 'teams.json') return { teams: [{ boardId: 1, boardName: 'Board A', enabled: true }] };
+      return null;
+    });
+    const customWrite = vi.fn();
+    const getDeps = vi.fn().mockReturnValue({ readStorage: customRead, writeStorage: customWrite });
+
+    const defaultReadStorage = vi.fn();
+    const defaultWriteStorage = vi.fn();
+
+    await performMultiProjectRefresh({
+      projects: [{ key: 'LEGACY', name: 'Legacy Project' }],
+      hardRefresh: false,
+      getDeps,
+      fetchSprints: vi.fn().mockResolvedValue([]),
+      fetchSprintIssues: vi.fn().mockResolvedValue([]),
+      readStorage: defaultReadStorage,
+      writeStorage: defaultWriteStorage
+    });
+
+    expect(getDeps).toHaveBeenCalledWith('LEGACY');
+    expect(customRead).toHaveBeenCalledWith('teams.json');
+    expect(defaultReadStorage).not.toHaveBeenCalled();
+  });
 });
 
 describe('processKanbanBoard', () => {
