@@ -691,7 +691,7 @@ export default {
       this.isRefreshing = true
       try {
         const refreshes = [refreshMetrics({ scope: 'all', force, sources })]
-        if (this.enabledBuiltInSlugs.includes('allocation-tracker')) {
+        if (this.enabledBuiltInSlugs?.includes('allocation-tracker')) {
           refreshes.push(
             apiRequest('/modules/allocation-tracker/refresh', {
               method: 'POST',
