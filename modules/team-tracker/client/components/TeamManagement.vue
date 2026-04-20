@@ -6,6 +6,7 @@ import { useRoster } from '@shared/client/composables/useRoster'
 const { teams, loading, demoToast, fetchTeams, createTeam, renameTeam, deleteTeam } = useTeams()
 const { orgs } = useRoster()
 
+const filterOrg = ref('')
 const showCreateModal = ref(false)
 const newTeamName = ref('')
 const newTeamOrg = ref('')
@@ -22,6 +23,19 @@ onMounted(() => fetchTeams())
 
 const orgKeys = computed(() => {
   return orgs.value.map(o => ({ key: o.key, displayName: o.displayName }))
+})
+
+const showOrgBadge = computed(() => !filterOrg.value)
+
+const orgDisplayMap = computed(() => {
+  const map = {}
+  for (const o of orgKeys.value) map[o.key] = o.displayName
+  return map
+})
+
+const filteredTeams = computed(() => {
+  if (!filterOrg.value) return teams.value
+  return teams.value.filter(t => t.orgKey === filterOrg.value)
 })
 
 watch(orgKeys, (keys) => {
@@ -80,12 +94,23 @@ async function handleDelete(teamId) {
   <div class="space-y-4">
     <div class="flex items-center justify-between">
       <h3 class="text-lg font-medium text-gray-900">Team Management</h3>
-      <button
-        class="px-4 py-2 bg-primary-600 text-white text-sm rounded hover:bg-primary-700"
-        @click="openCreateModal"
-      >
-        Create Team
-      </button>
+      <div class="flex items-center gap-3">
+        <select
+          v-model="filterOrg"
+          class="rounded border-gray-300 shadow-sm text-sm focus:ring-primary-500 focus:border-primary-500"
+        >
+          <option value="">All Orgs</option>
+          <option v-for="org in orgKeys" :key="org.key" :value="org.key">
+            {{ org.displayName }}
+          </option>
+        </select>
+        <button
+          class="px-4 py-2 bg-primary-600 text-white text-sm rounded hover:bg-primary-700"
+          @click="openCreateModal"
+        >
+          Create Team
+        </button>
+      </div>
     </div>
 
     <div v-if="demoInfo" class="p-3 bg-blue-50 border border-blue-200 rounded text-blue-700 text-sm">
@@ -98,7 +123,7 @@ async function handleDelete(teamId) {
     <!-- Team list -->
     <div v-if="loading" class="text-sm text-gray-500">Loading teams...</div>
     <ul v-else class="divide-y divide-gray-200 border rounded">
-      <li v-for="team in teams" :key="team.id" class="flex items-center justify-between p-3">
+      <li v-for="team in filteredTeams" :key="team.id" class="flex items-center justify-between p-3">
         <div v-if="editingTeamId === team.id" class="flex items-center gap-2 flex-1">
           <input
             v-model="editName"
@@ -111,15 +136,15 @@ async function handleDelete(teamId) {
         </div>
         <div v-else class="flex items-center gap-2 flex-1">
           <span class="font-medium text-gray-900">{{ team.name }}</span>
-          <span class="text-xs text-gray-500">{{ team.orgKey }}</span>
+          <span v-if="showOrgBadge" class="text-xs text-gray-500 bg-gray-100 dark:bg-gray-700 dark:text-gray-400 px-1.5 py-0.5 rounded">{{ orgDisplayMap[team.orgKey] || team.orgKey }}</span>
         </div>
         <div v-if="editingTeamId !== team.id" class="flex items-center gap-2">
           <button class="text-sm text-gray-500 hover:text-gray-700" @click="startEdit(team)">Rename</button>
           <button class="text-sm text-red-500 hover:text-red-700" @click="handleDelete(team.id)">Delete</button>
         </div>
       </li>
-      <li v-if="teams.length === 0" class="p-3 text-sm text-gray-500 text-center">
-        No teams created yet
+      <li v-if="filteredTeams.length === 0" class="p-3 text-sm text-gray-500 text-center">
+        No teams {{ filterOrg ? 'in this org' : 'created yet' }}
       </li>
     </ul>
 
