@@ -155,11 +155,13 @@ function getSpecialty(member) {
 }
 
 function getStatus(member) {
-  return member.status || member.customFields?.status || 'Confirmed'
+  const cf = member.customFields
+  return member.status || cf?.status || 'Confirmed'
 }
 
 function getComponent(member) {
-  return member.customFields?.component || member.component || '—'
+  const cf = member.customFields
+  return cf?.component || cf?.jiraComponent || member.component || '—'
 }
 
 function getLocation(member) {
