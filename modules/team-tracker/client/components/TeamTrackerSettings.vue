@@ -39,6 +39,7 @@
           In-App mode stores team structure locally. If migrating from Sheets, use the button below to copy existing team/assignment data.
         </p>
         <button
+          v-if="!alreadyMigrated"
           @click="showMigrateConfirm = true"
           :disabled="migrating"
           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -49,6 +50,9 @@
           </svg>
           {{ migrating ? 'Migrating...' : 'Migrate from Sheets' }}
         </button>
+        <p v-if="alreadyMigrated" class="text-sm text-green-600 dark:text-green-400">
+          Migration already completed on {{ new Date(config._migratedToInApp).toLocaleDateString() }}.
+        </p>
         <p v-if="migrateResult" class="mt-2 text-sm" :class="migrateError ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'">
           {{ migrateResult }}
         </p>
@@ -139,6 +143,8 @@ const migrating = ref(false)
 const migrateResult = ref(null)
 const migrateError = ref(false)
 
+const alreadyMigrated = computed(() => !!config.value?._migratedToInApp)
+
 // Initialize from config
 fetchConfig().then(() => {
   if (config.value) {
@@ -178,6 +184,7 @@ async function handleMigrate() {
   try {
     const result = await apiRequest('/modules/team-tracker/structure/migrate', { method: 'POST' })
     migrateResult.value = `Migration complete: ${result.teams} teams, ${result.assignments} assignments, ${result.fields} fields created.`
+    await fetchConfig()
   } catch (err) {
     migrateError.value = true
     migrateResult.value = `Migration failed: ${err.message}`
