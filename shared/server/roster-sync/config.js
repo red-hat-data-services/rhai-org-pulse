@@ -15,6 +15,10 @@ function loadConfig(storage) {
 
   const config = storage.readFromStorage(CONFIG_KEY);
   if (config) {
+    // Ensure teamDataSource has a default
+    if (!config.teamDataSource) {
+      config.teamDataSource = 'sheets';
+    }
     const migrated = migrateConfig(config);
     const instancesMigrated = migrateGitlabInstances(migrated, storage);
     return instancesMigrated;

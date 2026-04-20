@@ -284,6 +284,11 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/modules/ai-impact/features` — list all features (slim projection)
 - `/api/modules/ai-impact/features/:key` — single feature + history
 - `/api/modules/ai-impact/features/status` — feature data status (admin)
+- `/api/modules/team-tracker/permissions/me` — current user's permission tier and managed UIDs
+- `/api/modules/team-tracker/structure/teams` — list all teams (optional `orgKey` filter)
+- `/api/modules/team-tracker/structure/unassigned` — list unassigned people (query: `scope=direct|org|all`)
+- `/api/modules/team-tracker/structure/field-definitions` — list all field definitions (person + team)
+- `/api/modules/team-tracker/structure/audit-log` — query audit log (query: `from`, `to`, `action`, `actor`, `entityId`, `limit`, `offset`)
 
 **PUT:**
 - `/api/modules/ai-impact/assessments/:key` — upsert single assessment (admin)
@@ -312,6 +317,21 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/modules/feature-traffic/config` — save fetch configuration (admin)
 - `/api/modules/ai-impact/assessments/bulk` — bulk upsert assessments (admin)
 - `/api/modules/ai-impact/features/bulk` — bulk upsert features (admin)
+- `/api/modules/team-tracker/structure/teams` — create a new team `{ name, orgKey }` (admin/team-admin)
+- `/api/modules/team-tracker/structure/teams/:teamId/members` — assign person `{ uid }` (manager/admin)
+- `/api/modules/team-tracker/structure/teams/:teamId/members/bulk` — bulk assign `{ uids: [...] }` (manager/admin, all-or-nothing)
+- `/api/modules/team-tracker/structure/field-definitions/person` — create person-level field (admin/team-admin)
+- `/api/modules/team-tracker/structure/field-definitions/person/reorder` — reorder person fields (admin/team-admin)
+- `/api/modules/team-tracker/structure/field-definitions/team` — create team-level field (admin/team-admin)
+- `/api/modules/team-tracker/structure/field-definitions/team/reorder` — reorder team fields (admin/team-admin)
+- `/api/modules/team-tracker/structure/migrate` — trigger Sheets-to-in-app migration (admin)
+
+**PATCH:**
+- `/api/modules/team-tracker/structure/teams/:teamId` — rename a team (admin/team-admin)
+- `/api/modules/team-tracker/structure/field-definitions/person/:fieldId` — edit person field definition (admin/team-admin)
+- `/api/modules/team-tracker/structure/field-definitions/team/:fieldId` — edit team field definition (admin/team-admin)
+- `/api/modules/team-tracker/structure/person/:uid/fields` — update person field values (manager/admin)
+- `/api/modules/team-tracker/structure/teams/:teamId/fields` — update team field values (admin/team-admin)
 
 **DELETE:**
 - `/api/tokens/:id` — revoke own API token
@@ -319,6 +339,10 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/modules/team-tracker/snapshots` — delete all stored snapshots (admin)
 - `/api/modules/ai-impact/assessments` — clear all assessment data (admin)
 - `/api/modules/ai-impact/features` — clear all feature data (admin)
+- `/api/modules/team-tracker/structure/teams/:teamId` — delete a team (admin/team-admin)
+- `/api/modules/team-tracker/structure/teams/:teamId/members/:uid` — unassign person (manager/admin)
+- `/api/modules/team-tracker/structure/field-definitions/person/:fieldId` — soft-delete person field (admin/team-admin)
+- `/api/modules/team-tracker/structure/field-definitions/team/:fieldId` — soft-delete team field (admin/team-admin)
 
 **GET (snapshots):**
 - `/api/modules/team-tracker/snapshots/:teamKey` — all snapshots for a team

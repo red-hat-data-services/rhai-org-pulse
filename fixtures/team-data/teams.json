@@ -1,0 +1,38 @@
+{
+  "teams": {
+    "team_a1b2c3": {
+      "id": "team_a1b2c3",
+      "name": "Platform",
+      "orgKey": "achen",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "createdBy": "admin@example.com",
+      "metadata": {
+        "field_g7h8i9": "Pat Manager"
+      }
+    },
+    "team_d4e5f6": {
+      "id": "team_d4e5f6",
+      "name": "Infrastructure",
+      "orgKey": "achen",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "createdBy": "admin@example.com",
+      "metadata": {}
+    },
+    "team_j1k2l3": {
+      "id": "team_j1k2l3",
+      "name": "ML Platform",
+      "orgKey": "fjohnson",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "createdBy": "admin@example.com",
+      "metadata": {}
+    },
+    "team_m4n5o6": {
+      "id": "team_m4n5o6",
+      "name": "Data Pipeline",
+      "orgKey": "fjohnson",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "createdBy": "admin@example.com",
+      "metadata": {}
+    }
+  }
+}

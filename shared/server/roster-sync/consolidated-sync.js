@@ -95,8 +95,10 @@ async function runConsolidatedSync(storage) {
     }
 
     // ─── Phase 2: Google Sheets enrichment (on temp roster-shaped structure) ───
+    // Skip Sheets enrichment when team data source is "in-app" —
+    // in-app data lives in _appFields/teamIds which are NOT in ENRICHMENT_FIELDS
     var sheetsData = null;
-    if (config.googleSheetId) {
+    if (config.teamDataSource !== 'in-app' && config.googleSheetId) {
       try {
         console.log('[consolidated-sync] Fetching Google Sheets data...');
         sheetsData = await fetchSheetData(config.googleSheetId, config.sheetNames, config.customFields, config.teamStructure);

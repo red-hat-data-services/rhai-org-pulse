@@ -31,7 +31,9 @@ export function useRoster() {
         key: `${org.key}::${teamName}`,
         displayKey: org.displayName ? `${org.displayName}::${teamName}` : null,
         displayName: team.displayName,
-        members: team.members
+        members: team.members,
+        teamId: team.teamId || null,
+        metadata: team.metadata || {}
       }
     }
 

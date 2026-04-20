@@ -26,10 +26,12 @@ export function useAuth() {
   }
 
   const isAdmin = computed(() => user.value?.isAdmin === true)
+  const permissionTier = computed(() => user.value?.permissionTier || 'user')
 
   return {
     user,
     loading,
-    isAdmin
+    isAdmin,
+    permissionTier
   }
 }

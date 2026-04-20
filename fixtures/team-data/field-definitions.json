@@ -1,0 +1,45 @@
+{
+  "personFields": [
+    {
+      "id": "field_x1y2z3",
+      "label": "Focus Area",
+      "type": "free-text",
+      "required": false,
+      "visible": true,
+      "primaryDisplay": true,
+      "allowedValues": null,
+      "deleted": false,
+      "order": 0,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "createdBy": "admin@example.com"
+    },
+    {
+      "id": "field_d4e5f6",
+      "label": "Jira Component",
+      "type": "free-text",
+      "required": false,
+      "visible": true,
+      "primaryDisplay": false,
+      "allowedValues": null,
+      "deleted": false,
+      "order": 1,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "createdBy": "admin@example.com"
+    }
+  ],
+  "teamFields": [
+    {
+      "id": "field_g7h8i9",
+      "label": "Product Manager",
+      "type": "person-reference-unlinked",
+      "required": false,
+      "visible": true,
+      "primaryDisplay": false,
+      "allowedValues": null,
+      "deleted": false,
+      "order": 0,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "createdBy": "admin@example.com"
+    }
+  ]
+}

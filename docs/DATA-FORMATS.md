@@ -183,6 +183,7 @@ Stores the consolidated configuration for automated roster building (merged from
       }
     ]
   },
+  "teamDataSource": "sheets",
   "gracePeriodDays": 30,
   "autoSync": { "enabled": false, "intervalHours": 24 },
   "lastSyncAt": "2026-03-27T06:00:00.000Z",
@@ -201,6 +202,7 @@ Stores the consolidated configuration for automated roster building (merged from
 - `gracePeriodDays` controls how long inactive people are retained before purging (default 30).
 - `autoSync` controls the automatic sync scheduler (default disabled).
 - `lastSyncAt`, `lastSyncStatus`, `lastSyncError` are auto-populated during sync runs.
+- `teamDataSource` controls where team structure data lives: `"sheets"` (default, Google Sheets enrichment) or `"in-app"` (managed via the Team Structure Management UI). When `"in-app"`, Sheets Phase 2 enrichment is skipped during sync.
 - `_migratedFrom` is set to `"roster-sync-config.json"` after one-time migration from the legacy config file. The old file is never deleted (rollback safety net).
 
 ## Sync Log — `data/team-data/sync-log.json`
@@ -316,7 +318,9 @@ The single source of truth for all people data. Built by the consolidated sync p
       "lastSeenAt": "2026-03-27T06:00:00.000Z",
       "inactiveSince": null,
       "jiraTeam": "Platform",
-      "specialty": "backend"
+      "specialty": "backend",
+      "teamIds": ["team_a1b2c3"],
+      "_appFields": { "field_x1y2z3": "backend" }
     }
   }
 }
@@ -327,6 +331,8 @@ The single source of truth for all people data. Built by the consolidated sync p
 - `readRosterFull()` in `shared/server/roster.js` transforms this into the legacy `{ orgs: { key: { leader, members } } }` format for backward compatibility with `deriveRoster()` and downstream consumers.
 - Leaders are identified by matching a person's `uid` against the configured `orgRoots[].uid` values.
 - Enrichment fields from Google Sheets (`_teamGrouping`, `specialty`, `jiraTeam`, etc.) are stored as top-level fields on person records.
+- `teamIds` is an array of team IDs (e.g., `["team_a1b2c3"]`) linking the person to in-app managed teams. Defaults to `[]`. Only used when `teamDataSource` is `"in-app"`.
+- `_appFields` is an object mapping field definition IDs to values (e.g., `{ "field_x1y2z3": "backend" }`). Stores person-level custom field values managed in-app. The `_` prefix ensures it is not overwritten by Sheets enrichment during sync.
 
 **Derived roster API response (`GET /api/roster`):**
 - When multiple org roots share the same explicitly-configured `displayName` in config, `deriveRoster()` merges them into a single org entry.
@@ -339,6 +345,113 @@ The single source of truth for all people data. Built by the consolidated sync p
 ```json
 ["user1@example.com", "user2@example.com"]
 ```
+
+## Teams — `data/team-data/teams.json`
+
+Stores all in-app managed teams. Created when `teamDataSource` is set to `"in-app"` and teams are created via the Team Structure Management UI or migration.
+
+```json
+{
+  "teams": {
+    "team_a1b2c3": {
+      "id": "team_a1b2c3",
+      "name": "Platform",
+      "orgKey": "achen",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "createdBy": "admin@example.com",
+      "metadata": {
+        "field_g7h8i9": "Pat Manager"
+      }
+    }
+  }
+}
+```
+
+**Notes:**
+- `teams` is a `{ teamId: team }` map.
+- Team IDs follow the pattern `team_` + 6 hex characters (e.g., `team_a1b2c3`), generated via `crypto.randomBytes(3)`.
+- `orgKey` links the team to an org root UID.
+- `metadata` stores team-level custom field values, keyed by field definition ID. Empty object `{}` when no team fields are set.
+- `createdBy` is the email of the user who created the team.
+
+## Field Definitions — `data/team-data/field-definitions.json`
+
+Stores custom field definitions for person-level and team-level fields. Created when `teamDataSource` is set to `"in-app"` and fields are defined via the Field Definitions UI or migration.
+
+```json
+{
+  "personFields": [
+    {
+      "id": "field_x1y2z3",
+      "label": "Focus Area",
+      "type": "free-text",
+      "required": false,
+      "visible": true,
+      "primaryDisplay": true,
+      "allowedValues": null,
+      "deleted": false,
+      "order": 0,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "createdBy": "admin@example.com"
+    }
+  ],
+  "teamFields": [
+    {
+      "id": "field_g7h8i9",
+      "label": "Product Manager",
+      "type": "person-reference-unlinked",
+      "required": false,
+      "visible": true,
+      "primaryDisplay": false,
+      "allowedValues": null,
+      "deleted": false,
+      "order": 0,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "createdBy": "admin@example.com"
+    }
+  ]
+}
+```
+
+**Notes:**
+- `personFields` and `teamFields` are arrays sorted by `order`.
+- Field IDs follow the pattern `field_` + 6 hex characters (e.g., `field_x1y2z3`).
+- `type` is one of: `"free-text"`, `"person-reference-linked"`, `"person-reference-unlinked"`.
+- `deleted` supports soft-delete — deleted fields are hidden from the UI but values are preserved.
+- `allowedValues` is reserved for future use (currently always `null`).
+- At most one person field can have `primaryDisplay: true`.
+
+## Audit Log — `data/audit-log.json`
+
+Append-only log of team structure management actions. Entries are added by team, field, and migration operations.
+
+```json
+{
+  "entries": [
+    {
+      "id": "evt_demo0001",
+      "timestamp": "2026-01-15T10:00:00.000Z",
+      "actor": "admin@example.com",
+      "action": "team.create",
+      "entityType": "team",
+      "entityId": "team_a1b2c3",
+      "entityLabel": "Platform",
+      "field": null,
+      "oldValue": null,
+      "newValue": null,
+      "detail": "Created team \"Platform\" in org achen"
+    }
+  ],
+  "maxEntries": 10000
+}
+```
+
+**Notes:**
+- `entries` is ordered newest-first (prepended). Capped at `maxEntries` (10,000) — oldest entries are trimmed.
+- `action` values include: `team.create`, `team.rename`, `team.delete`, `person.team.assign`, `person.team.unassign`, `person.fields.update`, `team.fields.update`, `field.create`, `field.update`, `field.delete`, `field.reorder`, `migration.sheets_to_inapp`.
+- `entityType` is one of: `"team"`, `"person"`, `"field"`, `"system"`.
+- `field`, `oldValue`, `newValue` are used for change-tracking (e.g., rename, field value updates). `null` when not applicable.
+- `detail` is a human-readable summary of the action.
 
 ---
 

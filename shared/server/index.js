@@ -5,6 +5,7 @@ const googleSheets = require('./google-sheets')
 const roster = require('./roster')
 const rosterSync = require('./roster-sync')
 const jira = require('./jira')
+const permissions = require('./permissions')
 
 module.exports = {
   storage,
@@ -14,5 +15,6 @@ module.exports = {
   googleSheets,
   roster,
   rosterSync,
-  jira
+  jira,
+  permissions
 }

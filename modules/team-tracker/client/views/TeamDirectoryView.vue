@@ -1,12 +1,17 @@
 <script setup>
-import { ref, onMounted, inject } from 'vue'
+import { ref, computed, onMounted, inject } from 'vue'
 import { useOrgRoster } from '../composables/useOrgRoster'
+import { useRoster } from '@shared/client/composables/useRoster'
+import { usePermissions } from '@shared/client/composables/usePermissions'
 import OrgSelector from '../components/OrgSelector.vue'
 import TeamCard from '../components/TeamCard.vue'
 
 const nav = inject('moduleNav')
 const { orgs, selectedOrg, loading, searchQuery, sortBy, filteredTeams, totalPeople, unassigned, loadTeams, loadOrgs } = useOrgRoster()
+const { rosterData } = useRoster()
+const { isAdmin } = usePermissions()
 const unassignedExpanded = ref(false)
+const isInAppMode = computed(() => rosterData.value?.teamDataSource === 'in-app')
 
 function openTeam(team) {
   nav.navigateTo('team-detail', { teamKey: `${team.org}::${team.name}` })
@@ -93,6 +98,16 @@ onMounted(async () => {
             {{ person.name }}
           </button>
         </div>
+        <button
+          v-if="isAdmin && isInAppMode"
+          @click="nav.navigateTo('unassigned')"
+          class="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/30 rounded-md hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors"
+        >
+          <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          Manage Unassigned
+        </button>
       </div>
     </div>
 

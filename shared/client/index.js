@@ -1,5 +1,8 @@
 export { useRoster } from './composables/useRoster.js'
 export { useAuth } from './composables/useAuth.js'
+export { usePermissions } from './composables/usePermissions.js'
+export { useTeams } from './composables/useTeams.js'
+export { useFieldDefinitions } from './composables/useFieldDefinitions.js'
 export { useGithubStats } from './composables/useGithubStats.js'
 export { useGitlabStats } from './composables/useGitlabStats.js'
 export { useAllowlist } from './composables/useAllowlist.js'

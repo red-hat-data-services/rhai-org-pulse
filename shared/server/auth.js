@@ -4,6 +4,7 @@
  */
 
 const crypto = require('crypto');
+const { getPermissionTier } = require('./permissions');
 
 function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
   const { tokenValidator } = options;
@@ -43,6 +44,21 @@ function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
     }
   }
 
+  function resolveUserUid(req) {
+    const registry = readFromStorage('team-data/registry.json');
+    req.userUid = null;
+    if (registry && registry.people) {
+      for (const [uid, person] of Object.entries(registry.people)) {
+        if (person.status !== 'active') continue;
+        if (person.email && person.email.toLowerCase() === req.userEmail) {
+          req.userUid = uid;
+          break;
+        }
+      }
+    }
+    req.permissionTier = getPermissionTier(req.userUid, registry, req.isAdmin);
+  }
+
   async function authMiddleware(req, res, next) {
     if (req.method === 'OPTIONS') return next()
 
@@ -62,6 +78,7 @@ function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
         req.authMethod = 'token';
         // Update lastUsedAt (fire-and-forget, throttled)
         tokenValidator.touchLastUsed(tokenRecord.id);
+        resolveUserUid(req);
         return next();
       }
       // No token validator configured — reject token auth
@@ -84,6 +101,7 @@ function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
     }
 
     req.isAdmin = isAdmin(req.userEmail)
+    resolveUserUid(req);
     next()
   }
 

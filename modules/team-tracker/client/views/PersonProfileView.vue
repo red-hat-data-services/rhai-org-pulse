@@ -5,10 +5,20 @@ import { useAuth } from '@shared/client/composables/useAuth.js'
 import { useRoster } from '@shared/client/composables/useRoster.js'
 import { useGithubStats } from '@shared/client/composables/useGithubStats.js'
 import { useGitlabStats } from '@shared/client/composables/useGitlabStats.js'
+import { usePermissions } from '@shared/client/composables/usePermissions.js'
+import { useFieldDefinitions } from '@shared/client/composables/useFieldDefinitions.js'
+import PersonFieldEditor from '../components/PersonFieldEditor.vue'
 
 const nav = inject('moduleNav')
 const { isAdmin } = useAuth()
-const { getTeamsForPerson, teams: allTeams } = useRoster()
+const { getTeamsForPerson, teams: allTeams, rosterData } = useRoster()
+const { canEdit } = usePermissions()
+const { definitions, fetchDefinitions } = useFieldDefinitions()
+
+const isInAppMode = computed(() => rosterData.value?.teamDataSource === 'in-app')
+const visiblePersonFields = computed(() =>
+  (definitions.value.personFields || []).filter(f => f.visible && !f.deleted)
+)
 const { getContributions: getGithubContributions } = useGithubStats()
 const { getContributions: getGitlabContributions, loadGitlabStats } = useGitlabStats()
 
@@ -37,13 +47,17 @@ const rosterMember = computed(() => {
 })
 
 const personComponent = computed(() => {
-  return rosterMember.value?.customFields?.component || null
+  const cf = rosterMember.value?.customFields
+  if (!cf) return null
+  // Try human-readable key (Sheets mode) then fall back to iterating fields
+  return cf.component || cf.jiraComponent || null
 })
 
 const engineeringSpeciality = computed(() => {
-  return rosterMember.value?.customFields?.engineeringSpeciality
-    || rosterMember.value?.engineeringSpeciality
-    || null
+  const cf = rosterMember.value?.customFields
+  if (cf?.engineeringSpeciality) return cf.engineeringSpeciality
+  if (cf?.specialty) return cf.specialty
+  return rosterMember.value?.engineeringSpeciality || null
 })
 
 const person = ref(null)
@@ -174,6 +188,7 @@ watch([uid, personName], loadPerson)
 onMounted(() => {
   loadPerson()
   loadGitlabStats()
+  fetchDefinitions()
 })
 </script>
 
@@ -407,6 +422,18 @@ onMounted(() => {
                 </tbody>
               </table>
             </div>
+          </div>
+
+          <!-- Custom Fields (in-app mode) -->
+          <div v-if="isInAppMode && visiblePersonFields.length > 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4 uppercase tracking-wider">Custom Fields</h3>
+            <PersonFieldEditor
+              :uid="person.uid"
+              :customFields="rosterMember?._appFields || {}"
+              :fieldDefinitions="visiblePersonFields"
+              :canEdit="canEdit(person.uid)"
+              @updated="loadPerson"
+            />
           </div>
 
           <!-- Metadata -->

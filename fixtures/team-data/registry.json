@@ -30,7 +30,12 @@
       "inactiveSince": null,
       "_teamGrouping": "Platform",
       "jiraTeam": "Platform",
-      "specialty": "backend"
+      "specialty": "backend",
+      "teamIds": ["team_a1b2c3"],
+      "_appFields": {
+        "field_x1y2z3": "backend",
+        "field_d4e5f6": "Platform Core"
+      }
     },
     "bsmith": {
       "uid": "bsmith",
@@ -53,7 +58,11 @@
       "inactiveSince": null,
       "_teamGrouping": "Platform",
       "jiraTeam": "Platform",
-      "specialty": "backend"
+      "specialty": "backend",
+      "teamIds": ["team_a1b2c3"],
+      "_appFields": {
+        "field_x1y2z3": "backend"
+      }
     },
     "cwilliams": {
       "uid": "cwilliams",
@@ -66,7 +75,7 @@
       "location": null,
       "officeLocation": null,
       "costCenter": null,
-      "managerUid": "achen",
+      "managerUid": "bsmith",
       "orgRoot": "achen",
       "github": { "username": "carolw", "source": "ldap" },
       "gitlab": { "username": "carolw", "source": "ldap" },
@@ -76,7 +85,11 @@
       "inactiveSince": null,
       "_teamGrouping": "Platform",
       "jiraTeam": "Platform",
-      "specialty": "fullstack"
+      "specialty": "fullstack",
+      "teamIds": ["team_a1b2c3"],
+      "_appFields": {
+        "field_x1y2z3": "fullstack"
+      }
     },
     "dlee": {
       "uid": "dlee",
@@ -99,7 +112,11 @@
       "inactiveSince": null,
       "_teamGrouping": "Infrastructure",
       "jiraTeam": "Infrastructure",
-      "specialty": "backend"
+      "specialty": "backend",
+      "teamIds": ["team_d4e5f6"],
+      "_appFields": {
+        "field_x1y2z3": "backend"
+      }
     },
     "egarcia": {
       "uid": "egarcia",
@@ -122,7 +139,11 @@
       "inactiveSince": null,
       "_teamGrouping": "Infrastructure",
       "jiraTeam": "Infrastructure",
-      "specialty": "devops"
+      "specialty": "devops",
+      "teamIds": ["team_d4e5f6"],
+      "_appFields": {
+        "field_x1y2z3": "devops"
+      }
     },
     "fjohnson": {
       "uid": "fjohnson",
@@ -145,7 +166,11 @@
       "inactiveSince": null,
       "_teamGrouping": "ML Platform",
       "jiraTeam": "ML Platform",
-      "specialty": "ml"
+      "specialty": "ml",
+      "teamIds": ["team_j1k2l3"],
+      "_appFields": {
+        "field_x1y2z3": "ml"
+      }
     },
     "gkim": {
       "uid": "gkim",
@@ -168,7 +193,11 @@
       "inactiveSince": null,
       "_teamGrouping": "ML Platform",
       "jiraTeam": "ML Platform",
-      "specialty": "ml"
+      "specialty": "ml",
+      "teamIds": ["team_j1k2l3"],
+      "_appFields": {
+        "field_x1y2z3": "ml"
+      }
     },
     "hwilson": {
       "uid": "hwilson",
@@ -191,7 +220,11 @@
       "inactiveSince": null,
       "_teamGrouping": "ML Platform",
       "jiraTeam": "ML Platform",
-      "specialty": "ml"
+      "specialty": "ml",
+      "teamIds": ["team_j1k2l3"],
+      "_appFields": {
+        "field_x1y2z3": "ml"
+      }
     },
     "imartinez": {
       "uid": "imartinez",
@@ -214,7 +247,11 @@
       "inactiveSince": null,
       "_teamGrouping": "Data Pipeline",
       "jiraTeam": "Data Pipeline",
-      "specialty": "data"
+      "specialty": "data",
+      "teamIds": ["team_m4n5o6"],
+      "_appFields": {
+        "field_x1y2z3": "data"
+      }
     },
     "jbrown": {
       "uid": "jbrown",
@@ -237,7 +274,11 @@
       "inactiveSince": null,
       "_teamGrouping": "Data Pipeline",
       "jiraTeam": "Data Pipeline",
-      "specialty": "backend"
+      "specialty": "backend",
+      "teamIds": ["team_m4n5o6"],
+      "_appFields": {
+        "field_x1y2z3": "backend"
+      }
     }
   }
 }

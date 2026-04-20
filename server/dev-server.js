@@ -212,6 +212,7 @@ app.get('/api/whoami', function(req, res) {
     email: req.userEmail,
     displayName,
     isAdmin: req.isAdmin,
+    permissionTier: req.permissionTier || (req.isAdmin ? 'admin' : 'user'),
     authMethod: req.authMethod || (req.headers['x-forwarded-email'] ? 'proxy' : 'local-dev')
   });
 });
