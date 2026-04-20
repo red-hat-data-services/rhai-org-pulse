@@ -607,7 +607,7 @@ module.exports = function registerRoutes(router, context) {
     res.json(defs);
   });
 
-  const VALID_FIELD_TYPES = ['free-text', 'person-reference-linked', 'person-reference-unlinked'];
+  const VALID_FIELD_TYPES = ['free-text', 'constrained', 'person-reference-linked', 'person-reference-unlinked'];
 
   router.post('/structure/field-definitions/person', requireAdmin, function(req, res) {
     const guard = demoWriteGuard(res);

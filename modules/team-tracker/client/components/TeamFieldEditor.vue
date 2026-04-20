@@ -53,7 +53,16 @@ async function saveEdit(fieldId) {
     <div v-for="field in visibleFields" :key="field.id" class="flex items-center gap-2">
       <span class="text-sm text-gray-600 w-32 shrink-0">{{ field.label }}:</span>
       <template v-if="editingFieldId === field.id">
+        <select
+          v-if="field.type === 'constrained' && field.allowedValues"
+          v-model="editValue"
+          class="flex-1 rounded border-gray-300 text-sm"
+        >
+          <option value="">— None —</option>
+          <option v-for="opt in field.allowedValues" :key="opt" :value="opt">{{ opt }}</option>
+        </select>
         <input
+          v-else
           v-model="editValue"
           class="flex-1 rounded border-gray-300 text-sm"
           @keyup.enter="saveEdit(field.id)"

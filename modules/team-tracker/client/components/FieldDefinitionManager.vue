@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useFieldDefinitions } from '@shared/client/composables/useFieldDefinitions'
 
 const { definitions, loading, demoToast, fetchDefinitions, createField, updateField, deleteField } = useFieldDefinitions()
@@ -8,8 +8,13 @@ const activeTab = ref('person')
 const showCreateModal = ref(false)
 const newFieldLabel = ref('')
 const newFieldType = ref('free-text')
+const newFieldOptions = ref([])
+const newOptionInput = ref('')
 const editingFieldId = ref(null)
 const editLabel = ref('')
+const showOptionsModal = ref(null)
+const editOptions = ref([])
+const editOptionInput = ref('')
 const error = ref(null)
 const demoInfo = ref(null)
 
@@ -24,31 +29,55 @@ const fieldTypes = [
   { value: 'person-reference-unlinked', label: 'Person Reference (unlinked)' }
 ]
 
+const fieldTypeLabels = Object.fromEntries(fieldTypes.map(t => [t.value, t.label]))
+
 onMounted(() => fetchDefinitions())
 
-const activeFields = () => {
+const activeFields = computed(() => {
   const key = activeTab.value === 'person' ? 'personFields' : 'teamFields'
   return (definitions.value[key] || []).filter(f => !f.deleted)
-}
+})
 
 function openCreateModal() {
   newFieldLabel.value = ''
   newFieldType.value = 'free-text'
+  newFieldOptions.value = []
+  newOptionInput.value = ''
   error.value = null
   showCreateModal.value = true
 }
 
+function addNewOption() {
+  const val = newOptionInput.value.trim()
+  if (val && !newFieldOptions.value.includes(val)) {
+    newFieldOptions.value.push(val)
+  }
+  newOptionInput.value = ''
+}
+
+function removeNewOption(index) {
+  newFieldOptions.value.splice(index, 1)
+}
+
+const createDisabled = computed(() => {
+  if (!newFieldLabel.value.trim()) return true
+  if (newFieldType.value === 'constrained' && newFieldOptions.value.length === 0) return true
+  return false
+})
+
 async function handleCreate() {
-  if (!newFieldLabel.value.trim()) return
+  if (createDisabled.value) return
   error.value = null
   try {
-    await createField(activeTab.value, {
+    const body = {
       label: newFieldLabel.value.trim(),
       type: newFieldType.value
-    })
+    }
+    if (newFieldType.value === 'constrained') {
+      body.allowedValues = newFieldOptions.value
+    }
+    await createField(activeTab.value, body)
     showCreateModal.value = false
-    newFieldLabel.value = ''
-    newFieldType.value = 'free-text'
   } catch (e) {
     error.value = e.message || 'Failed to create field'
   }
@@ -67,6 +96,36 @@ async function saveEdit(fieldId) {
     editingFieldId.value = null
   } catch (e) {
     error.value = e.message || 'Failed to update field'
+  }
+}
+
+function openOptionsModal(field) {
+  showOptionsModal.value = field
+  editOptions.value = [...(field.allowedValues || [])]
+  editOptionInput.value = ''
+  error.value = null
+}
+
+function addEditOption() {
+  const val = editOptionInput.value.trim()
+  if (val && !editOptions.value.includes(val)) {
+    editOptions.value.push(val)
+  }
+  editOptionInput.value = ''
+}
+
+function removeEditOption(index) {
+  editOptions.value.splice(index, 1)
+}
+
+async function saveOptions() {
+  if (!showOptionsModal.value) return
+  error.value = null
+  try {
+    await updateField(activeTab.value, showOptionsModal.value.id, { allowedValues: editOptions.value })
+    showOptionsModal.value = null
+  } catch (e) {
+    error.value = e.message || 'Failed to update options'
   }
 }
 
@@ -114,14 +173,14 @@ async function toggleVisibility(field) {
     <div v-if="demoInfo" class="p-2 bg-blue-50 border border-blue-200 rounded text-blue-700 text-sm">
       {{ demoInfo }}
     </div>
-    <div v-if="error && !showCreateModal" class="p-2 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+    <div v-if="error && !showCreateModal && !showOptionsModal" class="p-2 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
       {{ error }}
     </div>
 
     <!-- Field list -->
     <div v-if="loading" class="text-sm text-gray-500">Loading...</div>
     <ul v-else class="divide-y divide-gray-200 border rounded">
-      <li v-for="field in activeFields()" :key="field.id" class="flex items-center justify-between p-3">
+      <li v-for="field in activeFields" :key="field.id" class="flex items-center justify-between p-3">
         <div v-if="editingFieldId === field.id" class="flex items-center gap-2 flex-1">
           <input
             v-model="editLabel"
@@ -134,7 +193,10 @@ async function toggleVisibility(field) {
         </div>
         <div v-else class="flex-1">
           <span class="font-medium text-gray-900">{{ field.label }}</span>
-          <span class="text-xs text-gray-500 ml-2">{{ field.type }}</span>
+          <span class="text-xs text-gray-500 ml-2">{{ fieldTypeLabels[field.type] || field.type }}</span>
+          <span v-if="field.type === 'constrained'" class="text-xs text-gray-400 ml-1">
+            ({{ (field.allowedValues || []).length }} options)
+          </span>
         </div>
         <div v-if="editingFieldId !== field.id" class="flex items-center gap-2">
           <button
@@ -144,11 +206,12 @@ async function toggleVisibility(field) {
           >
             {{ field.visible ? 'Visible' : 'Hidden' }}
           </button>
+          <button v-if="field.type === 'constrained'" class="text-sm text-gray-500 hover:text-gray-700" @click="openOptionsModal(field)">Options</button>
           <button class="text-sm text-gray-500 hover:text-gray-700" @click="startEdit(field)">Edit</button>
           <button class="text-sm text-red-500 hover:text-red-700" @click="handleDelete(field.id)">Delete</button>
         </div>
       </li>
-      <li v-if="activeFields().length === 0" class="p-3 text-sm text-gray-500 text-center">
+      <li v-if="activeFields.length === 0" class="p-3 text-sm text-gray-500 text-center">
         No fields defined yet
       </li>
     </ul>
@@ -170,7 +233,7 @@ async function toggleVisibility(field) {
               type="text"
               class="block w-full rounded border-gray-300 shadow-sm text-sm focus:ring-primary-500 focus:border-primary-500"
               placeholder="e.g., Focus Area"
-              @keyup.enter="handleCreate"
+              @keyup.enter="newFieldType !== 'constrained' && handleCreate()"
             >
           </div>
           <div>
@@ -182,6 +245,31 @@ async function toggleVisibility(field) {
               <option v-for="t in fieldTypes" :key="t.value" :value="t.value">{{ t.label }}</option>
             </select>
           </div>
+          <!-- Allowed values for constrained type -->
+          <div v-if="newFieldType === 'constrained'">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Options</label>
+            <div class="flex gap-2 mb-2">
+              <input
+                v-model="newOptionInput"
+                type="text"
+                class="block flex-1 rounded border-gray-300 shadow-sm text-sm focus:ring-primary-500 focus:border-primary-500"
+                placeholder="Add an option..."
+                @keyup.enter="addNewOption"
+              >
+              <button
+                type="button"
+                class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+                @click="addNewOption"
+              >Add</button>
+            </div>
+            <ul v-if="newFieldOptions.length > 0" class="space-y-1">
+              <li v-for="(opt, i) in newFieldOptions" :key="i" class="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 rounded px-3 py-1.5 text-sm">
+                <span class="text-gray-900 dark:text-gray-100">{{ opt }}</span>
+                <button class="text-red-500 hover:text-red-700 text-xs ml-2" @click="removeNewOption(i)">&times;</button>
+              </li>
+            </ul>
+            <p v-else class="text-xs text-gray-400 mt-1">Add at least one option.</p>
+          </div>
         </div>
         <div class="mt-6 flex justify-end gap-3">
           <button
@@ -190,9 +278,54 @@ async function toggleVisibility(field) {
           >Cancel</button>
           <button
             class="px-4 py-2 bg-primary-600 text-white text-sm rounded hover:bg-primary-700 disabled:opacity-50"
-            :disabled="!newFieldLabel.trim()"
+            :disabled="createDisabled"
             @click="handleCreate"
           >Add</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit Options Modal -->
+    <div v-if="showOptionsModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click.self="showOptionsModal = null">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          Options for "{{ showOptionsModal.label }}"
+        </h3>
+        <div v-if="error" class="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+          {{ error }}
+        </div>
+        <div class="space-y-3">
+          <div class="flex gap-2">
+            <input
+              v-model="editOptionInput"
+              type="text"
+              class="block flex-1 rounded border-gray-300 shadow-sm text-sm focus:ring-primary-500 focus:border-primary-500"
+              placeholder="Add an option..."
+              @keyup.enter="addEditOption"
+            >
+            <button
+              type="button"
+              class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-600"
+              @click="addEditOption"
+            >Add</button>
+          </div>
+          <ul v-if="editOptions.length > 0" class="space-y-1">
+            <li v-for="(opt, i) in editOptions" :key="i" class="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 rounded px-3 py-1.5 text-sm">
+              <span class="text-gray-900 dark:text-gray-100">{{ opt }}</span>
+              <button class="text-red-500 hover:text-red-700 text-xs ml-2" @click="removeEditOption(i)">&times;</button>
+            </li>
+          </ul>
+          <p v-else class="text-xs text-gray-400">No options defined.</p>
+        </div>
+        <div class="mt-6 flex justify-end gap-3">
+          <button
+            class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
+            @click="showOptionsModal = null"
+          >Cancel</button>
+          <button
+            class="px-4 py-2 bg-primary-600 text-white text-sm rounded hover:bg-primary-700"
+            @click="saveOptions"
+          >Save</button>
         </div>
       </div>
     </div>
