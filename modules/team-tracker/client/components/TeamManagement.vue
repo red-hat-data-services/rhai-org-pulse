@@ -1,10 +1,10 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useTeams } from '@shared/client/composables/useTeams'
 import { useRoster } from '@shared/client/composables/useRoster'
 
 const { teams, loading, demoToast, fetchTeams, createTeam, renameTeam, deleteTeam } = useTeams()
-const { roster } = useRoster()
+const { orgs } = useRoster()
 
 const newTeamName = ref('')
 const newTeamOrg = ref('')
@@ -19,15 +19,15 @@ watch(demoToast, (msg) => {
 
 onMounted(() => fetchTeams())
 
-const orgKeys = ref([])
-onMounted(() => {
-  if (roster.value?.orgs) {
-    orgKeys.value = roster.value.orgs.map(o => ({ key: o.key, displayName: o.displayName }))
-    if (orgKeys.value.length > 0 && !newTeamOrg.value) {
-      newTeamOrg.value = orgKeys.value[0].key
-    }
-  }
+const orgKeys = computed(() => {
+  return orgs.value.map(o => ({ key: o.key, displayName: o.displayName }))
 })
+
+watch(orgKeys, (keys) => {
+  if (keys.length > 0 && !newTeamOrg.value) {
+    newTeamOrg.value = keys[0].key
+  }
+}, { immediate: true })
 
 async function handleCreate() {
   if (!newTeamName.value.trim()) return
