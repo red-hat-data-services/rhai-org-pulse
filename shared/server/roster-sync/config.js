@@ -28,6 +28,8 @@ function loadConfig(storage) {
  * The old file is never deleted (rollback safety net).
  */
 function migrateFromLegacyConfig(storage) {
+  if (!storage.writeToStorage) return;
+
   var target = storage.readFromStorage(CONFIG_KEY);
 
   // Already migrated — skip
