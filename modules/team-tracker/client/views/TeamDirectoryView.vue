@@ -5,7 +5,7 @@ import OrgSelector from '../components/OrgSelector.vue'
 import TeamCard from '../components/TeamCard.vue'
 
 const nav = inject('moduleNav')
-const { orgs, selectedOrg, loading, searchQuery, sortBy, filteredTeams, unassigned, loadTeams, loadOrgs } = useOrgRoster()
+const { orgs, selectedOrg, loading, searchQuery, sortBy, filteredTeams, totalPeople, unassigned, loadTeams, loadOrgs } = useOrgRoster()
 const unassignedExpanded = ref(false)
 
 function openTeam(team) {
@@ -32,7 +32,7 @@ onMounted(async () => {
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
       <div>
         <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Team Directory</h2>
-        <p class="text-sm text-gray-500 dark:text-gray-400">{{ filteredTeams.length }} teams</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">{{ filteredTeams.length }} teams · {{ totalPeople }} people</p>
       </div>
       <div class="flex items-center gap-3">
         <div class="relative">
