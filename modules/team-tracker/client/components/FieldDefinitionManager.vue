@@ -5,6 +5,7 @@ import { useFieldDefinitions } from '@shared/client/composables/useFieldDefiniti
 const { definitions, loading, demoToast, fetchDefinitions, createField, updateField, deleteField } = useFieldDefinitions()
 
 const activeTab = ref('person')
+const showCreateModal = ref(false)
 const newFieldLabel = ref('')
 const newFieldType = ref('free-text')
 const editingFieldId = ref(null)
@@ -30,6 +31,13 @@ const activeFields = () => {
   return (definitions.value[key] || []).filter(f => !f.deleted)
 }
 
+function openCreateModal() {
+  newFieldLabel.value = ''
+  newFieldType.value = 'free-text'
+  error.value = null
+  showCreateModal.value = true
+}
+
 async function handleCreate() {
   if (!newFieldLabel.value.trim()) return
   error.value = null
@@ -38,6 +46,7 @@ async function handleCreate() {
       label: newFieldLabel.value.trim(),
       type: newFieldType.value
     })
+    showCreateModal.value = false
     newFieldLabel.value = ''
     newFieldType.value = 'free-text'
   } catch (e) {
@@ -78,7 +87,15 @@ async function toggleVisibility(field) {
 
 <template>
   <div class="space-y-4">
-    <h3 class="text-lg font-medium text-gray-900">Field Definitions</h3>
+    <div class="flex items-center justify-between">
+      <h3 class="text-lg font-medium text-gray-900">Field Definitions</h3>
+      <button
+        class="px-4 py-2 bg-primary-600 text-white text-sm rounded hover:bg-primary-700"
+        @click="openCreateModal"
+      >
+        Add Field
+      </button>
+    </div>
 
     <!-- Tabs -->
     <div class="flex border-b">
@@ -97,35 +114,8 @@ async function toggleVisibility(field) {
     <div v-if="demoInfo" class="p-2 bg-blue-50 border border-blue-200 rounded text-blue-700 text-sm">
       {{ demoInfo }}
     </div>
-    <div v-if="error" class="p-2 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+    <div v-if="error && !showCreateModal" class="p-2 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
       {{ error }}
-    </div>
-
-    <!-- Create form -->
-    <div class="flex items-end gap-3">
-      <div class="flex-1">
-        <label class="block text-sm font-medium text-gray-700 mb-1">Label</label>
-        <input
-          v-model="newFieldLabel"
-          type="text"
-          class="block w-full rounded border-gray-300 shadow-sm text-sm"
-          placeholder="e.g., Focus Area"
-          @keyup.enter="handleCreate"
-        >
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Type</label>
-        <select v-model="newFieldType" class="rounded border-gray-300 text-sm">
-          <option v-for="t in fieldTypes" :key="t.value" :value="t.value">{{ t.label }}</option>
-        </select>
-      </div>
-      <button
-        class="px-4 py-2 bg-primary-600 text-white text-sm rounded hover:bg-primary-700 disabled:opacity-50"
-        :disabled="!newFieldLabel.trim()"
-        @click="handleCreate"
-      >
-        Add
-      </button>
     </div>
 
     <!-- Field list -->
@@ -162,5 +152,49 @@ async function toggleVisibility(field) {
         No fields defined yet
       </li>
     </ul>
+
+    <!-- Create Field Modal -->
+    <div v-if="showCreateModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click.self="showCreateModal = false">
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          Add {{ activeTab === 'person' ? 'Person' : 'Team' }} Field
+        </h3>
+        <div v-if="error" class="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+          {{ error }}
+        </div>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Label</label>
+            <input
+              v-model="newFieldLabel"
+              type="text"
+              class="block w-full rounded border-gray-300 shadow-sm text-sm focus:ring-primary-500 focus:border-primary-500"
+              placeholder="e.g., Focus Area"
+              @keyup.enter="handleCreate"
+            >
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+            <select
+              v-model="newFieldType"
+              class="block w-full rounded border-gray-300 shadow-sm text-sm focus:ring-primary-500 focus:border-primary-500"
+            >
+              <option v-for="t in fieldTypes" :key="t.value" :value="t.value">{{ t.label }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="mt-6 flex justify-end gap-3">
+          <button
+            class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
+            @click="showCreateModal = false"
+          >Cancel</button>
+          <button
+            class="px-4 py-2 bg-primary-600 text-white text-sm rounded hover:bg-primary-700 disabled:opacity-50"
+            :disabled="!newFieldLabel.trim()"
+            @click="handleCreate"
+          >Add</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
