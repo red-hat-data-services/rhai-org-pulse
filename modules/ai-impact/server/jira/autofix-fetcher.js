@@ -4,7 +4,7 @@ const { validateJqlSafeString } = require('../config');
 // All labels from the jira-autofix triage + autofix pipelines
 const TRIAGE_LABELS = [
   'jira-triage-pending',
-  'jira-triage-needs-info',
+  'jira-triage-missing-info',
   'jira-triage-not-fixable',
   'jira-triage-stale'
 ];
@@ -13,8 +13,12 @@ const AUTOFIX_LABELS = [
   'jira-autofix',
   'jira-autofix-pending',
   'jira-autofix-review',
-  'jira-autofix-done',
-  'jira-autofix-needs-info'
+  'jira-autofix-ci-failing',
+  'jira-autofix-merged',
+  'jira-autofix-rejected',
+  'jira-autofix-max-retries',
+  'jira-autofix-researched',
+  'jira-autofix-blocked'
 ];
 
 const ALL_PIPELINE_LABELS = [...TRIAGE_LABELS, ...AUTOFIX_LABELS];
@@ -22,14 +26,21 @@ const ALL_PIPELINE_LABELS = [...TRIAGE_LABELS, ...AUTOFIX_LABELS];
 function classifyIssue(labels) {
   const labelSet = new Set(labels);
 
-  if (labelSet.has('jira-autofix-done')) return 'autofix-done';
+  // Terminal autofix states (check first — most specific)
+  if (labelSet.has('jira-autofix-merged')) return 'autofix-merged';
+  if (labelSet.has('jira-autofix-rejected')) return 'autofix-rejected';
+  if (labelSet.has('jira-autofix-max-retries')) return 'autofix-max-retries';
+  if (labelSet.has('jira-autofix-researched')) return 'autofix-researched';
+  // Active autofix states
+  if (labelSet.has('jira-autofix-ci-failing')) return 'autofix-ci-failing';
   if (labelSet.has('jira-autofix-review')) return 'autofix-review';
   if (labelSet.has('jira-autofix-pending')) return 'autofix-pending';
-  if (labelSet.has('jira-autofix-needs-info')) return 'autofix-needs-info';
+  if (labelSet.has('jira-autofix-blocked')) return 'autofix-blocked';
   if (labelSet.has('jira-autofix')) return 'autofix-ready';
+  // Triage states
   if (labelSet.has('jira-triage-not-fixable')) return 'triage-not-fixable';
   if (labelSet.has('jira-triage-stale')) return 'triage-stale';
-  if (labelSet.has('jira-triage-needs-info')) return 'triage-needs-info';
+  if (labelSet.has('jira-triage-missing-info')) return 'triage-missing-info';
   if (labelSet.has('jira-triage-pending')) return 'triage-pending';
 
   return 'unknown';
@@ -64,14 +75,8 @@ function computeAutofixMetrics(issues, timeWindow) {
   ).length;
 
   const triageVerdicts = {
-    ready: windowIssues.filter(i =>
-      i.pipelineState === 'autofix-ready' ||
-      i.pipelineState === 'autofix-pending' ||
-      i.pipelineState === 'autofix-review' ||
-      i.pipelineState === 'autofix-done' ||
-      i.pipelineState === 'autofix-needs-info'
-    ).length,
-    needsInfo: windowIssues.filter(i => i.pipelineState === 'triage-needs-info').length,
+    ready: windowIssues.filter(i => i.pipelineState.startsWith('autofix-')).length,
+    missingInfo: windowIssues.filter(i => i.pipelineState === 'triage-missing-info').length,
     notFixable: windowIssues.filter(i => i.pipelineState === 'triage-not-fixable').length,
     stale: windowIssues.filter(i => i.pipelineState === 'triage-stale').length,
     pending: windowIssues.filter(i => i.pipelineState === 'triage-pending').length
@@ -81,15 +86,18 @@ function computeAutofixMetrics(issues, timeWindow) {
     ready: windowIssues.filter(i => i.pipelineState === 'autofix-ready').length,
     pending: windowIssues.filter(i => i.pipelineState === 'autofix-pending').length,
     review: windowIssues.filter(i => i.pipelineState === 'autofix-review').length,
-    done: windowIssues.filter(i => i.pipelineState === 'autofix-done').length,
-    needsInfo: windowIssues.filter(i => i.pipelineState === 'autofix-needs-info').length
+    ciFailing: windowIssues.filter(i => i.pipelineState === 'autofix-ci-failing').length,
+    merged: windowIssues.filter(i => i.pipelineState === 'autofix-merged').length,
+    rejected: windowIssues.filter(i => i.pipelineState === 'autofix-rejected').length,
+    maxRetries: windowIssues.filter(i => i.pipelineState === 'autofix-max-retries').length,
+    researched: windowIssues.filter(i => i.pipelineState === 'autofix-researched').length,
+    blocked: windowIssues.filter(i => i.pipelineState === 'autofix-blocked').length
   };
 
-  const autofixTotal = autofixStates.ready + autofixStates.pending +
-    autofixStates.review + autofixStates.done + autofixStates.needsInfo;
-  const terminalTotal = autofixStates.done + autofixStates.needsInfo;
+  const autofixTotal = Object.values(autofixStates).reduce((s, v) => s + v, 0);
+  const terminalTotal = autofixStates.merged + autofixStates.rejected + autofixStates.maxRetries;
   const successRate = terminalTotal > 0
-    ? Math.round((autofixStates.done / terminalTotal) * 100)
+    ? Math.round((autofixStates.merged / terminalTotal) * 100)
     : 0;
 
   return {
@@ -104,8 +112,8 @@ function computeAutofixMetrics(issues, timeWindow) {
 }
 
 // Buckets issues by created date but uses current pipelineState. An issue
-// created 3 weeks ago that later moved to autofix-done appears as "done"
-// in the week it was created, not when it completed. This is a known
+// created 3 weeks ago that later moved to autofix-merged appears as "merged"
+// in the week it was created, not when it was merged. This is a known
 // limitation — Jira labels don't carry timestamps for state transitions.
 function buildTrendData(issues, timeWindow) {
   const weekCounts = timeWindow === 'week' ? 4 : timeWindow === 'month' ? 8 : 13;
@@ -129,13 +137,13 @@ function buildTrendData(issues, timeWindow) {
       i.pipelineState.startsWith('autofix-')
     ).length;
 
-    const done = weekIssues.filter(i => i.pipelineState === 'autofix-done').length;
+    const merged = weekIssues.filter(i => i.pipelineState === 'autofix-merged').length;
 
     points.push({
       date: weekEnd.toISOString().slice(0, 10),
       triaged,
       autofixed,
-      done,
+      merged,
       total: weekIssues.length
     });
   }

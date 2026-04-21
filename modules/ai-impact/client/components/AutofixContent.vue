@@ -86,9 +86,6 @@ const hasActiveFilter = computed(() =>
 
 // Client-side metrics recomputation when filters are active.
 // Mirrors computeAutofixMetrics() in autofix-fetcher.js (server).
-// Uses startsWith('autofix-') for triageVerdicts.ready which includes
-// autofix-needs-info — matches the server's enumerated list in practice
-// since both count all autofix-* states as "passed triage."
 const metrics = computed(() => {
   if (!props.autofixData?.metrics) return null
   if (!hasActiveFilter.value) return props.autofixData.metrics
@@ -104,7 +101,7 @@ const metrics = computed(() => {
 
   const triageVerdicts = {
     ready: windowIssues.filter(i => i.pipelineState.startsWith('autofix-')).length,
-    needsInfo: windowIssues.filter(i => i.pipelineState === 'triage-needs-info').length,
+    missingInfo: windowIssues.filter(i => i.pipelineState === 'triage-missing-info').length,
     notFixable: windowIssues.filter(i => i.pipelineState === 'triage-not-fixable').length,
     stale: windowIssues.filter(i => i.pipelineState === 'triage-stale').length,
     pending: windowIssues.filter(i => i.pipelineState === 'triage-pending').length
@@ -114,12 +111,16 @@ const metrics = computed(() => {
     ready: windowIssues.filter(i => i.pipelineState === 'autofix-ready').length,
     pending: windowIssues.filter(i => i.pipelineState === 'autofix-pending').length,
     review: windowIssues.filter(i => i.pipelineState === 'autofix-review').length,
-    done: windowIssues.filter(i => i.pipelineState === 'autofix-done').length,
-    needsInfo: windowIssues.filter(i => i.pipelineState === 'autofix-needs-info').length
+    ciFailing: windowIssues.filter(i => i.pipelineState === 'autofix-ci-failing').length,
+    merged: windowIssues.filter(i => i.pipelineState === 'autofix-merged').length,
+    rejected: windowIssues.filter(i => i.pipelineState === 'autofix-rejected').length,
+    maxRetries: windowIssues.filter(i => i.pipelineState === 'autofix-max-retries').length,
+    researched: windowIssues.filter(i => i.pipelineState === 'autofix-researched').length,
+    blocked: windowIssues.filter(i => i.pipelineState === 'autofix-blocked').length
   }
 
-  const terminalTotal = autofixStates.done + autofixStates.needsInfo
-  const successRate = terminalTotal > 0 ? Math.round((autofixStates.done / terminalTotal) * 100) : 0
+  const terminalTotal = autofixStates.merged + autofixStates.rejected + autofixStates.maxRetries
+  const successRate = terminalTotal > 0 ? Math.round((autofixStates.merged / terminalTotal) * 100) : 0
 
   return { triageTotal, triageVerdicts, autofixStates, autofixTotal: triageVerdicts.ready, successRate, windowTotal: windowIssues.length, totalIssues: issues.length }
 })
@@ -137,8 +138,8 @@ const trendData = computed(() => {
     const weekIssues = issues.filter(i => { const d = new Date(i.created); return d >= weekStart && d < weekEnd })
     const triaged = weekIssues.filter(i => i.pipelineState.startsWith('triage-') || i.pipelineState.startsWith('autofix-')).length
     const autofixed = weekIssues.filter(i => i.pipelineState.startsWith('autofix-')).length
-    const done = weekIssues.filter(i => i.pipelineState === 'autofix-done').length
-    points.push({ date: weekEnd.toISOString().slice(0, 10), triaged, autofixed, done, total: weekIssues.length })
+    const merged = weekIssues.filter(i => i.pipelineState === 'autofix-merged').length
+    points.push({ date: weekEnd.toISOString().slice(0, 10), triaged, autofixed, merged, total: weekIssues.length })
   }
   return points
 })
@@ -146,14 +147,18 @@ const trendData = computed(() => {
 const STATE_OPTIONS = [
   { value: 'all', label: 'All' },
   { value: 'triage-pending', label: 'AI Assessing' },
-  { value: 'triage-needs-info', label: 'Needs Info' },
+  { value: 'triage-missing-info', label: 'Missing Info' },
   { value: 'triage-not-fixable', label: 'Not AI-Fixable' },
   { value: 'triage-stale', label: 'Stale' },
   { value: 'autofix-ready', label: 'Queued for AI' },
   { value: 'autofix-pending', label: 'AI Working' },
   { value: 'autofix-review', label: 'AI Fix Under Review' },
-  { value: 'autofix-done', label: 'AI Completed' },
-  { value: 'autofix-needs-info', label: 'AI Blocked' }
+  { value: 'autofix-ci-failing', label: 'AI Fix CI Failing' },
+  { value: 'autofix-merged', label: 'AI Fix Merged' },
+  { value: 'autofix-rejected', label: 'AI Fix Rejected' },
+  { value: 'autofix-max-retries', label: 'AI Max Retries' },
+  { value: 'autofix-researched', label: 'AI Researched' },
+  { value: 'autofix-blocked', label: 'AI Blocked' }
 ]
 
 const timeFilteredIssues = computed(() => {
@@ -183,9 +188,9 @@ const trendStatus = computed(() => {
   const firstHalf = trendData.value.slice(0, mid)
   const secondHalf = trendData.value.slice(mid)
   const firstTotal = firstHalf.reduce((s, p) => s + p.triaged, 0)
-  const firstDone = firstHalf.reduce((s, p) => s + p.done, 0)
+  const firstDone = firstHalf.reduce((s, p) => s + p.merged, 0)
   const secondTotal = secondHalf.reduce((s, p) => s + p.triaged, 0)
-  const secondDone = secondHalf.reduce((s, p) => s + p.done, 0)
+  const secondDone = secondHalf.reduce((s, p) => s + p.merged, 0)
   const firstRate = firstTotal > 0 ? firstDone / firstTotal : 0
   const secondRate = secondTotal > 0 ? secondDone / secondTotal : 0
   const diff = secondRate - firstRate
@@ -211,8 +216,8 @@ const comboChartData = computed(() => ({
       borderWidth: 2
     },
     {
-      label: 'Completed',
-      data: trendData.value.map(p => p.done),
+      label: 'Merged',
+      data: trendData.value.map(p => p.merged),
       backgroundColor: 'rgba(99, 102, 241, 0.5)',
       type: 'bar',
       yAxisID: 'y'
@@ -233,7 +238,7 @@ const comboChartOptions = {
 }
 
 const totalFixesLanded = computed(() => {
-  return trendData.value.reduce((s, p) => s + p.done, 0)
+  return trendData.value.reduce((s, p) => s + p.merged, 0)
 })
 
 const hasTrendActivity = computed(() => {
@@ -246,10 +251,14 @@ function stateLabel(state) {
 }
 
 function stateColorClass(state) {
-  if (state === 'autofix-done') return 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400'
+  if (state === 'autofix-merged') return 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400'
+  if (state === 'autofix-researched') return 'bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-400'
   if (state === 'autofix-review') return 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400'
+  if (state === 'autofix-ci-failing') return 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400'
   if (state === 'autofix-pending' || state === 'autofix-ready') return 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400'
-  if (state.includes('needs-info')) return 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-400'
+  if (state === 'autofix-rejected') return 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400'
+  if (state === 'autofix-max-retries') return 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400'
+  if (state === 'autofix-blocked' || state === 'triage-missing-info') return 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-400'
   if (state === 'triage-not-fixable') return 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400'
   if (state === 'triage-stale') return 'bg-gray-100 dark:bg-gray-600/20 text-gray-600 dark:text-gray-400'
   return 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
@@ -264,8 +273,8 @@ const triageSegments = computed(() => {
   if (!metrics.value) return []
   const v = metrics.value.triageVerdicts
   return [
-    { label: 'Ready for AI', count: v.ready || 0, color: 'bg-green-500', textClass: 'text-green-600 dark:text-green-400', jiraLabels: ['jira-autofix', 'jira-autofix-pending', 'jira-autofix-review', 'jira-autofix-done', 'jira-autofix-needs-info'] },
-    { label: 'Needs Info', count: v.needsInfo || 0, color: 'bg-yellow-500', textClass: 'text-yellow-600 dark:text-yellow-400', jiraLabels: ['jira-triage-needs-info'] },
+    { label: 'Ready for AI', count: v.ready || 0, color: 'bg-green-500', textClass: 'text-green-600 dark:text-green-400', jiraLabels: ['jira-autofix', 'jira-autofix-pending', 'jira-autofix-review', 'jira-autofix-ci-failing', 'jira-autofix-merged', 'jira-autofix-rejected', 'jira-autofix-max-retries', 'jira-autofix-researched', 'jira-autofix-blocked'] },
+    { label: 'Missing Info', count: v.missingInfo || 0, color: 'bg-yellow-500', textClass: 'text-yellow-600 dark:text-yellow-400', jiraLabels: ['jira-triage-missing-info'] },
     { label: 'Not AI-Fixable', count: v.notFixable || 0, color: 'bg-red-500', textClass: 'text-red-600 dark:text-red-400', jiraLabels: ['jira-triage-not-fixable'] },
     { label: 'Stale', count: v.stale || 0, color: 'bg-gray-400', textClass: 'text-gray-500 dark:text-gray-400', jiraLabels: ['jira-triage-stale'] },
     { label: 'AI Assessing', count: v.pending || 0, color: 'bg-gray-300 dark:bg-gray-600', textClass: 'text-gray-500 dark:text-gray-400', jiraLabels: ['jira-triage-pending'] }
@@ -278,11 +287,15 @@ const autofixSegments = computed(() => {
   if (!metrics.value) return []
   const a = metrics.value.autofixStates
   return [
-    { label: 'AI Completed', count: a.done || 0, color: 'bg-green-500', textClass: 'text-green-600 dark:text-green-400', jiraLabels: ['jira-autofix-done'] },
+    { label: 'AI Fix Merged', count: a.merged || 0, color: 'bg-green-500', textClass: 'text-green-600 dark:text-green-400', jiraLabels: ['jira-autofix-merged'] },
+    { label: 'AI Researched', count: a.researched || 0, color: 'bg-teal-500', textClass: 'text-teal-600 dark:text-teal-400', jiraLabels: ['jira-autofix-researched'] },
     { label: 'AI Fix Under Review', count: a.review || 0, color: 'bg-blue-500', textClass: 'text-blue-600 dark:text-blue-400', jiraLabels: ['jira-autofix-review'] },
+    { label: 'AI Fix CI Failing', count: a.ciFailing || 0, color: 'bg-orange-500', textClass: 'text-orange-600 dark:text-orange-400', jiraLabels: ['jira-autofix-ci-failing'] },
     { label: 'AI Working', count: a.pending || 0, color: 'bg-indigo-500', textClass: 'text-indigo-600 dark:text-indigo-400', jiraLabels: ['jira-autofix-pending'] },
     { label: 'Queued for AI', count: a.ready || 0, color: 'bg-gray-400', textClass: 'text-gray-500 dark:text-gray-400', jiraLabels: ['jira-autofix'] },
-    { label: 'AI Blocked', count: a.needsInfo || 0, color: 'bg-yellow-500', textClass: 'text-yellow-600 dark:text-yellow-400', jiraLabels: ['jira-autofix-needs-info'] }
+    { label: 'AI Fix Rejected', count: a.rejected || 0, color: 'bg-red-500', textClass: 'text-red-600 dark:text-red-400', jiraLabels: ['jira-autofix-rejected'] },
+    { label: 'AI Max Retries', count: a.maxRetries || 0, color: 'bg-orange-500', textClass: 'text-orange-600 dark:text-orange-400', jiraLabels: ['jira-autofix-max-retries'] },
+    { label: 'AI Blocked', count: a.blocked || 0, color: 'bg-yellow-500', textClass: 'text-yellow-600 dark:text-yellow-400', jiraLabels: ['jira-autofix-blocked'] }
   ].filter(s => s.count > 0)
 })
 
@@ -334,14 +347,18 @@ function buildJiraLabelUrl(jiraLabels) {
                 <tbody>
                   <tr><td colspan="2" class="font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] pb-1 pt-0">Triage</td></tr>
                   <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">AI Assessing</td><td class="text-gray-400 py-0.5">Bot is evaluating the ticket</td></tr>
-                  <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">Needs Info</td><td class="text-gray-400 py-0.5">Ticket incomplete, waiting on reporter</td></tr>
+                  <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">Missing Info</td><td class="text-gray-400 py-0.5">Ticket incomplete, waiting on reporter</td></tr>
                   <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">Not AI-Fixable</td><td class="text-gray-400 py-0.5">Not suitable for automated fixing</td></tr>
                   <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">Stale</td><td class="text-gray-400 py-0.5">No response for 14+ days</td></tr>
                   <tr><td colspan="2" class="font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide text-[10px] pb-1 pt-3">Autofix</td></tr>
                   <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">Queued for AI</td><td class="text-gray-400 py-0.5">Waiting for bot pickup</td></tr>
                   <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">AI Working</td><td class="text-gray-400 py-0.5">Bot is generating a fix</td></tr>
-                  <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">AI Fix Under Review</td><td class="text-gray-400 py-0.5">MR/PR created, iterating on feedback</td></tr>
-                  <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">AI Completed</td><td class="text-gray-400 py-0.5">Bot finished (merged, rejected, or max retries)</td></tr>
+                  <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">AI Fix Under Review</td><td class="text-gray-400 py-0.5">MR/PR created, human reviewing</td></tr>
+                  <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">AI Fix CI Failing</td><td class="text-gray-400 py-0.5">MR/PR exists, CI is red</td></tr>
+                  <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">AI Fix Merged</td><td class="text-gray-400 py-0.5">Fix landed successfully</td></tr>
+                  <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">AI Fix Rejected</td><td class="text-gray-400 py-0.5">MR/PR closed without merge</td></tr>
+                  <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">AI Max Retries</td><td class="text-gray-400 py-0.5">Bot hit iteration limit, needs human</td></tr>
+                  <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">AI Researched</td><td class="text-gray-400 py-0.5">Spike completed, findings posted</td></tr>
                   <tr><td class="font-medium pr-4 py-0.5 whitespace-nowrap">AI Blocked</td><td class="text-gray-400 py-0.5">Bot stuck, needs human intervention</td></tr>
                 </tbody>
               </table>
@@ -430,7 +447,7 @@ function buildJiraLabelUrl(jiraLabels) {
             <div class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">{{ metrics.totalIssues }} all time</div>
           </div>
           <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center"
-            :title="`Percentage of triaged bugs that qualified for autofix. ${metrics.triageVerdicts.ready || 0} out of ${metrics.triageTotal} triaged issues were deemed fixable by the AI triage bot.`"
+            :title="`Percentage of triaged issues that qualified for autofix. ${metrics.triageVerdicts.ready || 0} out of ${metrics.triageTotal} triaged issues were deemed fixable by the AI triage bot.`"
           >
             <div class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
               {{ metrics.triageTotal > 0 ? Math.round((metrics.triageVerdicts.ready || 0) / metrics.triageTotal * 100) : 0 }}%
@@ -439,13 +456,13 @@ function buildJiraLabelUrl(jiraLabels) {
             <div class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">{{ metrics.triageVerdicts.ready || 0 }} of {{ metrics.triageTotal }} triaged</div>
           </div>
           <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center"
-            :title="`Percentage of completed autofixes out of all terminal outcomes. Calculated as: AI Completed / (AI Completed + AI Blocked). In-progress issues are excluded. Note: AI Completed currently includes merged, rejected, and max-retries — accuracy improves once pipeline labels are split. ${metrics.autofixStates.done || 0} completed, ${metrics.autofixStates.needsInfo || 0} blocked.`"
+            :title="`Percentage of successfully merged autofixes out of all terminal outcomes. Calculated as: merged / (merged + rejected + max-retries). In-progress issues are excluded. Researched spikes are excluded (they don't produce MRs). ${metrics.autofixStates.merged || 0} merged, ${metrics.autofixStates.rejected || 0} rejected, ${metrics.autofixStates.maxRetries || 0} max retries.`"
           >
             <div class="text-2xl font-bold" :class="metrics.successRate >= 50 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'">
               {{ metrics.successRate }}%
             </div>
             <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase tracking-wide">Success Rate</div>
-            <div class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">{{ metrics.autofixStates.done || 0 }} of {{ (metrics.autofixStates.done || 0) + (metrics.autofixStates.needsInfo || 0) }} resolved</div>
+            <div class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">{{ metrics.autofixStates.merged || 0 }} of {{ (metrics.autofixStates.merged || 0) + (metrics.autofixStates.rejected || 0) + (metrics.autofixStates.maxRetries || 0) }} resolved</div>
           </div>
           <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center"
             :title="`Issues where the autofix bot has created an MR/PR and is iterating on review feedback and CI failures. ${metrics.autofixStates.review || 0} issues currently in review.`"
@@ -454,13 +471,13 @@ function buildJiraLabelUrl(jiraLabels) {
             <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase tracking-wide">In Review</div>
           </div>
           <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center"
-            :title="`Issues requiring human intervention. Includes tickets with incomplete information (missing info: ${metrics.triageVerdicts.needsInfo || 0}) and autofix attempts that hit a blocker (blocked: ${metrics.autofixStates.needsInfo || 0}).`"
+            :title="`Issues requiring human intervention. Includes tickets with incomplete information (missing info: ${metrics.triageVerdicts.missingInfo || 0}) and autofix attempts that hit a blocker (blocked: ${metrics.autofixStates.blocked || 0}).`"
           >
             <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-              {{ (metrics.autofixStates.needsInfo || 0) + (metrics.triageVerdicts.needsInfo || 0) }}
+              {{ (metrics.autofixStates.blocked || 0) + (metrics.triageVerdicts.missingInfo || 0) }}
             </div>
             <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase tracking-wide">Needs Attention</div>
-            <div class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">{{ metrics.triageVerdicts.needsInfo || 0 }} needs info · {{ metrics.autofixStates.needsInfo || 0 }} AI blocked</div>
+            <div class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">{{ metrics.triageVerdicts.missingInfo || 0 }} missing info · {{ metrics.autofixStates.blocked || 0 }} AI blocked</div>
           </div>
           <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center"
             title="Trend compares autofix completion rate between the first and second half of the selected time window."
@@ -493,7 +510,7 @@ function buildJiraLabelUrl(jiraLabels) {
                   <div class="absolute left-0 top-6 z-20 hidden group-hover:block w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/50 p-3 text-xs text-gray-700 dark:text-gray-300">
                     <div class="space-y-1">
                       <div class="flex justify-between"><span class="font-medium">Ready for AI</span><span class="text-gray-400">Qualified for autofix</span></div>
-                      <div class="flex justify-between"><span class="font-medium">Needs Info</span><span class="text-gray-400">Waiting on reporter</span></div>
+                      <div class="flex justify-between"><span class="font-medium">Missing Info</span><span class="text-gray-400">Waiting on reporter</span></div>
                       <div class="flex justify-between"><span class="font-medium">Not AI-Fixable</span><span class="text-gray-400">Not suitable for AI</span></div>
                       <div class="flex justify-between"><span class="font-medium">Stale</span><span class="text-gray-400">No response 14+ days</span></div>
                       <div class="flex justify-between"><span class="font-medium">AI Assessing</span><span class="text-gray-400">Bot is evaluating</span></div>
@@ -547,10 +564,14 @@ function buildJiraLabelUrl(jiraLabels) {
                   </svg>
                   <div class="absolute left-0 top-6 z-20 hidden group-hover:block w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/50 p-3 text-xs text-gray-700 dark:text-gray-300">
                     <div class="space-y-1">
-                      <div class="flex justify-between"><span class="font-medium">AI Completed</span><span class="text-gray-400">Bot finished</span></div>
-                      <div class="flex justify-between"><span class="font-medium">AI Fix Under Review</span><span class="text-gray-400">MR/PR iterating</span></div>
+                      <div class="flex justify-between"><span class="font-medium">AI Fix Merged</span><span class="text-gray-400">Fix landed</span></div>
+                      <div class="flex justify-between"><span class="font-medium">AI Researched</span><span class="text-gray-400">Spike completed</span></div>
+                      <div class="flex justify-between"><span class="font-medium">AI Fix Under Review</span><span class="text-gray-400">Human reviewing</span></div>
+                      <div class="flex justify-between"><span class="font-medium">AI Fix CI Failing</span><span class="text-gray-400">CI is red</span></div>
                       <div class="flex justify-between"><span class="font-medium">AI Working</span><span class="text-gray-400">Generating fix</span></div>
                       <div class="flex justify-between"><span class="font-medium">Queued for AI</span><span class="text-gray-400">Waiting for bot</span></div>
+                      <div class="flex justify-between"><span class="font-medium">AI Fix Rejected</span><span class="text-gray-400">MR closed</span></div>
+                      <div class="flex justify-between"><span class="font-medium">AI Max Retries</span><span class="text-gray-400">Bot gave up</span></div>
                       <div class="flex justify-between"><span class="font-medium">AI Blocked</span><span class="text-gray-400">Needs human help</span></div>
                     </div>
                   </div>
@@ -634,7 +655,7 @@ function buildJiraLabelUrl(jiraLabels) {
                     <p class="font-medium text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide text-[10px]">Triage</p>
                     <div class="space-y-1 mb-3">
                       <div class="flex justify-between"><span>AI Assessing</span><span class="text-gray-400">Bot is evaluating</span></div>
-                      <div class="flex justify-between"><span>Needs Info</span><span class="text-gray-400">Waiting on reporter</span></div>
+                      <div class="flex justify-between"><span>Missing Info</span><span class="text-gray-400">Waiting on reporter</span></div>
                       <div class="flex justify-between"><span>Not AI-Fixable</span><span class="text-gray-400">Not suitable for AI</span></div>
                       <div class="flex justify-between"><span>Stale</span><span class="text-gray-400">No response 14+ days</span></div>
                     </div>
@@ -642,8 +663,12 @@ function buildJiraLabelUrl(jiraLabels) {
                     <div class="space-y-1">
                       <div class="flex justify-between"><span>Queued for AI</span><span class="text-gray-400">Waiting for bot</span></div>
                       <div class="flex justify-between"><span>AI Working</span><span class="text-gray-400">Generating fix</span></div>
-                      <div class="flex justify-between"><span>AI Fix Under Review</span><span class="text-gray-400">MR/PR iterating</span></div>
-                      <div class="flex justify-between"><span>AI Completed</span><span class="text-gray-400">Bot finished</span></div>
+                      <div class="flex justify-between"><span>AI Fix Under Review</span><span class="text-gray-400">Human reviewing</span></div>
+                      <div class="flex justify-between"><span>AI Fix CI Failing</span><span class="text-gray-400">CI is red</span></div>
+                      <div class="flex justify-between"><span>AI Fix Merged</span><span class="text-gray-400">Fix landed</span></div>
+                      <div class="flex justify-between"><span>AI Fix Rejected</span><span class="text-gray-400">MR closed</span></div>
+                      <div class="flex justify-between"><span>AI Max Retries</span><span class="text-gray-400">Bot gave up</span></div>
+                      <div class="flex justify-between"><span>AI Researched</span><span class="text-gray-400">Spike completed</span></div>
                       <div class="flex justify-between"><span>AI Blocked</span><span class="text-gray-400">Needs human help</span></div>
                     </div>
                   </div>

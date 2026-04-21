@@ -7,16 +7,16 @@ const MOCK_DATA = {
   jiraHost: 'https://redhat.atlassian.net',
   metrics: {
     triageTotal: 10,
-    triageVerdicts: { ready: 6, needsInfo: 2, notFixable: 1, stale: 1, pending: 0 },
-    autofixStates: { ready: 1, pending: 1, review: 2, done: 2, needsInfo: 0 },
+    triageVerdicts: { ready: 6, missingInfo: 2, notFixable: 1, stale: 1, pending: 0 },
+    autofixStates: { ready: 1, pending: 1, review: 1, ciFailing: 0, merged: 2, rejected: 0, maxRetries: 0, researched: 0, blocked: 1 },
     autofixTotal: 6,
-    successRate: 33,
+    successRate: 100,
     windowTotal: 10,
     totalIssues: 10
   },
   trendData: [
-    { date: '2026-04-11', triaged: 3, autofixed: 2, done: 1, total: 3 },
-    { date: '2026-04-18', triaged: 7, autofixed: 4, done: 1, total: 7 }
+    { date: '2026-04-11', triaged: 3, autofixed: 2, merged: 1, total: 3 },
+    { date: '2026-04-18', triaged: 7, autofixed: 4, merged: 1, total: 7 }
   ],
   componentBreakdown: [
     { component: 'Model Server', triaged: 5, autofixed: 3, done: 1 },
@@ -56,7 +56,7 @@ describe('AutofixContent', () => {
       props: { autofixData: MOCK_DATA, loading: false, timeWindow: 'month' }
     })
     expect(wrapper.text()).toContain('10')
-    expect(wrapper.text()).toContain('33%')
+    expect(wrapper.text()).toContain('100%')
   })
 
   it('renders triage outcomes panel', () => {
@@ -65,7 +65,7 @@ describe('AutofixContent', () => {
     })
     expect(wrapper.text()).toContain('Triage Outcomes')
     expect(wrapper.text()).toContain('Ready for AI')
-    expect(wrapper.text()).toContain('Needs Info')
+    expect(wrapper.text()).toContain('Missing Info')
     expect(wrapper.text()).toContain('Not AI-Fixable')
   })
 
@@ -74,7 +74,7 @@ describe('AutofixContent', () => {
       props: { autofixData: MOCK_DATA, loading: false, timeWindow: 'month' }
     })
     expect(wrapper.text()).toContain('Autofix Progress')
-    expect(wrapper.text()).toContain('AI Completed')
+    expect(wrapper.text()).toContain('AI Fix Merged')
     expect(wrapper.text()).toContain('AI Fix Under Review')
   })
 

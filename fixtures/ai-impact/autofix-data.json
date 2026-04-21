@@ -11,13 +11,13 @@
       "updated": "2026-04-20T19:33:19.957+0000",
       "labels": [
         "aicp-team-forge",
-        "jira-triage-needs-info"
+        "jira-triage-missing-info"
       ],
       "components": [
         "AI Core Platform"
       ],
       "assignee": "Davide Bianchi",
-      "pipelineState": "triage-needs-info"
+      "pipelineState": "triage-missing-info"
     },
     {
       "key": "RHOAIENG-58983",
@@ -30,13 +30,13 @@
       "labels": [
         "dashboard-area-infrastructure",
         "dashboard-monarch-scrum",
-        "jira-triage-needs-info"
+        "jira-triage-missing-info"
       ],
       "components": [
         "AI Core Dashboard"
       ],
       "assignee": "Christian Vogt",
-      "pipelineState": "triage-needs-info"
+      "pipelineState": "triage-missing-info"
     },
     {
       "key": "RHOAIENG-58933",
@@ -48,13 +48,13 @@
       "updated": "2026-04-20T19:31:46.645+0000",
       "labels": [
         "devtestops-service",
-        "jira-triage-needs-info"
+        "jira-triage-missing-info"
       ],
       "components": [
         "AI Core Platform"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-needs-info"
+      "pipelineState": "triage-missing-info"
     },
     {
       "key": "RHOAIENG-58847",
@@ -66,13 +66,13 @@
       "updated": "2026-04-20T15:49:04.059+0000",
       "labels": [
         "dashboard-area-mcp",
-        "jira-triage-needs-info"
+        "jira-triage-missing-info"
       ],
       "components": [
         "AI Core Dashboard"
       ],
       "assignee": "Manaswini Das",
-      "pipelineState": "triage-needs-info"
+      "pipelineState": "triage-missing-info"
     },
     {
       "key": "RHOAIENG-58830",
@@ -84,13 +84,13 @@
       "updated": "2026-04-18T19:32:59.375+0000",
       "labels": [
         "dashboard-area-maas",
-        "jira-triage-needs-info"
+        "jira-triage-missing-info"
       ],
       "components": [
         "AI Core Dashboard"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-needs-info"
+      "pipelineState": "triage-missing-info"
     },
     {
       "key": "RHOAIENG-58829",
@@ -102,14 +102,14 @@
       "updated": "2026-04-18T19:34:11.323+0000",
       "labels": [
         "dashboard-area-maas",
-        "jira-triage-needs-info",
+        "jira-triage-missing-info",
         "needs-ux"
       ],
       "components": [
         "AI Core Dashboard"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-needs-info"
+      "pipelineState": "triage-missing-info"
     },
     {
       "key": "AIPCC-14469",
@@ -139,14 +139,14 @@
       "updated": "2026-04-20T18:04:22.620+0000",
       "labels": [
         "dashboard-crimson-scrum",
-        "jira-triage-needs-info"
+        "jira-triage-missing-info"
       ],
       "components": [
         "AI Core Dashboard",
         "Gen AI Studio"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-needs-info"
+      "pipelineState": "triage-missing-info"
     },
     {
       "key": "RHOAIENG-58747",
@@ -160,13 +160,13 @@
         "ai-reviewed",
         "dashboard-area-maas",
         "dashboard-zaffre-scrum",
-        "jira-triage-needs-info"
+        "jira-triage-missing-info"
       ],
       "components": [
         "AI Core Dashboard"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-needs-info"
+      "pipelineState": "triage-missing-info"
     },
     {
       "key": "RHOAIENG-58734",
@@ -180,13 +180,13 @@
         "ai-reviewed",
         "dashboard-area-observability",
         "dashboard-monarch-scrum",
-        "jira-triage-needs-info"
+        "jira-triage-missing-info"
       ],
       "components": [
         "AI Core Dashboard"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-needs-info"
+      "pipelineState": "triage-missing-info"
     },
     {
       "key": "AIPCC-14461",
@@ -198,14 +198,14 @@
       "updated": "2026-04-20T10:39:14.230+0000",
       "labels": [
         "jira-autofix",
-        "jira-autofix-done"
+        "jira-autofix-merged"
       ],
       "components": [
         "Development Platform",
         "Wheel Package Index"
       ],
       "assignee": "Ryan Petrello",
-      "pipelineState": "autofix-done"
+      "pipelineState": "autofix-merged"
     },
     {
       "key": "AIPCC-14460",
@@ -217,14 +217,14 @@
       "updated": "2026-04-20T10:39:14.034+0000",
       "labels": [
         "jira-autofix",
-        "jira-autofix-done"
+        "jira-autofix-merged"
       ],
       "components": [
         "Development Platform",
         "Wheel Package Index"
       ],
       "assignee": "Ryan Petrello",
-      "pipelineState": "autofix-done"
+      "pipelineState": "autofix-merged"
     },
     {
       "key": "AIPCC-14459",
@@ -236,14 +236,14 @@
       "updated": "2026-04-20T06:10:53.893+0000",
       "labels": [
         "jira-autofix",
-        "jira-autofix-done"
+        "jira-autofix-merged"
       ],
       "components": [
         "Development Platform",
         "Wheel Package Index"
       ],
       "assignee": "Ryan Petrello",
-      "pipelineState": "autofix-done"
+      "pipelineState": "autofix-merged"
     },
     {
       "key": "AIPCC-14458",
@@ -255,14 +255,14 @@
       "updated": "2026-04-20T10:39:13.975+0000",
       "labels": [
         "jira-autofix",
-        "jira-autofix-done"
+        "jira-autofix-merged"
       ],
       "components": [
         "Development Platform",
         "Wheel Package Index"
       ],
       "assignee": "Ryan Petrello",
-      "pipelineState": "autofix-done"
+      "pipelineState": "autofix-merged"
     },
     {
       "key": "AIPCC-14457",
@@ -274,14 +274,14 @@
       "updated": "2026-04-20T06:10:58.412+0000",
       "labels": [
         "jira-autofix",
-        "jira-autofix-done"
+        "jira-autofix-merged"
       ],
       "components": [
         "Development Platform",
         "Wheel Package Index"
       ],
       "assignee": "Ryan Petrello",
-      "pipelineState": "autofix-done"
+      "pipelineState": "autofix-merged"
     },
     {
       "key": "AIPCC-14456",
@@ -293,14 +293,14 @@
       "updated": "2026-04-20T06:10:45.565+0000",
       "labels": [
         "jira-autofix",
-        "jira-autofix-needs-info"
+        "jira-autofix-blocked"
       ],
       "components": [
         "Development Platform",
         "Wheel Package Index"
       ],
       "assignee": "Ryan Petrello",
-      "pipelineState": "autofix-needs-info"
+      "pipelineState": "autofix-blocked"
     },
     {
       "key": "AIPCC-14455",
@@ -312,14 +312,14 @@
       "updated": "2026-04-20T10:39:14.180+0000",
       "labels": [
         "jira-autofix",
-        "jira-autofix-done"
+        "jira-autofix-merged"
       ],
       "components": [
         "Development Platform",
         "Wheel Package Index"
       ],
       "assignee": "Ryan Petrello",
-      "pipelineState": "autofix-done"
+      "pipelineState": "autofix-merged"
     },
     {
       "key": "AIPCC-14454",
@@ -331,14 +331,14 @@
       "updated": "2026-04-20T10:39:14.364+0000",
       "labels": [
         "jira-autofix",
-        "jira-autofix-needs-info"
+        "jira-autofix-blocked"
       ],
       "components": [
         "Development Platform",
         "Wheel Package Index"
       ],
       "assignee": "Ryan Petrello",
-      "pipelineState": "autofix-needs-info"
+      "pipelineState": "autofix-blocked"
     },
     {
       "key": "RHOAIENG-58730",
@@ -350,14 +350,14 @@
       "updated": "2026-04-20T18:04:31.549+0000",
       "labels": [
         "dashboard-crimson-scrum",
-        "jira-triage-needs-info"
+        "jira-triage-missing-info"
       ],
       "components": [
         "AI Core Dashboard",
         "Gen AI Studio"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-needs-info"
+      "pipelineState": "triage-missing-info"
     },
     {
       "key": "RHOAIENG-58729",
@@ -369,14 +369,14 @@
       "updated": "2026-04-20T18:04:49.001+0000",
       "labels": [
         "dashboard-crimson-scrum",
-        "jira-triage-needs-info"
+        "jira-triage-missing-info"
       ],
       "components": [
         "AI Core Dashboard",
         "Gen AI Studio"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-needs-info"
+      "pipelineState": "triage-missing-info"
     },
     {
       "key": "RHOAIENG-58728",
@@ -388,14 +388,14 @@
       "updated": "2026-04-20T18:04:59.878+0000",
       "labels": [
         "dashboard-crimson-scrum",
-        "jira-triage-needs-info"
+        "jira-triage-missing-info"
       ],
       "components": [
         "AI Core Dashboard",
         "Gen AI Studio"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-needs-info"
+      "pipelineState": "triage-missing-info"
     },
     {
       "key": "RHOAIENG-58724",
@@ -409,13 +409,13 @@
         "ai-reviewed",
         "dashboard-area-infrastructure",
         "dashboard-monarch-scrum",
-        "jira-triage-needs-info"
+        "jira-triage-missing-info"
       ],
       "components": [
         "AI Core Dashboard"
       ],
       "assignee": "Moulali Shikalwadi",
-      "pipelineState": "triage-needs-info"
+      "pipelineState": "triage-missing-info"
     },
     {
       "key": "RHOAIENG-58678",
@@ -427,13 +427,13 @@
       "updated": "2026-04-17T15:37:30.425+0000",
       "labels": [
         "dashboard-tangerine-scrum",
-        "jira-triage-needs-info"
+        "jira-triage-missing-info"
       ],
       "components": [
         "AI Core Dashboard"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-needs-info"
+      "pipelineState": "triage-missing-info"
     },
     {
       "key": "RHOAIENG-58677",
@@ -445,13 +445,13 @@
       "updated": "2026-04-17T15:37:12.252+0000",
       "labels": [
         "dashboard-tangerine-scrum",
-        "jira-triage-needs-info"
+        "jira-triage-missing-info"
       ],
       "components": [
         "AI Core Dashboard"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-needs-info"
+      "pipelineState": "triage-missing-info"
     },
     {
       "key": "RHOAIENG-58676",
@@ -463,13 +463,13 @@
       "updated": "2026-04-17T15:37:49.388+0000",
       "labels": [
         "dashboard-tangerine-scrum",
-        "jira-triage-needs-info"
+        "jira-triage-missing-info"
       ],
       "components": [
         "AI Core Dashboard"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-needs-info"
+      "pipelineState": "triage-missing-info"
     },
     {
       "key": "RHOAIENG-58655",
@@ -481,13 +481,13 @@
       "updated": "2026-04-17T15:38:08.954+0000",
       "labels": [
         "dashboard-razzmatazz-scrum",
-        "jira-triage-needs-info"
+        "jira-triage-missing-info"
       ],
       "components": [
         "AI Core Dashboard"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-needs-info"
+      "pipelineState": "triage-missing-info"
     },
     {
       "key": "AIPCC-14433",
@@ -499,14 +499,14 @@
       "updated": "2026-04-17T00:54:05.296+0000",
       "labels": [
         "jira-autofix",
-        "jira-autofix-needs-info",
+        "jira-autofix-blocked",
         "support"
       ],
       "components": [
         "Development Platform"
       ],
       "assignee": "Sean Johnston",
-      "pipelineState": "autofix-needs-info"
+      "pipelineState": "autofix-blocked"
     },
     {
       "key": "RHOAIENG-58577",
@@ -518,14 +518,14 @@
       "updated": "2026-04-20T18:06:11.084+0000",
       "labels": [
         "dashboard-crimson-scrum",
-        "jira-triage-needs-info",
+        "jira-triage-missing-info",
         "needs-advisor"
       ],
       "components": [
         "AI Core Dashboard"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-needs-info"
+      "pipelineState": "triage-missing-info"
     },
     {
       "key": "RHOAIENG-58544",
@@ -537,13 +537,13 @@
       "updated": "2026-04-17T15:35:58.110+0000",
       "labels": [
         "dashboard-area-model-serving",
-        "jira-triage-needs-info"
+        "jira-triage-missing-info"
       ],
       "components": [
         "AI Core Dashboard"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-needs-info"
+      "pipelineState": "triage-missing-info"
     },
     {
       "key": "RHOAIENG-58513",
@@ -555,14 +555,14 @@
       "updated": "2026-04-20T12:14:01.591+0000",
       "labels": [
         "dashboard-area-maas",
-        "jira-triage-needs-info",
+        "jira-triage-missing-info",
         "maas-3.4-extension"
       ],
       "components": [
         "AI Core Dashboard"
       ],
       "assignee": "Claudia Alphonse",
-      "pipelineState": "triage-needs-info"
+      "pipelineState": "triage-missing-info"
     },
     {
       "key": "AIPCC-14345",
@@ -574,13 +574,13 @@
       "updated": "2026-04-16T10:34:58.135+0000",
       "labels": [
         "jira-autofix",
-        "jira-autofix-done"
+        "jira-autofix-merged"
       ],
       "components": [
         "Accelerator Enablement"
       ],
       "assignee": "AIPCC JIRABOT",
-      "pipelineState": "autofix-done"
+      "pipelineState": "autofix-merged"
     },
     {
       "key": "AIPCC-14342",
@@ -592,13 +592,13 @@
       "updated": "2026-04-18T19:10:43.152+0000",
       "labels": [
         "jira-autofix",
-        "jira-autofix-done"
+        "jira-autofix-merged"
       ],
       "components": [
         "Accelerator Enablement"
       ],
       "assignee": "Lance Barto",
-      "pipelineState": "autofix-done"
+      "pipelineState": "autofix-merged"
     },
     {
       "key": "AIPCC-14341",
@@ -610,13 +610,13 @@
       "updated": "2026-04-15T20:11:12.091+0000",
       "labels": [
         "jira-autofix",
-        "jira-autofix-done"
+        "jira-autofix-merged"
       ],
       "components": [
         "Accelerator Enablement"
       ],
       "assignee": "AIPCC JIRABOT",
-      "pipelineState": "autofix-done"
+      "pipelineState": "autofix-merged"
     },
     {
       "key": "RHOAIENG-58426",
@@ -628,14 +628,14 @@
       "updated": "2026-04-20T18:05:04.963+0000",
       "labels": [
         "dashboard-crimson-scrum",
-        "jira-triage-needs-info"
+        "jira-triage-missing-info"
       ],
       "components": [
         "AI Core Dashboard",
         "Gen AI Studio"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-needs-info"
+      "pipelineState": "triage-missing-info"
     },
     {
       "key": "RHOAIENG-58425",
@@ -783,13 +783,13 @@
       "updated": "2026-04-17T13:47:34.251+0000",
       "labels": [
         "autorag",
-        "jira-triage-needs-info"
+        "jira-triage-missing-info"
       ],
       "components": [
         "AutoRAG"
       ],
       "assignee": "Jakub Walaszczyk",
-      "pipelineState": "triage-needs-info"
+      "pipelineState": "triage-missing-info"
     },
     {
       "key": "AIPCC-14329",
@@ -819,13 +819,13 @@
       "updated": "2026-04-15T11:22:57.603+0000",
       "labels": [
         "jira-autofix",
-        "jira-autofix-done"
+        "jira-autofix-merged"
       ],
       "components": [
         "Accelerator Enablement"
       ],
       "assignee": "Anu Oguntayo",
-      "pipelineState": "autofix-done"
+      "pipelineState": "autofix-merged"
     },
     {
       "key": "RHOAIENG-58326",
@@ -839,13 +839,13 @@
         "ai-reviewed",
         "dashboard-area-applications",
         "dashboard-monarch-scrum",
-        "jira-triage-needs-info"
+        "jira-triage-missing-info"
       ],
       "components": [
         "AI Core Dashboard"
       ],
       "assignee": "Unassigned",
-      "pipelineState": "triage-needs-info"
+      "pipelineState": "triage-missing-info"
     },
     {
       "key": "AIPCC-14318",
@@ -876,7 +876,7 @@
       "labels": [
         "devtestops-service",
         "jira-autofix",
-        "jira-autofix-needs-info"
+        "jira-autofix-blocked"
       ],
       "components": [
         "Build and Release",
@@ -884,7 +884,7 @@
         "Notebooks Images"
       ],
       "assignee": "AIPCC JIRABOT",
-      "pipelineState": "autofix-needs-info"
+      "pipelineState": "autofix-blocked"
     }
   ]
 }
