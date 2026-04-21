@@ -15,14 +15,15 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip)
 const props = defineProps({
   history: { type: Array, default: () => [] },
   currentTotal: { type: Number, default: 0 },
-  currentAssessedAt: { type: String, default: '' }
+  currentAssessedAt: { type: String, default: '' },
+  currentScores: { type: Object, default: null }
 })
 
 const expanded = ref(false)
 
 // Combine current + history for the sparkline, sorted oldest-first
 const allEntries = computed(() => {
-  const current = { total: props.currentTotal, assessedAt: props.currentAssessedAt }
+  const current = { total: props.currentTotal, assessedAt: props.currentAssessedAt, scores: props.currentScores }
   const entries = [current, ...props.history]
   return entries.sort((a, b) => new Date(a.assessedAt) - new Date(b.assessedAt))
 })

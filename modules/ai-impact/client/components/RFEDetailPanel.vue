@@ -138,6 +138,7 @@ function getInvolvementClass(involvement) {
             :history="assessmentDetail.history"
             :currentTotal="assessment.total"
             :currentAssessedAt="assessment.assessedAt"
+            :currentScores="assessment.scores"
           />
         </div>
 

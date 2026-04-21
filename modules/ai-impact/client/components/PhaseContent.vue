@@ -39,7 +39,6 @@ const props = defineProps({
   filter: { type: String, default: 'all' },
   searchQuery: { type: String, default: '' },
   chartExpanded: { type: Boolean, default: true },
-  isAdmin: { type: Boolean, default: false },
   assessments: { type: Object, default: () => ({}) },
   filteredAssessments: { type: Object, default: () => ({}) },
   sortBy: { type: String, default: 'default' },
