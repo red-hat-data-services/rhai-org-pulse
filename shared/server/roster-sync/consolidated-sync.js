@@ -165,6 +165,18 @@ async function runConsolidatedSync(storage) {
     // mergePerson constructs fixed-field objects for new persons, dropping
     // extra fields. We copy enrichment fields from the enriched LDAP person
     // (which was mutated in-place by enrichPerson) onto the merged registry person.
+
+    // Include dynamic custom field keys from teamStructure config
+    var effectiveEnrichmentFields = ENRICHMENT_FIELDS.slice();
+    if (config.teamStructure && Array.isArray(config.teamStructure.customFields)) {
+      for (var tsi = 0; tsi < config.teamStructure.customFields.length; tsi++) {
+        var cfKey = config.teamStructure.customFields[tsi].key;
+        if (cfKey && effectiveEnrichmentFields.indexOf(cfKey) === -1) {
+          effectiveEnrichmentFields.push(cfKey);
+        }
+      }
+    }
+
     for (var ei = 0; ei < freshUids.length; ei++) {
       var euid = freshUids[ei];
       var enrichedPerson = freshPeopleMap[euid].person;
@@ -172,13 +184,13 @@ async function runConsolidatedSync(storage) {
       if (!registryPerson) continue;
 
       // Clear stale enrichment fields first (prevents old team data persisting)
-      for (var fi = 0; fi < ENRICHMENT_FIELDS.length; fi++) {
-        delete registryPerson[ENRICHMENT_FIELDS[fi]];
+      for (var fi = 0; fi < effectiveEnrichmentFields.length; fi++) {
+        delete registryPerson[effectiveEnrichmentFields[fi]];
       }
 
       // Copy enrichment fields from enriched LDAP person (deep copy to avoid aliasing)
-      for (var ci = 0; ci < ENRICHMENT_FIELDS.length; ci++) {
-        var field = ENRICHMENT_FIELDS[ci];
+      for (var ci = 0; ci < effectiveEnrichmentFields.length; ci++) {
+        var field = effectiveEnrichmentFields[ci];
         if (enrichedPerson[field] !== undefined) {
           registryPerson[field] = deepCopy(enrichedPerson[field]);
         }
