@@ -317,7 +317,32 @@ function buildJiraLabelUrl(jiraLabels) {
     <!-- Top Bar -->
     <header class="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-6 py-3 flex items-center justify-between">
       <div>
-        <h2 class="text-lg font-semibold dark:text-gray-100">Jira AutoFix</h2>
+        <h2 class="text-lg font-semibold dark:text-gray-100 flex items-center gap-2">
+          Jira AutoFix
+          <div class="relative group">
+            <svg class="h-4 w-4 text-gray-400 dark:text-gray-500 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div class="absolute left-0 top-7 z-20 hidden group-hover:block w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/50 p-4 text-xs text-gray-700 dark:text-gray-300">
+              <p class="font-semibold text-gray-900 dark:text-gray-100 mb-2">Pipeline Label Legend</p>
+              <p class="font-medium text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide text-[10px]">Triage</p>
+              <div class="space-y-1 mb-3">
+                <div class="flex justify-between"><span>AI Assessing</span><span class="text-gray-400">Bot is evaluating the ticket</span></div>
+                <div class="flex justify-between"><span>Needs Info</span><span class="text-gray-400">Ticket incomplete, waiting on reporter</span></div>
+                <div class="flex justify-between"><span>Not AI-Fixable</span><span class="text-gray-400">Not suitable for automated fixing</span></div>
+                <div class="flex justify-between"><span>Stale</span><span class="text-gray-400">No response for 14+ days</span></div>
+              </div>
+              <p class="font-medium text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wide text-[10px]">Autofix</p>
+              <div class="space-y-1">
+                <div class="flex justify-between"><span>Queued for AI</span><span class="text-gray-400">Waiting for bot pickup</span></div>
+                <div class="flex justify-between"><span>AI Working</span><span class="text-gray-400">Bot is generating a fix</span></div>
+                <div class="flex justify-between"><span>AI Fix Under Review</span><span class="text-gray-400">MR/PR created, iterating on feedback</span></div>
+                <div class="flex justify-between"><span>AI Completed</span><span class="text-gray-400">Bot finished (merged, rejected, or max retries)</span></div>
+                <div class="flex justify-between"><span>AI Blocked</span><span class="text-gray-400">Bot stuck, needs human intervention</span></div>
+              </div>
+            </div>
+          </div>
+        </h2>
         <p class="text-sm text-gray-500 dark:text-gray-400">
           AI-driven issue triage and automated code fixes
           <span v-if="autofixData?.fetchedAt" class="ml-2 text-gray-400 dark:text-gray-500">&middot; {{ new Date(autofixData.fetchedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) }} {{ new Date(autofixData.fetchedAt).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) }}</span>

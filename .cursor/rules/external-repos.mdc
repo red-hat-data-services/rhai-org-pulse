@@ -1,0 +1,32 @@
+---
+description: How to work with external repos behind auth (GitLab, private GitHub, etc.)
+alwaysApply: true
+---
+
+# Working with External Repos Behind Auth
+
+The agent cannot access private GitLab/GitHub repos via URL — they require VPN or auth tokens. When an external repo is needed:
+
+## Option 1: User clones locally (preferred)
+
+Ask the user to clone the repo to their home directory:
+
+```bash
+git clone <repo-url> ~/repo-name
+```
+
+Then read files from the local path (e.g., `/home/sanandpa/repo-name/`). This is the fastest path — no credentials needed, full file access.
+
+## Option 2: User has it open in Cursor
+
+The agent cannot see browser tabs or Cursor Simple Browser content. If the user says "I opened it in the browser," explain that local filesystem access is needed and suggest Option 1.
+
+## Option 3: MCP tools
+
+For Jira (user-mcp-atlassian) and GitHub (user-github), use the MCP tools to query data directly. These are pre-authenticated. For GitLab, there is no MCP — fall back to Option 1.
+
+## Conventions
+
+- Clone external repos to `~/repo-name` (outside the workspace) to keep things clean
+- Never commit external repo content into the workspace
+- When referencing external repo files, use absolute paths (e.g., `/home/sanandpa/jira-autofix/scripts/jira-triage.sh`)
