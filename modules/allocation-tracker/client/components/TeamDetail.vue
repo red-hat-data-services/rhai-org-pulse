@@ -44,18 +44,25 @@
         </span>
       </div>
 
+      <!-- Metric toggle -->
+      <div class="flex items-center justify-end mb-4">
+        <MetricToggle :modelValue="metricMode" @update:modelValue="$emit('update:metricMode', $event)" />
+      </div>
+
       <!-- Allocation bar -->
       <div class="mb-4">
         <AllocationBar
           :buckets="sprintData.summary.buckets"
           :totalPoints="sprintData.summary.totalPoints"
+          :totalCount="sprintData.summary.totalCount || 0"
+          :metricMode="metricMode"
           class="h-8"
         />
       </div>
 
-      <!-- Total points summary -->
+      <!-- Total summary -->
       <div class="text-sm text-gray-600 mb-4">
-        <span class="font-semibold text-gray-900">{{ sprintData.summary.totalPoints }}</span> total points
+        <span class="font-semibold text-gray-900">{{ displayTotal }}</span> total {{ metricMode === 'counts' ? 'issues' : 'points' }}
       </div>
 
       <!-- Unestimated panel -->
@@ -71,11 +78,14 @@
           :name="bucket.name"
           :bucketKey="bucket.key"
           :points="getBucketData(bucket.key).points"
+          :count="getBucketData(bucket.key).count"
           :percentage="getBucketData(bucket.key).percentage"
           :targetPercentage="bucket.target"
           :completedPoints="getBucketData(bucket.key).completedPoints"
+          :completedCount="getBucketData(bucket.key).completedCount"
           :color="bucket.color"
           :issues="sprintData.issues[bucket.key] || []"
+          :metricMode="metricMode"
         />
       </div>
 
@@ -83,6 +93,7 @@
       <CompletionSummary
         :summary="sprintData.summary"
         :sprintState="selectedSprint.state"
+        :metricMode="metricMode"
       />
     </template>
   </div>
@@ -94,6 +105,7 @@ import SprintSelector from './SprintSelector.vue'
 import SprintStatusBadge from './SprintStatusBadge.vue'
 import AllocationBar from './AllocationBar.vue'
 import BucketBreakdown from './BucketBreakdown.vue'
+import MetricToggle from './MetricToggle.vue'
 import UnestimatedPanel from './UnestimatedPanel.vue'
 import CompletionSummary from './CompletionSummary.vue'
 
@@ -102,10 +114,11 @@ const props = defineProps({
   sprints: { type: Array, default: () => [] },
   selectedSprint: { type: Object, default: null },
   sprintData: { type: Object, default: null },
-  isLoading: { type: Boolean, default: false }
+  isLoading: { type: Boolean, default: false },
+  metricMode: { type: String, default: 'points' }
 })
 
-defineEmits(['select-sprint', 'back'])
+defineEmits(['select-sprint', 'back', 'update:metricMode'])
 
 const bucketConfigs = [
   { key: 'tech-debt-quality', name: 'Tech Debt & Quality', target: 40, color: 'amber' },
@@ -114,12 +127,28 @@ const bucketConfigs = [
   { key: 'uncategorized', name: 'Uncategorized', target: 0, color: 'gray' }
 ]
 
+const displayTotal = computed(() => {
+  if (!props.sprintData) return 0
+  if (props.metricMode === 'counts') return props.sprintData.summary.totalCount || 0
+  return props.sprintData.summary.totalPoints || 0
+})
+
 function getBucketData(key) {
   const bucket = props.sprintData?.summary?.buckets?.[key]
+  let percentage
+  if (props.metricMode === 'counts') {
+    const total = displayTotal.value
+    const count = bucket?.count || 0
+    percentage = total > 0 ? Math.round((count / total) * 100) : 0
+  } else {
+    percentage = bucket?.percentage || 0
+  }
   return {
     points: bucket?.points || 0,
-    percentage: bucket?.percentage || 0,
-    completedPoints: bucket?.completedPoints || 0
+    count: bucket?.count || 0,
+    percentage,
+    completedPoints: bucket?.completedPoints || 0,
+    completedCount: bucket?.completedCount || 0
   }
 }
 

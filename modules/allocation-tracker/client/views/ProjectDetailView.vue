@@ -9,12 +9,14 @@
       :filters="filters"
       :activeFilterId="activeFilterId"
       :activeFilter="activeFilter"
+      :metricMode="metricMode"
       @back="onBack"
       @select-team="onSelectTeam"
       @select-filter="setActiveFilter"
       @create-filter="openCreateFilter"
       @edit-filter="openEditFilter"
       @delete-filter="handleDeleteFilter"
+      @update:metricMode="metricMode = $event"
     />
 
     <FilterEditorModal
@@ -41,6 +43,7 @@ const {
   selectedProjectSummary,
   boards,
   boardSprintData,
+  metricMode,
   isLoading,
   projects,
   handleSelectProject
