@@ -21,7 +21,7 @@
       </div>
 
       <div class="mt-3">
-        <AllocationBar :buckets="sprintData.summary.buckets" :totalPoints="sprintData.summary.totalPoints" :metricMode="metricMode" />
+        <AllocationBar :buckets="sprintData.summary.buckets" :totalPoints="sprintData.summary.totalPoints" :totalCount="sprintData.summary.totalCount || 0" :metricMode="metricMode" />
       </div>
 
       <div class="flex items-center justify-between mt-2 text-sm">

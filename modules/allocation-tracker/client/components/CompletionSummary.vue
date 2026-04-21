@@ -78,11 +78,11 @@ const visibleBuckets = computed(() => {
   const valueField = props.metricMode === 'counts' ? 'count' : 'points'
   const completedField = props.metricMode === 'counts' ? 'completedCount' : 'completedPoints'
   return Object.entries(props.summary.buckets)
-    .filter(([, data]) => (data[valueField] || data.issueCount || 0) > 0)
+    .filter(([, data]) => (data[valueField] || 0) > 0)
     .map(([key, data]) => ({
       key,
       label: bucketLabels[key] || key,
-      displayValue: props.metricMode === 'counts' ? (data.count || data.issueCount || 0) : (data.points || 0),
+      displayValue: data[valueField] || 0,
       displayCompleted: data[completedField] || 0
     }))
 })

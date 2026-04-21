@@ -16,7 +16,7 @@
 
     <template v-if="displayTotal > 0">
       <div class="mt-3">
-        <AllocationBar :buckets="aggregatedBuckets" :totalPoints="totalPoints" :metricMode="metricMode" />
+        <AllocationBar :buckets="aggregatedBuckets" :totalPoints="totalPoints" :totalCount="totalCount" :metricMode="metricMode" />
       </div>
 
       <div class="flex items-center justify-between mt-2 text-sm">
@@ -36,6 +36,9 @@
 <script setup>
 import { computed } from 'vue'
 import AllocationBar from './AllocationBar.vue'
+import { useAllocationData } from '../composables/useAllocationData.js'
+
+const { aggregateBuckets } = useAllocationData()
 
 const props = defineProps({
   project: {
@@ -59,41 +62,15 @@ const boardCount = computed(() => {
   return Object.keys(props.summary.boards).length
 })
 
-const totalPoints = computed(() => {
-  if (!props.summary?.boards) return 0
-  return Object.values(props.summary.boards)
-    .reduce((sum, b) => sum + (b?.summary?.totalPoints || 0), 0)
+const aggregated = computed(() => {
+  if (!props.summary?.boards) return { buckets: {}, totalPoints: 0, totalCount: 0 }
+  return aggregateBuckets(props.summary.boards)
 })
 
-const totalCount = computed(() => {
-  if (!props.summary?.boards) return 0
-  return Object.values(props.summary.boards)
-    .reduce((sum, b) => sum + (b?.summary?.totalCount || b?.summary?.estimatedIssueCount || 0), 0)
-})
+const aggregatedBuckets = computed(() => aggregated.value.buckets)
+const totalPoints = computed(() => aggregated.value.totalPoints)
+const totalCount = computed(() => aggregated.value.totalCount)
 
 const displayTotal = computed(() => props.metricMode === 'counts' ? totalCount.value : totalPoints.value)
 const unitLabel = computed(() => props.metricMode === 'counts' ? 'issues' : 'pts')
-
-const aggregatedBuckets = computed(() => {
-  if (!props.summary?.boards) return {}
-  const buckets = {
-    'tech-debt-quality': { points: 0, count: 0, issueCount: 0, completedPoints: 0, completedCount: 0 },
-    'new-features': { points: 0, count: 0, issueCount: 0, completedPoints: 0, completedCount: 0 },
-    'learning-enablement': { points: 0, count: 0, issueCount: 0, completedPoints: 0, completedCount: 0 },
-    'uncategorized': { points: 0, count: 0, issueCount: 0, completedPoints: 0, completedCount: 0 }
-  }
-  for (const boardData of Object.values(props.summary.boards)) {
-    if (!boardData?.summary?.buckets) continue
-    for (const [key, bucket] of Object.entries(boardData.summary.buckets)) {
-      if (buckets[key]) {
-        buckets[key].points += bucket.points || 0
-        buckets[key].count += bucket.count || bucket.issueCount || 0
-        buckets[key].issueCount += bucket.issueCount || 0
-        buckets[key].completedPoints += bucket.completedPoints || 0
-        buckets[key].completedCount += bucket.completedCount || 0
-      }
-    }
-  }
-  return buckets
-})
 </script>

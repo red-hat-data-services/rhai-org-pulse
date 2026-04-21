@@ -54,6 +54,7 @@
         <AllocationBar
           :buckets="sprintData.summary.buckets"
           :totalPoints="sprintData.summary.totalPoints"
+          :totalCount="sprintData.summary.totalCount || 0"
           :metricMode="metricMode"
           class="h-8"
         />
@@ -134,14 +135,18 @@ const displayTotal = computed(() => {
 
 function getBucketData(key) {
   const bucket = props.sprintData?.summary?.buckets?.[key]
-  const total = displayTotal.value
-  const value = props.metricMode === 'counts'
-    ? (bucket?.count || bucket?.issueCount || 0)
-    : (bucket?.points || 0)
+  let percentage
+  if (props.metricMode === 'counts') {
+    const total = displayTotal.value
+    const count = bucket?.count || 0
+    percentage = total > 0 ? Math.round((count / total) * 100) : 0
+  } else {
+    percentage = bucket?.percentage || 0
+  }
   return {
     points: bucket?.points || 0,
-    count: bucket?.count || bucket?.issueCount || 0,
-    percentage: total > 0 ? Math.round((value / total) * 100) : 0,
+    count: bucket?.count || 0,
+    percentage,
     completedPoints: bucket?.completedPoints || 0,
     completedCount: bucket?.completedCount || 0
   }

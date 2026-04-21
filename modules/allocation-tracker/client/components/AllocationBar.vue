@@ -87,6 +87,10 @@ const props = defineProps({
     type: Number,
     required: true
   },
+  totalCount: {
+    type: Number,
+    default: 0
+  },
   metricMode: {
     type: String,
     default: 'points'
@@ -96,16 +100,13 @@ const props = defineProps({
 const unitLabel = computed(() => props.metricMode === 'counts' ? 'issues' : 'pts')
 
 const total = computed(() => {
-  if (props.metricMode === 'counts') {
-    return Object.values(props.buckets).reduce((sum, b) => sum + (b.count || b.issueCount || 0), 0)
-  }
-  return props.totalPoints
+  return props.metricMode === 'counts' ? props.totalCount : props.totalPoints
 })
 
 function bucketValue(key) {
   const bucket = props.buckets[key]
   if (!bucket) return 0
-  if (props.metricMode === 'counts') return bucket.count || bucket.issueCount || 0
+  if (props.metricMode === 'counts') return bucket.count || 0
   return bucket.points || 0
 }
 

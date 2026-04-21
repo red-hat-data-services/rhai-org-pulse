@@ -15,7 +15,7 @@
           </span>
         </div>
         <p class="text-xs text-gray-400 mb-2">Aggregated from each board's currently active sprint</p>
-        <AllocationBar :buckets="orgSummary.buckets" :totalPoints="orgSummary.totalPoints" :metricMode="metricMode" />
+        <AllocationBar :buckets="orgSummary.buckets" :totalPoints="orgSummary.totalPoints" :totalCount="orgSummary.totalCount || 0" :metricMode="metricMode" />
       </div>
     </div>
 

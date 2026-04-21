@@ -188,17 +188,49 @@ async function handleRefreshData(hardRefresh) {
   }
 }
 
+// ─── Shared bucket helpers ───
+
+const BUCKET_KEYS = ['tech-debt-quality', 'new-features', 'learning-enablement', 'uncategorized']
+
+function emptyBucket() {
+  return { points: 0, count: 0, completedPoints: 0, completedCount: 0 }
+}
+
+/**
+ * Aggregate bucket data across boards from a project/org summary.
+ * Normalizes server fields (count/issueCount) into a single `count` field.
+ * Returns { buckets, totalPoints, totalCount }.
+ */
+function aggregateBuckets(boards) {
+  const buckets = Object.fromEntries(BUCKET_KEYS.map(k => [k, emptyBucket()]))
+  let totalPoints = 0
+  let totalCount = 0
+
+  for (const boardData of Object.values(boards)) {
+    if (!boardData?.summary?.buckets) continue
+    totalPoints += boardData.summary.totalPoints || 0
+    totalCount += boardData.summary.totalCount || 0
+    for (const [key, bucket] of Object.entries(boardData.summary.buckets)) {
+      if (!buckets[key]) continue
+      buckets[key].points += bucket.points || 0
+      buckets[key].count += bucket.count || bucket.issueCount || 0
+      buckets[key].completedPoints += bucket.completedPoints || 0
+      buckets[key].completedCount += bucket.completedCount || 0
+    }
+  }
+
+  return { buckets, totalPoints, totalCount }
+}
+
 // ─── transformSprintData ───
 
 function transformSprintData(data) {
-  // Group flat issues array by bucket
-  const issuesByBucket = { 'tech-debt-quality': [], 'new-features': [], 'learning-enablement': [], 'uncategorized': [] }
+  const issuesByBucket = Object.fromEntries(BUCKET_KEYS.map(k => [k, []]))
   for (const issue of (data.issues || [])) {
     const bucket = issuesByBucket[issue.bucket]
     if (bucket) bucket.push(issue)
   }
 
-  // Add percentage and completedPoints to summary
   const summary = { ...data.summary }
   const totalPoints = summary.totalPoints || 0
 
@@ -209,6 +241,8 @@ function transformSprintData(data) {
         completedPoints += bucket.completedPoints || 0
         return [key, {
           ...bucket,
+          count: bucket.count || bucket.issueCount || 0,
+          completedCount: bucket.completedCount || 0,
           percentage: totalPoints > 0 ? Math.round((bucket.points / totalPoints) * 100) : 0
         }]
       })
@@ -289,6 +323,7 @@ export function useAllocationData() {
     loadTeamSprints,
     handleSelectSprint,
     handleRefreshData,
-    transformSprintData
+    transformSprintData,
+    aggregateBuckets
   }
 }
