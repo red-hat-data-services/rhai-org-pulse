@@ -116,6 +116,14 @@ function getExcludedStatusesDisplay() {
   }
   return config.value.excludedStatuses || ''
 }
+
+function getAutofixProjectsDisplay() {
+  if (!config.value) return ''
+  if (Array.isArray(config.value.autofixProjects)) {
+    return config.value.autofixProjects.join(', ')
+  }
+  return config.value.autofixProjects || ''
+}
 </script>
 
 <template>
@@ -226,6 +234,35 @@ function getExcludedStatusesDisplay() {
         <span v-if="saveError" class="text-red-600 dark:text-red-400 text-sm">{{ saveError }}</span>
       </div>
     </template>
+
+    <!-- Autofix Configuration -->
+    <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+      <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Jira AutoFix</h4>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4" v-if="config">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Jira Projects</label>
+          <input
+            :value="getAutofixProjectsDisplay()"
+            @input="config.autofixProjects = $event.target.value.split(',').map(s => s.trim()).filter(Boolean)"
+            type="text"
+            placeholder="AIPCC, RHOAIENG"
+            class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500"
+          />
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Comma-separated Jira project keys to scan for autofix labels</p>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Created After</label>
+          <input
+            v-model="config.autofixCreatedAfter"
+            type="text"
+            placeholder="2026-04-15"
+            class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500"
+          />
+          <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Only include issues created on or after this date (YYYY-MM-DD)</p>
+        </div>
+      </div>
+    </div>
 
     <!-- Manual Refresh -->
     <div class="border-t border-gray-200 dark:border-gray-700 pt-4">

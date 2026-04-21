@@ -1,8 +1,10 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useAIImpact } from '../composables/useAIImpact.js'
+import { useAutofix } from '../composables/useAutofix.js'
 import PhaseSidebar from '../components/PhaseSidebar.vue'
 import PhaseContent from '../components/PhaseContent.vue'
+import AutofixContent from '../components/AutofixContent.vue'
 import ComingSoonPlaceholder from '../components/ComingSoonPlaceholder.vue'
 import RFEDetailPanel from '../components/RFEDetailPanel.vue'
 
@@ -14,6 +16,9 @@ const searchQuery = ref('')
 const chartExpanded = ref(true)
 
 const { rfeData, loading, error, load } = useAIImpact(timeWindow)
+
+const autofixTimeWindow = ref('month')
+const { autofixData, loading: autofixLoading, error: autofixError, load: autofixLoad } = useAutofix(autofixTimeWindow)
 
 const metrics = computed(() => rfeData.value?.metrics || null)
 const trendData = computed(() => rfeData.value?.trendData || [])
@@ -29,6 +34,12 @@ const phases = [
   { id: 'build-release', name: 'Build & Release', order: 7, status: 'coming-soon' },
 ]
 
+const workflows = [
+  { id: 'autofix', name: 'Jira AutoFix', status: 'active' }
+]
+
+const isPhase = computed(() => phases.some(p => p.id === selectedPhase.value))
+const isWorkflow = computed(() => workflows.some(w => w.id === selectedPhase.value))
 const activePhase = computed(() => phases.find(p => p.id === selectedPhase.value))
 
 const timeWindowCutoff = computed(() => {
@@ -53,17 +64,24 @@ const filteredRFEs = computed(() => {
 function handleRetry() {
   load()
 }
+
+function handleSelect(id) {
+  selectedPhase.value = id
+  selectedRFE.value = null
+}
 </script>
 
 <template>
   <div class="flex h-full bg-gray-50 dark:bg-gray-900">
     <PhaseSidebar
       :phases="phases"
+      :workflows="workflows"
       :selectedPhase="selectedPhase"
-      @select="selectedPhase = $event; selectedRFE = null"
+      @select="handleSelect"
     />
 
-    <template v-if="activePhase?.status === 'active'">
+    <!-- Phase views -->
+    <template v-if="isPhase && activePhase?.status === 'active'">
       <PhaseContent
         :phase="activePhase"
         :loading="loading"
@@ -94,8 +112,20 @@ function handleRetry() {
       />
     </template>
 
+    <!-- Workflow views -->
+    <AutofixContent
+      v-else-if="isWorkflow && selectedPhase === 'autofix'"
+      :loading="autofixLoading"
+      :error="autofixError"
+      :autofixData="autofixData"
+      :timeWindow="autofixTimeWindow"
+      @update:timeWindow="autofixTimeWindow = $event"
+      @retry="autofixLoad"
+    />
+
+    <!-- Coming soon placeholder for inactive phases -->
     <ComingSoonPlaceholder
-      v-else
+      v-else-if="isPhase"
       :phaseName="activePhase?.name || 'this phase'"
     />
   </div>
