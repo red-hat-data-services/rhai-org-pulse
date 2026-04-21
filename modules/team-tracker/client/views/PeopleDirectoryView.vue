@@ -1,6 +1,9 @@
 <script setup>
 import { ref, computed, onMounted, inject } from 'vue'
 import { apiRequest } from '@shared/client/services/api.js'
+import { useFieldDefinitions } from '@shared/client/composables/useFieldDefinitions'
+import { useFieldFilters } from '../composables/useFieldFilters'
+import FieldFilterPanel from '../components/FieldFilterPanel.vue'
 
 const nav = inject('moduleNav')
 
@@ -15,6 +18,27 @@ const selectedGeos = ref([])
 const sortField = ref('name')
 const sortAsc = ref(true)
 
+const { definitions, fetchDefinitions } = useFieldDefinitions()
+
+const personFieldDefs = computed(() =>
+  (definitions.value.personFields || []).filter(f => f.visible && !f.deleted && f.type === 'constrained')
+)
+
+// Full unfiltered active people list (for absolute filter counts)
+const activePeople = computed(() => people.value.filter(p => p.status === 'active'))
+
+const {
+  activeFilters: fieldActiveFilters,
+  setFilter: setFieldFilter,
+  clearFilter: clearFieldFilter,
+  clearAll: clearAllFieldFilters,
+  filtered: fieldFiltered,
+  filterCounts: fieldFilterCounts
+} = useFieldFilters(
+  activePeople,
+  personFieldDefs,
+  (person) => person._appFields || {}
+)
 
 async function loadData() {
   loading.value = true
@@ -22,7 +46,8 @@ async function loadData() {
     const [peopleRes, statsRes, syncRes] = await Promise.all([
       apiRequest('/modules/team-tracker/registry/people'),
       apiRequest('/modules/team-tracker/registry/stats'),
-      apiRequest('/modules/team-tracker/ipa/sync/status')
+      apiRequest('/modules/team-tracker/ipa/sync/status'),
+      fetchDefinitions()
     ])
     people.value = peopleRes.people || []
     stats.value = statsRes
@@ -69,7 +94,9 @@ const filteredStats = computed(() => {
 })
 
 const filtered = computed(() => {
-  let list = people.value.filter(p => p.status === 'active')
+  // Start with field-filtered set (from full active list with absolute counts)
+  const fieldFilteredUids = new Set(fieldFiltered.value.map(p => p.uid))
+  let list = people.value.filter(p => p.status === 'active' && fieldFilteredUids.has(p.uid))
 
   if (selectedOrgs.value.length > 0) {
     const orgSet = new Set(selectedOrgs.value)
@@ -228,6 +255,17 @@ onMounted(loadData)
             </label>
           </div>
         </div>
+
+        <!-- Custom field filters -->
+        <FieldFilterPanel
+          v-if="personFieldDefs.length > 0"
+          :field-definitions="personFieldDefs"
+          :active-filters="fieldActiveFilters"
+          :filter-counts="fieldFilterCounts"
+          @update:filter="({ fieldId, values }) => setFieldFilter(fieldId, values)"
+          @clear:filter="clearFieldFilter"
+          @clear:all="clearAllFieldFilters"
+        />
 
         <span class="text-sm text-gray-500 dark:text-gray-400 self-center ml-auto">{{ filtered.length }} results</span>
       </div>

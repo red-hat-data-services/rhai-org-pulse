@@ -268,6 +268,19 @@ onMounted(() => {
             </div>
           </div>
 
+          <!-- Custom Fields (in-app mode) -->
+          <div v-if="isInAppMode && visiblePersonFields.length > 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4 uppercase tracking-wider">Custom Fields</h3>
+            <PersonFieldEditor
+              :uid="person.uid"
+              :customFields="person._appFields || {}"
+              :fieldDefinitions="visiblePersonFields"
+              :canEdit="canEdit(person.uid)"
+              :people="allPeople"
+              @updated="loadPerson"
+            />
+          </div>
+
           <!-- Identities -->
           <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4 uppercase tracking-wider">Identities</h3>
@@ -422,18 +435,6 @@ onMounted(() => {
                 </tbody>
               </table>
             </div>
-          </div>
-
-          <!-- Custom Fields (in-app mode) -->
-          <div v-if="isInAppMode && visiblePersonFields.length > 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4 uppercase tracking-wider">Custom Fields</h3>
-            <PersonFieldEditor
-              :uid="person.uid"
-              :customFields="rosterMember?._appFields || {}"
-              :fieldDefinitions="visiblePersonFields"
-              :canEdit="canEdit(person.uid)"
-              @updated="loadPerson"
-            />
           </div>
 
           <!-- Metadata -->

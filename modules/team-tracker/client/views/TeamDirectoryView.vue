@@ -3,8 +3,11 @@ import { ref, computed, onMounted, inject } from 'vue'
 import { useOrgRoster } from '../composables/useOrgRoster'
 import { useRoster } from '@shared/client/composables/useRoster'
 import { usePermissions } from '@shared/client/composables/usePermissions'
+import { useFieldDefinitions } from '@shared/client/composables/useFieldDefinitions'
+import { useFieldFilters } from '../composables/useFieldFilters'
 import OrgSelector from '../components/OrgSelector.vue'
 import TeamCard from '../components/TeamCard.vue'
+import FieldFilterPanel from '../components/FieldFilterPanel.vue'
 
 const nav = inject('moduleNav')
 const { orgs, selectedOrg, loading, searchQuery, sortBy, filteredTeams, totalPeople, unassigned, loadTeams, loadOrgs } = useOrgRoster()
@@ -12,6 +15,27 @@ const { rosterData } = useRoster()
 const { isAdmin } = usePermissions()
 const unassignedExpanded = ref(false)
 const isInAppMode = computed(() => rosterData.value?.teamDataSource === 'in-app')
+
+const { definitions, fetchDefinitions } = useFieldDefinitions()
+
+const teamFieldDefs = computed(() =>
+  (definitions.value.teamFields || []).filter(f => f.visible && !f.deleted && f.type === 'constrained')
+)
+
+const {
+  activeFilters: teamActiveFilters,
+  setFilter: setTeamFilter,
+  clearFilter: clearTeamFilter,
+  clearAll: clearAllTeamFilters,
+  filtered: teamFieldFiltered,
+  filterCounts: teamFilterCounts
+} = useFieldFilters(
+  filteredTeams,
+  teamFieldDefs,
+  (team) => team.metadata || {}
+)
+
+const displayedTeams = computed(() => teamFieldFiltered.value)
 
 function openTeam(team) {
   nav.navigateTo('team-detail', { teamKey: `${team.org}::${team.name}` })
@@ -24,7 +48,7 @@ function selectOrg(org) {
 
 onMounted(async () => {
   const orgParam = nav.params.value?.org || selectedOrg.value
-  await Promise.all([loadTeams(orgParam || undefined), loadOrgs()])
+  await Promise.all([loadTeams(orgParam || undefined), loadOrgs(), fetchDefinitions()])
 
   if (nav.params.value?.org) {
     selectedOrg.value = nav.params.value.org
@@ -37,7 +61,7 @@ onMounted(async () => {
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
       <div>
         <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Team Directory</h2>
-        <p class="text-sm text-gray-500 dark:text-gray-400">{{ filteredTeams.length }} teams · {{ totalPeople }} people</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">{{ displayedTeams.length }} teams · {{ totalPeople }} people</p>
       </div>
       <div class="flex items-center gap-3">
         <div class="relative">
@@ -63,6 +87,18 @@ onMounted(async () => {
       @select="selectOrg"
       class="mb-6"
     />
+
+    <!-- Team field filters -->
+    <div v-if="teamFieldDefs.length > 0 && !loading" class="mb-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+      <FieldFilterPanel
+        :field-definitions="teamFieldDefs"
+        :active-filters="teamActiveFilters"
+        :filter-counts="teamFilterCounts"
+        @update:filter="({ fieldId, values }) => setTeamFilter(fieldId, values)"
+        @clear:filter="clearTeamFilter"
+        @clear:all="clearAllTeamFilters"
+      />
+    </div>
 
     <!-- Unassigned people banner -->
     <div v-if="unassigned.length > 0 && !loading" class="mb-6 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 rounded-lg">
@@ -115,14 +151,14 @@ onMounted(async () => {
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
     </div>
 
-    <div v-else-if="filteredTeams.length === 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
+    <div v-else-if="displayedTeams.length === 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
       <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">No Teams Found</h3>
       <p class="text-sm text-gray-500 dark:text-gray-400">Try a different search or org filter.</p>
     </div>
 
     <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <TeamCard
-        v-for="team in filteredTeams"
+        v-for="team in displayedTeams"
         :key="`${team.org}::${team.name}`"
         :team="team"
         @click="openTeam(team)"

@@ -44,7 +44,7 @@ describe('createFieldDefinition', () => {
     const storage = createMockStorage();
     const field = createFieldDefinition(storage, 'team', {
       label: 'Product Manager',
-      type: 'person-reference-unlinked'
+      type: 'person-reference-linked'
     }, 'admin@example.com');
 
     expect(field.label).toBe('Product Manager');

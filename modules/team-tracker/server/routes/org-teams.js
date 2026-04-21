@@ -116,6 +116,23 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
       teams.push({ org, name, boardUrls: teamBoardUrls, boards, engLeads, productManagers, headcount: counts, components, memberCount: teamPeople.length, jiraFilter });
     }
 
+    // Enrich with structure team metadata (C1 fix)
+    const teamStore = require('../../../../shared/server/team-store');
+    const structureData = teamStore.readTeams(storage);
+    const structureByComposite = {};
+    for (const [id, t] of Object.entries(structureData.teams)) {
+      const displayName = orgKeyToDisplay[t.orgKey] || t.orgKey;
+      structureByComposite[`${displayName}::${t.name}`] = { ...t, id };
+    }
+    for (const team of teams) {
+      const key = `${team.org}::${team.name}`;
+      const structure = structureByComposite[key];
+      if (structure) {
+        team.structureId = structure.id;
+        team.metadata = structure.metadata || {};
+      }
+    }
+
     // Find people with no team assignment
     const relevantPeople = orgFilter
       ? allPeople.filter(p => (orgKeyToDisplay[p.orgKey] || '') === orgFilter)

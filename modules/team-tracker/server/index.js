@@ -607,27 +607,35 @@ module.exports = function registerRoutes(router, context) {
     res.json(defs);
   });
 
-  const VALID_FIELD_TYPES = ['free-text', 'constrained', 'person-reference-linked', 'person-reference-unlinked'];
+  const VALID_FIELD_TYPES = ['free-text', 'constrained', 'person-reference-linked'];
 
   router.post('/structure/field-definitions/person', requireAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
-    const { label, type, required, visible, primaryDisplay, allowedValues } = req.body;
+    const { label, type, required, visible, primaryDisplay, allowedValues, multiValue } = req.body;
     if (!label) return res.status(400).json({ error: 'label is required' });
     if (typeof label !== 'string' || label.length > 100) return res.status(400).json({ error: 'label must be a string of 100 characters or fewer' });
     if (type && !VALID_FIELD_TYPES.includes(type)) return res.status(400).json({ error: `Invalid type. Must be one of: ${VALID_FIELD_TYPES.join(', ')}` });
-    const field = fieldStore.createFieldDefinition(storage, 'person', {
-      label: label.trim(), type, required, visible, primaryDisplay, allowedValues
-    }, req.userEmail);
-    res.status(201).json(field);
+    try {
+      const field = fieldStore.createFieldDefinition(storage, 'person', {
+        label: label.trim(), type, required, visible, primaryDisplay, allowedValues, multiValue
+      }, req.userEmail);
+      res.status(201).json(field);
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
   });
 
   router.patch('/structure/field-definitions/person/:fieldId', requireAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
-    const result = fieldStore.updateFieldDefinition(storage, 'person', req.params.fieldId, req.body, req.userEmail);
-    if (!result) return res.status(404).json({ error: 'Field not found' });
-    res.json(result);
+    try {
+      const result = fieldStore.updateFieldDefinition(storage, 'person', req.params.fieldId, req.body, req.userEmail);
+      if (!result) return res.status(404).json({ error: 'Field not found' });
+      res.json(result);
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
   });
 
   router.delete('/structure/field-definitions/person/:fieldId', requireAdmin, function(req, res) {
@@ -652,22 +660,30 @@ module.exports = function registerRoutes(router, context) {
   router.post('/structure/field-definitions/team', requireAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
-    const { label, type, required, visible, primaryDisplay, allowedValues } = req.body;
+    const { label, type, required, visible, primaryDisplay, allowedValues, multiValue } = req.body;
     if (!label) return res.status(400).json({ error: 'label is required' });
     if (typeof label !== 'string' || label.length > 100) return res.status(400).json({ error: 'label must be a string of 100 characters or fewer' });
     if (type && !VALID_FIELD_TYPES.includes(type)) return res.status(400).json({ error: `Invalid type. Must be one of: ${VALID_FIELD_TYPES.join(', ')}` });
-    const field = fieldStore.createFieldDefinition(storage, 'team', {
-      label: label.trim(), type, required, visible, primaryDisplay, allowedValues
-    }, req.userEmail);
-    res.status(201).json(field);
+    try {
+      const field = fieldStore.createFieldDefinition(storage, 'team', {
+        label: label.trim(), type, required, visible, primaryDisplay, allowedValues, multiValue
+      }, req.userEmail);
+      res.status(201).json(field);
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
   });
 
   router.patch('/structure/field-definitions/team/:fieldId', requireAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
-    const result = fieldStore.updateFieldDefinition(storage, 'team', req.params.fieldId, req.body, req.userEmail);
-    if (!result) return res.status(404).json({ error: 'Field not found' });
-    res.json(result);
+    try {
+      const result = fieldStore.updateFieldDefinition(storage, 'team', req.params.fieldId, req.body, req.userEmail);
+      if (!result) return res.status(404).json({ error: 'Field not found' });
+      res.json(result);
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
   });
 
   router.delete('/structure/field-definitions/team/:fieldId', requireAdmin, function(req, res) {
@@ -694,8 +710,21 @@ module.exports = function registerRoutes(router, context) {
     function(req, res) {
       const guard = demoWriteGuard(res);
       if (guard) return;
-      const result = fieldStore.updatePersonFields(storage, req.params.uid, req.body, req.userEmail);
+      if (typeof req.body !== 'object' || Array.isArray(req.body) || !req.body) {
+        return res.status(400).json({ error: 'Request body must be a JSON object' });
+      }
+
+      // Load existing person fields for required-field checks
+      const registry = readFromStorage('team-data/registry.json');
+      const person = registry && registry.people && registry.people[req.params.uid];
+      const existingValues = person && person._appFields ? person._appFields : {};
+
+      const { validated, warnings, errors } = fieldStore.validateFieldValues(storage, 'person', req.body, existingValues);
+      if (errors.length > 0) return res.status(400).json({ error: errors.join('; ') });
+
+      const result = fieldStore.updatePersonFields(storage, req.params.uid, validated, req.userEmail);
       if (!result) return res.status(404).json({ error: 'Person not found' });
+      if (warnings.length > 0) result._warnings = warnings;
       res.json(result);
     }
   );
@@ -705,9 +734,24 @@ module.exports = function registerRoutes(router, context) {
   router.patch('/structure/teams/:teamId/fields', requireAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
-    const result = teamStore.updateTeamFields(storage, req.params.teamId, req.body, req.userEmail);
+    if (typeof req.body !== 'object' || Array.isArray(req.body) || !req.body) {
+      return res.status(400).json({ error: 'Request body must be a JSON object' });
+    }
+
+    // Load existing team metadata for required-field checks
+    const teamsData = teamStore.readTeams(storage);
+    const team = teamsData.teams && teamsData.teams[req.params.teamId];
+    const existingValues = team && team.metadata ? team.metadata : {};
+
+    const { validated, warnings, errors } = fieldStore.validateFieldValues(storage, 'team', req.body, existingValues);
+    if (errors.length > 0) return res.status(400).json({ error: errors.join('; ') });
+
+    const result = teamStore.updateTeamFields(storage, req.params.teamId, validated, req.userEmail);
     if (!result) return res.status(404).json({ error: 'Team not found' });
-    res.json(result);
+    // Return flat metadata (not full team object) + optional warnings
+    const response = { ...(result.metadata || {}) };
+    if (warnings.length > 0) response._warnings = warnings;
+    res.json(response);
   });
 
   // ─── Audit Log ───

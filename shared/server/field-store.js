@@ -13,12 +13,105 @@ function generateFieldId() {
   return 'field_' + crypto.randomBytes(3).toString('hex');
 }
 
+const MAX_ALLOWED_VALUES = 100;
+const MAX_ALLOWED_VALUE_LENGTH = 200;
+const VALID_FIELD_TYPES = ['free-text', 'constrained', 'person-reference-linked'];
+
 function readFieldDefinitions(storage) {
   return storage.readFromStorage(FIELD_DEFS_KEY) || { personFields: [], teamFields: [] };
 }
 
 function writeFieldDefinitions(storage, data) {
   storage.writeToStorage(FIELD_DEFS_KEY, data);
+}
+
+/**
+ * Validate allowedValues array: must be an array of strings with reasonable bounds.
+ * @returns {string|null} Error message, or null if valid.
+ */
+function validateAllowedValues(allowedValues) {
+  if (allowedValues == null) return null;
+  if (!Array.isArray(allowedValues)) return 'allowedValues must be an array';
+  if (allowedValues.length > MAX_ALLOWED_VALUES) return `allowedValues cannot exceed ${MAX_ALLOWED_VALUES} items`;
+  for (const v of allowedValues) {
+    if (typeof v !== 'string') return 'Each allowedValues entry must be a string';
+    if (v.length > MAX_ALLOWED_VALUE_LENGTH) return `Each allowedValues entry must be ${MAX_ALLOWED_VALUE_LENGTH} characters or fewer`;
+    if (v.length === 0) return 'allowedValues entries cannot be empty strings';
+  }
+  return null;
+}
+
+/**
+ * Normalize a stored field value to match the field definition's current multiValue setting.
+ * - multiValue=true: string -> [string], null -> [], array -> array
+ * - multiValue=false: [first] -> first, string -> string, null -> null
+ */
+function coerceFieldValue(value, fieldDef) {
+  if (fieldDef && fieldDef.multiValue) {
+    if (value == null || value === '') return [];
+    if (Array.isArray(value)) return value;
+    return [value];
+  }
+  // single-value
+  if (Array.isArray(value)) return value[0] || null;
+  return value;
+}
+
+/**
+ * Validate and normalize field values against their definitions.
+ * @param {object} storage
+ * @param {'person'|'team'} scope
+ * @param {Object<string,*>} fieldValues - Incoming { fieldId: value } pairs
+ * @param {Object<string,*>} [existingValues] - Full current field values for required-field checks
+ * @returns {{ validated: Object, warnings: string[], errors: string[] }}
+ */
+function validateFieldValues(storage, scope, fieldValues, existingValues) {
+  const defs = readFieldDefinitions(storage);
+  const key = scope === 'person' ? 'personFields' : 'teamFields';
+  const fields = defs[key] || [];
+  const byId = {};
+  for (const f of fields) {
+    if (!f.deleted) byId[f.id] = f;
+  }
+
+  const validated = {};
+  const warnings = [];
+  const errors = [];
+
+  for (const [fieldId, rawValue] of Object.entries(fieldValues)) {
+    const fieldDef = byId[fieldId];
+    if (!fieldDef) {
+      errors.push(`Unknown field: ${fieldId}`);
+      continue;
+    }
+
+    const value = coerceFieldValue(rawValue, fieldDef);
+
+    if (fieldDef.type === 'constrained' && fieldDef.allowedValues) {
+      const allowed = fieldDef.allowedValues;
+      const vals = Array.isArray(value) ? value : (value ? [value] : []);
+      for (const v of vals) {
+        if (!allowed.includes(v)) {
+          warnings.push(`Value "${v}" is not in the allowed options for "${fieldDef.label}"`);
+        }
+      }
+    }
+
+    validated[fieldId] = value;
+  }
+
+  // Check required fields against the merged set of existing + incoming values
+  const merged = { ...(existingValues || {}), ...validated };
+  for (const f of fields) {
+    if (f.deleted || !f.required) continue;
+    const val = merged[f.id];
+    const isEmpty = val == null || val === '' || (Array.isArray(val) && val.length === 0);
+    if (isEmpty) {
+      warnings.push(`${f.label} is required`);
+    }
+  }
+
+  return { validated, warnings, errors };
 }
 
 /**
@@ -34,10 +127,17 @@ function createFieldDefinition(storage, scope, definition, actorEmail) {
   const key = scope === 'person' ? 'personFields' : 'teamFields';
   const fields = data[key];
 
+  const fieldType = definition.type || 'free-text';
+
+  // Validate allowedValues
+  const avError = validateAllowedValues(definition.allowedValues);
+  if (avError) throw new Error(avError);
+
   const field = {
     id: generateFieldId(),
     label: definition.label,
-    type: definition.type || 'free-text',
+    type: fieldType,
+    multiValue: fieldType === 'constrained' ? (definition.multiValue || false) : false,
     required: definition.required || false,
     visible: definition.visible !== false,
     primaryDisplay: definition.primaryDisplay || false,
@@ -78,9 +178,20 @@ function updateFieldDefinition(storage, scope, fieldId, updates, actorEmail) {
   const field = data[key].find(f => f.id === fieldId);
   if (!field) return null;
 
+  // Validate type if being updated
+  if (updates.type !== undefined && !VALID_FIELD_TYPES.includes(updates.type)) {
+    throw new Error(`Invalid type. Must be one of: ${VALID_FIELD_TYPES.join(', ')}`);
+  }
+
+  // Validate allowedValues if being updated
+  if (updates.allowedValues !== undefined) {
+    const avError = validateAllowedValues(updates.allowedValues);
+    if (avError) throw new Error(avError);
+  }
+
   const changes = {};
   for (const [k, v] of Object.entries(updates)) {
-    if (['label', 'type', 'required', 'visible', 'primaryDisplay', 'allowedValues'].includes(k)) {
+    if (['label', 'type', 'required', 'visible', 'primaryDisplay', 'allowedValues', 'multiValue'].includes(k)) {
       changes[k] = { old: field[k], new: v };
       field[k] = v;
     }
@@ -199,5 +310,7 @@ module.exports = {
   softDeleteField,
   reorderFields,
   updatePersonFields,
+  coerceFieldValue,
+  validateFieldValues,
   FIELD_DEFS_KEY
 };

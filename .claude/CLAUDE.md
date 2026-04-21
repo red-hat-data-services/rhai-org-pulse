@@ -284,6 +284,9 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/modules/ai-impact/features` — list all features (slim projection)
 - `/api/modules/ai-impact/features/:key` — single feature + history
 - `/api/modules/ai-impact/features/status` — feature data status (admin)
+- `/api/modules/team-tracker/org-teams` — org-roster teams with member counts, boards, components. Returns `structureId` and `metadata` on teams that match structure teams. Optional `org` query param.
+- `/api/modules/team-tracker/org-teams/:teamKey` — single org-roster team detail (teamKey = `org::teamName`)
+- `/api/modules/team-tracker/org-teams/:teamKey/members` — members of an org-roster team
 - `/api/modules/team-tracker/permissions/me` — current user's permission tier and managed UIDs
 - `/api/modules/team-tracker/structure/teams` — list all teams (optional `orgKey` filter)
 - `/api/modules/team-tracker/structure/unassigned` — list unassigned people (query: `scope=direct|org|all`)
@@ -331,7 +334,7 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/modules/team-tracker/structure/field-definitions/person/:fieldId` — edit person field definition (admin/team-admin)
 - `/api/modules/team-tracker/structure/field-definitions/team/:fieldId` — edit team field definition (admin/team-admin)
 - `/api/modules/team-tracker/structure/person/:uid/fields` — update person field values (manager/admin)
-- `/api/modules/team-tracker/structure/teams/:teamId/fields` — update team field values (admin/team-admin)
+- `/api/modules/team-tracker/structure/teams/:teamId/fields` — update team field values (admin/team-admin). Returns flat metadata object `{ fieldId: value, ... }` with optional `_warnings` array, not the full team object.
 
 **DELETE:**
 - `/api/tokens/:id` — revoke own API token

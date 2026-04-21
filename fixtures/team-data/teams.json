@@ -7,7 +7,8 @@
       "createdAt": "2026-01-01T00:00:00.000Z",
       "createdBy": "admin@example.com",
       "metadata": {
-        "field_g7h8i9": "Pat Manager"
+        "field_g7h8i9": "Pat Manager",
+        "field_tf0001": "Active"
       }
     },
     "team_d4e5f6": {
@@ -16,7 +17,9 @@
       "orgKey": "achen",
       "createdAt": "2026-01-01T00:00:00.000Z",
       "createdBy": "admin@example.com",
-      "metadata": {}
+      "metadata": {
+        "field_tf0001": "Forming"
+      }
     },
     "team_j1k2l3": {
       "id": "team_j1k2l3",
@@ -24,7 +27,9 @@
       "orgKey": "fjohnson",
       "createdAt": "2026-01-01T00:00:00.000Z",
       "createdBy": "admin@example.com",
-      "metadata": {}
+      "metadata": {
+        "field_tf0001": "Active"
+      }
     },
     "team_m4n5o6": {
       "id": "team_m4n5o6",

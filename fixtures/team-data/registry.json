@@ -34,7 +34,9 @@
       "teamIds": ["team_a1b2c3"],
       "_appFields": {
         "field_x1y2z3": "backend",
-        "field_d4e5f6": "Platform Core"
+        "field_d4e5f6": "Platform Core",
+        "field_mv0001": ["Python", "Go"],
+        "field_rq0001": "Backend"
       }
     },
     "bsmith": {
@@ -61,7 +63,9 @@
       "specialty": "backend",
       "teamIds": ["team_a1b2c3"],
       "_appFields": {
-        "field_x1y2z3": "backend"
+        "field_x1y2z3": "backend",
+        "field_mv0001": ["Go", "Rust"],
+        "field_rq0001": "Backend"
       }
     },
     "cwilliams": {
@@ -88,7 +92,9 @@
       "specialty": "fullstack",
       "teamIds": ["team_a1b2c3"],
       "_appFields": {
-        "field_x1y2z3": "fullstack"
+        "field_x1y2z3": "fullstack",
+        "field_mv0001": ["JavaScript", "Python"],
+        "field_rq0001": "Full Stack"
       }
     },
     "dlee": {
@@ -115,7 +121,9 @@
       "specialty": "backend",
       "teamIds": ["team_d4e5f6"],
       "_appFields": {
-        "field_x1y2z3": "backend"
+        "field_x1y2z3": "backend",
+        "field_mv0001": ["Python", "Java"],
+        "field_rq0001": "Backend"
       }
     },
     "egarcia": {
@@ -142,7 +150,9 @@
       "specialty": "devops",
       "teamIds": ["team_d4e5f6"],
       "_appFields": {
-        "field_x1y2z3": "devops"
+        "field_x1y2z3": "devops",
+        "field_mv0001": ["Go", "Python"],
+        "field_rq0001": "DevOps"
       }
     },
     "fjohnson": {

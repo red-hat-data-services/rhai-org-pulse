@@ -332,7 +332,7 @@ The single source of truth for all people data. Built by the consolidated sync p
 - Leaders are identified by matching a person's `uid` against the configured `orgRoots[].uid` values.
 - Enrichment fields from Google Sheets (`_teamGrouping`, `specialty`, `jiraTeam`, etc.) are stored as top-level fields on person records.
 - `teamIds` is an array of team IDs (e.g., `["team_a1b2c3"]`) linking the person to in-app managed teams. Defaults to `[]`. Only used when `teamDataSource` is `"in-app"`.
-- `_appFields` is an object mapping field definition IDs to values (e.g., `{ "field_x1y2z3": "backend" }`). Stores person-level custom field values managed in-app. The `_` prefix ensures it is not overwritten by Sheets enrichment during sync.
+- `_appFields` is an object mapping field definition IDs to values. Values are strings for single-value fields, or arrays of strings for multi-value fields (e.g., `{ "field_x1y2z3": "backend", "field_mv0001": ["Python", "Go"] }`). Stores person-level custom field values managed in-app. The `_` prefix ensures it is not overwritten by Sheets enrichment during sync.
 
 **Derived roster API response (`GET /api/roster`):**
 - When multiple org roots share the same explicitly-configured `displayName` in config, `deriveRoster()` merges them into a single org entry.
@@ -385,6 +385,7 @@ Stores custom field definitions for person-level and team-level fields. Created 
       "id": "field_x1y2z3",
       "label": "Focus Area",
       "type": "free-text",
+      "multiValue": false,
       "required": false,
       "visible": true,
       "primaryDisplay": true,
@@ -399,7 +400,8 @@ Stores custom field definitions for person-level and team-level fields. Created 
     {
       "id": "field_g7h8i9",
       "label": "Product Manager",
-      "type": "person-reference-unlinked",
+      "type": "person-reference-linked",
+      "multiValue": false,
       "required": false,
       "visible": true,
       "primaryDisplay": false,
@@ -416,9 +418,10 @@ Stores custom field definitions for person-level and team-level fields. Created 
 **Notes:**
 - `personFields` and `teamFields` are arrays sorted by `order`.
 - Field IDs follow the pattern `field_` + 6 hex characters (e.g., `field_x1y2z3`).
-- `type` is one of: `"free-text"`, `"person-reference-linked"`, `"person-reference-unlinked"`.
+- `type` is one of: `"free-text"`, `"constrained"`, `"person-reference-linked"`.
+- `multiValue` is a boolean. When `true` (only valid for `constrained` type), the field accepts an array of selected values. Defaults to `false`.
 - `deleted` supports soft-delete — deleted fields are hidden from the UI but values are preserved.
-- `allowedValues` is reserved for future use (currently always `null`).
+- `allowedValues` is an array of strings for `constrained` fields (the set of selectable options), or `null` for other field types. Maximum 100 items, each up to 200 characters.
 - At most one person field can have `primaryDisplay: true`.
 
 ## Audit Log — `data/audit-log.json`

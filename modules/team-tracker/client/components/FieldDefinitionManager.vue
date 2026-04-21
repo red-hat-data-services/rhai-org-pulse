@@ -8,6 +8,7 @@ const activeTab = ref('person')
 const showCreateModal = ref(false)
 const newFieldLabel = ref('')
 const newFieldType = ref('free-text')
+const newFieldMultiValue = ref(false)
 const newFieldOptions = ref([])
 const newOptionInput = ref('')
 const editingFieldId = ref(null)
@@ -25,8 +26,7 @@ watch(demoToast, (msg) => {
 const fieldTypes = [
   { value: 'free-text', label: 'Free Text' },
   { value: 'constrained', label: 'Constrained (dropdown)' },
-  { value: 'person-reference-linked', label: 'Person Reference (linked)' },
-  { value: 'person-reference-unlinked', label: 'Person Reference (unlinked)' }
+  { value: 'person-reference-linked', label: 'Person Reference' }
 ]
 
 const fieldTypeLabels = Object.fromEntries(fieldTypes.map(t => [t.value, t.label]))
@@ -41,6 +41,7 @@ const activeFields = computed(() => {
 function openCreateModal() {
   newFieldLabel.value = ''
   newFieldType.value = 'free-text'
+  newFieldMultiValue.value = false
   newFieldOptions.value = []
   newOptionInput.value = ''
   error.value = null
@@ -75,6 +76,7 @@ async function handleCreate() {
     }
     if (newFieldType.value === 'constrained') {
       body.allowedValues = newFieldOptions.value
+      body.multiValue = newFieldMultiValue.value
     }
     await createField(activeTab.value, body)
     showCreateModal.value = false
@@ -197,6 +199,7 @@ async function toggleVisibility(field) {
           <span v-if="field.type === 'constrained'" class="text-xs text-gray-400 ml-1">
             ({{ (field.allowedValues || []).length }} options)
           </span>
+          <span v-if="field.multiValue" class="text-xs text-primary-500 dark:text-primary-400 ml-1">(multi)</span>
         </div>
         <div v-if="editingFieldId !== field.id" class="flex items-center gap-2">
           <button
@@ -269,6 +272,14 @@ async function toggleVisibility(field) {
               </li>
             </ul>
             <p v-else class="text-xs text-gray-400 mt-1">Add at least one option.</p>
+            <label class="flex items-center gap-2 mt-3">
+              <input
+                type="checkbox"
+                v-model="newFieldMultiValue"
+                class="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500"
+              />
+              <span class="text-sm text-gray-700 dark:text-gray-300">Allow multiple values</span>
+            </label>
           </div>
         </div>
         <div class="mt-6 flex justify-end gap-3">

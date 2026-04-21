@@ -26,6 +26,7 @@ export function useTeams() {
   async function createTeam(name, orgKey) {
     const result = await apiRequest('/modules/team-tracker/structure/teams', {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, orgKey })
     })
     if (isDemoResponse(result)) { demoToast.value = result.message; return result }
@@ -36,6 +37,7 @@ export function useTeams() {
   async function renameTeam(teamId, name) {
     const result = await apiRequest(`/modules/team-tracker/structure/teams/${teamId}`, {
       method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name })
     })
     if (isDemoResponse(result)) { demoToast.value = result.message; return result }
@@ -56,6 +58,7 @@ export function useTeams() {
   async function assignMember(teamId, uid) {
     const result = await apiRequest(`/modules/team-tracker/structure/teams/${teamId}/members`, {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ uid })
     })
     if (isDemoResponse(result)) { demoToast.value = result.message; return result }
@@ -65,6 +68,7 @@ export function useTeams() {
   async function assignMembersBulk(teamId, uids) {
     const result = await apiRequest(`/modules/team-tracker/structure/teams/${teamId}/members/bulk`, {
       method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ uids })
     })
     if (isDemoResponse(result)) { demoToast.value = result.message; return result }
@@ -87,6 +91,7 @@ export function useTeams() {
   async function updateTeamFields(teamId, fields) {
     const result = await apiRequest(`/modules/team-tracker/structure/teams/${teamId}/fields`, {
       method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(fields)
     })
     if (isDemoResponse(result)) { demoToast.value = result.message; return result }
