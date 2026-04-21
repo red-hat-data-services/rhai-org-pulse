@@ -36,6 +36,8 @@ const selectedSprint = ref(null)
 const teamSprintData = ref(null)
 const isTeamDetailLoading = ref(false)
 
+const metricMode = ref('points')
+
 const isLoading = ref(false)
 const isRefreshing = ref(false)
 const lastUpdated = ref(null)
@@ -273,6 +275,7 @@ export function useAllocationData() {
     isTeamDetailLoading,
 
     // UI state
+    metricMode,
     isLoading,
     isRefreshing,
     lastUpdated,

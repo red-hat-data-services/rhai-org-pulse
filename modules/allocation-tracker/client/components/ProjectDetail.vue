@@ -13,17 +13,22 @@
       </button>
     </div>
 
+    <!-- Metric toggle -->
+    <div class="flex items-center justify-end mb-4">
+      <MetricToggle :modelValue="metricMode" @update:modelValue="$emit('update:metricMode', $event)" />
+    </div>
+
     <!-- Project allocation bar -->
     <div v-if="projectSummary && projectSummary.lastUpdated" class="mb-6">
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <div class="flex items-center justify-between mb-2">
           <h2 class="text-lg font-semibold text-gray-900">{{ project.name }} — Project Overview</h2>
-          <span v-if="totalPoints > 0" class="text-sm text-gray-500">
-            {{ totalPoints }} pts across {{ boardCount }} {{ boardCount === 1 ? 'board' : 'boards' }}
+          <span v-if="displayTotal > 0" class="text-sm text-gray-500">
+            {{ displayTotal }} {{ unitLabel }} across {{ boardCount }} {{ boardCount === 1 ? 'board' : 'boards' }}
           </span>
         </div>
         <p class="text-xs text-gray-400 mb-2">Aggregated from each board's currently active sprint</p>
-        <AllocationBar v-if="aggregatedBuckets && totalPoints > 0" :buckets="aggregatedBuckets" :totalPoints="totalPoints" />
+        <AllocationBar v-if="aggregatedBuckets && displayTotal > 0" :buckets="aggregatedBuckets" :totalPoints="totalPoints" :metricMode="metricMode" />
       </div>
     </div>
 
@@ -78,6 +83,7 @@
         :key="board.id"
         :board="board"
         :sprintData="boardSprintData[board.id] || null"
+        :metricMode="metricMode"
         @select-team="$emit('select-team', $event)"
       />
     </div>
@@ -90,6 +96,7 @@
 import { computed } from 'vue'
 import AllocationBar from './AllocationBar.vue'
 import FilterSelector from './FilterSelector.vue'
+import MetricToggle from './MetricToggle.vue'
 import LoadingOverlay from '@shared/client/components/LoadingOverlay.vue'
 import TeamCard from './TeamCard.vue'
 
@@ -125,10 +132,14 @@ const props = defineProps({
   activeFilter: {
     type: Object,
     default: null
+  },
+  metricMode: {
+    type: String,
+    default: 'points'
   }
 })
 
-defineEmits(['back', 'select-team', 'select-filter', 'create-filter', 'edit-filter', 'delete-filter'])
+defineEmits(['back', 'select-team', 'select-filter', 'create-filter', 'edit-filter', 'delete-filter', 'update:metricMode'])
 
 const filteredBoards = computed(() => {
   const boards = props.activeFilter
@@ -145,10 +156,10 @@ const boardCount = computed(() => {
 const aggregatedBuckets = computed(() => {
   if (!props.projectSummary?.boards) return null
   const buckets = {
-    'tech-debt-quality': { points: 0, issueCount: 0, completedPoints: 0 },
-    'new-features': { points: 0, issueCount: 0, completedPoints: 0 },
-    'learning-enablement': { points: 0, issueCount: 0, completedPoints: 0 },
-    'uncategorized': { points: 0, issueCount: 0, completedPoints: 0 }
+    'tech-debt-quality': { points: 0, count: 0, issueCount: 0, completedPoints: 0, completedCount: 0 },
+    'new-features': { points: 0, count: 0, issueCount: 0, completedPoints: 0, completedCount: 0 },
+    'learning-enablement': { points: 0, count: 0, issueCount: 0, completedPoints: 0, completedCount: 0 },
+    'uncategorized': { points: 0, count: 0, issueCount: 0, completedPoints: 0, completedCount: 0 }
   }
 
   for (const boardData of Object.values(props.projectSummary.boards)) {
@@ -156,8 +167,10 @@ const aggregatedBuckets = computed(() => {
     for (const [key, bucket] of Object.entries(boardData.summary.buckets)) {
       if (buckets[key]) {
         buckets[key].points += bucket.points || 0
+        buckets[key].count += bucket.count || bucket.issueCount || 0
         buckets[key].issueCount += bucket.issueCount || 0
         buckets[key].completedPoints += bucket.completedPoints || 0
+        buckets[key].completedCount += bucket.completedCount || 0
       }
     }
   }
@@ -170,4 +183,13 @@ const totalPoints = computed(() => {
   return Object.values(props.projectSummary.boards)
     .reduce((sum, b) => sum + (b?.summary?.totalPoints || 0), 0)
 })
+
+const totalCount = computed(() => {
+  if (!props.projectSummary?.boards) return 0
+  return Object.values(props.projectSummary.boards)
+    .reduce((sum, b) => sum + (b?.summary?.totalCount || b?.summary?.estimatedIssueCount || 0), 0)
+})
+
+const displayTotal = computed(() => props.metricMode === 'counts' ? totalCount.value : totalPoints.value)
+const unitLabel = computed(() => props.metricMode === 'counts' ? 'issues' : 'pts')
 </script>
