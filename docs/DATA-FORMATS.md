@@ -380,6 +380,52 @@ Cached RFE issues fetched from Jira. The module's primary data file.
 - `linkedFeature` is resolved from Jira issue links (type = "Cloners", outward to RHAISTRAT project). Can be `null` if no link exists.
 - `labels` is the raw Jira label array, preserved for reference
 
+## AI Impact — Assessments (`data/ai-impact/assessments.json`)
+
+Quality assessment data pushed from the rfe-quality-dashboard CI pipeline. Stores the latest assessment and score history for each RFE.
+
+```json
+{
+  "lastSyncedAt": "2026-04-19T12:00:00Z",
+  "totalAssessed": 1630,
+  "assessments": {
+    "RHAIRFE-123": {
+      "latest": {
+        "scores": { "what": 2, "why": 1, "how": 2, "task": 1, "size": 2 },
+        "total": 8,
+        "passFail": "PASS",
+        "antiPatterns": ["WHY Void"],
+        "criterionNotes": {
+          "what": "...", "why": "...", "how": "...", "task": "...", "size": "..."
+        },
+        "verdict": "One-sentence summary.",
+        "feedback": "Actionable markdown.",
+        "assessedAt": "2026-04-19T12:00:00Z"
+      },
+      "history": [
+        {
+          "total": 5,
+          "passFail": "FAIL",
+          "scores": { "what": 1, "why": 0, "how": 1, "task": 1, "size": 2 },
+          "assessedAt": "2026-04-12T12:00:00Z"
+        }
+      ]
+    }
+  }
+}
+```
+
+**Notes:**
+- `latest` contains the full assessment (scores, notes, verdict, feedback). Used by list, detail, and chart views.
+- `history` contains prior assessments with a trimmed payload (only `scores`, `total`, `passFail`, `assessedAt`). Full notes are only kept in `latest` to control file size.
+- History is sorted newest-first, capped at 20 entries per RFE (`MAX_HISTORY`). When the cap is reached, only entries newer than the oldest existing entry are accepted; older entries are discarded without insertion.
+- `lastSyncedAt` and `totalAssessed` are updated on every write (PUT single or POST bulk).
+- `scores`: each criterion (`what`, `why`, `how`, `task`, `size`) is an integer 0-2. `total` is the sum (0-10).
+- `passFail` is `"PASS"` or `"FAIL"` (enum only; no server-side threshold validation).
+- Upsert is idempotent: if `latest.assessedAt` matches the incoming `assessedAt`, the write is skipped and the endpoint returns `"unchanged"`.
+- The file is written atomically (write-to-temp-then-rename) to prevent corruption from mid-write crashes.
+- On DELETE, the file is written as `{ "lastSyncedAt": null, "totalAssessed": 0, "assessments": {} }` (never `null`).
+
 ## AI Impact — Config (`data/ai-impact/config.json`)
 
 Admin-configurable settings for the AI Impact module.

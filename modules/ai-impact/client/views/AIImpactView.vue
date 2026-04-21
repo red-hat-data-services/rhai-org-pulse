@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { useAIImpact } from '../composables/useAIImpact.js'
 import { useAutofix } from '../composables/useAutofix.js'
+import { useAssessments } from '../composables/useAssessments.js'
 import PhaseSidebar from '../components/PhaseSidebar.vue'
 import PhaseContent from '../components/PhaseContent.vue'
 import AutofixContent from '../components/AutofixContent.vue'
@@ -14,8 +15,16 @@ const timeWindow = ref('week')
 const filter = ref('all')
 const searchQuery = ref('')
 const chartExpanded = ref(true)
+const sortBy = ref('default')
+const passFailFilter = ref('all')
+const priorityFilter = ref('all')
+const statusFilter = ref('all')
 
 const { rfeData, loading, error, load } = useAIImpact(timeWindow)
+const { assessments, loadAssessments, loadAssessmentDetail } = useAssessments()
+
+// Load assessments alongside RFE data
+loadAssessments()
 
 const autofixTimeWindow = ref('month')
 const { autofixData, loading: autofixLoading, error: autofixError, load: autofixLoad } = useAutofix(autofixTimeWindow)
@@ -61,8 +70,20 @@ const filteredRFEs = computed(() => {
   })
 })
 
+const filteredAssessments = computed(() => {
+  const rfeKeys = new Set(filteredRFEs.value.map(r => r.key))
+  const result = {}
+  for (const [key, assessment] of Object.entries(assessments.value)) {
+    if (rfeKeys.has(key)) {
+      result[key] = assessment
+    }
+  }
+  return result
+})
+
 function handleRetry() {
   load()
+  loadAssessments()
 }
 
 function handleSelect(id) {
@@ -72,7 +93,7 @@ function handleSelect(id) {
 </script>
 
 <template>
-  <div class="flex h-full bg-gray-50 dark:bg-gray-900">
+  <div class="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
     <PhaseSidebar
       :phases="phases"
       :workflows="workflows"
@@ -95,10 +116,20 @@ function handleSelect(id) {
         :filter="filter"
         :searchQuery="searchQuery"
         :chartExpanded="chartExpanded"
+        :assessments="assessments"
+        :filteredAssessments="filteredAssessments"
+        :sortBy="sortBy"
+        :passFailFilter="passFailFilter"
+        :priorityFilter="priorityFilter"
+        :statusFilter="statusFilter"
         @update:timeWindow="timeWindow = $event"
         @update:filter="filter = $event"
         @update:searchQuery="searchQuery = $event"
         @update:chartExpanded="chartExpanded = $event"
+        @update:sortBy="sortBy = $event"
+        @update:passFailFilter="passFailFilter = $event"
+        @update:priorityFilter="priorityFilter = $event"
+        @update:statusFilter="statusFilter = $event"
         @selectRFE="selectedRFE = $event"
         @retry="handleRetry"
       />
@@ -108,6 +139,8 @@ function handleSelect(id) {
         :rfe="selectedRFE"
         :phases="phases"
         :jiraHost="rfeData?.jiraHost"
+        :assessment="assessments[selectedRFE?.key] || null"
+        :loadAssessmentDetail="loadAssessmentDetail"
         @close="selectedRFE = null"
       />
     </template>

@@ -11,6 +11,10 @@ const refreshStatus = ref(null)
 const refreshTriggering = ref(false)
 const clearingCache = ref(false)
 const clearCacheResult = ref(null)
+const assessmentStatus = ref(null)
+const assessmentStatusLoading = ref(false)
+const clearingAssessments = ref(false)
+const clearAssessmentsResult = ref(null)
 
 async function loadConfig() {
   loading.value = true
@@ -103,9 +107,36 @@ async function checkRefreshStatus() {
   }
 }
 
+async function loadAssessmentStatus() {
+  assessmentStatusLoading.value = true
+  try {
+    assessmentStatus.value = await apiRequest('/modules/ai-impact/assessments/status')
+  } catch {
+    assessmentStatus.value = null
+  } finally {
+    assessmentStatusLoading.value = false
+  }
+}
+
+async function clearAssessments() {
+  clearingAssessments.value = true
+  clearAssessmentsResult.value = null
+  try {
+    await apiRequest('/modules/ai-impact/assessments', { method: 'DELETE' })
+    clearAssessmentsResult.value = { status: 'success', message: 'Assessment data cleared' }
+    loadAssessmentStatus()
+    setTimeout(() => { clearAssessmentsResult.value = null }, 3000)
+  } catch (e) {
+    clearAssessmentsResult.value = { status: 'error', message: e.message }
+  } finally {
+    clearingAssessments.value = false
+  }
+}
+
 onMounted(() => {
   loadConfig()
   checkRefreshStatus()
+  loadAssessmentStatus()
 })
 
 // Format excludedStatuses for display
@@ -296,6 +327,42 @@ function getAutofixProjectsDisplay() {
           </span>
         </div>
       </div>
+    </div>
+    <!-- Assessment Data -->
+    <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+      <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Assessment Data</h4>
+      <div v-if="assessmentStatusLoading" class="text-sm text-gray-500 dark:text-gray-400">Loading assessment status...</div>
+      <template v-else-if="assessmentStatus">
+        <div class="grid grid-cols-3 gap-4 mb-3">
+          <div class="bg-gray-50 dark:bg-gray-700 rounded-md p-3">
+            <p class="text-xs text-gray-500 dark:text-gray-400">Total Assessed</p>
+            <p class="text-lg font-semibold dark:text-gray-200">{{ assessmentStatus.totalAssessed }}</p>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700 rounded-md p-3">
+            <p class="text-xs text-gray-500 dark:text-gray-400">History Entries</p>
+            <p class="text-lg font-semibold dark:text-gray-200">{{ assessmentStatus.totalHistoryEntries }}</p>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700 rounded-md p-3">
+            <p class="text-xs text-gray-500 dark:text-gray-400">Last Synced</p>
+            <p class="text-sm font-medium dark:text-gray-200">
+              {{ assessmentStatus.lastSyncedAt ? new Date(assessmentStatus.lastSyncedAt).toLocaleString() : 'Never' }}
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <button
+            @click="clearAssessments"
+            :disabled="clearingAssessments || assessmentStatus.totalAssessed === 0"
+            class="px-4 py-2 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-300 rounded-md text-sm hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
+          >
+            {{ clearingAssessments ? 'Clearing...' : 'Clear Assessment Data' }}
+          </button>
+          <span v-if="clearAssessmentsResult" class="text-sm" :class="clearAssessmentsResult.status === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+            {{ clearAssessmentsResult.message }}
+          </span>
+        </div>
+      </template>
+      <div v-else class="text-sm text-gray-500 dark:text-gray-400">No assessment data available</div>
     </div>
   </div>
 </template>

@@ -1,9 +1,30 @@
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import LoadingOverlay from '@shared/client/components/LoadingOverlay.vue'
 import MetricsRow from './MetricsRow.vue'
 import TrendCharts from './TrendCharts.vue'
 import RFEList from './RFEList.vue'
+import AssessmentGuideModal from './AssessmentGuideModal.vue'
+
+const GUIDE_DISMISSED_KEY = 'tt_cache:ai-impact-guide-dismissed'
+const showGuideModal = ref(false)
+
+onMounted(() => {
+  if (localStorage.getItem(GUIDE_DISMISSED_KEY) !== 'true') {
+    showGuideModal.value = true
+  }
+})
+
+function closeGuide(dismiss) {
+  showGuideModal.value = false
+  if (dismiss) {
+    localStorage.setItem(GUIDE_DISMISSED_KEY, 'true')
+  }
+}
+
+function openGuide() {
+  showGuideModal.value = true
+}
 
 const props = defineProps({
   phase: { type: Object, required: true },
@@ -18,7 +39,12 @@ const props = defineProps({
   filter: { type: String, default: 'all' },
   searchQuery: { type: String, default: '' },
   chartExpanded: { type: Boolean, default: true },
-  isAdmin: { type: Boolean, default: false }
+  assessments: { type: Object, default: () => ({}) },
+  filteredAssessments: { type: Object, default: () => ({}) },
+  sortBy: { type: String, default: 'default' },
+  passFailFilter: { type: String, default: 'all' },
+  priorityFilter: { type: String, default: 'all' },
+  statusFilter: { type: String, default: 'all' }
 })
 
 const emit = defineEmits([
@@ -26,6 +52,10 @@ const emit = defineEmits([
   'update:filter',
   'update:searchQuery',
   'update:chartExpanded',
+  'update:sortBy',
+  'update:passFailFilter',
+  'update:priorityFilter',
+  'update:statusFilter',
   'selectRFE',
   'retry'
 ])
@@ -41,19 +71,22 @@ const isEmpty = computed(() => !props.rfeData?.fetchedAt)
         <h2 class="text-lg font-semibold dark:text-gray-100">{{ phase.name }}</h2>
         <p class="text-sm text-gray-500 dark:text-gray-400">AI adoption metrics and RFE tracking</p>
       </div>
-      <select
-        :value="timeWindow"
-        @change="emit('update:timeWindow', $event.target.value)"
-        class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-gray-300"
-      >
-        <option value="week">This Week</option>
-        <option value="month">This Month</option>
-        <option value="3months">Last 3 Months</option>
-      </select>
+      <div class="flex items-center gap-3">
+        <select
+          :value="timeWindow"
+          @change="emit('update:timeWindow', $event.target.value)"
+          class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-gray-300"
+        >
+          <option value="week">This Week</option>
+          <option value="month">This Month</option>
+          <option value="3months">Last 3 Months</option>
+        </select>
+      </div>
     </header>
 
     <!-- Content -->
     <div class="flex-1 overflow-auto">
+
       <!-- Loading -->
       <LoadingOverlay v-if="loading && !rfeData" />
 
@@ -95,6 +128,7 @@ const isEmpty = computed(() => !props.rfeData?.fetchedAt)
           :trendData="trendData"
           :breakdown="breakdown"
           :expanded="chartExpanded"
+          :filteredAssessments="filteredAssessments"
           @toggle="emit('update:chartExpanded', !chartExpanded)"
         />
 
@@ -103,11 +137,35 @@ const isEmpty = computed(() => !props.rfeData?.fetchedAt)
           :filter="filter"
           :searchQuery="searchQuery"
           :jiraHost="rfeData?.jiraHost"
+          :assessments="assessments"
+          :sortBy="sortBy"
+          :passFailFilter="passFailFilter"
+          :priorityFilter="priorityFilter"
+          :statusFilter="statusFilter"
           @update:filter="emit('update:filter', $event)"
           @update:searchQuery="emit('update:searchQuery', $event)"
+          @update:sortBy="emit('update:sortBy', $event)"
+          @update:passFailFilter="emit('update:passFailFilter', $event)"
+          @update:priorityFilter="emit('update:priorityFilter', $event)"
+          @update:statusFilter="emit('update:statusFilter', $event)"
           @selectRFE="emit('selectRFE', $event)"
         />
       </template>
     </div>
+
+    <!-- Floating help button -->
+    <button
+      @click="openGuide"
+      class="fixed bottom-6 right-6 w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all flex items-center justify-center group z-40"
+    >
+      <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span class="absolute bottom-full right-0 mb-2 px-3 py-1.5 text-xs font-medium text-white bg-gray-900 dark:bg-gray-700 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+        AI Impact Tools
+      </span>
+    </button>
+
+    <AssessmentGuideModal :show="showGuideModal" @close="closeGuide" />
   </div>
 </template>

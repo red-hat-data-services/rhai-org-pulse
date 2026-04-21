@@ -13,6 +13,10 @@ module.exports = function registerRoutes(router, context) {
   const { computeAllMetrics } = require('./metrics');
   const { fetchAutofixData, computeAutofixMetrics, buildTrendData: buildAutofixTrend } = require('./jira/autofix-fetcher');
 
+  // Assessment routes (Phase 1: Storage + Ingest API)
+  const registerAssessmentRoutes = require('./assessments/routes');
+  registerAssessmentRoutes(router, context);
+
   // ─── Refresh state (in-memory) ───
 
   const refreshState = {

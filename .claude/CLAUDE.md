@@ -278,6 +278,12 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/modules/feature-traffic/versions` — unique fix versions
 - `/api/modules/feature-traffic/status` — data freshness, sync info, staleness warning
 - `/api/modules/feature-traffic/config` — fetch configuration (admin)
+- `/api/modules/ai-impact/assessments` — list all latest assessments (slim projection)
+- `/api/modules/ai-impact/assessments/:key` — single RFE assessment + history
+- `/api/modules/ai-impact/assessments/status` — assessment data status (admin)
+
+**PUT:**
+- `/api/modules/ai-impact/assessments/:key` — upsert single assessment (admin)
 
 **POST:**
 - `/api/tokens` — create a new API token (returns raw token once)
@@ -300,11 +306,13 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/modules/team-tracker/snapshots/generate` — generate snapshots for all teams (admin)
 - `/api/modules/feature-traffic/refresh` — trigger manual data refresh from GitLab CI (admin)
 - `/api/modules/feature-traffic/config` — save fetch configuration (admin)
+- `/api/modules/ai-impact/assessments/bulk` — bulk upsert assessments (admin)
 
 **DELETE:**
 - `/api/tokens/:id` — revoke own API token
 - `/api/admin/tokens/:id` — revoke any API token (admin)
 - `/api/modules/team-tracker/snapshots` — delete all stored snapshots (admin)
+- `/api/modules/ai-impact/assessments` — clear all assessment data (admin)
 
 **GET (snapshots):**
 - `/api/modules/team-tracker/snapshots/:teamKey` — all snapshots for a team
