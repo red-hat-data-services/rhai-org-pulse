@@ -69,6 +69,16 @@ const selectClass = 'bg-white dark:bg-gray-800 border border-gray-300 dark:borde
       <option v-for="p in (filterOptions.priorities || [])" :key="p" :value="p">{{ p }}</option>
     </select>
 
+    <select
+      v-if="filterOptions.teams && filterOptions.teams.length > 0"
+      :value="selectedTeam"
+      @change="$emit('update:selectedTeam', $event.target.value)"
+      :class="selectClass"
+    >
+      <option value="">All Teams</option>
+      <option v-for="t in filterOptions.teams" :key="t" :value="t">{{ t }}</option>
+    </select>
+
     <button
       v-if="hasActiveFilters"
       class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"

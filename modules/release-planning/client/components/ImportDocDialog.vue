@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { apiRequest } from '@shared/client/services/api'
 
 const API_BASE = '/modules/release-planning'
@@ -17,6 +17,17 @@ const previewing = ref(false)
 const importing = ref(false)
 const previewData = ref(null)
 const error = ref(null)
+
+watch(function() { return props.open }, function(isOpen) {
+  if (isOpen) {
+    docUrl.value = ''
+    mode.value = 'replace'
+    previewData.value = null
+    error.value = null
+    previewing.value = false
+    importing.value = false
+  }
+})
 
 const docId = computed(function() {
   const input = docUrl.value.trim()

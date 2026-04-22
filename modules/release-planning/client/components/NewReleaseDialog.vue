@@ -22,6 +22,7 @@ const docUrl = ref('')
 const previewLoading = ref(false)
 const previewData = ref(null)
 const previewError = ref(null)
+const releaseCreated = ref(false)
 
 // SmartSheet state
 const smartSheetReleases = ref([])
@@ -68,6 +69,7 @@ watch(function() { return props.open }, function(isOpen) {
     previewData.value = null
     previewError.value = null
     previewLoading.value = false
+    releaseCreated.value = false
     loadSmartSheetReleases()
   }
 })
@@ -130,19 +132,23 @@ async function handleCreate() {
   errorMsg.value = ''
 
   try {
-    var cloneSource = mode.value === 'clone' ? cloneFrom.value : null
-    var result = await createRelease(version.value.trim(), cloneSource)
+    var result
+    if (!releaseCreated.value) {
+      var cloneSource = mode.value === 'clone' ? cloneFrom.value : null
+      result = await createRelease(version.value.trim(), cloneSource)
 
-    if (result.status === 'skipped') {
-      emit('close')
-      return
+      if (result.status === 'skipped') {
+        emit('close')
+        return
+      }
+      releaseCreated.value = true
     }
 
     if (mode.value === 'import' && docId.value) {
       await executeDocImport(version.value.trim(), docId.value, 'replace')
     }
 
-    emit('created', result)
+    emit('created', result || { version: version.value.trim() })
     emit('close')
   } catch (err) {
     errorMsg.value = err.message || 'Failed to create release'

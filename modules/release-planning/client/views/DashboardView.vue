@@ -115,22 +115,10 @@ async function handleSave() {
     }
     closeEditPanel()
   } catch (err) {
-    if (err.status === 400) {
-      // Try to parse field errors from the response
-      try {
-        const body = JSON.parse(err.message.replace(/^Validation failed/, '').trim() || '{}')
-        if (body && typeof body === 'object') {
-          setFieldErrors(body)
-        }
-      } catch {
-        // If the error response has fields attached
-      }
-      // Also try to get field errors from a structured response
-      // The apiRequest helper throws with the error message
-      setSaveError(err.message)
-    } else {
-      setSaveError(err.message || 'Save failed. Your changes have not been lost -- please retry.')
+    if (err.status === 400 && err.data && err.data.fields) {
+      setFieldErrors(err.data.fields)
     }
+    setSaveError(err.message || 'Save failed. Your changes have not been lost -- please retry.')
   } finally {
     setSaving(false)
   }
@@ -186,7 +174,7 @@ function handleCancelDelete() {
 
 async function handleReorder(orderedNames) {
   try {
-    var result = await reorderBigRocks(selectedVersion.value, orderedNames)
+    const result = await reorderBigRocks(selectedVersion.value, orderedNames)
     if (result && result.bigRocks) {
       updateBigRocksInPlace(result.bigRocks)
     }
