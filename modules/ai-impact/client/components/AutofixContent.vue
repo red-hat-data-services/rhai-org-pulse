@@ -291,8 +291,8 @@ const autofixSegments = computed(() => {
     { label: 'AI Researched', count: a.researched || 0, color: 'bg-teal-500', textClass: 'text-teal-600 dark:text-teal-400', jiraLabels: ['jira-autofix-researched'] },
     { label: 'AI Fix Under Review', count: a.review || 0, color: 'bg-blue-500', textClass: 'text-blue-600 dark:text-blue-400', jiraLabels: ['jira-autofix-review'] },
     { label: 'AI Fix CI Failing', count: a.ciFailing || 0, color: 'bg-orange-500', textClass: 'text-orange-600 dark:text-orange-400', jiraLabels: ['jira-autofix-ci-failing'] },
-    { label: 'AI Working', count: a.pending || 0, color: 'bg-indigo-500', textClass: 'text-indigo-600 dark:text-indigo-400', jiraLabels: ['jira-autofix-pending'] },
-    { label: 'Queued for AI', count: a.ready || 0, color: 'bg-gray-400', textClass: 'text-gray-500 dark:text-gray-400', jiraLabels: ['jira-autofix'] },
+    { label: 'AI Working', count: a.pending || 0, color: 'bg-indigo-500', textClass: 'text-indigo-600 dark:text-indigo-400', jiraLabels: ['jira-autofix-pending'], excludeLabels: ['jira-autofix-blocked', 'jira-autofix-ci-failing', 'jira-autofix-review', 'jira-autofix-merged', 'jira-autofix-rejected', 'jira-autofix-max-retries', 'jira-autofix-researched'] },
+    { label: 'Queued for AI', count: a.ready || 0, color: 'bg-gray-400', textClass: 'text-gray-500 dark:text-gray-400', jiraLabels: ['jira-autofix'], excludeLabels: ['jira-autofix-pending', 'jira-autofix-review', 'jira-autofix-ci-failing', 'jira-autofix-merged', 'jira-autofix-rejected', 'jira-autofix-max-retries', 'jira-autofix-researched', 'jira-autofix-blocked'] },
     { label: 'AI Fix Rejected', count: a.rejected || 0, color: 'bg-red-500', textClass: 'text-red-600 dark:text-red-400', jiraLabels: ['jira-autofix-rejected'] },
     { label: 'AI Max Retries', count: a.maxRetries || 0, color: 'bg-orange-500', textClass: 'text-orange-600 dark:text-orange-400', jiraLabels: ['jira-autofix-max-retries'] },
     { label: 'AI Blocked', count: a.blocked || 0, color: 'bg-yellow-500', textClass: 'text-yellow-600 dark:text-yellow-400', jiraLabels: ['jira-autofix-blocked'] }
@@ -301,10 +301,14 @@ const autofixSegments = computed(() => {
 
 const autofixSegmentTotal = computed(() => autofixSegments.value.reduce((s, v) => s + v.count, 0))
 
-function buildJiraLabelUrl(jiraLabels) {
+function buildJiraLabelUrl(jiraLabels, excludeLabels) {
   const host = jiraHost.value
   const labels = jiraLabels.map(l => `"${l}"`).join(', ')
   let jql = `labels IN (${labels})`
+  if (excludeLabels && excludeLabels.length > 0) {
+    const excluded = excludeLabels.map(l => `"${l}"`).join(', ')
+    jql += ` AND labels NOT IN (${excluded})`
+  }
   if (selectedProject.value !== 'all') {
     jql += ` AND project = "${selectedProject.value}"`
   } else {
@@ -444,7 +448,7 @@ function buildJiraLabelUrl(jiraLabels) {
           >
             <div class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ metrics.windowTotal }}</div>
             <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase tracking-wide">{{ selectedProject !== 'all' ? selectedProject + ' Issues' : 'Total Issues' }}</div>
-            <div class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">{{ metrics.totalIssues }} all time</div>
+            <div v-if="metrics.totalIssues !== metrics.windowTotal" class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">{{ metrics.totalIssues }} all time</div>
           </div>
           <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center"
             :title="`Percentage of triaged issues that qualified for autofix. ${metrics.triageVerdicts.ready || 0} out of ${metrics.triageTotal} triaged issues were deemed fixable by the AI triage bot.`"
@@ -542,7 +546,7 @@ function buildJiraLabelUrl(jiraLabels) {
                 </div>
                 <div class="flex items-center gap-2">
                   <a
-                    :href="buildJiraLabelUrl(seg.jiraLabels)"
+                    :href="buildJiraLabelUrl(seg.jiraLabels, seg.excludeLabels)"
                     target="_blank" rel="noopener"
                     class="text-sm font-semibold hover:underline"
                     :class="seg.textClass"
@@ -601,7 +605,7 @@ function buildJiraLabelUrl(jiraLabels) {
                 </div>
                 <div class="flex items-center gap-2">
                   <a
-                    :href="buildJiraLabelUrl(seg.jiraLabels)"
+                    :href="buildJiraLabelUrl(seg.jiraLabels, seg.excludeLabels)"
                     target="_blank" rel="noopener"
                     class="text-sm font-semibold hover:underline"
                     :class="seg.textClass"
