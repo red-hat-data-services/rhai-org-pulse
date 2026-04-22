@@ -67,6 +67,10 @@ describe('classifyIssue', () => {
   it('prioritizes autofix-merged over other labels', () => {
     expect(classifyIssue(['jira-autofix-merged', 'jira-autofix-review', 'jira-autofix'])).toBe('autofix-merged')
   })
+
+  it('prioritizes autofix-blocked over autofix-pending when both present', () => {
+    expect(classifyIssue(['jira-autofix', 'jira-autofix-pending', 'jira-autofix-blocked'])).toBe('autofix-blocked')
+  })
 })
 
 describe('processIssue', () => {
