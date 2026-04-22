@@ -651,7 +651,6 @@ module.exports = function registerRoutes(router, context) {
         var existing = getConfig(readFromStorage)
         var merged = {
           ...existing,
-          ...config,
           releases: { ...existing.releases, ...config.releases },
           fieldMapping: { ...existing.fieldMapping, ...(config.fieldMapping || {}) },
           customFieldIds: { ...existing.customFieldIds, ...(config.customFieldIds || {}) }
