@@ -6,7 +6,7 @@ const props = defineProps({
   jiraHost: { type: String, default: null }
 })
 
-const emit = defineEmits(['navigateToRFE'])
+const emit = defineEmits(['navigateToRFE', 'navigateToFeature'])
 
 function getPhaseSignal(phaseId) {
   if (props.feature) return getFeaturePhaseSignal(phaseId)
@@ -175,6 +175,12 @@ function getFeaturePhaseSignal(phaseId) {
                 <span v-if="getPhaseSignal(phase.id).fixVersions?.length > 0" class="ml-1">
                   ({{ getPhaseSignal(phase.id).fixVersions.join(', ') }})
                 </span>
+                <button
+                  class="ml-1 text-primary-600 dark:text-primary-400 hover:underline"
+                  @click="emit('navigateToFeature', getPhaseSignal(phase.id).linkedKey)"
+                >
+                  View in Feature Review
+                </button>
               </template>
               <template v-else-if="phase.status === 'coming-soon' && phase.id !== 'feature-review' && phase.id !== 'build-release'">
                 <span class="text-gray-300 dark:text-gray-600">No signals yet</span>

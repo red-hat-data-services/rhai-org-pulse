@@ -84,6 +84,27 @@ const filteredRFEs = computed(() => {
   })
 })
 
+// Reverse lookup: sourceRfe → feature key/status for cross-linking
+const rfeToFeature = computed(() => {
+  const map = {}
+  for (const f of Object.values(features.value)) {
+    if (f.sourceRfe) {
+      map[f.sourceRfe] = { key: f.key, summary: f.title, status: f.status || 'Unknown', fixVersions: [] }
+    }
+  }
+  return map
+})
+
+// Enrich selected RFE with linkedFeature from features data when Jira link is missing
+const enrichedSelectedRFE = computed(() => {
+  const rfe = selectedRFE.value
+  if (!rfe) return null
+  if (rfe.linkedFeature) return rfe
+  const featureLink = rfeToFeature.value[rfe.key]
+  if (!featureLink) return rfe
+  return { ...rfe, linkedFeature: featureLink }
+})
+
 const filteredAssessments = computed(() => {
   const rfeKeys = new Set(filteredRFEs.value.map(r => r.key))
   const result = {}
@@ -108,6 +129,30 @@ function handleSelect(id) {
   selectedPhase.value = id
   selectedRFE.value = null
   selectedFeature.value = null
+}
+
+function handleNavigateToFeature(featureKey) {
+  // Cross-link: switch to Feature Review phase and select the linked feature
+  featureSearchQuery.value = ''
+  featureRecommendationFilter.value = 'all'
+  featurePriorityFilter.value = 'all'
+  featureHumanReviewFilter.value = 'all'
+  featureNeedsAttentionFilter.value = 'all'
+  featureSortBy.value = 'default'
+
+  selectedPhase.value = 'feature-review'
+  selectedRFE.value = null
+
+  const featureList = Object.values(features.value)
+  const feature = featureList.find(f => f.key === featureKey)
+  if (feature) {
+    selectedFeature.value = feature
+  } else {
+    const jiraHost = rfeData.value?.jiraHost
+    if (jiraHost) {
+      window.open(`${jiraHost}/browse/${featureKey}`, '_blank')
+    }
+  }
 }
 
 function handleNavigateToRFE(rfeKey) {
@@ -181,13 +226,14 @@ function handleNavigateToRFE(rfeKey) {
       />
 
       <RFEDetailPanel
-        v-if="selectedRFE"
-        :rfe="selectedRFE"
+        v-if="enrichedSelectedRFE"
+        :rfe="enrichedSelectedRFE"
         :phases="phases"
         :jiraHost="rfeData?.jiraHost"
         :assessment="assessments[selectedRFE?.key] || null"
         :loadAssessmentDetail="loadAssessmentDetail"
         @close="selectedRFE = null"
+        @navigateToFeature="handleNavigateToFeature"
       />
     </template>
 

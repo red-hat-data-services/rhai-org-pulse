@@ -34,7 +34,7 @@ watch(
   { immediate: true }
 )
 
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'navigateToFeature'])
 
 function getInvolvementLabel(involvement) {
   switch (involvement) {
@@ -157,7 +157,7 @@ function getInvolvementClass(involvement) {
         </div>
       </div>
 
-      <PipelineTimeline :rfe="rfe" :phases="phases" :jiraHost="jiraHost" />
+      <PipelineTimeline :rfe="rfe" :phases="phases" :jiraHost="jiraHost" @navigateToFeature="emit('navigateToFeature', $event)" />
     </div>
   </aside>
 </template>
