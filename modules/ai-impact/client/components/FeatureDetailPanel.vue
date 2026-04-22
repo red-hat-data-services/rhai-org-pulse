@@ -51,8 +51,8 @@ function getScoreClass(score) {
 function getHumanReviewLabel(status) {
   switch (status) {
     case 'reviewed': return 'Human Reviewed'
-    case 'pending': return 'Awaiting Review'
-    default: return 'Not Required'
+    case 'pending': return 'Awaiting Human Review'
+    default: return 'Human Review: Not Required'
   }
 }
 

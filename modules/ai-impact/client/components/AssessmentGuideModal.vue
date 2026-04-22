@@ -220,7 +220,36 @@ function handleClose() {
                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200">Human Reviewed</span>
                     <span class="text-gray-600 dark:text-gray-300">A human engineer has reviewed and signed off</span>
                   </div>
+                  <div class="flex items-center gap-2">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">Human Review: Not Required</span>
+                    <span class="text-gray-600 dark:text-gray-300">No human sign-off needed for this feature</span>
+                  </div>
                 </div>
+              </div>
+
+              <!-- CLI reference -->
+              <div class="rounded-lg bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-700 px-4 py-3">
+                <h4 class="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">CLI Tools</h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  Features are created and reviewed by the <span class="font-mono text-xs bg-gray-200 dark:bg-gray-600 px-1 py-0.5 rounded">strat-creator</span> and <span class="font-mono text-xs bg-gray-200 dark:bg-gray-600 px-1 py-0.5 rounded">strat-reviewer</span> plugins (source: <a href="https://github.com/jwforres/rfe-creator" target="_blank" rel="noopener noreferrer" class="font-mono text-xs text-blue-600 dark:text-blue-400 hover:underline">jwforres/rfe-creator</a>).
+                </p>
+                <div class="space-y-1.5 text-xs font-mono">
+                  <div class="flex items-start gap-2">
+                    <code class="px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 whitespace-nowrap">/strat.create</code>
+                    <span class="text-gray-500 dark:text-gray-400 font-sans pt-0.5">Create strategy features from approved RFEs</span>
+                  </div>
+                  <div class="flex items-start gap-2">
+                    <code class="px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 whitespace-nowrap">/strat.refine</code>
+                    <span class="text-gray-500 dark:text-gray-400 font-sans pt-0.5">Refine strategies with dependencies, teams, and NFRs</span>
+                  </div>
+                  <div class="flex items-start gap-2">
+                    <code class="px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 whitespace-nowrap">/strat.review</code>
+                    <span class="text-gray-500 dark:text-gray-400 font-sans pt-0.5">Adversarial AI review across all four dimensions</span>
+                  </div>
+                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  Install: <code class="px-1 py-0.5 rounded bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200">/plugin install rfe-creator@opendatahub-skills</code>
+                </p>
               </div>
             </div>
 

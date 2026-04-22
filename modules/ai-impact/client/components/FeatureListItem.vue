@@ -69,7 +69,7 @@ function getHumanReviewClass(status) {
             class="inline-flex items-center px-2 py-0.5 rounded-full text-xs"
             :class="getHumanReviewClass(feature.humanReviewStatus)"
           >
-            {{ feature.humanReviewStatus === 'reviewed' ? 'Human Reviewed' : feature.humanReviewStatus === 'pending' ? 'Awaiting Review' : 'No Review' }}
+            {{ feature.humanReviewStatus === 'reviewed' ? 'Human Reviewed' : feature.humanReviewStatus === 'pending' ? 'Awaiting Human Review' : 'Human Review: Not Required' }}
           </span>
         </div>
       </div>
