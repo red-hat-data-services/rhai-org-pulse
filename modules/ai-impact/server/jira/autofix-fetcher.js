@@ -31,11 +31,12 @@ function classifyIssue(labels) {
   if (labelSet.has('jira-autofix-rejected')) return 'autofix-rejected';
   if (labelSet.has('jira-autofix-max-retries')) return 'autofix-max-retries';
   if (labelSet.has('jira-autofix-researched')) return 'autofix-researched';
-  // Active autofix states
+  // Active autofix states (blocked before pending — blocked is added when
+  // the bot gets stuck after starting, but pending may not be removed)
+  if (labelSet.has('jira-autofix-blocked')) return 'autofix-blocked';
   if (labelSet.has('jira-autofix-ci-failing')) return 'autofix-ci-failing';
   if (labelSet.has('jira-autofix-review')) return 'autofix-review';
   if (labelSet.has('jira-autofix-pending')) return 'autofix-pending';
-  if (labelSet.has('jira-autofix-blocked')) return 'autofix-blocked';
   if (labelSet.has('jira-autofix')) return 'autofix-ready';
   // Triage states
   if (labelSet.has('jira-triage-not-fixable')) return 'triage-not-fixable';
