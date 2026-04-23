@@ -82,6 +82,83 @@ function tabCount(tabId) {
   return 0
 }
 
+function escapeCell(val) {
+  return String(val).replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\n/g, ' ')
+}
+
+function exportMarkdown() {
+  var lines = []
+  var filename
+
+  if (activeTab.value === 'big-rocks') {
+    lines.push('# Big Rocks - ' + selectedVersion.value)
+    lines.push('')
+    lines.push('| **Priority** | **Pillar** | **Big Rock** | **Owner** | **Architect** | **Features** | **RFEs** | **Notes** |')
+    lines.push('|:--------:|--------|----------|-------|-----------|:--------:|:----:|-------|')
+    for (var rock of bigRocks.value) {
+      lines.push('| ' + [
+        rock.priority,
+        escapeCell(rock.pillar || '-'),
+        escapeCell(rock.name),
+        escapeCell(rock.owner || '-'),
+        escapeCell(rock.architect || '-'),
+        rock.featureCount,
+        rock.rfeCount,
+        escapeCell(rock.notes || '-')
+      ].join(' | ') + ' |')
+    }
+    filename = 'big-rocks-' + selectedVersion.value + '.md'
+  } else if (activeTab.value === 'features') {
+    lines.push('# Features - ' + selectedVersion.value)
+    lines.push('')
+    lines.push('| **Big Rock** | **Feature** | **Status** | **Priority** | **Phase** | **Title** | **Components** | **Target Release** | **PM** | **Delivery Owner** | **RFE** | **Fix Version** |')
+    lines.push('|----------|---------|--------|----------|-------|-------|------------|----------------|-----|----------------|-----|-------------|')
+    for (var f of filteredFeatures.value) {
+      lines.push('| ' + [
+        escapeCell(f.bigRock || '-'),
+        f.issueKey,
+        escapeCell(f.status || '-'),
+        escapeCell(f.priority || '-'),
+        escapeCell(f.phase || '-'),
+        escapeCell(f.summary || '-'),
+        escapeCell(f.components || '-'),
+        escapeCell(f.targetRelease || '-'),
+        escapeCell(f.pm || '-'),
+        escapeCell(f.deliveryOwner || '-'),
+        f.rfe || '-',
+        escapeCell(f.fixVersion || '-')
+      ].join(' | ') + ' |')
+    }
+    filename = 'features-' + selectedVersion.value + '.md'
+  } else {
+    lines.push('# RFEs - ' + selectedVersion.value)
+    lines.push('')
+    lines.push('| **Big Rock** | **RFE** | **Status** | **Priority** | **Title** | **Components** | **PM** | **Labels** |')
+    lines.push('|----------|-----|--------|----------|-------|------------|-----|--------|')
+    for (var r of filteredRfes.value) {
+      lines.push('| ' + [
+        escapeCell(r.bigRock || '-'),
+        r.issueKey,
+        escapeCell(r.status || '-'),
+        escapeCell(r.priority || '-'),
+        escapeCell(r.summary || '-'),
+        escapeCell(r.components || '-'),
+        escapeCell(r.pm || '-'),
+        escapeCell((r.labels || []).join(', ') || '-')
+      ].join(' | ') + ' |')
+    }
+    filename = 'rfes-' + selectedVersion.value + '.md'
+  }
+
+  var blob = new Blob([lines.join('\n') + '\n'], { type: 'text/markdown' })
+  var url = URL.createObjectURL(blob)
+  var a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 function formatDate(iso) {
   if (!iso) return 'Never'
   return new Date(iso).toLocaleString()
@@ -239,7 +316,7 @@ onMounted(async function() {
     <!-- Header -->
     <div class="flex items-center justify-between flex-wrap gap-4">
       <div>
-        <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">Release Planning Dashboard</h1>
+        <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">Big Rocks Planning Dashboard</h1>
         <p v-if="candidates && candidates.lastRefreshed" class="text-sm text-gray-500 dark:text-gray-400 mt-1">
           Data from {{ formatDate(candidates.lastRefreshed) }}
         </p>
@@ -295,6 +372,7 @@ onMounted(async function() {
       <!-- Filters -->
       <FilterBar
         :filterOptions="filterOptions"
+        :activeTab="activeTab"
         v-model:selectedPillar="selectedPillar"
         v-model:selectedRock="selectedRock"
         v-model:selectedStatus="selectedStatus"
@@ -306,6 +384,7 @@ onMounted(async function() {
       />
 
       <!-- Tabs -->
+      <div class="flex items-center gap-3">
       <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 w-fit">
         <button
           v-for="tab in tabs"
@@ -324,6 +403,16 @@ onMounted(async function() {
               : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'"
           >{{ tabCount(tab.id) }}</span>
         </button>
+      </div>
+      <button
+        @click="exportMarkdown"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+        Export
+      </button>
       </div>
 
       <!-- Tab content -->

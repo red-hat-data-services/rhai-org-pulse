@@ -39,17 +39,17 @@ defineProps({
     </div>
 
     <!-- Tier 3 -->
-    <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
-      <div class="text-sm font-semibold text-gray-700 dark:text-gray-300">Tier 3: Collaborative Support</div>
-      <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">Cross-team priorities</div>
+    <div class="p-4 rounded-lg bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/30">
+      <div class="text-sm font-semibold text-violet-700 dark:text-violet-400">Tier 3: Collaborative Support</div>
+      <div class="text-xs text-violet-600/70 dark:text-violet-400/70 mt-0.5 leading-snug">Cross-team priorities</div>
       <div class="flex items-baseline gap-4 mt-3">
         <div>
-          <span class="text-2xl font-bold text-gray-700 dark:text-gray-300">{{ summary.tier3 ? summary.tier3.features : 0 }}</span>
-          <span class="text-xs text-gray-500 dark:text-gray-400 ml-1">Features</span>
+          <span class="text-2xl font-bold text-violet-700 dark:text-violet-400">{{ summary.tier3 ? summary.tier3.features : 0 }}</span>
+          <span class="text-xs text-violet-600/70 dark:text-violet-400/70 ml-1">Features</span>
         </div>
         <div>
-          <span class="text-2xl font-bold text-gray-700 dark:text-gray-300">{{ summary.tier3 ? summary.tier3.rfes : 0 }}</span>
-          <span class="text-xs text-gray-500 dark:text-gray-400 ml-1">RFEs</span>
+          <span class="text-2xl font-bold text-violet-700 dark:text-violet-400">{{ summary.tier3 ? summary.tier3.rfes : 0 }}</span>
+          <span class="text-xs text-violet-600/70 dark:text-violet-400/70 ml-1">RFEs</span>
         </div>
       </div>
     </div>

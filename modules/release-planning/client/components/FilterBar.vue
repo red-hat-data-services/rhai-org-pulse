@@ -1,6 +1,7 @@
 <script setup>
 defineProps({
   filterOptions: { type: Object, default: () => ({}) },
+  activeTab: { type: String, default: 'big-rocks' },
   selectedPillar: { type: String, default: '' },
   selectedRock: { type: String, default: '' },
   selectedStatus: { type: String, default: '' },
@@ -34,6 +35,7 @@ const selectClass = 'bg-white dark:bg-gray-800 border border-gray-300 dark:borde
     />
 
     <select
+      v-if="activeTab === 'big-rocks'"
       :value="selectedPillar"
       @change="$emit('update:selectedPillar', $event.target.value)"
       :class="selectClass"
@@ -43,6 +45,7 @@ const selectClass = 'bg-white dark:bg-gray-800 border border-gray-300 dark:borde
     </select>
 
     <select
+      v-if="activeTab !== 'big-rocks'"
       :value="selectedRock"
       @change="$emit('update:selectedRock', $event.target.value)"
       :class="selectClass"
@@ -52,6 +55,7 @@ const selectClass = 'bg-white dark:bg-gray-800 border border-gray-300 dark:borde
     </select>
 
     <select
+      v-if="activeTab !== 'big-rocks'"
       :value="selectedStatus"
       @change="$emit('update:selectedStatus', $event.target.value)"
       :class="selectClass"
@@ -61,6 +65,7 @@ const selectClass = 'bg-white dark:bg-gray-800 border border-gray-300 dark:borde
     </select>
 
     <select
+      v-if="activeTab !== 'big-rocks'"
       :value="selectedPriority"
       @change="$emit('update:selectedPriority', $event.target.value)"
       :class="selectClass"
@@ -70,7 +75,7 @@ const selectClass = 'bg-white dark:bg-gray-800 border border-gray-300 dark:borde
     </select>
 
     <select
-      v-if="filterOptions.teams && filterOptions.teams.length > 0"
+      v-if="activeTab === 'features' && filterOptions.teams && filterOptions.teams.length > 0"
       :value="selectedTeam"
       @change="$emit('update:selectedTeam', $event.target.value)"
       :class="selectClass"

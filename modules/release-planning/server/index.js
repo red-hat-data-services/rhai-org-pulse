@@ -258,6 +258,7 @@ module.exports = function registerRoutes(router, context) {
       var result = await withConfigLock(function() {
         return reorderBigRocks(readFromStorage, writeToStorage, version, order)
       })
+      invalidateCache(version)
       res.json(result)
     } catch (err) {
       var status = err.statusCode || 500

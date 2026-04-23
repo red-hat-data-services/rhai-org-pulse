@@ -1,8 +1,7 @@
 <script setup>
 import StatusBadge from './StatusBadge.vue'
 import TierSeparator from './TierSeparator.vue'
-import { computed, toRef } from 'vue'
-import { useRockColors } from '../composables/useRockColors'
+import { computed } from 'vue'
 
 const props = defineProps({
   features: { type: Array, default: () => [] },
@@ -10,8 +9,6 @@ const props = defineProps({
   jiraBaseUrl: { type: String, default: '' },
   summary: { type: Object, default: null }
 })
-
-const { rockRowClass } = useRockColors(toRef(props, 'bigRocks'))
 
 const PRIORITY_STYLES = {
   'Blocker': 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400',
@@ -55,18 +52,18 @@ const groupedFeatures = computed(() => {
       <table class="w-full text-sm border-collapse">
         <thead>
           <tr>
-            <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">Big Rock</th>
-            <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">Feature</th>
-            <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">Status</th>
-            <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">Priority</th>
-            <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">Phase</th>
-            <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">Title</th>
-            <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">Components</th>
-            <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">Target Release</th>
-            <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">PM</th>
-            <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">Delivery Owner</th>
-            <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">RFE</th>
-            <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">Fix Version</th>
+            <th class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Big Rock</th>
+            <th class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Feature</th>
+            <th class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Status</th>
+            <th class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Priority</th>
+            <th class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Phase</th>
+            <th class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Title</th>
+            <th class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Components</th>
+            <th class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Target Release</th>
+            <th class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">PM</th>
+            <th class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Delivery Owner</th>
+            <th class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">RFE</th>
+            <th class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Fix Version</th>
           </tr>
         </thead>
         <tbody>
@@ -79,7 +76,7 @@ const groupedFeatures = computed(() => {
             />
             <tr
               v-else
-              :class="rockRowClass(item.data.bigRock).bg"
+              class="hover:bg-gray-50 dark:hover:bg-gray-700/50"
             >
               <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 max-w-[120px] truncate border border-gray-300 dark:border-gray-600">{{ item.data.bigRock || '-' }}</td>
               <td class="px-3 py-2 border border-gray-300 dark:border-gray-600">
