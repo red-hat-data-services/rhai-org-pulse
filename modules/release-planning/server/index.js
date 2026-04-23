@@ -5,7 +5,7 @@ const { CACHE_MAX_AGE_MS } = require('./constants')
 const { withConfigLock } = require('./config-lock')
 const { backupConfig } = require('./config-backup')
 const { validateBigRock } = require('./validation')
-const { createRequirePM, getPMUsers, addPMUser, removePMUser } = require('./pm-auth')
+const { createRequirePM, getPMUsers, addPMUser, removePMUser, isPM } = require('./pm-auth')
 const { previewDocImport, executeDocImport } = require('./doc-import')
 const smartsheetClient = require('../../../shared/server/smartsheet')
 
@@ -234,10 +234,8 @@ module.exports = function registerRoutes(router, context) {
   // ─── GET /permissions ───
 
   router.get('/permissions', requireAuth, function(req, res) {
-    var pmList = getPMUsers(readFromStorage)
-    var isPM = pmList.includes(req.userEmail)
     res.json({
-      canEdit: !!req.isAdmin || isPM
+      canEdit: !!req.isAdmin || isPM(req.userEmail, readFromStorage)
     })
   })
 
@@ -273,7 +271,12 @@ module.exports = function registerRoutes(router, context) {
     if (!isValidVersion(version)) {
       return res.status(400).json({ error: 'Invalid version format' })
     }
-    const name = decodeURIComponent(req.params.name)
+    var name
+    try {
+      name = decodeURIComponent(req.params.name)
+    } catch {
+      return res.status(400).json({ error: 'Invalid parameter encoding' })
+    }
 
     try {
       const result = await withConfigLock(function() {
@@ -353,7 +356,12 @@ module.exports = function registerRoutes(router, context) {
     if (!isValidVersion(version)) {
       return res.status(400).json({ error: 'Invalid version format' })
     }
-    const name = decodeURIComponent(req.params.name)
+    var name
+    try {
+      name = decodeURIComponent(req.params.name)
+    } catch {
+      return res.status(400).json({ error: 'Invalid parameter encoding' })
+    }
 
     try {
       const result = await withConfigLock(function() {
@@ -512,7 +520,12 @@ module.exports = function registerRoutes(router, context) {
   })
 
   router.delete('/pm-users/:email', requireAdmin, function(req, res) {
-    var email = decodeURIComponent(req.params.email)
+    var email
+    try {
+      email = decodeURIComponent(req.params.email)
+    } catch {
+      return res.status(400).json({ error: 'Invalid parameter encoding' })
+    }
     var emails = removePMUser(readFromStorage, writeToStorage, email)
     res.json({ emails: emails })
   })
@@ -642,6 +655,27 @@ module.exports = function registerRoutes(router, context) {
     for (var i = 0; i < versions.length; i++) {
       if (!VERSION_RE.test(versions[i]) || RESERVED_VERSIONS.includes(versions[i])) {
         return res.status(400).json({ error: 'Invalid version: ' + versions[i] })
+      }
+    }
+
+    // Validate each Big Rock in each release
+    for (var vi = 0; vi < versions.length; vi++) {
+      var ver = versions[vi]
+      var rocks = config.releases[ver].bigRocks
+      if (!rocks) continue
+      if (!Array.isArray(rocks)) {
+        return res.status(400).json({ error: 'bigRocks must be an array for release ' + ver })
+      }
+      var namesInRelease = []
+      for (var ri = 0; ri < rocks.length; ri++) {
+        var validation = validateBigRock(rocks[ri], { existingNames: namesInRelease })
+        if (!validation.valid) {
+          return res.status(400).json({
+            error: 'Invalid Big Rock at index ' + ri + ' in release ' + ver,
+            fields: validation.errors
+          })
+        }
+        namesInRelease.push(rocks[ri].name)
       }
     }
 

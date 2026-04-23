@@ -144,7 +144,7 @@ function exportMarkdown() {
         escapeCell(r.summary || '-'),
         escapeCell(r.components || '-'),
         escapeCell(r.pm || '-'),
-        escapeCell((r.labels || []).join(', ') || '-')
+        escapeCell(r.labels || '-')
       ].join(' | ') + ' |')
     }
     filename = 'rfes-' + selectedVersion.value + '.md'
