@@ -1,7 +1,8 @@
 <script setup>
 defineProps({
   rfe: { type: Object, required: true },
-  selected: { type: Boolean, default: false }
+  selected: { type: Boolean, default: false },
+  assessment: { type: Object, default: null }
 })
 
 const emit = defineEmits(['select'])
@@ -46,14 +47,39 @@ function getInvolvementClass(involvement) {
           </span>
         </div>
         <h4 class="font-medium text-sm truncate dark:text-gray-200">{{ rfe.summary }}</h4>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          {{ rfe.creatorDisplayName }} &bull; {{ new Date(rfe.created).toLocaleDateString() }}
-        </p>
+        <div class="flex items-center flex-wrap gap-2 mt-2">
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-xs">
+            <span class="font-medium text-gray-500 dark:text-gray-400">Author</span>
+            <span class="text-gray-800 dark:text-gray-100">{{ rfe.creatorDisplayName }}</span>
+          </span>
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-xs">
+            <span class="font-medium text-gray-500 dark:text-gray-400">Created</span>
+            <span class="text-gray-800 dark:text-gray-100">{{ new Date(rfe.created).toLocaleDateString() }}</span>
+          </span>
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-700 text-xs">
+            <span class="font-medium text-gray-500 dark:text-gray-400">Priority</span>
+            <span class="text-gray-800 dark:text-gray-100 capitalize">{{ rfe.priority }}</span>
+          </span>
+          <span
+            v-if="assessment"
+            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold"
+            :class="assessment.passFail === 'PASS'
+              ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200'
+              : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200'"
+          >
+            <span class="font-medium" :class="assessment.passFail === 'PASS' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">Score</span>
+            {{ assessment.total }}/10
+          </span>
+          <span
+            v-else
+            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-700 border border-dashed border-gray-300 dark:border-gray-600"
+          >
+            <span class="font-medium text-gray-500 dark:text-gray-400">Score</span>
+            <span class="text-gray-400 dark:text-gray-500">N/A</span>
+          </span>
+        </div>
       </div>
-      <div class="flex items-center gap-2 shrink-0">
-        <span class="inline-flex items-center px-2 py-0.5 rounded border border-gray-300 dark:border-gray-600 text-xs capitalize dark:text-gray-300">
-          {{ rfe.priority }}
-        </span>
+      <div class="flex items-center shrink-0">
         <svg class="h-4 w-4 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>

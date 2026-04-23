@@ -5,7 +5,7 @@ import OrgSelector from '../components/OrgSelector.vue'
 import TeamCard from '../components/TeamCard.vue'
 
 const nav = inject('moduleNav')
-const { orgs, selectedOrg, loading, searchQuery, sortBy, filteredTeams, unassigned, loadTeams, loadOrgs } = useOrgRoster()
+const { orgs, selectedOrg, loading, searchQuery, sortBy, filteredTeams, totalPeople, unassigned, loadTeams, loadOrgs } = useOrgRoster()
 const unassignedExpanded = ref(false)
 
 function openTeam(team) {
@@ -32,7 +32,7 @@ onMounted(async () => {
     <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
       <div>
         <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Team Directory</h2>
-        <p class="text-sm text-gray-500 dark:text-gray-400">{{ filteredTeams.length }} teams</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">{{ filteredTeams.length }} teams · {{ totalPeople }} people</p>
       </div>
       <div class="flex items-center gap-3">
         <div class="relative">
@@ -83,14 +83,15 @@ onMounted(async () => {
       </button>
       <div v-if="unassignedExpanded" class="px-4 pb-3">
         <div class="flex flex-wrap gap-2">
-          <span
+          <button
             v-for="person in unassigned"
             :key="person.name"
-            class="inline-flex items-center px-2.5 py-1 rounded-md text-xs bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-800/30 text-gray-700 dark:text-gray-300"
+            class="inline-flex items-center px-2.5 py-1 rounded-md text-xs bg-white dark:bg-gray-800 border border-amber-200 dark:border-amber-800/30 text-gray-700 dark:text-gray-300 hover:border-blue-400 dark:hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition-colors"
             :title="[person.title, person.org].filter(Boolean).join(' · ')"
+            @click="nav.navigateTo('person-detail', person.uid ? { uid: person.uid } : { person: person.name })"
           >
             {{ person.name }}
-          </span>
+          </button>
         </div>
       </div>
     </div>

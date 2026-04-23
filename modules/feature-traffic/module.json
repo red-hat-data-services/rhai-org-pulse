@@ -9,8 +9,8 @@
   "client": {
     "entry": "./client/index.js",
     "navItems": [
-      { "id": "overview", "label": "Overview", "icon": "BarChart3", "default": true },
-      { "id": "feature-detail", "label": "Feature", "icon": "GitBranch" }
+      { "id": "overview", "label": "Overview", "icon": "Map", "default": true },
+      { "id": "feature-detail", "label": "Feature", "icon": "Milestone" }
     ],
     "settingsComponent": "./client/components/FeatureTrafficSettings.vue"
   },

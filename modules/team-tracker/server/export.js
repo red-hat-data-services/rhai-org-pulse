@@ -1,14 +1,14 @@
 /**
  * Team Tracker export hook for anonymized test data.
  *
- * Handles: org-roster-full.json, people/*.json, github/gitlab contributions/history,
+ * Handles: roster (from registry), people/*.json, github/gitlab contributions/history,
  * snapshots, jira-name-map.json, roster-sync-config.json
  */
 
 module.exports = async function teamTrackerExport(addFile, storage, mapping) {
   const { readFromStorage } = storage;
 
-  // 1. org-roster-full.json
+  // 1. roster (from team-data/registry.json)
   await exportRoster(addFile, readFromStorage, mapping);
 
   // 2. people/*.json
@@ -32,7 +32,7 @@ module.exports = async function teamTrackerExport(addFile, storage, mapping) {
   // 8. jira-name-map.json
   await exportJiraNameMap(addFile, readFromStorage, mapping);
 
-  // 9. roster-sync-config.json
+  // 9. roster-sync-config (from team-data/config.json)
   await exportRosterSyncConfig(addFile, readFromStorage, mapping);
 
   // 10. last-refreshed.json (pass through)
@@ -55,6 +55,14 @@ function anonymizePerson(person, mapping) {
   if (result.email) result.email = mapping.emailToFake[result.email] || `${mapping.getOrCreateUidMapping(result.uid || '')}@example.com`;
   if (result.githubUsername) result.githubUsername = mapping.getOrCreateGithubMapping(result.githubUsername);
   if (result.gitlabUsername) result.gitlabUsername = mapping.getOrCreateGitlabMapping(result.gitlabUsername);
+  // Anonymize structured github/gitlab objects (registry format)
+  if (result.github && result.github.username) {
+    result.github = { ...result.github, username: mapping.getOrCreateGithubMapping(result.github.username) };
+  }
+  if (result.gitlab && result.gitlab.username) {
+    result.gitlab = { ...result.gitlab, username: mapping.getOrCreateGitlabMapping(result.gitlab.username) };
+  }
+  if (result.orgRoot) result.orgRoot = mapping.getOrCreateUidMapping(result.orgRoot);
   for (const field of NAME_FIELDS) {
     if (result[field]) result[field] = mapping.getOrCreateNameMapping(result[field]);
   }
@@ -65,7 +73,8 @@ function anonymizePerson(person, mapping) {
 }
 
 async function exportRoster(addFile, readFromStorage, mapping) {
-  const roster = readFromStorage('org-roster-full.json');
+  const { readRosterFull } = require('../../../shared/server/roster');
+  const roster = readRosterFull({ readFromStorage });
   if (!roster) return;
 
   const anonymized = {};
@@ -298,7 +307,8 @@ async function exportJiraNameMap(addFile, readFromStorage, mapping) {
 }
 
 async function exportRosterSyncConfig(addFile, readFromStorage, mapping) {
-  const data = readFromStorage('roster-sync-config.json');
+  const rosterSyncConfig = require('../../../shared/server/roster-sync/config');
+  const data = rosterSyncConfig.loadConfig({ readFromStorage });
   if (!data) return;
 
   const anonymized = { ...data };
@@ -309,6 +319,7 @@ async function exportRosterSyncConfig(addFile, readFromStorage, mapping) {
       ...root,
       uid: root.uid ? mapping.getOrCreateUidMapping(root.uid) : root.uid,
       name: root.name ? mapping.getOrCreateNameMapping(root.name) : root.name,
+      displayName: root.displayName ? mapping.getOrCreateNameMapping(root.displayName) : root.displayName,
     }));
   }
 

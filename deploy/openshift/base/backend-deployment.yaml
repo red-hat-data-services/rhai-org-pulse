@@ -87,6 +87,12 @@ spec:
                   name: ipa-credentials
                   key: IPA_BIND_PASSWORD
                   optional: true
+            - name: SMARTSHEET_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: team-tracker-secrets
+                  key: SMARTSHEET_API_TOKEN
+                  optional: true
           volumeMounts:
             - name: data
               mountPath: /app/data

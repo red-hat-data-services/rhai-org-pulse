@@ -5,8 +5,10 @@
     :selectedSprint="selectedSprint"
     :sprintData="teamSprintData"
     :isLoading="isTeamDetailLoading"
+    :metricMode="metricMode"
     @select-sprint="handleSelectSprint"
     @back="onBack"
+    @update:metricMode="metricMode = $event"
   />
 </template>
 
@@ -24,6 +26,7 @@ const {
   selectedSprint,
   teamSprintData,
   isTeamDetailLoading,
+  metricMode,
   handleSelectTeam,
   handleSelectSprint
 } = useAllocationData()

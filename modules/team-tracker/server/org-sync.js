@@ -4,8 +4,8 @@
  * and component mapping. When no sheet is configured or the fetch fails,
  * teams are derived from people's _teamGrouping values in the roster.
  *
- * People data comes from shared/server/roster.js (reads org-roster-full.json
- * populated by team-tracker's roster-sync).
+ * People data comes from shared/server/roster.js (reads team-data/registry.json
+ * and transforms to legacy roster format).
  */
 
 const { fetchRawSheet } = require('../../../shared/server/google-sheets');

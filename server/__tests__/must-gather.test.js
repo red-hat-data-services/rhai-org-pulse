@@ -80,19 +80,32 @@ describe('must-gather collect', () => {
   })
 
   it('aggressive mode anonymizes names from roster', async () => {
-    const roster = {
-      vp: { name: 'Jane VP', uid: 'janevp', email: 'jane@example.com' },
-      orgs: {
-        orgA: {
-          leader: { name: 'Bob Leader', uid: 'bobl', email: 'bob@example.com', githubUsername: 'bobgh' },
-          members: [
-            { name: 'Alice Dev', uid: 'aliced', email: 'alice@example.com' }
-          ]
+    const registry = {
+      meta: {
+        generatedAt: '2026-01-15T00:00:00.000Z',
+        provider: 'test',
+        orgRoots: ['orgA'],
+        vp: { name: 'Jane VP', uid: 'janevp' }
+      },
+      people: {
+        bobl: {
+          uid: 'bobl', name: 'Bob Leader', email: 'bob@example.com',
+          orgRoot: 'orgA', status: 'active', github: { username: 'bobgh', source: 'ldap' }, gitlab: null,
+          firstSeenAt: '2026-01-01T00:00:00.000Z', lastSeenAt: '2026-01-15T00:00:00.000Z', inactiveSince: null
+        },
+        aliced: {
+          uid: 'aliced', name: 'Alice Dev', email: 'alice@example.com',
+          orgRoot: 'orgA', status: 'active', github: null, gitlab: null,
+          firstSeenAt: '2026-01-01T00:00:00.000Z', lastSeenAt: '2026-01-15T00:00:00.000Z', inactiveSince: null
         }
       }
     }
+    const config = { orgRoots: [{ uid: 'orgA', name: 'Bob Leader', displayName: 'Bob Leader' }] }
 
-    const storage = makeStorage({ 'org-roster-full.json': roster })
+    const storage = makeStorage({
+      'team-data/registry.json': registry,
+      'team-data/config.json': config
+    })
 
     // Simulate module diagnostics with a person name
     const bundle = await collect({
@@ -115,7 +128,10 @@ describe('must-gather collect', () => {
   })
 
   it('aggressive mode truncates Google Sheet ID', async () => {
-    const storage = makeStorage({ 'org-roster-full.json': { orgs: {} } })
+    const storage = makeStorage({
+      'team-data/registry.json': { meta: { generatedAt: '2026-01-15T00:00:00.000Z', provider: 'test', orgRoots: [], vp: null }, people: {} },
+      'team-data/config.json': { orgRoots: [] }
+    })
 
     const bundle = await collect({
       storageModule: storage,

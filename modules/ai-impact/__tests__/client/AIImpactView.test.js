@@ -6,7 +6,7 @@ import MetricsRow from '../../client/components/MetricsRow.vue'
 
 const phases = [
   { id: 'rfe-review', name: 'RFE Review', order: 1, status: 'active' },
-  { id: 'architecture', name: 'Architecture & Design', order: 2, status: 'coming-soon' },
+  { id: 'feature-review', name: 'Feature Review', order: 2, status: 'active' },
   { id: 'implementation', name: 'Implementation', order: 3, status: 'coming-soon' },
   { id: 'qe-validation', name: 'QE / Validation', order: 4, status: 'coming-soon' },
   { id: 'security', name: 'Security Review', order: 5, status: 'coming-soon' },
@@ -28,7 +28,7 @@ describe('PhaseSidebar', () => {
       props: { phases, selectedPhase: 'rfe-review' }
     })
     expect(wrapper.text()).toContain('RFE Review')
-    expect(wrapper.text()).toContain('Architecture & Design')
+    expect(wrapper.text()).toContain('Feature Review')
     expect(wrapper.text()).toContain('Build & Release')
   })
 
@@ -39,8 +39,10 @@ describe('PhaseSidebar', () => {
     const buttons = wrapper.findAll('button')
     // First button (RFE Review) should not be disabled
     expect(buttons[0].attributes('disabled')).toBeUndefined()
-    // Second button (Architecture) should be disabled
-    expect(buttons[1].attributes('disabled')).toBeDefined()
+    // Second button (Feature Review) should not be disabled (now active)
+    expect(buttons[1].attributes('disabled')).toBeUndefined()
+    // Third button (Implementation) should be disabled
+    expect(buttons[2].attributes('disabled')).toBeDefined()
   })
 
   it('emits select when active phase is clicked', async () => {
@@ -55,10 +57,10 @@ describe('PhaseSidebar', () => {
 describe('ComingSoonPlaceholder', () => {
   it('shows "Coming Soon" for inactive phases', () => {
     const wrapper = mount(ComingSoonPlaceholder, {
-      props: { phaseName: 'Architecture & Design' }
+      props: { phaseName: 'Implementation' }
     })
     expect(wrapper.text()).toContain('Coming Soon')
-    expect(wrapper.text()).toContain('Architecture & Design')
+    expect(wrapper.text()).toContain('Implementation')
   })
 })
 

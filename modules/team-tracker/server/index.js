@@ -9,7 +9,7 @@ module.exports = function registerRoutes(router, context) {
   const { fetchPersonMetrics } = require('./jira/person-metrics');
   const { fetchGithubData } = require('./github/contributions');
   const { fetchGitlabData } = require('./gitlab/contributions');
-  const rosterSync = require('../../../shared/server/roster-sync');
+  const consolidatedSync = require('../../../shared/server/roster-sync/consolidated-sync');
   const rosterSyncConfig = require('../../../shared/server/roster-sync/config');
   const { readRosterFull: sharedReadRosterFull } = require('../../../shared/server/roster');
   const jiraSyncConfig = require('./jira/config');
@@ -1761,6 +1761,9 @@ module.exports = function registerRoutes(router, context) {
           if (!root.uid || !root.displayName) {
             return res.status(400).json({ error: 'Each org root must have uid and displayName' });
           }
+          if (!/^[a-zA-Z0-9._-]+$/.test(root.uid)) {
+            return res.status(400).json({ error: 'Invalid org root UID format' });
+          }
         }
       }
 
@@ -1887,22 +1890,18 @@ module.exports = function registerRoutes(router, context) {
         }
       }
 
-      const existing = rosterSyncConfig.loadConfig(storage) || {};
+      // Merge-based save: load full config, update only roster-sync fields,
+      // preserve IPA-specific fields (gracePeriodDays, autoSync, etc.)
+      const config = rosterSyncConfig.loadConfig(storage) || {};
 
-      const config = {
-        orgRoots: orgRoots !== undefined ? orgRoots : existing.orgRoots || [],
-        googleSheetId: googleSheetId !== undefined ? (googleSheetId || null) : (existing.googleSheetId || null),
-        sheetNames: sheetNames !== undefined ? (sheetNames || []) : (existing.sheetNames || []),
-        githubOrgs: githubOrgs !== undefined ? (githubOrgs || []) : (existing.githubOrgs || []),
-        gitlabGroups: gitlabGroups !== undefined ? (gitlabGroups || []) : (existing.gitlabGroups || []),
-        gitlabInstances: gitlabInstances !== undefined ? (gitlabInstances || []) : (existing.gitlabInstances || []),
-        teamStructure: validatedTeamStructure !== undefined ? validatedTeamStructure : (existing.teamStructure || null),
-        excludedTitles: validatedExcludedTitles !== undefined ? validatedExcludedTitles : (existing.excludedTitles || []),
-        customFields: existing.customFields || null,
-        lastSyncAt: existing.lastSyncAt || null,
-        lastSyncStatus: existing.lastSyncStatus || null,
-        lastSyncError: existing.lastSyncError || null
-      };
+      if (orgRoots !== undefined) config.orgRoots = orgRoots;
+      if (googleSheetId !== undefined) config.googleSheetId = googleSheetId || null;
+      if (sheetNames !== undefined) config.sheetNames = sheetNames || [];
+      if (githubOrgs !== undefined) config.githubOrgs = githubOrgs || [];
+      if (gitlabGroups !== undefined) config.gitlabGroups = gitlabGroups || [];
+      if (gitlabInstances !== undefined) config.gitlabInstances = gitlabInstances || [];
+      if (validatedTeamStructure !== undefined) config.teamStructure = validatedTeamStructure;
+      if (validatedExcludedTitles !== undefined) config.excludedTitles = validatedExcludedTitles;
 
       if (config.teamStructure) {
         const fm = {};
@@ -1912,15 +1911,9 @@ module.exports = function registerRoutes(router, context) {
           fm[f.key] = f.columnLabel;
         }
         config.fieldMapping = fm;
-      } else if (existing.fieldMapping) {
-        config.fieldMapping = existing.fieldMapping;
       }
 
       rosterSyncConfig.saveConfig(storage, config);
-
-      if (!DEMO_MODE) {
-        rosterSync.scheduleDaily(storage);
-      }
 
       res.json({ configured: true, ...config });
     } catch (error) {
@@ -2028,7 +2021,7 @@ module.exports = function registerRoutes(router, context) {
    */
   router.post('/admin/roster-sync/trigger', requireAdmin, function(req, res) {
     try {
-      if (rosterSync.isSyncInProgress()) {
+      if (consolidatedSync.isSyncInProgress()) {
         return res.json({ status: 'already_running' });
       }
 
@@ -2036,10 +2029,10 @@ module.exports = function registerRoutes(router, context) {
         return res.status(400).json({ error: 'Roster sync is not configured' });
       }
 
-      rosterSync.runSync(storage).then(function(result) {
-        console.log('[roster-sync] On-demand sync result:', result.status);
+      consolidatedSync.runConsolidatedSync(storage).then(function(result) {
+        console.log('[consolidated-sync] On-demand sync result:', result.status);
       }).catch(function(err) {
-        console.error('[roster-sync] On-demand sync error:', err);
+        console.error('[consolidated-sync] On-demand sync error:', err);
       });
 
       res.json({ status: 'started' });
@@ -2068,7 +2061,7 @@ module.exports = function registerRoutes(router, context) {
       const metadataSyncStatus = readFromStorage('org-roster/sync-status.json');
       const uState = unifiedSyncState;
 
-      const syncing = uState.inProgress || rosterSync.isSyncInProgress();
+      const syncing = uState.inProgress || consolidatedSync.isSyncInProgress();
       const now = Date.now();
       const rosterLastSync = config?.lastSyncAt ? new Date(config.lastSyncAt).getTime() : 0;
       const metadataLastSync = metadataSyncStatus?.lastSyncAt ? new Date(metadataSyncStatus.lastSyncAt).getTime() : 0;
@@ -2422,7 +2415,7 @@ module.exports = function registerRoutes(router, context) {
         lastSyncAt: syncConfig.lastSyncAt || null,
         lastSyncStatus: syncConfig.lastSyncStatus || null,
         lastSyncError: syncConfig.lastSyncError || null,
-        syncInProgress: rosterSync.isSyncInProgress()
+        syncInProgress: consolidatedSync.isSyncInProgress()
       };
 
       // Roster data health
@@ -2551,7 +2544,6 @@ module.exports = function registerRoutes(router, context) {
   // ─── Absorbed routes from org-roster and team-data ───
 
   const registerIpaRegistryRoutes = require('./routes/ipa-registry');
-  const { runIpaSync, isIpaSyncInProgress } = require('./routes/ipa-registry');
   const registerOrgTeamsRoutes = require('./routes/org-teams');
   const { isOrgSyncInProgress, getTriggerOrgSync } = require('./routes/org-teams');
 
@@ -2568,27 +2560,24 @@ module.exports = function registerRoutes(router, context) {
     if (unifiedSyncState.inProgress) {
       return res.status(409).json({ error: 'Unified sync already in progress' });
     }
-    if (rosterSync.isSyncInProgress()) {
-      return res.status(409).json({ error: 'Roster sync already in progress' });
+    if (consolidatedSync.isSyncInProgress()) {
+      return res.status(409).json({ error: 'Consolidated sync already in progress' });
     }
     if (isOrgSyncInProgress()) {
       return res.status(409).json({ error: 'Org metadata sync already in progress' });
     }
-    if (isIpaSyncInProgress()) {
-      return res.status(409).json({ error: 'IPA registry sync already in progress' });
-    }
 
     unifiedSyncState.inProgress = true;
     unifiedSyncState.currentPhase = 'roster';
-    unifiedSyncState.phaseLabel = 'Syncing people (LDAP + Sheets)...';
+    unifiedSyncState.phaseLabel = 'Syncing people (LDAP + Sheets + lifecycle)...';
     res.json({ status: 'started' });
 
     (async function() {
       try {
-        // Phase 1: Roster sync
-        const rosterResult = await rosterSync.runSync(storage);
-        if (rosterResult.status === 'skipped' || rosterResult.status === 'error') {
-          console.warn('[unified-sync] Roster sync did not succeed:', rosterResult.status, rosterResult.error || '');
+        // Phase 1: Consolidated sync (LDAP + Sheets + lifecycle)
+        const syncResult = await consolidatedSync.runConsolidatedSync(storage);
+        if (syncResult.status === 'skipped' || syncResult.status === 'error') {
+          console.warn('[unified-sync] Consolidated sync did not succeed:', syncResult.status, syncResult.message || '');
           return;
         }
 
@@ -2605,32 +2594,6 @@ module.exports = function registerRoutes(router, context) {
         if (triggerOrgSync) {
           await triggerOrgSync();
         }
-
-        // Phase 3: IPA registry sync
-        unifiedSyncState.currentPhase = 'registry';
-        unifiedSyncState.phaseLabel = 'Syncing people registry...';
-
-        if (isIpaSyncInProgress()) {
-          console.warn('[unified-sync] IPA sync became active between phases, skipping Phase 3');
-        } else {
-          // Sync IPA config from roster sync config (org roots + excluded titles)
-          const ipaConfig = storage.readFromStorage('team-data/config.json') || {};
-          const rosterConfig = rosterSyncConfig.loadConfig(storage);
-          let ipaConfigChanged = false;
-
-          if ((!ipaConfig.orgRoots || ipaConfig.orgRoots.length === 0) && rosterConfig?.orgRoots?.length > 0) {
-            ipaConfig.orgRoots = rosterConfig.orgRoots;
-            ipaConfigChanged = true;
-          }
-          const excludedTitles = rosterConfig?.excludedTitles?.length ? rosterConfig.excludedTitles : DEFAULT_EXCLUDED_TITLES;
-          ipaConfig.excludedTitles = excludedTitles;
-          ipaConfigChanged = true;
-          if (ipaConfigChanged) {
-            storage.writeToStorage('team-data/config.json', ipaConfig);
-            console.log('[unified-sync] Synced IPA registry config from roster sync config');
-          }
-          await runIpaSync(storage);
-        }
       } catch (err) {
         console.error('[unified-sync] Error:', err.message);
       } finally {
@@ -2640,13 +2603,4 @@ module.exports = function registerRoutes(router, context) {
       }
     })();
   });
-
-  // ─── Startup: schedule roster sync ───
-
-  if (!DEMO_MODE && rosterSyncConfig.isConfigured(storage)) {
-    rosterSync.scheduleDaily(storage);
-    console.log('Roster sync: daily schedule active');
-  } else if (!DEMO_MODE) {
-    console.log('Roster sync: not configured (visit Settings to set up)');
-  }
 };

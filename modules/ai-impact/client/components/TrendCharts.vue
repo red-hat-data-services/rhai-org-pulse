@@ -19,11 +19,17 @@ ChartJS.register(
   Filler, Title, Tooltip, Legend
 )
 
+import ScoreDistributionChart from './ScoreDistributionChart.vue'
+import CriteriaBreakdownChart from './CriteriaBreakdownChart.vue'
+
 const props = defineProps({
   trendData: { type: Array, default: () => [] },
   breakdown: { type: Array, default: () => [] },
-  expanded: { type: Boolean, default: true }
+  expanded: { type: Boolean, default: true },
+  filteredAssessments: { type: Object, default: () => ({}) }
 })
+
+const hasAssessments = computed(() => Object.keys(props.filteredAssessments).length > 0)
 
 const emit = defineEmits(['toggle'])
 
@@ -103,7 +109,8 @@ const breakdownChartOptions = {
       </svg>
     </button>
 
-    <div v-if="expanded" class="px-6 pb-6 grid md:grid-cols-2 gap-6">
+    <div v-if="expanded" class="px-6 pb-6 space-y-6">
+      <div class="grid md:grid-cols-2 gap-6">
       <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
         <div class="flex items-center justify-between mb-3">
           <h3 class="text-sm font-medium dark:text-gray-300">Adoption Over Time</h3>
@@ -138,6 +145,13 @@ const breakdownChartOptions = {
         <div class="h-[180px]">
           <Bar :data="breakdownChartData" :options="breakdownChartOptions" />
         </div>
+      </div>
+      </div>
+
+      <!-- Assessment Quality Charts -->
+      <div v-if="hasAssessments" class="grid md:grid-cols-2 gap-6">
+        <ScoreDistributionChart :assessments="filteredAssessments" />
+        <CriteriaBreakdownChart :assessments="filteredAssessments" />
       </div>
     </div>
   </div>

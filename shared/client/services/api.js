@@ -118,10 +118,12 @@ export async function apiRequest(path, options = {}) {
     if (response.status === 403) {
       const err = new Error(errorData.error || 'Access denied')
       err.status = 403
+      err.data = errorData
       throw err
     }
     const err = new Error(errorData.error || `HTTP ${response.status}`)
     err.status = response.status
+    err.data = errorData
     throw err
   }
 

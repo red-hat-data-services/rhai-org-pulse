@@ -8,13 +8,22 @@ const path = require('path');
 
 const FIXTURES_DIR = path.join(__dirname, '..', '..', 'fixtures');
 
+function isPathSafe(resolvedPath) {
+  const resolvedFixturesDir = path.resolve(FIXTURES_DIR);
+  return resolvedPath === resolvedFixturesDir || resolvedPath.startsWith(resolvedFixturesDir + path.sep);
+}
+
 /**
  * Read JSON from fixtures directory
- * @param {string} key - Path relative to fixtures/ (e.g., 'org-roster-full.json' or 'people/name.json')
+ * @param {string} key - Path relative to fixtures/ (e.g., 'team-data/registry.json' or 'people/name.json')
  * @returns {object|null} Parsed JSON or null if not found
  */
 function readFromStorage(key) {
-  const filePath = path.join(FIXTURES_DIR, key);
+  const filePath = path.resolve(FIXTURES_DIR, key);
+  if (!isPathSafe(filePath)) {
+    console.error(`[demo-storage] Blocked path traversal attempt: ${key}`);
+    return null;
+  }
   try {
     const content = fs.readFileSync(filePath, 'utf-8');
     return JSON.parse(content);
@@ -41,7 +50,11 @@ function writeToStorage(key, _data) {
  * @returns {string[]} Array of filenames (without path)
  */
 function listStorageFiles(dir) {
-  const dirPath = path.join(FIXTURES_DIR, dir);
+  const dirPath = path.resolve(FIXTURES_DIR, dir);
+  if (!isPathSafe(dirPath)) {
+    console.error(`[demo-storage] Blocked path traversal attempt: ${dir}`);
+    return [];
+  }
   try {
     return fs.readdirSync(dirPath).filter(f => f.endsWith('.json'));
   } catch (error) {
@@ -62,10 +75,19 @@ function deleteStorageDirectory(dir) {
   return { deleted: 0 };
 }
 
+/**
+ * No-op single file delete for demo mode (fixtures are read-only)
+ * @param {string} key - Would-be file to delete
+ */
+function deleteFromStorage(key) {
+  console.log(`[Demo Mode] Delete ignored: ${key}`);
+}
+
 module.exports = {
   readFromStorage,
   writeToStorage,
   listStorageFiles,
   deleteStorageDirectory,
+  deleteFromStorage,
   FIXTURES_DIR
 };

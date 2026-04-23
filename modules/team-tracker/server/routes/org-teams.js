@@ -6,7 +6,7 @@
 
 const { runSync, calculateHeadcountByRole, parseTeamBoardsTab } = require('../org-sync');
 const { fetchAllRfeBacklog } = require('../rfe');
-const { getAllPeople, getTeamRollup } = require('../../../../shared/server/roster');
+const { getAllPeople, getTeamRollup, collectRoleNames } = require('../../../../shared/server/roster');
 const { getOrgDisplayNames } = require('../../../../shared/server/roster-sync/config');
 const { fetchRawSheet } = require('../../../../shared/server/google-sheets');
 
@@ -27,7 +27,8 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
   const DEMO_MODE = process.env.DEMO_MODE === 'true';
 
   function getSheetId() {
-    const config = readFromStorage('roster-sync-config.json');
+    const rosterSyncConfig = require('../../../../shared/server/roster-sync/config');
+    const config = rosterSyncConfig.loadConfig(storage);
     return config?.googleSheetId || null;
   }
 
@@ -81,6 +82,9 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
     const orgKeyToDisplay = buildOrgKeyToDisplayName();
     const orgTeamPeopleMap = groupPeopleByOrgTeam(allPeople, orgKeyToDisplay);
 
+    const rosterNames = new Set(allPeople.map(p => p.name).filter(Boolean));
+    const allNames = collectRoleNames(allPeople, ['engineeringLead', 'productManager'], rosterNames);
+
     const teams = [];
     for (const [compositeKey, teamPeople] of Object.entries(orgTeamPeopleMap)) {
       const sepIdx = compositeKey.indexOf('::');
@@ -89,8 +93,8 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
       if (orgFilter && org !== orgFilter) continue;
 
       const counts = calculateHeadcountByRole(teamPeople);
-      const engLeads = getTeamRollup(teamPeople, 'engineeringLead');
-      const productManagers = getTeamRollup(teamPeople, 'productManager');
+      const engLeads = getTeamRollup(teamPeople, 'engineeringLead', allNames);
+      const productManagers = getTeamRollup(teamPeople, 'productManager', allNames);
 
       const filterCounts = {};
       for (const p of teamPeople) {
@@ -124,21 +128,32 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
       .map(p => ({ name: p.name, orgKey: p.orgKey, org: orgKeyToDisplay[p.orgKey] || p.orgKey, title: p.title || '' }))
       .sort((a, b) => a.name.localeCompare(b.name));
 
-    return { teams, unassigned, fetchedAt: metaData?.fetchedAt || null };
+    // Count unique people (a person on multiple teams should only count once)
+    const uniquePeople = new Set();
+    for (const teamPeople of Object.values(orgTeamPeopleMap)) {
+      for (const p of teamPeople) {
+        if (!orgFilter || (orgKeyToDisplay[p.orgKey] || '') === orgFilter) {
+          uniquePeople.add(p.name);
+        }
+      }
+    }
+    for (const p of unassigned) uniquePeople.add(p.name);
+
+    return { teams, unassigned, totalPeople: uniquePeople.size, fetchedAt: metaData?.fetchedAt || null };
   }
 
   // ─── GET /org-teams ───
 
   router.get('/org-teams', function(req, res) {
     try {
-      const { teams, unassigned, fetchedAt } = buildEnrichedTeams(req.query.org);
+      const { teams, unassigned, totalPeople, fetchedAt } = buildEnrichedTeams(req.query.org);
       const rfeData = readFromStorage('org-roster/rfe-backlog.json');
       const enriched = rfeData ? teams.map(function(t) {
         const teamKey = `${t.org}::${t.name}`;
         const rfe = rfeData.byTeam?.[teamKey];
         return { ...t, rfeCount: rfe?.count || 0 };
       }) : teams;
-      res.json({ teams: enriched, unassigned, fetchedAt });
+      res.json({ teams: enriched, unassigned, totalPeople, fetchedAt });
     } catch (error) {
       console.error('[team-tracker] GET /org-teams error:', error);
       res.status(500).json({ error: 'Failed to load team data' });
@@ -459,7 +474,7 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
 
   if (!DEMO_MODE) {
     setTimeout(function() {
-      const rosterData = readFromStorage('org-roster-full.json');
+      const rosterData = readFromStorage('team-data/registry.json');
       if (rosterData) {
         triggerOrgSync().catch(function(err) {
           console.error('[team-tracker] Initial org sync error:', err.message);

@@ -22,18 +22,31 @@ function makeStorage(data) {
 }
 
 function makeRosterData(orgRoots, people) {
-  // Build org-roster-full.json structure
-  const orgs = {}
-  for (const root of orgRoots) {
-    const orgPeople = people.filter(p => p.orgKey === root.uid)
-    orgs[root.uid] = {
-      leader: orgPeople[0] || { name: 'Leader', uid: 'leader', email: 'leader@test.com', title: 'Lead' },
-      members: orgPeople.slice(1),
+  // Build team-data/registry.json structure
+  const registryPeople = {}
+  for (const p of people) {
+    registryPeople[p.uid] = {
+      ...p,
+      orgRoot: p.orgKey,
+      status: 'active',
+      firstSeenAt: '2026-01-01T00:00:00.000Z',
+      lastSeenAt: '2026-01-15T00:00:00.000Z',
+      inactiveSince: null,
+      github: p.githubUsername ? { username: p.githubUsername, source: 'ldap' } : null,
+      gitlab: p.gitlabUsername ? { username: p.gitlabUsername, source: 'ldap' } : null,
     }
   }
   return {
-    'org-roster-full.json': { orgs },
-    'roster-sync-config.json': { orgRoots },
+    'team-data/registry.json': {
+      meta: {
+        generatedAt: '2026-01-15T00:00:00.000Z',
+        provider: 'test',
+        orgRoots: orgRoots.map(r => r.uid),
+        vp: null
+      },
+      people: registryPeople
+    },
+    'team-data/config.json': { orgRoots },
   }
 }
 
@@ -80,15 +93,13 @@ describe('deriveTeamsFromPeople', () => {
 
   it('skips people with no org mapping', () => {
     const data = {
-      'org-roster-full.json': {
-        orgs: {
-          unknown: {
-            leader: { name: 'Nobody', uid: 'n', email: 'n@t.com', title: 'Eng', _teamGrouping: 'Team A' },
-            members: [],
-          }
+      'team-data/registry.json': {
+        meta: { generatedAt: '2026-01-15T00:00:00.000Z', provider: 'test', orgRoots: [], vp: null },
+        people: {
+          n: { uid: 'n', name: 'Nobody', email: 'n@t.com', title: 'Eng', orgRoot: 'unknown', status: 'active', _teamGrouping: 'Team A', github: null, gitlab: null, firstSeenAt: '2026-01-01T00:00:00.000Z', lastSeenAt: '2026-01-15T00:00:00.000Z', inactiveSince: null }
         }
       },
-      'roster-sync-config.json': { orgRoots: [] },
+      'team-data/config.json': { orgRoots: [] },
     }
     const storage = makeStorage(data)
 

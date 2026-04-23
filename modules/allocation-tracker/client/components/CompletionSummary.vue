@@ -4,7 +4,7 @@
 
     <div class="mb-4">
       <div class="flex justify-between text-sm text-gray-700 mb-1">
-        <span>{{ summary.completedPoints }}/{{ summary.totalPoints }} pts completed</span>
+        <span>{{ displayCompleted }}/{{ displayTotal }} {{ unitLabel }} completed</span>
         <span class="font-medium">{{ completionPercent }}%</span>
       </div>
       <div class="w-full bg-gray-200 rounded-full h-3">
@@ -23,7 +23,7 @@
         class="flex justify-between text-sm"
       >
         <span class="text-gray-600">{{ bucket.label }}</span>
-        <span class="text-gray-900 font-medium">{{ bucket.completedPoints }}/{{ bucket.points }} pts</span>
+        <span class="text-gray-900 font-medium">{{ bucket.displayCompleted }}/{{ bucket.displayValue }} {{ unitLabel }}</span>
       </div>
     </div>
   </div>
@@ -40,12 +40,31 @@ const props = defineProps({
   sprintState: {
     type: String,
     required: true
+  },
+  metricMode: {
+    type: String,
+    default: 'points'
   }
 })
 
+const unitLabel = computed(() => props.metricMode === 'counts' ? 'issues' : 'pts')
+
+const displayTotal = computed(() => {
+  if (props.metricMode === 'counts') return props.summary.totalCount || 0
+  return props.summary.totalPoints || 0
+})
+
+const displayCompleted = computed(() => {
+  if (props.metricMode === 'counts') {
+    return Object.values(props.summary.buckets)
+      .reduce((sum, b) => sum + (b.completedCount || 0), 0)
+  }
+  return props.summary.completedPoints || 0
+})
+
 const completionPercent = computed(() => {
-  if (props.summary.totalPoints === 0) return 0
-  return Math.round((props.summary.completedPoints / props.summary.totalPoints) * 100)
+  if (displayTotal.value === 0) return 0
+  return Math.round((displayCompleted.value / displayTotal.value) * 100)
 })
 
 const bucketLabels = {
@@ -56,13 +75,15 @@ const bucketLabels = {
 }
 
 const visibleBuckets = computed(() => {
+  const valueField = props.metricMode === 'counts' ? 'count' : 'points'
+  const completedField = props.metricMode === 'counts' ? 'completedCount' : 'completedPoints'
   return Object.entries(props.summary.buckets)
-    .filter(([, data]) => data.points > 0)
+    .filter(([, data]) => (data[valueField] || 0) > 0)
     .map(([key, data]) => ({
       key,
       label: bucketLabels[key] || key,
-      points: data.points,
-      completedPoints: data.completedPoints
+      displayValue: data[valueField] || 0,
+      displayCompleted: data[completedField] || 0
     }))
 })
 </script>

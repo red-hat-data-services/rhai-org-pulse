@@ -7,9 +7,9 @@
   "client": {
     "entry": "./client/index.js",
     "navItems": [
-      { "id": "dashboard", "label": "Allocation", "icon": "PieChart", "default": true },
+      { "id": "dashboard", "label": "Allocation", "icon": "Target", "default": true },
       { "id": "project", "label": "Project", "icon": "FolderOpen" },
-      { "id": "team", "label": "Team Detail", "icon": "Users" }
+      { "id": "team", "label": "Team Detail", "icon": "UserCog" }
     ],
     "settingsComponent": "./client/components/AllocationTrackerSettings.vue"
   },

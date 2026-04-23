@@ -4,6 +4,10 @@ defineProps({
     type: Array,
     required: true
   },
+  workflows: {
+    type: Array,
+    default: () => []
+  },
   selectedPhase: {
     type: String,
     required: true
@@ -20,7 +24,7 @@ const emit = defineEmits(['select'])
       <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Delivery Pipeline</p>
     </div>
 
-    <nav class="p-2">
+    <nav class="p-2 flex-1 overflow-y-auto">
       <div class="text-xs font-medium text-gray-400 dark:text-gray-500 px-3 py-2 uppercase tracking-wide">Phases</div>
       <button
         v-for="phase in phases"
@@ -55,6 +59,40 @@ const emit = defineEmits(['select'])
           class="w-2 h-2 rounded-full bg-green-400"
         />
       </button>
+
+      <template v-if="workflows.length > 0">
+        <div class="border-t border-gray-200 dark:border-gray-700 my-3" />
+        <div class="text-xs font-medium text-gray-400 dark:text-gray-500 px-3 py-2 uppercase tracking-wide">AI Workflows</div>
+        <button
+          v-for="wf in workflows"
+          :key="wf.id"
+          :disabled="wf.status === 'coming-soon'"
+          @click="wf.status === 'active' && emit('select', wf.id)"
+          class="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors"
+          :class="{
+            'text-gray-300 dark:text-gray-600 cursor-not-allowed': wf.status === 'coming-soon',
+            'bg-primary-600 text-white': selectedPhase === wf.id && wf.status === 'active',
+            'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700': selectedPhase !== wf.id && wf.status === 'active'
+          }"
+        >
+          <span
+            class="w-6 h-6 rounded flex items-center justify-center"
+            :class="{
+              'bg-white/20': selectedPhase === wf.id,
+              'bg-gray-100 dark:bg-gray-700': selectedPhase !== wf.id
+            }"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </span>
+          <span class="flex-1 text-left truncate">{{ wf.name }}</span>
+          <span
+            v-if="wf.status === 'active' && selectedPhase === wf.id"
+            class="w-2 h-2 rounded-full bg-green-400"
+          />
+        </button>
+      </template>
     </nav>
   </aside>
 </template>

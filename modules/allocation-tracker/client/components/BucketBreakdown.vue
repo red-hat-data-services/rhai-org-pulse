@@ -12,12 +12,12 @@
     </div>
 
     <div class="flex items-baseline gap-2 mb-1">
-      <span class="text-2xl font-bold text-gray-900">{{ points }} pts</span>
+      <span class="text-2xl font-bold text-gray-900">{{ displayValue }} {{ unitLabel }}</span>
       <span class="text-sm text-gray-500">({{ percentage }}%)</span>
     </div>
 
     <div class="text-xs text-gray-500 mb-3">
-      Target: {{ targetPercentage }}% · {{ completedPoints }} completed · {{ issues.length }} issues
+      Target: {{ targetPercentage }}% · {{ displayCompleted }} completed · {{ issues.length }} issues
     </div>
 
     <IssueList :issues="issues" :expandable="true" />
@@ -32,12 +32,19 @@ const props = defineProps({
   name: { type: String, required: true },
   bucketKey: { type: String, required: true },
   points: { type: Number, required: true },
+  count: { type: Number, default: 0 },
   percentage: { type: Number, required: true },
   targetPercentage: { type: Number, required: true },
   issues: { type: Array, required: true },
   completedPoints: { type: Number, required: true },
-  color: { type: String, required: true }
+  completedCount: { type: Number, default: 0 },
+  color: { type: String, required: true },
+  metricMode: { type: String, default: 'points' }
 })
+
+const displayValue = computed(() => props.metricMode === 'counts' ? props.count : props.points)
+const displayCompleted = computed(() => props.metricMode === 'counts' ? props.completedCount : props.completedPoints)
+const unitLabel = computed(() => props.metricMode === 'counts' ? 'issues' : 'pts')
 
 const borderClass = computed(() => {
   const map = {

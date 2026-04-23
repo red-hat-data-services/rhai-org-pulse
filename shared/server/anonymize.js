@@ -59,7 +59,7 @@ function hashString(str) {
 }
 
 /**
- * Build the PII mapping from the org-roster-full.json data.
+ * Build the PII mapping from the roster data (derived from team-data/registry.json).
  *
  * @param {object} roster - The full roster object ({ vp, orgs })
  * @returns {object} mapping object with lookup functions and maps
