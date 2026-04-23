@@ -83,7 +83,7 @@ function tabCount(tabId) {
 }
 
 function escapeCell(val) {
-  return String(val).replace(/\|/g, '\\|').replace(/\n/g, ' ')
+  return String(val).replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\n/g, ' ')
 }
 
 function exportMarkdown() {
