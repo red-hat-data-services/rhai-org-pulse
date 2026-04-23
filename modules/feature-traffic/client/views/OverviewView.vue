@@ -133,12 +133,17 @@ function formatAge(days) {
 const signalGroups = computed(() => {
   const all = filteredFeatures.value
 
-  const blocked = all.filter(f => f.health === 'RED' && f.blockerCount > 0)
-  const redOther = all.filter(f => f.health === 'RED' && f.blockerCount === 0)
-  const atRisk = all.filter(f => f.health === 'YELLOW' && f.completionPct > 0)
-  const notStarted = all.filter(f => f.health === 'YELLOW' && f.completionPct === 0)
-  const onTrack = all.filter(f => f.health === 'GREEN' && f.completionPct < 100)
-  const complete = all.filter(f => f.health === 'GREEN' && f.completionPct >= 100)
+  // Completion takes priority: 100% done features are complete regardless of
+  // stale health data (the pipeline counts resolved Blocker-priority issues
+  // in blockerCount, inflating RED health on finished features).
+  const complete = all.filter(f => f.completionPct >= 100)
+  const active = all.filter(f => f.completionPct < 100)
+
+  const blocked = active.filter(f => f.health === 'RED' && f.blockerCount > 0)
+  const redOther = active.filter(f => f.health === 'RED' && f.blockerCount === 0)
+  const atRisk = active.filter(f => f.health === 'YELLOW' && f.completionPct > 0)
+  const notStarted = active.filter(f => f.health === 'YELLOW' && f.completionPct === 0)
+  const onTrack = active.filter(f => f.health === 'GREEN')
 
   return [
     {
