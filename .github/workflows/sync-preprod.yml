@@ -5,6 +5,9 @@ on:
     - cron: '0 6 * * 1'  # Weekly: Monday 6 AM UTC
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   sync:
     name: Create sync PR
