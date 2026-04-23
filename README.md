@@ -1,4 +1,4 @@
-# AI Engineering Team Tracker
+# AI Engineering People & Teams
 
 Internal dashboard for tracking AI Platform engineering team productivity across Jira and GitHub.
 

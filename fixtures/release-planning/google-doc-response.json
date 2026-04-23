@@ -1,0 +1,147 @@
+{
+  "title": "RH AI Big Rocks for 3.5",
+  "body": {
+    "content": [
+      {
+        "sectionBreak": {}
+      },
+      {
+        "paragraph": {
+          "elements": [{ "textRun": { "content": "Big Rocks for RHOAI 3.5" } }]
+        }
+      },
+      {
+        "paragraph": {
+          "elements": [{ "textRun": { "content": "MaaS (continue from 3.4) Outcome: RHAISTRAT-1513" } }],
+          "bullet": { "listId": "kix.list1" }
+        }
+      },
+      {
+        "paragraph": {
+          "elements": [{ "textRun": { "content": "Sub-item detail for MaaS." } }],
+          "bullet": { "listId": "kix.list1", "nestingLevel": 1 }
+        }
+      },
+      {
+        "paragraph": {
+          "elements": [{ "textRun": { "content": "Gen AI Studio / Prompt Lab (continue from 3.4) Outcome: RHAISTRAT-1312" } }],
+          "bullet": { "listId": "kix.list1" }
+        }
+      },
+      {
+        "paragraph": {
+          "elements": [{ "textRun": { "content": "Sub-item for Gen AI Studio." } }],
+          "bullet": { "listId": "kix.list1", "nestingLevel": 1 }
+        }
+      },
+      {
+        "paragraph": {
+          "elements": [{ "textRun": { "content": "Bring Your Own Agent (continue from 3.4) [Outcome TBD]" } }],
+          "bullet": { "listId": "kix.list1" }
+        }
+      },
+      {
+        "paragraph": {
+          "elements": [{ "textRun": { "content": "Enable tool calling for open source models (new for 3.5)" } }],
+          "bullet": { "listId": "kix.list1" }
+        }
+      },
+      {
+        "paragraph": {
+          "elements": [{ "textRun": { "content": "Llm-d / llm-d on xKS (continue from 3.4)" } }],
+          "bullet": { "listId": "kix.list1" }
+        }
+      },
+      {
+        "paragraph": {
+          "elements": [{ "textRun": { "content": "Llm-d in RHOAI for 3.5 Outcome: RHAISTRAT-1515" } }],
+          "bullet": { "listId": "kix.list1", "nestingLevel": 1 }
+        }
+      },
+      {
+        "paragraph": {
+          "elements": [{ "textRun": { "content": "RHAII xKS GA for 3.5 Outcome: RHAISTRAT-1403" } }],
+          "bullet": { "listId": "kix.list1", "nestingLevel": 1 }
+        }
+      },
+      {
+        "paragraph": {
+          "elements": [{ "textRun": { "content": "2.25 to 3.5 upgrade support Outcome: RHAISTRAT-1480" } }],
+          "bullet": { "listId": "kix.list1" }
+        }
+      },
+      {
+        "paragraph": {
+          "elements": [{ "textRun": { "content": "Eval Hub (continue from 3.4) Outcome: RHAISTRAT-1498" } }],
+          "bullet": { "listId": "kix.list1" }
+        }
+      },
+      {
+        "paragraph": {
+          "elements": [{ "textRun": { "content": "AI Hub including MCP catalog & registry (continue from 3.4) Outcome: RHAISTRAT-1339" } }],
+          "bullet": { "listId": "kix.list1" }
+        }
+      },
+      {
+        "paragraph": {
+          "elements": [{ "textRun": { "content": "Observability (continue from 3.4)" } }],
+          "bullet": { "listId": "kix.list1" }
+        }
+      },
+      {
+        "paragraph": {
+          "elements": [{ "textRun": { "content": "Observability sub-item A Outcome: RHAISTRAT-1517" } }],
+          "bullet": { "listId": "kix.list1", "nestingLevel": 1 }
+        }
+      },
+      {
+        "paragraph": {
+          "elements": [{ "textRun": { "content": "Observability sub-item B Outcome: RHAISTRAT-1446" } }],
+          "bullet": { "listId": "kix.list1", "nestingLevel": 1 }
+        }
+      },
+      {
+        "paragraph": {
+          "elements": [{ "textRun": { "content": "Multitenancy for RHAIE (new for 3.5)" } }],
+          "bullet": { "listId": "kix.list1" }
+        }
+      },
+      {
+        "paragraph": {
+          "elements": [{ "textRun": { "content": "Multitenancy sub-item Outcome: RHAISTRAT-1516" } }],
+          "bullet": { "listId": "kix.list1", "nestingLevel": 1 }
+        }
+      },
+      {
+        "paragraph": {
+          "elements": [{ "textRun": { "content": "RHAIE sub-item Outcome: RHAISTRAT-898" } }],
+          "bullet": { "listId": "kix.list1", "nestingLevel": 1 }
+        }
+      },
+      {
+        "paragraph": {
+          "elements": [{ "textRun": { "content": "AutoRAG (continue from 3.4) Outcome: RHAISTRAT-188" } }],
+          "bullet": { "listId": "kix.list1" }
+        }
+      },
+      {
+        "paragraph": {
+          "elements": [{ "textRun": { "content": "AI safety - model validation (new for 3.5)" } }],
+          "bullet": { "listId": "kix.list1" }
+        }
+      },
+      {
+        "paragraph": {
+          "elements": [{ "textRun": { "content": "Vllm multimodal (new for 3.5)" } }],
+          "bullet": { "listId": "kix.list1" }
+        }
+      },
+      {
+        "paragraph": {
+          "elements": [{ "textRun": { "content": "AutoML (continue from 3.4)" } }],
+          "bullet": { "listId": "kix.list1" }
+        }
+      }
+    ]
+  }
+}

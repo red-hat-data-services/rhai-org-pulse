@@ -7,9 +7,21 @@
  * no client-side token management needed.
  */
 
-const CACHE_PREFIX = 'tt_cache:'
-/** Prefix for sessionStorage-only caches (same family as tt_cache: localStorage keys). */
-export const SESSION_CACHE_PREFIX = 'tt_cache:session:'
+const CACHE_PREFIX = 'app_cache:'
+/** Prefix for sessionStorage-only caches (same family as app_cache: localStorage keys). */
+export const SESSION_CACHE_PREFIX = 'app_cache:session:'
+
+// One-time migration from old tt_cache: prefix
+try {
+  const keysToMigrate = []
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i)
+    if (k && k.startsWith('tt_cache:')) keysToMigrate.push(k)
+  }
+  for (const k of keysToMigrate) {
+    localStorage.removeItem(k)
+  }
+} catch { /* ignore */ }
 
 /**
  * Base URL for REST calls. Relative paths default to `/api` (Vite proxy in dev).
@@ -106,10 +118,12 @@ export async function apiRequest(path, options = {}) {
     if (response.status === 403) {
       const err = new Error(errorData.error || 'Access denied')
       err.status = 403
+      err.data = errorData
       throw err
     }
     const err = new Error(errorData.error || `HTTP ${response.status}`)
     err.status = response.status
+    err.data = errorData
     throw err
   }
 
@@ -270,6 +284,15 @@ export async function triggerRosterSync() {
 
 export async function getRosterSyncStatus() {
   return apiRequest('/admin/roster-sync/status')
+}
+
+// ─── Unified Sync ───
+
+export async function triggerUnifiedSync() {
+  return apiRequest('/admin/roster-sync/unified', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  })
 }
 
 // ─── Jira Sync Admin ───

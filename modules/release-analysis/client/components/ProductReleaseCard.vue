@@ -77,7 +77,7 @@
         <div class="min-w-0">
           <p class="text-xs text-gray-500 dark:text-gray-400">{{ release.productName }}</p>
           <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-            {{ releaseTeamsList.length }} project(s)
+            {{ componentList.length }} component(s) across {{ releaseTeamsList.length }} project(s)
             <span v-if="release.riskDriver"> · Driver: {{ release.riskDriver }}</span>
           </p>
           <p
@@ -103,124 +103,82 @@
         </div>
       </div>
 
-      <div v-if="!releaseTeamsList.length" class="text-sm text-gray-500 dark:text-gray-400">
+      <!-- Release-level capacity forecast -->
+      <div v-if="componentList.length" class="rounded-lg bg-gray-50/60 dark:bg-gray-800/30 border border-gray-200/60 dark:border-gray-700/40 px-4 py-2.5">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-1.5 text-[11px]">
+          <div>
+            <span class="text-gray-400 dark:text-gray-500">Feature Velocity (V) — 6mo avg</span>
+            <p class="font-semibold text-gray-700 dark:text-gray-300">{{ releaseForecast.velocity }} <span class="font-normal text-gray-400 dark:text-gray-500">issues / 14d</span></p>
+          </div>
+          <div>
+            <span class="text-gray-400 dark:text-gray-500">Remaining Issues (RI)</span>
+            <p class="font-semibold text-gray-700 dark:text-gray-300">{{ releaseForecast.remaining }} <span class="font-normal text-gray-400 dark:text-gray-500">not done</span></p>
+          </div>
+          <div>
+            <span class="text-gray-400 dark:text-gray-500">Sprint (14d window) Remaining (W)</span>
+            <p class="font-semibold text-gray-700 dark:text-gray-300">{{ releaseForecast.windowsRemaining }} <span class="font-normal text-gray-400 dark:text-gray-500">({{ releaseForecast.T }}d ÷ 14)</span></p>
+          </div>
+          <div>
+            <span class="text-gray-400 dark:text-gray-500">Capacity (C = V x W)</span>
+            <p class="font-semibold text-gray-700 dark:text-gray-300">{{ releaseForecast.totalCapacity }} <span class="font-normal text-gray-400 dark:text-gray-500">projected</span></p>
+          </div>
+        </div>
+        <div class="mt-2 text-xs space-y-1">
+          <div class="flex items-center gap-3 flex-wrap">
+            <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-semibold" :class="confidenceBadgeClass(releaseForecast.level)">
+              <span class="h-2 w-2 rounded-full" :class="confidenceDotClass(releaseForecast.level)" />
+              {{ releaseForecast.paceStatus }}
+            </span>
+            <span v-if="releaseForecast.riskSource === 'components'" class="text-red-600 dark:text-red-400">
+              At Risk Due To: {{ releaseForecast.atRiskComponents.join(', ') }}
+            </span>
+            <span v-else-if="releaseForecast.remaining > 0 && releaseForecast.delta < 0" class="text-red-600 dark:text-red-400">
+              Capacity Required: {{ releaseForecast.remaining }} but Projected {{ releaseForecast.totalCapacity }}
+            </span>
+            <span v-else-if="releaseForecast.remaining > 0" class="text-emerald-600 dark:text-emerald-400">
+              Capacity Required: {{ releaseForecast.remaining }}; Projected {{ releaseForecast.totalCapacity }}
+            </span>
+            <span v-else class="text-emerald-600 dark:text-emerald-400 font-medium">All issues resolved</span>
+          </div>
+          <div v-if="releaseForecast.riskSource === 'components' && releaseForecast.remaining > 0" class="pl-[calc(2.5rem+0.75rem)] text-gray-500 dark:text-gray-400">
+            Overall Capacity: Required {{ releaseForecast.remaining }}; Projected {{ releaseForecast.totalCapacity }}
+            <span class="font-semibold" :class="releaseForecast.delta >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'">
+              ({{ releaseForecast.delta >= 0 ? '+' : '' }}{{ releaseForecast.delta }})
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="!componentList.length" class="text-sm text-gray-500 dark:text-gray-400">
         No issues mapped to this release yet.
       </div>
 
-      <div v-else class="space-y-3">
-        <div
-          v-for="team in releaseTeamsList"
-          :key="team.projectKey"
-          class="space-y-1.5"
-        >
-          <div class="flex items-center justify-between gap-2 flex-wrap">
-            <span class="text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
-              {{ team.projectKey }}
-            </span>
-            <div
-              class="inline-flex items-center gap-1.5 rounded-full border border-gray-200/80 dark:border-gray-600 bg-gray-50/80 dark:bg-gray-800/50 px-2 py-0.5"
-            >
-              <span class="text-[9px] font-bold uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400 select-none">Risk</span>
-              <span class="h-2.5 w-px shrink-0 bg-gray-200 dark:bg-gray-600" aria-hidden="true" />
-              <span
-                class="inline-flex h-2 w-2 shrink-0 rounded-full ring-1 ring-white dark:ring-gray-900"
-                :class="riskDotClass(team.risk)"
-              />
-            </div>
+      <!-- Component rows -->
+      <div v-else class="flex flex-col gap-3">
+        <!-- At Risk block -->
+        <div v-if="atRiskComponents.length" class="rounded-lg bg-red-50/60 dark:bg-red-950/20 border border-red-200/80 dark:border-red-800/50 overflow-hidden">
+          <div class="flex items-center gap-2 px-4 py-2 border-b border-red-200/60 dark:border-red-800/40">
+            <span class="h-2 w-2 rounded-full bg-red-500" />
+            <span class="text-xs font-semibold text-red-700 dark:text-red-300 uppercase tracking-wide">At Risk</span>
+            <span class="text-[10px] text-red-500/70 dark:text-red-400/60">{{ atRiskComponents.length }} component{{ atRiskComponents.length !== 1 ? 's' : '' }}</span>
           </div>
-          <div
-            class="flex h-2 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 ring-1 ring-inset ring-gray-200/60 dark:ring-gray-700/60"
-          >
-            <template v-if="teamIssueSum(team) > 0">
-              <div class="h-full bg-emerald-500 dark:bg-emerald-600" :style="{ width: pct(team.issues_done, teamIssueSum(team)) }" />
-              <div class="h-full bg-blue-500 dark:bg-blue-600" :style="{ width: pct(team.issues_doing, teamIssueSum(team)) }" />
-              <div class="h-full bg-gray-400 dark:bg-gray-500" :style="{ width: pct(team.issues_to_do, teamIssueSum(team)) }" />
-            </template>
+          <div class="divide-y divide-red-100 dark:divide-red-900/30">
+            <ComponentDetailRow v-for="comp in atRiskComponents" :key="comp.name" :comp="comp" variant="risk" />
           </div>
-          <div class="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-gray-600 dark:text-gray-300">
-            <span class="inline-flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Done {{ fmtCount(team.issues_done) }}</span>
-            <span class="inline-flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-blue-500" /> Doing {{ fmtCount(team.issues_doing) }}</span>
-            <span class="inline-flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-gray-400" /> To do {{ fmtCount(team.issues_to_do) }}</span>
-            <span class="text-gray-500 dark:text-gray-400">· {{ teamIssueSum(team) }} issues</span>
+        </div>
+
+        <!-- On Track / Complete block -->
+        <div v-if="nonRiskComponents.length" class="rounded-lg border border-emerald-200/80 dark:border-emerald-800/50 overflow-hidden">
+          <div class="flex items-center gap-2 px-4 py-2 border-b border-emerald-200/60 dark:border-emerald-800/40 bg-emerald-50/60 dark:bg-emerald-950/20">
+            <span class="h-2 w-2 rounded-full bg-emerald-500" />
+            <span class="text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wide">On Track</span>
+            <span class="text-[10px] text-emerald-500/70 dark:text-emerald-400/60">{{ nonRiskComponents.length }} component{{ nonRiskComponents.length !== 1 ? 's' : '' }}</span>
+          </div>
+          <div class="divide-y divide-gray-100 dark:divide-gray-800">
+            <ComponentDetailRow v-for="comp in nonRiskComponents" :key="comp.name" :comp="comp" />
           </div>
         </div>
       </div>
-
-      <!-- Capacity table -->
-      <details class="group rounded-lg border border-gray-200 dark:border-gray-700 open:bg-gray-50/50 dark:open:bg-gray-800/30">
-        <summary class="cursor-pointer select-none px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 list-none flex items-center gap-2">
-          <span class="text-gray-400 group-open:rotate-90 transition-transform">&#9656;</span>
-          Capacity &amp; throughput
-        </summary>
-        <div class="px-3 pb-3 overflow-x-auto border-t border-gray-100 dark:border-gray-800">
-          <table class="min-w-full text-sm mt-2">
-            <thead class="text-left text-gray-600 dark:text-gray-300">
-              <tr>
-                <th class="pr-3 py-1">Team</th>
-                <th class="pr-3 py-1">Remaining</th>
-                <th class="pr-3 py-1">Done</th>
-                <th class="pr-3 py-1">Expected to due</th>
-                <th class="pr-3 py-1">Required/day</th>
-                <th class="pr-3 py-1">Available/day</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="team in releaseTeamsList"
-                :key="`cap-${team.projectKey}`"
-                class="border-t border-gray-100 dark:border-gray-800"
-              >
-                <td class="py-2 pr-3 font-medium">{{ team.projectKey }}</td>
-                <td class="py-2 pr-3">{{ fmt(team.remaining) }}</td>
-                <td class="py-2 pr-3">{{ fmt(team.actualDoneThisRelease) }}</td>
-                <td class="py-2 pr-3">{{ fmt(team.expectedThroughputToDue) }}</td>
-                <td class="py-2 pr-3">{{ fmt(team.requiredRatePerDay) }}</td>
-                <td class="py-2 pr-3">{{ fmt(team.availableRatePerDay) }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </details>
-
-      <!-- Issues table -->
-      <details class="group rounded-lg border border-gray-200 dark:border-gray-700 open:bg-gray-50/50 dark:open:bg-gray-800/30">
-        <summary class="cursor-pointer select-none px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 list-none flex items-center gap-2">
-          <span class="text-gray-400 group-open:rotate-90 transition-transform">&#9656;</span>
-          Issues ({{ releaseIssues.length }})
-        </summary>
-        <div class="overflow-x-auto max-h-[min(440px,50vh)] border-t border-gray-100 dark:border-gray-800">
-          <table class="min-w-full text-sm">
-            <thead class="bg-white dark:bg-gray-900 sticky top-0 text-left text-gray-600 dark:text-gray-300">
-              <tr>
-                <th class="px-3 py-2">Issue</th>
-                <th class="px-3 py-2">Type</th>
-                <th class="px-3 py-2">Team</th>
-                <th class="px-3 py-2">Status</th>
-                <th class="px-3 py-2">Weight</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="issue in releaseIssues"
-                :key="issue.key"
-                class="border-b border-gray-100 dark:border-gray-800"
-              >
-                <td class="px-3 py-2">
-                  <a :href="issue.link" target="_blank" rel="noopener" class="text-blue-600 hover:underline">{{ issue.key }}</a>
-                  <div class="text-xs text-gray-500 dark:text-gray-400 max-w-[320px] truncate">{{ issue.summary }}</div>
-                </td>
-                <td class="px-3 py-2">{{ issue.issueType || '—' }}</td>
-                <td class="px-3 py-2">{{ issue.projectKey }}</td>
-                <td class="px-3 py-2">
-                  <span class="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-700">{{ issue.statusBucket }}</span>
-                  <span class="text-xs text-gray-500 ml-1">{{ issue.status }}</span>
-                </td>
-                <td class="px-3 py-2">{{ fmt(issue.weight) }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </details>
 
       <!-- Monte Carlo -->
       <details
@@ -310,13 +268,36 @@
 <script setup>
 import { computed, ref } from 'vue'
 import MonteCarloChart from './MonteCarloChart.vue'
+import ComponentDetailRow from './ComponentDetailRow.vue'
 import { extractProduct } from '../composables/useReleaseFilter'
 import { gammaSample } from '../utils/monteCarlo'
+
+const FORECAST_WINDOW = 14
+const STRATEGIC_TYPES = new Set(['feature', 'initiative', 'spike'])
+const BUCKET_ORDER = { to_do: 0, doing: 1, done: 2 }
+
+function normalizeType(t) { return (t || '').toLowerCase().trim() }
+
+function countByBucket(issues) {
+  const counts = { done: 0, doing: 0, to_do: 0 }
+  for (const i of issues) {
+    if (i.statusBucket === 'done') counts.done++
+    else if (i.statusBucket === 'doing') counts.doing++
+    else counts.to_do++
+  }
+  return counts
+}
+
+function sortRemainingFirst(issues) {
+  return [...issues].sort((a, b) => (BUCKET_ORDER[a.statusBucket] ?? 1) - (BUCKET_ORDER[b.statusBucket] ?? 1))
+}
 
 const props = defineProps({
   release: { type: Object, required: true },
   mcInputs: { type: Object, default: null },
   activeMcTarget: { type: String, default: 'codeFreeze' },
+  componentVelocity: { type: Object, default: () => ({}) },
+  selectedProjects: { type: Set, default: () => new Set() },
   defaultExpanded: { type: Boolean, default: false }
 })
 
@@ -329,6 +310,179 @@ const productLabel = computed(() => extractProduct(props.release.releaseNumber).
 const releaseTeamsList = computed(() => {
   if (!props.release?.teams) return []
   return Object.values(props.release.teams).sort((a, b) => a.projectKey.localeCompare(b.projectKey))
+})
+
+function daysUntilDeadline() {
+  const deadline = props.release?.codeFreezeDate || props.release?.dueDate
+  if (!deadline) return 0
+  const target = new Date(deadline + 'T00:00:00')
+  if (isNaN(target.getTime())) return 0
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return Math.max(0, Math.ceil((target - today) / (1000 * 60 * 60 * 24)))
+}
+
+function lookupVelocity(componentNames) {
+  const cv = props.componentVelocity || {}
+  let total = 0
+  const seen = new Set()
+  for (const name of componentNames) {
+    if (seen.has(name)) continue
+    seen.add(name)
+    const entry = cv[name]
+    if (entry) total += entry.velocity
+  }
+  return Math.round(total * 10) / 10
+}
+
+function computeForecast(remaining, componentNames) {
+  const velocity = lookupVelocity(componentNames)
+  const T = daysUntilDeadline()
+  const windowsRemaining = T / FORECAST_WINDOW
+  const totalCapacity = velocity * windowsRemaining
+  const delta = totalCapacity - remaining
+
+  let paceStatus, level
+  if (remaining === 0) {
+    paceStatus = 'Complete'
+    level = 'High'
+  } else if (totalCapacity >= remaining) {
+    paceStatus = 'On Track'
+    level = 'High'
+  } else {
+    paceStatus = 'At Risk'
+    level = 'Low'
+  }
+
+  return {
+    velocity,
+    remaining,
+    windowsRemaining: +windowsRemaining.toFixed(1),
+    totalCapacity: +totalCapacity.toFixed(1),
+    delta: +delta.toFixed(1),
+    paceStatus,
+    level,
+    T
+  }
+}
+
+const projectFilteredIssues = computed(() => {
+  const all = releaseIssues.value
+  if (!props.selectedProjects.size) return all
+  return all.filter(i => props.selectedProjects.has(i.projectKey))
+})
+
+const componentList = computed(() => {
+  const issues = projectFilteredIssues.value
+  if (!issues.length) return []
+
+  const strategicMap = {}
+  for (const issue of issues) {
+    if (STRATEGIC_TYPES.has(normalizeType(issue.issueType))) {
+      strategicMap[issue.key] = issue
+    }
+  }
+
+  const childKeySet = new Set()
+  const childrenByParent = {}
+  for (const issue of issues) {
+    if (issue.parentKey && strategicMap[issue.parentKey]) {
+      childKeySet.add(issue.key)
+      if (!childrenByParent[issue.parentKey]) childrenByParent[issue.parentKey] = []
+      childrenByParent[issue.parentKey].push(issue)
+    }
+  }
+
+  const map = {}
+  for (const issue of issues) {
+    const names = issue.components?.length ? issue.components : ['(No component)']
+    for (const name of names) {
+      if (!map[name]) {
+        map[name] = { name, projects: new Set(), issues_to_do: 0, issues_doing: 0, issues_done: 0, allIssues: [] }
+      }
+      const entry = map[name]
+      entry.projects.add(issue.projectKey)
+      entry.allIssues.push(issue)
+      if (issue.statusBucket === 'to_do') entry.issues_to_do++
+      else if (issue.statusBucket === 'doing') entry.issues_doing++
+      else entry.issues_done++
+    }
+  }
+
+  return Object.values(map)
+    .map(c => {
+      const remaining = c.issues_to_do + c.issues_doing
+
+      const compStrategic = c.allIssues.filter(i => strategicMap[i.key])
+      const compStrategicKeys = new Set(compStrategic.map(i => i.key))
+
+      const TYPE_ORDER = { Feature: 0, Initiative: 1, Spike: 2 }
+      const strategicItems = compStrategic
+        .map(si => {
+          const children = sortRemainingFirst(childrenByParent[si.key] || [])
+          return {
+            key: si.key, summary: si.summary, issueType: si.issueType,
+            status: si.status, statusBucket: si.statusBucket, link: si.link,
+            children,
+            childCounts: countByBucket(children)
+          }
+        })
+        .sort((a, b) => {
+          const ta = TYPE_ORDER[a.issueType] ?? 3
+          const tb = TYPE_ORDER[b.issueType] ?? 3
+          if (ta !== tb) return ta - tb
+          return a.key.localeCompare(b.key)
+        })
+
+      const otherItems = sortRemainingFirst(
+        c.allIssues.filter(i => !compStrategicKeys.has(i.key) && !childKeySet.has(i.key))
+      )
+
+      return {
+        name: c.name,
+        projects: [...c.projects].sort(),
+        issues_to_do: c.issues_to_do,
+        issues_doing: c.issues_doing,
+        issues_done: c.issues_done,
+        forecast: computeForecast(remaining, [c.name]),
+        strategicItems,
+        otherItems,
+        otherCounts: countByBucket(otherItems)
+      }
+    })
+    .sort((a, b) => {
+      if (a.name === '(No component)') return 1
+      if (b.name === '(No component)') return -1
+      const riskOrder = { Low: 0, High: 1 }
+      const ra = riskOrder[a.forecast.level] ?? 0
+      const rb = riskOrder[b.forecast.level] ?? 0
+      if (ra !== rb) return ra - rb
+      return a.name.localeCompare(b.name)
+    })
+})
+
+const atRiskComponents = computed(() => componentList.value.filter(c => c.forecast.paceStatus === 'At Risk'))
+const nonRiskComponents = computed(() => componentList.value.filter(c => c.forecast.paceStatus !== 'At Risk'))
+
+const releaseForecast = computed(() => {
+  const allNames = componentList.value.map(c => c.name)
+  const seen = new Set()
+  let totalRemaining = 0
+  for (const issue of projectFilteredIssues.value) {
+    if (seen.has(issue.key)) continue
+    seen.add(issue.key)
+    if (issue.statusBucket !== 'done') totalRemaining++
+  }
+  const forecast = computeForecast(totalRemaining, allNames)
+
+  const atRisk = componentList.value.filter(c => c.forecast.paceStatus === 'At Risk')
+  if (atRisk.length > 0 && forecast.paceStatus !== 'At Risk') {
+    forecast.paceStatus = 'At Risk'
+    forecast.level = 'Low'
+    forecast.riskSource = 'components'
+  }
+  forecast.atRiskComponents = atRisk.map(c => c.name)
+  return forecast
 })
 
 const releaseIssues = computed(() => {
@@ -376,6 +530,8 @@ const releaseRiskTitle = computed(() => {
   return props.release?.riskSummary || 'Schedule risk from open issue count vs days to due date.'
 })
 
+// ── Styling helpers ──
+
 function riskDotClass(risk) {
   if (risk === 'red') return 'bg-red-500 dark:bg-red-600'
   if (risk === 'yellow') return 'bg-amber-400 dark:bg-amber-500'
@@ -383,9 +539,14 @@ function riskDotClass(risk) {
   return 'bg-emerald-500 dark:bg-emerald-600'
 }
 
-function teamIssueSum(team) {
-  if (!team) return 0
-  return (team.issues_to_do || 0) + (team.issues_doing || 0) + (team.issues_done || 0)
+function confidenceBadgeClass(level) {
+  if (level === 'High') return 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300'
+  return 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+}
+
+function confidenceDotClass(level) {
+  if (level === 'High') return 'bg-emerald-500'
+  return 'bg-red-500'
 }
 
 function pct(part, total) {
@@ -398,10 +559,6 @@ function fmtCount(n) {
   return String(Math.round(Number(n)))
 }
 
-function fmt(n) {
-  if (!Number.isFinite(Number(n))) return String(n)
-  return Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 })
-}
 
 function formatDate(iso) {
   const d = new Date(iso)

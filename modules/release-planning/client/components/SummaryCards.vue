@@ -1,0 +1,73 @@
+<script setup>
+defineProps({
+  summary: { type: Object, default: null }
+})
+</script>
+
+<template>
+  <div v-if="summary" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Tier 1 -->
+    <div class="p-4 rounded-lg bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30">
+      <div class="text-sm font-semibold text-blue-700 dark:text-blue-400">Tier 1: Milestone Essentials</div>
+      <div class="text-xs text-blue-600/70 dark:text-blue-400/70 mt-0.5 leading-snug">Must-have for release milestones</div>
+      <div class="flex items-baseline gap-4 mt-3">
+        <div>
+          <span class="text-2xl font-bold text-blue-700 dark:text-blue-400">{{ summary.tier1 ? summary.tier1.features : 0 }}</span>
+          <span class="text-xs text-blue-600/70 dark:text-blue-400/70 ml-1">Features</span>
+        </div>
+        <div>
+          <span class="text-2xl font-bold text-blue-700 dark:text-blue-400">{{ summary.tier1 ? summary.tier1.rfes : 0 }}</span>
+          <span class="text-xs text-blue-600/70 dark:text-blue-400/70 ml-1">RFEs</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tier 2 -->
+    <div class="p-4 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30">
+      <div class="text-sm font-semibold text-amber-700 dark:text-amber-400">Tier 2: Enhancements</div>
+      <div class="text-xs text-amber-600/70 dark:text-amber-400/70 mt-0.5 leading-snug">High-value UX/Customer impact</div>
+      <div class="flex items-baseline gap-4 mt-3">
+        <div>
+          <span class="text-2xl font-bold text-amber-700 dark:text-amber-400">{{ summary.tier2 ? summary.tier2.features : 0 }}</span>
+          <span class="text-xs text-amber-600/70 dark:text-amber-400/70 ml-1">Features</span>
+        </div>
+        <div>
+          <span class="text-2xl font-bold text-amber-700 dark:text-amber-400">{{ summary.tier2 ? summary.tier2.rfes : 0 }}</span>
+          <span class="text-xs text-amber-600/70 dark:text-amber-400/70 ml-1">RFEs</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tier 3 -->
+    <div class="p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+      <div class="text-sm font-semibold text-gray-700 dark:text-gray-300">Tier 3: Collaborative Support</div>
+      <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">Cross-team priorities</div>
+      <div class="flex items-baseline gap-4 mt-3">
+        <div>
+          <span class="text-2xl font-bold text-gray-700 dark:text-gray-300">{{ summary.tier3 ? summary.tier3.features : 0 }}</span>
+          <span class="text-xs text-gray-500 dark:text-gray-400 ml-1">Features</span>
+        </div>
+        <div>
+          <span class="text-2xl font-bold text-gray-700 dark:text-gray-300">{{ summary.tier3 ? summary.tier3.rfes : 0 }}</span>
+          <span class="text-xs text-gray-500 dark:text-gray-400 ml-1">RFEs</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Totals -->
+    <div class="p-4 rounded-lg bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/30">
+      <div class="text-sm font-semibold text-green-700 dark:text-green-400">Totals</div>
+      <div class="text-xs text-green-600/70 dark:text-green-400/70 mt-0.5 leading-snug">All features and RFEs across all tiers</div>
+      <div class="flex items-baseline gap-4 mt-3">
+        <div>
+          <span class="text-2xl font-bold text-green-700 dark:text-green-400">{{ summary.totalFeatures }}</span>
+          <span class="text-xs text-green-600/70 dark:text-green-400/70 ml-1">Features</span>
+        </div>
+        <div>
+          <span class="text-2xl font-bold text-green-700 dark:text-green-400">{{ summary.totalRfes }}</span>
+          <span class="text-xs text-green-600/70 dark:text-green-400/70 ml-1">RFEs</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>

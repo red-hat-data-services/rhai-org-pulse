@@ -98,7 +98,7 @@ describe('export orchestrator logic', () => {
 
   it('export does not include PII in anonymized output', () => {
     const storage = makeStorage({
-      'org-roster-full.json': FIXTURE_ROSTER,
+      'roster-data': FIXTURE_ROSTER,
       'allowlist.json': { emails: ['achen@example.com'] }
     })
     const mapping = buildMapping(FIXTURE_ROSTER)
@@ -109,7 +109,7 @@ describe('export orchestrator logic', () => {
     expect(anonymizedEmails).not.toContain('achen@example.com')
 
     // Verify roster anonymization
-    const roster = storage.readFromStorage('org-roster-full.json')
+    const roster = storage.readFromStorage('roster-data')
     const fakeVpName = mapping.nameToFake[roster.vp.name]
     expect(fakeVpName).not.toBe('Demo VP')
     expect(fakeVpName).toMatch(/^Person \d+$/)

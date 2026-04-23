@@ -153,6 +153,8 @@
             :release="release"
             :mc-inputs="mcInputsMap.get(release.releaseNumber) || null"
             :active-mc-target="getMcTarget(release.releaseNumber)"
+            :component-velocity="componentVelocity"
+            :selected-projects="selectedProjects"
             @set-mc-target="(rn, target) => $emit('set-mc-target', rn, target)"
           />
         </div>
@@ -174,6 +176,8 @@ const props = defineProps({
   group: { type: Object, required: true },
   mcInputsMap: { type: Map, required: true },
   getMcTarget: { type: Function, required: true },
+  componentVelocity: { type: Object, default: () => ({}) },
+  selectedProjects: { type: Set, default: () => new Set() },
   defaultOpen: { type: Boolean, default: true }
 })
 

@@ -436,15 +436,24 @@ async function performRefresh({ projectKey, hardRefresh, fetchSprints, fetchSpri
  * Multi-project refresh: iterate over projects, refresh each with prefixed storage,
  * then generate rollup summaries.
  */
-async function performMultiProjectRefresh({ projects, hardRefresh, fetchSprints, fetchSprintIssues, fetchBoardConfiguration, fetchFilterJql, fetchIssuesByJql, readStorage, writeStorage }) {
+async function performMultiProjectRefresh({ projects, hardRefresh, fetchSprints, fetchSprintIssues, fetchBoardConfiguration, fetchFilterJql, fetchIssuesByJql, readStorage, writeStorage, getDeps }) {
   console.log(`Starting multi-project refresh for ${projects.length} projects`);
   const refreshStart = Date.now();
 
   const projectResults = [];
 
   for (const project of projects) {
-    const prefix = getStoragePrefix(project.key);
-    const { read: prefixedRead, write: prefixedWrite } = createPrefixedStorage(prefix, readStorage, writeStorage);
+    let projRead, projWrite;
+    if (getDeps) {
+      const deps = getDeps(project.key);
+      projRead = deps.readStorage;
+      projWrite = deps.writeStorage;
+    } else {
+      const prefix = getStoragePrefix(project.key);
+      const { read, write } = createPrefixedStorage(prefix, readStorage, writeStorage);
+      projRead = read;
+      projWrite = write;
+    }
 
     try {
       const result = await performRefresh({
@@ -455,8 +464,8 @@ async function performMultiProjectRefresh({ projects, hardRefresh, fetchSprints,
         fetchBoardConfiguration,
         fetchFilterJql,
         fetchIssuesByJql,
-        readStorage: prefixedRead,
-        writeStorage: prefixedWrite
+        readStorage: projRead,
+        writeStorage: projWrite
       });
       projectResults.push({ ...result, success: true });
     } catch (error) {

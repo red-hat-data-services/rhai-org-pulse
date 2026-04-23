@@ -64,7 +64,7 @@ function enrichPerson(person, sheetsMap, orgDisplayName) {
  * @param {Object} ldapOrgs - Map of uid -> { leader, members }
  * @param {Map} sheetsData - Map of normalized name -> enrichment data (or null)
  * @param {Object} vpInfo - { name, uid } for the VP (optional)
- * @returns {Object} org-roster-full.json format
+ * @returns {Object} roster format ({ generatedAt, vp, orgs })
  */
 function buildRoster(orgRoots, ldapOrgs, sheetsData, vpInfo) {
   const roster = {

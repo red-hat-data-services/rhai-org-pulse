@@ -8,7 +8,7 @@
   "client": {
     "entry": "./client/index.js",
     "navItems": [
-      { "id": "main", "label": "Release Analysis", "icon": "BarChart3", "default": true },
+      { "id": "main", "label": "Release Analysis", "icon": "ChartColumnStacked", "default": true },
       { "id": "project-breakdown", "label": "Component Breakdown", "icon": "FolderTree" }
     ],
     "settingsComponent": "./client/components/ReleaseAnalysisSettings.vue"

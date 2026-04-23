@@ -1,0 +1,1331 @@
+{
+  "fetchedAt": "2026-04-22T05:17:38.418Z",
+  "issues": [
+    {
+      "key": "RHOAIENG-59199",
+      "summary": "KCS article: manual rotation procedure for expired self-signed gateway TLS certificate",
+      "status": "New",
+      "issueType": "Bug",
+      "priority": "Undefined",
+      "created": "2026-04-21T22:52:01.214+0000",
+      "updated": "2026-04-22T00:10:07.151+0000",
+      "labels": [
+        "aicp-team-heimdall",
+        "jira-triage-missing-info"
+      ],
+      "components": [
+        "AI Core Platform",
+        "AI Core Platform Security"
+      ],
+      "assignee": "Unassigned",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "RHOAIENG-59198",
+      "summary": "Operator does not proactively rotate self-signed gateway TLS certificates before expiry",
+      "status": "New",
+      "issueType": "Bug",
+      "priority": "Undefined",
+      "created": "2026-04-21T22:49:40.098+0000",
+      "updated": "2026-04-22T00:10:06.832+0000",
+      "labels": [
+        "aicp-team-heimdall",
+        "jira-triage-missing-info"
+      ],
+      "components": [
+        "AI Core Platform"
+      ],
+      "assignee": "Unassigned",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "RHOAIENG-59193",
+      "summary": "Subscriptions  Microcopy Update: Change to Why create an authorization policy?",
+      "status": "New",
+      "issueType": "Bug",
+      "priority": "Normal",
+      "created": "2026-04-21T20:38:39.765+0000",
+      "updated": "2026-04-21T22:09:27.162+0000",
+      "labels": [
+        "dashboard-area-maas",
+        "in-fixes-branch",
+        "jira-triage-pending",
+        "maas-3.4-extension"
+      ],
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "assignee": "Unassigned",
+      "pipelineState": "triage-pending"
+    },
+    {
+      "key": "AIPCC-14654",
+      "summary": "jira-status-summary bot is too aggressive when marking stories yellow/red",
+      "status": "In Progress",
+      "issueType": "Bug",
+      "priority": "Undefined",
+      "created": "2026-04-21T17:04:31.521+0000",
+      "updated": "2026-04-21T19:32:59.845+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-blocked"
+      ],
+      "components": [
+        "AI Testing + Workflow Validation"
+      ],
+      "assignee": "Lance Barto",
+      "pipelineState": "autofix-blocked"
+    },
+    {
+      "key": "RHOAIENG-59101",
+      "summary": "Missing create RBAC for events.k8s.io after controller-runtime",
+      "status": "New",
+      "issueType": "Bug",
+      "priority": "Undefined",
+      "created": "2026-04-21T14:49:20.171+0000",
+      "updated": "2026-04-21T22:18:39.993+0000",
+      "labels": [
+        "aicp-team-forge",
+        "jira-autofix",
+        "jira-autofix-blocked"
+      ],
+      "components": [
+        "AI Core Platform"
+      ],
+      "assignee": "Unassigned",
+      "pipelineState": "autofix-blocked"
+    },
+    {
+      "key": "AIPCC-14633",
+      "summary": "Autofix agent includes out-of-scope changes unrelated to the MR's stated purpose",
+      "status": "New",
+      "issueType": "Bug",
+      "priority": "Undefined",
+      "created": "2026-04-21T13:47:18.168+0000",
+      "updated": "2026-04-21T14:49:22.506+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-pending"
+      ],
+      "components": [],
+      "assignee": "Unassigned",
+      "pipelineState": "autofix-pending"
+    },
+    {
+      "key": "RHOAIENG-59075",
+      "summary": "template.buildData overwrites static namespace with empty string from dynamic namespace function",
+      "status": "Review",
+      "issueType": "Bug",
+      "priority": "Undefined",
+      "created": "2026-04-21T13:37:44.029+0000",
+      "updated": "2026-04-21T17:30:05.162+0000",
+      "labels": [
+        "aicp-team-compass",
+        "jira-autofix",
+        "jira-autofix-merged"
+      ],
+      "components": [
+        "AI Core Platform"
+      ],
+      "assignee": "AIPCC JIRABOT",
+      "pipelineState": "autofix-merged"
+    },
+    {
+      "key": "RHOAIENG-59073",
+      "summary": "[3.4] - Gateway OIDC sign-out does not end identity provider session (Entra ID re-authenticates immediately)",
+      "status": "In Progress",
+      "issueType": "Bug",
+      "priority": "Blocker",
+      "created": "2026-04-21T13:30:39.597+0000",
+      "updated": "2026-04-22T01:25:35.597+0000",
+      "labels": [
+        "Gateway",
+        "OIDC",
+        "aicp-team-heimdall",
+        "jira-triage-missing-info"
+      ],
+      "components": [
+        "AI Core Platform"
+      ],
+      "assignee": "Gowtham Shanmugasundaram",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "RHOAIENG-59067",
+      "summary": "odh-pipeline-runtime-pytorch-llmcompressor-cuda-py312-v3-4 build failure",
+      "status": "Resolved",
+      "issueType": "Bug",
+      "priority": "Blocker",
+      "created": "2026-04-21T12:05:14.238+0000",
+      "updated": "2026-04-22T00:45:26.239+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-blocked",
+        "release-blocker"
+      ],
+      "components": [
+        "Notebooks Images"
+      ],
+      "assignee": "Vath Sok",
+      "pipelineState": "autofix-blocked"
+    },
+    {
+      "key": "RHOAIENG-59066",
+      "summary": "odh-wb-jupyter-pytorch-llmcompressor-cuda-py312-v3-4 build failure",
+      "status": "Resolved",
+      "issueType": "Bug",
+      "priority": "Blocker",
+      "created": "2026-04-21T11:58:31.105+0000",
+      "updated": "2026-04-22T00:45:26.985+0000",
+      "labels": [
+        "jira-triage-missing-info",
+        "release-blocker"
+      ],
+      "components": [
+        "Notebooks Images"
+      ],
+      "assignee": "Vath Sok",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "RHOAIENG-59060",
+      "summary": "odh-workbench-jupyter-pytorch-llmcompressor-cuda-py312  build failure",
+      "status": "Resolved",
+      "issueType": "Bug",
+      "priority": "Blocker",
+      "created": "2026-04-21T11:49:14.676+0000",
+      "updated": "2026-04-22T00:45:27.731+0000",
+      "labels": [
+        "jira-triage-not-fixable",
+        "release-blocker"
+      ],
+      "components": [
+        "Notebooks Images"
+      ],
+      "assignee": "Vath Sok",
+      "pipelineState": "triage-not-fixable"
+    },
+    {
+      "key": "AIPCC-14624",
+      "summary": "Fix $ARGUMENTS variable documentation in team-docs repository skills",
+      "status": "Closed",
+      "issueType": "Bug",
+      "priority": "Undefined",
+      "created": "2026-04-21T11:24:45.231+0000",
+      "updated": "2026-04-21T12:56:40.472+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-review"
+      ],
+      "components": [
+        "AIPCC Ecosystems"
+      ],
+      "assignee": "Doug Hellmann",
+      "pipelineState": "autofix-review"
+    },
+    {
+      "key": "RHOAIENG-59055",
+      "summary": "Spike - Enable upstream sync from oauth2-proxy to kube-auth-proxy",
+      "status": "New",
+      "issueType": "Task",
+      "priority": "Major",
+      "created": "2026-04-21T11:22:09.655+0000",
+      "updated": "2026-04-21T14:33:21.003+0000",
+      "labels": [
+        "aicp-team-heimdall",
+        "jira-triage-missing-info"
+      ],
+      "components": [
+        "AI Core Platform"
+      ],
+      "assignee": "Gowtham Shanmugasundaram",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "RHOAIENG-58992",
+      "summary": "Unit tests and Kind E2E tests failing",
+      "status": "Resolved",
+      "issueType": "Bug",
+      "priority": "Critical",
+      "created": "2026-04-20T19:20:13.990+0000",
+      "updated": "2026-04-21T14:33:21.458+0000",
+      "labels": [
+        "aicp-team-forge",
+        "jira-triage-missing-info"
+      ],
+      "components": [
+        "AI Core Platform"
+      ],
+      "assignee": "Davide Bianchi",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "RHOAIENG-58984",
+      "summary": "[RHOAI 3.3.X] odh-notebook-controller: nil pointer dereference panic in extractElyraRuntimeConfigInfo when creating Notebook CR in namespace with embedded MinIO DSPA",
+      "status": "New",
+      "issueType": "Bug",
+      "priority": "Undefined",
+      "created": "2026-04-20T16:43:27.395+0000",
+      "updated": "2026-04-21T19:03:42.879+0000",
+      "labels": [
+        "ide_scrum:indigo",
+        "jira-autofix",
+        "jira-autofix-blocked",
+        "no-subteam"
+      ],
+      "components": [
+        "AI Core Platform",
+        "Notebooks Server"
+      ],
+      "assignee": "Unassigned",
+      "pipelineState": "autofix-blocked"
+    },
+    {
+      "key": "RHOAIENG-58983",
+      "summary": "[3.3.NEXT] - ChunkLoadError caused by stale cached remote entry files after redeployment",
+      "status": "Testing",
+      "issueType": "Bug",
+      "priority": "Major",
+      "created": "2026-04-20T16:23:30.047+0000",
+      "updated": "2026-04-21T14:33:22.018+0000",
+      "labels": [
+        "dashboard-area-infrastructure",
+        "dashboard-monarch-scrum",
+        "jira-triage-missing-info"
+      ],
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "assignee": "Christian Vogt",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "RHOAIENG-58940",
+      "summary": "Dashboard Pause action on RayJobs has no effect when job uses an existing RayCluster (clusterSelector)",
+      "status": "In Progress",
+      "issueType": "Bug",
+      "priority": "Blocker",
+      "created": "2026-04-20T14:33:27.729+0000",
+      "updated": "2026-04-22T01:20:03.465+0000",
+      "labels": [
+        "ai-reviewed",
+        "dashboard-tangerine-scrum",
+        "jira-triage-missing-info"
+      ],
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "assignee": "Claudia Alphonse",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "RHOAIENG-58933",
+      "summary": "Default DSC varies between CSV initialization-resource and UI (missing modelsAsService)",
+      "status": "New",
+      "issueType": "Bug",
+      "priority": "Blocker",
+      "created": "2026-04-20T13:17:12.697+0000",
+      "updated": "2026-04-21T15:44:13.916+0000",
+      "labels": [
+        "aicp-team-compass",
+        "devtestops-service",
+        "jira-triage-missing-info"
+      ],
+      "components": [
+        "AI Core Platform"
+      ],
+      "assignee": "Unassigned",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "RHOAIENG-58847",
+      "summary": "Filter panel should be separately scrolled with the content area in MCP Catalog",
+      "status": "Review",
+      "issueType": "Bug",
+      "priority": "Normal",
+      "created": "2026-04-18T06:34:30.363+0000",
+      "updated": "2026-04-21T14:33:23.452+0000",
+      "labels": [
+        "dashboard-area-mcp",
+        "jira-triage-missing-info"
+      ],
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "assignee": "Manaswini Das",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "RHOAIENG-58830",
+      "summary": "Revoke all my api keys kebab should be grayed out when disabled",
+      "status": "Backlog",
+      "issueType": "Bug",
+      "priority": "Major",
+      "created": "2026-04-17T19:39:55.292+0000",
+      "updated": "2026-04-21T14:33:23.944+0000",
+      "labels": [
+        "dashboard-area-maas",
+        "jira-triage-missing-info"
+      ],
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "assignee": "Unassigned",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "RHOAIENG-58829",
+      "summary": "No API Keys table doesn't give good direction to create an api key if needed",
+      "status": "New",
+      "issueType": "Bug",
+      "priority": "Major",
+      "created": "2026-04-17T19:38:20.905+0000",
+      "updated": "2026-04-21T14:33:24.670+0000",
+      "labels": [
+        "dashboard-area-maas",
+        "jira-triage-missing-info",
+        "needs-ux"
+      ],
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "assignee": "Unassigned",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "AIPCC-14469",
+      "summary": "Migrate gaudi_mirror.py from twine to requests-based upload",
+      "status": "In Progress",
+      "issueType": "Task",
+      "priority": "Undefined",
+      "created": "2026-04-17T19:00:06.224+0000",
+      "updated": "2026-04-21T16:10:34.725+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-blocked",
+        "jira-autofix-done",
+        "jira-autofix-pending"
+      ],
+      "components": [
+        "Development Platform"
+      ],
+      "assignee": "Ryan Petrello",
+      "pipelineState": "autofix-blocked"
+    },
+    {
+      "key": "RHOAIENG-58758",
+      "summary": "Playground crashes when a stopped llm-d deployment is registered as an AI Asset",
+      "status": "Backlog",
+      "issueType": "Bug",
+      "priority": "Critical",
+      "created": "2026-04-17T14:27:02.967+0000",
+      "updated": "2026-04-21T14:33:25.191+0000",
+      "labels": [
+        "dashboard-crimson-scrum",
+        "jira-triage-missing-info"
+      ],
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "assignee": "Unassigned",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "RHOAIENG-58747",
+      "summary": "Allow non-unique priorities in MaaS Subscriptions",
+      "status": "New",
+      "issueType": "Bug",
+      "priority": "Normal",
+      "created": "2026-04-17T13:00:22.814+0000",
+      "updated": "2026-04-21T14:33:25.652+0000",
+      "labels": [
+        "ai-reviewed",
+        "dashboard-area-maas",
+        "dashboard-zaffre-scrum",
+        "jira-triage-missing-info"
+      ],
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "assignee": "Unassigned",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "RHOAIENG-58734",
+      "summary": "PersesDashboard - Timezone Selector for relative time",
+      "status": "Closed",
+      "issueType": "Bug",
+      "priority": "Normal",
+      "created": "2026-04-17T12:07:25.631+0000",
+      "updated": "2026-04-21T21:48:34.559+0000",
+      "labels": [
+        "ai-reviewed",
+        "dashboard-area-observability",
+        "dashboard-monarch-scrum",
+        "jira-triage-missing-info"
+      ],
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "assignee": "Unassigned",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "AIPCC-14461",
+      "summary": "Remove twine-specific patches for opt-einsum 3.4.0",
+      "status": "Closed",
+      "issueType": "Task",
+      "priority": "Undefined",
+      "created": "2026-04-17T11:52:31.492+0000",
+      "updated": "2026-04-21T14:33:05.510+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-merged"
+      ],
+      "components": [
+        "Development Platform",
+        "Wheel Package Index"
+      ],
+      "assignee": "Ryan Petrello",
+      "pipelineState": "autofix-merged"
+    },
+    {
+      "key": "AIPCC-14460",
+      "summary": "Remove twine-specific patches for hatch-cython 0.5.0",
+      "status": "Closed",
+      "issueType": "Task",
+      "priority": "Undefined",
+      "created": "2026-04-17T11:52:30.469+0000",
+      "updated": "2026-04-21T14:33:05.973+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-merged"
+      ],
+      "components": [
+        "Development Platform",
+        "Wheel Package Index"
+      ],
+      "assignee": "Ryan Petrello",
+      "pipelineState": "autofix-merged"
+    },
+    {
+      "key": "AIPCC-14459",
+      "summary": "Remove twine-specific patches for filterpy 1.4.5",
+      "status": "Closed",
+      "issueType": "Task",
+      "priority": "Undefined",
+      "created": "2026-04-17T11:52:29.617+0000",
+      "updated": "2026-04-21T14:33:06.540+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-merged"
+      ],
+      "components": [
+        "Development Platform",
+        "Wheel Package Index"
+      ],
+      "assignee": "Ryan Petrello",
+      "pipelineState": "autofix-merged"
+    },
+    {
+      "key": "AIPCC-14458",
+      "summary": "Remove twine-specific patches for uvicorn 0.29.0",
+      "status": "Closed",
+      "issueType": "Task",
+      "priority": "Undefined",
+      "created": "2026-04-17T11:52:28.622+0000",
+      "updated": "2026-04-21T14:33:07.030+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-merged"
+      ],
+      "components": [
+        "Development Platform",
+        "Wheel Package Index"
+      ],
+      "assignee": "Ryan Petrello",
+      "pipelineState": "autofix-merged"
+    },
+    {
+      "key": "AIPCC-14457",
+      "summary": "Remove twine-specific patches for docker 7.1.0",
+      "status": "Closed",
+      "issueType": "Task",
+      "priority": "Undefined",
+      "created": "2026-04-17T11:52:27.474+0000",
+      "updated": "2026-04-21T14:33:07.452+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-merged"
+      ],
+      "components": [
+        "Development Platform",
+        "Wheel Package Index"
+      ],
+      "assignee": "Ryan Petrello",
+      "pipelineState": "autofix-merged"
+    },
+    {
+      "key": "AIPCC-14456",
+      "summary": "Remove twine-specific patches for soupsieve 2.6",
+      "status": "In Progress",
+      "issueType": "Task",
+      "priority": "Undefined",
+      "created": "2026-04-17T11:52:13.518+0000",
+      "updated": "2026-04-21T15:11:29.467+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-blocked"
+      ],
+      "components": [
+        "Development Platform",
+        "Wheel Package Index"
+      ],
+      "assignee": "Ryan Petrello",
+      "pipelineState": "autofix-blocked"
+    },
+    {
+      "key": "AIPCC-14455",
+      "summary": "Remove twine-specific patches for ply 3.11",
+      "status": "Closed",
+      "issueType": "Task",
+      "priority": "Undefined",
+      "created": "2026-04-17T11:52:12.360+0000",
+      "updated": "2026-04-21T14:33:07.890+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-merged"
+      ],
+      "components": [
+        "Development Platform",
+        "Wheel Package Index"
+      ],
+      "assignee": "Ryan Petrello",
+      "pipelineState": "autofix-merged"
+    },
+    {
+      "key": "AIPCC-14454",
+      "summary": "Remove twine-specific patches for hatch-fancy-pypi-readme 24.1.0",
+      "status": "Closed",
+      "issueType": "Task",
+      "priority": "Undefined",
+      "created": "2026-04-17T11:52:11.309+0000",
+      "updated": "2026-04-21T14:33:18.950+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-blocked"
+      ],
+      "components": [
+        "Development Platform",
+        "Wheel Package Index"
+      ],
+      "assignee": "Ryan Petrello",
+      "pipelineState": "autofix-blocked"
+    },
+    {
+      "key": "RHOAIENG-58730",
+      "summary": "GenAI Playground / AAE: MaaS feature flag should check backend service readiness",
+      "status": "Backlog",
+      "issueType": "Bug",
+      "priority": "Critical",
+      "created": "2026-04-17T11:43:42.643+0000",
+      "updated": "2026-04-21T14:33:26.773+0000",
+      "labels": [
+        "dashboard-crimson-scrum",
+        "jira-triage-missing-info"
+      ],
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "assignee": "Unassigned",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "RHOAIENG-58729",
+      "summary": "GenAI Playground: MCP server tools loading spinner only appears on first load",
+      "status": "Backlog",
+      "issueType": "Bug",
+      "priority": "Minor",
+      "created": "2026-04-17T11:43:39.381+0000",
+      "updated": "2026-04-21T14:33:27.194+0000",
+      "labels": [
+        "dashboard-crimson-scrum",
+        "jira-triage-missing-info"
+      ],
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "assignee": "Unassigned",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "RHOAIENG-58728",
+      "summary": "GenAI Playground: compare mode persists MCP server selection in both configurations",
+      "status": "Backlog",
+      "issueType": "Bug",
+      "priority": "Major",
+      "created": "2026-04-17T11:43:35.350+0000",
+      "updated": "2026-04-21T14:33:27.835+0000",
+      "labels": [
+        "dashboard-crimson-scrum",
+        "jira-triage-missing-info"
+      ],
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "assignee": "Unassigned",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "RHOAIENG-58724",
+      "summary": "odh-mod-arch-mlflow-v3-4 build failure",
+      "status": "Resolved",
+      "issueType": "Bug",
+      "priority": "Blocker",
+      "created": "2026-04-17T11:10:23.646+0000",
+      "updated": "2026-04-21T14:33:28.301+0000",
+      "labels": [
+        "ai-reviewed",
+        "dashboard-area-infrastructure",
+        "dashboard-monarch-scrum",
+        "jira-triage-missing-info"
+      ],
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "assignee": "Moulali Shikalwadi",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "RHOAIENG-58678",
+      "summary": "BUG: Fix unsafe error handling and add route tests for Feature Store backend",
+      "status": "New",
+      "issueType": "Bug",
+      "priority": "Major",
+      "created": "2026-04-17T07:30:38.429+0000",
+      "updated": "2026-04-21T14:33:28.826+0000",
+      "labels": [
+        "dashboard-tangerine-scrum",
+        "jira-triage-missing-info"
+      ],
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "assignee": "Unassigned",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "RHOAIENG-58677",
+      "summary": "BUG: Search race condition, highlight regex bug, and related search/filter issues in Feature Store",
+      "status": "New",
+      "issueType": "Bug",
+      "priority": "Major",
+      "created": "2026-04-17T07:30:16.887+0000",
+      "updated": "2026-04-21T14:33:29.328+0000",
+      "labels": [
+        "dashboard-tangerine-scrum",
+        "jira-triage-missing-info"
+      ],
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "assignee": "Unassigned",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "RHOAIENG-58676",
+      "summary": "BUG: Editing workbench can silently clear Feast metadata when Feature Store API is unavailable",
+      "status": "New",
+      "issueType": "Bug",
+      "priority": "Critical",
+      "created": "2026-04-17T07:29:47.032+0000",
+      "updated": "2026-04-21T14:33:29.966+0000",
+      "labels": [
+        "dashboard-tangerine-scrum",
+        "jira-triage-missing-info"
+      ],
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "assignee": "Unassigned",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "RHOAIENG-58655",
+      "summary": "Filter hardware profiles in workbench creation by available LocalQueues in the project",
+      "status": "New",
+      "issueType": "Bug",
+      "priority": "Major",
+      "created": "2026-04-16T21:27:54.838+0000",
+      "updated": "2026-04-21T14:33:30.382+0000",
+      "labels": [
+        "dashboard-razzmatazz-scrum",
+        "jira-triage-missing-info"
+      ],
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "assignee": "Unassigned",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "AIPCC-14433",
+      "summary": "[builder] modify pydeck plugin so that it only patches <0.92",
+      "status": "Closed",
+      "issueType": "Bug",
+      "priority": "Undefined",
+      "created": "2026-04-16T20:48:54.388+0000",
+      "updated": "2026-04-21T14:33:19.425+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-blocked",
+        "support"
+      ],
+      "components": [
+        "Development Platform"
+      ],
+      "assignee": "Sean Johnston",
+      "pipelineState": "autofix-blocked"
+    },
+    {
+      "key": "RHOAIENG-58577",
+      "summary": "gen-ai BFF uses rest.CopyConfig instead of rest.AnonymousClientConfig for user-scoped K8s clients",
+      "status": "Backlog",
+      "issueType": "Bug",
+      "priority": "Critical",
+      "created": "2026-04-16T17:46:29.566+0000",
+      "updated": "2026-04-21T14:33:30.804+0000",
+      "labels": [
+        "dashboard-crimson-scrum",
+        "jira-triage-missing-info",
+        "needs-advisor"
+      ],
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "assignee": "Unassigned",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "RHOAIENG-58544",
+      "summary": "Auto-select option for Deployment resource is disabled in 3.4",
+      "status": "Backlog",
+      "issueType": "Bug",
+      "priority": "Major",
+      "created": "2026-04-16T16:12:18.200+0000",
+      "updated": "2026-04-21T14:33:31.277+0000",
+      "labels": [
+        "dashboard-area-model-serving",
+        "jira-triage-missing-info"
+      ],
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "assignee": "Unassigned",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "RHOAIENG-58513",
+      "summary": "Subscription and Policy tables missing resource popover helper icon \"?\"",
+      "status": "Review",
+      "issueType": "Bug",
+      "priority": "Major",
+      "created": "2026-04-16T12:58:16.158+0000",
+      "updated": "2026-04-21T15:14:10.091+0000",
+      "labels": [
+        "dashboard-area-maas",
+        "jira-triage-missing-info"
+      ],
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "assignee": "Claudia Alphonse",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "AIPCC-14345",
+      "summary": "When working on spikes, jira-autofix should not require a repository",
+      "status": "Closed",
+      "issueType": "Story",
+      "priority": "Undefined",
+      "created": "2026-04-15T19:36:30.603+0000",
+      "updated": "2026-04-21T14:33:10.934+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-researched"
+      ],
+      "components": [
+        "Accelerator Enablement"
+      ],
+      "assignee": "AIPCC JIRABOT",
+      "pipelineState": "autofix-researched"
+    },
+    {
+      "key": "AIPCC-14342",
+      "summary": "Implement e2e tests for ai-review",
+      "status": "Closed",
+      "issueType": "Story",
+      "priority": "Undefined",
+      "created": "2026-04-15T17:58:48.733+0000",
+      "updated": "2026-04-21T20:13:13.938+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-merged"
+      ],
+      "components": [
+        "Accelerator Enablement"
+      ],
+      "assignee": "Lance Barto",
+      "pipelineState": "autofix-merged"
+    },
+    {
+      "key": "AIPCC-14341",
+      "summary": "File stories for the package deletion epic",
+      "status": "Closed",
+      "issueType": "Spike",
+      "priority": "Undefined",
+      "created": "2026-04-15T17:46:08.602+0000",
+      "updated": "2026-04-21T14:33:11.560+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-researched"
+      ],
+      "components": [
+        "Accelerator Enablement"
+      ],
+      "assignee": "AIPCC JIRABOT",
+      "pipelineState": "autofix-researched"
+    },
+    {
+      "key": "RHOAIENG-58426",
+      "summary": "GenAI Playground: compare mode clears selected vector store",
+      "status": "Backlog",
+      "issueType": "Bug",
+      "priority": "Normal",
+      "created": "2026-04-15T16:38:39.640+0000",
+      "updated": "2026-04-21T14:33:32.365+0000",
+      "labels": [
+        "dashboard-crimson-scrum",
+        "jira-triage-missing-info"
+      ],
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "assignee": "Unassigned",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "RHOAIENG-58425",
+      "summary": "[Playground] Load prompt modal: inline collapse control is not obvious as \"clear/unselect prompt\"",
+      "status": "Backlog",
+      "issueType": "Bug",
+      "priority": "Normal",
+      "created": "2026-04-15T16:38:34.109+0000",
+      "updated": "2026-04-20T18:05:09.947+0000",
+      "labels": [
+        "dashboard-crimson-scrum",
+        "jira-triage-not-fixable"
+      ],
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "assignee": "Unassigned",
+      "pipelineState": "triage-not-fixable"
+    },
+    {
+      "key": "RHOAIENG-58424",
+      "summary": "GenAI Playground: compare mode shows \"Start a new session?\" modal when no messages exist",
+      "status": "In Progress",
+      "issueType": "Bug",
+      "priority": "Undefined",
+      "created": "2026-04-15T16:38:32.478+0000",
+      "updated": "2026-04-21T15:10:49.233+0000",
+      "labels": [
+        "dashboard-crimson-scrum",
+        "jira-autofix",
+        "jira-autofix-ci-failing"
+      ],
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "assignee": "AIPCC JIRABOT",
+      "pipelineState": "autofix-ci-failing"
+    },
+    {
+      "key": "RHOAIENG-58423",
+      "summary": "GenAI Playground: scroll to top/bottom chat arrows not centered",
+      "status": "Review",
+      "issueType": "Bug",
+      "priority": "Undefined",
+      "created": "2026-04-15T16:38:30.848+0000",
+      "updated": "2026-04-21T21:10:33.285+0000",
+      "labels": [
+        "dashboard-crimson-scrum",
+        "jira-autofix",
+        "jira-autofix-ci-failing"
+      ],
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "assignee": "AIPCC JIRABOT",
+      "pipelineState": "autofix-ci-failing"
+    },
+    {
+      "key": "RHOAIENG-58422",
+      "summary": "Playground: placeholder messages should disappear when real user/assistant messages exist",
+      "status": "Review",
+      "issueType": "Bug",
+      "priority": "Undefined",
+      "created": "2026-04-15T16:37:57.409+0000",
+      "updated": "2026-04-22T02:39:50.205+0000",
+      "labels": [
+        "dashboard-crimson-scrum",
+        "jira-autofix",
+        "jira-autofix-ci-failing"
+      ],
+      "components": [
+        "AI Core Dashboard",
+        "Gen AI Studio"
+      ],
+      "assignee": "AIPCC JIRABOT",
+      "pipelineState": "autofix-ci-failing"
+    },
+    {
+      "key": "RHOAIENG-58413",
+      "summary": "GenAI Playground: max tokens not applied when configuring LlamaStack or during playground inference",
+      "status": "Review",
+      "issueType": "Bug",
+      "priority": "Undefined",
+      "created": "2026-04-15T15:28:46.490+0000",
+      "updated": "2026-04-21T20:16:24.818+0000",
+      "labels": [
+        "dashboard-crimson-scrum",
+        "jira-autofix",
+        "jira-autofix-blocked"
+      ],
+      "components": [
+        "Gen AI Studio"
+      ],
+      "assignee": "AIPCC JIRABOT",
+      "pipelineState": "autofix-blocked"
+    },
+    {
+      "key": "AIPCC-14332",
+      "summary": "[QA][PyTorch UT][Distributed] test/distributed/rpc/cuda/test_tensorpipe_agent.py - TensorPipeTensorPipeAgentCudaRpcTest failure(s)",
+      "status": "Closed",
+      "issueType": "Bug",
+      "priority": "Undefined",
+      "created": "2026-04-15T14:27:16.490+0000",
+      "updated": "2026-04-19T14:29:31.502+0000",
+      "labels": [
+        "jira-triage-not-fixable",
+        "pytorch_qa"
+      ],
+      "components": [
+        "PyTorch"
+      ],
+      "assignee": "Unassigned",
+      "pipelineState": "triage-not-fixable"
+    },
+    {
+      "key": "RHOAIENG-58388",
+      "summary": "Long description causes subscription table to jump",
+      "status": "In Progress",
+      "issueType": "Bug",
+      "priority": "Major",
+      "created": "2026-04-15T14:00:24.281+0000",
+      "updated": "2026-04-21T15:14:17.254+0000",
+      "labels": [
+        "dashboard-area-maas",
+        "jira-autofix",
+        "jira-autofix-blocked",
+        "jira-autofix-pending"
+      ],
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "assignee": "AIPCC JIRABOT",
+      "pipelineState": "autofix-blocked"
+    },
+    {
+      "key": "RHOAIENG-58373",
+      "summary": "[AutoRAG] Lack of hybrid search mode configuration in generated inference notebook",
+      "status": "Backlog",
+      "issueType": "Bug",
+      "priority": "Major",
+      "created": "2026-04-15T13:28:15.240+0000",
+      "updated": "2026-04-21T14:33:32.876+0000",
+      "labels": [
+        "autorag",
+        "jira-triage-missing-info"
+      ],
+      "components": [
+        "AutoRAG"
+      ],
+      "assignee": "Jakub Walaszczyk",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "AIPCC-14329",
+      "summary": "Fromager 0.80.0 dropped support for resolve_source hook",
+      "status": "Closed",
+      "issueType": "Bug",
+      "priority": "Normal",
+      "created": "2026-04-15T12:17:56.528+0000",
+      "updated": "2026-04-15T13:25:27.029+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-review"
+      ],
+      "components": [
+        "Development Platform"
+      ],
+      "assignee": "AIPCC JIRABOT",
+      "pipelineState": "autofix-review"
+    },
+    {
+      "key": "AIPCC-14320",
+      "summary": "RHAI pipeline `uv run migrate-onboarding` is unable to migrate several ROCm 7.1 packages",
+      "status": "Closed",
+      "issueType": "Bug",
+      "priority": "Undefined",
+      "created": "2026-04-15T09:47:18.989+0000",
+      "updated": "2026-04-21T14:33:08.401+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-merged"
+      ],
+      "components": [
+        "Accelerator Enablement"
+      ],
+      "assignee": "Anu Oguntayo",
+      "pipelineState": "autofix-merged"
+    },
+    {
+      "key": "RHOAIENG-58326",
+      "summary": "disableISVBadges config option does not hide ISV badge labels on the Applications > Explore page",
+      "status": "New",
+      "issueType": "Bug",
+      "priority": "Normal",
+      "created": "2026-04-15T09:13:30.767+0000",
+      "updated": "2026-04-21T14:33:33.394+0000",
+      "labels": [
+        "ai-reviewed",
+        "dashboard-area-applications",
+        "dashboard-monarch-scrum",
+        "jira-triage-missing-info"
+      ],
+      "components": [
+        "AI Core Dashboard"
+      ],
+      "assignee": "Unassigned",
+      "pipelineState": "triage-missing-info"
+    },
+    {
+      "key": "AIPCC-14318",
+      "summary": "[QA][PyTorch UT][Distributed] distributed/test_c10d_nccl.py - CommTest failure(s)",
+      "status": "Closed",
+      "issueType": "Bug",
+      "priority": "Critical",
+      "created": "2026-04-15T08:37:45.826+0000",
+      "updated": "2026-04-19T14:29:54.429+0000",
+      "labels": [
+        "jira-triage-not-fixable",
+        "pytorch_qa"
+      ],
+      "components": [
+        "PyTorch"
+      ],
+      "assignee": "Unassigned",
+      "pipelineState": "triage-not-fixable"
+    },
+    {
+      "key": "RHOAIENG-58288",
+      "summary": "DIH for rhoai-3.4 lists unneeded odh-workbench images",
+      "status": "In Progress",
+      "issueType": "Bug",
+      "priority": "Undefined",
+      "created": "2026-04-15T08:23:44.375+0000",
+      "updated": "2026-04-21T15:11:29.693+0000",
+      "labels": [
+        "devtestops-service",
+        "jira-autofix",
+        "jira-autofix-blocked"
+      ],
+      "components": [
+        "Build and Release",
+        "DevOps",
+        "Notebooks Images"
+      ],
+      "assignee": "AIPCC JIRABOT",
+      "pipelineState": "autofix-blocked"
+    },
+    {
+      "key": "AIPCC-14272",
+      "summary": "Implement e2e tests in ai-review repository",
+      "status": "Closed",
+      "issueType": "Story",
+      "priority": "Undefined",
+      "created": "2026-04-14T14:11:28.013+0000",
+      "updated": "2026-04-15T17:57:48.659+0000",
+      "labels": [
+        "jira-autofix"
+      ],
+      "components": [
+        "Accelerator Enablement"
+      ],
+      "assignee": "AIPCC JIRABOT",
+      "pipelineState": "autofix-ready"
+    },
+    {
+      "key": "AIPCC-14220",
+      "summary": "[spike] Figure out how to expand the logical volume of the walkerpass system to make use of the new SSD drives",
+      "status": "Closed",
+      "issueType": "Sub-task",
+      "priority": "Normal",
+      "created": "2026-04-13T20:02:06.170+0000",
+      "updated": "2026-04-13T20:36:02.953+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-review"
+      ],
+      "components": [],
+      "assignee": "AIPCC JIRABOT",
+      "pipelineState": "autofix-review"
+    },
+    {
+      "key": "AIPCC-14216",
+      "summary": "pulp_ops.py root logger set to DEBUG causes excessive urllib3 output",
+      "status": "Closed",
+      "issueType": "Bug",
+      "priority": "Undefined",
+      "created": "2026-04-13T19:23:59.075+0000",
+      "updated": "2026-04-21T14:33:08.929+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-merged"
+      ],
+      "components": [
+        "Wheel Package Index"
+      ],
+      "assignee": "AIPCC JIRABOT",
+      "pipelineState": "autofix-merged"
+    },
+    {
+      "key": "AIPCC-14188",
+      "summary": "Package request form should discourage version pinning",
+      "status": "Closed",
+      "issueType": "Bug",
+      "priority": "Undefined",
+      "created": "2026-04-13T15:31:30.822+0000",
+      "updated": "2026-04-21T14:33:09.420+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-merged"
+      ],
+      "components": [
+        "AIPCC Productization"
+      ],
+      "assignee": "AIPCC JIRABOT",
+      "pipelineState": "autofix-merged"
+    },
+    {
+      "key": "AIPCC-14074",
+      "summary": "Unsloth package is in the rhai-innovations collection for CPU, but requires a GPU",
+      "status": "Closed",
+      "issueType": "Bug",
+      "priority": "Undefined",
+      "created": "2026-04-10T19:18:50.511+0000",
+      "updated": "2026-04-21T14:33:09.858+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-merged"
+      ],
+      "components": [
+        "Accelerator Enablement"
+      ],
+      "assignee": "AIPCC JIRABOT",
+      "pipelineState": "autofix-merged"
+    },
+    {
+      "key": "AIPCC-14062",
+      "summary": "RHAI pipeline is missing xformers for cpu-ubi9 aarch64",
+      "status": "Closed",
+      "issueType": "Bug",
+      "priority": "Major",
+      "created": "2026-04-10T15:17:45.551+0000",
+      "updated": "2026-04-21T14:33:10.434+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-merged"
+      ],
+      "components": [
+        "Wheel Package Index"
+      ],
+      "assignee": "AIPCC JIRABOT",
+      "pipelineState": "autofix-merged"
+    },
+    {
+      "key": "AIPCC-14049",
+      "summary": "Implement post-merge cherry-pick job triggered by MR comment",
+      "status": "In Progress",
+      "issueType": "Story",
+      "priority": "Undefined",
+      "created": "2026-04-10T13:44:23.529+0000",
+      "updated": "2026-04-21T15:11:29.039+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-blocked",
+        "jira-autofix-done"
+      ],
+      "components": [
+        "Wheel Package Index"
+      ],
+      "assignee": "Emilien Macchi",
+      "pipelineState": "autofix-blocked"
+    },
+    {
+      "key": "AIPCC-12897",
+      "summary": "Replace unsafe source with safe key-value parser in load_package_info",
+      "status": "In Progress",
+      "issueType": "Story",
+      "priority": "Normal",
+      "created": "2026-03-23T18:50:07.554+0000",
+      "updated": "2026-04-21T15:11:29.452+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-blocked"
+      ],
+      "components": [],
+      "assignee": "Martin Prpic",
+      "pipelineState": "autofix-blocked"
+    },
+    {
+      "key": "AIPCC-12895",
+      "summary": "Escape user inputs in Slack notification payloads",
+      "status": "In Progress",
+      "issueType": "Story",
+      "priority": "Major",
+      "created": "2026-03-23T18:50:05.668+0000",
+      "updated": "2026-04-21T15:11:29.563+0000",
+      "labels": [
+        "jira-autofix",
+        "jira-autofix-blocked",
+        "jira-autofix-done"
+      ],
+      "components": [
+        "Accelerator Enablement"
+      ],
+      "assignee": "Emilien Macchi",
+      "pipelineState": "autofix-blocked"
+    }
+  ]
+}

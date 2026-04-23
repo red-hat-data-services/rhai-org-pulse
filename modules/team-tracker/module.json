@@ -1,16 +1,17 @@
 {
-  "name": "Team Tracker",
+  "name": "People & Teams",
   "slug": "team-tracker",
-  "description": "Delivery metrics, sprint tracking, and team insights",
-  "icon": "bar-chart",
+  "description": "People, teams, delivery metrics, and org insights",
+  "icon": "users-round",
   "order": 0,
   "client": {
     "entry": "./client/index.js",
     "navItems": [
-      { "id": "dashboard", "label": "Dashboard", "icon": "BarChart3", "default": true },
-      { "id": "people", "label": "People", "icon": "Users" },
+      { "id": "home", "label": "Team Directory", "icon": "Users", "default": true },
+      { "id": "people", "label": "People", "icon": "User" },
       { "id": "trends", "label": "Trends", "icon": "TrendingUp" },
-      { "id": "reports", "label": "Reports", "icon": "FileText" }
+      { "id": "reports", "label": "Reports", "icon": "FileText" },
+      { "id": "org-dashboard", "label": "Org Dashboard", "icon": "Building2" }
     ],
     "settingsComponent": "./client/components/TeamTrackerSettings.vue"
   },
@@ -22,14 +23,17 @@
   "export": {
     "customHandler": true,
     "files": [
-      { "path": "org-roster-full.json", "notes": "Nested VP/orgs/leaders/members" },
+      { "path": "team-data/registry.json", "notes": "People registry (lifecycle, identities, enrichment)" },
       { "path": "people/*.json", "notes": "Per-person Jira metrics" },
       { "path": "github-contributions.json", "notes": "GitHub contribution counts" },
       { "path": "github-history.json", "notes": "Monthly GitHub history" },
       { "path": "gitlab-contributions.json", "notes": "GitLab contribution counts" },
       { "path": "gitlab-history.json", "notes": "Monthly GitLab history" },
       { "path": "snapshots/**/*.json", "notes": "Team snapshots" },
-      { "path": "jira-name-map.json", "notes": "Jira accountId cache" }
+      { "path": "jira-name-map.json", "notes": "Jira accountId cache" },
+      { "path": "org-roster/teams-metadata.json", "notes": "Team boards and org structure" },
+      { "path": "org-roster/components.json", "notes": "Component-to-team mapping" },
+      { "path": "org-roster/rfe-backlog.json", "notes": "RFE backlog by team and component" }
     ]
   }
 }

@@ -18,7 +18,12 @@ const props = defineProps({
   filter: { type: String, default: 'all' },
   searchQuery: { type: String, default: '' },
   chartExpanded: { type: Boolean, default: true },
-  isAdmin: { type: Boolean, default: false }
+  assessments: { type: Object, default: () => ({}) },
+  filteredAssessments: { type: Object, default: () => ({}) },
+  sortBy: { type: String, default: 'default' },
+  passFailFilter: { type: String, default: 'all' },
+  priorityFilter: { type: String, default: 'all' },
+  statusFilter: { type: String, default: 'all' }
 })
 
 const emit = defineEmits([
@@ -26,6 +31,10 @@ const emit = defineEmits([
   'update:filter',
   'update:searchQuery',
   'update:chartExpanded',
+  'update:sortBy',
+  'update:passFailFilter',
+  'update:priorityFilter',
+  'update:statusFilter',
   'selectRFE',
   'retry'
 ])
@@ -41,19 +50,22 @@ const isEmpty = computed(() => !props.rfeData?.fetchedAt)
         <h2 class="text-lg font-semibold dark:text-gray-100">{{ phase.name }}</h2>
         <p class="text-sm text-gray-500 dark:text-gray-400">AI adoption metrics and RFE tracking</p>
       </div>
-      <select
-        :value="timeWindow"
-        @change="emit('update:timeWindow', $event.target.value)"
-        class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-gray-300"
-      >
-        <option value="week">This Week</option>
-        <option value="month">This Month</option>
-        <option value="3months">Last 3 Months</option>
-      </select>
+      <div class="flex items-center gap-3">
+        <select
+          :value="timeWindow"
+          @change="emit('update:timeWindow', $event.target.value)"
+          class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-gray-300"
+        >
+          <option value="week">This Week</option>
+          <option value="month">This Month</option>
+          <option value="3months">Last 3 Months</option>
+        </select>
+      </div>
     </header>
 
     <!-- Content -->
     <div class="flex-1 overflow-auto">
+
       <!-- Loading -->
       <LoadingOverlay v-if="loading && !rfeData" />
 
@@ -95,6 +107,7 @@ const isEmpty = computed(() => !props.rfeData?.fetchedAt)
           :trendData="trendData"
           :breakdown="breakdown"
           :expanded="chartExpanded"
+          :filteredAssessments="filteredAssessments"
           @toggle="emit('update:chartExpanded', !chartExpanded)"
         />
 
@@ -103,11 +116,21 @@ const isEmpty = computed(() => !props.rfeData?.fetchedAt)
           :filter="filter"
           :searchQuery="searchQuery"
           :jiraHost="rfeData?.jiraHost"
+          :assessments="assessments"
+          :sortBy="sortBy"
+          :passFailFilter="passFailFilter"
+          :priorityFilter="priorityFilter"
+          :statusFilter="statusFilter"
           @update:filter="emit('update:filter', $event)"
           @update:searchQuery="emit('update:searchQuery', $event)"
+          @update:sortBy="emit('update:sortBy', $event)"
+          @update:passFailFilter="emit('update:passFailFilter', $event)"
+          @update:priorityFilter="emit('update:priorityFilter', $event)"
+          @update:statusFilter="emit('update:statusFilter', $event)"
           @selectRFE="emit('selectRFE', $event)"
         />
       </template>
     </div>
+
   </div>
 </template>

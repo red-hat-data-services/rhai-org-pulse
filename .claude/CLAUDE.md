@@ -1,4 +1,4 @@
-# AI Platform Team Tracker
+# AI Platform People & Teams
 
 ## Local Development
 
@@ -25,6 +25,8 @@ npm run dev:full       # Starts Vite (5173) + Express (3001)
 | `GITHUB_TOKEN` | Classic PAT with `read:user` scope (for contribution stats). Fine-grained tokens don't work with GraphQL API. |
 | `GITLAB_TOKEN` | GitLab PAT with `read_api` scope (for contribution stats). Without it, only public project contributions are counted. |
 | `GITLAB_BASE_URL` | GitLab instance URL (default: `https://gitlab.com`) |
+| `IPA_BIND_DN` | LDAP bind DN for IPA roster sync (service account). Required for roster sync. |
+| `IPA_BIND_PASSWORD` | LDAP bind password for IPA roster sync. Required for roster sync. |
 | `GOOGLE_SERVICE_ACCOUNT_KEY_FILE` | Path to Google SA JSON key (default: `/etc/secrets/google-sa-key.json`). For local dev: `./secrets/google-sa-key.json` |
 | `PRODUCT_PAGES_CLIENT_ID` | OAuth client ID for Product Pages (production). Mutually exclusive with `PRODUCT_PAGES_TOKEN`. |
 | `PRODUCT_PAGES_CLIENT_SECRET` | OAuth client secret for Product Pages (production). Used with `PRODUCT_PAGES_CLIENT_ID`. |
@@ -65,13 +67,13 @@ npm run dev:full       # Starts Vite (5173) + Express (3001)
 
 ### Roster Sync (`shared/server/roster-sync/`)
 Automated roster building that replaces manual scripts:
-- **LDAP** (`ldap.js`): Traverses Red Hat corporate directory from configured org root UIDs. Requires VPN.
+- **IPA LDAP** (`ipa-client.js`): Traverses Red Hat corporate directory (`ipa.corp.redhat.com`) via LDAPS from configured org root UIDs. Requires VPN and service account credentials (`IPA_BIND_DN`, `IPA_BIND_PASSWORD`).
   - `ldapjs` v3: `createClient()` is synchronous. Search entries use `entry.attributes` array with `.type` and `.values`.
   - Extracts GitHub and GitLab usernames from `rhatSocialUrl` LDAP field.
 - **Google Sheets** (`sheets.js`): Enriches LDAP data with team assignments, focus areas, etc. Sheet names are auto-discovered from the spreadsheet ID.
   - Auth via `GOOGLE_SERVICE_ACCOUNT_KEY_FILE` env var pointing to a service account JSON key.
 - **Username Inference** (`username-inference.js`): Optionally infers missing GitHub/GitLab usernames by fuzzy-matching roster people against GitHub org members or GitLab group members. Configured via Settings UI (`githubOrgs`, `gitlabInstances`). Supports per-instance GitLab credentials; falls back to legacy `gitlabGroups` if `gitlabInstances` is absent.
-- **Config** (`config.js`): Org roots, Google Sheet ID, and username inference settings stored in `data/roster-sync-config.json`, managed via Settings UI.
+- **Config** (`config.js`): Org roots, Google Sheet ID, username inference settings, and excluded job titles stored in `data/roster-sync-config.json`, managed via Settings UI.
 - **Scheduler** (`index.js`): Runs sync daily (24h interval). Can be triggered manually via API or Settings UI.
 
 ### Jira Integration (Jira Cloud — redhat.atlassian.net)
@@ -268,7 +270,7 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/trends` — monthly Jira + GitHub + GitLab trend data
 - `/api/allowlist` — authorized email list
 - `/api/admin/roster-sync/config` — roster sync configuration
-- `/api/admin/roster-sync/status` — sync status (running/last result)
+- `/api/admin/roster-sync/status` — sync status (running/last result, includes `phase`, `phaseLabel`, `metadataSync`, `stale` fields)
 - `/api/modules/team-tracker/sheets/discover` — discover sheet names in a Google Spreadsheet (admin, requires `spreadsheetId` query param)
 - `/api/modules/release-analysis/product-pages/products` — Product Pages product list for autocomplete (admin, includes authStatus)
 - `/api/modules/feature-traffic/features` — list features with filters (status, version, health, sort)
@@ -276,6 +278,16 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/modules/feature-traffic/versions` — unique fix versions
 - `/api/modules/feature-traffic/status` — data freshness, sync info, staleness warning
 - `/api/modules/feature-traffic/config` — fetch configuration (admin)
+- `/api/modules/ai-impact/assessments` — list all latest assessments (slim projection)
+- `/api/modules/ai-impact/assessments/:key` — single RFE assessment + history
+- `/api/modules/ai-impact/assessments/status` — assessment data status (admin)
+- `/api/modules/ai-impact/features` — list all features (slim projection)
+- `/api/modules/ai-impact/features/:key` — single feature + history
+- `/api/modules/ai-impact/features/status` — feature data status (admin)
+
+**PUT:**
+- `/api/modules/ai-impact/assessments/:key` — upsert single assessment (admin)
+- `/api/modules/ai-impact/features/:key` — upsert single feature (admin)
 
 **POST:**
 - `/api/tokens` — create a new API token (returns raw token once)
@@ -293,15 +305,20 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/trends/gitlab/refresh` — refresh GitLab history
 - `/api/admin/roster-sync/config` — save roster sync configuration
 - `/api/admin/roster-sync/trigger` — trigger manual roster sync
+- `/api/admin/roster-sync/unified` — trigger unified roster + metadata sync (admin)
 - `/api/allowlist` — update authorized email list
 - `/api/modules/team-tracker/snapshots/generate` — generate snapshots for all teams (admin)
 - `/api/modules/feature-traffic/refresh` — trigger manual data refresh from GitLab CI (admin)
 - `/api/modules/feature-traffic/config` — save fetch configuration (admin)
+- `/api/modules/ai-impact/assessments/bulk` — bulk upsert assessments (admin)
+- `/api/modules/ai-impact/features/bulk` — bulk upsert features (admin)
 
 **DELETE:**
 - `/api/tokens/:id` — revoke own API token
 - `/api/admin/tokens/:id` — revoke any API token (admin)
 - `/api/modules/team-tracker/snapshots` — delete all stored snapshots (admin)
+- `/api/modules/ai-impact/assessments` — clear all assessment data (admin)
+- `/api/modules/ai-impact/features` — clear all feature data (admin)
 
 **GET (snapshots):**
 - `/api/modules/team-tracker/snapshots/:teamKey` — all snapshots for a team

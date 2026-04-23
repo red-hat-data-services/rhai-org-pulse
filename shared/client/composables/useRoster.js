@@ -22,32 +22,33 @@ export function useRoster() {
 
   const selectedOrg = computed(() => {
     if (!selectedOrgKey.value) return null
-    return orgs.value.find(o => o.key === selectedOrgKey.value) || null
+    return orgs.value.find(o => o.key === selectedOrgKey.value || o.displayName === selectedOrgKey.value) || null
   })
 
   const teams = computed(() => {
+    function buildTeam(org, teamName, team) {
+      return {
+        key: `${org.key}::${teamName}`,
+        displayKey: org.displayName ? `${org.displayName}::${teamName}` : null,
+        displayName: team.displayName,
+        members: team.members
+      }
+    }
+
     // When no org is selected, show all teams across all orgs
     if (!selectedOrgKey.value) {
       const allTeams = []
       for (const org of orgs.value) {
         if (!org.teams) continue
         for (const [teamName, team] of Object.entries(org.teams)) {
-          allTeams.push({
-            key: `${org.key}::${teamName}`,
-            displayName: team.displayName,
-            members: team.members
-          })
+          allTeams.push(buildTeam(org, teamName, team))
         }
       }
       return allTeams
     }
     const org = selectedOrg.value
     if (!org?.teams) return []
-    return Object.entries(org.teams).map(([teamName, team]) => ({
-      key: `${org.key}::${teamName}`,
-      displayName: team.displayName,
-      members: team.members
-    }))
+    return Object.entries(org.teams).map(([teamName, team]) => buildTeam(org, teamName, team))
   })
 
   const multiTeamMembers = computed(() => {

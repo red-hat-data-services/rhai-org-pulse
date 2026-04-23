@@ -5,6 +5,7 @@ const { buildMapping } = require('../../../../shared/server/anonymize')
 // We test the export hook by calling it with mock addFile and storage
 const teamTrackerExport = require('../../server/export')
 
+// Old-format roster for buildMapping (expects { vp, orgs: { key: { leader, members } } })
 const FIXTURE_ROSTER = {
   vp: { name: 'Demo VP', uid: 'demovp', title: 'VP of Engineering' },
   orgs: {
@@ -23,6 +24,46 @@ const FIXTURE_ROSTER = {
   }
 }
 
+// Registry-format fixture for storage (what readRosterFull reads)
+const FIXTURE_REGISTRY = {
+  meta: {
+    generatedAt: '2026-01-15T00:00:00.000Z',
+    provider: 'test',
+    orgRoots: ['achen'],
+    vp: { name: 'Demo VP', uid: 'demovp' }
+  },
+  people: {
+    achen: {
+      uid: 'achen', name: 'Alice Chen', email: 'achen@example.com',
+      title: 'Senior Engineering Manager', orgRoot: 'achen',
+      github: { username: 'alicechen', source: 'ldap' },
+      gitlab: { username: 'alicechen', source: 'ldap' },
+      status: 'active', firstSeenAt: '2026-01-01T00:00:00.000Z',
+      lastSeenAt: '2026-01-15T00:00:00.000Z', inactiveSince: null
+    },
+    bsmith: {
+      uid: 'bsmith', name: 'Bob Smith', email: 'bsmith@example.com',
+      title: 'Senior Software Engineer', orgRoot: 'achen',
+      github: { username: 'bobsmith', source: 'ldap' },
+      gitlab: { username: 'bobsmith', source: 'ldap' },
+      status: 'active', firstSeenAt: '2026-01-01T00:00:00.000Z',
+      lastSeenAt: '2026-01-15T00:00:00.000Z', inactiveSince: null
+    }
+  }
+}
+
+const FIXTURE_CONFIG = {
+  orgRoots: [{ uid: 'achen', name: 'Alice Chen', displayName: 'Alice Chen' }]
+}
+
+function registryStorage(extra = {}) {
+  return {
+    'team-data/registry.json': FIXTURE_REGISTRY,
+    'team-data/config.json': FIXTURE_CONFIG,
+    ...extra
+  }
+}
+
 function makeStorage(data = {}) {
   return {
     readFromStorage(key) {
@@ -38,10 +79,10 @@ function makeStorage(data = {}) {
 }
 
 describe('teamTrackerExport', () => {
-  it('anonymizes org-roster-full.json', async () => {
+  it('anonymizes roster data', async () => {
     const files = []
     const addFile = (path, data) => files.push({ path, data })
-    const storage = makeStorage({ 'org-roster-full.json': FIXTURE_ROSTER })
+    const storage = makeStorage(registryStorage())
     const mapping = buildMapping(FIXTURE_ROSTER)
 
     await teamTrackerExport(addFile, storage, mapping)
@@ -68,8 +109,7 @@ describe('teamTrackerExport', () => {
   it('anonymizes people files with renamed filenames', async () => {
     const files = []
     const addFile = (path, data) => files.push({ path, data })
-    const storage = makeStorage({
-      'org-roster-full.json': FIXTURE_ROSTER,
+    const storage = makeStorage(registryStorage({
       'people/bob_smith.json': {
         jiraDisplayName: 'Bob Smith',
         fetchedAt: '2026-03-10T12:00:00.000Z',
@@ -81,7 +121,7 @@ describe('teamTrackerExport', () => {
         },
         inProgress: { count: 0, issues: [] }
       }
-    })
+    }))
     const mapping = buildMapping(FIXTURE_ROSTER)
 
     await teamTrackerExport(addFile, storage, mapping)
@@ -108,15 +148,14 @@ describe('teamTrackerExport', () => {
   it('anonymizes github-contributions.json', async () => {
     const files = []
     const addFile = (path, data) => files.push({ path, data })
-    const storage = makeStorage({
-      'org-roster-full.json': FIXTURE_ROSTER,
+    const storage = makeStorage(registryStorage({
       'github-contributions.json': {
         users: {
           bobsmith: { username: 'bobsmith', totalContributions: 245 }
         },
         fetchedAt: '2026-03-10T12:00:00.000Z'
       }
-    })
+    }))
     const mapping = buildMapping(FIXTURE_ROSTER)
 
     await teamTrackerExport(addFile, storage, mapping)
@@ -132,15 +171,14 @@ describe('teamTrackerExport', () => {
   it('anonymizes gitlab-contributions.json', async () => {
     const files = []
     const addFile = (path, data) => files.push({ path, data })
-    const storage = makeStorage({
-      'org-roster-full.json': FIXTURE_ROSTER,
+    const storage = makeStorage(registryStorage({
       'gitlab-contributions.json': {
         users: {
           bobsmith: { username: 'bobsmith', totalContributions: 198 }
         },
         fetchedAt: '2026-03-10T12:00:00.000Z'
       }
-    })
+    }))
     const mapping = buildMapping(FIXTURE_ROSTER)
 
     await teamTrackerExport(addFile, storage, mapping)
@@ -155,13 +193,12 @@ describe('teamTrackerExport', () => {
   it('anonymizes github-history.json', async () => {
     const files = []
     const addFile = (path, data) => files.push({ path, data })
-    const storage = makeStorage({
-      'org-roster-full.json': FIXTURE_ROSTER,
+    const storage = makeStorage(registryStorage({
       'github-history.json': {
         users: { bobsmith: { '2026-01': 72 } },
         fetchedAt: '2026-03-10T12:00:00.000Z'
       }
-    })
+    }))
     const mapping = buildMapping(FIXTURE_ROSTER)
 
     await teamTrackerExport(addFile, storage, mapping)
@@ -177,12 +214,11 @@ describe('teamTrackerExport', () => {
   it('anonymizes jira-name-map.json', async () => {
     const files = []
     const addFile = (path, data) => files.push({ path, data })
-    const storage = makeStorage({
-      'org-roster-full.json': FIXTURE_ROSTER,
+    const storage = makeStorage(registryStorage({
       'jira-name-map.json': {
         'Bob Smith': { accountId: 'real-account-id', displayName: 'Bob Smith' }
       }
-    })
+    }))
     const mapping = buildMapping(FIXTURE_ROSTER)
 
     await teamTrackerExport(addFile, storage, mapping)
@@ -196,18 +232,17 @@ describe('teamTrackerExport', () => {
     expect(jnmFile.data[fakeKey].displayName).toMatch(/^Person \d+$/)
   })
 
-  it('anonymizes roster-sync-config.json', async () => {
+  it('anonymizes sync config', async () => {
     const files = []
     const addFile = (path, data) => files.push({ path, data })
-    const storage = makeStorage({
-      'org-roster-full.json': FIXTURE_ROSTER,
-      'roster-sync-config.json': {
+    const storage = makeStorage(registryStorage({
+      'team-data/config.json': {
         orgRoots: [{ uid: 'achen', name: 'Alice Chen' }],
         googleSheetId: 'real-sheet-id',
         githubOrgs: ['real-org'],
         gitlabGroups: ['real-group']
       }
-    })
+    }))
     const mapping = buildMapping(FIXTURE_ROSTER)
 
     await teamTrackerExport(addFile, storage, mapping)
@@ -224,8 +259,7 @@ describe('teamTrackerExport', () => {
   it('maintains cross-file referential integrity', async () => {
     const files = []
     const addFile = (path, data) => files.push({ path, data })
-    const storage = makeStorage({
-      'org-roster-full.json': FIXTURE_ROSTER,
+    const storage = makeStorage(registryStorage({
       'people/bob_smith.json': {
         jiraDisplayName: 'Bob Smith',
         resolved: { count: 0, issues: [] },
@@ -235,7 +269,7 @@ describe('teamTrackerExport', () => {
         users: { bobsmith: { username: 'bobsmith', totalContributions: 10 } },
         fetchedAt: '2026-01-01'
       }
-    })
+    }))
     const mapping = buildMapping(FIXTURE_ROSTER)
 
     await teamTrackerExport(addFile, storage, mapping)
@@ -258,8 +292,7 @@ describe('teamTrackerExport', () => {
   it('does not leak original PII', async () => {
     const files = []
     const addFile = (path, data) => files.push({ path, data })
-    const storage = makeStorage({
-      'org-roster-full.json': FIXTURE_ROSTER,
+    const storage = makeStorage(registryStorage({
       'people/bob_smith.json': {
         jiraDisplayName: 'Bob Smith',
         resolved: {
@@ -268,7 +301,7 @@ describe('teamTrackerExport', () => {
         },
         inProgress: { count: 0, issues: [] }
       }
-    })
+    }))
     const mapping = buildMapping(FIXTURE_ROSTER)
 
     await teamTrackerExport(addFile, storage, mapping)

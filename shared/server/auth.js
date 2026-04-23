@@ -16,24 +16,31 @@ function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
 
   function seedAdminList() {
     const existing = readFromStorage('allowlist.json')
-    if (existing && existing.emails && existing.emails.length > 0) {
-      console.log(`Admin list: ${existing.emails.length} admin(s) loaded`)
-      return
-    }
+    const currentEmails = (existing && existing.emails) ? existing.emails : []
 
     const adminEmails = process.env.ADMIN_EMAILS
     if (!adminEmails) {
-      console.log('Admin list: empty — first authenticated user will be auto-added as admin')
+      if (currentEmails.length > 0) {
+        console.log(`Admin list: ${currentEmails.length} admin(s) loaded`)
+      } else {
+        console.log('Admin list: empty — first authenticated user will be auto-added as admin')
+      }
       return
     }
 
-    const emails = adminEmails
+    const envEmails = adminEmails
       .split(',')
       .map(e => e.trim().toLowerCase())
       .filter(Boolean)
 
-    writeToStorage('allowlist.json', { emails })
-    console.log(`Admin list: seeded with ${emails.length} admin(s) from ADMIN_EMAILS`)
+    const merged = [...new Set([...currentEmails, ...envEmails])]
+
+    if (merged.length !== currentEmails.length) {
+      writeToStorage('allowlist.json', { emails: merged })
+      console.log(`Admin list: merged to ${merged.length} admin(s) (${merged.length - currentEmails.length} added from ADMIN_EMAILS)`)
+    } else {
+      console.log(`Admin list: ${merged.length} admin(s) loaded`)
+    }
   }
 
   async function authMiddleware(req, res, next) {

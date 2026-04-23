@@ -30,7 +30,8 @@ async function handleExport(req, res, storageModule, builtInModules) {
     const { readFromStorage } = storageModule;
 
     // Build PII mapping from roster
-    const roster = readFromStorage('org-roster-full.json');
+    const { readRosterFull } = require('../shared/server/roster');
+    const roster = readRosterFull(storageModule);
     const mapping = buildMapping(roster);
 
     // Create temp directory structure

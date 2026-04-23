@@ -1,0 +1,270 @@
+{
+  "lastSyncedAt": "2026-04-20T06:00:00Z",
+  "totalFeatures": 12,
+  "features": {
+    "RHAISTRAT-1168": {
+      "latest": {
+        "key": "RHAISTRAT-1168",
+        "title": "GPU-as-a-Service Observability Dashboard",
+        "sourceRfe": "RHAIRFE-1001",
+        "priority": "Major",
+        "status": "Refined",
+        "size": "L",
+        "recommendation": "approve",
+        "needsAttention": false,
+        "humanReviewStatus": "reviewed",
+        "scores": { "feasibility": 2, "testability": 1, "scope": 2, "architecture": 2, "total": 7 },
+        "reviewers": { "feasibility": "approve", "testability": "revise", "scope": "approve", "architecture": "approve" },
+        "labels": ["strat-creator-auto-created", "strat-creator-rubric-pass", "tech-reviewed"],
+        "runId": "20260419-013035",
+        "runTimestamp": "2026-04-19T01:30:35Z",
+        "reviewedAt": "2026-04-19T01:30:35Z"
+      },
+      "history": [
+        {
+          "scores": { "feasibility": 1, "testability": 1, "scope": 2, "architecture": 1, "total": 5 },
+          "recommendation": "revise",
+          "needsAttention": true,
+          "humanReviewStatus": "pending",
+          "reviewedAt": "2026-04-12T01:30:00Z"
+        }
+      ]
+    },
+    "RHAISTRAT-1169": {
+      "latest": {
+        "key": "RHAISTRAT-1169",
+        "title": "Model Serving Autoscaling for High-Throughput Inference",
+        "sourceRfe": "RHAIRFE-1001",
+        "priority": "Critical",
+        "status": "In Progress",
+        "size": "XL",
+        "recommendation": "approve",
+        "needsAttention": false,
+        "humanReviewStatus": "reviewed",
+        "scores": { "feasibility": 2, "testability": 2, "scope": 2, "architecture": 2, "total": 8 },
+        "reviewers": { "feasibility": "approve", "testability": "approve", "scope": "approve", "architecture": "approve" },
+        "labels": ["strat-creator-auto-created", "strat-creator-rubric-pass", "tech-reviewed"],
+        "runId": "20260419-013035",
+        "runTimestamp": "2026-04-19T01:30:35Z",
+        "reviewedAt": "2026-04-19T01:30:35Z"
+      },
+      "history": []
+    },
+    "RHAISTRAT-1170": {
+      "latest": {
+        "key": "RHAISTRAT-1170",
+        "title": "LLM Fine-Tuning with Custom Datasets",
+        "sourceRfe": "RHAIRFE-1003",
+        "priority": "Critical",
+        "status": "Refined",
+        "size": "XL",
+        "recommendation": "revise",
+        "needsAttention": true,
+        "humanReviewStatus": "pending",
+        "scores": { "feasibility": 1, "testability": 1, "scope": 1, "architecture": 2, "total": 5 },
+        "reviewers": { "feasibility": "revise", "testability": "revise", "scope": "revise", "architecture": "approve" },
+        "labels": ["strat-creator-auto-created", "needs-tech-review"],
+        "runId": "20260419-013035",
+        "runTimestamp": "2026-04-19T01:30:35Z",
+        "reviewedAt": "2026-04-19T01:30:35Z"
+      },
+      "history": [
+        {
+          "scores": { "feasibility": 0, "testability": 1, "scope": 1, "architecture": 1, "total": 3 },
+          "recommendation": "reject",
+          "needsAttention": true,
+          "humanReviewStatus": "pending",
+          "reviewedAt": "2026-04-12T01:30:00Z"
+        }
+      ]
+    },
+    "RHAISTRAT-1171": {
+      "latest": {
+        "key": "RHAISTRAT-1171",
+        "title": "A/B Testing Framework for Model Endpoints",
+        "sourceRfe": "RHAIRFE-1005",
+        "priority": "Major",
+        "status": "New",
+        "size": "M",
+        "recommendation": "approve",
+        "needsAttention": false,
+        "humanReviewStatus": "not-required",
+        "scores": { "feasibility": 2, "testability": 2, "scope": 1, "architecture": 2, "total": 7 },
+        "reviewers": { "feasibility": "approve", "testability": "approve", "scope": "revise", "architecture": "approve" },
+        "labels": ["strat-creator-auto-created", "strat-creator-rubric-pass"],
+        "runId": "20260419-013035",
+        "runTimestamp": "2026-04-19T01:30:35Z",
+        "reviewedAt": "2026-04-19T01:30:35Z"
+      },
+      "history": []
+    },
+    "RHAISTRAT-1172": {
+      "latest": {
+        "key": "RHAISTRAT-1172",
+        "title": "Distributed Training Pipeline Orchestration",
+        "sourceRfe": "RHAIRFE-1009",
+        "priority": "Major",
+        "status": "Refined",
+        "size": "L",
+        "recommendation": "reject",
+        "needsAttention": true,
+        "humanReviewStatus": "pending",
+        "scores": { "feasibility": 0, "testability": 1, "scope": 0, "architecture": 1, "total": 2 },
+        "reviewers": { "feasibility": "reject", "testability": "revise", "scope": "reject", "architecture": "revise" },
+        "labels": ["strat-creator-auto-created", "strat-creator-rubric-fail", "needs-tech-review"],
+        "runId": "20260419-013035",
+        "runTimestamp": "2026-04-19T01:30:35Z",
+        "reviewedAt": "2026-04-19T01:30:35Z"
+      },
+      "history": []
+    },
+    "RHAISTRAT-1173": {
+      "latest": {
+        "key": "RHAISTRAT-1173",
+        "title": "GPU Memory Monitoring Dashboard",
+        "sourceRfe": "RHAIRFE-1002",
+        "priority": "Minor",
+        "status": "Refined",
+        "size": "S",
+        "recommendation": "approve",
+        "needsAttention": false,
+        "humanReviewStatus": "reviewed",
+        "scores": { "feasibility": 2, "testability": 2, "scope": 2, "architecture": 2, "total": 8 },
+        "reviewers": { "feasibility": "approve", "testability": "approve", "scope": "approve", "architecture": "approve" },
+        "labels": ["strat-creator-auto-created", "strat-creator-rubric-pass", "tech-reviewed"],
+        "runId": "20260418-060000",
+        "runTimestamp": "2026-04-18T06:00:00Z",
+        "reviewedAt": "2026-04-18T06:00:00Z"
+      },
+      "history": []
+    },
+    "RHAISTRAT-1174": {
+      "latest": {
+        "key": "RHAISTRAT-1174",
+        "title": "Data Quality Validation for Training Pipelines",
+        "sourceRfe": "RHAIRFE-1006",
+        "priority": "Normal",
+        "status": "New",
+        "size": "M",
+        "recommendation": "revise",
+        "needsAttention": false,
+        "humanReviewStatus": "not-required",
+        "scores": { "feasibility": 2, "testability": 1, "scope": 1, "architecture": 1, "total": 5 },
+        "reviewers": { "feasibility": "approve", "testability": "revise", "scope": "revise", "architecture": "revise" },
+        "labels": ["strat-creator-auto-created"],
+        "runId": "20260418-060000",
+        "runTimestamp": "2026-04-18T06:00:00Z",
+        "reviewedAt": "2026-04-18T06:00:00Z"
+      },
+      "history": []
+    },
+    "RHAISTRAT-1175": {
+      "latest": {
+        "key": "RHAISTRAT-1175",
+        "title": "RBAC for Shared Model Registry",
+        "sourceRfe": "RHAIRFE-1007",
+        "priority": "Major",
+        "status": "Refined",
+        "size": "L",
+        "recommendation": "approve",
+        "needsAttention": false,
+        "humanReviewStatus": "reviewed",
+        "scores": { "feasibility": 2, "testability": 2, "scope": 2, "architecture": 1, "total": 7 },
+        "reviewers": { "feasibility": "approve", "testability": "approve", "scope": "approve", "architecture": "revise" },
+        "labels": ["strat-creator-auto-created", "strat-creator-rubric-pass", "tech-reviewed"],
+        "runId": "20260418-060000",
+        "runTimestamp": "2026-04-18T06:00:00Z",
+        "reviewedAt": "2026-04-18T06:00:00Z"
+      },
+      "history": []
+    },
+    "RHAISTRAT-1176": {
+      "latest": {
+        "key": "RHAISTRAT-1176",
+        "title": "Custom Runtime Images for Jupyter Notebooks",
+        "sourceRfe": "RHAIRFE-1008",
+        "priority": "Normal",
+        "status": "New",
+        "size": null,
+        "recommendation": "revise",
+        "needsAttention": true,
+        "humanReviewStatus": "pending",
+        "scores": { "feasibility": 1, "testability": 0, "scope": 2, "architecture": 1, "total": 4 },
+        "reviewers": { "feasibility": "revise", "testability": "reject", "scope": "approve", "architecture": "revise" },
+        "labels": ["strat-creator-auto-created", "needs-tech-review"],
+        "runId": "20260418-060000",
+        "runTimestamp": "2026-04-18T06:00:00Z",
+        "reviewedAt": "2026-04-18T06:00:00Z"
+      },
+      "history": []
+    },
+    "RHAISTRAT-1177": {
+      "latest": {
+        "key": "RHAISTRAT-1177",
+        "title": "Real-Time Model Deployment Latency Optimization",
+        "sourceRfe": "RHAIRFE-1010",
+        "priority": "Blocker",
+        "status": "In Progress",
+        "size": "XL",
+        "recommendation": "approve",
+        "needsAttention": false,
+        "humanReviewStatus": "not-required",
+        "scores": { "feasibility": 2, "testability": 2, "scope": 1, "architecture": 2, "total": 7 },
+        "reviewers": { "feasibility": "approve", "testability": "approve", "scope": "revise", "architecture": "approve" },
+        "labels": ["strat-creator-auto-created", "strat-creator-rubric-pass"],
+        "runId": "20260417-060000",
+        "runTimestamp": "2026-04-17T06:00:00Z",
+        "reviewedAt": "2026-04-17T06:00:00Z"
+      },
+      "history": []
+    },
+    "RHAISTRAT-1178": {
+      "latest": {
+        "key": "RHAISTRAT-1178",
+        "title": "OpenTelemetry Tracing for Pipeline Debugging",
+        "sourceRfe": "RHAIRFE-1004",
+        "priority": "Minor",
+        "status": "New",
+        "size": "S",
+        "recommendation": "reject",
+        "needsAttention": true,
+        "humanReviewStatus": "not-required",
+        "scores": { "feasibility": 1, "testability": 0, "scope": 0, "architecture": 0, "total": 1 },
+        "reviewers": { "feasibility": "revise", "testability": "reject", "scope": "reject", "architecture": "reject" },
+        "labels": ["strat-creator-auto-created", "strat-creator-rubric-fail"],
+        "runId": "20260417-060000",
+        "runTimestamp": "2026-04-17T06:00:00Z",
+        "reviewedAt": "2026-04-17T06:00:00Z"
+      },
+      "history": [
+        {
+          "scores": { "feasibility": 0, "testability": 0, "scope": 0, "architecture": 0, "total": 0 },
+          "recommendation": "reject",
+          "needsAttention": true,
+          "humanReviewStatus": "not-required",
+          "reviewedAt": "2026-04-10T06:00:00Z"
+        }
+      ]
+    },
+    "RHAISTRAT-1179": {
+      "latest": {
+        "key": "RHAISTRAT-1179",
+        "title": "Federated Learning for Distributed Model Training",
+        "sourceRfe": "RHAIRFE-1009",
+        "priority": "Critical",
+        "status": "Refined",
+        "size": "XL",
+        "recommendation": "approve",
+        "needsAttention": false,
+        "humanReviewStatus": "reviewed",
+        "scores": { "feasibility": 2, "testability": 1, "scope": 2, "architecture": 2, "total": 7 },
+        "reviewers": { "feasibility": "approve", "testability": "revise", "scope": "approve", "architecture": "approve" },
+        "labels": ["strat-creator-auto-created", "strat-creator-rubric-pass", "tech-reviewed"],
+        "runId": "20260419-013035",
+        "runTimestamp": "2026-04-19T01:30:35Z",
+        "reviewedAt": "2026-04-19T01:30:35Z"
+      },
+      "history": []
+    }
+  }
+}

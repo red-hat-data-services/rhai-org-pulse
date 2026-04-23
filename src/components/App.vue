@@ -131,15 +131,11 @@
           @config-updated="(c) => { if (c.titlePrefix != null) titlePrefix = c.titlePrefix }"
         />
 
-        <!-- Docs View -->
-        <DocsView
-          v-else-if="activeModule === 'docs'"
-        />
-
-        <!-- Help & Debug View -->
-        <HelpView
-          v-else-if="activeModule === 'help'"
+        <!-- About View (consolidated Docs + Help) -->
+        <AboutView
+          v-else-if="activeModule === 'about'"
           :is-admin="authIsAdmin"
+          :initial-tab="aboutInitialTab"
         />
 
         <LoadingOverlay v-if="isLoading" />
@@ -172,8 +168,7 @@ import LoadingOverlay from '@shared/client/components/LoadingOverlay.vue'
 import Toast from '@shared/client/components/Toast.vue'
 import RefreshModal from '@shared/client/components/RefreshModal.vue'
 import SettingsView from './SettingsView.vue'
-import HelpView from './HelpView.vue'
-import DocsView from './DocsView.vue'
+import AboutView from './AboutView.vue'
 import ApiTokensView from './ApiTokensView.vue'
 import AppSidebar from './AppSidebar.vue'
 import LandingPage from './LandingPage.vue'
@@ -202,8 +197,7 @@ export default {
     LoadingOverlay,
     Toast,
     SettingsView,
-    HelpView,
-    DocsView,
+    AboutView,
     ApiTokensView,
     AppSidebar,
     RefreshModal,
@@ -380,6 +374,7 @@ export default {
       sidebarCollapsed: false,
       mobileMenuOpen: false,
       settingsInitialTab: null,
+      aboutInitialTab: null,
       toasts: []
     }
   },
@@ -399,8 +394,7 @@ export default {
       }
       if (this.activeModule === 'api-tokens') return 'API Tokens'
       if (this.activeModule === 'settings') return 'Settings'
-      if (this.activeModule === 'docs') return 'Docs'
-      if (this.activeModule === 'help') return 'Help & Debug'
+      if (this.activeModule === 'about') return 'About'
       // Built-in module: find manifest name
       const manifest = this.builtInManifests.find(m => m.slug === this.activeModule)
       if (manifest) return manifest.name
@@ -475,7 +469,7 @@ export default {
 
       // Backward compatibility redirects
       if (parts[0] === 'team' && parts[1]) {
-        const newHash = '#/team-tracker/team-roster?teamKey=' + encodeURIComponent(parts[1]) +
+        const newHash = '#/team-tracker/team-detail?teamKey=' + encodeURIComponent(parts[1]) +
           (parts[2] === 'person' && parts[3] ? '&person=' + encodeURIComponent(parts[3]) : '')
         window.location.replace(newHash)
         return
@@ -483,6 +477,14 @@ export default {
       if (parts[0] === 'people') { window.location.replace('#/team-tracker/people'); return }
       if (parts[0] === 'trends') { window.location.replace('#/team-tracker/trends'); return }
       if (parts[0] === 'reports') { window.location.replace('#/team-tracker/reports'); return }
+      // Redirect any org-roster bookmarks to team-tracker (modules merged)
+      if (parts[0] === 'org-roster') {
+        const viewMap = { 'home': 'home', 'team-detail': 'team-detail', 'org-dashboard': 'org-dashboard', 'people': 'people', 'person-detail': 'person-detail', 'org-explorer': 'org-dashboard' }
+        const view = viewMap[parts[1]] || parts[1] || 'home'
+        const paramStr = Object.entries(params).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&')
+        window.location.replace(`#/team-tracker/${view}${paramStr ? '?' + paramStr : ''}`)
+        return
+      }
 
       // Shell routes
       if (parts[0] === 'users') {
@@ -499,12 +501,17 @@ export default {
         this.setShellView('settings')
         return
       }
+      if (parts[0] === 'about') {
+        this.aboutInitialTab = params.tab || null
+        this.setShellView('about')
+        return
+      }
       if (parts[0] === 'help') {
-        this.setShellView('help')
+        window.location.replace('#/about?tab=help')
         return
       }
       if (parts[0] === 'docs') {
-        this.setShellView('docs')
+        window.location.replace('#/about?tab=docs')
         return
       }
 
@@ -534,16 +541,26 @@ export default {
         // Legacy team-tracker deep-link compat: #/team-tracker/team/<key>/person/<name>
         if (manifest.slug === 'team-tracker' && parts[1] === 'team' && parts[2]) {
           const teamKey = parts[2]
-          const viewId = (parts[3] === 'person' && parts[4]) ? 'person-detail' : 'team-roster'
+          const viewId = (parts[3] === 'person' && parts[4]) ? 'person-detail' : 'team-detail'
           const legacyParams = { teamKey }
           if (parts[3] === 'person' && parts[4]) {
             legacyParams.person = parts[4]
           }
-          // Redirect to new format
           let newHash = `#/${manifest.slug}/${viewId}?` + Object.entries(legacyParams)
             .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
             .join('&')
           window.location.replace(newHash)
+          return
+        }
+
+        // Legacy view redirects within team-tracker
+        if (manifest.slug === 'team-tracker' && parts[1] === 'dashboard') {
+          window.location.replace('#/team-tracker/home')
+          return
+        }
+        if (manifest.slug === 'team-tracker' && parts[1] === 'team-roster') {
+          const paramStr = Object.entries(params).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&')
+          window.location.replace(`#/team-tracker/team-detail${paramStr ? '?' + paramStr : ''}`)
           return
         }
 
@@ -625,14 +642,10 @@ export default {
         window.location.hash = '#/settings'
         return
       }
-      if (target === 'help') {
-        this.setShellView('help')
-        window.location.hash = '#/help'
-        return
-      }
-      if (target === 'docs') {
-        this.setShellView('docs')
-        window.location.hash = '#/docs'
+      if (target === 'about') {
+        this.aboutInitialTab = null
+        this.setShellView('about')
+        window.location.hash = '#/about'
         return
       }
 
@@ -672,7 +685,17 @@ export default {
       this.showRefreshModal = false
       this.isRefreshing = true
       try {
-        await refreshMetrics({ scope: 'all', force, sources })
+        const refreshes = [refreshMetrics({ scope: 'all', force, sources })]
+        if (this.enabledBuiltInSlugs?.includes('allocation-tracker')) {
+          refreshes.push(
+            apiRequest('/modules/allocation-tracker/refresh', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ hardRefresh: force })
+            }).catch(err => console.error('Allocation tracker refresh failed:', err))
+          )
+        }
+        await Promise.all(refreshes)
         this.showToast('Refresh started — data will update shortly')
       } catch (err) {
         console.error('Failed to start refresh:', err)

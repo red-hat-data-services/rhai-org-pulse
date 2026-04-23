@@ -8,8 +8,8 @@
     "entry": "./client/index.js",
     "navItems": [
       { "id": "dashboard", "label": "Dashboard", "icon": "BarChart3", "default": true },
-      { "id": "insights", "label": "Insights", "icon": "TrendingUp" },
-      { "id": "portfolio", "label": "Portfolio", "icon": "Building2" }
+      { "id": "insights", "label": "Insights", "icon": "Lightbulb" },
+      { "id": "portfolio", "label": "Portfolio", "icon": "Briefcase" }
     ],
     "settingsComponent": "./client/components/UpstreamPulseSettings.vue"
   },

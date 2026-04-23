@@ -61,11 +61,15 @@
             class="mt-4"
             :selected-versions="selectedVersions"
             :visible-versions="visibleVersions"
+            :selected-projects="selectedProjects"
+            :visible-projects="visibleProjects"
             :filtered-count="filteredReleases.length"
             :total-count="allReleases.length"
             :toggle-version="toggleVersion"
             :clear-versions="clearVersions"
-            :reset-filters="resetFilters"
+            :toggle-project="toggleProject"
+            :clear-projects="clearProjects"
+            :reset-filters="resetAllFilters"
           />
         </div>
 
@@ -81,6 +85,8 @@
               :group="group"
               :mc-inputs-map="mcInputsMap"
               :get-mc-target="getMcTarget"
+              :component-velocity="analysis?.componentVelocity || {}"
+              :selected-projects="selectedProjects"
               :default-open="false"
               @set-mc-target="setMcTarget"
             />
@@ -111,6 +117,32 @@ const {
   clearVersions,
   resetFilters
 } = useReleaseFilter(allReleases)
+
+// ── Jira project key filter ──
+
+const selectedProjects = reactive(new Set())
+
+const visibleProjects = computed(() => {
+  const keys = new Set()
+  for (const r of filteredReleases.value) {
+    if (r.teams) {
+      for (const pk of Object.keys(r.teams)) keys.add(pk)
+    }
+  }
+  return [...keys].sort()
+})
+
+function toggleProject(pk) {
+  if (selectedProjects.has(pk)) selectedProjects.delete(pk)
+  else selectedProjects.add(pk)
+}
+
+function clearProjects() { selectedProjects.clear() }
+
+function resetAllFilters() {
+  resetFilters()
+  selectedProjects.clear()
+}
 
 // ── Monte Carlo state ──
 
