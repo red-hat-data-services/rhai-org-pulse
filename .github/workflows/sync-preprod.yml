@@ -49,10 +49,10 @@ jobs:
         if: steps.check.outputs.commits_behind != '0' && steps.existing.outputs.existing_pr == ''
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          COMMITS_BEHIND: ${{ steps.check.outputs.commits_behind }}
         run: |
-          BEHIND=${{ steps.check.outputs.commits_behind }}
           BODY="Automated sync of \`main\` into \`preprod\`."
-          BODY="$BODY"$'\n\n'"**$BEHIND commits** to promote. Merge when ready to deploy to preprod."
+          BODY="$BODY"$'\n\n'"**${COMMITS_BEHIND} commits** to promote. Merge when ready to deploy to preprod."
           gh pr create \
             --base preprod \
             --head main \
