@@ -8,23 +8,27 @@ function generateId() {
 }
 
 function logAudit(readFromStorage, writeToStorage, entry) {
-  var log = readFromStorage(STORAGE_KEY) || { entries: [] }
+  try {
+    var log = readFromStorage(STORAGE_KEY) || { entries: [] }
 
-  log.entries.push({
-    id: generateId(),
-    timestamp: new Date().toISOString(),
-    version: entry.version || null,
-    action: entry.action,
-    user: entry.user,
-    summary: entry.summary,
-    details: entry.details || null
-  })
+    log.entries.push({
+      id: generateId(),
+      timestamp: new Date().toISOString(),
+      version: entry.version || null,
+      action: entry.action,
+      user: entry.user,
+      summary: entry.summary,
+      details: entry.details || null
+    })
 
-  if (log.entries.length > MAX_ENTRIES) {
-    log.entries = log.entries.slice(log.entries.length - MAX_ENTRIES)
+    if (log.entries.length > MAX_ENTRIES) {
+      log.entries = log.entries.slice(log.entries.length - MAX_ENTRIES)
+    }
+
+    writeToStorage(STORAGE_KEY, log)
+  } catch (err) {
+    console.error('[audit-log] Failed to write audit entry:', err.message)
   }
-
-  writeToStorage(STORAGE_KEY, log)
 }
 
 function getAuditLog(readFromStorage, options) {

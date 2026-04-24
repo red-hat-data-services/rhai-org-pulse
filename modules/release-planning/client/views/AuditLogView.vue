@@ -97,8 +97,9 @@ onMounted(async function() {
   var params = moduleNav ? moduleNav.params : {}
   if (params && params.version) {
     selectedVersion.value = params.version
+  } else {
+    fetchPage()
   }
-  fetchPage()
 })
 </script>
 
