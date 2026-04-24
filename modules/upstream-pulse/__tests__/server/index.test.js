@@ -15,7 +15,7 @@ describe('upstream-pulse server module', () => {
       get: vi.fn((...args) => registered.push({ method: 'get', path: args[0] })),
       post: vi.fn(),
     }
-    const context = { registerDiagnostics: vi.fn(), requireAdmin: vi.fn() }
+    const context = { registerDiagnostics: vi.fn(), requireAdmin: vi.fn(), storage: { readFromStorage: vi.fn() } }
 
     registerRoutes(router, context)
 
@@ -31,31 +31,33 @@ describe('upstream-pulse server module', () => {
     expect(paths).toHaveLength(8)
   })
 
-  it('registers admin POST route for projects', () => {
+  it('registers admin POST routes for projects and roster-push', () => {
     const postCalls = []
     const router = {
       get: vi.fn(),
       post: vi.fn((...args) => postCalls.push({ path: args[0] })),
     }
     const requireAdmin = vi.fn()
-    registerRoutes(router, { registerDiagnostics: vi.fn(), requireAdmin })
+    registerRoutes(router, { registerDiagnostics: vi.fn(), requireAdmin, storage: { readFromStorage: vi.fn() } })
 
-    expect(postCalls).toHaveLength(1)
-    expect(postCalls[0].path).toBe('/projects')
+    expect(postCalls).toHaveLength(2)
+    expect(postCalls.map(c => c.path)).toContain('/projects')
+    expect(postCalls.map(c => c.path)).toContain('/roster-push')
     expect(router.post).toHaveBeenCalledWith('/projects', requireAdmin, expect.any(Function))
+    expect(router.post).toHaveBeenCalledWith('/roster-push', requireAdmin, expect.any(Function))
   })
 
   it('gates repo-info behind requireAdmin', () => {
     const router = { get: vi.fn(), post: vi.fn() }
     const requireAdmin = vi.fn()
-    registerRoutes(router, { registerDiagnostics: vi.fn(), requireAdmin })
+    registerRoutes(router, { registerDiagnostics: vi.fn(), requireAdmin, storage: { readFromStorage: vi.fn() } })
 
     expect(router.get).toHaveBeenCalledWith('/repo-info', requireAdmin, expect.any(Function))
   })
 
   it('registers diagnostics hook when available', () => {
     const router = { get: vi.fn(), post: vi.fn() }
-    const context = { registerDiagnostics: vi.fn(), requireAdmin: vi.fn() }
+    const context = { registerDiagnostics: vi.fn(), requireAdmin: vi.fn(), storage: { readFromStorage: vi.fn() } }
 
     registerRoutes(router, context)
     expect(context.registerDiagnostics).toHaveBeenCalledWith(expect.any(Function))
@@ -63,7 +65,7 @@ describe('upstream-pulse server module', () => {
 
   it('does not fail when registerDiagnostics is absent', () => {
     const router = { get: vi.fn(), post: vi.fn() }
-    const context = { requireAdmin: vi.fn() }
+    const context = { requireAdmin: vi.fn(), storage: { readFromStorage: vi.fn() } }
 
     expect(() => registerRoutes(router, context)).not.toThrow()
   })

@@ -231,7 +231,7 @@ function handleClose() {
               <div class="rounded-lg bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-700 px-4 py-3">
                 <h4 class="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">CLI Tools</h4>
                 <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
-                  Features are created and reviewed by the <span class="font-mono text-xs bg-gray-200 dark:bg-gray-600 px-1 py-0.5 rounded">strat-creator</span> and <span class="font-mono text-xs bg-gray-200 dark:bg-gray-600 px-1 py-0.5 rounded">strat-reviewer</span> plugins (source: <a href="https://github.com/jwforres/rfe-creator" target="_blank" rel="noopener noreferrer" class="font-mono text-xs text-blue-600 dark:text-blue-400 hover:underline">jwforres/rfe-creator</a>).
+                  Features are created and reviewed by the <span class="font-mono text-xs bg-gray-200 dark:bg-gray-600 px-1 py-0.5 rounded">strat-creator</span> and <span class="font-mono text-xs bg-gray-200 dark:bg-gray-600 px-1 py-0.5 rounded">strat-reviewer</span> plugins (source: <a href="https://github.com/ederign/strat-creator" target="_blank" rel="noopener noreferrer" class="font-mono text-xs text-blue-600 dark:text-blue-400 hover:underline">ederign/strat-creator</a>).
                 </p>
                 <div class="space-y-1.5 text-xs font-mono">
                   <div class="flex items-start gap-2">

@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const { getAllPeople } = require('../../../shared/server/roster');
 
 const DEFAULT_BASE_URL = 'http://backend.ambient-code--upstream-pulse.svc.cluster.local:3000';
 const PROXY_TIMEOUT = 90_000;
@@ -124,6 +125,99 @@ async function checkConnection() {
   } catch (err) {
     return { reachable: false, error: err.message };
   }
+}
+
+const ROSTER_PUSH_SOURCE = 'org_pulse_roster';
+const ROSTER_PUSH_REPLACES = ['github_org_sync'];
+const ROSTER_PUSH_INTERVAL = 2 * 60 * 60 * 1000; // 2 hours
+const ROSTER_PUSH_STARTUP_DELAY = 2 * 60 * 1000; // 2 minutes
+const ROSTER_PUSH_TIMEOUT = 5 * 60 * 1000; // 5 minutes (bulk sync processes hundreds of members)
+
+let _lastPushGeneratedAt = null;
+
+function getServiceIdentityHeaders() {
+  const serviceUser = process.env.UPSTREAM_SYNC_SERVICE_USER || 'roster-sync-service';
+  return {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'x-forwarded-user': serviceUser,
+    'x-forwarded-email': serviceUser + '@internal'
+  };
+}
+
+async function pushRosterToUpstream(storage) {
+  const allPeople = getAllPeople(storage);
+
+  const people = [];
+  for (const p of allPeople) {
+    if (!p.github || !p.github.username) continue;
+    people.push({
+      name: p.name,
+      email: p.email || null,
+      githubUsername: p.github.username,
+      employeeId: p.uid || null,
+      department: p._teamGrouping || p.miroTeam || null,
+      role: p.title || null
+    });
+  }
+
+  if (people.length === 0) {
+    console.log('[upstream-pulse] Roster push skipped: no people with GitHub usernames');
+    return { skipped: true, reason: 'no_people' };
+  }
+
+  const base = getBaseUrl();
+  const url = base + '/api/admin/team-members/sync';
+  const body = {
+    source: ROSTER_PUSH_SOURCE,
+    replacesSources: ROSTER_PUSH_REPLACES,
+    people: people
+  };
+
+  console.log('[upstream-pulse] Pushing ' + people.length + ' roster members to ' + url);
+  const response = await fetch(url, {
+    method: 'POST',
+    timeout: ROSTER_PUSH_TIMEOUT,
+    headers: getServiceIdentityHeaders(),
+    body: JSON.stringify(body)
+  });
+
+  const data = await response.json().catch(function() { return {}; });
+  if (!response.ok) {
+    throw new Error('Roster push failed (' + response.status + '): ' + (data.error || 'unknown'));
+  }
+
+  console.log('[upstream-pulse] Roster push complete:', JSON.stringify(data));
+  return data;
+}
+
+function startPeriodicRosterPush(storage) {
+  if (process.env.DEMO_MODE === 'true') return;
+
+  function checkAndPush() {
+    try {
+      const registry = storage.readFromStorage('team-data/registry.json');
+      if (!registry || !registry.meta || !registry.meta.generatedAt) return;
+
+      const generatedAt = registry.meta.generatedAt;
+      if (_lastPushGeneratedAt === generatedAt) return;
+
+      pushRosterToUpstream(storage).then(function(result) {
+        if (!result.skipped) {
+          _lastPushGeneratedAt = generatedAt;
+        }
+      }).catch(function(err) {
+        console.warn('[upstream-pulse] Periodic roster push failed:', err.message);
+      });
+    } catch (err) {
+      console.warn('[upstream-pulse] Periodic roster push check failed:', err.message);
+    }
+  }
+
+  const startupTimer = setTimeout(checkAndPush, ROSTER_PUSH_STARTUP_DELAY);
+  if (startupTimer.unref) startupTimer.unref();
+  const intervalTimer = setInterval(checkAndPush, ROSTER_PUSH_INTERVAL);
+  if (intervalTimer.unref) intervalTimer.unref();
 }
 
 module.exports = function registerRoutes(router, context) {
@@ -271,13 +365,36 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  // ── Roster push (sync org-pulse team data to upstream-pulse) ──
+
+  router.post('/roster-push', requireAdmin, async function(req, res) {
+    try {
+      const result = await pushRosterToUpstream(context.storage);
+      if (!result.skipped) {
+        const registry = context.storage.readFromStorage('team-data/registry.json');
+        if (registry && registry.meta) _lastPushGeneratedAt = registry.meta.generatedAt;
+      }
+      res.json(result);
+    } catch (err) {
+      console.error('[upstream-pulse] Manual roster push failed:', err.message);
+      res.status(502).json({ error: 'Roster push failed', message: err.message });
+    }
+  });
+
+  // Start periodic roster push (checks registry.json for changes)
+  startPeriodicRosterPush(context.storage);
+
   if (context.registerDiagnostics) {
     context.registerDiagnostics(async function() {
       const connection = await checkConnection();
       return {
         baseUrl: getBaseUrl(),
         configured: !!process.env.UPSTREAM_PULSE_API_URL,
-        connection
+        connection,
+        rosterPush: {
+          lastPushGeneratedAt: _lastPushGeneratedAt,
+          serviceUser: process.env.UPSTREAM_SYNC_SERVICE_USER || 'roster-sync-service'
+        }
       };
     });
   }
