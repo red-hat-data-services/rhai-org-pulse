@@ -251,9 +251,10 @@ jobs:
             PARTS="${PARTS}frontend"
           fi
 
-          git config user.name "rhai-org-pulse[bot]"
-          git config user.email "rhai-org-pulse[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add deploy/openshift/overlays/preprod/kustomization.yaml
+          git diff --cached --quiet && { echo "No changes to commit"; exit 0; }
           git commit -m "deploy: update ${PARTS} image to ${{ github.sha }}"
           git push origin preprod
 

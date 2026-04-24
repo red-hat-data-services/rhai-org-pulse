@@ -83,6 +83,7 @@ function saveBigRock(readFromStorage, writeToStorage, version, originalName, dat
       pillar: data.pillar || '',
       state: data.state || '',
       owner: data.owner || '',
+      architect: data.architect || '',
       outcomeKeys: data.outcomeKeys || [],
       notes: data.notes || '',
       description: data.description || ''
@@ -96,6 +97,7 @@ function saveBigRock(readFromStorage, writeToStorage, version, originalName, dat
       pillar: data.pillar || '',
       state: data.state || '',
       owner: data.owner || '',
+      architect: data.architect || '',
       outcomeKeys: data.outcomeKeys || [],
       notes: data.notes || '',
       description: data.description || ''

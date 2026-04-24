@@ -42,4 +42,9 @@ function removePMUser(readFromStorage, writeToStorage, email) {
   return data.emails
 }
 
-module.exports = { createRequirePM, getPMUsers, addPMUser, removePMUser }
+function isPM(email, readFromStorage) {
+  var pmList = readFromStorage('release-planning/pm-users.json')
+  return !!(pmList && pmList.emails && pmList.emails.includes(email))
+}
+
+module.exports = { createRequirePM, getPMUsers, addPMUser, removePMUser, isPM }

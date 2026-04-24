@@ -1,0 +1,61 @@
+name: Sync Preprod with Main
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Weekly: Monday 6 AM UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    name: Create sync PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Check if sync needed
+        id: check
+        run: |
+          git fetch origin main preprod
+          BEHIND=$(git rev-list --count origin/preprod..origin/main)
+          echo "commits_behind=$BEHIND" >> "$GITHUB_OUTPUT"
+          echo "Preprod is $BEHIND commits behind main"
+
+      - name: Check for existing PR
+        if: steps.check.outputs.commits_behind != '0'
+        id: existing
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          EXISTING=$(gh pr list --base preprod --head main --state open --json number --jq '.[0].number // empty')
+          echo "existing_pr=$EXISTING" >> "$GITHUB_OUTPUT"
+          if [ -n "$EXISTING" ]; then
+            echo "Sync PR #$EXISTING already exists, skipping"
+          fi
+
+      - name: Create sync PR
+        if: steps.check.outputs.commits_behind != '0' && steps.existing.outputs.existing_pr == ''
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          COMMITS_BEHIND: ${{ steps.check.outputs.commits_behind }}
+        run: |
+          BODY="Automated sync of \`main\` into \`preprod\`."
+          BODY="$BODY"$'\n\n'"**${COMMITS_BEHIND} commits** to promote. Merge when ready to deploy to preprod."
+          gh pr create \
+            --base preprod \
+            --head main \
+            --title "Release: main → preprod" \
+            --body "$BODY" \
+            --label automated

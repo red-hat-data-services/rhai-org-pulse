@@ -11,6 +11,7 @@ const FIELD_LIMITS = {
   pillar: 100,
   state: 100,
   owner: 200,
+  architect: 200,
   notes: 2000,
   description: 2000
 }
@@ -54,7 +55,7 @@ function validateBigRock(data, options) {
 
   // String fields: max length
   var field
-  for (field of ['fullName', 'pillar', 'state', 'owner', 'notes', 'description']) {
+  for (field of ['fullName', 'pillar', 'state', 'owner', 'architect', 'notes', 'description']) {
     if (data[field] && typeof data[field] === 'string' && data[field].length > FIELD_LIMITS[field]) {
       errors[field] = `${field} must be ${FIELD_LIMITS[field]} characters or fewer`
     }

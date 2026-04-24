@@ -93,8 +93,12 @@ function handleRetry() {
 
       <!-- Form body -->
       <div class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-        <!-- Name -->
-        <div>
+        <!-- Name (read-only) -->
+        <div v-if="!isNewRock">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
+          <p class="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-md">{{ formData.name }}</p>
+        </div>
+        <div v-else>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Name <span class="text-red-500">*</span>
           </label>
@@ -109,46 +113,10 @@ function handleRetry() {
           <p v-if="fieldErrors.name" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ fieldErrors.name }}</p>
         </div>
 
-        <!-- Full Name -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
-          <input
-            v-model="formData.fullName"
-            type="text"
-            maxlength="200"
-            class="w-full px-3 py-2 border rounded-md text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            :class="fieldErrors.fullName ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'"
-            placeholder="e.g., MaaS (continue from 3.4)"
-          />
-          <p v-if="fieldErrors.fullName" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ fieldErrors.fullName }}</p>
-        </div>
-
-        <!-- Pillar -->
-        <div>
+        <!-- Pillar (read-only) -->
+        <div v-if="formData.pillar">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pillar</label>
-          <input
-            v-model="formData.pillar"
-            type="text"
-            maxlength="100"
-            class="w-full px-3 py-2 border rounded-md text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            :class="fieldErrors.pillar ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'"
-            placeholder="e.g., Inference"
-          />
-          <p v-if="fieldErrors.pillar" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ fieldErrors.pillar }}</p>
-        </div>
-
-        <!-- State -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">State</label>
-          <input
-            v-model="formData.state"
-            type="text"
-            maxlength="100"
-            class="w-full px-3 py-2 border rounded-md text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            :class="fieldErrors.state ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'"
-            placeholder="e.g., continue from 3.4"
-          />
-          <p v-if="fieldErrors.state" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ fieldErrors.state }}</p>
+          <p class="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-md">{{ formData.pillar }}</p>
         </div>
 
         <!-- Owner -->
@@ -163,6 +131,20 @@ function handleRetry() {
             placeholder="e.g., jsmith@redhat.com"
           />
           <p v-if="fieldErrors.owner" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ fieldErrors.owner }}</p>
+        </div>
+
+        <!-- Architect -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Architect</label>
+          <input
+            v-model="formData.architect"
+            type="text"
+            maxlength="200"
+            class="w-full px-3 py-2 border rounded-md text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            :class="fieldErrors.architect ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'"
+            placeholder="e.g., jdoe@redhat.com"
+          />
+          <p v-if="fieldErrors.architect" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ fieldErrors.architect }}</p>
         </div>
 
         <!-- Outcome Keys (tag input) -->
@@ -220,19 +202,6 @@ function handleRetry() {
           <p v-if="fieldErrors.notes" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ fieldErrors.notes }}</p>
         </div>
 
-        <!-- Description -->
-        <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
-          <textarea
-            v-model="formData.description"
-            rows="3"
-            maxlength="2000"
-            class="w-full px-3 py-2 border rounded-md text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-y"
-            :class="fieldErrors.description ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'"
-            placeholder="Optional description..."
-          />
-          <p v-if="fieldErrors.description" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ fieldErrors.description }}</p>
-        </div>
       </div>
 
       <!-- Footer -->

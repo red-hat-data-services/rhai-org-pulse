@@ -17,11 +17,10 @@ function createEmptyForm() {
     name: '',
     fullName: '',
     pillar: '',
-    state: '',
     owner: '',
+    architect: '',
     outcomeKeys: [],
-    notes: '',
-    description: ''
+    notes: ''
   }
 }
 
@@ -36,22 +35,17 @@ export function useBigRockEditor() {
       return formData.value.name.trim() !== '' ||
         formData.value.fullName.trim() !== '' ||
         formData.value.pillar.trim() !== '' ||
-        formData.value.state.trim() !== '' ||
         formData.value.owner.trim() !== '' ||
+        formData.value.architect.trim() !== '' ||
         formData.value.outcomeKeys.length > 0 ||
-        formData.value.notes.trim() !== '' ||
-        formData.value.description.trim() !== ''
+        formData.value.notes.trim() !== ''
     }
     // Editing existing -- dirty if any field differs from original
     const orig = editingRock.value
-    return formData.value.name.trim() !== (orig.name || '') ||
-      formData.value.fullName !== (orig.fullName || '') ||
-      formData.value.pillar !== (orig.pillar || '') ||
-      formData.value.state !== (orig.state || '') ||
-      formData.value.owner !== (orig.owner || '') ||
+    return formData.value.owner !== (orig.owner || '') ||
+      formData.value.architect !== (orig.architect || '') ||
       JSON.stringify(formData.value.outcomeKeys) !== JSON.stringify(orig.outcomeKeys || []) ||
-      formData.value.notes !== (orig.notes || '') ||
-      formData.value.description !== (orig.description || '')
+      formData.value.notes !== (orig.notes || '')
   })
 
   function openForEdit(rock) {
@@ -60,11 +54,10 @@ export function useBigRockEditor() {
       name: rock.name || '',
       fullName: rock.fullName || '',
       pillar: rock.pillar || '',
-      state: rock.state || '',
       owner: rock.owner || '',
+      architect: rock.architect || '',
       outcomeKeys: rock.outcomeKeys ? [...rock.outcomeKeys] : [],
-      notes: rock.notes || '',
-      description: rock.description || ''
+      notes: rock.notes || ''
     }
     saving.value = false
     saveError.value = null

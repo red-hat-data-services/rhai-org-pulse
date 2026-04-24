@@ -246,6 +246,7 @@ function buildCandidateResponse(pipelineResult, version, bigRocks, demoMode) {
     pillar: rock.pillar,
     state: rock.state,
     owner: rock.owner,
+    architect: rock.architect,
     outcomeKeys: rock.outcomeKeys,
     outcomeDescriptions: {},
     featureCount: (perRockStats[rock.name] || {}).features || 0,
