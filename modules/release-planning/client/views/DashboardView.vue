@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useReleasePlanning, useReleases } from '../composables/useReleasePlanning'
 import { useBigRockEditor } from '../composables/useBigRockEditor'
 import { useFilters } from '../composables/useFilters'
@@ -86,6 +86,24 @@ function escapeCell(val) {
   return String(val).replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\n/g, ' ')
 }
 
+function escapeCsv(val) {
+  var s = String(val)
+  if (s.indexOf(',') !== -1 || s.indexOf('"') !== -1 || s.indexOf('\n') !== -1) {
+    return '"' + s.replace(/"/g, '""') + '"'
+  }
+  return s
+}
+
+const exportMenuOpen = ref(false)
+
+function closeExportMenu() {
+  exportMenuOpen.value = false
+}
+
+function toggleExportMenu() {
+  exportMenuOpen.value = !exportMenuOpen.value
+}
+
 function exportMarkdown() {
   var lines = []
   var filename
@@ -157,6 +175,77 @@ function exportMarkdown() {
   a.download = filename
   a.click()
   URL.revokeObjectURL(url)
+}
+
+function exportCsv() {
+  closeExportMenu()
+  var rows = []
+  var filename
+
+  if (activeTab.value === 'big-rocks') {
+    rows.push(['Priority', 'Pillar', 'Big Rock', 'Owner', 'Architect', 'Features', 'RFEs', 'Notes'])
+    for (var rock of bigRocks.value) {
+      rows.push([
+        rock.priority,
+        rock.pillar || '',
+        rock.name,
+        rock.owner || '',
+        rock.architect || '',
+        rock.featureCount,
+        rock.rfeCount,
+        rock.notes || ''
+      ])
+    }
+    filename = 'big-rocks-' + selectedVersion.value + '.csv'
+  } else if (activeTab.value === 'features') {
+    rows.push(['Big Rock', 'Feature', 'Status', 'Priority', 'Phase', 'Title', 'Components', 'Target Release', 'PM', 'Delivery Owner', 'RFE', 'Fix Version'])
+    for (var f of filteredFeatures.value) {
+      rows.push([
+        f.bigRock || '',
+        f.issueKey,
+        f.status || '',
+        f.priority || '',
+        f.phase || '',
+        f.summary || '',
+        f.components || '',
+        f.targetRelease || '',
+        f.pm || '',
+        f.deliveryOwner || '',
+        f.rfe || '',
+        f.fixVersion || ''
+      ])
+    }
+    filename = 'features-' + selectedVersion.value + '.csv'
+  } else {
+    rows.push(['Big Rock', 'RFE', 'Status', 'Priority', 'Title', 'Components', 'PM', 'Labels'])
+    for (var r of filteredRfes.value) {
+      rows.push([
+        r.bigRock || '',
+        r.issueKey,
+        r.status || '',
+        r.priority || '',
+        r.summary || '',
+        r.components || '',
+        r.pm || '',
+        r.labels || ''
+      ])
+    }
+    filename = 'rfes-' + selectedVersion.value + '.csv'
+  }
+
+  var csv = rows.map(function(row) { return row.map(escapeCsv).join(',') }).join('\n')
+  var blob = new Blob([csv + '\n'], { type: 'text/csv' })
+  var url = URL.createObjectURL(blob)
+  var a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function handleExportMarkdown() {
+  closeExportMenu()
+  exportMarkdown()
 }
 
 function formatDate(iso) {
@@ -302,12 +391,21 @@ watch(selectedVersion, function(newVersion) {
   }
 })
 
+function handleClickOutside() {
+  exportMenuOpen.value = false
+}
+
 onMounted(async function() {
+  document.addEventListener('click', handleClickOutside)
   loadPermissions()
   await loadReleases()
   if (releases.value.length > 0) {
     selectedVersion.value = releases.value[0].version
   }
+})
+
+onUnmounted(function() {
+  document.removeEventListener('click', handleClickOutside)
 })
 </script>
 
@@ -404,15 +502,33 @@ onMounted(async function() {
           >{{ tabCount(tab.id) }}</span>
         </button>
       </div>
-      <button
-        @click="exportMarkdown"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-      >
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-        </svg>
-        Export
-      </button>
+      <div class="relative" @click.stop>
+        <button
+          @click="toggleExportMenu"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+          </svg>
+          Export
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        <div
+          v-if="exportMenuOpen"
+          class="absolute right-0 mt-1 w-40 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-10"
+        >
+          <button
+            @click="handleExportMarkdown"
+            class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+          >Markdown (.md)</button>
+          <button
+            @click="exportCsv"
+            class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+          >CSV (.csv)</button>
+        </div>
+      </div>
       </div>
 
       <!-- Tab content -->
