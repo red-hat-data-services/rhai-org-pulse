@@ -1,7 +1,7 @@
 {
   "fetchedAt": "2026-04-10T06:09:29.084Z",
-  "schemaVersion": "v1",
-  "featureCount": 460,
+  "schemaVersion": "v2",
+  "featureCount": 461,
   "features": [
     {
       "key": "TEST1-15",
@@ -20,7 +20,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-07-15T12:41:13.071+0000"
+      "lastUpdated": "2025-07-15T12:41:13.071+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-39",
@@ -42,7 +46,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T20:35:08.968+0000"
+      "lastUpdated": "2026-04-09T20:35:08.968+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-44",
@@ -61,7 +69,11 @@
       "issueCount": 31,
       "blockerCount": 0,
       "health": "GREEN",
-      "lastUpdated": "2026-04-09T14:55:51.340+0000"
+      "lastUpdated": "2026-04-09T14:55:51.340+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-47",
@@ -77,7 +89,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-02-10T17:15:30.831+0000"
+      "lastUpdated": "2026-02-10T17:15:30.831+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-52",
@@ -97,7 +113,11 @@
       "issueCount": 3,
       "blockerCount": 1,
       "health": "RED",
-      "lastUpdated": "2025-11-19T11:25:41.211+0000"
+      "lastUpdated": "2025-11-19T11:25:41.211+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-53",
@@ -113,7 +133,11 @@
       "issueCount": 3,
       "blockerCount": 1,
       "health": "RED",
-      "lastUpdated": "2025-09-02T11:41:27.819+0000"
+      "lastUpdated": "2025-09-02T11:41:27.819+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-55",
@@ -133,7 +157,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-05T22:26:07.884+0000"
+      "lastUpdated": "2026-04-05T22:26:07.884+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-56",
@@ -155,7 +183,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-12-10T12:19:49.570+0000"
+      "lastUpdated": "2025-12-10T12:19:49.570+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-58",
@@ -178,7 +210,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T15:11:03.131+0000"
+      "lastUpdated": "2026-04-03T15:11:03.131+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-59",
@@ -198,7 +234,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T03:08:56.221+0000"
+      "lastUpdated": "2026-04-03T03:08:56.221+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-64",
@@ -220,7 +260,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-12-04T19:06:16.275+0000"
+      "lastUpdated": "2025-12-04T19:06:16.275+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-65",
@@ -239,7 +283,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-01T06:03:31.859+0000"
+      "lastUpdated": "2026-04-01T06:03:31.859+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-66",
@@ -255,7 +303,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-09-10T03:30:17.344+0000"
+      "lastUpdated": "2025-09-10T03:30:17.344+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-67",
@@ -271,7 +323,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-09-10T02:08:37.619+0000"
+      "lastUpdated": "2025-09-10T02:08:37.619+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-68",
@@ -287,7 +343,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-09-16T15:13:51.124+0000"
+      "lastUpdated": "2025-09-16T15:13:51.124+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-69",
@@ -303,7 +363,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-09-10T02:14:20.330+0000"
+      "lastUpdated": "2025-09-10T02:14:20.330+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-70",
@@ -319,7 +383,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-02T19:39:40.493+0000"
+      "lastUpdated": "2026-04-02T19:39:40.493+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-71",
@@ -335,7 +403,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-09-10T03:38:52.583+0000"
+      "lastUpdated": "2025-09-10T03:38:52.583+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-72",
@@ -351,7 +423,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-09-10T03:44:53.254+0000"
+      "lastUpdated": "2025-09-10T03:44:53.254+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-73",
@@ -367,7 +443,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-02T19:39:39.203+0000"
+      "lastUpdated": "2026-04-02T19:39:39.203+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-74",
@@ -385,7 +465,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-09-18T12:31:09.450+0000"
+      "lastUpdated": "2025-09-18T12:31:09.450+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-82",
@@ -406,7 +490,11 @@
       "issueCount": 3,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-03-19T20:55:22.815+0000"
+      "lastUpdated": "2026-03-19T20:55:22.815+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-85",
@@ -422,7 +510,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-23T21:38:15.386+0000"
+      "lastUpdated": "2026-03-23T21:38:15.386+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-87",
@@ -441,7 +533,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-12T11:43:24.481+0000"
+      "lastUpdated": "2026-03-12T11:43:24.481+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-90",
@@ -457,7 +553,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-09-22T17:25:20.308+0000"
+      "lastUpdated": "2025-09-22T17:25:20.308+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-96",
@@ -473,7 +573,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-01-21T13:34:06.174+0000"
+      "lastUpdated": "2026-01-21T13:34:06.174+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-97",
@@ -492,7 +596,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T20:43:48.593+0000"
+      "lastUpdated": "2026-04-09T20:43:48.593+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-99",
@@ -513,7 +621,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T17:32:17.068+0000"
+      "lastUpdated": "2026-04-09T17:32:17.068+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-102",
@@ -532,7 +644,13 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-01-07T15:57:53.022+0000"
+      "lastUpdated": "2026-01-07T15:57:53.022+0000",
+      "targetVersions": [
+        "rhoai-3.5"
+      ],
+      "pm": "Jane PM",
+      "architect": "Bob Arch",
+      "parentKey": "TEST1-1016"
     },
     {
       "key": "TEST1-104",
@@ -555,7 +673,13 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-29T03:09:38.378+0000"
+      "lastUpdated": "2026-03-29T03:09:38.378+0000",
+      "targetVersions": [
+        "rhoai-3.5"
+      ],
+      "pm": "Jane PM",
+      "architect": null,
+      "parentKey": "TEST1-1016"
     },
     {
       "key": "TEST1-121",
@@ -571,7 +695,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-10-13T16:50:39.490+0000"
+      "lastUpdated": "2025-10-13T16:50:39.490+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-128",
@@ -587,7 +715,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T20:31:41.479+0000"
+      "lastUpdated": "2026-04-09T20:31:41.479+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-129",
@@ -606,7 +738,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-10T03:13:02.918+0000"
+      "lastUpdated": "2026-04-10T03:13:02.918+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-130",
@@ -628,7 +764,11 @@
       "issueCount": 72,
       "blockerCount": 5,
       "health": "RED",
-      "lastUpdated": "2026-04-10T03:09:29.777+0000"
+      "lastUpdated": "2026-04-10T03:09:29.777+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-131",
@@ -647,7 +787,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-03T08:56:12.164+0000"
+      "lastUpdated": "2026-03-03T08:56:12.164+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-133",
@@ -668,7 +812,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T03:11:15.319+0000"
+      "lastUpdated": "2026-04-09T03:11:15.319+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-138",
@@ -691,7 +839,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T17:41:33.711+0000"
+      "lastUpdated": "2026-04-09T17:41:33.711+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-143",
@@ -709,7 +861,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T13:40:11.619+0000"
+      "lastUpdated": "2026-04-07T13:40:11.619+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-150",
@@ -734,7 +890,11 @@
       "issueCount": 6,
       "blockerCount": 2,
       "health": "RED",
-      "lastUpdated": "2026-04-09T21:00:33.893+0000"
+      "lastUpdated": "2026-04-09T21:00:33.893+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-152",
@@ -753,7 +913,11 @@
       "issueCount": 56,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-04-09T14:59:12.797+0000"
+      "lastUpdated": "2026-04-09T14:59:12.797+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-156",
@@ -769,7 +933,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-17T11:52:31.646+0000"
+      "lastUpdated": "2025-11-17T11:52:31.646+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-157",
@@ -787,7 +955,11 @@
       "issueCount": 1,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2025-11-03T10:39:15.077+0000"
+      "lastUpdated": "2025-11-03T10:39:15.077+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-158",
@@ -805,7 +977,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-14T15:23:28.529+0000"
+      "lastUpdated": "2025-11-14T15:23:28.529+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-159",
@@ -823,7 +999,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-03T10:43:09.445+0000"
+      "lastUpdated": "2025-11-03T10:43:09.445+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-160",
@@ -845,7 +1025,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-10T03:13:22.349+0000"
+      "lastUpdated": "2026-04-10T03:13:22.349+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-161",
@@ -866,7 +1050,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-10T03:13:24.615+0000"
+      "lastUpdated": "2026-04-10T03:13:24.615+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-164",
@@ -889,7 +1077,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-18T19:06:48.837+0000"
+      "lastUpdated": "2026-03-18T19:06:48.837+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-170",
@@ -909,7 +1101,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-02-06T20:53:14.402+0000"
+      "lastUpdated": "2026-02-06T20:53:14.402+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-171",
@@ -929,7 +1125,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-02-06T20:53:23.724+0000"
+      "lastUpdated": "2026-02-06T20:53:23.724+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-172",
@@ -954,7 +1154,11 @@
       "issueCount": 26,
       "blockerCount": 2,
       "health": "RED",
-      "lastUpdated": "2026-04-07T17:29:47.144+0000"
+      "lastUpdated": "2026-04-07T17:29:47.144+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-174",
@@ -976,7 +1180,11 @@
       "issueCount": 124,
       "blockerCount": 6,
       "health": "RED",
-      "lastUpdated": "2026-04-01T14:06:08.572+0000"
+      "lastUpdated": "2026-04-01T14:06:08.572+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-178",
@@ -996,7 +1204,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-27T03:12:50.344+0000"
+      "lastUpdated": "2026-03-27T03:12:50.344+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-179",
@@ -1012,7 +1224,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-27T03:11:25.758+0000"
+      "lastUpdated": "2026-03-27T03:11:25.758+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-182",
@@ -1030,7 +1246,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-05T22:30:21.520+0000"
+      "lastUpdated": "2026-04-05T22:30:21.520+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-183",
@@ -1046,7 +1266,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-06T15:11:53.793+0000"
+      "lastUpdated": "2026-04-06T15:11:53.793+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-185",
@@ -1065,7 +1289,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T03:08:54.107+0000"
+      "lastUpdated": "2026-04-03T03:08:54.107+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-187",
@@ -1081,7 +1309,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-02T19:39:35.081+0000"
+      "lastUpdated": "2026-04-02T19:39:35.081+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-190",
@@ -1100,7 +1332,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-01-14T13:36:00.270+0000"
+      "lastUpdated": "2026-01-14T13:36:00.270+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-193",
@@ -1120,7 +1356,11 @@
       "issueCount": 29,
       "blockerCount": 7,
       "health": "RED",
-      "lastUpdated": "2026-04-07T10:15:02.326+0000"
+      "lastUpdated": "2026-04-07T10:15:02.326+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-194",
@@ -1139,7 +1379,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-01-27T13:22:02.905+0000"
+      "lastUpdated": "2026-01-27T13:22:02.905+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-200",
@@ -1157,7 +1401,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-23T21:48:18.313+0000"
+      "lastUpdated": "2026-03-23T21:48:18.313+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-201",
@@ -1175,7 +1423,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-23T21:37:26.189+0000"
+      "lastUpdated": "2026-03-23T21:37:26.189+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-208",
@@ -1193,7 +1445,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-01-26T14:17:25.269+0000"
+      "lastUpdated": "2026-01-26T14:17:25.269+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-210",
@@ -1215,7 +1471,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T03:10:54.432+0000"
+      "lastUpdated": "2026-04-09T03:10:54.432+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-211",
@@ -1234,7 +1494,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-02-05T14:15:17.342+0000"
+      "lastUpdated": "2026-02-05T14:15:17.342+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-223",
@@ -1252,7 +1516,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-01-13T10:26:30.726+0000"
+      "lastUpdated": "2026-01-13T10:26:30.726+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-239",
@@ -1271,7 +1539,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-16T17:04:21.227+0000"
+      "lastUpdated": "2025-11-16T17:04:21.227+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-240",
@@ -1289,7 +1561,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-01-13T09:58:51.633+0000"
+      "lastUpdated": "2026-01-13T09:58:51.633+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-241",
@@ -1309,7 +1585,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-01-13T10:10:52.118+0000"
+      "lastUpdated": "2026-01-13T10:10:52.118+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-248",
@@ -1331,7 +1611,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-02T17:45:01.994+0000"
+      "lastUpdated": "2026-04-02T17:45:01.994+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-254",
@@ -1349,7 +1633,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-18T15:54:02.571+0000"
+      "lastUpdated": "2025-11-18T15:54:02.571+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-262",
@@ -1367,7 +1655,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-01-13T09:58:45.972+0000"
+      "lastUpdated": "2026-01-13T09:58:45.972+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-263",
@@ -1387,7 +1679,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-01-13T10:10:45.069+0000"
+      "lastUpdated": "2026-01-13T10:10:45.069+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-264",
@@ -1405,7 +1701,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-01-13T09:58:48.694+0000"
+      "lastUpdated": "2026-01-13T09:58:48.694+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-273",
@@ -1425,7 +1725,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-12-15T13:43:17.594+0000"
+      "lastUpdated": "2025-12-15T13:43:17.594+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-274",
@@ -1443,7 +1747,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-01-13T09:58:54.466+0000"
+      "lastUpdated": "2026-01-13T09:58:54.466+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-284",
@@ -1463,7 +1771,11 @@
       "issueCount": 3,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-03-18T18:15:12.873+0000"
+      "lastUpdated": "2026-03-18T18:15:12.873+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-289",
@@ -1483,7 +1795,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T10:19:52.299+0000"
+      "lastUpdated": "2026-04-09T10:19:52.299+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-293",
@@ -1501,7 +1817,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-19T20:16:20.732+0000"
+      "lastUpdated": "2026-03-19T20:16:20.732+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-294",
@@ -1520,7 +1840,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-19T20:14:59.166+0000"
+      "lastUpdated": "2026-03-19T20:14:59.166+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-296",
@@ -1536,7 +1860,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-30T14:48:43.170+0000"
+      "lastUpdated": "2026-03-30T14:48:43.170+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-297",
@@ -1560,7 +1888,11 @@
       "issueCount": 11,
       "blockerCount": 1,
       "health": "RED",
-      "lastUpdated": "2026-04-09T21:44:23.829+0000"
+      "lastUpdated": "2026-04-09T21:44:23.829+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-298",
@@ -1581,7 +1913,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-02T13:26:01.091+0000"
+      "lastUpdated": "2026-04-02T13:26:01.091+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-300",
@@ -1601,7 +1937,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T08:08:33.084+0000"
+      "lastUpdated": "2026-04-07T08:08:33.084+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-301",
@@ -1622,7 +1962,11 @@
       "issueCount": 2,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T08:08:32.980+0000"
+      "lastUpdated": "2026-04-07T08:08:32.980+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-302",
@@ -1643,7 +1987,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-02-10T16:23:33.272+0000"
+      "lastUpdated": "2026-02-10T16:23:33.272+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-304",
@@ -1662,7 +2010,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T08:08:32.865+0000"
+      "lastUpdated": "2026-04-07T08:08:32.865+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-305",
@@ -1680,7 +2032,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-21T16:25:53.705+0000"
+      "lastUpdated": "2025-11-21T16:25:53.705+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-309",
@@ -1700,7 +2056,11 @@
       "issueCount": 30,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T08:46:51.199+0000"
+      "lastUpdated": "2026-04-08T08:46:51.199+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-313",
@@ -1723,7 +2083,11 @@
       "issueCount": 42,
       "blockerCount": 7,
       "health": "RED",
-      "lastUpdated": "2026-04-10T03:09:27.703+0000"
+      "lastUpdated": "2026-04-10T03:09:27.703+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-316",
@@ -1741,7 +2105,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-12-05T14:31:50.079+0000"
+      "lastUpdated": "2025-12-05T14:31:50.079+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-317",
@@ -1757,7 +2125,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:35:26.441+0000"
+      "lastUpdated": "2025-11-25T21:35:26.441+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-322",
@@ -1775,7 +2147,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:35:37.821+0000"
+      "lastUpdated": "2025-11-25T21:35:37.821+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-323",
@@ -1793,7 +2169,11 @@
       "issueCount": 7,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-04-09T14:31:27.652+0000"
+      "lastUpdated": "2026-04-09T14:31:27.652+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-332",
@@ -1814,7 +2194,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T14:33:49.051+0000"
+      "lastUpdated": "2026-04-07T14:33:49.051+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-335",
@@ -1832,7 +2216,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:36:08.087+0000"
+      "lastUpdated": "2025-11-25T21:36:08.087+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-343",
@@ -1848,7 +2236,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:36:26.760+0000"
+      "lastUpdated": "2025-11-25T21:36:26.760+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-349",
@@ -1870,7 +2262,11 @@
       "issueCount": 40,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-03-12T20:37:57.910+0000"
+      "lastUpdated": "2026-03-12T20:37:57.910+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-350",
@@ -1886,7 +2282,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:36:46.082+0000"
+      "lastUpdated": "2025-11-25T21:36:46.082+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-354",
@@ -1904,7 +2304,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:36:55.063+0000"
+      "lastUpdated": "2025-11-25T21:36:55.063+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-367",
@@ -1920,7 +2324,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:37:31.232+0000"
+      "lastUpdated": "2025-11-25T21:37:31.232+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-372",
@@ -1936,7 +2344,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-16T18:02:49.417+0000"
+      "lastUpdated": "2026-03-16T18:02:49.417+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-387",
@@ -1956,7 +2368,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:38:21.165+0000"
+      "lastUpdated": "2025-11-25T21:38:21.165+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-392",
@@ -1974,7 +2390,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:38:33.737+0000"
+      "lastUpdated": "2025-11-25T21:38:33.737+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-400",
@@ -1990,7 +2410,11 @@
       "issueCount": 86,
       "blockerCount": 75,
       "health": "RED",
-      "lastUpdated": "2026-03-23T09:30:44.002+0000"
+      "lastUpdated": "2026-03-23T09:30:44.002+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-404",
@@ -2010,7 +2434,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T15:50:25.766+0000"
+      "lastUpdated": "2026-04-09T15:50:25.766+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-405",
@@ -2028,7 +2456,11 @@
       "issueCount": 5,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-03-23T13:47:12.241+0000"
+      "lastUpdated": "2026-03-23T13:47:12.241+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-408",
@@ -2047,7 +2479,11 @@
       "issueCount": 3,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2025-12-08T11:10:41.886+0000"
+      "lastUpdated": "2025-12-08T11:10:41.886+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-414",
@@ -2063,7 +2499,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-05T19:22:00.075+0000"
+      "lastUpdated": "2026-03-05T19:22:00.075+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-420",
@@ -2084,7 +2524,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-04T18:02:27.124+0000"
+      "lastUpdated": "2026-03-04T18:02:27.124+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-423",
@@ -2100,7 +2544,11 @@
       "issueCount": 4,
       "blockerCount": 2,
       "health": "RED",
-      "lastUpdated": "2025-11-25T21:39:54.014+0000"
+      "lastUpdated": "2025-11-25T21:39:54.014+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-432",
@@ -2123,7 +2571,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-02T21:21:45.314+0000"
+      "lastUpdated": "2026-04-02T21:21:45.314+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-434",
@@ -2142,7 +2594,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:40:18.917+0000"
+      "lastUpdated": "2025-11-25T21:40:18.917+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-437",
@@ -2158,7 +2614,11 @@
       "issueCount": 6,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2025-11-27T16:21:24.874+0000"
+      "lastUpdated": "2025-11-27T16:21:24.874+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-441",
@@ -2177,7 +2637,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-12-01T16:12:45.536+0000"
+      "lastUpdated": "2025-12-01T16:12:45.536+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-448",
@@ -2193,7 +2657,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:40:51.301+0000"
+      "lastUpdated": "2025-11-25T21:40:51.301+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-449",
@@ -2211,7 +2679,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-10T01:12:12.717+0000"
+      "lastUpdated": "2026-03-10T01:12:12.717+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-450",
@@ -2230,7 +2702,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-01-01T10:54:08.364+0000"
+      "lastUpdated": "2026-01-01T10:54:08.364+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-462",
@@ -2248,7 +2724,11 @@
       "issueCount": 1,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2025-11-25T21:41:25.579+0000"
+      "lastUpdated": "2025-11-25T21:41:25.579+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-464",
@@ -2264,7 +2744,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:41:29.727+0000"
+      "lastUpdated": "2025-11-25T21:41:29.727+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-465",
@@ -2280,7 +2764,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:41:31.752+0000"
+      "lastUpdated": "2025-11-25T21:41:31.752+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-469",
@@ -2296,7 +2784,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:41:43.210+0000"
+      "lastUpdated": "2025-11-25T21:41:43.210+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-476",
@@ -2312,7 +2804,11 @@
       "issueCount": 2,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2025-11-25T21:41:59.167+0000"
+      "lastUpdated": "2025-11-25T21:41:59.167+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-483",
@@ -2328,7 +2824,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:42:15.984+0000"
+      "lastUpdated": "2025-11-25T21:42:15.984+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-488",
@@ -2347,7 +2847,11 @@
       "issueCount": 1,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2025-11-25T21:42:28.103+0000"
+      "lastUpdated": "2025-11-25T21:42:28.103+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-489",
@@ -2365,7 +2869,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:42:30.299+0000"
+      "lastUpdated": "2025-11-25T21:42:30.299+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-495",
@@ -2388,7 +2896,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:42:45.968+0000"
+      "lastUpdated": "2025-11-25T21:42:45.968+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-496",
@@ -2404,7 +2916,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-02-10T04:38:43.477+0000"
+      "lastUpdated": "2026-02-10T04:38:43.477+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-497",
@@ -2426,7 +2942,11 @@
       "issueCount": 9,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-23T19:26:49.504+0000"
+      "lastUpdated": "2026-03-23T19:26:49.504+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-499",
@@ -2446,7 +2966,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-28T01:04:36.466+0000"
+      "lastUpdated": "2026-03-28T01:04:36.466+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-502",
@@ -2462,7 +2986,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:43:06.125+0000"
+      "lastUpdated": "2025-11-25T21:43:06.125+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-503",
@@ -2480,7 +3008,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-16T18:02:21.385+0000"
+      "lastUpdated": "2026-03-16T18:02:21.385+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-506",
@@ -2498,7 +3030,11 @@
       "issueCount": 8,
       "blockerCount": 0,
       "health": "GREEN",
-      "lastUpdated": "2025-11-25T21:43:14.932+0000"
+      "lastUpdated": "2025-11-25T21:43:14.932+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-510",
@@ -2514,7 +3050,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:43:25.066+0000"
+      "lastUpdated": "2025-11-25T21:43:25.066+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-512",
@@ -2533,7 +3073,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-02-19T14:26:18.504+0000"
+      "lastUpdated": "2026-02-19T14:26:18.504+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-514",
@@ -2551,7 +3095,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-17T10:11:58.682+0000"
+      "lastUpdated": "2026-03-17T10:11:58.682+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-516",
@@ -2567,7 +3115,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:43:38.453+0000"
+      "lastUpdated": "2025-11-25T21:43:38.453+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-520",
@@ -2583,7 +3135,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:43:47.740+0000"
+      "lastUpdated": "2025-11-25T21:43:47.740+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-523",
@@ -2602,7 +3158,11 @@
       "issueCount": 3,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2025-11-25T21:43:54.702+0000"
+      "lastUpdated": "2025-11-25T21:43:54.702+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-536",
@@ -2621,7 +3181,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-04T14:11:43.160+0000"
+      "lastUpdated": "2026-03-04T14:11:43.160+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-544",
@@ -2639,7 +3203,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-01-12T16:33:29.521+0000"
+      "lastUpdated": "2026-01-12T16:33:29.521+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-545",
@@ -2667,7 +3235,11 @@
       "issueCount": 26,
       "blockerCount": 6,
       "health": "RED",
-      "lastUpdated": "2026-04-09T11:22:11.977+0000"
+      "lastUpdated": "2026-04-09T11:22:11.977+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-547",
@@ -2683,7 +3255,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-02-10T04:38:55.094+0000"
+      "lastUpdated": "2026-02-10T04:38:55.094+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-548",
@@ -2704,7 +3280,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-02-05T01:44:35.657+0000"
+      "lastUpdated": "2026-02-05T01:44:35.657+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-549",
@@ -2720,7 +3300,11 @@
       "issueCount": 65,
       "blockerCount": 3,
       "health": "RED",
-      "lastUpdated": "2026-02-16T21:03:42.387+0000"
+      "lastUpdated": "2026-02-16T21:03:42.387+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-559",
@@ -2736,7 +3320,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:45:27.950+0000"
+      "lastUpdated": "2025-11-25T21:45:27.950+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-563",
@@ -2752,7 +3340,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:45:36.678+0000"
+      "lastUpdated": "2025-11-25T21:45:36.678+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-576",
@@ -2768,7 +3360,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-03-02T08:24:32.138+0000"
+      "lastUpdated": "2026-03-02T08:24:32.138+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-577",
@@ -2784,7 +3380,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:46:09.001+0000"
+      "lastUpdated": "2025-11-25T21:46:09.001+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-581",
@@ -2807,7 +3407,11 @@
       "issueCount": 56,
       "blockerCount": 4,
       "health": "RED",
-      "lastUpdated": "2026-04-08T14:51:53.783+0000"
+      "lastUpdated": "2026-04-08T14:51:53.783+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-583",
@@ -2826,7 +3430,11 @@
       "issueCount": 1,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-02-27T19:14:01.867+0000"
+      "lastUpdated": "2026-02-27T19:14:01.867+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-585",
@@ -2844,7 +3452,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-01-19T13:46:44.069+0000"
+      "lastUpdated": "2026-01-19T13:46:44.069+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-587",
@@ -2862,7 +3474,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:46:33.820+0000"
+      "lastUpdated": "2025-11-25T21:46:33.820+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-588",
@@ -2880,7 +3496,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:46:35.830+0000"
+      "lastUpdated": "2025-11-25T21:46:35.830+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-589",
@@ -2896,7 +3516,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-12-16T12:34:59.435+0000"
+      "lastUpdated": "2025-12-16T12:34:59.435+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-590",
@@ -2916,7 +3540,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-10T13:58:59.943+0000"
+      "lastUpdated": "2026-03-10T13:58:59.943+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-591",
@@ -2932,7 +3560,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-01T14:51:27.438+0000"
+      "lastUpdated": "2026-04-01T14:51:27.438+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-596",
@@ -2950,7 +3582,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:46:59.745+0000"
+      "lastUpdated": "2025-11-25T21:46:59.745+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-597",
@@ -2968,7 +3604,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-12-01T14:48:19.967+0000"
+      "lastUpdated": "2025-12-01T14:48:19.967+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-601",
@@ -2984,7 +3624,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-31T04:14:59.771+0000"
+      "lastUpdated": "2026-03-31T04:14:59.771+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-604",
@@ -3000,7 +3644,11 @@
       "issueCount": 13,
       "blockerCount": 8,
       "health": "RED",
-      "lastUpdated": "2026-01-01T10:55:43.895+0000"
+      "lastUpdated": "2026-01-01T10:55:43.895+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-605",
@@ -3016,7 +3664,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:47:20.385+0000"
+      "lastUpdated": "2025-11-25T21:47:20.385+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-611",
@@ -3035,7 +3687,11 @@
       "issueCount": 31,
       "blockerCount": 4,
       "health": "RED",
-      "lastUpdated": "2026-03-09T19:35:30.588+0000"
+      "lastUpdated": "2026-03-09T19:35:30.588+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-612",
@@ -3054,7 +3710,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-01-26T15:01:07.144+0000"
+      "lastUpdated": "2026-01-26T15:01:07.144+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-614",
@@ -3070,7 +3730,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:47:41.425+0000"
+      "lastUpdated": "2025-11-25T21:47:41.425+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-615",
@@ -3089,7 +3753,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-02-10T04:38:58.740+0000"
+      "lastUpdated": "2026-02-10T04:38:58.740+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-619",
@@ -3105,7 +3773,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:47:52.741+0000"
+      "lastUpdated": "2025-11-25T21:47:52.741+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-622",
@@ -3121,7 +3793,11 @@
       "issueCount": 52,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-04-01T13:07:11.177+0000"
+      "lastUpdated": "2026-04-01T13:07:11.177+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-623",
@@ -3137,7 +3813,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:48:04.427+0000"
+      "lastUpdated": "2025-11-25T21:48:04.427+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-628",
@@ -3153,7 +3833,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:48:15.872+0000"
+      "lastUpdated": "2025-11-25T21:48:15.872+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-630",
@@ -3171,7 +3855,11 @@
       "issueCount": 1,
       "blockerCount": 0,
       "health": "GREEN",
-      "lastUpdated": "2025-11-25T21:48:20.514+0000"
+      "lastUpdated": "2025-11-25T21:48:20.514+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-647",
@@ -3187,7 +3875,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:49:05.484+0000"
+      "lastUpdated": "2025-11-25T21:49:05.484+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-649",
@@ -3203,7 +3895,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:49:09.758+0000"
+      "lastUpdated": "2025-11-25T21:49:09.758+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-651",
@@ -3219,7 +3915,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:49:14.513+0000"
+      "lastUpdated": "2025-11-25T21:49:14.513+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-656",
@@ -3235,7 +3935,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:49:25.782+0000"
+      "lastUpdated": "2025-11-25T21:49:25.782+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-662",
@@ -3251,7 +3955,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:49:40.018+0000"
+      "lastUpdated": "2025-11-25T21:49:40.018+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-664",
@@ -3267,7 +3975,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:49:44.035+0000"
+      "lastUpdated": "2025-11-25T21:49:44.035+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-665",
@@ -3283,7 +3995,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-01-26T15:01:19.775+0000"
+      "lastUpdated": "2026-01-26T15:01:19.775+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-668",
@@ -3299,7 +4015,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-09T20:21:39.076+0000"
+      "lastUpdated": "2026-03-09T20:21:39.076+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-680",
@@ -3315,7 +4035,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:50:25.869+0000"
+      "lastUpdated": "2025-11-25T21:50:25.869+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-689",
@@ -3331,7 +4055,11 @@
       "issueCount": 32,
       "blockerCount": 1,
       "health": "RED",
-      "lastUpdated": "2026-03-10T16:45:51.070+0000"
+      "lastUpdated": "2026-03-10T16:45:51.070+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-693",
@@ -3347,7 +4075,11 @@
       "issueCount": 26,
       "blockerCount": 5,
       "health": "RED",
-      "lastUpdated": "2025-11-25T21:51:00.048+0000"
+      "lastUpdated": "2025-11-25T21:51:00.048+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-694",
@@ -3366,7 +4098,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-12T08:00:58.199+0000"
+      "lastUpdated": "2026-03-12T08:00:58.199+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-695",
@@ -3389,7 +4125,11 @@
       "issueCount": 2,
       "blockerCount": 0,
       "health": "GREEN",
-      "lastUpdated": "2026-02-10T04:37:54.861+0000"
+      "lastUpdated": "2026-02-10T04:37:54.861+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-696",
@@ -3410,7 +4150,11 @@
       "issueCount": 3,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-03-05T16:21:05.767+0000"
+      "lastUpdated": "2026-03-05T16:21:05.767+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-699",
@@ -3429,7 +4173,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:51:15.642+0000"
+      "lastUpdated": "2025-11-25T21:51:15.642+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-709",
@@ -3451,7 +4199,11 @@
       "issueCount": 2,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2025-11-25T21:51:40.021+0000"
+      "lastUpdated": "2025-11-25T21:51:40.021+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-713",
@@ -3467,7 +4219,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-01-05T14:44:47.418+0000"
+      "lastUpdated": "2026-01-05T14:44:47.418+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-718",
@@ -3485,7 +4241,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-01-07T15:51:08.396+0000"
+      "lastUpdated": "2026-01-07T15:51:08.396+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-719",
@@ -3503,7 +4263,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-12-09T17:20:20.972+0000"
+      "lastUpdated": "2025-12-09T17:20:20.972+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-720",
@@ -3521,7 +4285,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:52:07.998+0000"
+      "lastUpdated": "2025-11-25T21:52:07.998+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-723",
@@ -3539,7 +4307,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:52:14.362+0000"
+      "lastUpdated": "2025-11-25T21:52:14.362+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-725",
@@ -3557,7 +4329,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:52:18.259+0000"
+      "lastUpdated": "2025-11-25T21:52:18.259+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-728",
@@ -3573,7 +4349,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:52:24.952+0000"
+      "lastUpdated": "2025-11-25T21:52:24.952+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-732",
@@ -3592,7 +4372,11 @@
       "issueCount": 16,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-06T13:06:47.647+0000"
+      "lastUpdated": "2026-04-06T13:06:47.647+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-737",
@@ -3610,7 +4394,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-02-10T04:38:36.139+0000"
+      "lastUpdated": "2026-02-10T04:38:36.139+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-738",
@@ -3626,7 +4414,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:52:49.950+0000"
+      "lastUpdated": "2025-11-25T21:52:49.950+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-739",
@@ -3642,7 +4434,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:52:51.852+0000"
+      "lastUpdated": "2025-11-25T21:52:51.852+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-747",
@@ -3658,7 +4454,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-02-17T22:30:46.199+0000"
+      "lastUpdated": "2026-02-17T22:30:46.199+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-752",
@@ -3677,7 +4477,11 @@
       "issueCount": 4,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-04-09T09:03:32.010+0000"
+      "lastUpdated": "2026-04-09T09:03:32.010+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-754",
@@ -3695,7 +4499,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:53:30.375+0000"
+      "lastUpdated": "2025-11-25T21:53:30.375+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-765",
@@ -3713,7 +4521,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:53:58.988+0000"
+      "lastUpdated": "2025-11-25T21:53:58.988+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-767",
@@ -3729,7 +4541,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-01-26T18:33:35.989+0000"
+      "lastUpdated": "2026-01-26T18:33:35.989+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-773",
@@ -3749,7 +4565,11 @@
       "issueCount": 10,
       "blockerCount": 2,
       "health": "RED",
-      "lastUpdated": "2026-02-05T17:04:23.023+0000"
+      "lastUpdated": "2026-02-05T17:04:23.023+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-775",
@@ -3765,7 +4585,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:54:25.084+0000"
+      "lastUpdated": "2025-11-25T21:54:25.084+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-776",
@@ -3781,7 +4605,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:54:26.949+0000"
+      "lastUpdated": "2025-11-25T21:54:26.949+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-786",
@@ -3797,7 +4625,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:54:52.720+0000"
+      "lastUpdated": "2025-11-25T21:54:52.720+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-813",
@@ -3819,7 +4651,11 @@
       "issueCount": 98,
       "blockerCount": 12,
       "health": "RED",
-      "lastUpdated": "2026-04-08T09:12:20.619+0000"
+      "lastUpdated": "2026-04-08T09:12:20.619+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-814",
@@ -3835,7 +4671,11 @@
       "issueCount": 3,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2025-11-25T21:56:09.972+0000"
+      "lastUpdated": "2025-11-25T21:56:09.972+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-842",
@@ -3851,7 +4691,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:57:16.051+0000"
+      "lastUpdated": "2025-11-25T21:57:16.051+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-844",
@@ -3871,7 +4715,11 @@
       "issueCount": 39,
       "blockerCount": 10,
       "health": "RED",
-      "lastUpdated": "2026-03-18T21:03:48.507+0000"
+      "lastUpdated": "2026-03-18T21:03:48.507+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-845",
@@ -3889,7 +4737,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-01-14T15:37:54.581+0000"
+      "lastUpdated": "2026-01-14T15:37:54.581+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-848",
@@ -3905,7 +4757,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:57:30.629+0000"
+      "lastUpdated": "2025-11-25T21:57:30.629+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-853",
@@ -3923,7 +4779,11 @@
       "issueCount": 14,
       "blockerCount": 9,
       "health": "RED",
-      "lastUpdated": "2026-04-09T10:12:36.591+0000"
+      "lastUpdated": "2026-04-09T10:12:36.591+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-854",
@@ -3941,7 +4801,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:57:44.273+0000"
+      "lastUpdated": "2025-11-25T21:57:44.273+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-855",
@@ -3957,7 +4821,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:57:46.203+0000"
+      "lastUpdated": "2025-11-25T21:57:46.203+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-860",
@@ -3973,7 +4841,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-11-25T21:57:57.494+0000"
+      "lastUpdated": "2025-11-25T21:57:57.494+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-930",
@@ -3994,7 +4866,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-03-27T12:32:12.769+0000"
+      "lastUpdated": "2026-03-27T12:32:12.769+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-940",
@@ -4014,7 +4890,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T08:26:00.097+0000"
+      "lastUpdated": "2026-04-09T08:26:00.097+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-948",
@@ -4032,7 +4912,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-03-23T13:42:39.065+0000"
+      "lastUpdated": "2026-03-23T13:42:39.065+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-949",
@@ -4052,7 +4936,11 @@
       "issueCount": 5,
       "blockerCount": 4,
       "health": "RED",
-      "lastUpdated": "2026-04-09T16:41:49.807+0000"
+      "lastUpdated": "2026-04-09T16:41:49.807+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-951",
@@ -4070,7 +4958,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-01T06:03:28.281+0000"
+      "lastUpdated": "2026-04-01T06:03:28.281+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-955",
@@ -4088,7 +4980,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-12-04T19:18:03.958+0000"
+      "lastUpdated": "2025-12-04T19:18:03.958+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-958",
@@ -4108,7 +5004,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T12:56:52.494+0000"
+      "lastUpdated": "2026-04-09T12:56:52.494+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-960",
@@ -4133,7 +5033,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-30T08:05:05.544+0000"
+      "lastUpdated": "2026-03-30T08:05:05.544+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-965",
@@ -4152,7 +5056,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T10:21:44.325+0000"
+      "lastUpdated": "2026-04-09T10:21:44.325+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-968",
@@ -4172,7 +5080,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-22T16:45:28.510+0000"
+      "lastUpdated": "2026-03-22T16:45:28.510+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-969",
@@ -4191,7 +5103,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-02-11T21:38:15.911+0000"
+      "lastUpdated": "2026-02-11T21:38:15.911+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-970",
@@ -4211,7 +5127,11 @@
       "issueCount": 4,
       "blockerCount": 3,
       "health": "RED",
-      "lastUpdated": "2026-04-10T03:09:05.984+0000"
+      "lastUpdated": "2026-04-10T03:09:05.984+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-971",
@@ -4234,7 +5154,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T10:10:51.415+0000"
+      "lastUpdated": "2026-04-08T10:10:51.415+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-973",
@@ -4254,7 +5178,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T08:08:32.791+0000"
+      "lastUpdated": "2026-04-07T08:08:32.791+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-974",
@@ -4274,7 +5202,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T10:19:53.193+0000"
+      "lastUpdated": "2026-04-09T10:19:53.193+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-976",
@@ -4293,7 +5225,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T08:08:32.711+0000"
+      "lastUpdated": "2026-04-07T08:08:32.711+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-978",
@@ -4311,7 +5247,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-01-07T11:20:23.384+0000"
+      "lastUpdated": "2026-01-07T11:20:23.384+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-979",
@@ -4333,7 +5273,11 @@
       "issueCount": 19,
       "blockerCount": 3,
       "health": "RED",
-      "lastUpdated": "2026-04-03T13:53:14.348+0000"
+      "lastUpdated": "2026-04-03T13:53:14.348+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-980",
@@ -4351,7 +5295,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T12:56:52.017+0000"
+      "lastUpdated": "2026-04-09T12:56:52.017+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-983",
@@ -4372,7 +5320,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-01T06:02:01.800+0000"
+      "lastUpdated": "2026-04-01T06:02:01.800+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-988",
@@ -4392,7 +5344,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-02T19:39:33.740+0000"
+      "lastUpdated": "2026-04-02T19:39:33.740+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-989",
@@ -4411,7 +5367,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T17:29:51.245+0000"
+      "lastUpdated": "2026-04-03T17:29:51.245+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-991",
@@ -4429,7 +5389,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T08:08:32.565+0000"
+      "lastUpdated": "2026-04-07T08:08:32.565+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-992",
@@ -4447,7 +5411,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T08:08:32.491+0000"
+      "lastUpdated": "2026-04-07T08:08:32.491+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-993",
@@ -4465,7 +5433,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2025-12-11T10:59:55.077+0000"
+      "lastUpdated": "2025-12-11T10:59:55.077+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-995",
@@ -4484,7 +5456,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-20T16:55:58.691+0000"
+      "lastUpdated": "2026-03-20T16:55:58.691+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1016",
@@ -4502,7 +5478,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-13T15:06:58.798+0000"
+      "lastUpdated": "2026-03-13T15:06:58.798+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1045",
@@ -4521,7 +5501,11 @@
       "issueCount": 9,
       "blockerCount": 2,
       "health": "RED",
-      "lastUpdated": "2026-04-03T13:41:26.172+0000"
+      "lastUpdated": "2026-04-03T13:41:26.172+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1047",
@@ -4539,7 +5523,13 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-20T11:34:33.194+0000"
+      "lastUpdated": "2026-03-20T11:34:33.194+0000",
+      "targetVersions": [
+        "rhoai-3.5"
+      ],
+      "pm": null,
+      "architect": null,
+      "parentKey": "TEST1-1045"
     },
     {
       "key": "TEST1-1051",
@@ -4565,7 +5555,13 @@
       "issueCount": 9,
       "blockerCount": 1,
       "health": "RED",
-      "lastUpdated": "2026-04-10T03:09:04.382+0000"
+      "lastUpdated": "2026-04-10T03:09:04.382+0000",
+      "targetVersions": [
+        "rhoai-3.5"
+      ],
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1053",
@@ -4581,18 +5577,22 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T15:50:34.999+0000"
+      "lastUpdated": "2026-04-09T15:50:34.999+0000",
+      "targetVersions": [
+        "rhoai-3.5"
+      ],
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1054",
       "summary": "Update dependencies",
-      "status": "Review",
+      "status": "In Progress",
       "statusCategory": "In Progress",
       "priority": "Critical",
       "assignee": "Justin Sun",
-      "fixVersions": [
-        "rhoai-3.4"
-      ],
+      "fixVersions": [],
       "labels": [
         "3.4-candidate",
         "3.4-committed",
@@ -4606,13 +5606,17 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T13:35:25.387+0000"
+      "lastUpdated": "2026-04-08T13:35:25.387+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1059",
       "summary": "Add logging for debugging",
-      "status": "New",
-      "statusCategory": "To Do",
+      "status": "Review",
+      "statusCategory": "In Progress",
       "priority": "Undefined",
       "assignee": "Yi Zheng",
       "fixVersions": [],
@@ -4625,7 +5629,13 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T08:08:32.322+0000"
+      "lastUpdated": "2026-04-07T08:08:32.322+0000",
+      "targetVersions": [
+        "rhoai-3.5"
+      ],
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1061",
@@ -4646,7 +5656,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T17:29:55.665+0000"
+      "lastUpdated": "2026-04-03T17:29:55.665+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1062",
@@ -4665,7 +5679,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-31T14:15:50.582+0000"
+      "lastUpdated": "2026-03-31T14:15:50.582+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1064",
@@ -4683,7 +5701,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T12:50:54.856+0000"
+      "lastUpdated": "2026-04-08T12:50:54.856+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1065",
@@ -4701,7 +5723,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-01-21T11:35:04.372+0000"
+      "lastUpdated": "2026-01-21T11:35:04.372+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1078",
@@ -4720,7 +5746,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-27T12:31:42.661+0000"
+      "lastUpdated": "2026-03-27T12:31:42.661+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1079",
@@ -4740,7 +5770,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T10:28:21.072+0000"
+      "lastUpdated": "2026-04-09T10:28:21.072+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1082",
@@ -4760,7 +5794,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T08:08:32.137+0000"
+      "lastUpdated": "2026-04-07T08:08:32.137+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1084",
@@ -4788,7 +5826,11 @@
       "issueCount": 93,
       "blockerCount": 20,
       "health": "RED",
-      "lastUpdated": "2026-04-08T14:56:00.602+0000"
+      "lastUpdated": "2026-04-08T14:56:00.602+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1085",
@@ -4807,7 +5849,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-18T11:38:59.345+0000"
+      "lastUpdated": "2026-03-18T11:38:59.345+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1089",
@@ -4827,7 +5873,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-01-15T11:41:32.282+0000"
+      "lastUpdated": "2026-01-15T11:41:32.282+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1104",
@@ -4847,7 +5897,11 @@
       "issueCount": 1,
       "blockerCount": 0,
       "health": "GREEN",
-      "lastUpdated": "2026-04-03T21:59:23.841+0000"
+      "lastUpdated": "2026-04-03T21:59:23.841+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1109",
@@ -4867,7 +5921,11 @@
       "issueCount": 26,
       "blockerCount": 6,
       "health": "RED",
-      "lastUpdated": "2026-04-08T14:36:24.909+0000"
+      "lastUpdated": "2026-04-08T14:36:24.909+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1111",
@@ -4888,7 +5946,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T03:10:52.574+0000"
+      "lastUpdated": "2026-04-09T03:10:52.574+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1112",
@@ -4915,7 +5977,11 @@
       "issueCount": 60,
       "blockerCount": 3,
       "health": "RED",
-      "lastUpdated": "2026-04-09T11:22:16.073+0000"
+      "lastUpdated": "2026-04-09T11:22:16.073+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1115",
@@ -4936,7 +6002,11 @@
       "issueCount": 2,
       "blockerCount": 0,
       "health": "GREEN",
-      "lastUpdated": "2026-03-18T20:16:27.646+0000"
+      "lastUpdated": "2026-03-18T20:16:27.646+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1117",
@@ -4959,7 +6029,11 @@
       "issueCount": 103,
       "blockerCount": 16,
       "health": "RED",
-      "lastUpdated": "2026-04-07T20:48:02.701+0000"
+      "lastUpdated": "2026-04-07T20:48:02.701+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1119",
@@ -4977,7 +6051,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-19T13:46:46.205+0000"
+      "lastUpdated": "2026-03-19T13:46:46.205+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1120",
@@ -5000,7 +6078,11 @@
       "issueCount": 3,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-04-01T14:02:45.032+0000"
+      "lastUpdated": "2026-04-01T14:02:45.032+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1121",
@@ -5020,7 +6102,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-27T09:39:28.979+0000"
+      "lastUpdated": "2026-03-27T09:39:28.979+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1129",
@@ -5038,7 +6124,11 @@
       "issueCount": 21,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-04-09T10:29:54.029+0000"
+      "lastUpdated": "2026-04-09T10:29:54.029+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1130",
@@ -5057,7 +6147,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-18T20:12:11.500+0000"
+      "lastUpdated": "2026-03-18T20:12:11.500+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1131",
@@ -5076,7 +6170,11 @@
       "issueCount": 10,
       "blockerCount": 1,
       "health": "RED",
-      "lastUpdated": "2026-04-09T10:30:21.594+0000"
+      "lastUpdated": "2026-04-09T10:30:21.594+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1132",
@@ -5095,7 +6193,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-24T20:36:53.018+0000"
+      "lastUpdated": "2026-03-24T20:36:53.018+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1134",
@@ -5119,7 +6221,11 @@
       "issueCount": 80,
       "blockerCount": 12,
       "health": "RED",
-      "lastUpdated": "2026-04-09T11:22:20.228+0000"
+      "lastUpdated": "2026-04-09T11:22:20.228+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1136",
@@ -5142,7 +6248,11 @@
       "issueCount": 22,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T19:41:15.682+0000"
+      "lastUpdated": "2026-04-09T19:41:15.682+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1143",
@@ -5158,7 +6268,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T09:49:41.318+0000"
+      "lastUpdated": "2026-04-08T09:49:41.318+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1144",
@@ -5174,7 +6288,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-02-26T15:05:30.169+0000"
+      "lastUpdated": "2026-02-26T15:05:30.169+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1145",
@@ -5190,7 +6308,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-02-18T21:14:17.594+0000"
+      "lastUpdated": "2026-02-18T21:14:17.594+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1146",
@@ -5206,7 +6328,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-02-04T15:57:25.053+0000"
+      "lastUpdated": "2026-02-04T15:57:25.053+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1147",
@@ -5224,7 +6350,11 @@
       "issueCount": 3,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-04-03T16:19:27.828+0000"
+      "lastUpdated": "2026-04-03T16:19:27.828+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1148",
@@ -5243,7 +6373,11 @@
       "issueCount": 22,
       "blockerCount": 1,
       "health": "RED",
-      "lastUpdated": "2026-04-09T10:42:09.088+0000"
+      "lastUpdated": "2026-04-09T10:42:09.088+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1149",
@@ -5273,7 +6407,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T15:30:02.377+0000"
+      "lastUpdated": "2026-04-08T15:30:02.377+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1150",
@@ -5298,7 +6436,11 @@
       "issueCount": 72,
       "blockerCount": 4,
       "health": "RED",
-      "lastUpdated": "2026-04-08T15:30:02.513+0000"
+      "lastUpdated": "2026-04-08T15:30:02.513+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1153",
@@ -5316,7 +6458,11 @@
       "issueCount": 6,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-02-23T07:53:18.146+0000"
+      "lastUpdated": "2026-02-23T07:53:18.146+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1159",
@@ -5336,7 +6482,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T12:56:53.244+0000"
+      "lastUpdated": "2026-04-09T12:56:53.244+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1161",
@@ -5359,7 +6509,11 @@
       "issueCount": 48,
       "blockerCount": 17,
       "health": "RED",
-      "lastUpdated": "2026-04-06T15:35:51.608+0000"
+      "lastUpdated": "2026-04-06T15:35:51.608+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1164",
@@ -5379,7 +6533,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T13:23:04.372+0000"
+      "lastUpdated": "2026-04-09T13:23:04.372+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1165",
@@ -5395,7 +6553,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-01T15:15:25.693+0000"
+      "lastUpdated": "2026-04-01T15:15:25.693+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1167",
@@ -5418,7 +6580,11 @@
       "issueCount": 25,
       "blockerCount": 2,
       "health": "RED",
-      "lastUpdated": "2026-04-09T20:33:40.836+0000"
+      "lastUpdated": "2026-04-09T20:33:40.836+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1168",
@@ -5438,7 +6604,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T16:37:51.840+0000"
+      "lastUpdated": "2026-04-07T16:37:51.840+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1169",
@@ -5456,7 +6626,11 @@
       "issueCount": 18,
       "blockerCount": 4,
       "health": "RED",
-      "lastUpdated": "2026-04-01T09:29:11.135+0000"
+      "lastUpdated": "2026-04-01T09:29:11.135+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1172",
@@ -5476,7 +6650,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-26T17:45:05.049+0000"
+      "lastUpdated": "2026-03-26T17:45:05.049+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1173",
@@ -5497,7 +6675,11 @@
       "issueCount": 7,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-04-10T03:08:58.400+0000"
+      "lastUpdated": "2026-04-10T03:08:58.400+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1175",
@@ -5513,7 +6695,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-02-04T09:43:17.334+0000"
+      "lastUpdated": "2026-02-04T09:43:17.334+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1176",
@@ -5535,7 +6721,11 @@
       "issueCount": 21,
       "blockerCount": 6,
       "health": "RED",
-      "lastUpdated": "2026-04-06T13:17:48.930+0000"
+      "lastUpdated": "2026-04-06T13:17:48.930+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1178",
@@ -5557,7 +6747,11 @@
       "issueCount": 41,
       "blockerCount": 7,
       "health": "RED",
-      "lastUpdated": "2026-04-10T03:09:00.090+0000"
+      "lastUpdated": "2026-04-10T03:09:00.090+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1179",
@@ -5580,7 +6774,11 @@
       "issueCount": 25,
       "blockerCount": 4,
       "health": "RED",
-      "lastUpdated": "2026-04-10T03:09:21.814+0000"
+      "lastUpdated": "2026-04-10T03:09:21.814+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1180",
@@ -5602,7 +6800,11 @@
       "issueCount": 1,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-04-10T03:09:23.740+0000"
+      "lastUpdated": "2026-04-10T03:09:23.740+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1181",
@@ -5621,7 +6823,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-10T03:09:36.727+0000"
+      "lastUpdated": "2026-04-10T03:09:36.727+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1182",
@@ -5643,7 +6849,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T12:45:45.543+0000"
+      "lastUpdated": "2026-04-08T12:45:45.543+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1183",
@@ -5663,7 +6873,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T12:55:02.892+0000"
+      "lastUpdated": "2026-04-09T12:55:02.892+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1190",
@@ -5679,7 +6893,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-04T09:04:44.694+0000"
+      "lastUpdated": "2026-03-04T09:04:44.694+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1191",
@@ -5702,7 +6920,11 @@
       "issueCount": 21,
       "blockerCount": 8,
       "health": "RED",
-      "lastUpdated": "2026-04-08T15:30:02.676+0000"
+      "lastUpdated": "2026-04-08T15:30:02.676+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1192",
@@ -5720,7 +6942,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T10:53:39.657+0000"
+      "lastUpdated": "2026-04-09T10:53:39.657+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1195",
@@ -5738,7 +6964,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-02-06T04:28:01.443+0000"
+      "lastUpdated": "2026-02-06T04:28:01.443+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1196",
@@ -5757,7 +6987,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-01T06:02:30.566+0000"
+      "lastUpdated": "2026-04-01T06:02:30.566+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1197",
@@ -5773,7 +7007,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-02-10T10:10:34.960+0000"
+      "lastUpdated": "2026-02-10T10:10:34.960+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1199",
@@ -5793,7 +7031,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-23T00:14:07.552+0000"
+      "lastUpdated": "2026-03-23T00:14:07.552+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1201",
@@ -5815,7 +7057,11 @@
       "issueCount": 53,
       "blockerCount": 10,
       "health": "RED",
-      "lastUpdated": "2026-04-07T20:49:09.499+0000"
+      "lastUpdated": "2026-04-07T20:49:09.499+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1202",
@@ -5831,7 +7077,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-06T20:47:53.941+0000"
+      "lastUpdated": "2026-03-06T20:47:53.941+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1203",
@@ -5851,7 +7101,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T16:00:30.008+0000"
+      "lastUpdated": "2026-04-08T16:00:30.008+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1204",
@@ -5875,7 +7129,11 @@
       "issueCount": 63,
       "blockerCount": 4,
       "health": "RED",
-      "lastUpdated": "2026-04-08T15:30:02.892+0000"
+      "lastUpdated": "2026-04-08T15:30:02.892+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1208",
@@ -5899,7 +7157,11 @@
       "issueCount": 1,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-04-08T16:15:48.017+0000"
+      "lastUpdated": "2026-04-08T16:15:48.017+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1209",
@@ -5918,7 +7180,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-18T02:42:19.622+0000"
+      "lastUpdated": "2026-03-18T02:42:19.622+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1213",
@@ -5940,7 +7206,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T10:30:22.806+0000"
+      "lastUpdated": "2026-04-09T10:30:22.806+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1214",
@@ -5960,7 +7230,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T08:11:04.974+0000"
+      "lastUpdated": "2026-04-09T08:11:04.974+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1215",
@@ -5979,7 +7253,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-01T00:47:56.584+0000"
+      "lastUpdated": "2026-04-01T00:47:56.584+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1216",
@@ -6001,7 +7279,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T14:31:19.979+0000"
+      "lastUpdated": "2026-04-09T14:31:19.979+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1218",
@@ -6023,7 +7305,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-25T12:43:49.892+0000"
+      "lastUpdated": "2026-03-25T12:43:49.892+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1219",
@@ -6039,7 +7325,11 @@
       "issueCount": 17,
       "blockerCount": 6,
       "health": "RED",
-      "lastUpdated": "2026-03-30T07:44:56.536+0000"
+      "lastUpdated": "2026-03-30T07:44:56.536+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1220",
@@ -6055,7 +7345,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-02-17T07:16:14.602+0000"
+      "lastUpdated": "2026-02-17T07:16:14.602+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1222",
@@ -6074,7 +7368,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T12:02:46.503+0000"
+      "lastUpdated": "2026-04-09T12:02:46.503+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1226",
@@ -6090,7 +7388,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T17:34:55.673+0000"
+      "lastUpdated": "2026-04-09T17:34:55.673+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1228",
@@ -6111,7 +7413,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T20:42:03.313+0000"
+      "lastUpdated": "2026-04-09T20:42:03.313+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1230",
@@ -6131,7 +7437,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-02-27T08:37:12.140+0000"
+      "lastUpdated": "2026-02-27T08:37:12.140+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1231",
@@ -6151,7 +7461,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-10T03:09:58.877+0000"
+      "lastUpdated": "2026-04-10T03:09:58.877+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1232",
@@ -6169,7 +7483,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-10T03:09:47.068+0000"
+      "lastUpdated": "2026-04-10T03:09:47.068+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1235",
@@ -6191,7 +7509,11 @@
       "issueCount": 21,
       "blockerCount": 2,
       "health": "RED",
-      "lastUpdated": "2026-04-07T20:50:02.388+0000"
+      "lastUpdated": "2026-04-07T20:50:02.388+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1236",
@@ -6209,7 +7531,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T12:56:52.275+0000"
+      "lastUpdated": "2026-04-09T12:56:52.275+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1237",
@@ -6227,7 +7553,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T12:56:53.621+0000"
+      "lastUpdated": "2026-04-09T12:56:53.621+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1238",
@@ -6245,7 +7575,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T12:56:52.873+0000"
+      "lastUpdated": "2026-04-09T12:56:52.873+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1239",
@@ -6266,7 +7600,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T20:02:59.622+0000"
+      "lastUpdated": "2026-04-08T20:02:59.622+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1243",
@@ -6284,7 +7622,11 @@
       "issueCount": 3,
       "blockerCount": 1,
       "health": "RED",
-      "lastUpdated": "2026-04-09T16:09:19.995+0000"
+      "lastUpdated": "2026-04-09T16:09:19.995+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1244",
@@ -6302,7 +7644,11 @@
       "issueCount": 27,
       "blockerCount": 1,
       "health": "RED",
-      "lastUpdated": "2026-04-08T12:46:21.455+0000"
+      "lastUpdated": "2026-04-08T12:46:21.455+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1245",
@@ -6320,7 +7666,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T17:29:51.198+0000"
+      "lastUpdated": "2026-04-03T17:29:51.198+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1246",
@@ -6339,7 +7689,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T17:29:53.819+0000"
+      "lastUpdated": "2026-04-03T17:29:53.819+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1247",
@@ -6360,7 +7714,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-02-27T08:37:41.902+0000"
+      "lastUpdated": "2026-02-27T08:37:41.902+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1248",
@@ -6380,7 +7738,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T20:35:01.584+0000"
+      "lastUpdated": "2026-04-09T20:35:01.584+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1250",
@@ -6398,7 +7760,11 @@
       "issueCount": 1,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-04-09T11:38:07.740+0000"
+      "lastUpdated": "2026-04-09T11:38:07.740+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1251",
@@ -6416,7 +7782,11 @@
       "issueCount": 1,
       "blockerCount": 0,
       "health": "GREEN",
-      "lastUpdated": "2026-04-03T09:43:00.190+0000"
+      "lastUpdated": "2026-04-03T09:43:00.190+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1252",
@@ -6435,7 +7805,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-06T22:00:30.457+0000"
+      "lastUpdated": "2026-04-06T22:00:30.457+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1254",
@@ -6456,7 +7830,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-10T03:09:02.711+0000"
+      "lastUpdated": "2026-04-10T03:09:02.711+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1255",
@@ -6472,7 +7850,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-19T04:25:17.011+0000"
+      "lastUpdated": "2026-03-19T04:25:17.011+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1256",
@@ -6488,7 +7870,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-01T16:02:54.138+0000"
+      "lastUpdated": "2026-03-01T16:02:54.138+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1258",
@@ -6509,7 +7895,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-23T19:26:50.122+0000"
+      "lastUpdated": "2026-03-23T19:26:50.122+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1259",
@@ -6529,7 +7919,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T10:30:07.486+0000"
+      "lastUpdated": "2026-04-09T10:30:07.486+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1260",
@@ -6552,7 +7946,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-30T03:11:05.798+0000"
+      "lastUpdated": "2026-03-30T03:11:05.798+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1262",
@@ -6571,7 +7969,11 @@
       "issueCount": 13,
       "blockerCount": 1,
       "health": "RED",
-      "lastUpdated": "2026-04-03T13:45:06.783+0000"
+      "lastUpdated": "2026-04-03T13:45:06.783+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1265",
@@ -6587,7 +7989,11 @@
       "issueCount": 25,
       "blockerCount": 14,
       "health": "RED",
-      "lastUpdated": "2026-04-09T14:49:27.769+0000"
+      "lastUpdated": "2026-04-09T14:49:27.769+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1266",
@@ -6605,7 +8011,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-01T11:05:30.231+0000"
+      "lastUpdated": "2026-04-01T11:05:30.231+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1267",
@@ -6625,7 +8035,11 @@
       "issueCount": 12,
       "blockerCount": 1,
       "health": "RED",
-      "lastUpdated": "2026-03-25T18:06:01.027+0000"
+      "lastUpdated": "2026-03-25T18:06:01.027+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1275",
@@ -6646,7 +8060,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-05T03:14:08.942+0000"
+      "lastUpdated": "2026-03-05T03:14:08.942+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1276",
@@ -6668,7 +8086,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-20T18:45:57.566+0000"
+      "lastUpdated": "2026-03-20T18:45:57.566+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1277",
@@ -6690,7 +8112,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-20T18:46:13.738+0000"
+      "lastUpdated": "2026-03-20T18:46:13.738+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1278",
@@ -6706,7 +8132,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-05T09:49:44.496+0000"
+      "lastUpdated": "2026-03-05T09:49:44.496+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1280",
@@ -6725,7 +8155,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-06T00:06:10.293+0000"
+      "lastUpdated": "2026-03-06T00:06:10.293+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1281",
@@ -6741,7 +8175,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T01:46:05.138+0000"
+      "lastUpdated": "2026-04-08T01:46:05.138+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1282",
@@ -6760,7 +8198,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-30T11:14:59.589+0000"
+      "lastUpdated": "2026-03-30T11:14:59.589+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1283",
@@ -6776,7 +8218,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T20:06:52.626+0000"
+      "lastUpdated": "2026-04-08T20:06:52.626+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1284",
@@ -6796,7 +8242,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-31T04:14:48.089+0000"
+      "lastUpdated": "2026-03-31T04:14:48.089+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1285",
@@ -6816,7 +8266,11 @@
       "issueCount": 12,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T03:07:03.553+0000"
+      "lastUpdated": "2026-04-07T03:07:03.553+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1286",
@@ -6835,7 +8289,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T18:47:04.483+0000"
+      "lastUpdated": "2026-04-03T18:47:04.483+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1287",
@@ -6851,7 +8309,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-10T17:56:19.716+0000"
+      "lastUpdated": "2026-03-10T17:56:19.716+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1288",
@@ -6867,7 +8329,11 @@
       "issueCount": 25,
       "blockerCount": 1,
       "health": "RED",
-      "lastUpdated": "2026-04-03T16:23:24.972+0000"
+      "lastUpdated": "2026-04-03T16:23:24.972+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1290",
@@ -6888,7 +8354,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-06T16:01:32.551+0000"
+      "lastUpdated": "2026-04-06T16:01:32.551+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1291",
@@ -6904,7 +8374,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T17:35:00.743+0000"
+      "lastUpdated": "2026-04-09T17:35:00.743+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1295",
@@ -6923,7 +8397,11 @@
       "issueCount": 27,
       "blockerCount": 6,
       "health": "RED",
-      "lastUpdated": "2026-04-09T20:55:01.262+0000"
+      "lastUpdated": "2026-04-09T20:55:01.262+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1297",
@@ -6939,7 +8417,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T14:54:30.839+0000"
+      "lastUpdated": "2026-04-09T14:54:30.839+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1299",
@@ -6963,7 +8445,11 @@
       "issueCount": 6,
       "blockerCount": 6,
       "health": "RED",
-      "lastUpdated": "2026-04-09T03:10:39.498+0000"
+      "lastUpdated": "2026-04-09T03:10:39.498+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1301",
@@ -6979,7 +8465,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T09:09:56.573+0000"
+      "lastUpdated": "2026-04-09T09:09:56.573+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1302",
@@ -6997,7 +8487,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T12:56:52.679+0000"
+      "lastUpdated": "2026-04-09T12:56:52.679+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1306",
@@ -7020,7 +8514,11 @@
       "issueCount": 15,
       "blockerCount": 1,
       "health": "RED",
-      "lastUpdated": "2026-04-09T14:12:44.185+0000"
+      "lastUpdated": "2026-04-09T14:12:44.185+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1309",
@@ -7038,7 +8536,11 @@
       "issueCount": 23,
       "blockerCount": 1,
       "health": "RED",
-      "lastUpdated": "2026-04-03T14:36:31.215+0000"
+      "lastUpdated": "2026-04-03T14:36:31.215+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1311",
@@ -7056,7 +8558,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-02T19:39:32.459+0000"
+      "lastUpdated": "2026-04-02T19:39:32.459+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1314",
@@ -7074,7 +8580,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T14:06:33.173+0000"
+      "lastUpdated": "2026-04-08T14:06:33.173+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1315",
@@ -7093,7 +8603,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-23T21:23:31.569+0000"
+      "lastUpdated": "2026-03-23T21:23:31.569+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1316",
@@ -7112,7 +8626,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T21:28:16.230+0000"
+      "lastUpdated": "2026-04-03T21:28:16.230+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1318",
@@ -7128,7 +8646,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-18T02:22:10.891+0000"
+      "lastUpdated": "2026-03-18T02:22:10.891+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1319",
@@ -7144,7 +8666,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-18T02:23:09.136+0000"
+      "lastUpdated": "2026-03-18T02:23:09.136+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1320",
@@ -7163,7 +8689,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T12:47:50.769+0000"
+      "lastUpdated": "2026-04-09T12:47:50.769+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1321",
@@ -7182,7 +8712,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T20:39:38.763+0000"
+      "lastUpdated": "2026-04-09T20:39:38.763+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1322",
@@ -7200,7 +8734,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-20T13:22:24.153+0000"
+      "lastUpdated": "2026-03-20T13:22:24.153+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1326",
@@ -7220,7 +8758,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-18T15:35:40.687+0000"
+      "lastUpdated": "2026-03-18T15:35:40.687+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1328",
@@ -7241,7 +8783,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-19T21:34:19.408+0000"
+      "lastUpdated": "2026-03-19T21:34:19.408+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1340",
@@ -7257,7 +8803,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-19T03:58:29.791+0000"
+      "lastUpdated": "2026-03-19T03:58:29.791+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1341",
@@ -7273,7 +8823,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-19T04:09:05.224+0000"
+      "lastUpdated": "2026-03-19T04:09:05.224+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1342",
@@ -7296,7 +8850,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-05T11:37:37.742+0000"
+      "lastUpdated": "2026-04-05T11:37:37.742+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1358",
@@ -7316,7 +8874,11 @@
       "issueCount": 9,
       "blockerCount": 1,
       "health": "RED",
-      "lastUpdated": "2026-04-07T10:33:56.402+0000"
+      "lastUpdated": "2026-04-07T10:33:56.402+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1361",
@@ -7336,7 +8898,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T20:34:11.222+0000"
+      "lastUpdated": "2026-04-09T20:34:11.222+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1362",
@@ -7356,7 +8922,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T20:34:15.061+0000"
+      "lastUpdated": "2026-04-09T20:34:15.061+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1363",
@@ -7372,7 +8942,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-19T19:29:21.999+0000"
+      "lastUpdated": "2026-03-19T19:29:21.999+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1364",
@@ -7388,7 +8962,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T13:52:57.984+0000"
+      "lastUpdated": "2026-04-09T13:52:57.984+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1365",
@@ -7407,7 +8985,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T13:44:30.492+0000"
+      "lastUpdated": "2026-04-08T13:44:30.492+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1366",
@@ -7428,7 +9010,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-20T13:28:26.356+0000"
+      "lastUpdated": "2026-03-20T13:28:26.356+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1367",
@@ -7447,7 +9033,11 @@
       "issueCount": 3,
       "blockerCount": 0,
       "health": "GREEN",
-      "lastUpdated": "2026-04-03T09:29:47.951+0000"
+      "lastUpdated": "2026-04-03T09:29:47.951+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1368",
@@ -7466,7 +9056,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-23T00:22:41.501+0000"
+      "lastUpdated": "2026-03-23T00:22:41.501+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1369",
@@ -7484,7 +9078,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-22T15:55:17.222+0000"
+      "lastUpdated": "2026-03-22T15:55:17.222+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1370",
@@ -7502,7 +9100,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T16:17:34.230+0000"
+      "lastUpdated": "2026-04-03T16:17:34.230+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1371",
@@ -7520,7 +9122,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-22T15:55:22.740+0000"
+      "lastUpdated": "2026-03-22T15:55:22.740+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1372",
@@ -7539,7 +9145,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T16:21:28.484+0000"
+      "lastUpdated": "2026-04-03T16:21:28.484+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1373",
@@ -7559,7 +9169,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T03:10:33.628+0000"
+      "lastUpdated": "2026-04-09T03:10:33.628+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1374",
@@ -7579,7 +9193,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T12:36:12.396+0000"
+      "lastUpdated": "2026-04-09T12:36:12.396+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1375",
@@ -7598,7 +9216,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-06T03:13:35.320+0000"
+      "lastUpdated": "2026-04-06T03:13:35.320+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1376",
@@ -7618,7 +9240,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-06T15:47:02.915+0000"
+      "lastUpdated": "2026-04-06T15:47:02.915+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1377",
@@ -7638,7 +9264,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T08:09:06.071+0000"
+      "lastUpdated": "2026-04-07T08:09:06.071+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1378",
@@ -7658,7 +9288,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-26T13:29:38.282+0000"
+      "lastUpdated": "2026-03-26T13:29:38.282+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1379",
@@ -7676,7 +9310,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-23T18:56:19.635+0000"
+      "lastUpdated": "2026-03-23T18:56:19.635+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1381",
@@ -7696,7 +9334,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T15:59:03.155+0000"
+      "lastUpdated": "2026-04-08T15:59:03.155+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1383",
@@ -7716,7 +9358,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-23T14:32:42.164+0000"
+      "lastUpdated": "2026-03-23T14:32:42.164+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1384",
@@ -7737,7 +9383,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-01T19:33:38.698+0000"
+      "lastUpdated": "2026-04-01T19:33:38.698+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1385",
@@ -7753,7 +9403,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-23T14:20:02.363+0000"
+      "lastUpdated": "2026-03-23T14:20:02.363+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1386",
@@ -7769,7 +9423,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-23T16:01:52.357+0000"
+      "lastUpdated": "2026-03-23T16:01:52.357+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1388",
@@ -7787,7 +9445,11 @@
       "issueCount": 9,
       "blockerCount": 0,
       "health": "GREEN",
-      "lastUpdated": "2026-04-03T09:54:00.890+0000"
+      "lastUpdated": "2026-04-03T09:54:00.890+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1389",
@@ -7808,7 +9470,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T18:58:31.180+0000"
+      "lastUpdated": "2026-04-03T18:58:31.180+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1390",
@@ -7826,7 +9492,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-23T18:41:11.037+0000"
+      "lastUpdated": "2026-03-23T18:41:11.037+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1392",
@@ -7844,7 +9514,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-23T22:00:11.084+0000"
+      "lastUpdated": "2026-03-23T22:00:11.084+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1393",
@@ -7860,7 +9534,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T18:05:35.760+0000"
+      "lastUpdated": "2026-04-07T18:05:35.760+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1394",
@@ -7878,7 +9556,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-31T17:34:23.302+0000"
+      "lastUpdated": "2026-03-31T17:34:23.302+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1395",
@@ -7898,7 +9580,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T14:38:20.832+0000"
+      "lastUpdated": "2026-04-08T14:38:20.832+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1397",
@@ -7917,7 +9603,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T03:49:12.216+0000"
+      "lastUpdated": "2026-04-09T03:49:12.216+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1398",
@@ -7935,7 +9625,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-26T16:19:17.530+0000"
+      "lastUpdated": "2026-03-26T16:19:17.530+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1399",
@@ -7951,7 +9645,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-26T03:23:41.730+0000"
+      "lastUpdated": "2026-03-26T03:23:41.730+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1400",
@@ -7969,7 +9667,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-06T03:14:00.442+0000"
+      "lastUpdated": "2026-04-06T03:14:00.442+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1404",
@@ -7989,7 +9691,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T12:55:02.685+0000"
+      "lastUpdated": "2026-04-09T12:55:02.685+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1406",
@@ -8009,7 +9715,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-26T17:45:10.904+0000"
+      "lastUpdated": "2026-03-26T17:45:10.904+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1407",
@@ -8028,7 +9738,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-10T03:09:45.089+0000"
+      "lastUpdated": "2026-04-10T03:09:45.089+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1408",
@@ -8046,7 +9760,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-05T22:33:35.829+0000"
+      "lastUpdated": "2026-04-05T22:33:35.829+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1409",
@@ -8065,7 +9783,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-06T15:13:18.029+0000"
+      "lastUpdated": "2026-04-06T15:13:18.029+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1410",
@@ -8084,7 +9806,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T03:10:25.158+0000"
+      "lastUpdated": "2026-04-09T03:10:25.158+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1412",
@@ -8100,7 +9826,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-06T13:19:23.230+0000"
+      "lastUpdated": "2026-04-06T13:19:23.230+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1413",
@@ -8119,7 +9849,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T09:48:38.521+0000"
+      "lastUpdated": "2026-04-07T09:48:38.521+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1414",
@@ -8139,7 +9873,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-30T03:23:32.450+0000"
+      "lastUpdated": "2026-03-30T03:23:32.450+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1415",
@@ -8159,7 +9897,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-03-30T18:27:55.450+0000"
+      "lastUpdated": "2026-03-30T18:27:55.450+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1416",
@@ -8180,7 +9922,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T03:10:14.740+0000"
+      "lastUpdated": "2026-04-09T03:10:14.740+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1418",
@@ -8200,7 +9946,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T20:34:18.334+0000"
+      "lastUpdated": "2026-04-09T20:34:18.334+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1420",
@@ -8219,7 +9969,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-10T03:10:00.543+0000"
+      "lastUpdated": "2026-04-10T03:10:00.543+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1422",
@@ -8238,7 +9992,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-01T14:59:10.942+0000"
+      "lastUpdated": "2026-04-01T14:59:10.942+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1424",
@@ -8258,7 +10016,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-01T20:19:22.489+0000"
+      "lastUpdated": "2026-04-01T20:19:22.489+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1425",
@@ -8278,7 +10040,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-01T20:00:48.612+0000"
+      "lastUpdated": "2026-04-01T20:00:48.612+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1426",
@@ -8298,7 +10064,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-01T20:19:22.656+0000"
+      "lastUpdated": "2026-04-01T20:19:22.656+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1427",
@@ -8317,7 +10087,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-01T22:59:47.443+0000"
+      "lastUpdated": "2026-04-01T22:59:47.443+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1429",
@@ -8336,7 +10110,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-04T03:13:31.685+0000"
+      "lastUpdated": "2026-04-04T03:13:31.685+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1431",
@@ -8357,7 +10135,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T18:36:14.671+0000"
+      "lastUpdated": "2026-04-08T18:36:14.671+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1432",
@@ -8378,7 +10160,11 @@
       "issueCount": 26,
       "blockerCount": 5,
       "health": "RED",
-      "lastUpdated": "2026-04-03T20:55:36.473+0000"
+      "lastUpdated": "2026-04-03T20:55:36.473+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1433",
@@ -8398,7 +10184,11 @@
       "issueCount": 13,
       "blockerCount": 1,
       "health": "RED",
-      "lastUpdated": "2026-04-06T13:17:48.696+0000"
+      "lastUpdated": "2026-04-06T13:17:48.696+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1434",
@@ -8416,7 +10206,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-03T20:19:31.148+0000"
+      "lastUpdated": "2026-04-03T20:19:31.148+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1436",
@@ -8442,7 +10236,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T19:33:47.203+0000"
+      "lastUpdated": "2026-04-08T19:33:47.203+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1437",
@@ -8462,7 +10260,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-04T23:54:20.846+0000"
+      "lastUpdated": "2026-04-04T23:54:20.846+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1440",
@@ -8483,7 +10285,11 @@
       "issueCount": 1,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-04-09T00:31:09.743+0000"
+      "lastUpdated": "2026-04-09T00:31:09.743+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1441",
@@ -8501,7 +10307,11 @@
       "issueCount": 5,
       "blockerCount": 0,
       "health": "RED",
-      "lastUpdated": "2026-04-09T03:12:08.072+0000"
+      "lastUpdated": "2026-04-09T03:12:08.072+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1443",
@@ -8521,7 +10331,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T13:11:26.220+0000"
+      "lastUpdated": "2026-04-07T13:11:26.220+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1444",
@@ -8537,7 +10351,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-07T13:39:58.130+0000"
+      "lastUpdated": "2026-04-07T13:39:58.130+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1445",
@@ -8557,7 +10375,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T18:08:37.706+0000"
+      "lastUpdated": "2026-04-09T18:08:37.706+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1451",
@@ -8578,7 +10400,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T12:06:55.878+0000"
+      "lastUpdated": "2026-04-08T12:06:55.878+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1452",
@@ -8598,7 +10424,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T12:07:07.792+0000"
+      "lastUpdated": "2026-04-08T12:07:07.792+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1453",
@@ -8618,7 +10448,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T01:00:33.322+0000"
+      "lastUpdated": "2026-04-08T01:00:33.322+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1455",
@@ -8637,7 +10471,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T15:19:53.668+0000"
+      "lastUpdated": "2026-04-08T15:19:53.668+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1456",
@@ -8659,7 +10497,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T20:42:43.051+0000"
+      "lastUpdated": "2026-04-09T20:42:43.051+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1457",
@@ -8675,7 +10517,11 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-08T18:21:28.575+0000"
+      "lastUpdated": "2026-04-08T18:21:28.575+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
     },
     {
       "key": "TEST1-1461",
@@ -8695,7 +10541,92 @@
       "issueCount": 0,
       "blockerCount": 0,
       "health": "YELLOW",
-      "lastUpdated": "2026-04-09T16:55:39.299+0000"
+      "lastUpdated": "2026-04-09T16:55:39.299+0000",
+      "targetVersions": null,
+      "pm": null,
+      "architect": null,
+      "parentKey": null
+    },
+    {
+      "key": "TEST1-1057",
+      "summary": "Fix validation issue",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Undefined",
+      "assignee": "Onyx Cross",
+      "fixVersions": [
+        "RHAIIS-3.3"
+      ],
+      "labels": [
+        "Approved-RFE"
+      ],
+      "completionPct": 0,
+      "epicCount": 0,
+      "issueCount": 0,
+      "blockerCount": 0,
+      "health": "YELLOW",
+      "lastUpdated": "2026-04-07T08:08:32.401+0000",
+      "targetVersions": [
+        "rhoai-3.4"
+      ],
+      "pm": null,
+      "architect": null,
+      "parentKey": "TEST1-1016"
     }
-  ]
+  ],
+  "rfes": [
+    {
+      "key": "RHAIRFE-101",
+      "summary": "Support GPU sharing for inference workloads",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Major",
+      "assignee": "Alice Engineer",
+      "fixVersions": [],
+      "labels": [
+        "3.5-candidate"
+      ],
+      "lastUpdated": "2026-01-15T14:00:00.000+0000"
+    },
+    {
+      "key": "RHAIRFE-102",
+      "summary": "Add multi-model serving support",
+      "status": "In Progress",
+      "statusCategory": "In Progress",
+      "priority": "Critical",
+      "assignee": "Bob Builder",
+      "fixVersions": [],
+      "labels": [
+        "3.5-candidate"
+      ],
+      "lastUpdated": "2026-02-01T11:00:00.000+0000"
+    },
+    {
+      "key": "RHAIRFE-103",
+      "summary": "Improve notebook startup time",
+      "status": "New",
+      "statusCategory": "To Do",
+      "priority": "Normal",
+      "assignee": null,
+      "fixVersions": [],
+      "labels": [
+        "3.5-candidate"
+      ],
+      "lastUpdated": "2026-01-20T10:00:00.000+0000"
+    },
+    {
+      "key": "RHAIRFE-104",
+      "summary": "Approved RFE that should be excluded",
+      "status": "Approved",
+      "statusCategory": "Done",
+      "priority": "Major",
+      "assignee": null,
+      "fixVersions": [],
+      "labels": [
+        "3.5-candidate"
+      ],
+      "lastUpdated": "2025-12-01T10:00:00.000+0000"
+    }
+  ],
+  "rfeCount": 4
 }

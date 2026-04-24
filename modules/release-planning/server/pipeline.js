@@ -1,204 +1,238 @@
-const { TERMINAL_STATUSES, PRIORITY_ORDER, JIRA_BROWSE_URL, JIRA_THROTTLE_MS } = require('./constants')
+const { TERMINAL_STATUSES, PRIORITY_ORDER } = require('./constants')
 const {
-  fetchOutcomeFeatures,
-  fetchOutcomeRfes,
-  fetchOutcomeSummaries,
-  fetchTier2Features,
-  fetchTier2Rfes,
-  fetchTier3Features,
-  throttledSequential
-} = require('./jira-client')
+  loadIndex,
+  mapToCandidate,
+  findRfeFromLinks,
+  findTier1Features,
+  findTier1Rfes,
+  findOutcomeSummaries,
+  findTier2Features,
+  findTier2Rfes,
+  findTier3Features
+} = require('./cache-reader')
 
 function sortByPriority(a, b) {
-  const pa = PRIORITY_ORDER[a.priority] !== undefined ? PRIORITY_ORDER[a.priority] : 99
-  const pb = PRIORITY_ORDER[b.priority] !== undefined ? PRIORITY_ORDER[b.priority] : 99
+  var pa = PRIORITY_ORDER[a.priority] !== undefined ? PRIORITY_ORDER[a.priority] : 99
+  var pb = PRIORITY_ORDER[b.priority] !== undefined ? PRIORITY_ORDER[b.priority] : 99
   if (pa !== pb) return pa - pb
   return a.issueKey.localeCompare(b.issueKey)
 }
 
-async function runPipeline(config, bigRocks, release, fetchAllJqlResults, jiraRequest, opts) {
-  const rockFilter = opts && opts.rockFilter
+function runPipeline(config, bigRocks, release, readFromStorage, opts) {
+  var rockFilter = opts && opts.rockFilter
 
-  const rocksToProcess = rockFilter
-    ? bigRocks.filter(r => r.name === rockFilter)
+  var rocksToProcess = rockFilter
+    ? bigRocks.filter(function(r) { return r.name === rockFilter })
     : bigRocks
 
   if (rockFilter && rocksToProcess.length === 0) {
-    throw new Error(`No matching rock found for filter: ${rockFilter}. Available: ${bigRocks.map(r => r.name).join(', ')}`)
+    throw new Error('No matching rock found for filter: ' + rockFilter + '. Available: ' + bigRocks.map(function(r) { return r.name }).join(', '))
   }
 
-  const rocksWithOutcomes = rocksToProcess.filter(r => r.outcomeKeys && r.outcomeKeys.length > 0)
-  const rocksWithout = rocksToProcess.filter(r => !r.outcomeKeys || r.outcomeKeys.length === 0)
+  var rocksWithOutcomes = rocksToProcess.filter(function(r) { return r.outcomeKeys && r.outcomeKeys.length > 0 })
+  var rocksWithout = rocksToProcess.filter(function(r) { return !r.outcomeKeys || r.outcomeKeys.length === 0 })
 
-  for (const r of rocksWithout) {
-    console.warn(`[release-planning] Skipping ${r.name}: no outcomeKeys defined`)
+  for (var w = 0; w < rocksWithout.length; w++) {
+    console.warn('[release-planning] Skipping ' + rocksWithout[w].name + ': no outcomeKeys defined')
   }
 
-  const fieldMapping = config.fieldMapping || {}
-  const customFieldIds = config.customFieldIds || {}
+  // Load the feature-traffic index once
+  var index = loadIndex(readFromStorage)
 
-  // Fetch outcome summaries
-  const allOutcomeKeys = []
-  for (const rock of rocksWithOutcomes) {
-    allOutcomeKeys.push(...rock.outcomeKeys)
+  // Collect all outcome keys
+  var allOutcomeKeys = []
+  for (var r = 0; r < rocksWithOutcomes.length; r++) {
+    allOutcomeKeys.push.apply(allOutcomeKeys, rocksWithOutcomes[r].outcomeKeys)
   }
-  const outcomeSummaries = await fetchOutcomeSummaries(fetchAllJqlResults, jiraRequest, allOutcomeKeys)
+
+  // Fetch outcome summaries from cache
+  var outcomeSummaries = findOutcomeSummaries(index, allOutcomeKeys)
 
   // Phase A: Discover children for each rock's outcomes
-  // Maps: issueKey -> { candidate, rockSet: Set<[priority, name]> }
-  const featureMap = new Map()
-  const rfeMap = new Map()
-  let skippedCount = 0
-  let terminalFilteredCount = 0
+  // Maps: issueKey -> { candidate, rockSet: Set<"priority:name"> }
+  var featureMap = new Map()
+  var rfeMap = new Map()
+  var skippedCount = 0
+  var terminalFilteredCount = 0
 
-  await throttledSequential(rocksWithOutcomes, async function(rock) {
-    let rockChildCount = 0
+  for (var ri = 0; ri < rocksWithOutcomes.length; ri++) {
+    var rock = rocksWithOutcomes[ri]
+    var rockChildCount = 0
 
-    for (const outcomeKey of rock.outcomeKeys) {
-      const [features, rfes] = await Promise.all([
-        fetchOutcomeFeatures(
-          fetchAllJqlResults, jiraRequest, outcomeKey, rock.name,
-          fieldMapping, customFieldIds
-        ),
-        fetchOutcomeRfes(
-          fetchAllJqlResults, jiraRequest, outcomeKey, release, rock.name,
-          fieldMapping, customFieldIds
-        )
-      ])
+    // Find Tier 1 features for this rock's outcomes
+    var rawFeatures = findTier1Features(readFromStorage, index, rock.outcomeKeys)
+    for (var fi = 0; fi < rawFeatures.length; fi++) {
+      var feat = rawFeatures[fi]
+      var candidate = mapToCandidate(feat, rock.name, 'outcome')
 
-      for (const child of features) {
-        if (!child.targetRelease.includes(release)) {
-          skippedCount++
-          continue
-        }
-        if (TERMINAL_STATUSES.includes(child.status)) {
-          terminalFilteredCount++
-          continue
-        }
-        const key = child.issueKey
-        if (featureMap.has(key)) {
-          featureMap.get(key).rockSet.add(`${rock.priority}:${rock.name}`)
-        } else {
-          featureMap.set(key, { candidate: child, rockSet: new Set([`${rock.priority}:${rock.name}`]) })
-        }
-        rockChildCount++
+      // Filter by release match
+      if (!candidate.targetRelease.includes(release)) {
+        skippedCount++
+        continue
       }
 
-      for (const child of rfes) {
-        const key = child.issueKey
-        if (rfeMap.has(key)) {
-          rfeMap.get(key).rockSet.add(`${rock.priority}:${rock.name}`)
-        } else {
-          rfeMap.set(key, { candidate: child, rockSet: new Set([`${rock.priority}:${rock.name}`]) })
-        }
-        rockChildCount++
+      // Filter terminal statuses
+      if (TERMINAL_STATUSES.indexOf(candidate.status) !== -1) {
+        terminalFilteredCount++
+        continue
       }
 
-      // Throttle between outcome queries within a rock
-      if (rock.outcomeKeys.indexOf(outcomeKey) < rock.outcomeKeys.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, JIRA_THROTTLE_MS))
+      // Enrich with RFE link from issueLinks
+      var issueLinks = feat.issueLinks || feat._indexEntry && feat._indexEntry.issueLinks || []
+      var rfeLink = findRfeFromLinks(issueLinks)
+      if (rfeLink.key) {
+        candidate.rfe = rfeLink.key
+        candidate.rfeStatus = rfeLink.status
       }
+
+      var key = candidate.issueKey
+      if (featureMap.has(key)) {
+        featureMap.get(key).rockSet.add(rock.priority + ':' + rock.name)
+      } else {
+        featureMap.set(key, { candidate: candidate, rockSet: new Set([rock.priority + ':' + rock.name]) })
+      }
+      rockChildCount++
+    }
+
+    // Find Tier 1 RFEs for this rock's outcomes
+    var rawRfes = findTier1Rfes(readFromStorage, index, rock.outcomeKeys, release)
+    for (var rfi = 0; rfi < rawRfes.length; rfi++) {
+      var rfe = rawRfes[rfi]
+      var rfeCandidate = mapToCandidate(rfe, rock.name, 'outcome')
+
+      var rfeKey = rfeCandidate.issueKey
+      if (rfeMap.has(rfeKey)) {
+        rfeMap.get(rfeKey).rockSet.add(rock.priority + ':' + rock.name)
+      } else {
+        rfeMap.set(rfeKey, { candidate: rfeCandidate, rockSet: new Set([rock.priority + ':' + rock.name]) })
+      }
+      rockChildCount++
     }
 
     if (rockChildCount === 0 && rock.outcomeKeys.length > 0) {
-      console.warn(`[release-planning] Rock '${rock.name}' has outcomes ${rock.outcomeKeys.join(', ')} but zero qualifying children`)
+      console.warn('[release-planning] Rock \'' + rock.name + '\' has outcomes ' + rock.outcomeKeys.join(', ') + ' but zero qualifying children')
     }
-
-    return rockChildCount
-  })
+  }
 
   // Phase B: Merge Big Rock names and build Tier 1 lists
-  const rockPriority = {}
-  for (const rock of bigRocks) {
-    rockPriority[rock.name] = rock.priority
+  var rockPriority = {}
+  for (var bp = 0; bp < bigRocks.length; bp++) {
+    rockPriority[bigRocks[bp].name] = bigRocks[bp].priority
   }
 
   function mergeRockNames(rockSet) {
-    const pairs = [...rockSet].map(s => {
-      const idx = s.indexOf(':')
-      return [parseInt(s.slice(0, idx), 10), s.slice(idx + 1)]
+    var pairs = []
+    rockSet.forEach(function(s) {
+      var idx = s.indexOf(':')
+      pairs.push([parseInt(s.slice(0, idx), 10), s.slice(idx + 1)])
     })
-    pairs.sort((a, b) => a[0] - b[0])
-    return pairs.map(p => p[1]).join(', ')
+    pairs.sort(function(a, b) { return a[0] - b[0] })
+    return pairs.map(function(p) { return p[1] }).join(', ')
   }
 
-  const tier1Features = []
-  for (const [, entry] of featureMap) {
-    const merged = mergeRockNames(entry.rockSet)
-    tier1Features.push({ ...entry.candidate, bigRock: merged, tier: 1 })
-  }
+  var tier1Features = []
+  featureMap.forEach(function(entry) {
+    var merged = mergeRockNames(entry.rockSet)
+    tier1Features.push(Object.assign({}, entry.candidate, { bigRock: merged, tier: 1 }))
+  })
 
-  const tier1Rfes = []
-  for (const [, entry] of rfeMap) {
-    const merged = mergeRockNames(entry.rockSet)
-    tier1Rfes.push({ ...entry.candidate, bigRock: merged, tier: 1 })
-  }
+  var tier1Rfes = []
+  rfeMap.forEach(function(entry) {
+    var merged = mergeRockNames(entry.rockSet)
+    tier1Rfes.push(Object.assign({}, entry.candidate, { bigRock: merged, tier: 1 }))
+  })
 
   // Sort Tier 1
   tier1Features.sort(function(a, b) {
-    const ra = rockPriority[a.bigRock.split(', ')[0]] || 999
-    const rb = rockPriority[b.bigRock.split(', ')[0]] || 999
+    var ra = rockPriority[a.bigRock.split(', ')[0]] || 999
+    var rb = rockPriority[b.bigRock.split(', ')[0]] || 999
     if (ra !== rb) return ra - rb
     return sortByPriority(a, b)
   })
   tier1Rfes.sort(function(a, b) {
-    const ra = rockPriority[a.bigRock.split(', ')[0]] || 999
-    const rb = rockPriority[b.bigRock.split(', ')[0]] || 999
+    var ra = rockPriority[a.bigRock.split(', ')[0]] || 999
+    var rb = rockPriority[b.bigRock.split(', ')[0]] || 999
     if (ra !== rb) return ra - rb
     return sortByPriority(a, b)
   })
 
   // Phase C: Tier 2 discovery
-  const tier1FeatureKeys = new Set(tier1Features.map(c => c.issueKey))
-  const tier1RfeKeys = new Set(tier1Rfes.map(c => c.issueKey))
+  var tier1FeatureKeys = new Set(tier1Features.map(function(c) { return c.issueKey }))
+  var tier1RfeKeys = new Set(tier1Rfes.map(function(c) { return c.issueKey }))
 
-  const [rawTier2Features, tier2Rfes] = await Promise.all([
-    fetchTier2Features(fetchAllJqlResults, jiraRequest, release, tier1FeatureKeys, fieldMapping, customFieldIds),
-    fetchTier2Rfes(fetchAllJqlResults, jiraRequest, release, tier1RfeKeys, fieldMapping, customFieldIds)
-  ])
+  var rawTier2Features = findTier2Features(readFromStorage, index, release, tier1FeatureKeys)
+  var rawTier2Rfes = findTier2Rfes(readFromStorage, index, release, tier1RfeKeys)
 
   // Post-filter terminal statuses on Tier 2 features
-  const tier2Features = []
-  for (const c of rawTier2Features) {
-    if (TERMINAL_STATUSES.includes(c.status)) {
+  var tier2Features = []
+  for (var t2i = 0; t2i < rawTier2Features.length; t2i++) {
+    var t2f = rawTier2Features[t2i]
+    var t2candidate = mapToCandidate(t2f, '', 'tier2')
+
+    if (TERMINAL_STATUSES.indexOf(t2candidate.status) !== -1) {
       terminalFilteredCount++
       continue
     }
-    tier2Features.push({ ...c, tier: 2 })
+
+    // Enrich with RFE link
+    var t2links = t2f.issueLinks || []
+    var t2rfeLink = findRfeFromLinks(t2links)
+    if (t2rfeLink.key) {
+      t2candidate.rfe = t2rfeLink.key
+      t2candidate.rfeStatus = t2rfeLink.status
+    }
+
+    tier2Features.push(Object.assign({}, t2candidate, { tier: 2 }))
   }
   tier2Features.sort(sortByPriority)
 
-  const tier2RfesTagged = tier2Rfes.map(c => ({ ...c, tier: 2 }))
+  var tier2RfesTagged = rawTier2Rfes.map(function(rfe) {
+    return Object.assign({}, mapToCandidate(rfe, '', 'tier2'), { tier: 2 })
+  })
   tier2RfesTagged.sort(sortByPriority)
 
   // Phase D: Tier 3 discovery
-  const tier2FeatureKeys = new Set(tier2Features.map(c => c.issueKey))
-  const tier3Exclude = new Set([...tier1FeatureKeys, ...tier2FeatureKeys])
+  var tier2FeatureKeys = new Set(tier2Features.map(function(c) { return c.issueKey }))
+  var tier3Exclude = new Set()
+  tier1FeatureKeys.forEach(function(k) { tier3Exclude.add(k) })
+  tier2FeatureKeys.forEach(function(k) { tier3Exclude.add(k) })
 
-  const rawTier3Features = await fetchTier3Features(
-    fetchAllJqlResults, jiraRequest, tier3Exclude, fieldMapping, customFieldIds
-  )
+  var rawTier3Features = findTier3Features(readFromStorage, index, tier3Exclude)
 
-  const tier3Features = []
-  for (const c of rawTier3Features) {
-    if (TERMINAL_STATUSES.includes(c.status)) {
+  var tier3Features = []
+  for (var t3i = 0; t3i < rawTier3Features.length; t3i++) {
+    var t3f = rawTier3Features[t3i]
+    var t3candidate = mapToCandidate(t3f, '', 'tier3')
+
+    if (TERMINAL_STATUSES.indexOf(t3candidate.status) !== -1) {
       terminalFilteredCount++
       continue
     }
-    if (c.targetRelease || c.fixVersion) continue
-    tier3Features.push({ ...c, tier: 3 })
+
+    if (t3candidate.targetRelease || t3candidate.fixVersion) continue
+
+    // Enrich with RFE link
+    var t3links = t3f.issueLinks || []
+    var t3rfeLink = findRfeFromLinks(t3links)
+    if (t3rfeLink.key) {
+      t3candidate.rfe = t3rfeLink.key
+      t3candidate.rfeStatus = t3rfeLink.status
+    }
+
+    tier3Features.push(Object.assign({}, t3candidate, { tier: 3 }))
   }
   tier3Features.sort(sortByPriority)
 
-  const allFeatures = [...tier1Features, ...tier2Features, ...tier3Features]
-  const allRfes = [...tier1Rfes, ...tier2RfesTagged]
+  var allFeatures = tier1Features.concat(tier2Features, tier3Features)
+  var allRfes = tier1Rfes.concat(tier2RfesTagged)
 
   // Per-rock stats
-  const perRockStats = {}
-  for (const rock of rocksWithOutcomes) {
-    const features = tier1Features.filter(c => c.bigRock.split(', ')[0] === rock.name).length
-    const rfes = tier1Rfes.filter(c => c.bigRock.split(', ')[0] === rock.name).length
-    perRockStats[rock.name] = { features, rfes }
+  var perRockStats = {}
+  for (var si = 0; si < rocksWithOutcomes.length; si++) {
+    var statRock = rocksWithOutcomes[si]
+    var rockFeatures = tier1Features.filter(function(c) { return c.bigRock.split(', ')[0] === statRock.name }).length
+    var rockRfes = tier1Rfes.filter(function(c) { return c.bigRock.split(', ')[0] === statRock.name }).length
+    perRockStats[statRock.name] = { features: rockFeatures, rfes: rockRfes }
   }
 
   return {
@@ -209,70 +243,76 @@ async function runPipeline(config, bigRocks, release, fetchAllJqlResults, jiraRe
     tier2Features: tier2Features.length,
     tier2Rfes: tier2RfesTagged.length,
     tier3Features: tier3Features.length,
-    perRockStats,
-    outcomeSummaries,
-    release,
-    skippedCount,
-    terminalFilteredCount,
-    rocksWithoutOutcomes: rocksWithout.map(r => r.name)
+    perRockStats: perRockStats,
+    outcomeSummaries: outcomeSummaries,
+    release: release,
+    skippedCount: skippedCount,
+    terminalFilteredCount: terminalFilteredCount,
+    rocksWithoutOutcomes: rocksWithout.map(function(r) { return r.name })
   }
 }
 
 function buildCandidateResponse(pipelineResult, version, bigRocks, demoMode) {
-  const { features, rfes, outcomeSummaries, perRockStats } = pipelineResult
+  var features = pipelineResult.features
+  var rfes = pipelineResult.rfes
+  var outcomeSummaries = pipelineResult.outcomeSummaries
+  var perRockStats = pipelineResult.perRockStats
 
-  const allStatuses = new Set()
-  const allTeams = new Set()
-  const allPriorities = new Set()
-  const allPillars = new Set()
+  var allStatuses = new Set()
+  var allTeams = new Set()
+  var allPriorities = new Set()
+  var allPillars = new Set()
 
-  for (const f of features) {
-    if (f.status) allStatuses.add(f.status)
-    if (f.components) allTeams.add(f.components)
-    if (f.priority) allPriorities.add(f.priority)
+  for (var fi = 0; fi < features.length; fi++) {
+    if (features[fi].status) allStatuses.add(features[fi].status)
+    if (features[fi].components) allTeams.add(features[fi].components)
+    if (features[fi].priority) allPriorities.add(features[fi].priority)
   }
-  for (const r of rfes) {
-    if (r.status) allStatuses.add(r.status)
-    if (r.priority) allPriorities.add(r.priority)
+  for (var ri = 0; ri < rfes.length; ri++) {
+    if (rfes[ri].status) allStatuses.add(rfes[ri].status)
+    if (rfes[ri].priority) allPriorities.add(rfes[ri].priority)
   }
-  for (const rock of bigRocks) {
-    if (rock.pillar) allPillars.add(rock.pillar)
+  for (var bi = 0; bi < bigRocks.length; bi++) {
+    if (bigRocks[bi].pillar) allPillars.add(bigRocks[bi].pillar)
   }
 
-  const rockSummaries = bigRocks.map(rock => ({
-    priority: rock.priority,
-    name: rock.name,
-    fullName: rock.fullName,
-    pillar: rock.pillar,
-    state: rock.state,
-    owner: rock.owner,
-    architect: rock.architect,
-    outcomeKeys: rock.outcomeKeys,
-    outcomeDescriptions: {},
-    featureCount: (perRockStats[rock.name] || {}).features || 0,
-    rfeCount: (perRockStats[rock.name] || {}).rfes || 0,
-    notes: rock.notes || ''
-  }))
+  var rockSummaries = bigRocks.map(function(rock) {
+    return {
+      priority: rock.priority,
+      name: rock.name,
+      fullName: rock.fullName,
+      pillar: rock.pillar,
+      state: rock.state,
+      owner: rock.owner,
+      outcomeKeys: rock.outcomeKeys,
+      outcomeDescriptions: {},
+      featureCount: (perRockStats[rock.name] || {}).features || 0,
+      rfeCount: (perRockStats[rock.name] || {}).rfes || 0,
+      notes: rock.notes || ''
+    }
+  })
 
   // Fill in outcome descriptions
-  for (const rock of rockSummaries) {
-    for (const key of rock.outcomeKeys) {
-      if (outcomeSummaries[key]) {
-        rock.outcomeDescriptions[key] = outcomeSummaries[key]
+  for (var si = 0; si < rockSummaries.length; si++) {
+    var rockSum = rockSummaries[si]
+    for (var ki = 0; ki < rockSum.outcomeKeys.length; ki++) {
+      var oKey = rockSum.outcomeKeys[ki]
+      if (outcomeSummaries[oKey]) {
+        rockSum.outcomeDescriptions[oKey] = outcomeSummaries[oKey]
       }
     }
   }
 
   return {
-    version,
-    jiraBaseUrl: JIRA_BROWSE_URL,
+    version: version,
+    jiraBaseUrl: require('./constants').JIRA_BROWSE_URL,
     lastRefreshed: new Date().toISOString(),
     demoMode: !!demoMode,
     summary: {
       totalFeatures: features.length,
       totalRfes: rfes.length,
       totalBigRocks: bigRocks.length,
-      rocksWithData: Object.values(perRockStats).filter(s => s.features > 0 || s.rfes > 0).length,
+      rocksWithData: Object.values(perRockStats).filter(function(s) { return s.features > 0 || s.rfes > 0 }).length,
       tier1: {
         features: pipelineResult.tier1Features,
         rfes: pipelineResult.tier1Rfes,
@@ -291,22 +331,20 @@ function buildCandidateResponse(pipelineResult, version, bigRocks, demoMode) {
       perRock: perRockStats
     },
     bigRocks: rockSummaries,
-    features: features.map(f => ({
-      ...f,
-      tier: f.tier || 1
-    })),
-    rfes: rfes.map(r => ({
-      ...r,
-      tier: r.tier || 1
-    })),
+    features: features.map(function(f) {
+      return Object.assign({}, f, { tier: f.tier || 1 })
+    }),
+    rfes: rfes.map(function(r) {
+      return Object.assign({}, r, { tier: r.tier || 1 })
+    }),
     filterOptions: {
-      pillars: [...allPillars].sort(),
-      rocks: bigRocks.map(r => r.name),
-      statuses: [...allStatuses].sort(),
-      teams: [...allTeams].sort(),
-      priorities: [...allPriorities].sort()
+      pillars: Array.from(allPillars).sort(),
+      rocks: bigRocks.map(function(r) { return r.name }),
+      statuses: Array.from(allStatuses).sort(),
+      teams: Array.from(allTeams).sort(),
+      priorities: Array.from(allPriorities).sort()
     }
   }
 }
 
-module.exports = { runPipeline, buildCandidateResponse }
+module.exports = { runPipeline: runPipeline, buildCandidateResponse: buildCandidateResponse }

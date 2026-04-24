@@ -1,8 +1,8 @@
 {
   "key": "TEST1-1059",
   "summary": "Add logging for debugging",
-  "status": "New",
-  "statusCategory": "To Do",
+  "status": "Review",
+  "statusCategory": "In Progress",
   "priority": "Undefined",
   "assignee": {
     "displayName": "Gray Knox",
@@ -29,6 +29,10 @@
       "linkedStatus": "Approved"
     }
   ],
+  "targetVersions": ["rhoai-3.5"],
+  "pm": null,
+  "architect": null,
+  "parentKey": null,
   "epics": [],
   "metrics": {
     "totalEpics": 0,

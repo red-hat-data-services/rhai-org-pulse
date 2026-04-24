@@ -64,6 +64,10 @@
       "linkedStatus": "New"
     }
   ],
+  "targetVersions": null,
+  "pm": null,
+  "architect": null,
+  "parentKey": null,
   "epics": [
     {
       "key": "TEST2-42310",

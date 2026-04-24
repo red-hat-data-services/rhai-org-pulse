@@ -1,0 +1,17 @@
+{
+  "key": "RHAIRFE-101",
+  "summary": "Support GPU sharing for inference workloads",
+  "status": "New",
+  "statusCategory": "To Do",
+  "priority": "Major",
+  "assignee": {"displayName": "Alice Engineer", "accountId": "abc123"},
+  "fixVersions": [],
+  "labels": ["3.5-candidate"],
+  "components": ["Serving"],
+  "created": "2025-10-01T10:00:00.000+0000",
+  "updated": "2026-01-15T14:00:00.000+0000",
+  "description": null,
+  "issueLinks": [
+    {"type": "Dependency", "direction": "inward", "linkedKey": "TEST1-1016", "linkedSummary": "Outcome 1", "linkedStatus": "In Progress"}
+  ]
+}

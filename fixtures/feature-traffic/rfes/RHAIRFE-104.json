@@ -1,0 +1,17 @@
+{
+  "key": "RHAIRFE-104",
+  "summary": "Approved RFE that should be excluded",
+  "status": "Approved",
+  "statusCategory": "Done",
+  "priority": "Major",
+  "assignee": null,
+  "fixVersions": [],
+  "labels": ["3.5-candidate"],
+  "components": ["Platform"],
+  "created": "2025-08-01T08:00:00.000+0000",
+  "updated": "2025-12-01T10:00:00.000+0000",
+  "description": null,
+  "issueLinks": [
+    {"type": "Dependency", "direction": "inward", "linkedKey": "TEST1-1016", "linkedSummary": "Outcome 1", "linkedStatus": "In Progress"}
+  ]
+}

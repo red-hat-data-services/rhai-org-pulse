@@ -1,0 +1,17 @@
+{
+  "key": "RHAIRFE-102",
+  "summary": "Add multi-model serving support",
+  "status": "In Progress",
+  "statusCategory": "In Progress",
+  "priority": "Critical",
+  "assignee": {"displayName": "Bob Builder", "accountId": "def456"},
+  "fixVersions": [],
+  "labels": ["3.5-candidate"],
+  "components": ["Platform"],
+  "created": "2025-09-15T09:00:00.000+0000",
+  "updated": "2026-02-01T11:00:00.000+0000",
+  "description": null,
+  "issueLinks": [
+    {"type": "Dependency", "direction": "inward", "linkedKey": "TEST1-1045", "linkedSummary": "Outcome 2", "linkedStatus": "New"}
+  ]
+}

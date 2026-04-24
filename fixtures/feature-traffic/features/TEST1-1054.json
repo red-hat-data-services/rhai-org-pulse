@@ -1,16 +1,14 @@
 {
   "key": "TEST1-1054",
   "summary": "Update dependencies",
-  "status": "Review",
+  "status": "In Progress",
   "statusCategory": "In Progress",
   "priority": "Critical",
   "assignee": {
     "displayName": "Gray Jay",
     "accountId": "712020:b52b1774-aa43-43a2-84eb-9d72df202a7d"
   },
-  "fixVersions": [
-    "rhoai-3.4"
-  ],
+  "fixVersions": [],
   "labels": [
     "3.4-candidate",
     "3.4-committed",
@@ -108,6 +106,10 @@
       "linkedStatus": "Backlog"
     }
   ],
+  "targetVersions": null,
+  "pm": null,
+  "architect": null,
+  "parentKey": null,
   "epics": [],
   "metrics": {
     "totalEpics": 0,

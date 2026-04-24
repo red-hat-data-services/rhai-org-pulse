@@ -1,6 +1,6 @@
-const { jiraRequest, fetchAllJqlResults } = require('../../../shared/server/jira')
 const { getConfig, loadBigRocks, getConfiguredReleases, saveBigRock, deleteBigRock, reorderBigRocks, createRelease, cloneRelease, deleteRelease } = require('./config')
 const { runPipeline, buildCandidateResponse } = require('./pipeline')
+const { loadIndex, validateKeysFromCache } = require('./cache-reader')
 const { CACHE_MAX_AGE_MS } = require('./constants')
 const { withConfigLock } = require('./config-lock')
 const { backupConfig } = require('./config-backup')
@@ -74,7 +74,7 @@ module.exports = function registerRoutes(router, context) {
       return
     }
 
-    runPipeline(config, bigRocks, version, fetchAllJqlResults, jiraRequest)
+    Promise.resolve(runPipeline(config, bigRocks, version, readFromStorage))
       .then(function(result) {
         const response = buildCandidateResponse(result, version, bigRocks, false)
         writeToStorage(`${DATA_PREFIX}/candidates-cache-${version}.json`, {
@@ -450,7 +450,7 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── POST /jira/validate-keys ───
 
-  router.post('/jira/validate-keys', requirePM, async function(req, res) {
+  router.post('/jira/validate-keys', requirePM, function(req, res) {
     const keys = req.body && req.body.keys
     if (!Array.isArray(keys) || keys.length === 0) {
       return res.status(400).json({ error: 'keys must be a non-empty array' })
@@ -460,44 +460,21 @@ module.exports = function registerRoutes(router, context) {
     }
 
     const results = {}
-    const keysToFetch = keys.filter(function(k) {
-      return typeof k === 'string' && /^[A-Z]+-\d+$/.test(k)
-    })
+    const keysToValidate = []
 
     // Mark invalid-format keys immediately
     for (var i = 0; i < keys.length; i++) {
       if (typeof keys[i] !== 'string' || !/^[A-Z]+-\d+$/.test(keys[i])) {
         results[keys[i]] = { valid: false, error: 'Invalid key format' }
+      } else {
+        keysToValidate.push(keys[i])
       }
     }
 
-    if (keysToFetch.length > 0) {
-      try {
-        const keysStr = keysToFetch.join(', ')
-        const jql = 'key in (' + keysStr + ')'
-        const rawIssues = await fetchAllJqlResults(jiraRequest, jql, 'summary', { maxResults: 100 })
-
-        const foundKeys = {}
-        for (var j = 0; j < rawIssues.length; j++) {
-          foundKeys[rawIssues[j].key] = (rawIssues[j].fields || {}).summary || ''
-        }
-
-        for (var k = 0; k < keysToFetch.length; k++) {
-          var key = keysToFetch[k]
-          if (foundKeys[key] !== undefined) {
-            results[key] = { valid: true, summary: foundKeys[key] }
-          } else {
-            results[key] = { valid: false, error: 'Issue not found' }
-          }
-        }
-      } catch (err) {
-        console.error('[release-planning] Jira key validation failed:', err.message)
-        for (var m = 0; m < keysToFetch.length; m++) {
-          if (!results[keysToFetch[m]]) {
-            results[keysToFetch[m]] = { valid: false, error: 'Jira unavailable' }
-          }
-        }
-      }
+    if (keysToValidate.length > 0) {
+      var index = loadIndex(readFromStorage)
+      var cacheResults = validateKeysFromCache(index, keysToValidate)
+      Object.assign(results, cacheResults)
     }
 
     res.json({ results: results })

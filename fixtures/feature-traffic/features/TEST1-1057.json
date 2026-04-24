@@ -36,6 +36,10 @@
       "linkedStatus": "Closed"
     }
   ],
+  "targetVersions": ["rhoai-3.4"],
+  "pm": null,
+  "architect": null,
+  "parentKey": "TEST1-1016",
   "epics": [],
   "metrics": {
     "totalEpics": 0,

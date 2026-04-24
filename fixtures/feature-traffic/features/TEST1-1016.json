@@ -69,6 +69,10 @@
       "linkedStatus": "Closed"
     }
   ],
+  "targetVersions": null,
+  "pm": null,
+  "architect": null,
+  "parentKey": null,
   "epics": [],
   "metrics": {
     "totalEpics": 0,
