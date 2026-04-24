@@ -5,7 +5,7 @@ export function useFilters(features, rfes, bigRocks) {
   const selectedRock = ref('')
   const selectedStatus = ref('')
   const selectedPriority = ref('')
-  const selectedTeam = ref('')
+  const selectedTeams = ref([])
   const searchQuery = ref('')
 
   function matchesFilters(item) {
@@ -22,7 +22,16 @@ export function useFilters(features, rfes, bigRocks) {
 
     if (selectedStatus.value && item.status !== selectedStatus.value) return false
     if (selectedPriority.value && item.priority !== selectedPriority.value) return false
-    if (selectedTeam.value && item.components !== selectedTeam.value) return false
+
+    if (selectedTeams.value.length > 0) {
+      var itemComponents = item.components
+        ? item.components.split(', ').map(function(c) { return c.trim() })
+        : []
+      var hasMatch = selectedTeams.value.some(function(team) {
+        return itemComponents.includes(team)
+      })
+      if (!hasMatch) return false
+    }
 
     if (selectedRock.value) {
       const rocks = (item.bigRock || '').split(', ')
@@ -56,7 +65,7 @@ export function useFilters(features, rfes, bigRocks) {
 
   const hasActiveFilters = computed(() => {
     return !!(selectedPillar.value || selectedRock.value || selectedStatus.value ||
-      selectedPriority.value || selectedTeam.value || searchQuery.value)
+      selectedPriority.value || selectedTeams.value.length > 0 || searchQuery.value)
   })
 
   function clearFilters() {
@@ -64,7 +73,7 @@ export function useFilters(features, rfes, bigRocks) {
     selectedRock.value = ''
     selectedStatus.value = ''
     selectedPriority.value = ''
-    selectedTeam.value = ''
+    selectedTeams.value = []
     searchQuery.value = ''
   }
 
@@ -73,7 +82,7 @@ export function useFilters(features, rfes, bigRocks) {
     selectedRock,
     selectedStatus,
     selectedPriority,
-    selectedTeam,
+    selectedTeams,
     searchQuery,
     filteredFeatures,
     filteredRfes,

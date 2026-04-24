@@ -8,7 +8,7 @@ var props = defineProps({
 
 var moduleNav = inject('moduleNav')
 var { entries, loading, loadAuditLog } = useAuditLog()
-var collapsed = ref(false)
+var collapsed = ref(true)
 
 var ACTION_META = {
   create_rock: { icon: 'plus', label: 'Created', color: 'text-green-600 dark:text-green-400' },

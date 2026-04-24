@@ -2,6 +2,7 @@
 import StatusBadge from './StatusBadge.vue'
 import TierSeparator from './TierSeparator.vue'
 import { computed } from 'vue'
+import { PRIORITY_STYLES } from '../constants'
 
 const props = defineProps({
   features: { type: Array, default: () => [] },
@@ -10,15 +11,7 @@ const props = defineProps({
   summary: { type: Object, default: null }
 })
 
-const PRIORITY_STYLES = {
-  'Blocker': 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400',
-  'Critical': 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-400',
-  'Major': 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-400',
-  'Normal': 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400',
-  'Minor': 'bg-gray-100 dark:bg-gray-500/20 text-gray-600 dark:text-gray-400'
-}
-
-const COL_COUNT = 12
+const COL_COUNT = 11
 
 const tierCounts = computed(() => {
   const counts = {}
@@ -60,7 +53,6 @@ const groupedFeatures = computed(() => {
             <th class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Title</th>
             <th class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Components</th>
             <th class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Target Release</th>
-            <th class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">PM</th>
             <th class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Delivery Owner</th>
             <th class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">RFE</th>
             <th class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Fix Version</th>
@@ -95,11 +87,21 @@ const groupedFeatures = computed(() => {
                   :class="PRIORITY_STYLES[item.data.priority] || PRIORITY_STYLES['Normal']"
                 >{{ item.data.priority }}</span>
               </td>
-              <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600">{{ item.data.phase || '-' }}</td>
+              <td class="px-3 py-2 border border-gray-300 dark:border-gray-600">
+                <span
+                  v-if="item.data.phase"
+                  class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold"
+                  :class="{
+                    'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400': item.data.phase === 'TP',
+                    'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400': item.data.phase === 'DP',
+                    'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400': item.data.phase === 'GA'
+                  }"
+                >{{ item.data.phase }}</span>
+                <span v-else class="text-gray-400 dark:text-gray-600 text-xs">-</span>
+              </td>
               <td class="px-3 py-2 text-gray-900 dark:text-gray-100 max-w-xs truncate border border-gray-300 dark:border-gray-600">{{ item.data.summary }}</td>
               <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600">{{ item.data.components }}</td>
               <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600">{{ item.data.targetRelease }}</td>
-              <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600">{{ item.data.pm }}</td>
               <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600">{{ item.data.deliveryOwner || '-' }}</td>
               <td class="px-3 py-2 border border-gray-300 dark:border-gray-600">
                 <a

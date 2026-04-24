@@ -8,7 +8,7 @@
 function createRequirePM(readFromStorage) {
   function isPM(email) {
     var pmList = readFromStorage('release-planning/pm-users.json')
-    return pmList && pmList.emails && pmList.emails.includes(email)
+    return pmList && pmList.emails && pmList.emails.includes(email.toLowerCase())
   }
 
   return function requirePM(req, res, next) {
@@ -44,7 +44,7 @@ function removePMUser(readFromStorage, writeToStorage, email) {
 
 function isPM(email, readFromStorage) {
   var pmList = readFromStorage('release-planning/pm-users.json')
-  return !!(pmList && pmList.emails && pmList.emails.includes(email))
+  return !!(pmList && pmList.emails && pmList.emails.includes(email.toLowerCase()))
 }
 
 module.exports = { createRequirePM, getPMUsers, addPMUser, removePMUser, isPM }

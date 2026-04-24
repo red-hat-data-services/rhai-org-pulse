@@ -265,7 +265,13 @@ function buildCandidateResponse(pipelineResult, version, bigRocks, demoMode) {
 
   for (var fi = 0; fi < features.length; fi++) {
     if (features[fi].status) allStatuses.add(features[fi].status)
-    if (features[fi].components) allTeams.add(features[fi].components)
+    if (features[fi].components) {
+      var parts = features[fi].components.split(', ')
+      for (var pi = 0; pi < parts.length; pi++) {
+        var trimmed = parts[pi].trim()
+        if (trimmed) allTeams.add(trimmed)
+      }
+    }
     if (features[fi].priority) allPriorities.add(features[fi].priority)
   }
   for (var ri = 0; ri < rfes.length; ri++) {

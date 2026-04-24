@@ -128,7 +128,6 @@ module.exports = function registerRoutes(router, context) {
       return res.status(400).json({ error: 'Invalid version format' })
     }
     const rockFilter = req.query.rockFilter || null
-    const forceRefresh = req.query.refresh === 'true'
 
     if (DEMO_MODE) {
       const demoData = loadFixture('candidates-cache-demo.json')
@@ -157,7 +156,7 @@ module.exports = function registerRoutes(router, context) {
       const age = Date.now() - new Date(cached.cachedAt).getTime()
       const isStale = age >= CACHE_MAX_AGE_MS
 
-      if (isStale || forceRefresh) {
+      if (isStale) {
         triggerBackgroundRefresh(version)
       }
 
@@ -176,7 +175,7 @@ module.exports = function registerRoutes(router, context) {
 
       return res.json({
         ...data,
-        _cacheStale: isStale || forceRefresh,
+        _cacheStale: isStale,
         _refreshing: refreshState.running
       })
     }

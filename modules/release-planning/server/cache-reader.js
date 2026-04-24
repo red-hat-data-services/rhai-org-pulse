@@ -57,6 +57,36 @@ function getComponents(item) {
   return []
 }
 
+// ─── Phase Extraction ───
+
+var RELEASE_TYPE_MAP = {
+  'Tech Preview': 'TP',
+  'Developer Preview': 'DP',
+  'General Availability': 'GA',
+  'TP': 'TP',
+  'DP': 'DP',
+  'GA': 'GA'
+}
+
+function getPhase(item, fixVersions) {
+  // Prefer explicit releaseType field from Jira (customfield_10851)
+  if (item.releaseType) {
+    var mapped = RELEASE_TYPE_MAP[item.releaseType]
+    if (mapped) return mapped
+  }
+  // Fall back to deriving from fixVersions
+  for (var i = 0; i < fixVersions.length; i++) {
+    var v = fixVersions[i].toUpperCase()
+    if (v.indexOf('GA') !== -1) return 'GA'
+  }
+  for (var j = 0; j < fixVersions.length; j++) {
+    var v2 = fixVersions[j].toUpperCase().replace(/[^A-Z0-9]/g, '')
+    if (v2.indexOf('EA2') !== -1 || v2.indexOf('DP2') !== -1) return 'DP'
+    if (v2.indexOf('EA1') !== -1 || v2.indexOf('DP1') !== -1 || v2.indexOf('TP') !== -1) return 'TP'
+  }
+  return ''
+}
+
 // ─── Candidate Mapping ───
 
 /**
@@ -75,7 +105,7 @@ function mapToCandidate(item, bigRockName, sourcePass) {
     issueKey: item.key,
     status: item.status || '',
     priority: item.priority || '',
-    phase: '',
+    phase: getPhase(item, fixVersions),
     summary: item.summary || '',
     components: components.join(', '),
     labels: labels.join(', '),

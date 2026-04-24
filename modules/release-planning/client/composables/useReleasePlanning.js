@@ -18,7 +18,6 @@ export function useReleasePlanning() {
 
     const params = new URLSearchParams()
     if (opts && opts.rockFilter) params.set('rockFilter', opts.rockFilter)
-    if (opts && opts.refresh) params.set('refresh', 'true')
 
     const qs = params.toString()
     const url = `${API_BASE}/releases/${encodeURIComponent(version)}/candidates${qs ? '?' + qs : ''}`

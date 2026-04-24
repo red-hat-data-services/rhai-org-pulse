@@ -16,7 +16,7 @@ import RecentActivity from '../components/RecentActivity.vue'
 
 const {
   candidates, loading, error, refreshing, cacheStale, permissions,
-  loadCandidates, triggerRefresh, loadPermissions,
+  loadCandidates, triggerRefresh, checkRefreshStatus, loadPermissions,
   saveBigRock, deleteBigRock: deleteBigRockApi, updateBigRocksInPlace,
   reorderBigRocks, seedFromFixture
 } = useReleasePlanning()
@@ -43,6 +43,35 @@ const newReleaseDialogOpen = ref(false)
 // Seed state
 const seeding = ref(false)
 
+// Refresh polling
+var refreshPollTimer = null
+
+function startRefreshPolling() {
+  stopRefreshPolling()
+  refreshPollTimer = setInterval(async function() {
+    var status = await checkRefreshStatus()
+    if (!status.running) {
+      stopRefreshPolling()
+      if (selectedVersion.value) {
+        loadCandidates(selectedVersion.value)
+      }
+    }
+  }, 3000)
+}
+
+function stopRefreshPolling() {
+  if (refreshPollTimer) {
+    clearInterval(refreshPollTimer)
+    refreshPollTimer = null
+  }
+}
+
+watch(refreshing, function(isRefreshing) {
+  if (isRefreshing) {
+    startRefreshPolling()
+  }
+})
+
 const features = computed(() => candidates.value ? candidates.value.features || [] : [])
 const rfes = computed(() => candidates.value ? candidates.value.rfes || [] : [])
 const bigRocks = computed(() => candidates.value ? candidates.value.bigRocks || [] : [])
@@ -58,7 +87,7 @@ const {
   selectedRock,
   selectedStatus,
   selectedPriority,
-  selectedTeam,
+  selectedTeams,
   searchQuery,
   filteredFeatures,
   filteredRfes,
@@ -387,6 +416,7 @@ async function handleSeedFixture() {
 }
 
 watch(selectedVersion, function(newVersion) {
+  error.value = null
   if (newVersion) {
     loadCandidates(newVersion)
   }
@@ -407,6 +437,7 @@ onMounted(async function() {
 
 onUnmounted(function() {
   document.removeEventListener('click', handleClickOutside)
+  stopRefreshPolling()
 })
 </script>
 
@@ -471,68 +502,72 @@ onUnmounted(function() {
       <!-- Recent Activity -->
       <RecentActivity :version="selectedVersion" />
 
-      <!-- Filters -->
-      <FilterBar
-        :filterOptions="filterOptions"
-        :activeTab="activeTab"
-        v-model:selectedPillar="selectedPillar"
-        v-model:selectedRock="selectedRock"
-        v-model:selectedStatus="selectedStatus"
-        v-model:selectedPriority="selectedPriority"
-        v-model:selectedTeam="selectedTeam"
-        v-model:searchQuery="searchQuery"
-        :hasActiveFilters="hasActiveFilters"
-        @clearFilters="clearFilters"
-      />
-
       <!-- Tabs -->
-      <div class="flex items-center gap-3">
-      <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 rounded-lg p-0.5 w-fit">
-        <button
-          v-for="tab in tabs"
-          :key="tab.id"
-          @click="activeTab = tab.id"
-          class="px-4 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1.5"
-          :class="activeTab === tab.id
-            ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm'
-            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
-        >
-          {{ tab.label }}
-          <span
-            class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-semibold"
-            :class="activeTab === tab.id
-              ? 'bg-primary-100 dark:bg-primary-500/20 text-primary-700 dark:text-primary-400'
-              : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'"
-          >{{ tabCount(tab.id) }}</span>
-        </button>
-      </div>
-      <div class="relative" @click.stop>
-        <button
-          @click="toggleExportMenu"
-          class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-        >
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          Export
-          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-        <div
-          v-if="exportMenuOpen"
-          class="absolute right-0 mt-1 w-40 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-10"
-        >
-          <button
-            @click="handleExportMarkdown"
-            class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-          >Markdown (.md)</button>
-          <button
-            @click="exportCsv"
-            class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-          >CSV (.csv)</button>
+      <div>
+        <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+          <div class="flex items-center gap-0 -mb-px">
+            <button
+              v-for="tab in tabs"
+              :key="tab.id"
+              @click="activeTab = tab.id"
+              class="px-4 py-2.5 text-xs font-medium transition-colors flex items-center gap-1.5 border-b-2"
+              :class="activeTab === tab.id
+                ? 'border-primary-600 dark:border-primary-400 text-primary-700 dark:text-primary-400'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'"
+            >
+              {{ tab.label }}
+              <span
+                class="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-semibold"
+                :class="activeTab === tab.id
+                  ? 'bg-primary-100 dark:bg-primary-500/20 text-primary-700 dark:text-primary-400'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'"
+              >{{ tabCount(tab.id) }}</span>
+            </button>
+          </div>
+          <div class="relative pb-2" @click.stop>
+            <button
+              @click="toggleExportMenu"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Export
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <div
+              v-if="exportMenuOpen"
+              class="absolute right-0 mt-1 w-40 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-10"
+            >
+              <button
+                @click="handleExportMarkdown"
+                class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              >Markdown (.md)</button>
+              <button
+                @click="exportCsv"
+                class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              >CSV (.csv)</button>
+            </div>
+          </div>
         </div>
-      </div>
+
+        <!-- Filters -->
+        <div class="pt-3">
+          <FilterBar
+            :filterOptions="filterOptions"
+            :activeTab="activeTab"
+            v-model:selectedPillar="selectedPillar"
+            v-model:selectedRock="selectedRock"
+            v-model:selectedStatus="selectedStatus"
+            v-model:selectedPriority="selectedPriority"
+            v-model:selectedTeams="selectedTeams"
+            v-model:searchQuery="searchQuery"
+            :hasActiveFilters="hasActiveFilters"
+            @clearFilters="clearFilters"
+          />
+        </div>
       </div>
 
       <!-- Tab content -->
