@@ -53,17 +53,17 @@ function onDragEnd() {
       <table class="w-full text-sm border-collapse">
         <thead>
           <tr>
-            <th v-if="canEdit" class="px-2 py-2 w-8 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50"></th>
-            <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium w-8 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">#</th>
-            <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">Pillar</th>
-            <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">Big Rock</th>
-            <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">Outcome(s)</th>
-            <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">State</th>
-            <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">Owner</th>
-            <th class="px-3 py-2 text-center text-gray-500 dark:text-gray-400 font-medium border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">Features</th>
-            <th class="px-3 py-2 text-center text-gray-500 dark:text-gray-400 font-medium border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">RFEs</th>
-            <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">Notes</th>
-            <th v-if="canEdit" class="px-2 py-2 w-8 border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50"></th>
+            <th v-if="canEdit" class="px-2 py-2 w-8 border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80"></th>
+            <th class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide w-8 border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Priority</th>
+            <th class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Pillar</th>
+            <th class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Big Rock</th>
+            <th class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Outcome(s)</th>
+            <th class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Owner</th>
+            <th class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Architect</th>
+            <th class="px-3 py-2 text-center text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Features</th>
+            <th class="px-3 py-2 text-center text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">RFEs</th>
+            <th class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Notes</th>
+            <th v-if="canEdit" class="px-2 py-2 w-8 border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80"></th>
           </tr>
         </thead>
         <draggable
@@ -76,7 +76,7 @@ function onDragEnd() {
         >
           <template #item="{ element: rock }">
             <tr
-              class="cursor-pointer hover:ring-2 hover:ring-primary-400 hover:ring-inset"
+              class="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50"
               @click="handleRowClick(rock)"
             >
               <td class="px-2 py-2 text-center border border-gray-300 dark:border-gray-600">
@@ -109,8 +109,8 @@ function onDragEnd() {
                 </div>
                 <span v-if="!rock.outcomeKeys || rock.outcomeKeys.length === 0" class="text-xs text-gray-400 dark:text-gray-500 italic">TBD</span>
               </td>
-              <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600">{{ rock.state }}</td>
               <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600">{{ rock.owner || '-' }}</td>
+              <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600">{{ rock.architect || '-' }}</td>
               <td class="px-3 py-2 text-center border border-gray-300 dark:border-gray-600">
                 <span class="font-semibold text-gray-700 dark:text-gray-300">{{ rock.featureCount }}</span>
               </td>
@@ -136,6 +136,7 @@ function onDragEnd() {
           <tr
             v-for="rock in bigRocks"
             :key="rock.name"
+            class="hover:bg-gray-50 dark:hover:bg-gray-700/50"
           >
             <td class="px-3 py-2 text-gray-400 dark:text-gray-500 font-mono text-xs border border-gray-300 dark:border-gray-600">{{ rock.priority }}</td>
             <td class="px-3 py-2 border border-gray-300 dark:border-gray-600">
@@ -162,8 +163,8 @@ function onDragEnd() {
               </div>
               <span v-if="!rock.outcomeKeys || rock.outcomeKeys.length === 0" class="text-xs text-gray-400 dark:text-gray-500 italic">TBD</span>
             </td>
-            <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600">{{ rock.state }}</td>
             <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600">{{ rock.owner || '-' }}</td>
+            <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600">{{ rock.architect || '-' }}</td>
             <td class="px-3 py-2 text-center border border-gray-300 dark:border-gray-600">
               <span class="font-semibold text-gray-700 dark:text-gray-300">{{ rock.featureCount }}</span>
             </td>
