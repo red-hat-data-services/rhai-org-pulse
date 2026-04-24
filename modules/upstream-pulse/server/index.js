@@ -1,4 +1,5 @@
 const fetch = require('node-fetch');
+const { getAllPeople } = require('../../../shared/server/roster');
 
 const DEFAULT_BASE_URL = 'http://backend.ambient-code--upstream-pulse.svc.cluster.local:3000';
 const PROXY_TIMEOUT = 90_000;
@@ -126,8 +127,6 @@ async function checkConnection() {
   }
 }
 
-const { getAllPeople } = require('../../../shared/server/roster');
-
 const ROSTER_PUSH_SOURCE = 'org_pulse_roster';
 const ROSTER_PUSH_REPLACES = ['github_org_sync'];
 const ROSTER_PUSH_INTERVAL = 2 * 60 * 60 * 1000; // 2 hours
@@ -215,9 +214,10 @@ function startPeriodicRosterPush(storage) {
     }
   }
 
-  setTimeout(checkAndPush, ROSTER_PUSH_STARTUP_DELAY);
-  const timer = setInterval(checkAndPush, ROSTER_PUSH_INTERVAL);
-  if (timer.unref) timer.unref();
+  const startupTimer = setTimeout(checkAndPush, ROSTER_PUSH_STARTUP_DELAY);
+  if (startupTimer.unref) startupTimer.unref();
+  const intervalTimer = setInterval(checkAndPush, ROSTER_PUSH_INTERVAL);
+  if (intervalTimer.unref) intervalTimer.unref();
 }
 
 module.exports = function registerRoutes(router, context) {
