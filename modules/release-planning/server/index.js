@@ -7,6 +7,7 @@ const { backupConfig } = require('./config-backup')
 const { validateBigRock } = require('./validation')
 const { createRequirePM, getPMUsers, addPMUser, removePMUser, isPM } = require('./pm-auth')
 const { previewDocImport, executeDocImport } = require('./doc-import')
+const { logAudit, getAuditLog } = require('./audit-log')
 const smartsheetClient = require('../../../shared/server/smartsheet')
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true'
@@ -256,6 +257,12 @@ module.exports = function registerRoutes(router, context) {
       var result = await withConfigLock(function() {
         return reorderBigRocks(readFromStorage, writeToStorage, version, order)
       })
+      logAudit(readFromStorage, writeToStorage, {
+        version: version,
+        action: 'reorder_rocks',
+        user: req.userEmail,
+        summary: 'Reordered Big Rocks'
+      })
       invalidateCache(version)
       res.json(result)
     } catch (err) {
@@ -300,6 +307,13 @@ module.exports = function registerRoutes(router, context) {
         return saveBigRock(readFromStorage, writeToStorage, version, name, req.body)
       })
 
+      logAudit(readFromStorage, writeToStorage, {
+        version: version,
+        action: 'update_rock',
+        user: req.userEmail,
+        summary: 'Updated Big Rock "' + name + '"',
+        details: { rockName: name }
+      })
       invalidateCache(version)
       res.json(result)
     } catch (err) {
@@ -339,6 +353,14 @@ module.exports = function registerRoutes(router, context) {
         return saveBigRock(readFromStorage, writeToStorage, version, null, req.body)
       })
 
+      var newName = req.body && req.body.name
+      logAudit(readFromStorage, writeToStorage, {
+        version: version,
+        action: 'create_rock',
+        user: req.userEmail,
+        summary: 'Created Big Rock "' + newName + '"',
+        details: { rockName: newName }
+      })
       invalidateCache(version)
       res.status(201).json(result)
     } catch (err) {
@@ -383,6 +405,13 @@ module.exports = function registerRoutes(router, context) {
         return deleteBigRock(readFromStorage, writeToStorage, version, name)
       })
 
+      logAudit(readFromStorage, writeToStorage, {
+        version: version,
+        action: 'delete_rock',
+        user: req.userEmail,
+        summary: 'Deleted Big Rock "' + name + '"',
+        details: { rockName: name }
+      })
       invalidateCache(version)
       res.json(result)
     } catch (err) {
@@ -415,6 +444,14 @@ module.exports = function registerRoutes(router, context) {
         }
         return createRelease(readFromStorage, writeToStorage, version)
       })
+      logAudit(readFromStorage, writeToStorage, {
+        version: version,
+        action: cloneFrom ? 'clone_release' : 'create_release',
+        user: req.userEmail,
+        summary: cloneFrom
+          ? 'Cloned release ' + version + ' from ' + cloneFrom
+          : 'Created release ' + version
+      })
       res.status(201).json(result)
     } catch (err) {
       var status = err.statusCode || 500
@@ -434,6 +471,13 @@ module.exports = function registerRoutes(router, context) {
       var result = await withConfigLock(function() {
         backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
         return deleteRelease(readFromStorage, writeToStorage, version)
+      })
+
+      logAudit(readFromStorage, writeToStorage, {
+        version: version,
+        action: 'delete_release',
+        user: req.userEmail,
+        summary: 'Deleted release ' + version
       })
 
       // Also delete the candidates cache file for this version
@@ -493,6 +537,11 @@ module.exports = function registerRoutes(router, context) {
       return res.status(400).json({ error: 'email is required' })
     }
     var emails = addPMUser(readFromStorage, writeToStorage, email.trim())
+    logAudit(readFromStorage, writeToStorage, {
+      action: 'add_pm',
+      user: req.userEmail,
+      summary: 'Added PM user ' + email.trim()
+    })
     res.json({ emails: emails })
   })
 
@@ -504,6 +553,11 @@ module.exports = function registerRoutes(router, context) {
       return res.status(400).json({ error: 'Invalid parameter encoding' })
     }
     var emails = removePMUser(readFromStorage, writeToStorage, email)
+    logAudit(readFromStorage, writeToStorage, {
+      action: 'remove_pm',
+      user: req.userEmail,
+      summary: 'Removed PM user ' + email
+    })
     res.json({ emails: emails })
   })
 
@@ -577,6 +631,13 @@ module.exports = function registerRoutes(router, context) {
         return executeDocImport(readFromStorage, writeToStorage, version, docId, mode, parsedDoc)
       })
 
+      logAudit(readFromStorage, writeToStorage, {
+        version: version,
+        action: 'import_doc',
+        user: req.userEmail,
+        summary: 'Imported Big Rocks from Google Doc (' + mode + ' mode)',
+        details: { docId: docId, mode: mode }
+      })
       invalidateCache(version)
       res.json(result)
     } catch (err) {
@@ -678,6 +739,11 @@ module.exports = function registerRoutes(router, context) {
         return { seeded: seededVersions, totalReleases: Object.keys(merged.releases).length }
       })
 
+      logAudit(readFromStorage, writeToStorage, {
+        action: 'seed',
+        user: req.userEmail,
+        summary: 'Seeded release data for ' + versions.join(', ')
+      })
       res.json(result)
     } catch (err) {
       var status = err.statusCode || 500
@@ -691,6 +757,24 @@ module.exports = function registerRoutes(router, context) {
       return res.status(404).json({ error: 'No fixture data found' })
     }
     res.json(fixture)
+  })
+
+  // ─── Audit Log ───
+
+  router.get('/audit-log', requireAuth, function(req, res) {
+    var version = req.query.version || null
+    var action = req.query.action || null
+    var limit = Math.min(Math.max(parseInt(req.query.limit) || 50, 1), 500)
+    var offset = Math.max(parseInt(req.query.offset) || 0, 0)
+
+    var result = getAuditLog(readFromStorage, {
+      version: version,
+      action: action,
+      limit: limit,
+      offset: offset
+    })
+
+    res.json(result)
   })
 
   // Diagnostics

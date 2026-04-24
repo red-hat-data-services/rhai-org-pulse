@@ -12,6 +12,7 @@ import FeaturesTable from '../components/FeaturesTable.vue'
 import RfesTable from '../components/RfesTable.vue'
 import FilterBar from '../components/FilterBar.vue'
 import ReleaseSelector from '../components/ReleaseSelector.vue'
+import RecentActivity from '../components/RecentActivity.vue'
 
 const {
   candidates, loading, error, refreshing, cacheStale, permissions,
@@ -466,6 +467,9 @@ onUnmounted(function() {
     <template v-else-if="candidates">
       <!-- Summary -->
       <SummaryCards :summary="summary" />
+
+      <!-- Recent Activity -->
+      <RecentActivity :version="selectedVersion" />
 
       <!-- Filters -->
       <FilterBar
