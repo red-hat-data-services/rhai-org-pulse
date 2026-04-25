@@ -485,12 +485,12 @@ onUnmounted(function() {
     </div>
 
     <!-- Cache stale indicator -->
-    <div v-if="cacheStale && refreshing" class="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-lg px-4 py-2 text-sm text-blue-700 dark:text-blue-400">
+    <div v-if="cacheStale && refreshing" role="status" class="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-lg px-4 py-2 text-sm text-blue-700 dark:text-blue-400">
       Refreshing data in the background...
     </div>
 
     <!-- Error -->
-    <div v-if="error" class="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-lg p-4 text-red-700 dark:text-red-400 text-sm">
+    <div v-if="error" role="alert" class="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-lg p-4 text-red-700 dark:text-red-400 text-sm">
       {{ error }}
     </div>
 
@@ -509,10 +509,15 @@ onUnmounted(function() {
       <!-- Tabs -->
       <div>
         <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
-          <div class="flex items-center gap-0 -mb-px">
+          <div role="tablist" aria-label="Release planning views" class="flex items-center gap-0 -mb-px">
             <button
               v-for="tab in tabs"
               :key="tab.id"
+              role="tab"
+              :id="'tab-' + tab.id"
+              :aria-selected="activeTab === tab.id"
+              :aria-controls="'panel-' + tab.id"
+              :tabindex="activeTab === tab.id ? 0 : -1"
               @click="activeTab = tab.id"
               class="px-4 py-2.5 text-xs font-medium transition-colors flex items-center gap-1.5 border-b-2"
               :class="activeTab === tab.id
@@ -528,28 +533,34 @@ onUnmounted(function() {
               >{{ tabCount(tab.id) }}</span>
             </button>
           </div>
-          <div class="relative pb-2" @click.stop>
+          <div class="relative pb-2" @click.stop @keydown.escape="closeExportMenu">
             <button
               @click="toggleExportMenu"
+              :aria-expanded="exportMenuOpen"
+              aria-haspopup="menu"
+              aria-label="Export data"
               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
             >
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
               </svg>
               Export
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
             <div
               v-if="exportMenuOpen"
+              role="menu"
               class="absolute right-0 mt-1 w-40 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-10"
             >
               <button
+                role="menuitem"
                 @click="handleExportMarkdown"
                 class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
               >Markdown (.md)</button>
               <button
+                role="menuitem"
                 @click="exportCsv"
                 class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
               >CSV (.csv)</button>
@@ -575,30 +586,33 @@ onUnmounted(function() {
       </div>
 
       <!-- Tab content -->
-      <BigRocksTable
-        v-if="activeTab === 'big-rocks'"
-        :bigRocks="bigRocks"
-        :jiraBaseUrl="jiraBaseUrl"
-        :canEdit="canEdit"
-        @editRock="handleEditRock"
-        @addRock="handleAddRock"
-        @deleteRock="handleDeleteRock"
-        @reorder="handleReorder"
-      />
-      <FeaturesTable
-        v-if="activeTab === 'features'"
-        :features="filteredFeatures"
-        :bigRocks="bigRocks"
-        :jiraBaseUrl="jiraBaseUrl"
-        :summary="summary"
-      />
-      <RfesTable
-        v-if="activeTab === 'rfes'"
-        :rfes="filteredRfes"
-        :bigRocks="bigRocks"
-        :jiraBaseUrl="jiraBaseUrl"
-        :summary="summary"
-      />
+      <div v-if="activeTab === 'big-rocks'" id="panel-big-rocks" role="tabpanel" aria-labelledby="tab-big-rocks">
+        <BigRocksTable
+          :bigRocks="bigRocks"
+          :jiraBaseUrl="jiraBaseUrl"
+          :canEdit="canEdit"
+          @editRock="handleEditRock"
+          @addRock="handleAddRock"
+          @deleteRock="handleDeleteRock"
+          @reorder="handleReorder"
+        />
+      </div>
+      <div v-if="activeTab === 'features'" id="panel-features" role="tabpanel" aria-labelledby="tab-features">
+        <FeaturesTable
+          :features="filteredFeatures"
+          :bigRocks="bigRocks"
+          :jiraBaseUrl="jiraBaseUrl"
+          :summary="summary"
+        />
+      </div>
+      <div v-if="activeTab === 'rfes'" id="panel-rfes" role="tabpanel" aria-labelledby="tab-rfes">
+        <RfesTable
+          :rfes="filteredRfes"
+          :bigRocks="bigRocks"
+          :jiraBaseUrl="jiraBaseUrl"
+          :summary="summary"
+        />
+      </div>
     </template>
 
     <!-- No releases configured -->

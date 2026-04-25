@@ -78,32 +78,38 @@ watch(function() { return props.version }, function(v) {
 <template>
   <div v-if="hasEntries" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
     <!-- Header -->
-    <div
-      class="flex items-center justify-between px-4 py-2 cursor-pointer select-none"
+    <button
+      type="button"
+      class="flex items-center justify-between w-full px-4 py-2 cursor-pointer select-none text-left"
+      :aria-expanded="!collapsed"
       @click="collapsed = !collapsed"
     >
       <div class="flex items-center gap-2 min-w-0">
-        <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <span class="text-xs font-medium text-gray-700 dark:text-gray-300">Recent Activity</span>
         <span v-if="collapsed" class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ activitySummary }}</span>
       </div>
       <div class="flex items-center gap-2">
-        <button
+        <span
           v-if="!collapsed"
           @click.stop="viewAll"
+          role="link"
+          tabindex="0"
+          @keydown.enter.stop="viewAll"
           class="text-xs text-primary-600 dark:text-primary-400 hover:underline"
-        >View all</button>
+        >View all</span>
         <svg
           class="w-3.5 h-3.5 text-gray-400 transition-transform"
           :class="collapsed ? '' : 'rotate-180'"
           fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
         </svg>
       </div>
-    </div>
+    </button>
 
     <!-- Entries -->
     <div v-if="!collapsed" class="border-t border-gray-100 dark:border-gray-700">
@@ -115,7 +121,7 @@ watch(function() { return props.version }, function(v) {
           class="px-4 py-1.5 flex items-center gap-2 text-xs"
         >
           <!-- Action icon -->
-          <span class="flex-shrink-0 w-4 h-4 flex items-center justify-center">
+          <span class="flex-shrink-0 w-4 h-4 flex items-center justify-center" aria-hidden="true">
             <!-- Plus -->
             <svg v-if="actionMeta(entry.action).icon === 'plus'" :class="actionMeta(entry.action).color" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />

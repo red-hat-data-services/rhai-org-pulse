@@ -67,6 +67,7 @@ onUnmounted(function() {
       @input="$emit('update:searchQuery', $event.target.value)"
       type="text"
       placeholder="Search issues..."
+      aria-label="Search issues"
       class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
     />
 
@@ -75,6 +76,7 @@ onUnmounted(function() {
       :value="selectedPillar"
       @change="$emit('update:selectedPillar', $event.target.value)"
       :class="selectClass"
+      aria-label="Filter by pillar"
     >
       <option value="">All Pillars</option>
       <option v-for="p in (filterOptions.pillars || [])" :key="p" :value="p">{{ p }}</option>
@@ -85,6 +87,7 @@ onUnmounted(function() {
       :value="selectedRock"
       @change="$emit('update:selectedRock', $event.target.value)"
       :class="selectClass"
+      aria-label="Filter by Big Rock"
     >
       <option value="">All Rocks</option>
       <option v-for="r in (filterOptions.rocks || [])" :key="r" :value="r">{{ r }}</option>
@@ -95,6 +98,7 @@ onUnmounted(function() {
       :value="selectedStatus"
       @change="$emit('update:selectedStatus', $event.target.value)"
       :class="selectClass"
+      aria-label="Filter by status"
     >
       <option value="">All Statuses</option>
       <option v-for="s in (filterOptions.statuses || [])" :key="s" :value="s">{{ s }}</option>
@@ -105,6 +109,7 @@ onUnmounted(function() {
       :value="selectedPriority"
       @change="$emit('update:selectedPriority', $event.target.value)"
       :class="selectClass"
+      aria-label="Filter by priority"
     >
       <option value="">All Priorities</option>
       <option v-for="p in (filterOptions.priorities || [])" :key="p" :value="p">{{ p }}</option>
@@ -119,16 +124,23 @@ onUnmounted(function() {
       <button
         type="button"
         @click="teamsOpen = !teamsOpen"
+        @keydown.escape="teamsOpen = false"
+        :aria-expanded="teamsOpen"
+        aria-haspopup="listbox"
+        aria-label="Filter by component team"
         :class="[selectClass, 'flex items-center gap-1.5 cursor-pointer']"
       >
         <span class="truncate max-w-[180px]">{{ teamsLabel }}</span>
-        <svg class="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-3.5 h-3.5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
         </svg>
       </button>
       <div
         v-if="teamsOpen"
+        role="listbox"
+        aria-label="Component teams"
         class="absolute z-50 mt-1 w-64 max-h-60 overflow-y-auto bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg"
+        @keydown.escape="teamsOpen = false"
       >
         <label
           v-for="t in filterOptions.teams"

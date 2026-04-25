@@ -1,12 +1,15 @@
 <script setup>
 import { ref } from 'vue'
 import { useBigRockEditor } from '../composables/useBigRockEditor'
+import { useFocusTrap } from '../composables/useFocusTrap'
 
 const emit = defineEmits(['save', 'cancel'])
 
 const { isOpen, formData, saving, saveError, fieldErrors, isNewRock } = useBigRockEditor()
 
 const outcomeKeyInput = ref('')
+const panelRef = ref(null)
+const { handleKeydown } = useFocusTrap(panelRef, isOpen, function() { emit('cancel') })
 
 function addOutcomeKey() {
   const key = outcomeKeyInput.value.trim().toUpperCase()
@@ -57,25 +60,31 @@ function handleRetry() {
   <Transition name="slide">
     <div
       v-if="isOpen"
+      ref="panelRef"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="edit-panel-title"
       class="fixed top-0 right-0 h-full w-full max-w-lg bg-white dark:bg-gray-800 shadow-xl z-50 flex flex-col border-l border-gray-200 dark:border-gray-700"
+      @keydown="handleKeydown"
     >
       <!-- Header -->
       <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-        <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">
+        <h2 id="edit-panel-title" class="text-base font-semibold text-gray-900 dark:text-gray-100">
           {{ isNewRock ? 'Add Big Rock' : 'Edit Big Rock' }}
         </h2>
         <button
           @click="handleCancel"
+          aria-label="Close panel"
           class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded"
         >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
       </div>
 
       <!-- Save error notification -->
-      <div v-if="saveError" class="mx-5 mt-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-lg px-4 py-3 text-sm text-red-700 dark:text-red-400">
+      <div v-if="saveError" role="alert" class="mx-5 mt-4 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-lg px-4 py-3 text-sm text-red-700 dark:text-red-400">
         <div class="flex items-start justify-between gap-2">
           <div>
             <p class="font-medium">Save failed</p>
@@ -99,10 +108,11 @@ function handleRetry() {
           <p class="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-md">{{ formData.name }}</p>
         </div>
         <div v-else>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label for="rock-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Name <span class="text-red-500">*</span>
           </label>
           <input
+            id="rock-name"
             v-model="formData.name"
             type="text"
             maxlength="100"
@@ -121,8 +131,9 @@ function handleRetry() {
 
         <!-- Owner -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Owner</label>
+          <label for="rock-owner" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Owner</label>
           <input
+            id="rock-owner"
             v-model="formData.owner"
             type="text"
             maxlength="200"
@@ -135,8 +146,9 @@ function handleRetry() {
 
         <!-- Architect -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Architect</label>
+          <label for="rock-architect" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Architect</label>
           <input
+            id="rock-architect"
             v-model="formData.architect"
             type="text"
             maxlength="200"
@@ -149,7 +161,7 @@ function handleRetry() {
 
         <!-- Outcome Keys (tag input) -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Outcome Keys</label>
+          <label for="rock-outcome-key" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Outcome Keys</label>
           <div class="flex flex-wrap gap-1.5 mb-2" v-if="formData.outcomeKeys.length > 0">
             <span
               v-for="(key, idx) in formData.outcomeKeys"
@@ -159,10 +171,11 @@ function handleRetry() {
               {{ key }}
               <button
                 @click="removeOutcomeKey(idx)"
+                :aria-label="'Remove ' + key"
                 class="hover:text-red-500 ml-0.5"
                 type="button"
               >
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -170,6 +183,7 @@ function handleRetry() {
           </div>
           <div class="flex gap-2">
             <input
+              id="rock-outcome-key"
               v-model="outcomeKeyInput"
               type="text"
               @keydown="handleOutcomeKeydown"
@@ -190,8 +204,9 @@ function handleRetry() {
 
         <!-- Notes -->
         <div>
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
+          <label for="rock-notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notes</label>
           <textarea
+            id="rock-notes"
             v-model="formData.notes"
             rows="3"
             maxlength="2000"
@@ -216,9 +231,10 @@ function handleRetry() {
         <button
           @click="handleSave"
           :disabled="saving"
+          :aria-busy="saving"
           class="px-4 py-2 text-sm font-medium rounded-md bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
-          <svg v-if="saving" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+          <svg v-if="saving" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24" aria-hidden="true">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
