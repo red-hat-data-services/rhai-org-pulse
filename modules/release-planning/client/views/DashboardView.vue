@@ -372,6 +372,11 @@ function handleCancelDelete() {
 // ─── Reorder handler ───
 
 async function handleReorder(orderedNames) {
+  const previousBigRocks = bigRocks.value.slice()
+  const rocksByName = Object.fromEntries(previousBigRocks.map(r => [r.name, r]))
+  const optimistic = orderedNames.map((name, idx) => ({ ...rocksByName[name], priority: idx + 1 }))
+  updateBigRocksInPlace(optimistic)
+
   try {
     const result = await reorderBigRocks(selectedVersion.value, orderedNames)
     if (result && result.bigRocks) {
@@ -379,8 +384,7 @@ async function handleReorder(orderedNames) {
     }
   } catch (err) {
     error.value = err.message || 'Reorder failed'
-    // Refetch to restore correct state
-    loadCandidates(selectedVersion.value)
+    updateBigRocksInPlace(previousBigRocks)
   }
 }
 
