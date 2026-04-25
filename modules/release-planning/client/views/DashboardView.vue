@@ -383,7 +383,7 @@ async function handleReorder(orderedNames) {
   updateBigRocksInPlace(optimistic)
 
   try {
-    var result = await reorderBigRocks(selectedVersion.value, orderedNames)
+    const result = await reorderBigRocks(selectedVersion.value, orderedNames)
     if (result && result.bigRocks) {
       updateBigRocksInPlace(result.bigRocks)
     }
