@@ -7,7 +7,7 @@
 
 const googleDocs = require('../../../shared/server/google-docs')
 const { validateBigRock } = require('./validation')
-const { getConfig, saveBigRock, deleteBigRock } = require('./config')
+const { getConfig } = require('./config')
 
 /**
  * Parse a Google Doc URL or ID to extract the document ID.
@@ -60,11 +60,8 @@ async function previewDocImport(docIdOrUrl) {
 }
 
 /**
- * Execute the import: validate each rock via validateBigRock, and persist
- * through saveBigRock / deleteBigRock CRUD functions.
- *
- * This ensures all imported data passes through the same validation and
- * persistence code path as manual CRUD operations.
+ * Execute the import: validate each rock via validateBigRock, then batch-write
+ * all changes in a single config read-modify-write cycle.
  *
  * @param {Function} readFromStorage
  * @param {Function} writeToStorage
@@ -74,6 +71,21 @@ async function previewDocImport(docIdOrUrl) {
  * @param {object} parsedDoc - Pre-fetched parse result from previewDocImport
  * @returns {object} { imported, skipped, skippedNames, validationErrors, mode, bigRocks }
  */
+function normalizeRock(data, priority) {
+  return {
+    priority: priority,
+    name: (data.name || '').trim(),
+    fullName: data.fullName || '',
+    pillar: data.pillar || '',
+    state: data.state || '',
+    owner: data.owner || '',
+    architect: data.architect || '',
+    outcomeKeys: data.outcomeKeys || [],
+    notes: data.notes || '',
+    description: data.description || ''
+  }
+}
+
 function executeDocImport(readFromStorage, writeToStorage, version, docIdOrUrl, mode, parsedDoc) {
   const parsedRocks = parsedDoc.bigRocks
 
@@ -89,34 +101,23 @@ function executeDocImport(readFromStorage, writeToStorage, version, docIdOrUrl, 
     throw Object.assign(new Error('Release ' + version + ' not found'), { statusCode: 404 })
   }
 
-  const existingRocks = config.releases[version].bigRocks || []
+  const bigRocks = mode === 'replace' ? [] : (config.releases[version].bigRocks || []).slice()
+  const existingNames = new Set(bigRocks.map(function(r) { return r.name }))
+
   let imported = 0
   let skipped = 0
   const skippedNames = []
   const validationErrors = []
 
-  if (mode === 'replace') {
-    // Delete all existing rocks first (reverse order to avoid index shift)
-    for (let i = existingRocks.length - 1; i >= 0; i--) {
-      deleteBigRock(readFromStorage, writeToStorage, version, existingRocks[i].name)
-    }
-  }
-
-  // Build the set of names already present (for duplicate + uniqueness checks)
-  const currentRocks = getConfig(readFromStorage).releases[version].bigRocks || []
-  const existingNames = new Set(currentRocks.map(function(r) { return r.name }))
-
   for (let j = 0; j < parsedRocks.length; j++) {
     const rock = parsedRocks[j]
 
-    // Skip duplicates in append mode
     if (mode === 'append' && existingNames.has(rock.name)) {
       skipped++
       skippedNames.push(rock.name)
       continue
     }
 
-    // Validate through the same validator used by CRUD endpoints
     const validation = validateBigRock(rock, {
       existingNames: Array.from(existingNames)
     })
@@ -127,15 +128,17 @@ function executeDocImport(readFromStorage, writeToStorage, version, docIdOrUrl, 
       continue
     }
 
-    // Persist through the standard CRUD function
-    saveBigRock(readFromStorage, writeToStorage, version, null, rock)
+    bigRocks.push(normalizeRock(rock, bigRocks.length + 1))
     existingNames.add(rock.name)
     imported++
   }
 
-  // Read back the final state (authoritative)
-  const finalConfig = getConfig(readFromStorage)
-  const finalRocks = finalConfig.releases[version].bigRocks || []
+  for (let i = 0; i < bigRocks.length; i++) {
+    bigRocks[i].priority = i + 1
+  }
+
+  config.releases[version].bigRocks = bigRocks
+  writeToStorage('release-planning/config.json', config)
 
   return {
     imported: imported,
@@ -143,7 +146,7 @@ function executeDocImport(readFromStorage, writeToStorage, version, docIdOrUrl, 
     skippedNames: skippedNames.length > 0 ? skippedNames : undefined,
     validationErrors: validationErrors.length > 0 ? validationErrors : undefined,
     mode: mode,
-    bigRocks: finalRocks
+    bigRocks: bigRocks
   }
 }
 
