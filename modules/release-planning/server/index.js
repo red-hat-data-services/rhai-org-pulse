@@ -1,3 +1,4 @@
+const crypto = require('crypto')
 const { getConfig, loadBigRocks, getConfiguredReleases, saveBigRock, deleteBigRock, reorderBigRocks, createRelease, cloneRelease, deleteRelease } = require('./config')
 const { runPipeline, buildCandidateResponse } = require('./pipeline')
 const { loadIndex, validateKeysFromCache } = require('./cache-reader')
@@ -29,6 +30,16 @@ module.exports = function registerRoutes(router, context) {
   const requirePM = createRequirePM(readFromStorage)
 
   let refreshState = { running: false, lastResult: null }
+
+  function sendJsonWithETag(req, res, data, statusCode) {
+    const body = JSON.stringify(data)
+    const etag = '"' + crypto.createHash('md5').update(body).digest('hex') + '"'
+    res.set('ETag', etag)
+    if (req.headers['if-none-match'] === etag) {
+      return res.status(304).end()
+    }
+    res.status(statusCode || 200).set('Content-Type', 'application/json').send(body)
+  }
 
   // Demo mode guard: block all non-GET requests when DEMO_MODE is true
   if (DEMO_MODE) {
@@ -173,7 +184,7 @@ module.exports = function registerRoutes(router, context) {
         }
       }
 
-      return res.json({
+      return sendJsonWithETag(req, res, {
         ...data,
         _cacheStale: isStale,
         _refreshing: refreshState.running
@@ -181,7 +192,7 @@ module.exports = function registerRoutes(router, context) {
     }
 
     triggerBackgroundRefresh(version)
-    res.status(202).json({
+    sendJsonWithETag(req, res, {
       _cacheStale: true,
       _refreshing: true,
       _noCache: true,
@@ -190,7 +201,7 @@ module.exports = function registerRoutes(router, context) {
       bigRocks: [],
       summary: null,
       warning: 'Pipeline is running for the first time. This may take a few minutes.'
-    })
+    }, 202)
   })
 
   // POST /releases/:version/refresh

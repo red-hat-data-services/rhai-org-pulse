@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { apiRequest } from '@shared/client/services/api'
+import { apiRequest, getApiBase } from '@shared/client/services/api'
 
 const API_BASE = '/modules/release-planning'
 
@@ -10,6 +10,7 @@ const error = ref(null)
 const refreshing = ref(false)
 const cacheStale = ref(false)
 const permissions = ref(null)
+const etagCache = {}
 
 export function useReleasePlanning() {
   async function loadCandidates(version, opts) {
@@ -22,8 +23,32 @@ export function useReleasePlanning() {
     const qs = params.toString()
     const url = `${API_BASE}/releases/${encodeURIComponent(version)}/candidates${qs ? '?' + qs : ''}`
 
+    const cacheKey = version + (opts && opts.rockFilter ? ':' + opts.rockFilter : '')
+    const headers = {}
+    if (etagCache[cacheKey]) {
+      headers['If-None-Match'] = etagCache[cacheKey]
+    }
+
     try {
-      const data = await apiRequest(url)
+      const response = await fetch(`${getApiBase()}${url}`, { headers })
+
+      if (response.status === 304) {
+        // Data unchanged — keep existing candidates
+        loading.value = false
+        return
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(function() { return {} })
+        throw new Error(errorData.error || 'HTTP ' + response.status)
+      }
+
+      const etag = response.headers.get('etag')
+      if (etag) {
+        etagCache[cacheKey] = etag
+      }
+
+      const data = await response.json()
       candidates.value = data
       refreshing.value = !!data._refreshing
       cacheStale.value = !!data._cacheStale
