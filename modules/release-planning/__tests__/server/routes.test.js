@@ -77,14 +77,26 @@ function makeRes() {
   const res = {
     _status: 200,
     _json: null,
+    _headers: {},
+    _ended: false,
     status: function(code) { res._status = code; return res },
-    json: function(data) { res._json = data; return res }
+    json: function(data) { res._json = data; return res },
+    set: function(key, value) { res._headers[key] = value; return res },
+    end: function() { res._ended = true; return res },
+    send: function(body) {
+      if (typeof body === 'string') {
+        try { res._json = JSON.parse(body) } catch { res._json = body }
+      } else {
+        res._json = body
+      }
+      return res
+    }
   }
   return res
 }
 
 function makeReq(overrides) {
-  return Object.assign({ isAdmin: true, userEmail: 'admin@test.com', body: {}, params: {}, query: {} }, overrides)
+  return Object.assign({ isAdmin: true, userEmail: 'admin@test.com', body: {}, params: {}, query: {}, headers: {} }, overrides)
 }
 
 function callRoute(routes, method, path, req) {
@@ -231,6 +243,45 @@ describe('release-planning routes', function() {
       const res = callRoute(router._routes, 'GET', '/releases/:version/candidates', req)
       expect(res._status).toBe(202)
       expect(res._json._noCache).toBe(true)
+    })
+
+    it('returns ETag header with cached response', function() {
+      storage._store['release-planning/candidates-cache-3.5.json'] = {
+        cachedAt: new Date().toISOString(),
+        data: { features: [], rfes: [], bigRocks: [], summary: null }
+      }
+      const req = makeReq({ params: { version: '3.5' }, query: {} })
+      const res = callRoute(router._routes, 'GET', '/releases/:version/candidates', req)
+      expect(res._headers['ETag']).toBeDefined()
+      expect(res._headers['ETag']).toMatch(/^"[a-f0-9]+"$/)
+    })
+
+    it('returns 304 when If-None-Match matches ETag', function() {
+      storage._store['release-planning/candidates-cache-3.5.json'] = {
+        cachedAt: new Date().toISOString(),
+        data: { features: [], rfes: [], bigRocks: [], summary: null }
+      }
+      // First request to get the ETag
+      const req1 = makeReq({ params: { version: '3.5' }, query: {} })
+      const res1 = callRoute(router._routes, 'GET', '/releases/:version/candidates', req1)
+      const etag = res1._headers['ETag']
+
+      // Second request with matching If-None-Match
+      const req2 = makeReq({ params: { version: '3.5' }, query: {}, headers: { 'if-none-match': etag } })
+      const res2 = callRoute(router._routes, 'GET', '/releases/:version/candidates', req2)
+      expect(res2._status).toBe(304)
+      expect(res2._ended).toBe(true)
+    })
+
+    it('returns 200 when If-None-Match does not match', function() {
+      storage._store['release-planning/candidates-cache-3.5.json'] = {
+        cachedAt: new Date().toISOString(),
+        data: { features: [{ issueKey: 'TEST-1' }], rfes: [], bigRocks: [], summary: null }
+      }
+      const req = makeReq({ params: { version: '3.5' }, query: {}, headers: { 'if-none-match': '"stale-etag"' } })
+      const res = callRoute(router._routes, 'GET', '/releases/:version/candidates', req)
+      expect(res._status).toBe(200)
+      expect(res._json.features).toHaveLength(1)
     })
   })
 
