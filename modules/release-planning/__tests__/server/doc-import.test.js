@@ -188,6 +188,44 @@ describe('executeDocImport', () => {
     expect(result.validationErrors[0].name).toBe(longName)
   })
 
+  it('writes config exactly once in replace mode', () => {
+    const config = makeConfig([
+      makeRock('Old A', ['RHAISTRAT-100']),
+      makeRock('Old B', ['RHAISTRAT-200']),
+      makeRock('Old C', ['RHAISTRAT-300'])
+    ])
+    const storage = createStorageWithConfig(config)
+    const parsedDoc = makeParsedDoc([
+      makeRock('New 1', ['RHAISTRAT-400']),
+      makeRock('New 2', ['RHAISTRAT-500'])
+    ])
+
+    executeDocImport(
+      storage.readFromStorage, storage.writeToStorage,
+      '3.5', 'test-doc-id', 'replace', parsedDoc
+    )
+
+    expect(storage.writeToStorage).toHaveBeenCalledTimes(1)
+  })
+
+  it('writes config exactly once in append mode', () => {
+    const config = makeConfig([
+      makeRock('Existing', ['RHAISTRAT-100'])
+    ])
+    const storage = createStorageWithConfig(config)
+    const parsedDoc = makeParsedDoc([
+      makeRock('New A', ['RHAISTRAT-200']),
+      makeRock('New B', ['RHAISTRAT-300'])
+    ])
+
+    executeDocImport(
+      storage.readFromStorage, storage.writeToStorage,
+      '3.5', 'test-doc-id', 'append', parsedDoc
+    )
+
+    expect(storage.writeToStorage).toHaveBeenCalledTimes(1)
+  })
+
   it('renumbers priorities sequentially', () => {
     const config = makeConfig([])
     const storage = createStorageWithConfig(config)
