@@ -95,9 +95,6 @@ watch(function() { return props.version }, function(v) {
         <span
           v-if="!collapsed"
           @click.stop="viewAll"
-          role="link"
-          tabindex="0"
-          @keydown.enter.stop="viewAll"
           class="text-xs text-primary-600 dark:text-primary-400 hover:underline"
         >View all</span>
         <svg
