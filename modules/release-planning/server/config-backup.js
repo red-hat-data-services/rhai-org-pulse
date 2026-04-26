@@ -1,8 +1,9 @@
 /**
- * Backup-before-destructive-write logic for config.json.
+ * Backup-before-destructive-write logic for release-planning config.
  *
  * Creates timestamped backups before destructive operations (delete Big Rock,
- * delete release, replace-mode import). Retains the 10 most recent backups.
+ * delete release, replace-mode import). Bundles config.json and all per-release
+ * files into a single backup. Retains the 10 most recent backups.
  */
 
 const BACKUP_PREFIX = 'release-planning/config-backup-'
@@ -12,8 +13,15 @@ function backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteF
   const config = readFromStorage('release-planning/config.json')
   if (!config) return
 
+  const bundle = { config: config, releases: {} }
+  const versions = Object.keys(config.releases || {})
+  for (let i = 0; i < versions.length; i++) {
+    const data = readFromStorage('release-planning/releases/' + versions[i] + '.json')
+    if (data) bundle.releases[versions[i]] = data
+  }
+
   const ts = new Date().toISOString().replace(/[:.]/g, '-')
-  writeToStorage(`${BACKUP_PREFIX}${ts}.json`, config)
+  writeToStorage(`${BACKUP_PREFIX}${ts}.json`, bundle)
 
   pruneOldBackups(listStorageFiles, deleteFromStorage)
 }

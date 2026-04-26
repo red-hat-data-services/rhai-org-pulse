@@ -1,5 +1,5 @@
 const crypto = require('crypto')
-const { getConfig, loadBigRocks, getConfiguredReleases, saveBigRock, deleteBigRock, reorderBigRocks, createRelease, cloneRelease, deleteRelease } = require('./config')
+const { getConfig, loadBigRocks, getConfiguredReleases, saveBigRock, deleteBigRock, reorderBigRocks, createRelease, cloneRelease, deleteRelease, migrateConfig, releaseFilePath } = require('./config')
 const { runPipeline, buildCandidateResponse } = require('./pipeline')
 const { loadIndex, validateKeysFromCache } = require('./cache-reader')
 const { CACHE_MAX_AGE_MS } = require('./constants')
@@ -25,6 +25,8 @@ module.exports = function registerRoutes(router, context) {
   const { readFromStorage, writeToStorage } = storage
   const listStorageFiles = storage.listStorageFiles || null
   const deleteFromStorage = storage.deleteFromStorage || null
+
+  migrateConfig(readFromStorage, writeToStorage)
 
   // PM role middleware: admins and listed PM users can edit
   const requirePM = createRequirePM(readFromStorage)
@@ -297,13 +299,11 @@ module.exports = function registerRoutes(router, context) {
 
     try {
       const result = await withConfigLock(function() {
-        // Validate
         const currentConfig = getConfig(readFromStorage)
-        const releaseConfig = currentConfig.releases[version]
-        if (!releaseConfig) {
+        if (!currentConfig.releases[version]) {
           throw Object.assign(new Error('Release ' + version + ' not found'), { statusCode: 404 })
         }
-        const existingRocks = releaseConfig.bigRocks || []
+        const existingRocks = loadBigRocks(readFromStorage, version)
         const existingNames = existingRocks.map(function(r) { return r.name })
 
         const validation = validateBigRock(req.body, {
@@ -344,13 +344,11 @@ module.exports = function registerRoutes(router, context) {
 
     try {
       const result = await withConfigLock(function() {
-        // Validate
         const currentConfig = getConfig(readFromStorage)
-        const releaseConfig = currentConfig.releases[version]
-        if (!releaseConfig) {
+        if (!currentConfig.releases[version]) {
           throw Object.assign(new Error('Release ' + version + ' not found'), { statusCode: 404 })
         }
-        const existingRocks = releaseConfig.bigRocks || []
+        const existingRocks = loadBigRocks(readFromStorage, version)
         const existingNames = existingRocks.map(function(r) { return r.name })
 
         const validation = validateBigRock(req.body, {
@@ -397,19 +395,16 @@ module.exports = function registerRoutes(router, context) {
 
     try {
       const result = await withConfigLock(function() {
-        // Check existence first
         const currentConfig = getConfig(readFromStorage)
-        const releaseConfig = currentConfig.releases[version]
-        if (!releaseConfig) {
+        if (!currentConfig.releases[version]) {
           throw Object.assign(new Error('Release ' + version + ' not found'), { statusCode: 404 })
         }
-        const existingRocks = releaseConfig.bigRocks || []
+        const existingRocks = loadBigRocks(readFromStorage, version)
         const found = existingRocks.find(function(r) { return r.name === name })
         if (!found) {
           throw Object.assign(new Error("Big Rock '" + name + "' not found for release " + version), { statusCode: 404 })
         }
 
-        // Backup before destructive write
         backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
 
         return deleteBigRock(readFromStorage, writeToStorage, version, name)
@@ -490,8 +485,8 @@ module.exports = function registerRoutes(router, context) {
         summary: 'Deleted release ' + version
       })
 
-      // Also delete the candidates cache file for this version
       if (deleteFromStorage) {
+        deleteFromStorage(releaseFilePath(version))
         deleteFromStorage(DATA_PREFIX + '/candidates-cache-' + version + '.json')
       }
 
@@ -586,9 +581,7 @@ module.exports = function registerRoutes(router, context) {
     try {
       const result = await previewDocImport(docId)
 
-      // Annotate each rock with duplicate/validation status for the target release
-      const config = getConfig(readFromStorage)
-      const existingRocks = (config.releases[version] && config.releases[version].bigRocks) || []
+      const existingRocks = loadBigRocks(readFromStorage, version)
       const existingNames = new Set(existingRocks.map(function(r) { return r.name }))
 
       for (let i = 0; i < result.bigRocks.length; i++) {
@@ -732,10 +725,19 @@ module.exports = function registerRoutes(router, context) {
         backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
 
         const existing = getConfig(readFromStorage)
+
+        // Merge release stubs into config registry (without bigRocks)
+        const mergedReleases = { ...existing.releases }
+        for (let vi = 0; vi < versions.length; vi++) {
+          const ver = versions[vi]
+          const rocks = config.releases[ver].bigRocks || []
+          mergedReleases[ver] = { release: ver }
+          writeToStorage(releaseFilePath(ver), { release: ver, bigRocks: rocks })
+        }
+
         const merged = {
           ...existing,
-          ...config,
-          releases: { ...existing.releases, ...config.releases },
+          releases: mergedReleases,
           fieldMapping: { ...existing.fieldMapping, ...(config.fieldMapping || {}) },
           customFieldIds: { ...existing.customFieldIds, ...(config.customFieldIds || {}) }
         }
@@ -743,7 +745,7 @@ module.exports = function registerRoutes(router, context) {
         writeToStorage('release-planning/config.json', merged)
 
         const seededVersions = versions.map(function(v) {
-          return { version: v, bigRockCount: (merged.releases[v].bigRocks || []).length }
+          return { version: v, bigRockCount: (config.releases[v].bigRocks || []).length }
         })
 
         return { seeded: seededVersions, totalReleases: Object.keys(merged.releases).length }

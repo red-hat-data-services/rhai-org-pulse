@@ -1,21 +1,29 @@
 import { describe, it, expect, vi } from 'vitest'
 const { parseDocId, executeDocImport } = require('../../server/doc-import')
 
-function createStorageWithConfig(config) {
-  let stored = JSON.parse(JSON.stringify(config))
+function createStorage(configReleases, releaseFiles) {
+  const store = {
+    'release-planning/config.json': { releases: configReleases || {} }
+  }
+  if (releaseFiles) {
+    for (const v in releaseFiles) {
+      store['release-planning/releases/' + v + '.json'] = releaseFiles[v]
+    }
+  }
   return {
-    readFromStorage: vi.fn(function() { return stored }),
+    readFromStorage: vi.fn(function(key) {
+      return store[key] ? JSON.parse(JSON.stringify(store[key])) : null
+    }),
     writeToStorage: vi.fn(function(key, data) {
-      stored = JSON.parse(JSON.stringify(data))
-    })
+      store[key] = JSON.parse(JSON.stringify(data))
+    }),
+    _store: store
   }
 }
 
-function makeConfig(bigRocks, version) {
+function makeReleaseFile(bigRocks, version) {
   version = version || '3.5'
-  const releases = {}
-  releases[version] = { release: version, bigRocks: bigRocks || [] }
-  return { releases: releases }
+  return { release: version, bigRocks: bigRocks || [] }
 }
 
 function makeParsedDoc(rocks) {
@@ -74,11 +82,13 @@ describe('parseDocId', () => {
 describe('executeDocImport', () => {
   describe('replace mode', () => {
     it('replaces all existing Big Rocks', () => {
-      const config = makeConfig([
-        makeRock('Old Rock A', ['RHAISTRAT-100']),
-        makeRock('Old Rock B', ['RHAISTRAT-200'])
-      ])
-      const storage = createStorageWithConfig(config)
+      const storage = createStorage(
+        { '3.5': { release: '3.5' } },
+        { '3.5': makeReleaseFile([
+          makeRock('Old Rock A', ['RHAISTRAT-100']),
+          makeRock('Old Rock B', ['RHAISTRAT-200'])
+        ]) }
+      )
       const parsedDoc = makeParsedDoc([
         makeRock('New Rock 1', ['RHAISTRAT-300']),
         makeRock('New Rock 2', ['RHAISTRAT-400'])
@@ -100,10 +110,12 @@ describe('executeDocImport', () => {
 
   describe('append mode', () => {
     it('adds new rocks after existing ones', () => {
-      const config = makeConfig([
-        makeRock('Existing', ['RHAISTRAT-100'])
-      ])
-      const storage = createStorageWithConfig(config)
+      const storage = createStorage(
+        { '3.5': { release: '3.5' } },
+        { '3.5': makeReleaseFile([
+          makeRock('Existing', ['RHAISTRAT-100'])
+        ]) }
+      )
       const parsedDoc = makeParsedDoc([
         makeRock('New Rock', ['RHAISTRAT-200'])
       ])
@@ -120,10 +132,12 @@ describe('executeDocImport', () => {
     })
 
     it('skips duplicate names', () => {
-      const config = makeConfig([
-        makeRock('MaaS', ['RHAISTRAT-100'])
-      ])
-      const storage = createStorageWithConfig(config)
+      const storage = createStorage(
+        { '3.5': { release: '3.5' } },
+        { '3.5': makeReleaseFile([
+          makeRock('MaaS', ['RHAISTRAT-100'])
+        ]) }
+      )
       const parsedDoc = makeParsedDoc([
         makeRock('MaaS', ['RHAISTRAT-200']),
         makeRock('New Rock', ['RHAISTRAT-300'])
@@ -142,8 +156,10 @@ describe('executeDocImport', () => {
   })
 
   it('throws when no Big Rocks are parsed', () => {
-    const config = makeConfig([])
-    const storage = createStorageWithConfig(config)
+    const storage = createStorage(
+      { '3.5': { release: '3.5' } },
+      { '3.5': makeReleaseFile([]) }
+    )
     const parsedDoc = makeParsedDoc([])
 
     expect(function() {
@@ -155,8 +171,10 @@ describe('executeDocImport', () => {
   })
 
   it('throws when release version not found', () => {
-    const config = makeConfig([], '3.5')
-    const storage = createStorageWithConfig(config)
+    const storage = createStorage(
+      { '3.5': { release: '3.5' } },
+      { '3.5': makeReleaseFile([]) }
+    )
     const parsedDoc = makeParsedDoc([makeRock('Test')])
 
     expect(function() {
@@ -168,9 +186,10 @@ describe('executeDocImport', () => {
   })
 
   it('skips rocks that fail validation', () => {
-    const config = makeConfig([])
-    const storage = createStorageWithConfig(config)
-    // Name exceeding 100 chars
+    const storage = createStorage(
+      { '3.5': { release: '3.5' } },
+      { '3.5': makeReleaseFile([]) }
+    )
     const longName = 'A'.repeat(101)
     const parsedDoc = makeParsedDoc([
       makeRock(longName),
@@ -188,13 +207,15 @@ describe('executeDocImport', () => {
     expect(result.validationErrors[0].name).toBe(longName)
   })
 
-  it('writes config exactly once in replace mode', () => {
-    const config = makeConfig([
-      makeRock('Old A', ['RHAISTRAT-100']),
-      makeRock('Old B', ['RHAISTRAT-200']),
-      makeRock('Old C', ['RHAISTRAT-300'])
-    ])
-    const storage = createStorageWithConfig(config)
+  it('writes per-release file exactly once in replace mode', () => {
+    const storage = createStorage(
+      { '3.5': { release: '3.5' } },
+      { '3.5': makeReleaseFile([
+        makeRock('Old A', ['RHAISTRAT-100']),
+        makeRock('Old B', ['RHAISTRAT-200']),
+        makeRock('Old C', ['RHAISTRAT-300'])
+      ]) }
+    )
     const parsedDoc = makeParsedDoc([
       makeRock('New 1', ['RHAISTRAT-400']),
       makeRock('New 2', ['RHAISTRAT-500'])
@@ -206,13 +227,19 @@ describe('executeDocImport', () => {
     )
 
     expect(storage.writeToStorage).toHaveBeenCalledTimes(1)
+    expect(storage.writeToStorage).toHaveBeenCalledWith(
+      'release-planning/releases/3.5.json',
+      expect.any(Object)
+    )
   })
 
-  it('writes config exactly once in append mode', () => {
-    const config = makeConfig([
-      makeRock('Existing', ['RHAISTRAT-100'])
-    ])
-    const storage = createStorageWithConfig(config)
+  it('writes per-release file exactly once in append mode', () => {
+    const storage = createStorage(
+      { '3.5': { release: '3.5' } },
+      { '3.5': makeReleaseFile([
+        makeRock('Existing', ['RHAISTRAT-100'])
+      ]) }
+    )
     const parsedDoc = makeParsedDoc([
       makeRock('New A', ['RHAISTRAT-200']),
       makeRock('New B', ['RHAISTRAT-300'])
@@ -224,11 +251,17 @@ describe('executeDocImport', () => {
     )
 
     expect(storage.writeToStorage).toHaveBeenCalledTimes(1)
+    expect(storage.writeToStorage).toHaveBeenCalledWith(
+      'release-planning/releases/3.5.json',
+      expect.any(Object)
+    )
   })
 
   it('renumbers priorities sequentially', () => {
-    const config = makeConfig([])
-    const storage = createStorageWithConfig(config)
+    const storage = createStorage(
+      { '3.5': { release: '3.5' } },
+      { '3.5': makeReleaseFile([]) }
+    )
     const parsedDoc = makeParsedDoc([
       makeRock('Rock A'),
       makeRock('Rock B'),

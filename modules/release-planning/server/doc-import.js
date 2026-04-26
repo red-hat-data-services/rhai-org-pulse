@@ -7,7 +7,7 @@
 
 const googleDocs = require('../../../shared/server/google-docs')
 const { validateBigRock } = require('./validation')
-const { getConfig } = require('./config')
+const { getConfig, loadReleaseData, releaseFilePath } = require('./config')
 
 /**
  * Parse a Google Doc URL or ID to extract the document ID.
@@ -101,7 +101,8 @@ function executeDocImport(readFromStorage, writeToStorage, version, docIdOrUrl, 
     throw Object.assign(new Error('Release ' + version + ' not found'), { statusCode: 404 })
   }
 
-  const bigRocks = mode === 'replace' ? [] : (config.releases[version].bigRocks || []).slice()
+  const releaseData = loadReleaseData(readFromStorage, version)
+  const bigRocks = mode === 'replace' ? [] : (releaseData.bigRocks || []).slice()
   const existingNames = new Set(bigRocks.map(function(r) { return r.name }))
 
   let imported = 0
@@ -137,8 +138,8 @@ function executeDocImport(readFromStorage, writeToStorage, version, docIdOrUrl, 
     bigRocks[i].priority = i + 1
   }
 
-  config.releases[version].bigRocks = bigRocks
-  writeToStorage('release-planning/config.json', config)
+  releaseData.bigRocks = bigRocks
+  writeToStorage(releaseFilePath(version), releaseData)
 
   return {
     imported: imported,

@@ -1,16 +1,24 @@
 import { describe, it, expect, vi } from 'vitest'
 const { createRelease, cloneRelease, deleteRelease } = require('../../server/config')
 
-function createStorageWithConfig(config) {
-  const stored = JSON.parse(JSON.stringify(config))
-  return {
-    readFromStorage: vi.fn().mockReturnValue(stored),
-    writeToStorage: vi.fn()
+function createStorage(configReleases, releaseFiles) {
+  const store = {
+    'release-planning/config.json': { releases: configReleases || {} }
   }
-}
-
-function makeConfig(releases) {
-  return { releases: releases || {} }
+  if (releaseFiles) {
+    for (const v in releaseFiles) {
+      store['release-planning/releases/' + v + '.json'] = releaseFiles[v]
+    }
+  }
+  return {
+    readFromStorage: vi.fn(function(key) {
+      return store[key] ? JSON.parse(JSON.stringify(store[key])) : null
+    }),
+    writeToStorage: vi.fn(function(key, data) {
+      store[key] = JSON.parse(JSON.stringify(data))
+    }),
+    _store: store
+  }
 }
 
 function makeRock(name, priority) {
@@ -29,8 +37,10 @@ function makeRock(name, priority) {
 
 describe('createRelease', () => {
   it('creates a blank release successfully', () => {
-    const config = makeConfig({ '3.5': { release: '3.5', bigRocks: [] } })
-    const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+    const { readFromStorage, writeToStorage } = createStorage(
+      { '3.5': { release: '3.5' } },
+      { '3.5': { release: '3.5', bigRocks: [] } }
+    )
 
     const result = createRelease(readFromStorage, writeToStorage, '3.6')
 
@@ -38,17 +48,19 @@ describe('createRelease', () => {
     expect(result.bigRockCount).toBe(0)
     expect(writeToStorage).toHaveBeenCalledWith('release-planning/config.json', expect.objectContaining({
       releases: expect.objectContaining({
-        '3.6': expect.objectContaining({
-          release: '3.6',
-          bigRocks: []
-        })
+        '3.6': { release: '3.6' }
       })
     }))
+    expect(writeToStorage).toHaveBeenCalledWith('release-planning/releases/3.6.json', {
+      release: '3.6',
+      bigRocks: []
+    })
   })
 
   it('fails if version already exists (409)', () => {
-    const config = makeConfig({ '3.5': { release: '3.5', bigRocks: [] } })
-    const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+    const { readFromStorage, writeToStorage } = createStorage(
+      { '3.5': { release: '3.5' } }
+    )
 
     try {
       createRelease(readFromStorage, writeToStorage, '3.5')
@@ -61,8 +73,7 @@ describe('createRelease', () => {
   })
 
   it('fails if version is empty', () => {
-    const config = makeConfig({})
-    const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+    const { readFromStorage, writeToStorage } = createStorage({})
 
     expect(() => {
       createRelease(readFromStorage, writeToStorage, '')
@@ -71,59 +82,60 @@ describe('createRelease', () => {
   })
 
   it('creates the first release when config has no releases', () => {
-    const config = makeConfig({})
-    const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+    const { readFromStorage, writeToStorage } = createStorage({})
 
     const result = createRelease(readFromStorage, writeToStorage, '3.5')
 
     expect(result.version).toBe('3.5')
     expect(result.bigRockCount).toBe(0)
-    expect(writeToStorage).toHaveBeenCalled()
+    expect(writeToStorage).toHaveBeenCalledWith('release-planning/config.json', expect.any(Object))
+    expect(writeToStorage).toHaveBeenCalledWith('release-planning/releases/3.5.json', {
+      release: '3.5',
+      bigRocks: []
+    })
   })
 })
 
 describe('cloneRelease', () => {
   it('clones Big Rocks from an existing release', () => {
-    const config = makeConfig({
-      '3.5': {
-        release: '3.5',
-        bigRocks: [makeRock('A', 1), makeRock('B', 2)]
-      }
-    })
-    const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+    const { readFromStorage, writeToStorage } = createStorage(
+      { '3.5': { release: '3.5' } },
+      { '3.5': { release: '3.5', bigRocks: [makeRock('A', 1), makeRock('B', 2)] } }
+    )
 
     const result = cloneRelease(readFromStorage, writeToStorage, '3.6', '3.5')
 
     expect(result.version).toBe('3.6')
     expect(result.bigRockCount).toBe(2)
-    expect(writeToStorage).toHaveBeenCalled()
+    expect(writeToStorage).toHaveBeenCalledWith('release-planning/releases/3.6.json', expect.objectContaining({
+      release: '3.6',
+      bigRocks: expect.arrayContaining([
+        expect.objectContaining({ name: 'A' }),
+        expect.objectContaining({ name: 'B' })
+      ])
+    }))
   })
 
   it('deep-copies Big Rocks so modifying clone does not affect source', () => {
-    const sourceRocks = [makeRock('A', 1), makeRock('B', 2)]
-    const config = makeConfig({
-      '3.5': { release: '3.5', bigRocks: sourceRocks }
-    })
-    const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+    const { readFromStorage, writeToStorage, _store } = createStorage(
+      { '3.5': { release: '3.5' } },
+      { '3.5': { release: '3.5', bigRocks: [makeRock('A', 1), makeRock('B', 2)] } }
+    )
 
     cloneRelease(readFromStorage, writeToStorage, '3.6', '3.5')
 
-    // Get the written config to check the cloned data
-    const writtenConfig = writeToStorage.mock.calls[0][1]
-    const clonedRocks = writtenConfig.releases['3.6'].bigRocks
-    const originalRocks = writtenConfig.releases['3.5'].bigRocks
+    const clonedData = _store['release-planning/releases/3.6.json']
+    const sourceData = _store['release-planning/releases/3.5.json']
 
-    // Modify the clone
-    clonedRocks[0].name = 'MODIFIED'
-
-    // Original should be unchanged
-    expect(originalRocks[0].name).toBe('A')
-    expect(clonedRocks[0].name).toBe('MODIFIED')
+    clonedData.bigRocks[0].name = 'MODIFIED'
+    expect(sourceData.bigRocks[0].name).toBe('A')
   })
 
   it('fails if source release does not exist', () => {
-    const config = makeConfig({ '3.5': { release: '3.5', bigRocks: [] } })
-    const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+    const { readFromStorage, writeToStorage } = createStorage(
+      { '3.5': { release: '3.5' } },
+      { '3.5': { release: '3.5', bigRocks: [] } }
+    )
 
     try {
       cloneRelease(readFromStorage, writeToStorage, '3.6', '9.9')
@@ -137,11 +149,16 @@ describe('cloneRelease', () => {
   })
 
   it('fails if target version already exists', () => {
-    const config = makeConfig({
-      '3.5': { release: '3.5', bigRocks: [makeRock('A', 1)] },
-      '3.6': { release: '3.6', bigRocks: [] }
-    })
-    const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+    const { readFromStorage, writeToStorage } = createStorage(
+      {
+        '3.5': { release: '3.5' },
+        '3.6': { release: '3.6' }
+      },
+      {
+        '3.5': { release: '3.5', bigRocks: [makeRock('A', 1)] },
+        '3.6': { release: '3.6', bigRocks: [] }
+      }
+    )
 
     try {
       cloneRelease(readFromStorage, writeToStorage, '3.6', '3.5')
@@ -153,10 +170,10 @@ describe('cloneRelease', () => {
   })
 
   it('clones from a release with empty Big Rocks', () => {
-    const config = makeConfig({
-      '3.5': { release: '3.5', bigRocks: [] }
-    })
-    const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+    const { readFromStorage, writeToStorage } = createStorage(
+      { '3.5': { release: '3.5' } },
+      { '3.5': { release: '3.5', bigRocks: [] } }
+    )
 
     const result = cloneRelease(readFromStorage, writeToStorage, '3.6', '3.5')
 
@@ -165,48 +182,47 @@ describe('cloneRelease', () => {
   })
 
   it('preserves outcomeKeys as arrays in the clone', () => {
-    const config = makeConfig({
-      '3.5': {
-        release: '3.5',
-        bigRocks: [
-          { ...makeRock('A', 1), outcomeKeys: ['KEY-1', 'KEY-2'] }
-        ]
+    const { readFromStorage, writeToStorage, _store } = createStorage(
+      { '3.5': { release: '3.5' } },
+      {
+        '3.5': {
+          release: '3.5',
+          bigRocks: [{ ...makeRock('A', 1), outcomeKeys: ['KEY-1', 'KEY-2'] }]
+        }
       }
-    })
-    const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+    )
 
     cloneRelease(readFromStorage, writeToStorage, '3.6', '3.5')
 
-    const writtenConfig = writeToStorage.mock.calls[0][1]
-    const clonedRocks = writtenConfig.releases['3.6'].bigRocks
-    expect(clonedRocks[0].outcomeKeys).toEqual(['KEY-1', 'KEY-2'])
-    // Verify deep copy of nested array
-    expect(clonedRocks[0].outcomeKeys).not.toBe(
-      writtenConfig.releases['3.5'].bigRocks[0].outcomeKeys
-    )
+    const clonedData = _store['release-planning/releases/3.6.json']
+    expect(clonedData.bigRocks[0].outcomeKeys).toEqual(['KEY-1', 'KEY-2'])
+    const sourceData = _store['release-planning/releases/3.5.json']
+    expect(clonedData.bigRocks[0].outcomeKeys).not.toBe(sourceData.bigRocks[0].outcomeKeys)
   })
 })
 
 describe('deleteRelease', () => {
-  it('deletes an existing release', () => {
-    const config = makeConfig({
-      '3.5': { release: '3.5', bigRocks: [makeRock('A', 1)] },
-      '3.6': { release: '3.6', bigRocks: [] }
-    })
-    const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+  it('deletes an existing release from config registry', () => {
+    const { readFromStorage, writeToStorage } = createStorage(
+      {
+        '3.5': { release: '3.5' },
+        '3.6': { release: '3.6' }
+      }
+    )
 
     const result = deleteRelease(readFromStorage, writeToStorage, '3.5')
 
     expect(result.deleted).toBe('3.5')
-    expect(writeToStorage).toHaveBeenCalled()
+    expect(writeToStorage).toHaveBeenCalledWith('release-planning/config.json', expect.any(Object))
     const writtenConfig = writeToStorage.mock.calls[0][1]
     expect(writtenConfig.releases['3.5']).toBeUndefined()
     expect(writtenConfig.releases['3.6']).toBeDefined()
   })
 
   it('fails if release does not exist', () => {
-    const config = makeConfig({ '3.5': { release: '3.5', bigRocks: [] } })
-    const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+    const { readFromStorage, writeToStorage } = createStorage(
+      { '3.5': { release: '3.5' } }
+    )
 
     try {
       deleteRelease(readFromStorage, writeToStorage, '9.9')
@@ -220,13 +236,11 @@ describe('deleteRelease', () => {
   })
 
   it('returns the version name of the deleted release', () => {
-    const config = makeConfig({
-      '3.5': { release: '3.5', bigRocks: [] }
-    })
-    const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+    const { readFromStorage, writeToStorage } = createStorage(
+      { '3.5': { release: '3.5' } }
+    )
 
     const result = deleteRelease(readFromStorage, writeToStorage, '3.5')
-
     expect(result.deleted).toBe('3.5')
   })
 })

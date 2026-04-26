@@ -15,6 +15,10 @@ const DEFAULT_CONFIG = {
   }
 }
 
+function releaseFilePath(version) {
+  return 'release-planning/releases/' + version + '.json'
+}
+
 function getConfig(readFromStorage) {
   const stored = readFromStorage('release-planning/config.json')
   if (stored && typeof stored === 'object') {
@@ -28,13 +32,13 @@ function getConfig(readFromStorage) {
   return { ...DEFAULT_CONFIG }
 }
 
+function loadReleaseData(readFromStorage, version) {
+  return readFromStorage(releaseFilePath(version)) || { release: version, bigRocks: [] }
+}
+
 function loadBigRocks(readFromStorage, version) {
-  const config = getConfig(readFromStorage)
-  const releaseConfig = config.releases[version]
-  if (!releaseConfig || !releaseConfig.bigRocks) {
-    return []
-  }
-  return releaseConfig.bigRocks
+  const data = loadReleaseData(readFromStorage, version)
+  return data.bigRocks || []
 }
 
 function loadFieldMapping(readFromStorage) {
@@ -44,34 +48,24 @@ function loadFieldMapping(readFromStorage) {
 
 function getConfiguredReleases(readFromStorage) {
   const config = getConfig(readFromStorage)
-  return Object.keys(config.releases || {}).map(version => ({
-    version,
-    bigRockCount: (config.releases[version].bigRocks || []).length
-  }))
+  return Object.keys(config.releases || {}).map(function(version) {
+    const releaseData = loadReleaseData(readFromStorage, version)
+    return {
+      version: version,
+      bigRockCount: (releaseData.bigRocks || []).length
+    }
+  })
 }
 
 /**
  * Save a Big Rock (create or update) within a release.
- * The server renumbers priorities sequentially after every write.
- *
- * @param {Function} readFromStorage
- * @param {Function} writeToStorage
- * @param {string} version - Release version
- * @param {string|null} originalName - The existing name to update, or null for new
- * @param {object} data - Big Rock fields
- * @returns {object} { bigRock, bigRocks } - The saved rock and the full updated list
+ * Reads/writes only the per-release file, not the global config.
  */
 function saveBigRock(readFromStorage, writeToStorage, version, originalName, data) {
-  const config = getConfig(readFromStorage)
-
-  if (!config.releases[version]) {
-    throw new Error(`Release ${version} not found`)
-  }
-
-  const bigRocks = config.releases[version].bigRocks || []
+  const releaseData = loadReleaseData(readFromStorage, version)
+  const bigRocks = releaseData.bigRocks || []
 
   if (originalName) {
-    // Update existing
     const idx = bigRocks.findIndex(function(r) { return r.name === originalName })
     if (idx === -1) {
       throw new Error(`Big Rock '${originalName}' not found for release ${version}`)
@@ -89,7 +83,6 @@ function saveBigRock(readFromStorage, writeToStorage, version, originalName, dat
       description: data.description || ''
     }
   } else {
-    // Add new
     const newRock = {
       priority: bigRocks.length + 1,
       name: (data.name || '').trim(),
@@ -108,11 +101,10 @@ function saveBigRock(readFromStorage, writeToStorage, version, originalName, dat
     bigRocks.push(newRock)
   }
 
-  // Renumber priorities sequentially
   renumberPriorities(bigRocks)
 
-  config.releases[version].bigRocks = bigRocks
-  writeToStorage('release-planning/config.json', config)
+  releaseData.bigRocks = bigRocks
+  writeToStorage(releaseFilePath(version), releaseData)
 
   const savedRock = bigRocks.find(function(r) { return r.name === (data.name || '').trim() })
   return { bigRock: savedRock, bigRocks: bigRocks }
@@ -120,21 +112,11 @@ function saveBigRock(readFromStorage, writeToStorage, version, originalName, dat
 
 /**
  * Delete a Big Rock by name from a release.
- *
- * @param {Function} readFromStorage
- * @param {Function} writeToStorage
- * @param {string} version - Release version
- * @param {string} name - Big Rock name to delete
- * @returns {object} { deleted, bigRocks } - The deleted name and remaining list
+ * Reads/writes only the per-release file.
  */
 function deleteBigRock(readFromStorage, writeToStorage, version, name) {
-  const config = getConfig(readFromStorage)
-
-  if (!config.releases[version]) {
-    throw new Error(`Release ${version} not found`)
-  }
-
-  const bigRocks = config.releases[version].bigRocks || []
+  const releaseData = loadReleaseData(readFromStorage, version)
+  const bigRocks = releaseData.bigRocks || []
   const idx = bigRocks.findIndex(function(r) { return r.name === name })
 
   if (idx === -1) {
@@ -142,42 +124,35 @@ function deleteBigRock(readFromStorage, writeToStorage, version, name) {
   }
 
   bigRocks.splice(idx, 1)
-
-  // Renumber priorities sequentially
   renumberPriorities(bigRocks)
 
-  config.releases[version].bigRocks = bigRocks
-  writeToStorage('release-planning/config.json', config)
+  releaseData.bigRocks = bigRocks
+  writeToStorage(releaseFilePath(version), releaseData)
 
   return { deleted: name, bigRocks: bigRocks }
 }
 
 /**
  * Reorder Big Rocks within a release.
- * The orderedNames array must exactly match the set of current Big Rock names.
- *
- * @param {Function} readFromStorage
- * @param {Function} writeToStorage
- * @param {string} version - Release version
- * @param {string[]} orderedNames - Big Rock names in desired order
- * @returns {object} { bigRocks } - The reordered list with new priorities
+ * Reads/writes only the per-release file.
  */
 function reorderBigRocks(readFromStorage, writeToStorage, version, orderedNames) {
   const config = getConfig(readFromStorage)
-
   if (!config.releases[version]) {
-    throw new Error('Release ' + version + ' not found')
+    throw Object.assign(
+      new Error('Release ' + version + ' not found'),
+      { statusCode: 404 }
+    )
   }
 
-  const bigRocks = config.releases[version].bigRocks || []
+  const releaseData = loadReleaseData(readFromStorage, version)
+  const bigRocks = releaseData.bigRocks || []
   const currentNames = bigRocks.map(function(r) { return r.name })
 
-  // Validate: orderedNames must be an array
   if (!Array.isArray(orderedNames)) {
     throw new Error('orderedNames must be an array')
   }
 
-  // Validate: same count
   if (orderedNames.length !== currentNames.length) {
     throw Object.assign(
       new Error('Order list does not match current Big Rocks. Expected names: ' + JSON.stringify(currentNames)),
@@ -185,7 +160,6 @@ function reorderBigRocks(readFromStorage, writeToStorage, version, orderedNames)
     )
   }
 
-  // Validate: same set of names (no duplicates, no extras, no missing)
   const currentSet = Object.create(null)
   for (let i = 0; i < currentNames.length; i++) {
     currentSet[currentNames[i]] = true
@@ -207,31 +181,23 @@ function reorderBigRocks(readFromStorage, writeToStorage, version, orderedNames)
     }
   }
 
-  // Build a lookup map for fast access
   const rockByName = Object.create(null)
   for (let k = 0; k < bigRocks.length; k++) {
     rockByName[bigRocks[k].name] = bigRocks[k]
   }
 
-  // Reorder
   const reordered = orderedNames.map(function(name) { return rockByName[name] })
-
-  // Renumber priorities
   renumberPriorities(reordered)
 
-  config.releases[version].bigRocks = reordered
-  writeToStorage('release-planning/config.json', config)
+  releaseData.bigRocks = reordered
+  writeToStorage(releaseFilePath(version), releaseData)
 
   return { bigRocks: reordered }
 }
 
 /**
  * Create a new blank release.
- *
- * @param {Function} readFromStorage
- * @param {Function} writeToStorage
- * @param {string} version - Release version string
- * @returns {object} { version, bigRockCount }
+ * Registers in config.json and creates per-release file.
  */
 function createRelease(readFromStorage, writeToStorage, version) {
   if (!version || typeof version !== 'string' || version.trim().length === 0) {
@@ -247,20 +213,16 @@ function createRelease(readFromStorage, writeToStorage, version) {
     )
   }
 
-  config.releases[version] = { release: version, bigRocks: [] }
+  config.releases[version] = { release: version }
   writeToStorage('release-planning/config.json', config)
+  writeToStorage(releaseFilePath(version), { release: version, bigRocks: [] })
 
   return { version: version, bigRockCount: 0 }
 }
 
 /**
  * Create a new release by cloning Big Rocks from an existing release.
- *
- * @param {Function} readFromStorage
- * @param {Function} writeToStorage
- * @param {string} version - New release version string
- * @param {string} cloneFrom - Source release version to clone from
- * @returns {object} { version, bigRockCount }
+ * Registers in config.json and creates per-release file with cloned data.
  */
 function cloneRelease(readFromStorage, writeToStorage, version, cloneFrom) {
   if (!version || typeof version !== 'string' || version.trim().length === 0) {
@@ -283,23 +245,19 @@ function cloneRelease(readFromStorage, writeToStorage, version, cloneFrom) {
     )
   }
 
-  // Deep-copy the bigRocks array so edits to the clone don't affect the source
-  const sourceBigRocks = config.releases[cloneFrom].bigRocks || []
-  const clonedBigRocks = JSON.parse(JSON.stringify(sourceBigRocks))
+  const sourceData = loadReleaseData(readFromStorage, cloneFrom)
+  const clonedBigRocks = JSON.parse(JSON.stringify(sourceData.bigRocks || []))
 
-  config.releases[version] = { release: version, bigRocks: clonedBigRocks }
+  config.releases[version] = { release: version }
   writeToStorage('release-planning/config.json', config)
+  writeToStorage(releaseFilePath(version), { release: version, bigRocks: clonedBigRocks })
 
   return { version: version, bigRockCount: clonedBigRocks.length }
 }
 
 /**
- * Delete a release and its configuration.
- *
- * @param {Function} readFromStorage
- * @param {Function} writeToStorage
- * @param {string} version - Release version to delete
- * @returns {object} { deleted }
+ * Delete a release from the registry.
+ * The caller is responsible for deleting the per-release file and cache.
  */
 function deleteRelease(readFromStorage, writeToStorage, version) {
   const config = getConfig(readFromStorage)
@@ -318,6 +276,38 @@ function deleteRelease(readFromStorage, writeToStorage, version) {
 }
 
 /**
+ * Migrate legacy config: move bigRocks from config.json release entries
+ * into per-release files. Idempotent — skips releases already migrated.
+ */
+function migrateConfig(readFromStorage, writeToStorage) {
+  const config = getConfig(readFromStorage)
+  const versions = Object.keys(config.releases || {})
+  let migrated = 0
+
+  for (let i = 0; i < versions.length; i++) {
+    const version = versions[i]
+    const entry = config.releases[version]
+    if (!entry || !Array.isArray(entry.bigRocks)) continue
+
+    const existing = readFromStorage(releaseFilePath(version))
+    if (existing) continue
+
+    writeToStorage(releaseFilePath(version), {
+      release: version,
+      bigRocks: entry.bigRocks
+    })
+
+    delete entry.bigRocks
+    migrated++
+  }
+
+  if (migrated > 0) {
+    writeToStorage('release-planning/config.json', config)
+    console.log('[release-planning] Migrated ' + migrated + ' release(s) to per-release files')
+  }
+}
+
+/**
  * Renumber priorities sequentially starting from 1.
  * Modifies the array in place.
  */
@@ -330,6 +320,7 @@ function renumberPriorities(bigRocks) {
 module.exports = {
   DEFAULT_CONFIG,
   getConfig,
+  loadReleaseData,
   loadBigRocks,
   loadFieldMapping,
   getConfiguredReleases,
@@ -338,5 +329,7 @@ module.exports = {
   reorderBigRocks,
   createRelease,
   cloneRelease,
-  deleteRelease
+  deleteRelease,
+  migrateConfig,
+  releaseFilePath
 }

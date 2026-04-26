@@ -112,10 +112,12 @@ function callRoute(routes, method, path, req) {
   return res
 }
 
-function makeConfig(version, bigRocks) {
-  const releases = {}
-  releases[version] = { release: version, bigRocks: bigRocks || [] }
-  return { releases: releases }
+function setupVersion(store, version, bigRocks) {
+  if (!store['release-planning/config.json']) {
+    store['release-planning/config.json'] = { releases: {} }
+  }
+  store['release-planning/config.json'].releases[version] = { release: version }
+  store['release-planning/releases/' + version + '.json'] = { release: version, bigRocks: bigRocks || [] }
 }
 
 const VALID_ROCK = {
@@ -136,7 +138,8 @@ describe('release-planning routes', function() {
   beforeEach(function() {
     vi.clearAllMocks()
     storage = makeStorage({
-      'release-planning/config.json': makeConfig('3.5', []),
+      'release-planning/config.json': { releases: { '3.5': { release: '3.5' } } },
+      'release-planning/releases/3.5.json': { release: '3.5', bigRocks: [] },
       'release-planning/pm-users.json': { emails: ['pm@test.com'] }
     })
     router = makeRouter()
@@ -261,12 +264,10 @@ describe('release-planning routes', function() {
         cachedAt: new Date().toISOString(),
         data: { features: [], rfes: [], bigRocks: [], summary: null }
       }
-      // First request to get the ETag
       const req1 = makeReq({ params: { version: '3.5' }, query: {} })
       const res1 = callRoute(router._routes, 'GET', '/releases/:version/candidates', req1)
       const etag = res1._headers['ETag']
 
-      // Second request with matching If-None-Match
       const req2 = makeReq({ params: { version: '3.5' }, query: {}, headers: { 'if-none-match': etag } })
       const res2 = callRoute(router._routes, 'GET', '/releases/:version/candidates', req2)
       expect(res2._status).toBe(304)
@@ -355,7 +356,7 @@ describe('release-planning routes', function() {
 
   describe('PUT /releases/:version/big-rocks/:name', function() {
     beforeEach(function() {
-      storage._store['release-planning/config.json'] = makeConfig('3.5', [VALID_ROCK])
+      setupVersion(storage._store, '3.5', [VALID_ROCK])
     })
 
     it('updates an existing big rock', async function() {
@@ -392,7 +393,7 @@ describe('release-planning routes', function() {
 
   describe('DELETE /releases/:version/big-rocks/:name', function() {
     beforeEach(function() {
-      storage._store['release-planning/config.json'] = makeConfig('3.5', [VALID_ROCK])
+      setupVersion(storage._store, '3.5', [VALID_ROCK])
     })
 
     it('deletes a big rock', async function() {
@@ -590,7 +591,7 @@ describe('release-planning routes', function() {
 
   describe('PUT /releases/:version/big-rocks/reorder', function() {
     beforeEach(function() {
-      storage._store['release-planning/config.json'] = makeConfig('3.5', [
+      setupVersion(storage._store, '3.5', [
         Object.assign({}, VALID_ROCK, { name: 'Rock A', priority: 1 }),
         Object.assign({}, VALID_ROCK, { name: 'Rock B', priority: 2 })
       ])

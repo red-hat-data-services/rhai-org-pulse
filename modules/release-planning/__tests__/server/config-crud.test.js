@@ -1,28 +1,40 @@
 import { describe, it, expect, vi } from 'vitest'
 const { saveBigRock, deleteBigRock } = require('../../server/config')
 
-function createStorageWithConfig(config) {
-  const stored = { ...config }
+function createStorage(configReleases, releaseFiles) {
+  const store = {
+    'release-planning/config.json': { releases: configReleases || {} }
+  }
+  if (releaseFiles) {
+    for (const v in releaseFiles) {
+      store['release-planning/releases/' + v + '.json'] = releaseFiles[v]
+    }
+  }
   return {
-    readFromStorage: vi.fn().mockReturnValue(stored),
-    writeToStorage: vi.fn()
+    readFromStorage: vi.fn(function(key) {
+      return store[key] ? JSON.parse(JSON.stringify(store[key])) : null
+    }),
+    writeToStorage: vi.fn(function(key, data) {
+      store[key] = JSON.parse(JSON.stringify(data))
+    }),
+    _store: store
   }
 }
 
-function makeConfig(bigRocks, version) {
+function makeReleaseFile(bigRocks, version) {
   version = version || '3.5'
-  const releases = {}
-  releases[version] = { release: version, bigRocks: bigRocks || [] }
-  return { releases }
+  return { release: version, bigRocks: bigRocks || [] }
 }
 
 describe('saveBigRock', () => {
   describe('creating a new Big Rock', () => {
     it('adds a new Big Rock to the end of the list', () => {
-      const config = makeConfig([
-        { priority: 1, name: 'Existing', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' }
-      ])
-      const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+      const { readFromStorage, writeToStorage } = createStorage(
+        { '3.5': { release: '3.5' } },
+        { '3.5': makeReleaseFile([
+          { priority: 1, name: 'Existing', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' }
+        ]) }
+      )
 
       const result = saveBigRock(readFromStorage, writeToStorage, '3.5', null, {
         name: 'New Rock',
@@ -33,12 +45,14 @@ describe('saveBigRock', () => {
       expect(result.bigRock.pillar).toBe('Platform')
       expect(result.bigRock.priority).toBe(2)
       expect(result.bigRocks).toHaveLength(2)
-      expect(writeToStorage).toHaveBeenCalledWith('release-planning/config.json', expect.any(Object))
+      expect(writeToStorage).toHaveBeenCalledWith('release-planning/releases/3.5.json', expect.any(Object))
     })
 
     it('assigns priority 1 to the first Big Rock', () => {
-      const config = makeConfig([])
-      const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+      const { readFromStorage, writeToStorage } = createStorage(
+        { '3.5': { release: '3.5' } },
+        { '3.5': makeReleaseFile([]) }
+      )
 
       const result = saveBigRock(readFromStorage, writeToStorage, '3.5', null, {
         name: 'First Rock'
@@ -49,8 +63,10 @@ describe('saveBigRock', () => {
     })
 
     it('defaults optional fields to empty strings/arrays', () => {
-      const config = makeConfig([])
-      const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+      const { readFromStorage, writeToStorage } = createStorage(
+        { '3.5': { release: '3.5' } },
+        { '3.5': makeReleaseFile([]) }
+      )
 
       const result = saveBigRock(readFromStorage, writeToStorage, '3.5', null, {
         name: 'Minimal Rock'
@@ -66,8 +82,10 @@ describe('saveBigRock', () => {
     })
 
     it('trims the name', () => {
-      const config = makeConfig([])
-      const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+      const { readFromStorage, writeToStorage } = createStorage(
+        { '3.5': { release: '3.5' } },
+        { '3.5': makeReleaseFile([]) }
+      )
 
       const result = saveBigRock(readFromStorage, writeToStorage, '3.5', null, {
         name: '  Spaced Name  '
@@ -79,11 +97,13 @@ describe('saveBigRock', () => {
 
   describe('updating an existing Big Rock', () => {
     it('updates fields of an existing Big Rock by name', () => {
-      const config = makeConfig([
-        { priority: 1, name: 'MaaS', fullName: 'Old', pillar: 'Inference', state: '', owner: '', outcomeKeys: [], notes: '', description: '' },
-        { priority: 2, name: 'Other', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' }
-      ])
-      const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+      const { readFromStorage, writeToStorage } = createStorage(
+        { '3.5': { release: '3.5' } },
+        { '3.5': makeReleaseFile([
+          { priority: 1, name: 'MaaS', fullName: 'Old', pillar: 'Inference', state: '', owner: '', outcomeKeys: [], notes: '', description: '' },
+          { priority: 2, name: 'Other', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' }
+        ]) }
+      )
 
       const result = saveBigRock(readFromStorage, writeToStorage, '3.5', 'MaaS', {
         name: 'MaaS',
@@ -99,10 +119,12 @@ describe('saveBigRock', () => {
     })
 
     it('allows renaming a Big Rock', () => {
-      const config = makeConfig([
-        { priority: 1, name: 'OldName', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' }
-      ])
-      const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+      const { readFromStorage, writeToStorage } = createStorage(
+        { '3.5': { release: '3.5' } },
+        { '3.5': makeReleaseFile([
+          { priority: 1, name: 'OldName', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' }
+        ]) }
+      )
 
       const result = saveBigRock(readFromStorage, writeToStorage, '3.5', 'OldName', {
         name: 'NewName'
@@ -113,10 +135,12 @@ describe('saveBigRock', () => {
     })
 
     it('throws when the original name is not found', () => {
-      const config = makeConfig([
-        { priority: 1, name: 'MaaS', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' }
-      ])
-      const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+      const { readFromStorage, writeToStorage } = createStorage(
+        { '3.5': { release: '3.5' } },
+        { '3.5': makeReleaseFile([
+          { priority: 1, name: 'MaaS', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' }
+        ]) }
+      )
 
       expect(() => {
         saveBigRock(readFromStorage, writeToStorage, '3.5', 'NonExistent', { name: 'X' })
@@ -124,12 +148,14 @@ describe('saveBigRock', () => {
     })
 
     it('preserves priority during update', () => {
-      const config = makeConfig([
-        { priority: 1, name: 'A', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' },
-        { priority: 2, name: 'B', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' },
-        { priority: 3, name: 'C', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' }
-      ])
-      const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+      const { readFromStorage, writeToStorage } = createStorage(
+        { '3.5': { release: '3.5' } },
+        { '3.5': makeReleaseFile([
+          { priority: 1, name: 'A', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' },
+          { priority: 2, name: 'B', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' },
+          { priority: 3, name: 'C', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' }
+        ]) }
+      )
 
       const result = saveBigRock(readFromStorage, writeToStorage, '3.5', 'B', {
         name: 'B',
@@ -141,24 +167,15 @@ describe('saveBigRock', () => {
     })
   })
 
-  describe('release validation', () => {
-    it('throws when the release does not exist', () => {
-      const config = makeConfig([], '3.5')
-      const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
-
-      expect(() => {
-        saveBigRock(readFromStorage, writeToStorage, '9.9', null, { name: 'X' })
-      }).toThrow('Release 9.9 not found')
-    })
-  })
-
   describe('priority renumbering', () => {
     it('renumbers priorities sequentially after save', () => {
-      const config = makeConfig([
-        { priority: 5, name: 'A', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' },
-        { priority: 10, name: 'B', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' }
-      ])
-      const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+      const { readFromStorage, writeToStorage } = createStorage(
+        { '3.5': { release: '3.5' } },
+        { '3.5': makeReleaseFile([
+          { priority: 5, name: 'A', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' },
+          { priority: 10, name: 'B', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' }
+        ]) }
+      )
 
       const result = saveBigRock(readFromStorage, writeToStorage, '3.5', null, { name: 'C' })
 
@@ -171,12 +188,14 @@ describe('saveBigRock', () => {
 
 describe('deleteBigRock', () => {
   it('deletes a Big Rock by name', () => {
-    const config = makeConfig([
-      { priority: 1, name: 'A', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' },
-      { priority: 2, name: 'B', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' },
-      { priority: 3, name: 'C', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' }
-    ])
-    const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+    const { readFromStorage, writeToStorage } = createStorage(
+      { '3.5': { release: '3.5' } },
+      { '3.5': makeReleaseFile([
+        { priority: 1, name: 'A', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' },
+        { priority: 2, name: 'B', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' },
+        { priority: 3, name: 'C', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' }
+      ]) }
+    )
 
     const result = deleteBigRock(readFromStorage, writeToStorage, '3.5', 'B')
 
@@ -186,12 +205,14 @@ describe('deleteBigRock', () => {
   })
 
   it('renumbers priorities after deletion', () => {
-    const config = makeConfig([
-      { priority: 1, name: 'A', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' },
-      { priority: 2, name: 'B', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' },
-      { priority: 3, name: 'C', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' }
-    ])
-    const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+    const { readFromStorage, writeToStorage } = createStorage(
+      { '3.5': { release: '3.5' } },
+      { '3.5': makeReleaseFile([
+        { priority: 1, name: 'A', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' },
+        { priority: 2, name: 'B', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' },
+        { priority: 3, name: 'C', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' }
+      ]) }
+    )
 
     const result = deleteBigRock(readFromStorage, writeToStorage, '3.5', 'A')
 
@@ -202,10 +223,12 @@ describe('deleteBigRock', () => {
   })
 
   it('allows deleting the last Big Rock', () => {
-    const config = makeConfig([
-      { priority: 1, name: 'Only', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' }
-    ])
-    const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+    const { readFromStorage, writeToStorage } = createStorage(
+      { '3.5': { release: '3.5' } },
+      { '3.5': makeReleaseFile([
+        { priority: 1, name: 'Only', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' }
+      ]) }
+    )
 
     const result = deleteBigRock(readFromStorage, writeToStorage, '3.5', 'Only')
 
@@ -214,42 +237,33 @@ describe('deleteBigRock', () => {
   })
 
   it('throws when the Big Rock name is not found', () => {
-    const config = makeConfig([
-      { priority: 1, name: 'A', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' }
-    ])
-    const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+    const { readFromStorage, writeToStorage } = createStorage(
+      { '3.5': { release: '3.5' } },
+      { '3.5': makeReleaseFile([
+        { priority: 1, name: 'A', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' }
+      ]) }
+    )
 
     expect(() => {
       deleteBigRock(readFromStorage, writeToStorage, '3.5', 'NonExistent')
     }).toThrow("'NonExistent' not found")
   })
 
-  it('throws when the release does not exist', () => {
-    const config = makeConfig([], '3.5')
-    const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
-
-    expect(() => {
-      deleteBigRock(readFromStorage, writeToStorage, '9.9', 'A')
-    }).toThrow('Release 9.9 not found')
-  })
-
-  it('writes the updated config to storage', () => {
-    const config = makeConfig([
-      { priority: 1, name: 'A', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' },
-      { priority: 2, name: 'B', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' }
-    ])
-    const { readFromStorage, writeToStorage } = createStorageWithConfig(config)
+  it('writes the updated release file to storage', () => {
+    const { readFromStorage, writeToStorage } = createStorage(
+      { '3.5': { release: '3.5' } },
+      { '3.5': makeReleaseFile([
+        { priority: 1, name: 'A', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' },
+        { priority: 2, name: 'B', fullName: '', pillar: '', state: '', owner: '', outcomeKeys: [], notes: '', description: '' }
+      ]) }
+    )
 
     deleteBigRock(readFromStorage, writeToStorage, '3.5', 'A')
 
-    expect(writeToStorage).toHaveBeenCalledWith('release-planning/config.json', expect.objectContaining({
-      releases: expect.objectContaining({
-        '3.5': expect.objectContaining({
-          bigRocks: expect.arrayContaining([
-            expect.objectContaining({ name: 'B', priority: 1 })
-          ])
-        })
-      })
+    expect(writeToStorage).toHaveBeenCalledWith('release-planning/releases/3.5.json', expect.objectContaining({
+      bigRocks: expect.arrayContaining([
+        expect.objectContaining({ name: 'B', priority: 1 })
+      ])
     }))
   })
 })

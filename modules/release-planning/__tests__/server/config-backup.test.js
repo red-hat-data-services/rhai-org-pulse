@@ -1,33 +1,49 @@
 import { describe, it, expect, vi } from 'vitest'
 const { backupConfig } = require('../../server/config-backup')
 
-function createMocks(config, existingFiles) {
+function createMocks(configData, releaseFiles, existingBackupFiles) {
+  const store = {}
+  if (configData) {
+    store['release-planning/config.json'] = configData
+  }
+  if (releaseFiles) {
+    for (const v in releaseFiles) {
+      store['release-planning/releases/' + v + '.json'] = releaseFiles[v]
+    }
+  }
   return {
-    readFromStorage: vi.fn().mockReturnValue(config),
+    readFromStorage: vi.fn(function(key) {
+      return store[key] ? JSON.parse(JSON.stringify(store[key])) : null
+    }),
     writeToStorage: vi.fn(),
-    listStorageFiles: vi.fn().mockReturnValue(existingFiles || []),
+    listStorageFiles: vi.fn().mockReturnValue(existingBackupFiles || []),
     deleteFromStorage: vi.fn()
   }
 }
 
 describe('backupConfig', () => {
-  it('creates a timestamped backup of config.json', () => {
-    const config = { releases: { '3.5': { bigRocks: [] } } }
-    const { readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage } = createMocks(config, [])
+  it('creates a timestamped backup bundling config and per-release files', () => {
+    const config = { releases: { '3.5': { release: '3.5' } } }
+    const releaseData = { release: '3.5', bigRocks: [{ name: 'A', priority: 1 }] }
+    const { readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage } =
+      createMocks(config, { '3.5': releaseData }, [])
 
     backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
 
     expect(readFromStorage).toHaveBeenCalledWith('release-planning/config.json')
+    expect(readFromStorage).toHaveBeenCalledWith('release-planning/releases/3.5.json')
     expect(writeToStorage).toHaveBeenCalledTimes(1)
 
     const [key, data] = writeToStorage.mock.calls[0]
     expect(key).toMatch(/^release-planning\/config-backup-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}/)
     expect(key).toMatch(/\.json$/)
-    expect(data).toEqual(config)
+    expect(data.config).toEqual(config)
+    expect(data.releases['3.5']).toEqual(releaseData)
   })
 
   it('does nothing when config.json is null', () => {
-    const { readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage } = createMocks(null, [])
+    const { readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage } =
+      createMocks(null, null, [])
 
     backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
 
@@ -36,13 +52,26 @@ describe('backupConfig', () => {
 
   it('handles missing listStorageFiles gracefully', () => {
     const config = { releases: {} }
-    const readFromStorage = vi.fn().mockReturnValue(config)
-    const writeToStorage = vi.fn()
-    const deleteFromStorage = vi.fn()
+    const { readFromStorage, writeToStorage } = createMocks(config)
 
-    backupConfig(readFromStorage, writeToStorage, null, deleteFromStorage)
+    backupConfig(readFromStorage, writeToStorage, null, vi.fn())
 
     expect(writeToStorage).toHaveBeenCalledTimes(1)
+  })
+
+  it('bundles multiple per-release files', () => {
+    const config = { releases: { '3.5': { release: '3.5' }, '3.6': { release: '3.6' } } }
+    const { readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage } =
+      createMocks(config, {
+        '3.5': { release: '3.5', bigRocks: [{ name: 'A' }] },
+        '3.6': { release: '3.6', bigRocks: [{ name: 'B' }] }
+      }, [])
+
+    backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
+
+    const data = writeToStorage.mock.calls[0][1]
+    expect(data.releases['3.5'].bigRocks[0].name).toBe('A')
+    expect(data.releases['3.6'].bigRocks[0].name).toBe('B')
   })
 
   it('prunes old backups when more than 10 exist', () => {
@@ -52,13 +81,12 @@ describe('backupConfig', () => {
       return `config-backup-2026-04-${num}T12-00-00-000Z.json`
     })
 
-    const { readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage } = createMocks(config, existingFiles)
+    const { readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage } =
+      createMocks(config, null, existingFiles)
 
     backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
 
-    // listStorageFiles returns 12 files. 12 > 10, so it deletes 2 oldest via deleteFromStorage.
     expect(deleteFromStorage).toHaveBeenCalledTimes(2)
-    // The two oldest should be deleted
     expect(deleteFromStorage.mock.calls[0][0]).toContain('config-backup-2026-04-00')
     expect(deleteFromStorage.mock.calls[1][0]).toContain('config-backup-2026-04-01')
   })
@@ -69,11 +97,11 @@ describe('backupConfig', () => {
       `config-backup-2026-04-0${i + 1}T12-00-00-000Z.json`
     )
 
-    const { readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage } = createMocks(config, existingFiles)
+    const { readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage } =
+      createMocks(config, null, existingFiles)
 
     backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
 
-    // Only the backup write, no prune deletes
     expect(deleteFromStorage).not.toHaveBeenCalled()
   })
 
@@ -87,24 +115,20 @@ describe('backupConfig', () => {
       'something-else.txt'
     ]
 
-    const { readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage } = createMocks(config, existingFiles)
+    const { readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage } =
+      createMocks(config, null, existingFiles)
 
     backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
 
-    // Only 2 backup files found, well under 10, no pruning
     expect(deleteFromStorage).not.toHaveBeenCalled()
   })
 
   it('handles listStorageFiles error gracefully', () => {
     const config = { releases: {} }
-    const readFromStorage = vi.fn().mockReturnValue(config)
-    const writeToStorage = vi.fn()
+    const { readFromStorage, writeToStorage } = createMocks(config)
     const listStorageFiles = vi.fn().mockImplementation(() => { throw new Error('disk error') })
-    const deleteFromStorage = vi.fn()
 
-    // Should not throw
-    expect(() => backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)).not.toThrow()
-    // Backup was still written
+    expect(() => backupConfig(readFromStorage, writeToStorage, listStorageFiles, vi.fn())).not.toThrow()
     expect(writeToStorage).toHaveBeenCalledTimes(1)
   })
 })
