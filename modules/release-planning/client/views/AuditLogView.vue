@@ -109,9 +109,10 @@ onMounted(async function() {
     <div class="flex items-center gap-3">
       <button
         @click="goBack"
+        aria-label="Go back"
         class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
       >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
         </svg>
       </button>
@@ -125,6 +126,7 @@ onMounted(async function() {
     <div class="flex items-center gap-3 flex-wrap">
       <select
         v-model="selectedVersion"
+        aria-label="Filter by release"
         class="text-xs border border-gray-300 dark:border-gray-600 rounded-md px-2.5 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
       >
         <option value="">All releases</option>
@@ -132,6 +134,7 @@ onMounted(async function() {
       </select>
       <select
         v-model="selectedAction"
+        aria-label="Filter by action"
         class="text-xs border border-gray-300 dark:border-gray-600 rounded-md px-2.5 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
       >
         <option v-for="opt in ACTION_OPTIONS" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
@@ -142,7 +145,7 @@ onMounted(async function() {
     </div>
 
     <!-- Error -->
-    <div v-if="error" class="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-lg p-3 text-sm text-red-700 dark:text-red-400">
+    <div v-if="error" role="alert" class="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-lg p-3 text-sm text-red-700 dark:text-red-400">
       {{ error }}
     </div>
 
@@ -152,13 +155,14 @@ onMounted(async function() {
     <!-- Table -->
     <div v-else-if="entries.length > 0" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
       <table class="w-full text-xs">
+        <caption class="sr-only">Audit log entries</caption>
         <thead>
           <tr class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-            <th class="text-left px-4 py-2 font-medium text-gray-500 dark:text-gray-400">Time</th>
-            <th class="text-left px-4 py-2 font-medium text-gray-500 dark:text-gray-400">Action</th>
-            <th class="text-left px-4 py-2 font-medium text-gray-500 dark:text-gray-400">Description</th>
-            <th class="text-left px-4 py-2 font-medium text-gray-500 dark:text-gray-400">Release</th>
-            <th class="text-left px-4 py-2 font-medium text-gray-500 dark:text-gray-400">User</th>
+            <th scope="col" class="text-left px-4 py-2 font-medium text-gray-500 dark:text-gray-400">Time</th>
+            <th scope="col" class="text-left px-4 py-2 font-medium text-gray-500 dark:text-gray-400">Action</th>
+            <th scope="col" class="text-left px-4 py-2 font-medium text-gray-500 dark:text-gray-400">Description</th>
+            <th scope="col" class="text-left px-4 py-2 font-medium text-gray-500 dark:text-gray-400">Release</th>
+            <th scope="col" class="text-left px-4 py-2 font-medium text-gray-500 dark:text-gray-400">User</th>
           </tr>
         </thead>
         <tbody>

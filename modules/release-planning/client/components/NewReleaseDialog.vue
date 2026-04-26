@@ -1,6 +1,7 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, toRef } from 'vue'
 import { useReleasePlanning } from '../composables/useReleasePlanning'
+import { useFocusTrap } from '../composables/useFocusTrap'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -28,6 +29,10 @@ const releaseCreated = ref(false)
 const smartSheetReleases = ref([])
 const smartSheetLoading = ref(false)
 const smartSheetAvailable = ref(false)
+
+// Focus trap
+const dialogRef = ref(null)
+const { handleKeydown } = useFocusTrap(dialogRef, toRef(props, 'open'), function() { emit('close') })
 
 const unconfiguredSmartSheetReleases = computed(function() {
   return smartSheetReleases.value.filter(function(r) { return !r.alreadyConfigured })
@@ -165,14 +170,22 @@ async function handleCreate() {
       <div class="absolute inset-0 bg-black/50" @click="$emit('close')"></div>
 
       <!-- Dialog -->
-      <div class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full mx-4 p-6 max-h-[90vh] overflow-y-auto"
-           :class="mode === 'import' ? 'max-w-2xl' : 'max-w-md'">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">New Release</h2>
+      <div
+        ref="dialogRef"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="new-release-title"
+        class="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full mx-4 p-6 max-h-[90vh] overflow-y-auto"
+        :class="mode === 'import' ? 'max-w-2xl' : 'max-w-md'"
+        @keydown="handleKeydown"
+      >
+        <h2 id="new-release-title" class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">New Release</h2>
 
         <!-- Version input -->
         <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Release Version</label>
+          <label for="release-version" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Release Version</label>
           <input
+            id="release-version"
             v-model="version"
             type="text"
             placeholder="e.g., 3.6"
@@ -203,8 +216,8 @@ async function handleCreate() {
         </div>
 
         <!-- Mode selection -->
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Initial Big Rocks</label>
+        <fieldset class="mb-4">
+          <legend class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Initial Big Rocks</legend>
           <div class="space-y-2">
             <label class="flex items-center gap-2 cursor-pointer">
               <input type="radio" v-model="mode" value="blank" class="text-primary-600 focus:ring-primary-500" />
@@ -219,12 +232,13 @@ async function handleCreate() {
               <span class="text-sm text-gray-700 dark:text-gray-300">Import from Google Doc</span>
             </label>
           </div>
-        </div>
+        </fieldset>
 
         <!-- Clone source dropdown -->
         <div v-if="mode === 'clone'" class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Clone from</label>
+          <label for="clone-source" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Clone from</label>
           <select
+            id="clone-source"
             v-model="cloneFrom"
             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
           >
@@ -237,9 +251,10 @@ async function handleCreate() {
         <!-- Google Doc import section -->
         <div v-if="mode === 'import'" class="mb-4 space-y-3">
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Google Doc URL or Document ID</label>
+            <label for="doc-url" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Google Doc URL or Document ID</label>
             <div class="flex gap-2">
               <input
+                id="doc-url"
                 v-model="docUrl"
                 type="text"
                 placeholder="https://docs.google.com/document/d/... or document ID"
@@ -251,7 +266,7 @@ async function handleCreate() {
                 :disabled="!docId || !version.trim() || previewLoading || creating"
                 class="px-3 py-2 text-sm font-medium rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 whitespace-nowrap border border-gray-300 dark:border-gray-600"
               >
-                <svg v-if="previewLoading" class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24">
+                <svg v-if="previewLoading" class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
@@ -261,7 +276,7 @@ async function handleCreate() {
           </div>
 
           <!-- Preview error -->
-          <div v-if="previewError" class="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-lg p-3 text-sm text-red-700 dark:text-red-400">
+          <div v-if="previewError" role="alert" class="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-lg p-3 text-sm text-red-700 dark:text-red-400">
             {{ previewError }}
           </div>
 
@@ -286,13 +301,14 @@ async function handleCreate() {
             <!-- Preview table -->
             <div class="overflow-x-auto">
               <table class="w-full text-xs">
+                <caption class="sr-only">Import preview: Big Rocks parsed from Google Doc</caption>
                 <thead>
                   <tr class="border-b border-gray-200 dark:border-gray-700">
-                    <th class="text-left py-2 px-2 font-medium text-gray-500 dark:text-gray-400">#</th>
-                    <th class="text-left py-2 px-2 font-medium text-gray-500 dark:text-gray-400">Name</th>
-                    <th class="text-left py-2 px-2 font-medium text-gray-500 dark:text-gray-400">State</th>
-                    <th class="text-left py-2 px-2 font-medium text-gray-500 dark:text-gray-400">Outcome Keys</th>
-                    <th class="text-left py-2 px-2 font-medium text-gray-500 dark:text-gray-400">Status</th>
+                    <th scope="col" class="text-left py-2 px-2 font-medium text-gray-500 dark:text-gray-400">#</th>
+                    <th scope="col" class="text-left py-2 px-2 font-medium text-gray-500 dark:text-gray-400">Name</th>
+                    <th scope="col" class="text-left py-2 px-2 font-medium text-gray-500 dark:text-gray-400">State</th>
+                    <th scope="col" class="text-left py-2 px-2 font-medium text-gray-500 dark:text-gray-400">Outcome Keys</th>
+                    <th scope="col" class="text-left py-2 px-2 font-medium text-gray-500 dark:text-gray-400">Status</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -327,7 +343,7 @@ async function handleCreate() {
         </div>
 
         <!-- Error -->
-        <div v-if="errorMsg" class="mb-4 p-2 rounded bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-sm text-red-700 dark:text-red-400">
+        <div v-if="errorMsg" role="alert" class="mb-4 p-2 rounded bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-sm text-red-700 dark:text-red-400">
           {{ errorMsg }}
         </div>
 
