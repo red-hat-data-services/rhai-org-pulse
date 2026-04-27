@@ -26,7 +26,8 @@ const props = defineProps({
   trendData: { type: Array, default: () => [] },
   breakdown: { type: Array, default: () => [] },
   expanded: { type: Boolean, default: true },
-  filteredAssessments: { type: Object, default: () => ({}) }
+  filteredAssessments: { type: Object, default: () => ({}) },
+  timeWindow: { type: String, default: 'month' }
 })
 
 const hasAssessments = computed(() => Object.keys(props.filteredAssessments).length > 0)
@@ -45,6 +46,14 @@ onMounted(() => {
 
 const textColor = computed(() => isDark.value ? 'rgba(209, 213, 219, 1)' : 'rgba(107, 114, 128, 1)')
 const gridColor = computed(() => isDark.value ? 'rgba(75, 85, 99, 0.5)' : 'rgba(229, 231, 235, 1)')
+
+const trailingWeeks = computed(() => {
+  if (props.timeWindow === 'week') return 4
+  if (props.timeWindow === '3months') return 13
+  return 8
+})
+
+const trailingLabel = computed(() => `Weekly trend · trailing ${trailingWeeks.value} weeks`)
 
 const createdPctChartData = computed(() => ({
   labels: props.trendData.map(p => p.date),
@@ -121,6 +130,7 @@ const breakdownChartOptions = computed(() => ({
             d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
         </svg>
         Trend Visualization
+        <span class="text-xs font-normal text-gray-400 dark:text-gray-500">{{ trailingLabel }}</span>
       </span>
       <svg
         class="h-4 w-4 transition-transform dark:text-gray-300"

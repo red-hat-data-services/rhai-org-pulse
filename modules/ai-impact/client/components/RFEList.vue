@@ -12,7 +12,14 @@ const props = defineProps({
   sortBy: { type: String, default: 'default' },
   passFailFilter: { type: String, default: 'all' },
   priorityFilter: { type: String, default: 'all' },
-  statusFilter: { type: String, default: 'all' }
+  statusFilter: { type: String, default: 'all' },
+  timeWindow: { type: String, default: 'month' }
+})
+
+const windowDescription = computed(() => {
+  const days = props.timeWindow === 'week' ? 7 : props.timeWindow === '3months' ? 90 : 30
+  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
+  return `since ${cutoff.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
 })
 
 const emit = defineEmits(['update:filter', 'update:searchQuery', 'update:sortBy', 'update:passFailFilter', 'update:priorityFilter', 'update:statusFilter', 'selectRFE'])
@@ -109,7 +116,7 @@ function handleSelectRFE(rfe) {
             d="M4 6h16M4 10h16M4 14h16M4 18h16" />
         </svg>
         RFE List
-        <span class="text-sm font-normal text-gray-500 dark:text-gray-400">({{ sortedAndFilteredRFEs.length }})</span>
+        <span class="text-sm font-normal text-gray-500 dark:text-gray-400">({{ sortedAndFilteredRFEs.length }}) · {{ windowDescription }}</span>
       </h3>
       <div class="flex gap-2">
         <div class="relative">

@@ -110,6 +110,7 @@ const isEmpty = computed(() => !props.rfeData?.fetchedAt)
           :breakdown="breakdown"
           :expanded="chartExpanded"
           :filteredAssessments="filteredAssessments"
+          :timeWindow="timeWindow"
           @toggle="emit('update:chartExpanded', !chartExpanded)"
         />
 
@@ -123,6 +124,7 @@ const isEmpty = computed(() => !props.rfeData?.fetchedAt)
           :passFailFilter="passFailFilter"
           :priorityFilter="priorityFilter"
           :statusFilter="statusFilter"
+          :timeWindow="timeWindow"
           @update:filter="emit('update:filter', $event)"
           @update:searchQuery="emit('update:searchQuery', $event)"
           @update:sortBy="emit('update:sortBy', $event)"
