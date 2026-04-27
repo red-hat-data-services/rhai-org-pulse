@@ -8,15 +8,27 @@ const props = defineProps({
 
 const MILESTONE_ORDER = [
   { key: 'ea1PlanFreeze', label: 'EA1 PF', color: 'bg-blue-300 dark:bg-blue-300', style: 'dashed' },
-  { key: 'ea1Freeze', label: 'EA1 Code Freeze', color: 'bg-blue-500 dark:bg-blue-400' },
-  { key: 'ea1Target', label: 'EA1 Release', color: 'bg-blue-600 dark:bg-blue-500' },
+  { key: 'ea1Freeze', label: 'EA1 CF', color: 'bg-blue-500 dark:bg-blue-400' },
+  { key: 'ea1Target', label: 'EA1 Rel', color: 'bg-blue-600 dark:bg-blue-500' },
   { key: 'ea2PlanFreeze', label: 'EA2 PF', color: 'bg-amber-300 dark:bg-amber-300', style: 'dashed' },
-  { key: 'ea2Freeze', label: 'EA2 Code Freeze', color: 'bg-amber-500 dark:bg-amber-400' },
-  { key: 'ea2Target', label: 'EA2 Release', color: 'bg-amber-600 dark:bg-amber-500' },
+  { key: 'ea2Freeze', label: 'EA2 CF', color: 'bg-amber-500 dark:bg-amber-400' },
+  { key: 'ea2Target', label: 'EA2 Rel', color: 'bg-amber-600 dark:bg-amber-500' },
   { key: 'gaPlanFreeze', label: 'GA PF', color: 'bg-green-300 dark:bg-green-300', style: 'dashed' },
-  { key: 'gaFreeze', label: 'GA Code Freeze', color: 'bg-green-500 dark:bg-green-400' },
-  { key: 'gaTarget', label: 'GA Release', color: 'bg-green-600 dark:bg-green-500' }
+  { key: 'gaFreeze', label: 'GA CF', color: 'bg-green-500 dark:bg-green-400' },
+  { key: 'gaTarget', label: 'GA Rel', color: 'bg-green-600 dark:bg-green-500' }
 ]
+
+const LONG_LABELS = {
+  'EA1 PF': 'EA1 Planning Freeze',
+  'EA1 CF': 'EA1 Code Freeze',
+  'EA1 Rel': 'EA1 Release',
+  'EA2 PF': 'EA2 Planning Freeze',
+  'EA2 CF': 'EA2 Code Freeze',
+  'EA2 Rel': 'EA2 Release',
+  'GA PF': 'GA Planning Freeze',
+  'GA CF': 'GA Code Freeze',
+  'GA Rel': 'GA Release'
+}
 
 function parseDate(val) {
   if (!val) return null
@@ -45,6 +57,7 @@ const milestonePoints = computed(function() {
       points.push({
         key: m.key,
         label: m.label,
+        longLabel: LONG_LABELS[m.label] || m.label,
         color: m.color,
         style: m.style || null,
         date: date,
@@ -64,7 +77,6 @@ const timelineRange = computed(function() {
   var dates = milestonePoints.value.map(function(p) { return p.date.getTime() })
   var min = Math.min.apply(null, dates)
   var max = Math.max.apply(null, dates)
-  // Add 5% padding on each side
   var padding = (max - min) * 0.05 || 86400000
   return { start: min - padding, end: max + padding }
 })
@@ -92,7 +104,7 @@ const nextMilestone = computed(function() {
       var diff = milestonePoints.value[i].date.getTime() - now
       var days = Math.ceil(diff / 86400000)
       return {
-        label: milestonePoints.value[i].label,
+        label: milestonePoints.value[i].longLabel,
         days: days
       }
     }
@@ -100,34 +112,63 @@ const nextMilestone = computed(function() {
   return null
 })
 
-const STEM_HEIGHT = 28
-const OVERLAP_THRESHOLD = 10
-const CLOSE_DATE_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000 // 7 days in ms
+const NEAR_STEM = 20
+const FAR_STEM = 36
+const CHAR_WIDTH_PCT = 0.6
+const LABEL_GAP_PCT = 1.5
+
+// tier 0 = above-near, 1 = below-near, 2 = above-far, 3 = below-far
+const TIER_PREFERENCE = [0, 1, 2, 3]
+
+function estimateLabelWidthPct(label, dateStr) {
+  var chars = Math.max(label.length, dateStr.length)
+  return chars * CHAR_WIDTH_PCT
+}
 
 const staggeredPoints = computed(function() {
   var points = milestonePoints.value
   if (points.length === 0) return []
 
+  // Track rightmost edge per tier (in % units)
+  var tierEdges = [-Infinity, -Infinity, -Infinity, -Infinity]
   var result = []
+
   for (var i = 0; i < points.length; i++) {
     var pct = positionPct(points[i].date)
-    var above = true
+    var halfWidth = estimateLabelWidthPct(points[i].label, points[i].dateStr) / 2
+    var leftEdge = pct - halfWidth
 
-    if (i > 0) {
-      var prevPct = positionPct(points[i - 1].date)
-      var dateDiffMs = Math.abs(points[i].date.getTime() - points[i - 1].date.getTime())
-
-      // When adjacent markers are within 7 days or overlap in position,
-      // stack labels vertically by alternating above/below
-      if (Math.abs(pct - prevPct) < OVERLAP_THRESHOLD || dateDiffMs < CLOSE_DATE_THRESHOLD_MS) {
-        above = !result[i - 1].above
+    var bestTier = 0
+    for (var t = 0; t < TIER_PREFERENCE.length; t++) {
+      var tier = TIER_PREFERENCE[t]
+      if (leftEdge >= tierEdges[tier] + LABEL_GAP_PCT) {
+        bestTier = tier
+        break
       }
     }
 
-    result.push(Object.assign({}, points[i], { pct: pct, above: above }))
+    tierEdges[bestTier] = pct + halfWidth
+
+    result.push(Object.assign({}, points[i], {
+      pct: pct,
+      tier: bestTier
+    }))
   }
   return result
 })
+
+function tierIsAbove(tier) {
+  return tier === 0 || tier === 2
+}
+
+function stemHeight(tier) {
+  return (tier === 0 || tier === 1) ? NEAR_STEM : FAR_STEM
+}
+
+function labelOffset(tier) {
+  if (tier === 0 || tier === 1) return 0
+  return NEAR_STEM + 16
+}
 </script>
 
 <template>
@@ -140,7 +181,7 @@ const staggeredPoints = computed(function() {
     </div>
 
     <!-- Desktop horizontal timeline -->
-    <div class="hidden sm:block relative mx-4" style="height: 120px">
+    <div class="hidden sm:block relative mx-4" style="height: 140px">
       <!-- Track line — centered vertically -->
       <div class="absolute left-0 right-0 h-0.5 bg-gray-300 dark:bg-gray-600" style="top: 50%"></div>
 
@@ -164,29 +205,34 @@ const staggeredPoints = computed(function() {
           <div
             class="w-3 h-3 rounded-full border-2"
             :class="[point.color, point.style === 'dashed' ? 'border-dashed border-gray-500' : 'border-white dark:border-gray-800']"
+            :title="point.longLabel + ' — ' + point.dateStr"
           ></div>
         </div>
 
-        <!-- Stem + label above -->
+        <!-- Label above -->
         <div
-          v-if="point.above"
+          v-if="tierIsAbove(point.tier)"
           class="absolute -translate-x-1/2 text-center flex flex-col items-center"
           :style="{ left: point.pct + '%', bottom: '50%' }"
         >
-          <div class="text-[10px] text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ point.label }}</div>
-          <div class="text-[10px] font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">{{ point.dateStr }}</div>
-          <div class="w-px bg-gray-300 dark:bg-gray-500 mt-0.5" :style="{ height: STEM_HEIGHT + 'px' }"></div>
+          <div :style="{ marginBottom: labelOffset(point.tier) + 'px' }">
+            <div class="text-[10px] text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ point.label }}</div>
+            <div class="text-[10px] font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">{{ point.dateStr }}</div>
+          </div>
+          <div class="w-px bg-gray-300 dark:bg-gray-500 mt-0.5" :style="{ height: stemHeight(point.tier) + 'px' }"></div>
         </div>
 
-        <!-- Stem + label below -->
+        <!-- Label below -->
         <div
           v-else
           class="absolute -translate-x-1/2 text-center flex flex-col items-center"
           :style="{ left: point.pct + '%', top: '50%' }"
         >
-          <div class="w-px bg-gray-300 dark:bg-gray-500 mb-0.5" :style="{ height: STEM_HEIGHT + 'px' }"></div>
-          <div class="text-[10px] text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ point.label }}</div>
-          <div class="text-[10px] font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">{{ point.dateStr }}</div>
+          <div class="w-px bg-gray-300 dark:bg-gray-500 mb-0.5" :style="{ height: stemHeight(point.tier) + 'px' }"></div>
+          <div :style="{ marginTop: labelOffset(point.tier) + 'px' }">
+            <div class="text-[10px] text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ point.label }}</div>
+            <div class="text-[10px] font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">{{ point.dateStr }}</div>
+          </div>
         </div>
       </template>
     </div>
@@ -203,7 +249,7 @@ const staggeredPoints = computed(function() {
           :class="[point.color, point.style === 'dashed' ? 'border border-dashed border-gray-500' : '']"
         ></div>
         <div class="flex-1 flex justify-between items-center">
-          <span class="text-xs text-gray-600 dark:text-gray-400">{{ point.label }}</span>
+          <span class="text-xs text-gray-600 dark:text-gray-400">{{ point.longLabel }}</span>
           <span class="text-xs font-medium text-gray-900 dark:text-gray-100">{{ point.dateStr }}</span>
         </div>
       </div>
