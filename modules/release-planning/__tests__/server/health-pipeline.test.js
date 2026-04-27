@@ -768,6 +768,20 @@ describe('runHealthPipeline', function() {
     expect(result.planningFreezes.ga).toBeNull()
   })
 
+  it('falls back to Smartsheet for previous GA freeze when Product Pages cache is missing', async function() {
+    smartsheetClient.isConfigured.mockReturnValue(true)
+    smartsheetClient.discoverReleasesPartial.mockResolvedValue([
+      { version: '3.4', ea1Freeze: '2025-12-01', ea1Target: '2025-12-15', ea2Freeze: '2026-02-01', ea2Target: '2026-02-15', gaFreeze: '2026-04-17', gaTarget: '2026-04-30' },
+      { version: '3.5', ea1Freeze: '2026-05-01', ea1Target: '2026-05-15', ea2Freeze: '2026-06-15', ea2Target: '2026-07-01', gaFreeze: '2026-08-01', gaTarget: '2026-08-15' }
+    ])
+    var storage = makeStorage(makeCandidatesCache([
+      { issueKey: 'T-1', summary: 'F1', status: 'In Progress', components: '', fixVersion: '', deliveryOwner: 'Jane', tier: 1 }
+    ]))
+    var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
+    // EA1 planning freeze = previous version (3.4) GA freeze from Smartsheet - 7 = 2026-04-17 - 7 = 2026-04-10
+    expect(result.planningFreezes.ea1).toBe('2026-04-10')
+  })
+
   it('attaches priorityScore and priorityBreakdown to health features', async function() {
     var storage = makeStorage(makeCandidatesCache([
       { issueKey: 'T-1', summary: 'F1', status: 'In Progress', priority: 'Major', components: '', fixVersion: '', deliveryOwner: 'Jane', tier: 1 },
