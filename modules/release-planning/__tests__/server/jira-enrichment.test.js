@@ -219,6 +219,32 @@ describe('runPass1', function() {
     expect(result.get('TEST-1').storyPoints).toBe(5)
   })
 
+  it('populates tshirtSize from description in Pass 1', async function() {
+    var mockFetch = vi.fn().mockResolvedValue([{
+      key: 'TEST-2',
+      fields: {
+        description: 'Feature overview.\nT-Shirt Size: L\nMore details.',
+        customfield_10028: 3,
+        issuelinks: []
+      }
+    }])
+    var result = await runPass1(vi.fn(), mockFetch, ['TEST-2'], { batchSize: 40, throttleMs: 0 })
+    expect(result.get('TEST-2').tshirtSize).toBe('L')
+  })
+
+  it('sets tshirtSize to null when description has no size', async function() {
+    var mockFetch = vi.fn().mockResolvedValue([{
+      key: 'TEST-3',
+      fields: {
+        description: 'A description with no size info',
+        customfield_10028: 5,
+        issuelinks: []
+      }
+    }])
+    var result = await runPass1(vi.fn(), mockFetch, ['TEST-3'], { batchSize: 40, throttleMs: 0 })
+    expect(result.get('TEST-3').tshirtSize).toBeNull()
+  })
+
   it('batches keys correctly', async function() {
     var keys = []
     for (var i = 1; i <= 5; i++) keys.push('T-' + i)

@@ -661,6 +661,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
       dor: dorStatus,
       rice: riceResult,
       storyPoints: enrichment ? enrichment.storyPoints || null : null,
+      tshirtSize: enrichment ? enrichment.tshirtSize || null : null,
       jiraUrl: JIRA_BROWSE_URL + '/' + key
     })
   }

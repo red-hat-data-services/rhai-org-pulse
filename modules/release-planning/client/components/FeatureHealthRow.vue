@@ -317,6 +317,10 @@ var flagSeverityClass = {
                   <span class="text-gray-500 dark:text-gray-400">Tier:</span>
                   <span class="ml-1 text-gray-900 dark:text-gray-100">{{ feature.tier }}</span>
                 </div>
+                <div v-if="feature.tshirtSize">
+                  <span class="text-gray-500 dark:text-gray-400">Size:</span>
+                  <span class="ml-1 text-gray-900 dark:text-gray-100">{{ feature.tshirtSize }}</span>
+                </div>
               </div>
             </div>
           </div>
