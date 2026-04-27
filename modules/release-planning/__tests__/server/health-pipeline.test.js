@@ -422,12 +422,12 @@ describe('loadMilestones', function() {
 
 const smartsheetClient = require('../../../../shared/server/smartsheet')
 vi.spyOn(smartsheetClient, 'isConfigured')
-vi.spyOn(smartsheetClient, 'discoverReleasesWithFreezes')
+vi.spyOn(smartsheetClient, 'discoverReleasesPartial')
 
 describe('backfillFreezeDatesFromSmartsheet', function() {
   beforeEach(function() {
     smartsheetClient.isConfigured.mockReturnValue(false)
-    smartsheetClient.discoverReleasesWithFreezes.mockResolvedValue([])
+    smartsheetClient.discoverReleasesPartial.mockResolvedValue([])
   })
 
   it('returns milestones unchanged when Smartsheet is not configured and milestones have freeze dates', async function() {
@@ -475,12 +475,12 @@ describe('backfillFreezeDatesFromSmartsheet', function() {
     var result = await backfillFreezeDatesFromSmartsheet(milestones, '3.5')
     expect(result.milestones).toEqual(milestones)
     expect(result.warnings).toHaveLength(0)
-    expect(smartsheetClient.discoverReleasesWithFreezes).not.toHaveBeenCalled()
+    expect(smartsheetClient.discoverReleasesPartial).not.toHaveBeenCalled()
   })
 
   it('loads everything from Smartsheet when milestones is null', async function() {
     smartsheetClient.isConfigured.mockReturnValue(true)
-    smartsheetClient.discoverReleasesWithFreezes.mockResolvedValue([
+    smartsheetClient.discoverReleasesPartial.mockResolvedValue([
       { version: '3.5', ea1Freeze: '2026-05-15', ea1Target: '2026-06-18', ea2Freeze: '2026-06-19', ea2Target: '2026-07-16', gaFreeze: '2026-07-24', gaTarget: '2026-08-20' }
     ])
     var result = await backfillFreezeDatesFromSmartsheet(null, '3.5')
@@ -494,7 +494,7 @@ describe('backfillFreezeDatesFromSmartsheet', function() {
 
   it('merges Smartsheet freeze dates into Product Pages milestones', async function() {
     smartsheetClient.isConfigured.mockReturnValue(true)
-    smartsheetClient.discoverReleasesWithFreezes.mockResolvedValue([
+    smartsheetClient.discoverReleasesPartial.mockResolvedValue([
       { version: '3.5', ea1Freeze: '2026-05-15', ea1Target: '2026-06-18', ea2Freeze: '2026-06-19', ea2Target: '2026-07-16', gaFreeze: '2026-07-24', gaTarget: '2026-08-20' }
     ])
     var milestones = {
@@ -515,7 +515,7 @@ describe('backfillFreezeDatesFromSmartsheet', function() {
 
   it('returns null when Smartsheet has no matching version', async function() {
     smartsheetClient.isConfigured.mockReturnValue(true)
-    smartsheetClient.discoverReleasesWithFreezes.mockResolvedValue([
+    smartsheetClient.discoverReleasesPartial.mockResolvedValue([
       { version: '3.4', ea1Freeze: '2026-01-01', ea1Target: '2026-02-01', ea2Freeze: '2026-03-01', ea2Target: '2026-04-01', gaFreeze: '2026-05-01', gaTarget: '2026-06-01' }
     ])
     var result = await backfillFreezeDatesFromSmartsheet(null, '3.5')
@@ -527,7 +527,7 @@ describe('backfillFreezeDatesFromSmartsheet', function() {
 
   it('handles Smartsheet API errors gracefully', async function() {
     smartsheetClient.isConfigured.mockReturnValue(true)
-    smartsheetClient.discoverReleasesWithFreezes.mockRejectedValue(new Error('API timeout'))
+    smartsheetClient.discoverReleasesPartial.mockRejectedValue(new Error('API timeout'))
     var milestones = {
       ea1Freeze: null, ea1Target: '2026-06-18',
       ea2Freeze: null, ea2Target: '2026-07-16',
@@ -710,5 +710,65 @@ describe('runHealthPipeline', function() {
     expect(result.features[0]).toHaveProperty('key')
     expect(result.features[0]).toHaveProperty('risk')
     expect(result.features[0]).toHaveProperty('dor')
+  })
+
+  it('includes planningFreezes in cache output when milestones are present', async function() {
+    var data = makeCandidatesCache([
+      { issueKey: 'T-1', summary: 'F1', status: 'In Progress', components: '', fixVersion: '', deliveryOwner: 'Jane', tier: 1 }
+    ])
+    data['release-analysis/product-pages-releases-cache.json'] = {
+      source: 'api',
+      fetchedAt: '2026-04-26T00:00:00Z',
+      releases: [
+        { productName: 'rhoai', releaseNumber: 'rhoai-3.5.EA1', dueDate: '2026-05-15', codeFreezeDate: '2026-05-01' },
+        { productName: 'rhoai', releaseNumber: 'rhoai-3.5.EA2', dueDate: '2026-07-01', codeFreezeDate: '2026-06-15' },
+        { productName: 'rhoai', releaseNumber: 'rhoai-3.5', dueDate: '2026-08-15', codeFreezeDate: '2026-08-01' }
+      ]
+    }
+    var storage = makeStorage(data)
+    var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
+    expect(result.planningFreezes).not.toBeNull()
+    // Planning freeze = code freeze - 7 days
+    expect(result.planningFreezes.ea1).toBe('2026-04-24')
+    expect(result.planningFreezes.ea2).toBe('2026-06-08')
+    expect(result.planningFreezes.ga).toBe('2026-07-25')
+  })
+
+  it('returns null planningFreezes when milestones are null', async function() {
+    var storage = makeStorage(makeCandidatesCache([
+      { issueKey: 'T-1', summary: 'F1', status: 'In Progress', components: '', fixVersion: '', deliveryOwner: 'Jane', tier: 1 }
+    ]))
+    var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
+    expect(result.planningFreezes).toBeNull()
+  })
+
+  it('attaches priorityScore and priorityBreakdown to health features', async function() {
+    var storage = makeStorage(makeCandidatesCache([
+      { issueKey: 'T-1', summary: 'F1', status: 'In Progress', priority: 'Major', components: '', fixVersion: '', deliveryOwner: 'Jane', tier: 1 },
+      { issueKey: 'T-2', summary: 'F2', status: 'New', priority: 'Minor', components: '', fixVersion: '', deliveryOwner: 'Bob', tier: 3 }
+    ]))
+    var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
+    expect(result.features).toHaveLength(2)
+    for (var i = 0; i < result.features.length; i++) {
+      expect(result.features[i]).toHaveProperty('priorityScore')
+      expect(result.features[i]).toHaveProperty('priorityBreakdown')
+      expect(typeof result.features[i].priorityScore).toBe('number')
+      expect(result.features[i].priorityBreakdown).toBeDefined()
+      expect(result.features[i].priorityBreakdown).toHaveProperty('rice')
+      expect(result.features[i].priorityBreakdown).toHaveProperty('bigRock')
+      expect(result.features[i].priorityBreakdown).toHaveProperty('priority')
+      expect(result.features[i].priorityBreakdown).toHaveProperty('complexity')
+    }
+    // Tier 1 Major should score higher than Tier 3 Minor
+    expect(result.features[0].priorityScore).toBeGreaterThan(result.features[1].priorityScore)
+  })
+
+  it('includes storyPoints on health features (null without enrichment)', async function() {
+    var storage = makeStorage(makeCandidatesCache([
+      { issueKey: 'T-1', summary: 'F1', status: 'In Progress', components: '', fixVersion: '', deliveryOwner: 'Jane', tier: 1 }
+    ]))
+    var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
+    expect(result.features[0]).toHaveProperty('storyPoints')
+    expect(result.features[0].storyPoints).toBeNull()
   })
 })
