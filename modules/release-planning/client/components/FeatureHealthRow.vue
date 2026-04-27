@@ -1,6 +1,5 @@
 <script setup>
 import { computed } from 'vue'
-import RiskBadge from './RiskBadge.vue'
 import RiceScoreDisplay from './RiceScoreDisplay.vue'
 import DorChecklist from './DorChecklist.vue'
 import StatusBadge from './StatusBadge.vue'
@@ -39,9 +38,53 @@ var riskOverride = computed(function() {
   return props.feature.risk.override || null
 })
 
+var effectiveRisk = computed(function() {
+  if (riskOverride.value) return riskOverride.value.riskOverride || riskLevel.value
+  return riskLevel.value
+})
+
 var dorPct = computed(function() {
   if (!props.feature.dor) return 0
   return props.feature.dor.completionPct || 0
+})
+
+var dorPctClass = computed(function() {
+  if (dorPct.value >= 80) return 'text-green-600 dark:text-green-400'
+  if (dorPct.value >= 50) return 'text-yellow-600 dark:text-yellow-400'
+  return 'text-red-600 dark:text-red-400'
+})
+
+var healthTooltip = computed(function() {
+  var lines = []
+  lines.push('Risk: ' + effectiveRisk.value.charAt(0).toUpperCase() + effectiveRisk.value.slice(1))
+  var dor = props.feature.dor
+  lines.push('DoR: ' + dorPct.value + '% (' + (dor ? dor.checkedCount : 0) + '/' + (dor ? dor.totalCount : 0) + ')')
+  if (riskFlags.value.length > 0) {
+    lines.push(riskFlags.value.length + ' risk flag(s):')
+    for (var i = 0; i < riskFlags.value.length; i++) {
+      lines.push('  - ' + riskFlags.value[i].category + ': ' + riskFlags.value[i].message)
+    }
+  }
+  if (riskOverride.value) {
+    lines.push('Override: ' + riskOverride.value.riskOverride + ' (' + riskOverride.value.reason + ')')
+  }
+  return lines.join('\n')
+})
+
+var priorityScoreClass = computed(function() {
+  var score = props.feature.priorityScore
+  if (score >= 70) return 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400'
+  if (score >= 40) return 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-400'
+  return 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400'
+})
+
+var priorityTooltip = computed(function() {
+  if (!props.feature.priorityBreakdown) return ''
+  var b = props.feature.priorityBreakdown
+  return 'RICE: ' + b.rice + '% (30w)\n' +
+         'Big Rock: ' + b.bigRock + '% (30w)\n' +
+         'Priority: ' + b.priority + '% (25w)\n' +
+         'Complexity: ' + b.complexity + '% (15w)'
 })
 
 var featureUrl = computed(function() {
@@ -115,21 +158,33 @@ var flagSeverityClass = {
     <td class="px-3 py-2 border border-gray-300 dark:border-gray-600">
       <StatusBadge :status="feature.status" />
     </td>
-    <!-- Risk -->
+    <!-- Health (combined Risk + DoR) -->
     <td class="px-3 py-2 border border-gray-300 dark:border-gray-600">
-      <RiskBadge
-        :level="riskLevel"
-        :flagCount="feature.risk ? feature.risk.score : 0"
-        :flags="riskFlags"
-        :override="riskOverride"
-      />
+      <div class="flex items-center gap-1.5" :title="healthTooltip">
+        <span
+          class="w-2.5 h-2.5 rounded-full flex-shrink-0"
+          role="img"
+          :aria-label="'Risk level: ' + effectiveRisk"
+          :class="{
+            'bg-green-500': effectiveRisk === 'green',
+            'bg-yellow-500': effectiveRisk === 'yellow',
+            'bg-red-500': effectiveRisk === 'red'
+          }"
+        ></span>
+        <span
+          class="text-xs font-medium"
+          :class="dorPctClass"
+        >{{ dorPct }}%</span>
+      </div>
     </td>
-    <!-- DoR -->
-    <td class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-xs text-center">
+    <!-- Priority -->
+    <td class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-center" :title="priorityTooltip">
       <span
-        class="font-medium"
-        :class="dorPct >= 80 ? 'text-green-600 dark:text-green-400' : dorPct >= 50 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'"
-      >{{ dorPct }}%</span>
+        v-if="feature.priorityScore != null"
+        class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold"
+        :class="priorityScoreClass"
+      >{{ feature.priorityScore }}</span>
+      <span v-else class="text-gray-400 dark:text-gray-600 text-xs">-</span>
     </td>
     <!-- RICE -->
     <td class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-center" @click.stop>
@@ -137,6 +192,8 @@ var flagSeverityClass = {
     </td>
     <!-- Component -->
     <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600">{{ feature.components || '-' }}</td>
+    <!-- Owner -->
+    <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600">{{ feature.deliveryOwner || '-' }}</td>
     <!-- Phase -->
     <td class="px-3 py-2 border border-gray-300 dark:border-gray-600">
       <span
@@ -156,7 +213,7 @@ var flagSeverityClass = {
 
   <!-- Expanded detail row -->
   <tr v-if="expanded">
-    <td colspan="10" class="border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 p-0">
+    <td colspan="11" class="border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 p-0">
       <div class="p-4 space-y-4">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <!-- DoR Checklist -->

@@ -30,12 +30,9 @@ var activePhase = ref('all')
 var riskFilter = ref('')
 var dorFilter = ref('')
 var bigRockFilter = ref('')
-var componentFilter = ref('')
+var selectedComponents = ref([])
 var tierFilter = ref('')
 var searchQuery = ref('')
-
-// Export menu
-var exportMenuOpen = ref(false)
 
 // Refresh polling
 var refreshPollTimer = null
@@ -180,12 +177,17 @@ var bigRockOptions = computed(function() {
 })
 
 var componentOptions = computed(function() {
-  var comps = {}
-  for (var i = 0; i < features.value.length; i++) {
-    var comp = features.value[i].components
-    if (comp) comps[comp] = true
+  var set = new Set()
+  var feats = features.value || []
+  for (var i = 0; i < feats.length; i++) {
+    if (feats[i].components) {
+      var parts = feats[i].components.split(/\s*,\s*/).filter(Boolean)
+      for (var j = 0; j < parts.length; j++) {
+        set.add(parts[j])
+      }
+    }
   }
-  return Object.keys(comps).sort()
+  return Array.from(set).sort()
 })
 
 // ─── Filtered features (applied on top of phasedFeatures) ───
@@ -213,8 +215,16 @@ var filteredFeatures = computed(function() {
     // Big Rock filter
     if (bigRockFilter.value && f.bigRock !== bigRockFilter.value) return false
 
-    // Component filter
-    if (componentFilter.value && f.components !== componentFilter.value) return false
+    // Component filter (multi-select with comma split)
+    if (selectedComponents.value.length > 0) {
+      var featureComps = f.components
+        ? f.components.split(/\s*,\s*/).filter(Boolean)
+        : []
+      var hasMatch = selectedComponents.value.some(function(comp) {
+        return featureComps.includes(comp)
+      })
+      if (!hasMatch) return false
+    }
 
     // Tier filter
     if (tierFilter.value && String(f.tier) !== tierFilter.value) return false
@@ -231,14 +241,14 @@ var filteredFeatures = computed(function() {
 })
 
 var hasActiveFilters = computed(function() {
-  return !!(riskFilter.value || dorFilter.value || bigRockFilter.value || componentFilter.value || tierFilter.value || searchQuery.value)
+  return !!(riskFilter.value || dorFilter.value || bigRockFilter.value || selectedComponents.value.length > 0 || tierFilter.value || searchQuery.value)
 })
 
 function clearFilters() {
   riskFilter.value = ''
   dorFilter.value = ''
   bigRockFilter.value = ''
-  componentFilter.value = ''
+  selectedComponents.value = []
   tierFilter.value = ''
   searchQuery.value = ''
 }
@@ -324,99 +334,6 @@ function handleRemoveOverride(featureKey) {
   })
 }
 
-// ─── Export ───
-
-function escapeCsv(val) {
-  var s = String(val)
-  if (s.indexOf(',') !== -1 || s.indexOf('"') !== -1 || s.indexOf('\n') !== -1 || s.indexOf('\r') !== -1) {
-    return '"' + s.replace(/"/g, '""') + '"'
-  }
-  return s
-}
-
-function exportCsv() {
-  exportMenuOpen.value = false
-  var rows = []
-  rows.push(['Feature', 'Summary', 'Status', 'Risk', 'DoR %', 'RICE', 'Component', 'Phase', 'Tier', 'PM', 'Owner', 'Epics', 'Issues', 'Completion %', 'Blockers'])
-
-  for (var i = 0; i < filteredFeatures.value.length; i++) {
-    var f = filteredFeatures.value[i]
-    rows.push([
-      f.key || '',
-      f.summary || '',
-      f.status || '',
-      f.risk ? f.risk.level : '',
-      f.dor ? f.dor.completionPct : '',
-      f.rice && f.rice.score != null ? f.rice.score : '',
-      f.components || '',
-      f.phase || '',
-      f.tier || '',
-      f.pm || '',
-      f.deliveryOwner || '',
-      f.epicCount != null ? f.epicCount : '',
-      f.issueCount != null ? f.issueCount : '',
-      f.completionPct != null ? f.completionPct : '',
-      f.blockerCount != null ? f.blockerCount : ''
-    ])
-  }
-
-  var csv = rows.map(function(row) { return row.map(escapeCsv).join(',') }).join('\n')
-  var blob = new Blob([csv + '\n'], { type: 'text/csv' })
-  var url = URL.createObjectURL(blob)
-  var a = document.createElement('a')
-  a.href = url
-  a.download = 'plan-health-' + selectedVersion.value + '-' + (activePhase.value || 'all') + '.csv'
-  a.click()
-  URL.revokeObjectURL(url)
-}
-
-function escapeCell(val) {
-  return String(val).replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\n/g, ' ')
-}
-
-function exportMarkdown() {
-  exportMenuOpen.value = false
-  var lines = []
-  lines.push('# Release Plan Health - ' + selectedVersion.value + (activePhase.value !== 'all' ? ' ' + activePhase.value : ''))
-  lines.push('')
-  lines.push('| **Feature** | **Summary** | **Status** | **Risk** | **DoR %** | **RICE** | **Component** | **Phase** |')
-  lines.push('|---------|---------|--------|------|-------|------|-----------|-------|')
-
-  for (var i = 0; i < filteredFeatures.value.length; i++) {
-    var f = filteredFeatures.value[i]
-    lines.push('| ' + [
-      f.key || '-',
-      escapeCell(f.summary || '-'),
-      escapeCell(f.status || '-'),
-      f.risk ? f.risk.level : '-',
-      f.dor ? f.dor.completionPct + '%' : '-',
-      f.rice && f.rice.score != null ? f.rice.score : '-',
-      escapeCell(f.components || '-'),
-      f.phase || '-'
-    ].join(' | ') + ' |')
-  }
-
-  var blob = new Blob([lines.join('\n') + '\n'], { type: 'text/markdown' })
-  var url = URL.createObjectURL(blob)
-  var a = document.createElement('a')
-  a.href = url
-  a.download = 'plan-health-' + selectedVersion.value + '-' + (activePhase.value !== 'all' ? activePhase.value : 'all') + '.md'
-  a.click()
-  URL.revokeObjectURL(url)
-}
-
-function toggleExportMenu() {
-  exportMenuOpen.value = !exportMenuOpen.value
-}
-
-function closeExportMenu() {
-  exportMenuOpen.value = false
-}
-
-function handleClickOutside() {
-  exportMenuOpen.value = false
-}
-
 // ─── Format helpers ───
 
 function formatDate(iso) {
@@ -436,7 +353,6 @@ watch(selectedVersion, function(newVersion) {
 })
 
 onMounted(async function() {
-  document.addEventListener('click', handleClickOutside)
   await loadReleases()
   if (releases.value.length > 0) {
     selectedVersion.value = releases.value[0].version
@@ -444,7 +360,6 @@ onMounted(async function() {
 })
 
 onUnmounted(function() {
-  document.removeEventListener('click', handleClickOutside)
   stopRefreshPolling()
   cancelDorPending()
 })
@@ -474,37 +389,6 @@ onUnmounted(function() {
         >
           {{ healthRefreshing ? 'Refreshing...' : 'Refresh' }}
         </button>
-        <div class="relative" @click.stop @keydown.escape="closeExportMenu">
-          <button
-            v-if="features.length > 0"
-            @click="toggleExportMenu"
-            :aria-expanded="exportMenuOpen"
-            aria-haspopup="menu"
-            aria-label="Export data"
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-          >
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Export
-          </button>
-          <div
-            v-if="exportMenuOpen"
-            role="menu"
-            class="absolute right-0 mt-1 w-40 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-10"
-          >
-            <button
-              role="menuitem"
-              @click="exportMarkdown"
-              class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-            >Markdown (.md)</button>
-            <button
-              role="menuitem"
-              @click="exportCsv"
-              class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-            >CSV (.csv)</button>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -585,7 +469,7 @@ onUnmounted(function() {
         v-model:riskFilter="riskFilter"
         v-model:dorFilter="dorFilter"
         v-model:bigRockFilter="bigRockFilter"
-        v-model:componentFilter="componentFilter"
+        v-model:selectedComponents="selectedComponents"
         v-model:tierFilter="tierFilter"
         v-model:searchQuery="searchQuery"
         :bigRocks="bigRockOptions"

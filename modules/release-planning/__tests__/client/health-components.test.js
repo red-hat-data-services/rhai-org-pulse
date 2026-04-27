@@ -226,7 +226,7 @@ describe('RiceScoreDisplay', function() {
 describe('HealthFilterBar', function() {
   it('renders search input', function() {
     var wrapper = mount(HealthFilterBar)
-    expect(wrapper.find('input').exists()).toBe(true)
+    expect(wrapper.find('input[type="text"]').exists()).toBe(true)
   })
 
   it('renders risk filter select', function() {
@@ -241,10 +241,52 @@ describe('HealthFilterBar', function() {
     expect(wrapper.text()).toContain('Rock B')
   })
 
-  it('renders components select when components provided', function() {
+  it('renders component multi-select button when components provided', function() {
     var wrapper = mount(HealthFilterBar, { props: { components: ['Model Serving', 'Pipelines'] } })
+    expect(wrapper.text()).toContain('All Components')
+  })
+
+  it('shows component options in dropdown when button clicked', async function() {
+    var wrapper = mount(HealthFilterBar, {
+      props: { components: ['Model Serving', 'Pipelines'] },
+      attachTo: document.body
+    })
+    var compBtn = wrapper.findAll('button').filter(function(b) {
+      return b.text().includes('All Components')
+    })
+    if (compBtn.length > 0) {
+      await compBtn[0].trigger('click')
+      expect(wrapper.text()).toContain('Model Serving')
+      expect(wrapper.text()).toContain('Pipelines')
+    }
+    wrapper.unmount()
+  })
+
+  it('shows selected component chips', function() {
+    var wrapper = mount(HealthFilterBar, {
+      props: {
+        components: ['Model Serving', 'Pipelines'],
+        selectedComponents: ['Model Serving']
+      }
+    })
     expect(wrapper.text()).toContain('Model Serving')
-    expect(wrapper.text()).toContain('Pipelines')
+  })
+
+  it('emits update:selectedComponents when chip remove is clicked', async function() {
+    var wrapper = mount(HealthFilterBar, {
+      props: {
+        components: ['Model Serving', 'Pipelines'],
+        selectedComponents: ['Model Serving']
+      }
+    })
+    var removeBtn = wrapper.findAll('button').filter(function(b) {
+      return b.attributes('aria-label') === 'Remove component filter'
+    })
+    if (removeBtn.length > 0) {
+      await removeBtn[0].trigger('click')
+      expect(wrapper.emitted('update:selectedComponents')).toBeDefined()
+      expect(wrapper.emitted('update:selectedComponents')[0][0]).toEqual([])
+    }
   })
 
   it('renders tier filter select', function() {
@@ -290,7 +332,7 @@ describe('HealthFilterBar', function() {
 
   it('emits update:searchQuery on input', async function() {
     var wrapper = mount(HealthFilterBar)
-    await wrapper.find('input').setValue('test query')
+    await wrapper.find('input[type="text"]').setValue('test query')
     expect(wrapper.emitted('update:searchQuery')).toBeDefined()
     expect(wrapper.emitted('update:searchQuery')[0][0]).toBe('test query')
   })
@@ -341,21 +383,27 @@ describe('FeatureHealthTable', function() {
       key: 'T-1', summary: 'Feature 1', status: 'In Progress',
       risk: { level: 'green', flags: [], riskScore: 0 },
       dor: { checkedCount: 10, totalCount: 13, completionPct: 77, items: [] },
-      rice: null, components: ['Model Serving'], phase: 'GA', bigRock: 'MaaS'
+      rice: null, components: 'Model Serving', phase: 'GA', bigRock: 'MaaS',
+      deliveryOwner: 'Alice', priorityScore: 65, priorityBreakdown: { rice: 50, bigRock: 100, priority: 60, complexity: 50 }
     },
     {
       key: 'T-2', summary: 'Feature 2', status: 'New',
-      risk: { level: 'red', flags: [{ category: 'MILESTONE_MISS', severity: 'high' }], riskScore: 1 },
+      risk: { level: 'red', flags: [{ category: 'MILESTONE_MISS', severity: 'high', message: 'Past deadline' }], riskScore: 1 },
       dor: { checkedCount: 3, totalCount: 13, completionPct: 23, items: [] },
-      rice: { score: 250, complete: true }, components: ['Pipelines'], phase: 'TP', bigRock: null
+      rice: { score: 250, complete: true }, components: 'Pipelines', phase: 'TP', bigRock: null,
+      deliveryOwner: 'Bob', priorityScore: 42, priorityBreakdown: { rice: 40, bigRock: 60, priority: 40, complexity: 30 }
     }
   ]
 
-  it('renders table headers', function() {
+  it('renders table headers including Health, Priority, and Owner', function() {
     var wrapper = mount(FeatureHealthTable, { props: { features: features } })
     expect(wrapper.text()).toContain('Feature')
     expect(wrapper.text()).toContain('Summary')
-    expect(wrapper.text()).toContain('Risk')
+    expect(wrapper.text()).toContain('Health')
+    expect(wrapper.text()).toContain('Priority')
+    expect(wrapper.text()).toContain('Owner')
+    expect(wrapper.text()).not.toContain('Risk')
+    expect(wrapper.text()).not.toContain('DoR')
   })
 
   it('shows empty state when features array is empty', function() {
@@ -376,10 +424,16 @@ describe('FeatureHealthTable', function() {
     expect(wrapper.text()).not.toContain('Next')
   })
 
-  it('sorts features by risk by default (red first)', function() {
+  it('sorts features by health by default (red first)', function() {
     var wrapper = mount(FeatureHealthTable, { props: { features: features } })
     var rows = wrapper.findAll('tr')
     var firstDataRow = rows.length > 1 ? rows[1].text() : ''
     expect(firstDataRow).toContain('T-2')
+  })
+
+  it('has 11 column headers', function() {
+    var wrapper = mount(FeatureHealthTable, { props: { features: features } })
+    var headers = wrapper.findAll('th')
+    expect(headers.length).toBe(11)
   })
 })

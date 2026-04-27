@@ -12,7 +12,7 @@ const emit = defineEmits(['toggleDorItem', 'updateNotes', 'setOverride', 'remove
 
 var PAGE_SIZE = 50
 var expandedRows = ref({})
-var sortKey = ref('risk')
+var sortKey = ref('health')
 var sortAsc = ref(true)
 var currentPage = ref(1)
 
@@ -21,10 +21,11 @@ var columns = [
   { key: 'key', label: 'Feature', sortable: true },
   { key: 'summary', label: 'Summary', sortable: true },
   { key: 'status', label: 'Status', sortable: true },
-  { key: 'risk', label: 'Risk', sortable: true },
-  { key: 'dor', label: 'DoR', sortable: true },
+  { key: 'health', label: 'Health', sortable: true },
+  { key: 'priority', label: 'Priority', sortable: true },
   { key: 'rice', label: 'RICE', sortable: true },
   { key: 'components', label: 'Component', sortable: true },
+  { key: 'owner', label: 'Owner', sortable: true },
   { key: 'phase', label: 'Phase', sortable: true },
   { key: 'tier', label: 'Tier', sortable: true }
 ]
@@ -54,20 +55,21 @@ var sortedFeatures = computed(function() {
     } else if (key === 'status') {
       va = a.status || ''
       vb = b.status || ''
-    } else if (key === 'risk') {
-      va = RISK_ORDER[getRiskLevel(a)]
-      vb = RISK_ORDER[getRiskLevel(b)]
-      if (va == null) va = 3
-      if (vb == null) vb = 3
-    } else if (key === 'dor') {
-      va = a.dor ? a.dor.completionPct : 0
-      vb = b.dor ? b.dor.completionPct : 0
+    } else if (key === 'health') {
+      va = RISK_ORDER[getRiskLevel(a)] * 1000 + (1000 - (a.dor ? a.dor.completionPct : 0))
+      vb = RISK_ORDER[getRiskLevel(b)] * 1000 + (1000 - (b.dor ? b.dor.completionPct : 0))
+    } else if (key === 'priority') {
+      va = a.priorityScore != null ? a.priorityScore : -1
+      vb = b.priorityScore != null ? b.priorityScore : -1
     } else if (key === 'rice') {
       va = a.rice && a.rice.score != null ? a.rice.score : -1
       vb = b.rice && b.rice.score != null ? b.rice.score : -1
     } else if (key === 'components') {
       va = (a.components || '').toLowerCase()
       vb = (b.components || '').toLowerCase()
+    } else if (key === 'owner') {
+      va = (a.deliveryOwner || '').toLowerCase()
+      vb = (b.deliveryOwner || '').toLowerCase()
     } else if (key === 'phase') {
       va = a.phase || ''
       vb = b.phase || ''
@@ -179,7 +181,7 @@ function sortIndicator(key) {
             />
           </template>
           <tr v-if="!features || features.length === 0">
-            <td colspan="10" class="px-3 py-8 text-center text-gray-500 border border-gray-300 dark:border-gray-600">
+            <td colspan="11" class="px-3 py-8 text-center text-gray-500 border border-gray-300 dark:border-gray-600">
               No features found matching the current filters.
             </td>
           </tr>
