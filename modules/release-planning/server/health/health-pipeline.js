@@ -344,6 +344,46 @@ async function backfillFreezeDatesFromSmartsheet(milestones, version) {
   }
 }
 
+var FREEZE_OFFSET_DAYS = 30
+
+/**
+ * Derive missing freeze dates by subtracting FREEZE_OFFSET_DAYS from target dates.
+ *
+ * @param {object|null} milestones
+ * @returns {{ milestones: object|null, warnings: string[] }}
+ */
+function deriveFreezeDates(milestones) {
+  var warnings = []
+  if (!milestones) return { milestones: null, warnings: warnings }
+
+  var derived = []
+
+  function offset(dateStr) {
+    var d = new Date(dateStr + 'T00:00:00Z')
+    d.setUTCDate(d.getUTCDate() - FREEZE_OFFSET_DAYS)
+    return d.toISOString().split('T')[0]
+  }
+
+  if (!milestones.ea1Freeze && milestones.ea1Target) {
+    milestones.ea1Freeze = offset(milestones.ea1Target)
+    derived.push('ea1Freeze')
+  }
+  if (!milestones.ea2Freeze && milestones.ea2Target) {
+    milestones.ea2Freeze = offset(milestones.ea2Target)
+    derived.push('ea2Freeze')
+  }
+  if (!milestones.gaFreeze && milestones.gaTarget) {
+    milestones.gaFreeze = offset(milestones.gaTarget)
+    derived.push('gaFreeze')
+  }
+
+  if (derived.length > 0) {
+    warnings.push('Derived freeze dates (target minus ' + FREEZE_OFFSET_DAYS + ' days): ' + derived.join(', '))
+  }
+
+  return { milestones: milestones, warnings: warnings }
+}
+
 /**
  * Load features for a release version from the feature-traffic cache.
  * Filters features by target version match and excludes closed statuses.
@@ -498,11 +538,14 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
 
   console.log('[health] Found ' + features.length + ' features for version ' + version + ' phase ' + phaseKey)
 
-  // Step 2: Load milestone dates (Product Pages → Smartsheet fallback for freeze dates)
+  // Step 2: Load milestone dates (Product Pages → Smartsheet fallback → derived from targets)
   var milestones = loadMilestones(readFromStorage, version)
   var fallbackResult = await backfillFreezeDatesFromSmartsheet(milestones, version)
   milestones = fallbackResult.milestones
   warnings = warnings.concat(fallbackResult.warnings)
+  var deriveResult = deriveFreezeDates(milestones)
+  milestones = deriveResult.milestones
+  warnings = warnings.concat(deriveResult.warnings)
 
   // Step 3: Run Jira enrichment
   var enrichResult = { enrichments: new Map(), riceData: new Map(), warnings: [], stats: { pass1: 0, pass2: 0, rice: 0 } }
@@ -699,6 +742,7 @@ module.exports = {
   loadFeaturesFromCandidates: loadFeaturesFromCandidates,
   loadMilestones: loadMilestones,
   backfillFreezeDatesFromSmartsheet: backfillFreezeDatesFromSmartsheet,
+  deriveFreezeDates: deriveFreezeDates,
   computeMilestoneInfo: computeMilestoneInfo,
   computePlanningDeadline: computePlanningDeadline,
   getFeaturePhase: getFeaturePhase,

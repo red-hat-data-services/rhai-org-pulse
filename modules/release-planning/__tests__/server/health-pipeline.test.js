@@ -6,6 +6,7 @@ const {
   loadFeaturesFromCandidates,
   loadMilestones,
   backfillFreezeDatesFromSmartsheet,
+  deriveFreezeDates,
   computeMilestoneInfo,
   computePlanningDeadline,
   getFeaturePhase,
@@ -537,6 +538,67 @@ describe('backfillFreezeDatesFromSmartsheet', function() {
     expect(result.warnings).toEqual(
       expect.arrayContaining([expect.stringContaining('Smartsheet fallback failed')])
     )
+  })
+})
+
+describe('deriveFreezeDates', function() {
+  it('returns null milestones unchanged', function() {
+    var result = deriveFreezeDates(null)
+    expect(result.milestones).toBeNull()
+    expect(result.warnings).toHaveLength(0)
+  })
+
+  it('derives all freeze dates from target dates', function() {
+    var milestones = {
+      ea1Freeze: null, ea1Target: '2026-06-18',
+      ea2Freeze: null, ea2Target: '2026-07-16',
+      gaFreeze: null, gaTarget: '2026-08-20'
+    }
+    var result = deriveFreezeDates(milestones)
+    expect(result.milestones.ea1Freeze).toBe('2026-05-19')
+    expect(result.milestones.ea2Freeze).toBe('2026-06-16')
+    expect(result.milestones.gaFreeze).toBe('2026-07-21')
+    expect(result.warnings[0]).toContain('Derived freeze dates')
+    expect(result.warnings[0]).toContain('ea1Freeze')
+    expect(result.warnings[0]).toContain('ea2Freeze')
+    expect(result.warnings[0]).toContain('gaFreeze')
+  })
+
+  it('does not overwrite existing freeze dates', function() {
+    var milestones = {
+      ea1Freeze: '2026-05-01', ea1Target: '2026-06-18',
+      ea2Freeze: null, ea2Target: '2026-07-16',
+      gaFreeze: '2026-08-01', gaTarget: '2026-08-20'
+    }
+    var result = deriveFreezeDates(milestones)
+    expect(result.milestones.ea1Freeze).toBe('2026-05-01')
+    expect(result.milestones.ea2Freeze).toBe('2026-06-16')
+    expect(result.milestones.gaFreeze).toBe('2026-08-01')
+    expect(result.warnings[0]).toContain('ea2Freeze')
+    expect(result.warnings[0]).not.toContain('ea1Freeze')
+    expect(result.warnings[0]).not.toContain('gaFreeze')
+  })
+
+  it('produces no warnings when all freeze dates already exist', function() {
+    var milestones = {
+      ea1Freeze: '2026-05-01', ea1Target: '2026-06-18',
+      ea2Freeze: '2026-06-15', ea2Target: '2026-07-16',
+      gaFreeze: '2026-08-01', gaTarget: '2026-08-20'
+    }
+    var result = deriveFreezeDates(milestones)
+    expect(result.warnings).toHaveLength(0)
+  })
+
+  it('handles month boundary rollover correctly', function() {
+    var milestones = {
+      ea1Freeze: null, ea1Target: '2026-01-15',
+      ea2Freeze: null, ea2Target: null,
+      gaFreeze: null, gaTarget: null
+    }
+    var result = deriveFreezeDates(milestones)
+    expect(result.milestones.ea1Freeze).toBe('2025-12-16')
+    expect(result.milestones.ea2Freeze).toBeNull()
+    expect(result.milestones.gaFreeze).toBeNull()
   })
 })
 
