@@ -151,7 +151,7 @@ function loadFeaturesFromCandidates(readFromStorage, version, phase) {
  * Compute the planning deadline for a given phase.
  * The planning deadline is the code freeze date minus PLANNING_DEADLINE_OFFSET_DAYS.
  *
- * @param {object|null} milestones - Milestone dates from Smartsheet
+ * @param {object|null} milestones - Milestone dates from Product Pages
  * @param {string|null} phase - Selected phase (EA1/EA2/GA)
  * @returns {{ date: string, daysRemaining: number }|null}
  */
