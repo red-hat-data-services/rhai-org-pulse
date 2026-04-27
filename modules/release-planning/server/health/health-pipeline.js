@@ -21,6 +21,7 @@ const { enrichFeatures } = require('./jira-enrichment')
 const { evaluateDor } = require('./dor-checker')
 const { computeFeatureRisk } = require('./risk-engine')
 const { buildRiceResult } = require('./rice-scorer')
+const { computePriorityScores } = require('./priority-scorer')
 const smartsheetClient = require('../../../../shared/server/smartsheet')
 
 var DATA_PREFIX = 'release-planning'
@@ -290,7 +291,7 @@ async function backfillFreezeDatesFromSmartsheet(milestones, version) {
   }
 
   try {
-    var releases = await smartsheetClient.discoverReleasesWithFreezes()
+    var releases = await smartsheetClient.discoverReleasesPartial()
     var match = null
     for (var i = 0; i < releases.length; i++) {
       if (releases[i].version === version) {
@@ -347,6 +348,18 @@ async function backfillFreezeDatesFromSmartsheet(milestones, version) {
 var FREEZE_OFFSET_DAYS = 30
 
 /**
+ * Offset a date string by a given number of days.
+ * @param {string} dateStr - ISO date string (YYYY-MM-DD)
+ * @param {number} days - Number of days to offset (positive = forward, negative = backward)
+ * @returns {string} Offset date as YYYY-MM-DD
+ */
+function offsetDate(dateStr, days) {
+  var d = new Date(dateStr + 'T00:00:00Z')
+  d.setUTCDate(d.getUTCDate() + days)
+  return d.toISOString().split('T')[0]
+}
+
+/**
  * Derive missing freeze dates by subtracting FREEZE_OFFSET_DAYS from target dates.
  *
  * @param {object|null} milestones
@@ -358,22 +371,16 @@ function deriveFreezeDates(milestones) {
 
   var derived = []
 
-  function offset(dateStr) {
-    var d = new Date(dateStr + 'T00:00:00Z')
-    d.setUTCDate(d.getUTCDate() - FREEZE_OFFSET_DAYS)
-    return d.toISOString().split('T')[0]
-  }
-
   if (!milestones.ea1Freeze && milestones.ea1Target) {
-    milestones.ea1Freeze = offset(milestones.ea1Target)
+    milestones.ea1Freeze = offsetDate(milestones.ea1Target, -FREEZE_OFFSET_DAYS)
     derived.push('ea1Freeze')
   }
   if (!milestones.ea2Freeze && milestones.ea2Target) {
-    milestones.ea2Freeze = offset(milestones.ea2Target)
+    milestones.ea2Freeze = offsetDate(milestones.ea2Target, -FREEZE_OFFSET_DAYS)
     derived.push('ea2Freeze')
   }
   if (!milestones.gaFreeze && milestones.gaTarget) {
-    milestones.gaFreeze = offset(milestones.gaTarget)
+    milestones.gaFreeze = offsetDate(milestones.gaTarget, -FREEZE_OFFSET_DAYS)
     derived.push('gaFreeze')
   }
 
@@ -653,8 +660,18 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
       },
       dor: dorStatus,
       rice: riceResult,
+      storyPoints: enrichment ? enrichment.storyPoints || null : null,
       jiraUrl: JIRA_BROWSE_URL + '/' + key
     })
+  }
+
+  // Step 6b: Compute composite priority scores
+  var priorityScores = computePriorityScores(healthFeatures)
+  for (var pi = 0; pi < healthFeatures.length; pi++) {
+    var pKey = healthFeatures[pi].key
+    var pResult = priorityScores.get(pKey)
+    healthFeatures[pi].priorityScore = pResult ? pResult.score : null
+    healthFeatures[pi].priorityBreakdown = pResult ? pResult.breakdown : null
   }
 
   // Step 6: Build summary
@@ -671,6 +688,11 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
       ea2Target: milestones.ea2Target,
       gaFreeze: milestones.gaFreeze,
       gaTarget: milestones.gaTarget
+    } : null,
+    planningFreezes: milestones ? {
+      ea1: milestones.ea1Freeze ? offsetDate(milestones.ea1Freeze, -PLANNING_DEADLINE_OFFSET_DAYS) : null,
+      ea2: milestones.ea2Freeze ? offsetDate(milestones.ea2Freeze, -PLANNING_DEADLINE_OFFSET_DAYS) : null,
+      ga: milestones.gaFreeze ? offsetDate(milestones.gaFreeze, -PLANNING_DEADLINE_OFFSET_DAYS) : null
     } : null,
     phase: phaseKey,
     summary: {

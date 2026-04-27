@@ -52,18 +52,18 @@ async function fetchSheet() {
   return data
 }
 
+var REQUIRED_MILESTONES = ['ea1_freeze', 'ea1_target', 'ea2_freeze', 'ea2_target', 'ga_freeze', 'ga_target']
+
 /**
- * Extract release versions and their key milestone dates from the SmartSheet.
+ * Private helper -- shared sheet-fetch-and-parse logic used by all
+ * discoverReleases* functions.  Parses the Smartsheet rows for milestone
+ * dates, filters versions via the supplied predicate, and returns the
+ * full milestone object per version.
  *
- * Ports the regex logic from release-pulse's smartsheet_client.py.
- * Matches the same four row patterns: EA1/EA2 Code Freeze, EA1/EA2
- * RELEASE, GA Code Freeze, GA. Only surfaces versions that have all 6
- * required milestones (ea1_freeze, ea1_target, ea2_freeze, ea2_target,
- * ga_freeze, ga_target), matching the Python client's completeness check.
- *
- * @returns {Array<{ version: string, ea1Target: string|null, ea2Target: string|null, gaTarget: string|null }>}
+ * @param {Function} filterFn - Predicate receiving a milestones object; return true to include
+ * @returns {Promise<Array<{ version: string, ea1Freeze: string|null, ea1Target: string|null, ea2Freeze: string|null, ea2Target: string|null, gaFreeze: string|null, gaTarget: string|null }>>}
  */
-async function discoverReleases() {
+async function parseSmartsheetReleases(filterFn) {
   var sheet = await fetchSheet()
 
   var colMap = {}
@@ -73,7 +73,7 @@ async function discoverReleases() {
   var taskCol = colMap['Task Name']
   var startCol = colMap['Start']
 
-  var milestones = {} // version -> { ea1_freeze, ea1_target, ea2_freeze, ea2_target, ga_freeze, ga_target }
+  var milestones = {}
 
   for (var r = 0; r < sheet.rows.length; r++) {
     var row = sheet.rows[r]
@@ -88,35 +88,24 @@ async function discoverReleases() {
     var dateStr = String(startVal).split('T')[0]
     var m
 
-    // EA1/EA2 Code Freeze -- e.g. "3.4.EA1 RHOAI Code Freeze"
     m = task.match(/^(\d+\.\d+)\.(EA[12])\s+(?:RHOAI\s+)?Code\s+Freeze/i)
     if (m) {
-      var ver = m[1]
-      var phase = m[2].toLowerCase()
-      if (!milestones[ver]) milestones[ver] = {}
-      milestones[ver][phase + '_freeze'] = dateStr
+      if (!milestones[m[1]]) milestones[m[1]] = {}
+      milestones[m[1]][m[2].toLowerCase() + '_freeze'] = dateStr
       continue
     }
-
-    // EA1/EA2 Release -- e.g. "3.5.EA1 RHOAI RELEASE"
     m = task.match(/^(\d+\.\d+)\.(EA[12])\s+(?:RHOAI\s+)?RELEASE/i)
     if (m) {
-      var ver2 = m[1]
-      var phase2 = m[2].toLowerCase()
-      if (!milestones[ver2]) milestones[ver2] = {}
-      milestones[ver2][phase2 + '_target'] = dateStr
+      if (!milestones[m[1]]) milestones[m[1]] = {}
+      milestones[m[1]][m[2].toLowerCase() + '_target'] = dateStr
       continue
     }
-
-    // GA Code Freeze -- e.g. "3.4 RHOAI Code Freeze" (not EA, not Feature Freeze)
     m = task.match(/^(\d+\.\d+)\s+(?:RHOAI\s+)?Code\s+Freeze$/i)
     if (m) {
       if (!milestones[m[1]]) milestones[m[1]] = {}
       milestones[m[1]].ga_freeze = dateStr
       continue
     }
-
-    // GA Release -- e.g. "3.5 RHOAI GA"
     m = task.match(/^(\d+\.\d+)\s+(?:RHOAI\s+)?GA$/i)
     if (m) {
       if (!milestones[m[1]]) milestones[m[1]] = {}
@@ -125,15 +114,8 @@ async function discoverReleases() {
     }
   }
 
-  // Only include versions that have all 6 required milestones
-  // (matches the Python client's completeness check)
-  var REQUIRED_MILESTONES = ['ea1_freeze', 'ea1_target', 'ea2_freeze', 'ea2_target', 'ga_freeze', 'ga_target']
-
-  var releases = Object.keys(milestones)
-    .filter(function(version) {
-      var ms = milestones[version]
-      return REQUIRED_MILESTONES.every(function(key) { return !!ms[key] })
-    })
+  return Object.keys(milestones)
+    .filter(function(version) { return filterFn(milestones[version]) })
     .sort(function(a, b) {
       var ap = a.split('.').map(Number)
       var bp = b.split('.').map(Number)
@@ -143,13 +125,41 @@ async function discoverReleases() {
       var ms = milestones[version]
       return {
         version: version,
+        ea1Freeze: ms.ea1_freeze || null,
         ea1Target: ms.ea1_target || null,
+        ea2Freeze: ms.ea2_freeze || null,
         ea2Target: ms.ea2_target || null,
+        gaFreeze: ms.ga_freeze || null,
         gaTarget: ms.ga_target || null
       }
     })
+}
 
-  return releases
+/**
+ * Extract release versions and their key milestone dates from the SmartSheet.
+ *
+ * Ports the regex logic from release-pulse's smartsheet_client.py.
+ * Matches the same four row patterns: EA1/EA2 Code Freeze, EA1/EA2
+ * RELEASE, GA Code Freeze, GA. Only surfaces versions that have all 6
+ * required milestones (ea1_freeze, ea1_target, ea2_freeze, ea2_target,
+ * ga_freeze, ga_target), matching the Python client's completeness check.
+ *
+ * @returns {Array<{ version: string, ea1Target: string|null, ea2Target: string|null, gaTarget: string|null }>}
+ */
+async function discoverReleases() {
+  var releases = await parseSmartsheetReleases(function(ms) {
+    return REQUIRED_MILESTONES.every(function(key) { return !!ms[key] })
+  })
+
+  // Map to the original shape -- target dates only, no freeze dates
+  return releases.map(function(r) {
+    return {
+      version: r.version,
+      ea1Target: r.ea1Target,
+      ea2Target: r.ea2Target,
+      gaTarget: r.gaTarget
+    }
+  })
 }
 
 function httpGet(url, headers) {
@@ -186,98 +196,29 @@ function httpGet(url, headers) {
  * @returns {Array<{ version: string, ea1Freeze: string|null, ea1Target: string|null, ea2Freeze: string|null, ea2Target: string|null, gaFreeze: string|null, gaTarget: string|null }>}
  */
 async function discoverReleasesWithFreezes() {
-  var sheet = await fetchSheet()
+  return parseSmartsheetReleases(function(ms) {
+    return REQUIRED_MILESTONES.every(function(key) { return !!ms[key] })
+  })
+}
 
-  var colMap = {}
-  for (var c = 0; c < sheet.columns.length; c++) {
-    colMap[sheet.columns[c].title] = sheet.columns[c].id
-  }
-  var taskCol = colMap['Task Name']
-  var startCol = colMap['Start']
-
-  var milestones = {}
-
-  for (var r = 0; r < sheet.rows.length; r++) {
-    var row = sheet.rows[r]
-    var cells = {}
-    for (var ci = 0; ci < row.cells.length; ci++) {
-      cells[row.cells[ci].columnId] = row.cells[ci].value
-    }
-    var task = cells[taskCol]
-    var startVal = cells[startCol]
-    if (!task || !startVal) continue
-
-    var dateStr = String(startVal).split('T')[0]
-    var m
-
-    // EA1/EA2 Code Freeze
-    m = task.match(/^(\d+\.\d+)\.(EA[12])\s+(?:RHOAI\s+)?Code\s+Freeze/i)
-    if (m) {
-      var ver = m[1]
-      var phase = m[2].toLowerCase()
-      if (!milestones[ver]) milestones[ver] = {}
-      milestones[ver][phase + '_freeze'] = dateStr
-      continue
-    }
-
-    // EA1/EA2 Release
-    m = task.match(/^(\d+\.\d+)\.(EA[12])\s+(?:RHOAI\s+)?RELEASE/i)
-    if (m) {
-      var ver2 = m[1]
-      var phase2 = m[2].toLowerCase()
-      if (!milestones[ver2]) milestones[ver2] = {}
-      milestones[ver2][phase2 + '_target'] = dateStr
-      continue
-    }
-
-    // GA Code Freeze
-    m = task.match(/^(\d+\.\d+)\s+(?:RHOAI\s+)?Code\s+Freeze$/i)
-    if (m) {
-      if (!milestones[m[1]]) milestones[m[1]] = {}
-      milestones[m[1]].ga_freeze = dateStr
-      continue
-    }
-
-    // GA Release
-    m = task.match(/^(\d+\.\d+)\s+(?:RHOAI\s+)?GA$/i)
-    if (m) {
-      if (!milestones[m[1]]) milestones[m[1]] = {}
-      milestones[m[1]].ga_target = dateStr
-      continue
-    }
-  }
-
-  var REQUIRED_MILESTONES = ['ea1_freeze', 'ea1_target', 'ea2_freeze', 'ea2_target', 'ga_freeze', 'ga_target']
-
-  var releases = Object.keys(milestones)
-    .filter(function(version) {
-      var ms = milestones[version]
-      return REQUIRED_MILESTONES.every(function(key) { return !!ms[key] })
-    })
-    .sort(function(a, b) {
-      var ap = a.split('.').map(Number)
-      var bp = b.split('.').map(Number)
-      return ap[0] - bp[0] || ap[1] - bp[1]
-    })
-    .map(function(version) {
-      var ms = milestones[version]
-      return {
-        version: version,
-        ea1Freeze: ms.ea1_freeze || null,
-        ea1Target: ms.ea1_target || null,
-        ea2Freeze: ms.ea2_freeze || null,
-        ea2Target: ms.ea2_target || null,
-        gaFreeze: ms.ga_freeze || null,
-        gaTarget: ms.ga_target || null
-      }
-    })
-
-  return releases
+/**
+ * Relaxed version of discoverReleasesWithFreezes that includes versions
+ * with at least one milestone date.  Used by the health pipeline's
+ * backfill flow, where upcoming releases may not yet have all 6 dates
+ * in Smartsheet (e.g., GA dates not set while EA1 is being planned).
+ *
+ * @returns {Array<{ version: string, ea1Freeze: string|null, ea1Target: string|null, ea2Freeze: string|null, ea2Target: string|null, gaFreeze: string|null, gaTarget: string|null }>}
+ */
+async function discoverReleasesPartial() {
+  return parseSmartsheetReleases(function(ms) {
+    return Object.keys(ms).length > 0
+  })
 }
 
 module.exports = {
   discoverReleases: discoverReleases,
   discoverReleasesWithFreezes: discoverReleasesWithFreezes,
+  discoverReleasesPartial: discoverReleasesPartial,
   isConfigured: isConfigured,
   SMARTSHEET_SHEET_ID: SMARTSHEET_SHEET_ID
 }

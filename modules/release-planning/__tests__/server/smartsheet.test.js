@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-const { isConfigured } = require('../../../../shared/server/smartsheet')
+const smartsheet = require('../../../../shared/server/smartsheet')
 
 // Note: We can't easily unit test discoverReleases without mocking https.get,
 // which requires a heavier test setup. The isConfigured and regex logic are
@@ -10,8 +10,30 @@ describe('isConfigured', () => {
     // Default in the module is '' when env var is not set
     // Since we can't easily reset module-level vars, we verify the function exists
     // and returns a boolean. In CI, the token is not set, so this should be false.
-    const result = isConfigured()
+    const result = smartsheet.isConfigured()
     expect(typeof result).toBe('boolean')
+  })
+})
+
+describe('module exports', () => {
+  it('exports discoverReleases', () => {
+    expect(typeof smartsheet.discoverReleases).toBe('function')
+  })
+
+  it('exports discoverReleasesWithFreezes', () => {
+    expect(typeof smartsheet.discoverReleasesWithFreezes).toBe('function')
+  })
+
+  it('exports discoverReleasesPartial', () => {
+    expect(typeof smartsheet.discoverReleasesPartial).toBe('function')
+  })
+
+  it('exports isConfigured', () => {
+    expect(typeof smartsheet.isConfigured).toBe('function')
+  })
+
+  it('exports SMARTSHEET_SHEET_ID', () => {
+    expect(typeof smartsheet.SMARTSHEET_SHEET_ID).toBe('string')
   })
 })
 
