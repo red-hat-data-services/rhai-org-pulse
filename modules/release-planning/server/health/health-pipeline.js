@@ -3,7 +3,7 @@
  *
  * Coordinates the full health assessment flow:
  *   1. Load features from Big Rocks candidates cache
- *   2. Load Product Pages milestone dates (with freeze dates)
+ *   2. Load milestone dates (Product Pages → Smartsheet fallback for freeze dates)
  *   3. Run Jira enrichment (two-pass)
  *   4. Evaluate DoR for each feature
  *   5. Compute risk for each feature
@@ -21,6 +21,7 @@ const { enrichFeatures } = require('./jira-enrichment')
 const { evaluateDor } = require('./dor-checker')
 const { computeFeatureRisk } = require('./risk-engine')
 const { buildRiceResult } = require('./rice-scorer')
+const smartsheetClient = require('../../../../shared/server/smartsheet')
 
 var DATA_PREFIX = 'release-planning'
 
@@ -258,6 +259,92 @@ function loadMilestones(readFromStorage, version) {
 }
 
 /**
+ * Fill missing freeze dates from Smartsheet.
+ *
+ * If milestones is null (no Product Pages data), attempts to load everything
+ * from Smartsheet. If milestones exist but freeze dates are null, merges
+ * Smartsheet freeze dates into the existing object.
+ *
+ * @param {object|null} milestones - Milestones from Product Pages (may have null freeze fields)
+ * @param {string} version - Release version (e.g., '3.5')
+ * @returns {Promise<{ milestones: object|null, warnings: string[] }>}
+ */
+async function backfillFreezeDatesFromSmartsheet(milestones, version) {
+  var warnings = []
+
+  if (!smartsheetClient.isConfigured()) {
+    if (!milestones) {
+      warnings.push('Neither Product Pages nor Smartsheet is configured -- milestone risk checks will be skipped')
+    } else if (!milestones.ea1Freeze && !milestones.ea2Freeze && !milestones.gaFreeze) {
+      warnings.push('Product Pages freeze dates are missing and Smartsheet is not configured')
+    }
+    return { milestones: milestones, warnings: warnings }
+  }
+
+  var needsFullLoad = !milestones
+  var needsFreezeFill = milestones &&
+    !milestones.ea1Freeze && !milestones.ea2Freeze && !milestones.gaFreeze
+
+  if (!needsFullLoad && !needsFreezeFill) {
+    return { milestones: milestones, warnings: warnings }
+  }
+
+  try {
+    var releases = await smartsheetClient.discoverReleasesWithFreezes()
+    var match = null
+    for (var i = 0; i < releases.length; i++) {
+      if (releases[i].version === version) {
+        match = releases[i]
+        break
+      }
+    }
+
+    if (!match) {
+      if (needsFullLoad) {
+        warnings.push('No milestone data found in Smartsheet for version ' + version)
+      }
+      return { milestones: milestones, warnings: warnings }
+    }
+
+    if (needsFullLoad) {
+      warnings.push('Using Smartsheet as milestone source (Product Pages unavailable)')
+      return {
+        milestones: {
+          ea1Freeze: match.ea1Freeze,
+          ea1Target: match.ea1Target,
+          ea2Freeze: match.ea2Freeze,
+          ea2Target: match.ea2Target,
+          gaFreeze: match.gaFreeze,
+          gaTarget: match.gaTarget
+        },
+        warnings: warnings
+      }
+    }
+
+    // Merge freeze dates from Smartsheet into existing Product Pages milestones
+    var merged = {
+      ea1Freeze: milestones.ea1Freeze || match.ea1Freeze || null,
+      ea1Target: milestones.ea1Target,
+      ea2Freeze: milestones.ea2Freeze || match.ea2Freeze || null,
+      ea2Target: milestones.ea2Target,
+      gaFreeze: milestones.gaFreeze || match.gaFreeze || null,
+      gaTarget: milestones.gaTarget
+    }
+    var filled = []
+    if (!milestones.ea1Freeze && merged.ea1Freeze) filled.push('ea1Freeze')
+    if (!milestones.ea2Freeze && merged.ea2Freeze) filled.push('ea2Freeze')
+    if (!milestones.gaFreeze && merged.gaFreeze) filled.push('gaFreeze')
+    if (filled.length > 0) {
+      warnings.push('Backfilled freeze dates from Smartsheet: ' + filled.join(', '))
+    }
+    return { milestones: merged, warnings: warnings }
+  } catch (err) {
+    warnings.push('Smartsheet fallback failed: ' + err.message)
+    return { milestones: milestones, warnings: warnings }
+  }
+}
+
+/**
  * Load features for a release version from the feature-traffic cache.
  * Filters features by target version match and excludes closed statuses.
  * Loads detail files for each feature to get pm, components, releaseType, etc.
@@ -411,11 +498,11 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
 
   console.log('[health] Found ' + features.length + ' features for version ' + version + ' phase ' + phaseKey)
 
-  // Step 2: Load milestone dates from Product Pages cache
+  // Step 2: Load milestone dates (Product Pages → Smartsheet fallback for freeze dates)
   var milestones = loadMilestones(readFromStorage, version)
-  if (!milestones) {
-    warnings.push('Product Pages milestone dates not available -- milestone risk checks will be skipped')
-  }
+  var fallbackResult = await backfillFreezeDatesFromSmartsheet(milestones, version)
+  milestones = fallbackResult.milestones
+  warnings = warnings.concat(fallbackResult.warnings)
 
   // Step 3: Run Jira enrichment
   var enrichResult = { enrichments: new Map(), riceData: new Map(), warnings: [], stats: { pass1: 0, pass2: 0, rice: 0 } }
@@ -611,6 +698,7 @@ module.exports = {
   loadFeaturesForRelease: loadFeaturesForRelease,
   loadFeaturesFromCandidates: loadFeaturesFromCandidates,
   loadMilestones: loadMilestones,
+  backfillFreezeDatesFromSmartsheet: backfillFreezeDatesFromSmartsheet,
   computeMilestoneInfo: computeMilestoneInfo,
   computePlanningDeadline: computePlanningDeadline,
   getFeaturePhase: getFeaturePhase,

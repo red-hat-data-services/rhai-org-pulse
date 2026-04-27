@@ -5,6 +5,7 @@ const {
   loadFeaturesForRelease,
   loadFeaturesFromCandidates,
   loadMilestones,
+  backfillFreezeDatesFromSmartsheet,
   computeMilestoneInfo,
   computePlanningDeadline,
   getFeaturePhase,
@@ -418,7 +419,132 @@ describe('loadMilestones', function() {
   })
 })
 
+const smartsheetClient = require('../../../../shared/server/smartsheet')
+vi.spyOn(smartsheetClient, 'isConfigured')
+vi.spyOn(smartsheetClient, 'discoverReleasesWithFreezes')
+
+describe('backfillFreezeDatesFromSmartsheet', function() {
+  beforeEach(function() {
+    smartsheetClient.isConfigured.mockReturnValue(false)
+    smartsheetClient.discoverReleasesWithFreezes.mockResolvedValue([])
+  })
+
+  it('returns milestones unchanged when Smartsheet is not configured and milestones have freeze dates', async function() {
+    smartsheetClient.isConfigured.mockReturnValue(false)
+    var milestones = {
+      ea1Freeze: '2026-05-01', ea1Target: '2026-05-15',
+      ea2Freeze: '2026-06-15', ea2Target: '2026-07-01',
+      gaFreeze: '2026-08-01', gaTarget: '2026-08-15'
+    }
+    var result = await backfillFreezeDatesFromSmartsheet(milestones, '3.5')
+    expect(result.milestones).toEqual(milestones)
+    expect(result.warnings).toHaveLength(0)
+  })
+
+  it('warns when neither source is configured and milestones is null', async function() {
+    smartsheetClient.isConfigured.mockReturnValue(false)
+    var result = await backfillFreezeDatesFromSmartsheet(null, '3.5')
+    expect(result.milestones).toBeNull()
+    expect(result.warnings).toEqual(
+      expect.arrayContaining([expect.stringContaining('Neither Product Pages nor Smartsheet')])
+    )
+  })
+
+  it('warns when freeze dates missing and Smartsheet not configured', async function() {
+    smartsheetClient.isConfigured.mockReturnValue(false)
+    var milestones = {
+      ea1Freeze: null, ea1Target: '2026-05-15',
+      ea2Freeze: null, ea2Target: '2026-07-01',
+      gaFreeze: null, gaTarget: '2026-08-15'
+    }
+    var result = await backfillFreezeDatesFromSmartsheet(milestones, '3.5')
+    expect(result.milestones).toEqual(milestones)
+    expect(result.warnings).toEqual(
+      expect.arrayContaining([expect.stringContaining('Smartsheet is not configured')])
+    )
+  })
+
+  it('skips fallback when milestones already have freeze dates', async function() {
+    smartsheetClient.isConfigured.mockReturnValue(true)
+    var milestones = {
+      ea1Freeze: '2026-05-01', ea1Target: '2026-05-15',
+      ea2Freeze: '2026-06-15', ea2Target: '2026-07-01',
+      gaFreeze: '2026-08-01', gaTarget: '2026-08-15'
+    }
+    var result = await backfillFreezeDatesFromSmartsheet(milestones, '3.5')
+    expect(result.milestones).toEqual(milestones)
+    expect(result.warnings).toHaveLength(0)
+    expect(smartsheetClient.discoverReleasesWithFreezes).not.toHaveBeenCalled()
+  })
+
+  it('loads everything from Smartsheet when milestones is null', async function() {
+    smartsheetClient.isConfigured.mockReturnValue(true)
+    smartsheetClient.discoverReleasesWithFreezes.mockResolvedValue([
+      { version: '3.5', ea1Freeze: '2026-05-15', ea1Target: '2026-06-18', ea2Freeze: '2026-06-19', ea2Target: '2026-07-16', gaFreeze: '2026-07-24', gaTarget: '2026-08-20' }
+    ])
+    var result = await backfillFreezeDatesFromSmartsheet(null, '3.5')
+    expect(result.milestones).not.toBeNull()
+    expect(result.milestones.ea1Freeze).toBe('2026-05-15')
+    expect(result.milestones.gaTarget).toBe('2026-08-20')
+    expect(result.warnings).toEqual(
+      expect.arrayContaining([expect.stringContaining('Using Smartsheet')])
+    )
+  })
+
+  it('merges Smartsheet freeze dates into Product Pages milestones', async function() {
+    smartsheetClient.isConfigured.mockReturnValue(true)
+    smartsheetClient.discoverReleasesWithFreezes.mockResolvedValue([
+      { version: '3.5', ea1Freeze: '2026-05-15', ea1Target: '2026-06-18', ea2Freeze: '2026-06-19', ea2Target: '2026-07-16', gaFreeze: '2026-07-24', gaTarget: '2026-08-20' }
+    ])
+    var milestones = {
+      ea1Freeze: null, ea1Target: '2026-06-18',
+      ea2Freeze: null, ea2Target: '2026-07-16',
+      gaFreeze: null, gaTarget: '2026-08-20'
+    }
+    var result = await backfillFreezeDatesFromSmartsheet(milestones, '3.5')
+    expect(result.milestones.ea1Freeze).toBe('2026-05-15')
+    expect(result.milestones.ea2Freeze).toBe('2026-06-19')
+    expect(result.milestones.gaFreeze).toBe('2026-07-24')
+    // Product Pages target dates preserved
+    expect(result.milestones.ea1Target).toBe('2026-06-18')
+    expect(result.warnings).toEqual(
+      expect.arrayContaining([expect.stringContaining('Backfilled freeze dates')])
+    )
+  })
+
+  it('returns null when Smartsheet has no matching version', async function() {
+    smartsheetClient.isConfigured.mockReturnValue(true)
+    smartsheetClient.discoverReleasesWithFreezes.mockResolvedValue([
+      { version: '3.4', ea1Freeze: '2026-01-01', ea1Target: '2026-02-01', ea2Freeze: '2026-03-01', ea2Target: '2026-04-01', gaFreeze: '2026-05-01', gaTarget: '2026-06-01' }
+    ])
+    var result = await backfillFreezeDatesFromSmartsheet(null, '3.5')
+    expect(result.milestones).toBeNull()
+    expect(result.warnings).toEqual(
+      expect.arrayContaining([expect.stringContaining('No milestone data found')])
+    )
+  })
+
+  it('handles Smartsheet API errors gracefully', async function() {
+    smartsheetClient.isConfigured.mockReturnValue(true)
+    smartsheetClient.discoverReleasesWithFreezes.mockRejectedValue(new Error('API timeout'))
+    var milestones = {
+      ea1Freeze: null, ea1Target: '2026-06-18',
+      ea2Freeze: null, ea2Target: '2026-07-16',
+      gaFreeze: null, gaTarget: '2026-08-20'
+    }
+    var result = await backfillFreezeDatesFromSmartsheet(milestones, '3.5')
+    expect(result.milestones).toEqual(milestones)
+    expect(result.warnings).toEqual(
+      expect.arrayContaining([expect.stringContaining('Smartsheet fallback failed')])
+    )
+  })
+})
+
 describe('runHealthPipeline', function() {
+  beforeEach(function() {
+    smartsheetClient.isConfigured.mockReturnValue(false)
+  })
+
   function makeCandidatesCache(features) {
     return {
       'release-planning/candidates-cache-3.5.json': {
@@ -477,14 +603,14 @@ describe('runHealthPipeline', function() {
     expect(Array.isArray(result.enrichmentStatus.warnings)).toBe(true)
   })
 
-  it('returns null milestones when Product Pages cache is unavailable', async function() {
+  it('returns null milestones when neither source is available', async function() {
     var storage = makeStorage(makeCandidatesCache([
       { issueKey: 'T-1', summary: 'F1', status: 'In Progress', components: '', fixVersion: '', deliveryOwner: 'Jane', tier: 1 }
     ]))
     var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
     expect(result.milestones).toBeNull()
     expect(result.enrichmentStatus.warnings).toEqual(
-      expect.arrayContaining([expect.stringContaining('Product Pages')])
+      expect.arrayContaining([expect.stringContaining('Neither Product Pages nor Smartsheet')])
     )
   })
 
