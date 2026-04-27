@@ -480,7 +480,7 @@ module.exports = function registerRoutes(router, context) {
   const teamStore = require('../../../shared/server/team-store');
   const fieldStore = require('../../../shared/server/field-store');
   const auditLog = require('../../../shared/server/audit-log');
-  const { migrateToInApp } = require('../../../shared/server/team-migration');
+  const { migrateToInApp, previewMigration } = require('../../../shared/server/team-migration');
 
   // Helper: check if demo mode and return demo flag on write ops
   function demoWriteGuard(res) {
@@ -794,12 +794,20 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Migration ───
 
+  router.get('/structure/migrate/preview', requireAdmin, function(req, res) {
+    const config = rosterSyncConfig.loadConfig(storage);
+    if (!config) return res.status(400).json({ error: 'No config found' });
+    const preview = previewMigration(storage, config);
+    res.json(preview);
+  });
+
   router.post('/structure/migrate', requireAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
     const config = rosterSyncConfig.loadConfig(storage);
     if (!config) return res.status(400).json({ error: 'No config found' });
-    const result = migrateToInApp(storage, config, req.userEmail);
+    const fieldOverrides = req.body?.fieldOverrides || null;
+    const result = migrateToInApp(storage, config, req.userEmail, fieldOverrides);
     if (result.migrated) {
       config._migratedToInApp = new Date().toISOString();
       rosterSyncConfig.saveConfig(storage, config);

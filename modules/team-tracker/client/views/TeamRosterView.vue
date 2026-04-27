@@ -127,6 +127,7 @@
           :headcount="teamDetail?.headcount"
           :members="uniqueMembers"
           :teamKey="team?.key"
+          :fieldDefinitions="definitions?.personFields || []"
         />
       </div>
 

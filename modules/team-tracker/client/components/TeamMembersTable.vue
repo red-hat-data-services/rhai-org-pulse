@@ -25,7 +25,7 @@
         All {{ field.label }}
       </button>
       <button
-        v-for="opt in (field.allowedValues || [])"
+        v-for="opt in (field.allowedValues || []).filter(v => (memberFieldFilterCounts[field.id] || {})[v] > 0)"
         :key="opt"
         @click="setMemberFieldFilter(field.id, (memberFieldFilters[field.id] || []).includes(opt) ? (memberFieldFilters[field.id] || []).filter(v => v !== opt) : [...(memberFieldFilters[field.id] || []), opt])"
         class="px-3 py-1 rounded text-xs font-medium transition-colors border"
@@ -152,12 +152,21 @@ const constrainedPersonFields = computed(() =>
   (props.fieldDefinitions || []).filter(f => f.visible && !f.deleted && f.type === 'constrained')
 )
 
+// Only show filters for fields with 2+ distinct values among current members
+const relevantFilterFields = computed(() =>
+  constrainedPersonFields.value.filter(f => {
+    const counts = memberFieldFilterCounts.value[f.id] || {}
+    const nonZeroValues = Object.values(counts).filter(c => c > 0).length
+    return nonZeroValues >= 2
+  })
+)
+
 const visibleFilterFields = computed(() => {
-  if (showMoreFilters.value) return constrainedPersonFields.value
-  return constrainedPersonFields.value.slice(0, 2)
+  if (showMoreFilters.value) return relevantFilterFields.value
+  return relevantFilterFields.value.slice(0, 2)
 })
 
-const hasMoreFilters = computed(() => constrainedPersonFields.value.length > 2)
+const hasMoreFilters = computed(() => relevantFilterFields.value.length > 2)
 
 const membersRef = toRef(props, 'members')
 const fieldDefsRef = computed(() => constrainedPersonFields.value)
@@ -218,8 +227,24 @@ function personLink(member) {
   return linkTo('team-tracker', 'person-detail', { person: member.name, ...(props.teamKey && { teamKey: props.teamKey }) })
 }
 
+function getCustomFieldByLabel(member, label) {
+  const cf = member.customFields
+  if (!cf) return null
+  // Try direct key match first (sheets mode uses key names like 'component')
+  let val = cf[label]
+  if (!val) {
+    // In-app mode: customFields keys are field IDs — find the matching definition
+    const def = props.fieldDefinitions.find(f => f.label.toLowerCase() === label.toLowerCase())
+    if (def) val = cf[def.id]
+  }
+  if (val == null) return null
+  // Format arrays as comma-separated for display
+  return Array.isArray(val) ? val.join(', ') : val
+}
+
 function getSpecialty(member) {
-  return member.engineeringSpeciality || member.specialty || member.title || '—'
+  return getCustomFieldByLabel(member, 'Engineering Speciality')
+    || member.engineeringSpeciality || member.specialty || member.title || '—'
 }
 
 function getStatus(member) {
@@ -228,8 +253,8 @@ function getStatus(member) {
 }
 
 function getComponent(member) {
-  const cf = member.customFields
-  return cf?.component || cf?.jiraComponent || member.component || '—'
+  return getCustomFieldByLabel(member, 'Component')
+    || member.customFields?.component || member.customFields?.jiraComponent || member.component || '—'
 }
 
 function getLocation(member) {
