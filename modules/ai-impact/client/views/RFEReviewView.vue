@@ -22,9 +22,10 @@ const statusFilter = ref('all')
 
 const { rfeData, loading, error, load } = useAIImpact(timeWindow)
 const { assessments, loadAssessments, loadAssessmentDetail } = useAssessments()
-const { features } = useFeatures()
+const { features, loadFeatures } = useFeatures()
 
 loadAssessments()
+loadFeatures()
 
 const phase = PHASES.find(p => p.id === 'rfe-review')
 const metrics = computed(() => rfeData.value?.metrics || null)
