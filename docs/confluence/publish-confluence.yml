@@ -1,0 +1,100 @@
+# Publish Confluence Documentation
+#
+# This workflow generates Confluence pages from module metadata and publishes
+# them using the `mark` CLI tool (https://github.com/kovetskiy/mark).
+#
+# -------------------------------------------------------------------------
+# Required GitHub Secrets
+# -------------------------------------------------------------------------
+# CONFLUENCE_BASE_URL  - Your Confluence instance URL (e.g. https://yourorg.atlassian.net/wiki)
+# CONFLUENCE_USERNAME  - The email address of the Confluence user (for Atlassian Cloud)
+# CONFLUENCE_TOKEN     - An API token generated at https://id.atlassian.com/manage-profile/security/api-tokens
+#
+# Set these under Settings > Secrets and variables > Actions in your repository.
+# -------------------------------------------------------------------------
+#
+# How mark works
+# -------------------------------------------------------------------------
+# The `mark` CLI reads metadata from HTML comments embedded at the top of
+# each Markdown file. Every generated .md file must contain comments like:
+#
+#   <!-- Space: MYSPACE -->
+#   <!-- Title: My Page Title -->
+#   <!-- Parent: Optional Parent Page -->
+#
+# mark uses these to determine which Confluence space to publish to, what
+# title the page should have, and where it sits in the page hierarchy.
+# -------------------------------------------------------------------------
+#
+# Manual publishing
+# -------------------------------------------------------------------------
+# You can trigger this workflow on demand from the GitHub UI:
+#   Actions > "Publish Confluence Documentation" > Run workflow
+# This is useful when you need to republish without a code change, for
+# example after updating secrets or fixing a Confluence-side issue.
+# -------------------------------------------------------------------------
+
+name: Publish Confluence Documentation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "docs/confluence/**"
+      - "modules/**/module.json"
+      - "scripts/generate-confluence.js"
+
+  # Allow manual runs from the Actions tab (see comment block above).
+  workflow_dispatch:
+
+jobs:
+  generate-and-publish:
+    runs-on: ubuntu-latest
+
+    env:
+      CONFLUENCE_BASE_URL: ${{ secrets.CONFLUENCE_BASE_URL }}
+      CONFLUENCE_USERNAME: ${{ secrets.CONFLUENCE_USERNAME }}
+      CONFLUENCE_TOKEN: ${{ secrets.CONFLUENCE_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate Confluence documentation coverage
+        run: node scripts/validate-confluence-docs.js
+
+      - name: Generate Confluence pages from module metadata
+        run: node docs/confluence/generate-confluence.js --modules-dir ./modules
+
+      - name: Install mark CLI
+        run: |
+          # Fetch the latest release tag from the GitHub API
+          MARK_VERSION=$(curl -s https://api.github.com/repos/kovetskiy/mark/releases/latest | jq -r '.tag_name')
+          echo "Installing mark ${MARK_VERSION}"
+
+          # Download the linux amd64 binary
+          curl -sL "https://github.com/kovetskiy/mark/releases/download/${MARK_VERSION}/mark_linux_amd64" -o /usr/local/bin/mark
+          chmod +x /usr/local/bin/mark
+
+          # Verify installation
+          mark --version
+
+      - name: Publish to Confluence
+        run: |
+          # mark reads Space, Title, and Parent from HTML comments in each
+          # Markdown file and creates or updates the corresponding pages.
+          mark \
+            -u "$CONFLUENCE_USERNAME" \
+            -p "$CONFLUENCE_TOKEN" \
+            -b "$CONFLUENCE_BASE_URL" \
+            -f "docs/confluence/generated/*.md"
