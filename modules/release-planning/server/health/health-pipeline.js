@@ -272,25 +272,38 @@ function loadMilestones(readFromStorage, version) {
  *
  * @param {Function} readFromStorage
  * @param {string} version - Current version (e.g., '3.5')
- * @returns {string|null} Previous version's GA code freeze date, or null
+ * @returns {Promise<string|null>} Previous version's GA code freeze date, or null
  */
-function loadPreviousGaFreeze(readFromStorage, version) {
+async function loadPreviousGaFreeze(readFromStorage, version) {
   var parts = version.split('.')
   if (parts.length < 2) return null
   var prevMinor = parseInt(parts[1], 10) - 1
   if (prevMinor < 0) return null
   var prevVersion = parts[0] + '.' + prevMinor
 
+  // Try Product Pages cache first
   var cached = readFromStorage('release-analysis/product-pages-releases-cache.json')
-  if (!cached || !cached.releases || !Array.isArray(cached.releases)) {
-    return null
+  if (cached && cached.releases && Array.isArray(cached.releases)) {
+    for (var i = 0; i < cached.releases.length; i++) {
+      var r = cached.releases[i]
+      var rn = r.releaseNumber || ''
+      if (rn.indexOf(prevVersion) !== -1 && rn.indexOf('.EA') === -1) {
+        if (r.codeFreezeDate) return r.codeFreezeDate
+      }
+    }
   }
 
-  for (var i = 0; i < cached.releases.length; i++) {
-    var r = cached.releases[i]
-    var rn = r.releaseNumber || ''
-    if (rn.indexOf(prevVersion) !== -1 && rn.indexOf('.EA') === -1) {
-      return r.codeFreezeDate || null
+  // Fallback to Smartsheet
+  if (smartsheetClient.isConfigured()) {
+    try {
+      var releases = await smartsheetClient.discoverReleasesPartial()
+      for (var j = 0; j < releases.length; j++) {
+        if (releases[j].version === prevVersion && releases[j].gaFreeze) {
+          return releases[j].gaFreeze
+        }
+      }
+    } catch {
+      // fall through
     }
   }
 
@@ -591,7 +604,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
   var deriveResult = deriveFreezeDates(milestones)
   milestones = deriveResult.milestones
   warnings = warnings.concat(deriveResult.warnings)
-  var prevGaFreeze = loadPreviousGaFreeze(readFromStorage, version)
+  var prevGaFreeze = await loadPreviousGaFreeze(readFromStorage, version)
 
   // Step 3: Run Jira enrichment
   var enrichResult = { enrichments: new Map(), riceData: new Map(), warnings: [], stats: { pass1: 0, pass2: 0, rice: 0 } }
