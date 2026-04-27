@@ -7,7 +7,14 @@
   "client": {
     "entry": "./client/index.js",
     "navItems": [
-      { "id": "main", "label": "AI Impact", "icon": "Wand2", "default": true }
+      { "id": "rfe-review", "label": "RFE Review", "icon": "ClipboardList", "default": true },
+      { "id": "feature-review", "label": "Feature Review", "icon": "Target" },
+      { "id": "implementation", "label": "Implementation", "icon": "GitBranch", "disabled": true },
+      { "id": "qe-validation", "label": "QE / Validation", "icon": "Activity", "disabled": true },
+      { "id": "security", "label": "Security Review", "icon": "Shield", "disabled": true },
+      { "id": "documentation", "label": "Documentation", "icon": "FileText", "disabled": true },
+      { "id": "build-release", "label": "Build & Release", "icon": "Layers", "disabled": true },
+      { "id": "autofix", "label": "Jira AutoFix", "icon": "Wand2", "separatorBefore": true }
     ],
     "settingsComponent": "./client/components/AIImpactSettings.vue"
   },

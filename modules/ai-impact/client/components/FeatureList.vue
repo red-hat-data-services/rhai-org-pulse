@@ -9,7 +9,6 @@ const props = defineProps({
   recommendationFilter: { type: String, default: 'all' },
   priorityFilter: { type: String, default: 'all' },
   humanReviewFilter: { type: String, default: 'all' },
-  needsAttentionFilter: { type: String, default: 'all' },
   sortBy: { type: String, default: 'default' }
 })
 
@@ -18,7 +17,6 @@ const emit = defineEmits([
   'update:recommendationFilter',
   'update:priorityFilter',
   'update:humanReviewFilter',
-  'update:needsAttentionFilter',
   'update:sortBy',
   'selectFeature'
 ])
@@ -56,15 +54,9 @@ const sortedAndFilteredFeatures = computed(() => {
     items = items.filter(f => f.priority === props.priorityFilter)
   }
 
-  // Human review filter
+  // Review status filter
   if (props.humanReviewFilter !== 'all') {
     items = items.filter(f => f.humanReviewStatus === props.humanReviewFilter)
-  }
-
-  // Needs attention filter
-  if (props.needsAttentionFilter !== 'all') {
-    const wantAttention = props.needsAttentionFilter === 'yes'
-    items = items.filter(f => f.needsAttention === wantAttention)
   }
 
   // Sort
@@ -117,19 +109,9 @@ const sortedAndFilteredFeatures = computed(() => {
         class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-gray-300"
       >
         <option value="all">All Review Status</option>
-        <option value="pending">Awaiting Human Review</option>
-        <option value="reviewed">Human Reviewed</option>
-        <option value="not-required">No Review Needed</option>
-      </select>
-
-      <select
-        :value="needsAttentionFilter"
-        @change="emit('update:needsAttentionFilter', $event.target.value)"
-        class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-gray-300"
-      >
-        <option value="all">All Attention</option>
-        <option value="yes">Needs Attention</option>
-        <option value="no">No Attention</option>
+        <option value="needs-review">Flagged</option>
+        <option value="awaiting-review">Awaiting Sign-off</option>
+        <option value="approved">Approved</option>
       </select>
 
       <select

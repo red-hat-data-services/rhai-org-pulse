@@ -1,14 +1,21 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
-defineProps({
-  show: { type: Boolean, default: false }
+const props = defineProps({
+  show: { type: Boolean, default: false },
+  initialTab: { type: String, default: null }
 })
 
 const emit = defineEmits(['close'])
 
 const activeTab = ref('scoring')
 const dontShowAgain = ref(false)
+
+watch(() => props.show, (visible) => {
+  if (visible && props.initialTab) {
+    activeTab.value = props.initialTab
+  }
+})
 
 function handleClose() {
   emit('close', dontShowAgain.value)
@@ -144,7 +151,7 @@ function handleClose() {
               <div>
                 <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">How Feature Review Works</h3>
                 <p class="text-sm text-gray-600 dark:text-gray-300">
-                  When an RFE is approved, the Strat Creator pipeline automatically generates a Feature (strategy ticket) in Jira. Each feature is then scored by AI reviewers across four dimensions. Human engineers review flagged features before final sign-off.
+                  When an RFE is approved, the <a href="https://github.com/ederign/strat-creator" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline">Strat Creator</a> pipeline automatically generates a Feature ticket in Jira, then scores it with independent AI reviewers. Every feature needs human sign-off before it's considered complete.
                 </p>
               </div>
 
@@ -189,40 +196,52 @@ function handleClose() {
                 </div>
               </div>
 
+              <!-- What to do -->
+              <div>
+                <h4 class="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">What Should I Do?</h4>
+                <div class="space-y-3">
+                  <div class="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-3">
+                    <div class="flex items-center gap-2 mb-1.5">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">Flagged</span>
+                    </div>
+                    <p class="text-sm text-gray-700 dark:text-gray-300">
+                      The AI pipeline flagged concerns with this feature. Open it in Jira, review the AI-generated content, and add your technical corrections or direction in the <strong>Staff Engineer Input</strong> section of the description. Then remove the <code class="px-1 py-0.5 rounded bg-amber-100 dark:bg-amber-800/40 text-xs">strat-creator-needs-attention</code> label to unblock the pipeline for re-refinement.
+                    </p>
+                  </div>
+                  <div class="rounded-lg border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-900/20 p-3">
+                    <div class="flex items-center gap-2 mb-1.5">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200">Awaiting Sign-off</span>
+                    </div>
+                    <p class="text-sm text-gray-700 dark:text-gray-300">
+                      This feature passed AI review but no human has signed off yet. Review the feature in Jira. If it looks good, add the <code class="px-1 py-0.5 rounded bg-yellow-100 dark:bg-yellow-800/40 text-xs">strat-creator-human-sign-off</code> label. If changes are needed, add your feedback in the <strong>Staff Engineer Input</strong> section of the description and the pipeline will incorporate it on the next run.
+                    </p>
+                  </div>
+                  <div class="rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 p-3">
+                    <div class="flex items-center gap-2 mb-1.5">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200">Approved</span>
+                    </div>
+                    <p class="text-sm text-gray-700 dark:text-gray-300">
+                      This feature has been reviewed and signed off by a human engineer. No further action needed.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <!-- Status badges -->
               <div>
-                <h4 class="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">Status Indicators</h4>
+                <h4 class="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">AI Recommendation Badges</h4>
                 <div class="space-y-2 text-sm">
                   <div class="flex items-center gap-2">
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200">AI Recommendation: Approve</span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200">Approve</span>
                     <span class="text-gray-600 dark:text-gray-300">All AI reviewers recommend approval</span>
                   </div>
                   <div class="flex items-center gap-2">
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">AI Recommendation: Needs Revision</span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">Needs Revision</span>
                     <span class="text-gray-600 dark:text-gray-300">One or more reviewers flagged issues to address</span>
                   </div>
                   <div class="flex items-center gap-2">
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200">AI Recommendation: Reject</span>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200">Reject</span>
                     <span class="text-gray-600 dark:text-gray-300">Significant concerns — feature needs rework</span>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
-                      <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                      Needs Attention
-                    </span>
-                    <span class="text-gray-600 dark:text-gray-300">Flagged for human review due to low scores or concerns</span>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200">Awaiting Review</span>
-                    <span class="text-gray-600 dark:text-gray-300">Waiting for a human engineer to review</span>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200">Human Reviewed</span>
-                    <span class="text-gray-600 dark:text-gray-300">A human engineer has reviewed and signed off</span>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300">Human Review: Not Required</span>
-                    <span class="text-gray-600 dark:text-gray-300">No human sign-off needed for this feature</span>
                   </div>
                 </div>
               </div>
@@ -231,16 +250,16 @@ function handleClose() {
               <div class="rounded-lg bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-700 px-4 py-3">
                 <h4 class="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">CLI Tools</h4>
                 <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
-                  Features are created and reviewed by the <span class="font-mono text-xs bg-gray-200 dark:bg-gray-600 px-1 py-0.5 rounded">strat-creator</span> and <span class="font-mono text-xs bg-gray-200 dark:bg-gray-600 px-1 py-0.5 rounded">strat-reviewer</span> plugins (source: <a href="https://github.com/ederign/strat-creator" target="_blank" rel="noopener noreferrer" class="font-mono text-xs text-blue-600 dark:text-blue-400 hover:underline">ederign/strat-creator</a>).
+                  Features are created and reviewed by the <span class="font-mono text-xs bg-gray-200 dark:bg-gray-600 px-1 py-0.5 rounded">strat-creator</span> pipeline (source: <a href="https://github.com/ederign/strat-creator" target="_blank" rel="noopener noreferrer" class="font-mono text-xs text-blue-600 dark:text-blue-400 hover:underline">ederign/strat-creator</a>).
                 </p>
                 <div class="space-y-1.5 text-xs font-mono">
                   <div class="flex items-start gap-2">
                     <code class="px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 whitespace-nowrap">/strat.create</code>
-                    <span class="text-gray-500 dark:text-gray-400 font-sans pt-0.5">Create strategy features from approved RFEs</span>
+                    <span class="text-gray-500 dark:text-gray-400 font-sans pt-0.5">Create features from approved RFEs</span>
                   </div>
                   <div class="flex items-start gap-2">
                     <code class="px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 whitespace-nowrap">/strat.refine</code>
-                    <span class="text-gray-500 dark:text-gray-400 font-sans pt-0.5">Refine strategies with dependencies, teams, and NFRs</span>
+                    <span class="text-gray-500 dark:text-gray-400 font-sans pt-0.5">Refine features with dependencies, teams, and NFRs</span>
                   </div>
                   <div class="flex items-start gap-2">
                     <code class="px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 whitespace-nowrap">/strat.review</code>

@@ -55,7 +55,7 @@ apiTokens.init(storageModule);
 const PORT = process.env.API_PORT || 3001;
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 // Enable CORS
 app.use(function(req, res, next) {

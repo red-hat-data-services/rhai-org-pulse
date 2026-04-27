@@ -119,7 +119,7 @@ describe('GET /features', () => {
             size: 'M',
             recommendation: 'approve',
             needsAttention: false,
-            humanReviewStatus: 'reviewed',
+            humanReviewStatus: 'approved',
             scores: { feasibility: 2, testability: 2, scope: 2, architecture: 2, total: 8 },
             reviewers: { feasibility: 'approve', testability: 'approve', scope: 'approve', architecture: 'approve' },
             labels: ['some-label'],
@@ -157,7 +157,7 @@ describe('GET /features/:key', () => {
   it('returns full feature + history for existing key', async () => {
     const entry = {
       latest: makeValidBody(),
-      history: [{ scores: {}, recommendation: 'revise', needsAttention: false, humanReviewStatus: 'pending', reviewedAt: '2026-04-10T00:00:00Z' }]
+      history: [{ scores: {}, recommendation: 'revise', needsAttention: false, humanReviewStatus: 'needs-review', reviewedAt: '2026-04-10T00:00:00Z' }]
     };
     const data = { lastSyncedAt: 'x', totalFeatures: 1, features: { 'RHAISTRAT-1': entry } };
     const { router, routes } = createRouter();

@@ -3,14 +3,14 @@ const PRIORITIES = ['Blocker', 'Critical', 'Major', 'Minor', 'Normal', 'Undefine
 const RECOMMENDATIONS = ['approve', 'revise', 'reject'];
 
 /**
- * Derive humanReviewStatus from labels array.
+ * Derive humanReviewStatus from strat-creator pipeline labels.
  * @param {string[]} labels
- * @returns {'reviewed' | 'pending' | 'not-required'}
+ * @returns {'approved' | 'needs-review' | 'awaiting-review'}
  */
 function deriveHumanReviewStatus(labels) {
-  if (labels.includes('tech-reviewed')) return 'reviewed';
-  if (labels.includes('needs-tech-review')) return 'pending';
-  return 'not-required';
+  if (labels.includes('strat-creator-human-sign-off')) return 'approved';
+  if (labels.includes('strat-creator-needs-attention')) return 'needs-review';
+  return 'awaiting-review';
 }
 
 /**

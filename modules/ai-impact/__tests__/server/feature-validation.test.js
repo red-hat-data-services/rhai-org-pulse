@@ -31,22 +31,22 @@ describe('validateFeature', () => {
     expect(result.data.reviewedAt).toBe('2026-04-19T01:30:35Z');
   });
 
-  it('derives humanReviewStatus "reviewed" from tech-reviewed label', () => {
-    const result = validateFeature(makeValidFeature({ labels: ['tech-reviewed'] }));
+  it('derives humanReviewStatus "approved" from strat-creator-human-sign-off label', () => {
+    const result = validateFeature(makeValidFeature({ labels: ['strat-creator-human-sign-off'] }));
     expect(result.valid).toBe(true);
-    expect(result.data.humanReviewStatus).toBe('reviewed');
+    expect(result.data.humanReviewStatus).toBe('approved');
   });
 
-  it('derives humanReviewStatus "pending" from needs-tech-review label', () => {
-    const result = validateFeature(makeValidFeature({ labels: ['needs-tech-review'] }));
+  it('derives humanReviewStatus "needs-review" from strat-creator-needs-attention label', () => {
+    const result = validateFeature(makeValidFeature({ labels: ['strat-creator-needs-attention'] }));
     expect(result.valid).toBe(true);
-    expect(result.data.humanReviewStatus).toBe('pending');
+    expect(result.data.humanReviewStatus).toBe('needs-review');
   });
 
-  it('derives humanReviewStatus "not-required" when neither label present', () => {
+  it('derives humanReviewStatus "awaiting-review" when neither label present', () => {
     const result = validateFeature(makeValidFeature({ labels: ['other-label'] }));
     expect(result.valid).toBe(true);
-    expect(result.data.humanReviewStatus).toBe('not-required');
+    expect(result.data.humanReviewStatus).toBe('awaiting-review');
   });
 
   it('accepts size as null', () => {

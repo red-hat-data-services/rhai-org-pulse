@@ -62,25 +62,29 @@
             </button>
             <!-- Sub-items when expanded -->
             <div v-if="section.expanded" class="ml-4 mt-1 space-y-0.5">
-              <button
-                v-for="item in section.items"
-                :key="item.id"
-                @click="$emit('navigate', item.id)"
-                :aria-current="isNavItemActive(item, section) ? 'page' : undefined"
-                :aria-label="item.label"
-                class="group relative w-full flex items-center py-2 rounded-lg text-sm font-medium transition-all duration-200 gap-3 px-3"
-                :class="isNavItemActive(item, section)
-                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
-                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-700 dark:hover:text-gray-200'"
-              >
-                <component
-                  :is="item.icon"
-                  :size="18"
-                  :stroke-width="1.5"
-                  class="flex-shrink-0"
-                />
-                <span class="truncate">{{ item.label }}</span>
-              </button>
+              <template v-for="item in section.items" :key="item.id">
+                <div v-if="item.separatorBefore" class="border-t border-gray-200 dark:border-gray-700 my-2 mx-3" />
+                <button
+                  :disabled="item.disabled"
+                  @click="!item.disabled && $emit('navigate', item.id)"
+                  :aria-current="isNavItemActive(item, section) ? 'page' : undefined"
+                  :aria-label="item.label"
+                  class="group relative w-full flex items-center py-2 rounded-lg text-sm font-medium transition-all duration-200 gap-3 px-3"
+                  :class="item.disabled
+                    ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                    : isNavItemActive(item, section)
+                      ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+                      : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-700 dark:hover:text-gray-200'"
+                >
+                  <component
+                    :is="item.icon"
+                    :size="18"
+                    :stroke-width="1.5"
+                    class="flex-shrink-0"
+                  />
+                  <span class="truncate">{{ item.label }}</span>
+                </button>
+              </template>
             </div>
           </template>
 
@@ -377,7 +381,9 @@ const navSections = computed(() => {
       items: navItems.map(item => ({
         id: `${manifest.slug}::${item.id}`,
         label: item.label,
-        icon: resolveIcon(item.icon)
+        icon: resolveIcon(item.icon),
+        disabled: item.disabled || false,
+        separatorBefore: item.separatorBefore || false
       }))
     })
   }

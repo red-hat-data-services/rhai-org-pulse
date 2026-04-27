@@ -21,14 +21,18 @@ const avgScore = computed(() => {
   return (sum / totalFeatures.value).toFixed(1)
 })
 
-const needsAttentionCount = computed(() => {
-  return featureList.value.filter(f => f.needsAttention).length
+const needsActionCount = computed(() => {
+  return featureList.value.filter(f => f.humanReviewStatus === 'needs-review' || f.humanReviewStatus === 'awaiting-review').length
+})
+
+const signedOffCount = computed(() => {
+  return featureList.value.filter(f => f.humanReviewStatus === 'approved').length
 })
 </script>
 
 <template>
   <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-    <div class="grid gap-6 grid-cols-2 lg:grid-cols-4">
+    <div class="grid gap-6 grid-cols-2 lg:grid-cols-5">
       <div class="space-y-1">
         <p class="text-sm text-gray-500 dark:text-gray-400">Total Features</p>
         <span class="text-3xl font-bold dark:text-gray-100">{{ totalFeatures }}</span>
@@ -46,9 +50,16 @@ const needsAttentionCount = computed(() => {
       </div>
 
       <div class="space-y-1">
-        <p class="text-sm text-gray-500 dark:text-gray-400">Needs Attention</p>
-        <span class="text-3xl font-bold" :class="needsAttentionCount > 0 ? 'text-amber-600 dark:text-amber-400' : 'dark:text-gray-100'">
-          {{ needsAttentionCount }}
+        <p class="text-sm text-gray-500 dark:text-gray-400">Needs Action</p>
+        <span class="text-3xl font-bold" :class="needsActionCount > 0 ? 'text-amber-600 dark:text-amber-400' : 'dark:text-gray-100'">
+          {{ needsActionCount }}
+        </span>
+      </div>
+
+      <div class="space-y-1">
+        <p class="text-sm text-gray-500 dark:text-gray-400">Signed Off</p>
+        <span class="text-3xl font-bold" :class="signedOffCount > 0 ? 'text-green-600 dark:text-green-400' : 'dark:text-gray-100'">
+          {{ signedOffCount }}
         </span>
       </div>
     </div>

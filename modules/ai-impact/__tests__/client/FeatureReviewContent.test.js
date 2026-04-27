@@ -58,7 +58,7 @@ describe('FeatureReviewContent', () => {
         size: 'M',
         recommendation: 'approve',
         needsAttention: false,
-        humanReviewStatus: 'reviewed',
+        humanReviewStatus: 'approved',
         scores: { feasibility: 2, testability: 2, scope: 2, architecture: 2, total: 8 },
         reviewers: { feasibility: 'approve', testability: 'approve', scope: 'approve', architecture: 'approve' },
         reviewedAt: '2026-04-19T12:00:00Z'

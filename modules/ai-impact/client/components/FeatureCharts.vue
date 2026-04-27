@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { Bar } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -18,6 +18,20 @@ const props = defineProps({
 })
 
 const featureList = computed(() => Object.values(props.features))
+
+const isDark = ref(false)
+onMounted(() => {
+  isDark.value = document.documentElement.classList.contains('dark') ||
+    (typeof window.matchMedia === 'function' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  const observer = new MutationObserver(() => {
+    isDark.value = document.documentElement.classList.contains('dark')
+  })
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+  onBeforeUnmount(() => observer.disconnect())
+})
+
+const textColor = computed(() => isDark.value ? 'rgba(209, 213, 219, 1)' : 'rgba(107, 114, 128, 1)')
+const gridColor = computed(() => isDark.value ? 'rgba(75, 85, 99, 0.5)' : 'rgba(229, 231, 235, 1)')
 
 // Score Distribution: histogram of scores.total (0-8)
 const scoreDistributionData = computed(() => {
@@ -40,18 +54,18 @@ const scoreDistributionData = computed(() => {
   }
 })
 
-const scoreDistributionOptions = {
+const scoreDistributionOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
-    title: { display: true, text: 'Score Distribution' },
+    title: { display: true, text: 'Score Distribution', color: textColor.value },
     legend: { display: false }
   },
   scales: {
-    x: { title: { display: true, text: 'Total Score' } },
-    y: { title: { display: true, text: 'Count' }, beginAtZero: true, ticks: { stepSize: 1 } }
+    x: { title: { display: true, text: 'Total Score', color: textColor.value }, ticks: { color: textColor.value }, grid: { color: gridColor.value } },
+    y: { title: { display: true, text: 'Count', color: textColor.value }, beginAtZero: true, ticks: { stepSize: 1, color: textColor.value }, grid: { color: gridColor.value } }
   }
-}
+}))
 
 // Dimension Breakdown: stacked bar showing pass(2)/partial(1)/fail(0) per dimension
 const dimensionBreakdownData = computed(() => {
@@ -81,18 +95,18 @@ const dimensionBreakdownData = computed(() => {
   }
 })
 
-const dimensionBreakdownOptions = {
+const dimensionBreakdownOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
-    title: { display: true, text: 'Dimension Breakdown' },
-    legend: { display: true, position: 'bottom' }
+    title: { display: true, text: 'Dimension Breakdown', color: textColor.value },
+    legend: { display: true, position: 'bottom', labels: { color: textColor.value } }
   },
   scales: {
-    x: { stacked: true },
-    y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } }
+    x: { stacked: true, ticks: { color: textColor.value }, grid: { color: gridColor.value } },
+    y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1, color: textColor.value }, grid: { color: gridColor.value } }
   }
-}
+}))
 </script>
 
 <template>

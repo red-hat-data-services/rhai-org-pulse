@@ -18,7 +18,7 @@ function makeFeature(overrides = {}) {
     size: 'L',
     recommendation: 'approve',
     needsAttention: false,
-    humanReviewStatus: 'reviewed',
+    humanReviewStatus: 'approved',
     scores: { feasibility: 1, testability: 1, scope: 2, architecture: 2, total: 6 },
     reviewers: { feasibility: 'approve', testability: 'revise', scope: 'approve', architecture: 'approve' },
     labels: ['strat-creator-auto-created'],
@@ -162,7 +162,7 @@ describe('getLatestProjection', () => {
       features: {
         'A': {
           latest: makeFeature(),
-          history: [{ scores: {}, recommendation: 'revise', needsAttention: false, humanReviewStatus: 'pending', reviewedAt: '2026-04-10T00:00:00Z' }]
+          history: [{ scores: {}, recommendation: 'revise', needsAttention: false, humanReviewStatus: 'needs-review', reviewedAt: '2026-04-10T00:00:00Z' }]
         }
       }
     };
