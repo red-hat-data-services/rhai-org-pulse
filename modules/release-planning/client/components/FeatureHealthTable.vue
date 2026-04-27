@@ -25,7 +25,7 @@ var columns = [
   { key: 'priority', label: 'Priority', sortable: true },
   { key: 'rice', label: 'RICE', sortable: true },
   { key: 'components', label: 'Component', sortable: true },
-  { key: 'owner', label: 'Owner', sortable: true },
+  { key: 'owner', label: 'Delivery Owner', sortable: true },
   { key: 'fixVersions', label: 'Fix Version', sortable: true },
   { key: 'targetRelease', label: 'Target Release', sortable: true }
 ]

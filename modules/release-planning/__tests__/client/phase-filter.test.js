@@ -99,12 +99,12 @@ describe('passesPhaseFilter', function() {
     expect(passesPhaseFilter({ fixVersions: 'rhoai-3.5' }, '3.5', 'GA', true)).toBe(false)
   })
 
-  it('inclusive: returns false when fixVersions is empty', function() {
-    expect(passesPhaseFilter({ fixVersions: '' }, '3.5', 'EA2', false)).toBe(false)
-    expect(passesPhaseFilter({}, '3.5', 'EA2', false)).toBe(false)
+  it('inclusive: passes features with empty or missing fixVersions', function() {
+    expect(passesPhaseFilter({ fixVersions: '' }, '3.5', 'EA2', false)).toBe(true)
+    expect(passesPhaseFilter({}, '3.5', 'EA2', false)).toBe(true)
   })
 
-  it('inclusive: wrong version does not match', function() {
-    expect(passesPhaseFilter({ fixVersions: 'rhoai-3.4' }, '3.5', 'EA2', false)).toBe(false)
+  it('inclusive: passes features with non-matching version (not phase-excluded)', function() {
+    expect(passesPhaseFilter({ fixVersions: 'rhoai-3.4' }, '3.5', 'EA2', false)).toBe(true)
   })
 })
