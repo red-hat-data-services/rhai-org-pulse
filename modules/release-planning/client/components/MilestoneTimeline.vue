@@ -112,13 +112,13 @@ const nextMilestone = computed(function() {
   return null
 })
 
-var NEAR_STEM = 20
-var FAR_STEM = 36
-var CHAR_WIDTH_PCT = 0.6
-var LABEL_GAP_PCT = 1.5
+const NEAR_STEM = 20
+const FAR_STEM = 36
+const CHAR_WIDTH_PCT = 0.6
+const LABEL_GAP_PCT = 1.5
 
 // tier 0 = above-near, 1 = below-near, 2 = above-far, 3 = below-far
-var TIER_PREFERENCE = [0, 1, 2, 3]
+const TIER_PREFERENCE = [0, 1, 2, 3]
 
 function estimateLabelWidthPct(label, dateStr) {
   var chars = Math.max(label.length, dateStr.length)
