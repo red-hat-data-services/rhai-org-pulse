@@ -2,15 +2,19 @@
 import { computed } from 'vue'
 
 const props = defineProps({
-  milestones: { type: Object, default: null }
+  milestones: { type: Object, default: null },
+  planningFreezes: { type: Object, default: null }
 })
 
 const MILESTONE_ORDER = [
-  { key: 'ea1Freeze', label: 'EA1 Freeze', color: 'bg-blue-500 dark:bg-blue-400' },
+  { key: 'ea1PlanFreeze', label: 'EA1 PF', color: 'bg-blue-300 dark:bg-blue-300', style: 'dashed' },
+  { key: 'ea1Freeze', label: 'EA1 Code Freeze', color: 'bg-blue-500 dark:bg-blue-400' },
   { key: 'ea1Target', label: 'EA1 Release', color: 'bg-blue-600 dark:bg-blue-500' },
-  { key: 'ea2Freeze', label: 'EA2 Freeze', color: 'bg-amber-500 dark:bg-amber-400' },
+  { key: 'ea2PlanFreeze', label: 'EA2 PF', color: 'bg-amber-300 dark:bg-amber-300', style: 'dashed' },
+  { key: 'ea2Freeze', label: 'EA2 Code Freeze', color: 'bg-amber-500 dark:bg-amber-400' },
   { key: 'ea2Target', label: 'EA2 Release', color: 'bg-amber-600 dark:bg-amber-500' },
-  { key: 'gaFreeze', label: 'GA Freeze', color: 'bg-green-500 dark:bg-green-400' },
+  { key: 'gaPlanFreeze', label: 'GA PF', color: 'bg-green-300 dark:bg-green-300', style: 'dashed' },
+  { key: 'gaFreeze', label: 'GA Code Freeze', color: 'bg-green-500 dark:bg-green-400' },
   { key: 'gaTarget', label: 'GA Release', color: 'bg-green-600 dark:bg-green-500' }
 ]
 
@@ -27,15 +31,22 @@ function formatShort(date) {
 
 const milestonePoints = computed(function() {
   if (!props.milestones) return []
+  var pf = props.planningFreezes || {}
+  var combined = Object.assign({}, props.milestones, {
+    ea1PlanFreeze: pf.ea1 || null,
+    ea2PlanFreeze: pf.ea2 || null,
+    gaPlanFreeze: pf.ga || null
+  })
   var points = []
   for (var i = 0; i < MILESTONE_ORDER.length; i++) {
     var m = MILESTONE_ORDER[i]
-    var date = parseDate(props.milestones[m.key])
+    var date = parseDate(combined[m.key])
     if (date) {
       points.push({
         key: m.key,
         label: m.label,
         color: m.color,
+        style: m.style || null,
         date: date,
         dateStr: formatShort(date)
       })
@@ -91,6 +102,7 @@ const nextMilestone = computed(function() {
 
 const STEM_HEIGHT = 28
 const OVERLAP_THRESHOLD = 10
+const CLOSE_DATE_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000 // 7 days in ms
 
 const staggeredPoints = computed(function() {
   var points = milestonePoints.value
@@ -103,7 +115,11 @@ const staggeredPoints = computed(function() {
 
     if (i > 0) {
       var prevPct = positionPct(points[i - 1].date)
-      if (Math.abs(pct - prevPct) < OVERLAP_THRESHOLD) {
+      var dateDiffMs = Math.abs(points[i].date.getTime() - points[i - 1].date.getTime())
+
+      // When adjacent markers are within 7 days or overlap in position,
+      // stack labels vertically by alternating above/below
+      if (Math.abs(pct - prevPct) < OVERLAP_THRESHOLD || dateDiffMs < CLOSE_DATE_THRESHOLD_MS) {
         above = !result[i - 1].above
       }
     }
@@ -146,8 +162,8 @@ const staggeredPoints = computed(function() {
           :style="{ left: point.pct + '%', top: '50%' }"
         >
           <div
-            class="w-3 h-3 rounded-full border-2 border-white dark:border-gray-800"
-            :class="point.color"
+            class="w-3 h-3 rounded-full border-2"
+            :class="[point.color, point.style === 'dashed' ? 'border-dashed border-gray-500' : 'border-white dark:border-gray-800']"
           ></div>
         </div>
 
@@ -184,7 +200,7 @@ const staggeredPoints = computed(function() {
       >
         <div
           class="w-2.5 h-2.5 rounded-full flex-shrink-0"
-          :class="point.color"
+          :class="[point.color, point.style === 'dashed' ? 'border border-dashed border-gray-500' : '']"
         ></div>
         <div class="flex-1 flex justify-between items-center">
           <span class="text-xs text-gray-600 dark:text-gray-400">{{ point.label }}</span>

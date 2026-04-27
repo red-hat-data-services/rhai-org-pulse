@@ -7,7 +7,6 @@ import RiceScoreDisplay from '../../client/components/RiceScoreDisplay.vue'
 import HealthFilterBar from '../../client/components/HealthFilterBar.vue'
 import MilestoneTimeline from '../../client/components/MilestoneTimeline.vue'
 import FeatureHealthTable from '../../client/components/FeatureHealthTable.vue'
-import PhaseSelector from '../../client/components/PhaseSelector.vue'
 
 // ─── RiskBadge ───
 
@@ -62,57 +61,73 @@ describe('RiskBadge', function() {
 // ─── HealthSummaryCards ───
 
 describe('HealthSummaryCards', function() {
-  var summary = {
-    totalFeatures: 10,
-    byRisk: { green: 5, yellow: 3, red: 2 },
-    dorCompletionRate: 65,
-    averageRiceScore: 200
+  var cardCounts = {
+    total: 15,
+    riceComplete: 12,
+    ownerAssigned: 10,
+    scopeEstimated: 8,
+    dorComplete: 6
   }
 
-  it('renders nothing when summary is null', function() {
-    var wrapper = mount(HealthSummaryCards, { props: { summary: null } })
+  it('renders nothing when cardCounts is null', function() {
+    var wrapper = mount(HealthSummaryCards, { props: { cardCounts: null } })
     expect(wrapper.text()).toBe('')
   })
 
-  it('renders risk count cards', function() {
-    var wrapper = mount(HealthSummaryCards, { props: { summary: summary } })
-    expect(wrapper.text()).toContain('5')
-    expect(wrapper.text()).toContain('3')
-    expect(wrapper.text()).toContain('2')
+  it('renders 4 readiness cards', function() {
+    var wrapper = mount(HealthSummaryCards, { props: { cardCounts: cardCounts } })
+    expect(wrapper.text()).toContain('RICE Score Present')
+    expect(wrapper.text()).toContain('Owner Assigned')
+    expect(wrapper.text()).toContain('Scope Estimated')
+    expect(wrapper.text()).toContain('DoR Complete')
   })
 
-  it('renders DoR completion percentage', function() {
-    var wrapper = mount(HealthSummaryCards, { props: { summary: summary } })
-    expect(wrapper.text()).toContain('65')
+  it('shows count fractions for each card', function() {
+    var wrapper = mount(HealthSummaryCards, { props: { cardCounts: cardCounts } })
+    expect(wrapper.text()).toContain('12')
+    expect(wrapper.text()).toContain('10')
+    expect(wrapper.text()).toContain('8')
+    expect(wrapper.text()).toContain('6')
+    expect(wrapper.text()).toContain('/ 15')
   })
 
-  it('emits filterByRisk when a risk card is clicked', async function() {
-    var wrapper = mount(HealthSummaryCards, { props: { summary: summary } })
-    var buttons = wrapper.findAll('button')
-    await buttons[0].trigger('click')
-    expect(wrapper.emitted('filterByRisk')).toBeDefined()
+  it('shows percentage for each card', function() {
+    var wrapper = mount(HealthSummaryCards, { props: { cardCounts: cardCounts } })
+    expect(wrapper.text()).toContain('80%')  // 12/15
+    expect(wrapper.text()).toContain('67%')  // 10/15
+    expect(wrapper.text()).toContain('53%')  // 8/15
+    expect(wrapper.text()).toContain('40%')  // 6/15
   })
 
-  it('renders planning deadline card when planningDeadline is present', function() {
-    var summaryWithDeadline = Object.assign({}, summary, {
-      planningDeadline: { date: '2026-05-01', daysRemaining: 5 }
+  it('renders planning deadline when provided', function() {
+    var wrapper = mount(HealthSummaryCards, {
+      props: {
+        cardCounts: cardCounts,
+        planningDeadline: { date: '2026-05-01', daysRemaining: 5 }
+      }
     })
-    var wrapper = mount(HealthSummaryCards, { props: { summary: summaryWithDeadline } })
     expect(wrapper.text()).toContain('Planning Deadline')
     expect(wrapper.text()).toContain('2026-05-01')
+    expect(wrapper.text()).toContain('5')
   })
 
-  it('does not render planning deadline card when planningDeadline is null', function() {
-    var wrapper = mount(HealthSummaryCards, { props: { summary: summary } })
+  it('does not render planning deadline when null', function() {
+    var wrapper = mount(HealthSummaryCards, { props: { cardCounts: cardCounts } })
     expect(wrapper.text()).not.toContain('Planning Deadline')
   })
 
-  it('shows days remaining for planning deadline', function() {
-    var summaryWithDeadline = Object.assign({}, summary, {
-      planningDeadline: { date: '2026-05-01', daysRemaining: 10 }
-    })
-    var wrapper = mount(HealthSummaryCards, { props: { summary: summaryWithDeadline } })
-    expect(wrapper.text()).toContain('10')
+  it('does not emit filterByRisk events', function() {
+    var wrapper = mount(HealthSummaryCards, { props: { cardCounts: cardCounts } })
+    var buttons = wrapper.findAll('button')
+    // Cards are divs, not buttons -- no click interaction
+    expect(buttons.length).toBe(0)
+  })
+
+  it('handles zero total gracefully', function() {
+    var zeroCounts = { total: 0, riceComplete: 0, ownerAssigned: 0, scopeEstimated: 0, dorComplete: 0 }
+    var wrapper = mount(HealthSummaryCards, { props: { cardCounts: zeroCounts } })
+    expect(wrapper.text()).toContain('0')
+    expect(wrapper.text()).toContain('/ 0')
   })
 })
 
@@ -205,42 +220,6 @@ describe('RiceScoreDisplay', function() {
   })
 })
 
-// ─── PhaseSelector ───
-
-describe('PhaseSelector', function() {
-  var phases = [
-    { value: 'EA1', label: 'RHOAI 3.5 EA1' },
-    { value: 'EA2', label: 'RHOAI 3.5 EA2' },
-    { value: 'GA', label: 'RHOAI 3.5 GA' }
-  ]
-
-  it('renders select with All Phases option', function() {
-    var wrapper = mount(PhaseSelector, { props: { phases: phases, modelValue: '' } })
-    expect(wrapper.find('select').exists()).toBe(true)
-    expect(wrapper.text()).toContain('All Phases')
-  })
-
-  it('renders all provided phase options', function() {
-    var wrapper = mount(PhaseSelector, { props: { phases: phases, modelValue: '' } })
-    expect(wrapper.text()).toContain('RHOAI 3.5 EA1')
-    expect(wrapper.text()).toContain('RHOAI 3.5 EA2')
-    expect(wrapper.text()).toContain('RHOAI 3.5 GA')
-  })
-
-  it('emits update:modelValue on change', async function() {
-    var wrapper = mount(PhaseSelector, { props: { phases: phases, modelValue: '' } })
-    await wrapper.find('select').setValue('EA2')
-    expect(wrapper.emitted('update:modelValue')).toBeDefined()
-    expect(wrapper.emitted('update:modelValue')[0][0]).toBe('EA2')
-  })
-
-  it('renders empty when no phases provided', function() {
-    var wrapper = mount(PhaseSelector, { props: { phases: [], modelValue: '' } })
-    var options = wrapper.findAll('option')
-    expect(options.length).toBe(1)
-    expect(options[0].text()).toContain('All Phases')
-  })
-})
 
 // ─── HealthFilterBar ───
 
