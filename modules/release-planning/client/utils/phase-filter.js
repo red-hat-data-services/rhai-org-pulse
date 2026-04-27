@@ -1,15 +1,4 @@
-/**
- * Client-side phase filter utility.
- *
- * Determines whether a feature should appear in a given phase tab
- * based on its fix version strings. A feature passes the filter when
- * at least one of its fix versions contains both the release version
- * (e.g., "3.5") AND the phase label (e.g., "EA1"), case-insensitively
- * and regardless of separator (dot, dash, space, or none).
- *
- * Features without a matching phase-specific fix version do NOT appear
- * in individual phase tabs — only in the "All Features" view.
- */
+var PHASE_LABELS = ['EA1', 'EA2', 'GA']
 
 function splitCommaString(str) {
   if (!str || typeof str !== 'string') return []
@@ -20,9 +9,14 @@ function splitCommaString(str) {
  * @param {object} feature - Feature object with fixVersions or fixVersion
  * @param {string} version - Release version (e.g., '3.5')
  * @param {string|null} phase - Selected phase (EA1/EA2/GA) or null
+ * @param {boolean} [strict=true] - When true, only match phase-specific fix versions.
+ *   When false (inclusive), also include features whose fix versions match the
+ *   release version but have no phase-specific suffix. Excludes features tagged
+ *   for a different phase.
  * @returns {boolean}
  */
-export function passesPhaseFilter(feature, version, phase) {
+export function passesPhaseFilter(feature, version, phase, strict) {
+  if (strict === undefined) strict = true
   if (!phase) return true
 
   var fixVersionStr = feature.fixVersions || feature.fixVersion || ''
@@ -35,8 +29,19 @@ export function passesPhaseFilter(feature, version, phase) {
 
   for (var i = 0; i < fixVersions.length; i++) {
     var fv = fixVersions[i].toUpperCase()
-    if (fv.indexOf(versionUpper) !== -1 && fv.indexOf(phaseUpper) !== -1) {
-      return true
+    if (fv.indexOf(versionUpper) === -1) continue
+
+    if (fv.indexOf(phaseUpper) !== -1) return true
+
+    if (!strict) {
+      var hasAnyPhase = false
+      for (var j = 0; j < PHASE_LABELS.length; j++) {
+        if (fv.indexOf(PHASE_LABELS[j]) !== -1) {
+          hasAnyPhase = true
+          break
+        }
+      }
+      if (!hasAnyPhase) return true
     }
   }
 

@@ -7,7 +7,6 @@ import { useAuth } from '@shared/client'
 import { passesPhaseFilter } from '../utils/phase-filter'
 import ReleaseSelector from '../components/ReleaseSelector.vue'
 import MilestoneTimeline from '../components/MilestoneTimeline.vue'
-import HealthSummaryCards from '../components/HealthSummaryCards.vue'
 import HealthFilterBar from '../components/HealthFilterBar.vue'
 import FeatureHealthTable from '../components/FeatureHealthTable.vue'
 
@@ -24,7 +23,7 @@ var { isAdmin } = useAuth()
 var selectedVersion = ref('')
 
 // Phase tabs
-var activePhase = ref('all')
+var activePhase = ref('EA1')
 
 // Filter state
 var bigRockFilter = ref('')
@@ -73,92 +72,46 @@ var enrichmentStatus = computed(function() {
 
 // ─── Phase tabs ───
 
+function isPhaseCommitted(phaseId) {
+  var pf = planningFreezes.value
+  if (!pf) return false
+  var freezeDate = pf[phaseId.toLowerCase()]
+  if (!freezeDate) return false
+  var today = new Date().toISOString().split('T')[0]
+  return today >= freezeDate
+}
+
 var phaseTabs = computed(function() {
-  var tabs = [{ id: 'all', label: 'All Features' }]
+  var tabs = []
   var ms = milestones.value
   if (!ms) return tabs
-  if (ms.ea1Freeze || ms.ea1Target) tabs.push({ id: 'EA1', label: 'EA1' })
-  if (ms.ea2Freeze || ms.ea2Target) tabs.push({ id: 'EA2', label: 'EA2' })
-  if (ms.gaFreeze || ms.gaTarget) tabs.push({ id: 'GA', label: 'GA' })
+  if (ms.ea1Freeze || ms.ea1Target) {
+    tabs.push({ id: 'EA1', label: isPhaseCommitted('EA1') ? 'EA1 Committed' : 'EA1' })
+  }
+  if (ms.ea2Freeze || ms.ea2Target) {
+    tabs.push({ id: 'EA2', label: isPhaseCommitted('EA2') ? 'EA2 Committed' : 'EA2' })
+  }
+  if (ms.gaFreeze || ms.gaTarget) {
+    tabs.push({ id: 'GA', label: isPhaseCommitted('GA') ? 'GA Committed' : 'GA' })
+  }
   return tabs
 })
 
 // ─── Phase-filtered features ───
 
 var phasedFeatures = computed(function() {
-  if (activePhase.value === 'all') return features.value
+  var strict = isPhaseCommitted(activePhase.value)
   return features.value.filter(function(f) {
-    return passesPhaseFilter(f, selectedVersion.value, activePhase.value)
+    return passesPhaseFilter(f, selectedVersion.value, activePhase.value, strict)
   })
-})
-
-// ─── Card counts (computed client-side from phasedFeatures) ───
-
-var cardCounts = computed(function() {
-  var feats = phasedFeatures.value
-  var total = feats.length
-  var ownerAssigned = 0
-  var scopeEstimated = 0
-  var riceComplete = 0
-  var dorComplete = 0
-
-  for (var i = 0; i < feats.length; i++) {
-    var f = feats[i]
-    if (f.deliveryOwner) ownerAssigned++
-    if (f.storyPoints) scopeEstimated++
-    if (f.rice && f.rice.score != null) riceComplete++
-    if (f.dor && f.dor.completionPct >= 80) dorComplete++
-  }
-
-  return {
-    total: total,
-    ownerAssigned: ownerAssigned,
-    scopeEstimated: scopeEstimated,
-    riceComplete: riceComplete,
-    dorComplete: dorComplete
-  }
-})
-
-// ─── Planning deadline (client-side for "all" tab) ───
-
-function daysUntil(dateStr, todayStr) {
-  var d = new Date(dateStr + 'T00:00:00Z')
-  var t = new Date(todayStr + 'T00:00:00Z')
-  return Math.ceil((d - t) / (1000 * 60 * 60 * 24))
-}
-
-var activePlanningDeadline = computed(function() {
-  var pf = planningFreezes.value
-  if (!pf) return null
-
-  var todayStr = new Date().toISOString().split('T')[0]
-
-  if (activePhase.value !== 'all') {
-    var phaseKey = activePhase.value.toLowerCase()
-    var dateStr = pf[phaseKey]
-    if (!dateStr) return null
-    return { date: dateStr, daysRemaining: daysUntil(dateStr, todayStr) }
-  }
-
-  var nearest = null
-  var phases = ['ea1', 'ea2', 'ga']
-  for (var i = 0; i < phases.length; i++) {
-    var ds = pf[phases[i]]
-    if (!ds || ds < todayStr) continue
-    if (!nearest || ds < nearest.date) {
-      nearest = { date: ds, daysRemaining: daysUntil(ds, todayStr) }
-    }
-  }
-
-  return nearest
 })
 
 // ─── Tab feature counts ───
 
 function phaseFeatureCount(tabId) {
-  if (tabId === 'all') return features.value.length
+  var strict = isPhaseCommitted(tabId)
   return features.value.filter(function(f) {
-    return passesPhaseFilter(f, selectedVersion.value, tabId)
+    return passesPhaseFilter(f, selectedVersion.value, tabId, strict)
   }).length
 }
 
@@ -321,7 +274,7 @@ function formatDate(iso) {
 
 watch(selectedVersion, function(newVersion) {
   healthError.value = null
-  activePhase.value = 'all'
+  activePhase.value = 'EA1'
   clearFilters()
   if (newVersion) {
     loadHealth(newVersion)
@@ -436,9 +389,6 @@ onUnmounted(function() {
           </div>
         </div>
       </div>
-
-      <!-- Summary Cards -->
-      <HealthSummaryCards :cardCounts="cardCounts" :planningDeadline="activePlanningDeadline" />
 
       <!-- Filters -->
       <HealthFilterBar

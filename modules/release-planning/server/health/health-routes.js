@@ -24,6 +24,39 @@ var MAX_NOTES_LENGTH = 2000
 var MAX_REASON_LENGTH = 500
 
 var DEMO_MODE = process.env.DEMO_MODE === 'true'
+var PHASE_LABELS = ['EA1', 'EA2', 'GA']
+
+function getStrictPhaseKeys(features, version, phase) {
+  if (!features || !version || !phase) return []
+  var vUpper = version.toUpperCase()
+  var pUpper = phase.toUpperCase()
+  var keys = []
+  for (var i = 0; i < features.length; i++) {
+    var fvStr = features[i].fixVersions || ''
+    var parts = fvStr.split(',')
+    for (var j = 0; j < parts.length; j++) {
+      var fv = parts[j].trim().toUpperCase()
+      if (fv.indexOf(vUpper) !== -1 && fv.indexOf(pUpper) !== -1) {
+        keys.push(features[i].key)
+        break
+      }
+    }
+  }
+  return keys
+}
+
+function getCommittedPhases(planningFreezes) {
+  if (!planningFreezes) return []
+  var today = new Date().toISOString().split('T')[0]
+  var committed = []
+  for (var i = 0; i < PHASE_LABELS.length; i++) {
+    var freezeDate = planningFreezes[PHASE_LABELS[i].toLowerCase()]
+    if (freezeDate && today >= freezeDate) {
+      committed.push(PHASE_LABELS[i])
+    }
+  }
+  return committed
+}
 
 /**
  * Register health routes on the module router.
@@ -534,6 +567,10 @@ function healthRoutes(router, context) {
     var healthConfig = config.healthConfig || {}
     var timeoutMs = healthConfig.healthRefreshTimeoutMs || 480000
 
+    // Snapshot old cache for committed-list audit
+    var cacheFile = DATA_PREFIX + '/health-cache-' + version + '-' + pk + '.json'
+    var oldCache = readFromStorage(cacheFile)
+
     refreshStates.set(stateKey, {
       running: true,
       version: version,
@@ -561,6 +598,40 @@ function healthRoutes(router, context) {
             completedAt: new Date().toISOString()
           }
         })
+
+        // Audit committed list changes
+        try {
+          var newFreezes = result && result.planningFreezes
+          var committed = getCommittedPhases(newFreezes)
+          var oldFeatures = oldCache && oldCache.features ? oldCache.features : []
+          var newFeatures = result && result.features ? result.features : []
+
+          for (var i = 0; i < committed.length; i++) {
+            var cp = committed[i]
+            var oldKeys = getStrictPhaseKeys(oldFeatures, version, cp)
+            var newKeys = getStrictPhaseKeys(newFeatures, version, cp)
+
+            var oldSet = {}
+            for (var a = 0; a < oldKeys.length; a++) oldSet[oldKeys[a]] = true
+            var newSet = {}
+            for (var b = 0; b < newKeys.length; b++) newSet[newKeys[b]] = true
+
+            var added = newKeys.filter(function(k) { return !oldSet[k] })
+            var removed = oldKeys.filter(function(k) { return !newSet[k] })
+
+            if (added.length > 0 || removed.length > 0) {
+              logAudit(readFromStorage, writeToStorage, {
+                version: version,
+                action: 'committed_list_change',
+                user: 'system',
+                summary: 'Committed list changed for ' + cp + ': +' + added.length + ' added, -' + removed.length + ' removed',
+                details: { phase: cp, added: added, removed: removed }
+              })
+            }
+          }
+        } catch (auditErr) {
+          console.error('[health] Failed to audit committed list changes:', auditErr)
+        }
       })
       .catch(function(err) {
         console.error('[health] Background health refresh failed for ' + version + ' phase ' + pk + ':', err)

@@ -62,4 +62,49 @@ describe('passesPhaseFilter', function() {
     expect(passesPhaseFilter(feature, '3.5', 'EA1')).toBe(true)
     expect(passesPhaseFilter(feature, '3.5', 'EA2')).toBe(true)
   })
+
+  // strict=true is the default, tested above. Tests below cover strict=false (inclusive mode).
+
+  it('inclusive: passes features with no phase-specific fix version', function() {
+    expect(passesPhaseFilter({ fixVersions: 'rhoai-3.5' }, '3.5', 'EA2', false)).toBe(true)
+    expect(passesPhaseFilter({ fixVersions: 'rhoai-3.5' }, '3.5', 'GA', false)).toBe(true)
+  })
+
+  it('inclusive: passes features with matching phase fix version', function() {
+    expect(passesPhaseFilter({ fixVersions: 'rhoai-3.5.EA2' }, '3.5', 'EA2', false)).toBe(true)
+    expect(passesPhaseFilter({ fixVersions: 'rhoai-3.5.GA' }, '3.5', 'GA', false)).toBe(true)
+  })
+
+  it('inclusive: excludes features tagged for a different phase', function() {
+    expect(passesPhaseFilter({ fixVersions: 'rhoai-3.5.EA1' }, '3.5', 'EA2', false)).toBe(false)
+    expect(passesPhaseFilter({ fixVersions: 'rhoai-3.5.EA1' }, '3.5', 'GA', false)).toBe(false)
+    expect(passesPhaseFilter({ fixVersions: 'rhoai-3.5.GA' }, '3.5', 'EA2', false)).toBe(false)
+  })
+
+  it('inclusive: passes when one fix version has no phase and another has a different phase', function() {
+    var feature = { fixVersions: 'rhoai-3.5, rhoai-3.5.EA1' }
+    expect(passesPhaseFilter(feature, '3.5', 'EA2', false)).toBe(true)
+    expect(passesPhaseFilter(feature, '3.5', 'GA', false)).toBe(true)
+    expect(passesPhaseFilter(feature, '3.5', 'EA1', false)).toBe(true)
+  })
+
+  it('inclusive: excludes when all fix versions are for a different phase', function() {
+    var feature = { fixVersions: 'rhoai-3.5.EA1, rhaiis-3.5.EA1' }
+    expect(passesPhaseFilter(feature, '3.5', 'EA2', false)).toBe(false)
+    expect(passesPhaseFilter(feature, '3.5', 'GA', false)).toBe(false)
+  })
+
+  it('inclusive: strict=true still rejects unphased fix versions', function() {
+    expect(passesPhaseFilter({ fixVersions: 'rhoai-3.5' }, '3.5', 'EA2', true)).toBe(false)
+    expect(passesPhaseFilter({ fixVersions: 'rhoai-3.5' }, '3.5', 'GA', true)).toBe(false)
+  })
+
+  it('inclusive: returns false when fixVersions is empty', function() {
+    expect(passesPhaseFilter({ fixVersions: '' }, '3.5', 'EA2', false)).toBe(false)
+    expect(passesPhaseFilter({}, '3.5', 'EA2', false)).toBe(false)
+  })
+
+  it('inclusive: wrong version does not match', function() {
+    expect(passesPhaseFilter({ fixVersions: 'rhoai-3.4' }, '3.5', 'EA2', false)).toBe(false)
+  })
 })

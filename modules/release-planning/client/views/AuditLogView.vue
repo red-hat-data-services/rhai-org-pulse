@@ -24,7 +24,8 @@ const ACTION_OPTIONS = [
   { value: 'import_doc', label: 'Doc import' },
   { value: 'add_pm', label: 'Added PM' },
   { value: 'remove_pm', label: 'Removed PM' },
-  { value: 'seed', label: 'Seeded data' }
+  { value: 'seed', label: 'Seeded data' },
+  { value: 'committed_list_change', label: 'Committed list change' }
 ]
 
 const ACTION_COLORS = {
@@ -38,7 +39,8 @@ const ACTION_COLORS = {
   import_doc: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400',
   add_pm: 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400',
   remove_pm: 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400',
-  seed: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400'
+  seed: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400',
+  committed_list_change: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400'
 }
 
 function actionColor(action) {
