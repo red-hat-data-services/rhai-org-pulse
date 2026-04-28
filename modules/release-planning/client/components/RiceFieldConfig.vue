@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useReleaseHealth } from '../composables/useReleaseHealth'
 
 var { searchJiraFields, loadRiceConfig, saveRiceConfig } = useReleaseHealth()
@@ -41,6 +41,10 @@ onMounted(async function() {
   } catch {
     // Config not available
   }
+})
+
+onUnmounted(function() {
+  if (searchDebounce) clearTimeout(searchDebounce)
 })
 
 function startSearch(fieldKey) {

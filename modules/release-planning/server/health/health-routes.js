@@ -585,7 +585,7 @@ function healthRoutes(router, context) {
 
     writeToStorage(DATA_PREFIX + '/committed-snapshot-' + version + '-' + phase + '.json', snapshotData)
 
-    var user = req.headers['x-forwarded-email'] || 'unknown'
+    var user = req.userEmail || 'unknown'
     logAudit(readFromStorage, writeToStorage, {
       version: version,
       action: 'committed_snapshot',
