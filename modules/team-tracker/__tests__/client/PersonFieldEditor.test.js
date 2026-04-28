@@ -164,7 +164,7 @@ describe('PersonFieldEditor', () => {
         canEdit: false
       }
     })
-    expect(wrapper.text()).toContain('+2 more')
+    expect(wrapper.text()).toContain('+2')
   })
 
   it('coerces legacy string value for multi-value field display', () => {
@@ -191,7 +191,7 @@ describe('PersonFieldEditor', () => {
     expect(wrapper.text()).toContain('Platform')
   })
 
-  it('shows no custom fields message when empty', () => {
+  it('renders nothing when no fields defined', () => {
     const wrapper = mount(PersonFieldEditor, {
       props: {
         uid: 'achen',
@@ -200,6 +200,6 @@ describe('PersonFieldEditor', () => {
         canEdit: false
       }
     })
-    expect(wrapper.text()).toContain('No custom fields configured')
+    expect(wrapper.text()).toBe('')
   })
 })

@@ -51,15 +51,21 @@ const rosterMember = computed(() => {
 const personComponent = computed(() => {
   const cf = rosterMember.value?.customFields
   if (!cf) return null
-  // Try human-readable key (Sheets mode) then fall back to iterating fields
   return cf.component || cf.jiraComponent || null
 })
 
-const engineeringSpeciality = computed(() => {
-  const cf = rosterMember.value?.customFields
-  if (cf?.engineeringSpeciality) return cf.engineeringSpeciality
-  if (cf?.specialty) return cf.specialty
-  return rosterMember.value?.engineeringSpeciality || null
+const allPeople = computed(() => {
+  const seen = new Set()
+  const result = []
+  for (const t of allTeams.value) {
+    for (const m of t.members) {
+      if (m.uid && !seen.has(m.uid)) {
+        seen.add(m.uid)
+        result.push({ uid: m.uid, name: m.name })
+      }
+    }
+  }
+  return result
 })
 
 const person = ref(null)
@@ -231,7 +237,6 @@ onMounted(() => {
                 <div class="flex items-center gap-2 flex-wrap">
                   <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ person.name }}</h2>
                   <span v-if="person.status === 'inactive'" class="text-xs font-normal px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400">Inactive</span>
-                  <span v-if="engineeringSpeciality" class="text-xs px-2.5 py-0.5 rounded-full bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-medium">{{ engineeringSpeciality }}</span>
                 </div>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{{ person.title }}</p>
               </div>
@@ -281,12 +286,10 @@ onMounted(() => {
                 <span class="text-gray-900 dark:text-gray-100">{{ personComponent }}</span>
               </div>
             </div>
-          </div>
 
-          <!-- Custom Fields (in-app mode) -->
-          <div v-if="isInAppMode && visiblePersonFields.length > 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4 uppercase tracking-wider">Custom Fields</h3>
+            <!-- Custom Fields (in-app mode) -->
             <PersonFieldEditor
+              v-if="isInAppMode && visiblePersonFields.length > 0"
               :uid="person.uid"
               :customFields="person._appFields || {}"
               :fieldDefinitions="visiblePersonFields"

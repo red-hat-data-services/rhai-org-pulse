@@ -68,7 +68,7 @@ function startEdit(fieldId) {
   if (field?.type === 'constrained' && field?.multiValue) {
     editValue.value = Array.isArray(raw) ? [...raw] : (raw ? [raw] : [])
   } else if (isPersonRefType(field)) {
-    editValue.value = raw || ''
+    editValue.value = (Array.isArray(raw) ? raw[0] : raw) || ''
   } else {
     editValue.value = Array.isArray(raw) ? (raw[0] || '') : (raw || '')
   }
@@ -111,9 +111,15 @@ async function saveEdit(fieldId) {
   }
 }
 
-function resolvePersonName(uid) {
+function resolvePersonName(rawUid) {
+  const uid = Array.isArray(rawUid) ? rawUid[0] : rawUid
+  if (!uid) return null
   const person = props.people.find(p => p.uid === uid)
   return person ? person.name : null
+}
+
+function resolvePersonUid(rawUid) {
+  return Array.isArray(rawUid) ? rawUid[0] : rawUid
 }
 
 function isPersonRefType(field) {
@@ -210,9 +216,9 @@ function isPersonRefType(field) {
         </div>
         <!-- Person reference linked display -->
         <span v-else-if="field.type === 'person-reference-linked'" class="text-sm text-gray-900 dark:text-gray-100 flex-1">
-          <template v-if="metadata[field.id]">
+          <template v-if="resolvePersonUid(metadata[field.id])">
             <span v-if="resolvePersonName(metadata[field.id])" class="text-primary-600 dark:text-primary-400">{{ resolvePersonName(metadata[field.id]) }}</span>
-            <span v-else class="text-gray-400 dark:text-gray-500">{{ metadata[field.id] }} <span class="text-xs">(not found)</span></span>
+            <span v-else class="text-gray-400 dark:text-gray-500">{{ resolvePersonUid(metadata[field.id]) }} <span class="text-xs">(not found)</span></span>
           </template>
           <span v-else class="text-gray-400 dark:text-gray-500">-</span>
         </span>
