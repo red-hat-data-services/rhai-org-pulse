@@ -222,6 +222,20 @@ module.exports = function registerRoutes(router, context) {
         }
       }
 
+      // In in-app mode, add empty structure teams that had no members assigned
+      if (teamsData) {
+        for (const team of Object.values(teamsData.teams)) {
+          if (team.orgKey === orgKey && !teamMap[team.name]) {
+            teamMap[team.name] = {
+              displayName: team.name,
+              members: [],
+              metadata: team.metadata || {},
+              teamId: team.id
+            };
+          }
+        }
+      }
+
       orgs.push({
         key: orgKey,
         displayName: orgDisplayNames[orgKey] || orgData.leader.name,

@@ -1,12 +1,15 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, inject } from 'vue'
 import { useTeams } from '@shared/client/composables/useTeams'
 import { useRoster } from '@shared/client/composables/useRoster'
+import OrgSelector from './OrgSelector.vue'
+
+const nav = inject('moduleNav')
 
 const { teams, loading, demoToast, fetchTeams, createTeam, renameTeam, deleteTeam } = useTeams()
-const { orgs } = useRoster()
+const { orgs, reloadRoster } = useRoster()
 
-const filterOrg = ref('')
+const filterOrg = ref(null)
 const showCreateModal = ref(false)
 const newTeamName = ref('')
 const newTeamOrg = ref('')
@@ -25,7 +28,11 @@ const orgKeys = computed(() => {
   return orgs.value.map(o => ({ key: o.key, displayName: o.displayName }))
 })
 
-const showOrgBadge = computed(() => !filterOrg.value)
+const selectorOrgs = computed(() => {
+  return orgs.value.map(o => ({ name: o.displayName || o.key }))
+})
+
+const showOrgBadge = computed(() => filterOrg.value === null)
 
 const orgDisplayMap = computed(() => {
   const map = {}
@@ -34,8 +41,10 @@ const orgDisplayMap = computed(() => {
 })
 
 const filteredTeams = computed(() => {
-  if (!filterOrg.value) return teams.value
-  return teams.value.filter(t => t.orgKey === filterOrg.value)
+  const list = filterOrg.value
+    ? teams.value.filter(t => (orgDisplayMap.value[t.orgKey] || t.orgKey) === filterOrg.value)
+    : teams.value
+  return [...list].sort((a, b) => a.name.localeCompare(b.name))
 })
 
 watch(orgKeys, (keys) => {
@@ -56,6 +65,7 @@ async function handleCreate() {
   error.value = null
   try {
     await createTeam(newTeamName.value.trim(), newTeamOrg.value)
+    reloadRoster()
     showCreateModal.value = false
     newTeamName.value = ''
   } catch (e) {
@@ -73,6 +83,7 @@ async function saveEdit(teamId) {
   error.value = null
   try {
     await renameTeam(teamId, editName.value.trim())
+    reloadRoster()
     editingTeamId.value = null
   } catch (e) {
     error.value = e.message || 'Failed to rename team'
@@ -84,6 +95,7 @@ async function handleDelete(teamId) {
   error.value = null
   try {
     await deleteTeam(teamId)
+    reloadRoster()
   } catch (e) {
     error.value = e.message || 'Failed to delete team'
   }
@@ -94,24 +106,20 @@ async function handleDelete(teamId) {
   <div class="space-y-4">
     <div class="flex items-center justify-between">
       <h3 class="text-lg font-medium text-gray-900">Team Management</h3>
-      <div class="flex items-center gap-3">
-        <select
-          v-model="filterOrg"
-          class="rounded border-gray-300 shadow-sm text-sm focus:ring-primary-500 focus:border-primary-500"
-        >
-          <option value="">All Orgs</option>
-          <option v-for="org in orgKeys" :key="org.key" :value="org.key">
-            {{ org.displayName }}
-          </option>
-        </select>
-        <button
-          class="px-4 py-2 bg-primary-600 text-white text-sm rounded hover:bg-primary-700"
-          @click="openCreateModal"
-        >
-          Create Team
-        </button>
-      </div>
+      <button
+        class="px-4 py-2 bg-primary-600 text-white text-sm rounded hover:bg-primary-700"
+        @click="openCreateModal"
+      >
+        Create Team
+      </button>
     </div>
+
+    <OrgSelector
+      v-if="selectorOrgs.length > 1"
+      :orgs="selectorOrgs"
+      :model-value="filterOrg"
+      @select="filterOrg = $event"
+    />
 
     <div v-if="demoInfo" class="p-3 bg-blue-50 border border-blue-200 rounded text-blue-700 text-sm">
       {{ demoInfo }}
@@ -135,7 +143,10 @@ async function handleDelete(teamId) {
           <button class="text-sm text-gray-500 hover:text-gray-700" @click="editingTeamId = null">Cancel</button>
         </div>
         <div v-else class="flex items-center gap-2 flex-1">
-          <span class="font-medium text-gray-900">{{ team.name }}</span>
+          <a
+            class="font-medium text-primary-600 hover:text-primary-800 hover:underline cursor-pointer"
+            @click="nav.navigateTo('team-detail', { teamKey: `${team.orgKey}::${team.name}` })"
+          >{{ team.name }}</a>
           <span v-if="showOrgBadge" class="text-xs text-gray-500 bg-gray-100 dark:bg-gray-700 dark:text-gray-400 px-1.5 py-0.5 rounded">{{ orgDisplayMap[team.orgKey] || team.orgKey }}</span>
         </div>
         <div v-if="editingTeamId !== team.id" class="flex items-center gap-2">

@@ -36,7 +36,7 @@
             <div>
               <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ team.displayName }}</h2>
               <p class="text-sm text-gray-500 dark:text-gray-400">
-                {{ team.org }}<span v-if="uniqueCount"> · {{ uniqueCount }} members</span>
+                {{ teamOrgName }}<span v-if="uniqueCount"> · {{ uniqueCount }} members</span>
               </p>
             </div>
           </div>
@@ -260,6 +260,13 @@ const uniqueMembers = computed(() => {
 })
 
 const uniqueCount = computed(() => uniqueMembers.value.length)
+
+const teamOrgName = computed(() => {
+  if (!team.value) return ''
+  const key = team.value.displayKey || team.value.key
+  const sepIdx = key.indexOf('::')
+  return sepIdx !== -1 ? key.substring(0, sepIdx) : ''
+})
 
 const canManageMembers = computed(() => {
   if (!team.value?.teamId) return false

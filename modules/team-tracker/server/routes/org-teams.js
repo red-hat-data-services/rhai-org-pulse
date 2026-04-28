@@ -133,6 +133,17 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
       }
     }
 
+    // Add empty structure teams that have no members assigned yet
+    const existingKeys = new Set(teams.map(t => `${t.org}::${t.name}`));
+    for (const [compositeKey, structure] of Object.entries(structureByComposite)) {
+      if (existingKeys.has(compositeKey)) continue;
+      const sepIdx = compositeKey.indexOf('::');
+      const org = compositeKey.substring(0, sepIdx);
+      const name = compositeKey.substring(sepIdx + 2);
+      if (orgFilter && org !== orgFilter) continue;
+      teams.push({ org, name, boardUrls: [], boards: [], engLeads: [], productManagers: [], headcount: {}, components: [], memberCount: 0, jiraFilter: null, structureId: structure.id, metadata: structure.metadata || {} });
+    }
+
     // Find people with no team assignment
     const relevantPeople = orgFilter
       ? allPeople.filter(p => (orgKeyToDisplay[p.orgKey] || '') === orgFilter)
