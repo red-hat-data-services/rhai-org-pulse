@@ -242,6 +242,13 @@
                   </div>
                 </div>
 
+                <!-- Component-level charts -->
+                <div class="mx-4 mt-3 mb-4 grid grid-cols-1 lg:grid-cols-3 gap-3">
+                  <IssueCountChart :counts="comp.counts" />
+                  <VelocityChart :velocity="comp.forecast.velocity" :component-name="comp.name" />
+                  <BacklogHealthChart :forecast="comp.forecast" />
+                </div>
+
                 <!-- ═══ LAYER 3 — Strategic items inside this component ═══ -->
                 <div
                   v-for="si in comp.strategicItems"
@@ -368,6 +375,9 @@ import { computed, reactive } from 'vue'
 import { useReleaseAnalysis } from '../composables/useReleaseAnalysis'
 import { useReleaseFilter } from '../composables/useReleaseFilter'
 import ReleaseFilterBar from '../components/ReleaseFilterBar.vue'
+import IssueCountChart from '../components/IssueCountChart.vue'
+import VelocityChart from '../components/VelocityChart.vue'
+import BacklogHealthChart from '../components/BacklogHealthChart.vue'
 
 const STRATEGIC_TYPES = new Set(['feature', 'initiative', 'spike'])
 
