@@ -5,15 +5,18 @@ import FeatureHealthRow from './FeatureHealthRow.vue'
 const props = defineProps({
   features: { type: Array, default: () => [] },
   canEdit: { type: Boolean, default: false },
-  jiraBaseUrl: { type: String, default: '' }
+  jiraBaseUrl: { type: String, default: '' },
+  addedKeys: { type: Set, default: () => new Set() },
+  removedFeatures: { type: Array, default: () => [] },
+  showChanges: { type: Boolean, default: true }
 })
 
 const emit = defineEmits(['toggleDorItem', 'updateNotes', 'setOverride', 'removeOverride'])
 
 var PAGE_SIZE = 50
 var expandedRows = ref({})
-var sortKey = ref('health')
-var sortAsc = ref(true)
+var sortKey = ref('priority')
+var sortAsc = ref(false)
 var currentPage = ref(1)
 
 var columns = [
@@ -174,13 +177,33 @@ function sortIndicator(key) {
               :expanded="!!expandedRows[feature.key]"
               :canEdit="canEdit"
               :jiraBaseUrl="jiraBaseUrl"
+              :isAdded="addedKeys.has(feature.key)"
+              :showChanges="showChanges"
               @toggle="toggleRow"
               @toggleDorItem="handleDorToggle"
               @updateNotes="handleNotesUpdate"
               @removeOverride="handleRemoveOverride"
             />
           </template>
-          <tr v-if="!features || features.length === 0">
+          <template v-if="showChanges && removedFeatures.length > 0">
+            <tr v-for="removed in removedFeatures" :key="removed.key + '-removed'"
+                class="opacity-60 border-l-4 border-l-red-400 bg-red-50/30 dark:bg-red-500/5">
+              <td class="px-2 py-2 border border-gray-300 dark:border-gray-600 w-8"></td>
+              <td class="px-3 py-2 border border-gray-300 dark:border-gray-600">
+                <span class="font-mono text-xs text-gray-500 line-through">{{ removed.key }}</span>
+              </td>
+              <td class="px-3 py-2 text-gray-500 dark:text-gray-400 max-w-[300px] border border-gray-300 dark:border-gray-600 text-xs line-through">{{ removed.summary }}</td>
+              <td class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-xs text-gray-400">{{ removed.status || '-' }}</td>
+              <td class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-xs text-gray-400">-</td>
+              <td class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-xs text-gray-400">-</td>
+              <td class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-xs text-gray-400">-</td>
+              <td class="px-3 py-2 text-xs text-gray-400 border border-gray-300 dark:border-gray-600">{{ removed.components || '-' }}</td>
+              <td class="px-3 py-2 text-xs text-gray-400 border border-gray-300 dark:border-gray-600">{{ removed.deliveryOwner || '-' }}</td>
+              <td class="px-3 py-2 text-xs text-gray-400 border border-gray-300 dark:border-gray-600">-</td>
+              <td class="px-3 py-2 text-xs text-gray-400 border border-gray-300 dark:border-gray-600">-</td>
+            </tr>
+          </template>
+          <tr v-if="(!features || features.length === 0) && removedFeatures.length === 0">
             <td colspan="11" class="px-3 py-8 text-center text-gray-500 border border-gray-300 dark:border-gray-600">
               No features found matching the current filters.
             </td>

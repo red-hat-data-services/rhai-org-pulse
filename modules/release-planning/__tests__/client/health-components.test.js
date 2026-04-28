@@ -398,11 +398,11 @@ describe('FeatureHealthTable', function() {
     expect(wrapper.text()).not.toContain('Next')
   })
 
-  it('sorts features by health by default (red first)', function() {
+  it('sorts features by priority descending by default (highest first)', function() {
     var wrapper = mount(FeatureHealthTable, { props: { features: features } })
     var rows = wrapper.findAll('tr')
     var firstDataRow = rows.length > 1 ? rows[1].text() : ''
-    expect(firstDataRow).toContain('T-2')
+    expect(firstDataRow).toContain('T-1')
   })
 
   it('has 11 column headers', function() {

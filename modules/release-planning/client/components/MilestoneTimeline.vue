@@ -112,13 +112,8 @@ const nextMilestone = computed(function() {
   return null
 })
 
-const NEAR_STEM = 20
-const FAR_STEM = 36
 const CHAR_WIDTH_PCT = 0.6
 const LABEL_GAP_PCT = 1.5
-
-// tier 0 = above-near, 1 = below-near, 2 = above-far, 3 = below-far
-const TIER_PREFERENCE = [0, 1, 2, 3]
 
 function estimateLabelWidthPct(label, dateStr) {
   var chars = Math.max(label.length, dateStr.length)
@@ -129,8 +124,8 @@ const staggeredPoints = computed(function() {
   var points = milestonePoints.value
   if (points.length === 0) return []
 
-  // Track rightmost edge per tier (in % units)
-  var tierEdges = [-Infinity, -Infinity, -Infinity, -Infinity]
+  var aboveEdge = -Infinity
+  var belowEdge = -Infinity
   var result = []
 
   for (var i = 0; i < points.length; i++) {
@@ -138,37 +133,21 @@ const staggeredPoints = computed(function() {
     var halfWidth = estimateLabelWidthPct(points[i].label, points[i].dateStr) / 2
     var leftEdge = pct - halfWidth
 
-    var bestTier = 0
-    for (var t = 0; t < TIER_PREFERENCE.length; t++) {
-      var tier = TIER_PREFERENCE[t]
-      if (leftEdge >= tierEdges[tier] + LABEL_GAP_PCT) {
-        bestTier = tier
-        break
-      }
-    }
+    var preferAbove = (i % 2 === 0)
+    var canAbove = leftEdge >= aboveEdge + LABEL_GAP_PCT
+    var canBelow = leftEdge >= belowEdge + LABEL_GAP_PCT
 
-    tierEdges[bestTier] = pct + halfWidth
+    var band
+    if (preferAbove && canAbove) { band = 'above'; aboveEdge = pct + halfWidth }
+    else if (!preferAbove && canBelow) { band = 'below'; belowEdge = pct + halfWidth }
+    else if (canAbove) { band = 'above'; aboveEdge = pct + halfWidth }
+    else if (canBelow) { band = 'below'; belowEdge = pct + halfWidth }
+    else { band = 'above'; aboveEdge = pct + halfWidth }
 
-    result.push(Object.assign({}, points[i], {
-      pct: pct,
-      tier: bestTier
-    }))
+    result.push(Object.assign({}, points[i], { pct: pct, band: band }))
   }
   return result
 })
-
-function tierIsAbove(tier) {
-  return tier === 0 || tier === 2
-}
-
-function stemHeight(tier) {
-  return (tier === 0 || tier === 1) ? NEAR_STEM : FAR_STEM
-}
-
-function labelOffset(tier) {
-  if (tier === 0 || tier === 1) return 0
-  return NEAR_STEM + 16
-}
 </script>
 
 <template>
@@ -181,23 +160,36 @@ function labelOffset(tier) {
     </div>
 
     <!-- Desktop horizontal timeline -->
-    <div class="hidden sm:block relative mx-4" style="height: 140px">
-      <!-- Track line — centered vertically -->
+    <div class="hidden sm:block relative mx-4" style="height: 80px">
+      <!-- SVG layer for leader lines -->
+      <svg class="absolute inset-0 w-full h-full pointer-events-none">
+        <template v-for="point in staggeredPoints" :key="point.key + '-line'">
+          <line
+            :x1="point.pct + '%'" y1="50%"
+            :x2="point.pct + '%'"
+            :y2="point.band === 'above' ? '20%' : '80%'"
+            class="stroke-gray-300 dark:stroke-gray-500"
+            stroke-width="1"
+            stroke-dasharray="2,2"
+          />
+        </template>
+      </svg>
+
+      <!-- Track line -->
       <div class="absolute left-0 right-0 h-0.5 bg-gray-300 dark:bg-gray-600" style="top: 50%"></div>
 
       <!-- Today marker -->
       <div
         v-if="todayPosition != null"
         class="absolute -translate-x-1/2 z-10"
-        :style="{ left: todayPosition + '%', top: '10%', height: '80%' }"
+        :style="{ left: todayPosition + '%', top: '15%', height: '70%' }"
       >
         <div class="w-px h-full bg-red-400/40 dark:bg-red-400/30 mx-auto"></div>
-        <div class="text-[10px] font-medium text-red-600 dark:text-red-400 mt-0.5 whitespace-nowrap text-center -translate-x-1/4">Today</div>
+        <div class="text-[10px] font-medium text-red-600 dark:text-red-400 whitespace-nowrap text-center">Today</div>
       </div>
 
-      <!-- Milestone points -->
-      <template v-for="point in staggeredPoints" :key="point.key">
-        <!-- Dot — always on the track -->
+      <!-- Dots on track -->
+      <template v-for="point in staggeredPoints" :key="point.key + '-dot'">
         <div
           class="absolute -translate-x-1/2 -translate-y-1/2 z-[5]"
           :style="{ left: point.pct + '%', top: '50%' }"
@@ -208,31 +200,21 @@ function labelOffset(tier) {
             :title="point.longLabel + ' — ' + point.dateStr"
           ></div>
         </div>
+      </template>
 
-        <!-- Label above -->
-        <div
-          v-if="tierIsAbove(point.tier)"
-          class="absolute -translate-x-1/2 text-center flex flex-col items-center"
-          :style="{ left: point.pct + '%', bottom: '50%' }"
-        >
-          <div :style="{ marginBottom: labelOffset(point.tier) + 'px' }">
-            <div class="text-[10px] text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ point.label }}</div>
-            <div class="text-[10px] font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">{{ point.dateStr }}</div>
-          </div>
-          <div class="w-px bg-gray-300 dark:bg-gray-500 mt-0.5" :style="{ height: stemHeight(point.tier) + 'px' }"></div>
+      <!-- Labels -->
+      <template v-for="point in staggeredPoints" :key="point.key + '-label'">
+        <div v-if="point.band === 'above'"
+             class="absolute -translate-x-1/2 text-center"
+             :style="{ left: point.pct + '%', top: '0' }">
+          <div class="text-[10px] text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ point.label }}</div>
+          <div class="text-[10px] font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">{{ point.dateStr }}</div>
         </div>
-
-        <!-- Label below -->
-        <div
-          v-else
-          class="absolute -translate-x-1/2 text-center flex flex-col items-center"
-          :style="{ left: point.pct + '%', top: '50%' }"
-        >
-          <div class="w-px bg-gray-300 dark:bg-gray-500 mb-0.5" :style="{ height: stemHeight(point.tier) + 'px' }"></div>
-          <div :style="{ marginTop: labelOffset(point.tier) + 'px' }">
-            <div class="text-[10px] text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ point.label }}</div>
-            <div class="text-[10px] font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">{{ point.dateStr }}</div>
-          </div>
+        <div v-else
+             class="absolute -translate-x-1/2 text-center"
+             :style="{ left: point.pct + '%', bottom: '0' }">
+          <div class="text-[10px] font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">{{ point.dateStr }}</div>
+          <div class="text-[10px] text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ point.label }}</div>
         </div>
       </template>
     </div>
