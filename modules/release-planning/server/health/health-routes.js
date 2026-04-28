@@ -861,6 +861,47 @@ function healthRoutes(router, context) {
     res.json({ saved: true, customFieldIds: config.customFieldIds, enableRice: config.healthConfig ? config.healthConfig.enableRice : false })
   })
 
+  // ─── RICE admin: test configured field IDs ───
+
+  router.post('/releases/health-admin/rice-test', requirePM, async function(req, res) {
+    var config = getConfig(readFromStorage)
+    var ids = config.customFieldIds || {}
+    var fieldIds = [ids.riceReach, ids.riceImpact, ids.riceConfidence, ids.riceEffort].filter(Boolean)
+
+    if (fieldIds.length === 0) {
+      return res.status(400).json({ error: 'No RICE field IDs configured. Save field IDs first.' })
+    }
+
+    try {
+      var allFields = await getCachedFieldList()
+      var fieldMap = {}
+      for (var i = 0; i < allFields.length; i++) {
+        fieldMap[allFields[i].id] = allFields[i]
+      }
+
+      var results = {}
+      var RICE_KEYS = ['riceReach', 'riceImpact', 'riceConfidence', 'riceEffort']
+      var RICE_LABELS = ['Reach', 'Impact', 'Confidence', 'Effort']
+      var validCount = 0
+      for (var j = 0; j < RICE_KEYS.length; j++) {
+        var fid = ids[RICE_KEYS[j]]
+        if (fid && fieldMap[fid]) {
+          results[RICE_KEYS[j]] = { id: fid, name: fieldMap[fid].name, label: RICE_LABELS[j], found: true }
+          validCount++
+        } else if (fid) {
+          results[RICE_KEYS[j]] = { id: fid, name: null, label: RICE_LABELS[j], found: false }
+        } else {
+          results[RICE_KEYS[j]] = { id: null, name: null, label: RICE_LABELS[j], found: false }
+        }
+      }
+
+      res.json({ results: results, validCount: validCount, totalCount: 4 })
+    } catch (err) {
+      console.error('[health] RICE field test failed:', err.message)
+      res.status(500).json({ error: 'Failed to validate RICE fields: ' + err.message })
+    }
+  })
+
   // ─── RICE admin: get config ───
 
   router.get('/releases/health-admin/config', requirePM, function(req, res) {

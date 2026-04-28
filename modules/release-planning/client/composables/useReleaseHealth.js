@@ -132,6 +132,10 @@ export function useReleaseHealth() {
     })
   }
 
+  async function testRiceFields() {
+    return apiRequest(API_BASE + '/releases/health-admin/rice-test', { method: 'POST' })
+  }
+
   async function createSnapshot(version, phase) {
     return apiRequest(
       API_BASE + '/releases/' + encodeURIComponent(version) + '/health/snapshot/' + encodeURIComponent(phase),
@@ -154,6 +158,7 @@ export function useReleaseHealth() {
     createSnapshot: createSnapshot,
     searchJiraFields: searchJiraFields,
     loadRiceConfig: loadRiceConfig,
-    saveRiceConfig: saveRiceConfig
+    saveRiceConfig: saveRiceConfig,
+    testRiceFields: testRiceFields
   }
 }

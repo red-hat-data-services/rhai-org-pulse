@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useReleaseHealth } from '../composables/useReleaseHealth'
 
-var { searchJiraFields, loadRiceConfig, saveRiceConfig } = useReleaseHealth()
+var { searchJiraFields, loadRiceConfig, saveRiceConfig, testRiceFields } = useReleaseHealth()
 
 var enableRice = ref(false)
 var fields = ref({
@@ -18,6 +18,8 @@ var searchResults = ref([])
 var searching = ref(false)
 var saving = ref(false)
 var saveMessage = ref('')
+var testing = ref(false)
+var testResults = ref(null)
 var searchDebounce = null
 
 var RICE_FIELDS = [
@@ -103,6 +105,19 @@ async function handleSave() {
     saving.value = false
   }
 }
+
+async function handleTest() {
+  testing.value = true
+  testResults.value = null
+  try {
+    var result = await testRiceFields()
+    testResults.value = result
+  } catch (err) {
+    testResults.value = { error: err.message || 'Test failed' }
+  } finally {
+    testing.value = false
+  }
+}
 </script>
 
 <template>
@@ -165,9 +180,32 @@ async function handleSave() {
         :disabled="saving"
         class="px-3 py-1.5 text-xs font-medium rounded-md bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50"
       >{{ saving ? 'Saving...' : 'Save RICE Config' }}</button>
+      <button
+        v-if="enableRice"
+        @click="handleTest"
+        :disabled="testing"
+        class="px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+      >{{ testing ? 'Testing...' : 'Test RICE Fields' }}</button>
       <span v-if="saveMessage" class="text-xs" :class="saveMessage.startsWith('Error') ? 'text-red-600' : 'text-green-600'">
         {{ saveMessage }}
       </span>
+    </div>
+
+    <div v-if="testResults" class="mt-3 text-xs border border-gray-200 dark:border-gray-600 rounded p-3 bg-gray-50 dark:bg-gray-800">
+      <div v-if="testResults.error" class="text-red-600">{{ testResults.error }}</div>
+      <template v-else>
+        <div class="font-medium text-gray-700 dark:text-gray-300 mb-2">
+          {{ testResults.validCount }}/{{ testResults.totalCount }} fields found in Jira
+        </div>
+        <div v-for="(val, key) in testResults.results" :key="key" class="flex items-center gap-2 py-0.5">
+          <span v-if="val.found" class="text-green-600">&#10003;</span>
+          <span v-else class="text-red-500">&#10007;</span>
+          <span class="text-gray-600 dark:text-gray-400">{{ val.label }}:</span>
+          <span v-if="val.found" class="text-gray-800 dark:text-gray-200">{{ val.name }} ({{ val.id }})</span>
+          <span v-else-if="val.id" class="text-red-500">{{ val.id }} not found</span>
+          <span v-else class="text-gray-400">Not configured</span>
+        </div>
+      </template>
     </div>
   </div>
 </template>
