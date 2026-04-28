@@ -128,7 +128,7 @@
           :members="uniqueMembers"
           :teamKey="team?.key"
           :fieldDefinitions="definitions?.personFields || []"
-          :canManage="isInAppMode && !!team.teamId && canEditTeam(team.teamId)"
+          :canManage="isInAppMode && canManageMembers"
           :teamId="team.teamId"
           :allPeople="allPeople"
           @updated="reloadRoster"
@@ -218,7 +218,7 @@ const { teams: allTeams, rosterData, loading: rosterLoading, reloadRoster } = us
 const { loadTeamDetail, loadRfeConfig } = useOrgRoster()
 const { loadGitlabStats } = useGitlabStats()
 const { isAdmin } = useAuth()
-const { canEditTeam } = usePermissions()
+const { canEditTeam, isManager } = usePermissions()
 const { definitions, fetchDefinitions } = useFieldDefinitions()
 
 const isInAppMode = computed(() => rosterData.value?.teamDataSource === 'in-app')
@@ -260,6 +260,12 @@ const uniqueMembers = computed(() => {
 })
 
 const uniqueCount = computed(() => uniqueMembers.value.length)
+
+const canManageMembers = computed(() => {
+  if (!team.value?.teamId) return false
+  if (canEditTeam(team.value.teamId)) return true
+  return isManager.value
+})
 
 // --- Org-teams detail (enriched data) ---
 const teamDetail = ref(null)
