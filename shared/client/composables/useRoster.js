@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import { getRoster } from '../services/api'
+import { getRoster, apiRequest } from '../services/api'
 
 const rosterData = ref(null)
 const loading = ref(false)
@@ -89,8 +89,17 @@ export function useRoster() {
   }
 
   async function reloadRoster() {
-    rosterData.value = null
-    return loadRoster()
+    loading.value = true
+    error.value = null
+    try {
+      const fresh = await apiRequest('/roster')
+      rosterData.value = fresh
+    } catch (err) {
+      error.value = err.message
+      console.error('Failed to reload roster:', err)
+    } finally {
+      loading.value = false
+    }
   }
 
   async function loadRoster() {

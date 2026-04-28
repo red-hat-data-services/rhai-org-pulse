@@ -128,6 +128,10 @@
           :members="uniqueMembers"
           :teamKey="team?.key"
           :fieldDefinitions="definitions?.personFields || []"
+          :canManage="isInAppMode && !!team.teamId && canEditTeam(team.teamId)"
+          :teamId="team.teamId"
+          :allPeople="allPeople"
+          @updated="reloadRoster"
         />
       </div>
 
@@ -183,32 +187,6 @@
         </div>
       </div>
 
-      <!-- Manage Members (in-app mode, admin/manager only) -->
-      <div v-if="isInAppMode && team.teamId && canEditTeam(team.teamId)" class="mt-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-        <button
-          @click="showManageMembers = !showManageMembers"
-          class="w-full px-6 py-4 flex items-center justify-between text-left"
-        >
-          <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 uppercase tracking-wider">Manage Members</h3>
-          <svg
-            class="h-4 w-4 text-gray-400 dark:text-gray-500 transition-transform"
-            :class="{ 'rotate-180': showManageMembers }"
-            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-          </svg>
-        </button>
-        <div v-if="showManageMembers" class="border-t border-gray-200 dark:border-gray-700 px-6 py-4">
-          <TeamAssignment
-            :teamId="team.teamId"
-            :teamName="team.displayName"
-            :members="uniqueMembers"
-            :allPeople="allPeople"
-            @updated="reloadRoster"
-          />
-        </div>
-      </div>
-
       <!-- Refresh Modal -->
       <RefreshModal
         v-if="showRefreshModal"
@@ -225,7 +203,6 @@ import { computed, ref, onMounted, inject, watch } from 'vue'
 import TeamOverviewTab from '../components/TeamOverviewTab.vue'
 import TeamDeliveryTab from '../components/TeamDeliveryTab.vue'
 import TeamBacklogTab from '../components/TeamBacklogTab.vue'
-import TeamAssignment from '../components/TeamAssignment.vue'
 import TeamFieldEditor from '../components/TeamFieldEditor.vue'
 import RefreshModal from '@shared/client/components/RefreshModal.vue'
 import { useRoster } from '@shared/client/composables/useRoster'
@@ -247,9 +224,12 @@ const { definitions, fetchDefinitions } = useFieldDefinitions()
 const isInAppMode = computed(() => rosterData.value?.teamDataSource === 'in-app')
 
 const allPeople = computed(() => {
+  if (!team.value) return []
+  const orgKey = team.value.key.split('::')[0]
   const seen = new Set()
   const result = []
   for (const t of allTeams.value) {
+    if (t.key.split('::')[0] !== orgKey) continue
     for (const m of t.members) {
       if (m.uid && !seen.has(m.uid)) {
         seen.add(m.uid)
@@ -260,7 +240,6 @@ const allPeople = computed(() => {
   return result
 })
 
-const showManageMembers = ref(false)
 const showTeamFields = ref(false)
 
 // --- Team resolution ---

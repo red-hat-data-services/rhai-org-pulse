@@ -84,6 +84,8 @@
             {{ col.label }}
             <span v-if="sortKey === col.key" class="ml-1">{{ sortAsc ? '↑' : '↓' }}</span>
           </th>
+          <th v-if="canManage" class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          </th>
         </tr>
       </thead>
       <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -121,6 +123,15 @@
           <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{{ getComponent(member) }}</td>
           <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ member.geo || member.region || '—' }}</td>
           <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ getLocation(member) }}</td>
+          <td v-if="canManage" class="px-4 py-3 text-sm text-right whitespace-nowrap">
+            <button
+              v-if="member.uid"
+              @click.stop="emit('remove-member', member.uid)"
+              class="px-2.5 py-1 text-xs font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 transition-colors"
+            >
+              Remove from Team
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -143,8 +154,12 @@ const { teams: allTeams } = useRoster()
 const props = defineProps({
   members: { type: Array, required: true },
   teamKey: { type: String, default: null },
-  fieldDefinitions: { type: Array, default: () => [] }
+  fieldDefinitions: { type: Array, default: () => [] },
+  canManage: { type: Boolean, default: false },
+  teamId: { type: String, default: null }
 })
+
+const emit = defineEmits(['remove-member'])
 
 const showMoreFilters = ref(false)
 
