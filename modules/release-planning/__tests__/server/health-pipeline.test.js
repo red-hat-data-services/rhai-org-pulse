@@ -419,6 +419,63 @@ describe('loadMilestones', function() {
     expect(result.gaFreeze).toBe('2026-08-01')
     expect(result.gaTarget).toBe('2026-08-15')
   })
+
+  it('matches space-separated EA release numbers (expanded milestone format)', function() {
+    var storage = makeStorage(ppCache([
+      { productName: 'rhelai', releaseNumber: 'rhelai-3.5 EA1 release', dueDate: '2026-06-18', codeFreezeDate: null },
+      { productName: 'rhelai', releaseNumber: 'rhelai-3.5 EA2 release', dueDate: '2026-07-16', codeFreezeDate: null },
+      { productName: 'rhelai', releaseNumber: 'rhelai-3.5 GA', dueDate: '2026-08-20', codeFreezeDate: null }
+    ]))
+    var result = loadMilestones(storage.readFromStorage, '3.5')
+    expect(result).not.toBeNull()
+    expect(result.ea1Target).toBe('2026-06-18')
+    expect(result.ea2Target).toBe('2026-07-16')
+    expect(result.gaTarget).toBe('2026-08-20')
+    expect(result._matched.ea1).toBe('rhelai-3.5 EA1 release')
+    expect(result._matched.ea2).toBe('rhelai-3.5 EA2 release')
+    expect(result._matched.ga).toBe('rhelai-3.5 GA')
+  })
+
+  it('does not match EA releases as GA', function() {
+    var storage = makeStorage(ppCache([
+      { productName: 'RHAII', releaseNumber: 'RHAII-3.5 EA1', dueDate: '2026-06-02', codeFreezeDate: null },
+      { productName: 'RHAII', releaseNumber: 'RHAII-3.5 EA2', dueDate: '2026-07-01', codeFreezeDate: null },
+      { productName: 'RHAII', releaseNumber: 'RHAII-3.5 GA', dueDate: '2026-08-04', codeFreezeDate: null }
+    ]))
+    var result = loadMilestones(storage.readFromStorage, '3.5')
+    expect(result).not.toBeNull()
+    expect(result.ea1Target).toBe('2026-06-02')
+    expect(result.ea2Target).toBe('2026-07-01')
+    expect(result.gaTarget).toBe('2026-08-04')
+    expect(result._matched.ga).toBe('RHAII-3.5 GA')
+  })
+
+  it('prefers rhoai/rhelai product when multiple products match', function() {
+    var storage = makeStorage(ppCache([
+      { productName: 'RHAII', releaseNumber: 'RHAII-3.5 EA1', dueDate: '2026-06-02', codeFreezeDate: null },
+      { productName: 'rhelai', releaseNumber: 'rhelai-3.5 EA1 release', dueDate: '2026-06-18', codeFreezeDate: null },
+      { productName: 'RHAII', releaseNumber: 'RHAII-3.5 GA', dueDate: '2026-08-04', codeFreezeDate: null },
+      { productName: 'rhelai', releaseNumber: 'rhelai-3.5 GA', dueDate: '2026-08-20', codeFreezeDate: null }
+    ]))
+    var result = loadMilestones(storage.readFromStorage, '3.5')
+    expect(result.ea1Target).toBe('2026-06-18')
+    expect(result.gaTarget).toBe('2026-08-20')
+    expect(result._matched.ea1).toBe('rhelai-3.5 EA1 release')
+    expect(result._matched.ga).toBe('rhelai-3.5 GA')
+  })
+
+  it('returns _matched with release numbers for debugging', function() {
+    var storage = makeStorage(ppCache([
+      { productName: 'rhoai', releaseNumber: 'rhoai-3.5.EA1', dueDate: '2026-05-15', codeFreezeDate: '2026-05-01' },
+      { productName: 'rhoai', releaseNumber: 'rhoai-3.5', dueDate: '2026-08-15', codeFreezeDate: '2026-08-01' }
+    ]))
+    var result = loadMilestones(storage.readFromStorage, '3.5')
+    expect(result._matched).toEqual({
+      ea1: 'rhoai-3.5.EA1',
+      ea2: null,
+      ga: 'rhoai-3.5'
+    })
+  })
 })
 
 const smartsheetClient = require('../../../../shared/server/smartsheet')
