@@ -7,6 +7,8 @@
  * no client-side token management needed.
  */
 
+import { impersonatingUid } from '@shared/client/state/impersonation'
+
 const CACHE_PREFIX = 'app_cache:'
 /** Prefix for sessionStorage-only caches (same family as app_cache: localStorage keys). */
 export const SESSION_CACHE_PREFIX = 'app_cache:session:'
@@ -108,7 +110,12 @@ export function clearApiCache() {
 }
 
 export async function apiRequest(path, options = {}) {
-  const response = await fetch(`${getApiBase()}${path}`, options)
+  const headers = { ...(options.headers || {}) }
+  if (impersonatingUid.value) {
+    headers['X-Impersonate-Uid'] = impersonatingUid.value
+  }
+
+  const response = await fetch(`${getApiBase()}${path}`, { ...options, headers })
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))

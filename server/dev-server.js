@@ -22,7 +22,7 @@ errorBuffer.install();
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 const storageModule = DEMO_MODE ? require('../shared/server/demo-storage') : require('../shared/server/storage');
 const { readFromStorage, writeToStorage } = storageModule;
-const { createAuthMiddleware, proxySecretGuard } = require('../shared/server/auth');
+const { createAuthMiddleware, proxySecretGuard, blockDuringImpersonation } = require('../shared/server/auth');
 const apiTokens = require('./api-tokens');
 
 const modulesConfig = require('./modules/config');
@@ -198,6 +198,16 @@ app.use(authMiddleware);
  *                 authMethod:
  *                   type: string
  *                   enum: [token, proxy, local-dev]
+ *                 permissionTier:
+ *                   type: string
+ *                   enum: [admin, manager, user]
+ *                 impersonating:
+ *                   type: boolean
+ *                   description: Present and true when X-Impersonate-Uid header is active
+ *                 realAdmin:
+ *                   type: string
+ *                   format: email
+ *                   description: The real admin's email (only present during impersonation)
  */
 app.get('/api/whoami', function(req, res) {
   // For proxy-authenticated users, try to get display name from headers
@@ -208,13 +218,22 @@ app.get('/api/whoami', function(req, res) {
     const email = req.headers['x-forwarded-email'];
     displayName = preferred || user || email || req.userEmail;
   }
-  res.json({
+
+  const response = {
     email: req.userEmail,
     displayName,
     isAdmin: req.isAdmin,
     permissionTier: req.permissionTier || (req.isAdmin ? 'admin' : 'user'),
     authMethod: req.authMethod || (req.headers['x-forwarded-email'] ? 'proxy' : 'local-dev')
-  });
+  };
+
+  if (req.isImpersonating) {
+    response.impersonating = true;
+    response.realAdmin = req.realAdminEmail;
+    if (req.impersonatedDisplayName) response.displayName = req.impersonatedDisplayName;
+  }
+
+  res.json(response);
 });
 
 // ─── Routes: Site Config ───
@@ -305,7 +324,7 @@ app.post('/api/site-config', requireAdmin, function(req, res) {
  *                   items:
  *                     $ref: '#/components/schemas/ApiToken'
  */
-app.get('/api/tokens', function(req, res) {
+app.get('/api/tokens', blockDuringImpersonation, function(req, res) {
   try {
     const tokens = apiTokens.listUserTokens(req.userEmail);
     res.json({ tokens });
@@ -360,7 +379,7 @@ app.get('/api/tokens', function(req, res) {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-app.post('/api/tokens', async function(req, res) {
+app.post('/api/tokens', blockDuringImpersonation, async function(req, res) {
   try {
     const { name, expiresIn } = req.body;
 
@@ -406,7 +425,7 @@ app.post('/api/tokens', async function(req, res) {
  *       404:
  *         $ref: '#/components/responses/NotFound'
  */
-app.delete('/api/tokens/:id', async function(req, res) {
+app.delete('/api/tokens/:id', blockDuringImpersonation, async function(req, res) {
   try {
     const revoked = await apiTokens.revokeToken(req.params.id, req.userEmail);
     if (!revoked) {
@@ -470,7 +489,7 @@ app.get('/api/admin/tokens', requireAdmin, function(req, res) {
  *       404:
  *         $ref: '#/components/responses/NotFound'
  */
-app.delete('/api/admin/tokens/:id', requireAdmin, async function(req, res) {
+app.delete('/api/admin/tokens/:id', requireAdmin, blockDuringImpersonation, async function(req, res) {
   try {
     const revoked = await apiTokens.adminRevokeToken(req.params.id);
     if (!revoked) {
@@ -554,7 +573,7 @@ app.get('/api/allowlist', requireAdmin, function(req, res) {
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-app.post('/api/allowlist', requireAdmin, function(req, res) {
+app.post('/api/allowlist', requireAdmin, blockDuringImpersonation, function(req, res) {
   try {
     const { email } = req.body;
     if (!email || typeof email !== 'string') {
@@ -613,7 +632,7 @@ app.post('/api/allowlist', requireAdmin, function(req, res) {
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-app.delete('/api/allowlist/:email', requireAdmin, function(req, res) {
+app.delete('/api/allowlist/:email', requireAdmin, blockDuringImpersonation, function(req, res) {
   try {
     const email = decodeURIComponent(req.params.email).toLowerCase();
     const data = readFromStorage('allowlist.json') || { emails: [] };

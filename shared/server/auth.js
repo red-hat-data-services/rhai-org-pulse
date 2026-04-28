@@ -6,6 +6,15 @@
 const crypto = require('crypto');
 const { getPermissionTier } = require('./permissions');
 
+function blockDuringImpersonation(req, res, next) {
+  if (req.isImpersonating) {
+    return res.status(403).json({
+      error: 'This action is not allowed while impersonating another user'
+    });
+  }
+  next();
+}
+
 function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
   const { tokenValidator } = options;
 
@@ -59,6 +68,42 @@ function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
     req.permissionTier = getPermissionTier(req.userUid, registry, req.isAdmin);
   }
 
+  function applyImpersonation(req, res) {
+    const impersonateUid = req.headers['x-impersonate-uid'];
+    if (!impersonateUid) {
+      req.auditActor = req.userEmail;
+      return null;
+    }
+
+    if (!req.isAdmin) {
+      return res.status(403).json({ error: 'Only admins can impersonate' });
+    }
+
+    if (req.userUid && impersonateUid === req.userUid) {
+      return res.status(400).json({ error: 'Cannot impersonate yourself' });
+    }
+
+    const registry = readFromStorage('team-data/registry.json');
+    if (!registry?.people?.[impersonateUid] || registry.people[impersonateUid].status !== 'active') {
+      return res.status(404).json({ error: 'Target user not found in roster' });
+    }
+
+    const target = registry.people[impersonateUid];
+
+    req.realAdminEmail = req.userEmail;
+    req.realAdminUid = req.userUid;
+
+    req.userEmail = target.email?.toLowerCase() || impersonateUid;
+    req.userUid = impersonateUid;
+    req.isAdmin = isAdmin(req.userEmail);
+    req.permissionTier = getPermissionTier(req.userUid, registry, req.isAdmin);
+    req.isImpersonating = true;
+    req.impersonatedDisplayName = target.name || null;
+
+    req.auditActor = `${req.userEmail} (impersonated by ${req.realAdminEmail})`;
+    return null;
+  }
+
   async function authMiddleware(req, res, next) {
     if (req.method === 'OPTIONS') return next()
 
@@ -79,6 +124,8 @@ function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
         // Update lastUsedAt (fire-and-forget, throttled)
         tokenValidator.touchLastUsed(tokenRecord.id);
         resolveUserUid(req);
+        const blocked = applyImpersonation(req, res);
+        if (blocked) return;
         return next();
       }
       // No token validator configured — reject token auth
@@ -102,6 +149,8 @@ function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
 
     req.isAdmin = isAdmin(req.userEmail)
     resolveUserUid(req);
+    const blocked = applyImpersonation(req, res);
+    if (blocked) return;
     next()
   }
 
@@ -155,4 +204,4 @@ function proxySecretGuard(req, res, next, options = {}) {
   return res.status(401).json({ error: 'Unauthorized' });
 }
 
-module.exports = { createAuthMiddleware, proxySecretGuard }
+module.exports = { createAuthMiddleware, proxySecretGuard, blockDuringImpersonation }
