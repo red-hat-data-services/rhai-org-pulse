@@ -236,6 +236,12 @@ function loadMilestones(readFromStorage, version) {
     return null
   }
 
+  var escapedVersion = version.replace(/\./g, '\\.')
+  var ea1Pattern = new RegExp('\\b' + escapedVersion + '[.\\s]EA1\\b', 'i')
+  var ea2Pattern = new RegExp('\\b' + escapedVersion + '[.\\s]EA2\\b', 'i')
+  var eaExclude = /\bEA\d?\b/i
+  var preferredProduct = /^(rhoai|rhelai)/i
+
   var ea1Entry = null
   var ea2Entry = null
   var gaEntry = null
@@ -243,12 +249,12 @@ function loadMilestones(readFromStorage, version) {
   for (var i = 0; i < cached.releases.length; i++) {
     var r = cached.releases[i]
     var rn = r.releaseNumber || ''
-    if (rn.indexOf(version + '.EA1') !== -1) {
-      ea1Entry = r
-    } else if (rn.indexOf(version + '.EA2') !== -1) {
-      ea2Entry = r
-    } else if (rn.indexOf(version) !== -1 && rn.indexOf('.EA') === -1) {
-      gaEntry = r
+    if (ea1Pattern.test(rn)) {
+      if (!ea1Entry || preferredProduct.test(rn)) ea1Entry = r
+    } else if (ea2Pattern.test(rn)) {
+      if (!ea2Entry || preferredProduct.test(rn)) ea2Entry = r
+    } else if (rn.indexOf(version) !== -1 && !eaExclude.test(rn)) {
+      if (!gaEntry || preferredProduct.test(rn)) gaEntry = r
     }
   }
 
@@ -262,7 +268,12 @@ function loadMilestones(readFromStorage, version) {
     ea2Freeze: ea2Entry ? ea2Entry.codeFreezeDate || null : null,
     ea2Target: ea2Entry ? ea2Entry.dueDate || null : null,
     gaFreeze: gaEntry ? gaEntry.codeFreezeDate || null : null,
-    gaTarget: gaEntry ? gaEntry.dueDate || null : null
+    gaTarget: gaEntry ? gaEntry.dueDate || null : null,
+    _matched: {
+      ea1: ea1Entry ? ea1Entry.releaseNumber : null,
+      ea2: ea2Entry ? ea2Entry.releaseNumber : null,
+      ga: gaEntry ? gaEntry.releaseNumber : null
+    }
   }
 }
 
@@ -287,7 +298,7 @@ async function loadPreviousGaFreeze(readFromStorage, version) {
     for (var i = 0; i < cached.releases.length; i++) {
       var r = cached.releases[i]
       var rn = r.releaseNumber || ''
-      if (rn.indexOf(prevVersion) !== -1 && rn.indexOf('.EA') === -1) {
+      if (rn.indexOf(prevVersion) !== -1 && !/\bEA\d?\b/i.test(rn)) {
         if (r.codeFreezeDate) return r.codeFreezeDate
       }
     }
@@ -737,6 +748,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
   var cache = {
     cachedAt: today.toISOString(),
     version: version,
+    warnings: warnings,
     milestones: milestones ? {
       ea1Freeze: milestones.ea1Freeze,
       ea1Target: milestones.ea1Target,
