@@ -16,7 +16,7 @@ npm run dev:full       # Starts Vite (5173) + Express (3001)
 |----------|-------------|
 | `JIRA_EMAIL` | Your @redhat.com email |
 | `JIRA_TOKEN` | Jira Cloud API token from https://id.atlassian.com/manage-profile/security/api-tokens |
-| `ADMIN_EMAILS` | Comma-separated admin emails (seeds the allowlist) |
+| `ADMIN_EMAILS` | Comma-separated admin emails (seeds the role store) |
 
 ### Optional Environment Variables
 
@@ -170,11 +170,11 @@ Secrets (created manually on cluster, not in git):
 Standard `--platform linux/amd64` builds fail: npm times out under QEMU, esbuild crashes. Workaround: build/install natively, then copy into amd64 base images. See `deploy/OPENSHIFT.md` step 3 for details. This works because the backend has no native Node addons (all pure JS).
 
 ### Dev vs prod
-- **Dev overlay** clears `ADMIN_EMAILS` via `configMapGenerator` merge behavior. When empty, the first authenticated user is auto-added to the allowlist.
-- **Prod overlay** keeps `ADMIN_EMAILS` to pre-seed the allowlist with known admins.
+- **Dev overlay** clears `ADMIN_EMAILS` via `configMapGenerator` merge behavior. When empty, the first authenticated user is auto-added to the role store.
+- **Prod overlay** keeps `ADMIN_EMAILS` to pre-seed the role store with known admins.
 
 ### Auth flow (production)
-OpenShift OAuth proxy (sidecar on frontend pod) authenticates users and sets `X-Forwarded-Email` / `X-Forwarded-User` headers. The backend reads `X-Forwarded-Email` and checks it against `data/allowlist.json`. If the allowlist is empty, the first request auto-adds the user.
+OpenShift OAuth proxy (sidecar on frontend pod) authenticates users and sets `X-Forwarded-Email` / `X-Forwarded-User` headers. The backend reads `X-Forwarded-Email` and checks it against `data/roles.json` via role-store. If the role store is empty, the first request auto-adds the user.
 
 ## Project Structure
 
@@ -257,7 +257,7 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 
 **GET:**
 - `/api/healthz` — health check (no auth)
-- `/api/whoami` — current user info (supports both proxy and token auth). Response includes `permissionTier`. When `X-Impersonate-Uid` header is active, response adds `impersonating: true`, `realAdmin` (admin's email), and overrides `displayName`.
+- `/api/whoami` — current user info (supports both proxy and token auth). Response includes `permissionTier`, `isTeamAdmin`, and `roles`. When `X-Impersonate-Uid` header is active, response adds `impersonating: true`, `realAdmin` (admin's email), and overrides `displayName`.
 - `/api/site-config` — site configuration (titlePrefix)
 - `/api/tokens` — list current user's API tokens (blocked during impersonation)
 - `/api/admin/tokens` — list all API tokens (admin)
@@ -269,6 +269,8 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/gitlab/contributions` — GitLab contribution data
 - `/api/trends` — monthly Jira + GitHub + GitLab trend data
 - `/api/allowlist` — authorized email list
+- `/api/roles/me` — current user's roles (authenticated)
+- `/api/roles` — list all role assignments (admin)
 - `/api/admin/roster-sync/config` — roster sync configuration
 - `/api/admin/roster-sync/status` — sync status (running/last result, includes `phase`, `phaseLabel`, `metadataSync`, `stale` fields)
 - `/api/modules/team-tracker/sheets/discover` — discover sheet names in a Google Spreadsheet (admin, requires `spreadsheetId` query param)
@@ -315,6 +317,8 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/admin/roster-sync/trigger` — trigger manual roster sync
 - `/api/admin/roster-sync/unified` — trigger unified roster + metadata sync (admin)
 - `/api/allowlist` — update authorized email list
+- `/api/roles/assign` — assign role `{ email, role }` (admin)
+- `/api/roles/revoke` — revoke role `{ email, role }` (admin)
 - `/api/modules/team-tracker/snapshots/generate` — generate snapshots for all teams (admin)
 - `/api/modules/feature-traffic/refresh` — trigger manual data refresh from GitLab CI (admin)
 - `/api/modules/feature-traffic/config` — save fetch configuration (admin)

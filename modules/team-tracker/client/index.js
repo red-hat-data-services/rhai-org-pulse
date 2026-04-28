@@ -10,4 +10,5 @@ export const routes = {
   'team-detail': defineAsyncComponent(() => import('./views/TeamRosterView.vue')),
   'person-detail': defineAsyncComponent(() => import('./views/PersonProfileView.vue')),
   'unassigned': defineAsyncComponent(() => import('./components/UnassignedPeople.vue')),
+  'manage': defineAsyncComponent(() => import('./views/ManageView.vue')),
 }

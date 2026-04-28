@@ -85,8 +85,6 @@
     <GoogleSheetsSettings v-if="activeTab === 'google-sheets'" @config-saved="handleConfigSaved" @toast="$emit('toast', $event)" />
     <JiraSyncSettings v-if="activeTab === 'jira-sync'" />
     <SnapshotSettings v-if="activeTab === 'snapshots'" />
-    <TeamManagement v-if="activeTab === 'teams'" />
-    <FieldDefinitionManager v-if="activeTab === 'fields'" />
     <AuditLogView v-if="activeTab === 'audit-log'" />
   </div>
 </template>
@@ -99,8 +97,6 @@ import PeopleAndTeamsSettings from './PeopleAndTeamsSettings.vue'
 import GoogleSheetsSettings from './GoogleSheetsSettings.vue'
 import JiraSyncSettings from './JiraSyncSettings.vue'
 import SnapshotSettings from './SnapshotSettings.vue'
-import TeamManagement from './TeamManagement.vue'
-import FieldDefinitionManager from './FieldDefinitionManager.vue'
 import AuditLogView from './AuditLogView.vue'
 import MigrationFieldConfig from './MigrationFieldConfig.vue'
 import { useSyncStatus } from '../composables/useSyncStatus'
@@ -191,8 +187,6 @@ const sheetsTabs = [
 ]
 
 const inAppTabs = [
-  { id: 'teams', label: 'Teams' },
-  { id: 'fields', label: 'Fields' },
   { id: 'audit-log', label: 'Audit Log' }
 ]
 

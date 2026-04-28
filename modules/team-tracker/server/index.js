@@ -1,5 +1,5 @@
 module.exports = function registerRoutes(router, context) {
-  const { storage, requireAdmin } = context;
+  const { storage, requireAdmin, requireTeamAdmin, roleStore } = context;
   const { readFromStorage, writeToStorage, listStorageFiles, deleteStorageDirectory } = storage;
 
   const DEMO_MODE = process.env.DEMO_MODE === 'true';
@@ -445,6 +445,7 @@ module.exports = function registerRoutes(router, context) {
   function requireManagerOrAdmin(getTargetUid) {
     return (req, res, next) => {
       if (req.isAdmin) return next();
+      if (req.isTeamAdmin) return next();
       const targetUid = getTargetUid(req);
       if (!req.userUid) return res.status(403).json({ error: 'Cannot determine your identity' });
       const managed = permissions.getManagedUids(req.userUid, managerMap);
@@ -471,7 +472,8 @@ module.exports = function registerRoutes(router, context) {
       email: req.userEmail,
       uid: req.userUid,
       tier: req.permissionTier,
-      managedUids: managed
+      managedUids: managed,
+      roles: roleStore ? roleStore.getRoles(req.userEmail) : []
     });
   });
 
@@ -501,7 +503,7 @@ module.exports = function registerRoutes(router, context) {
     res.json({ teams });
   });
 
-  router.post('/structure/teams', requireAdmin, function(req, res) {
+  router.post('/structure/teams', requireTeamAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
     const { name, orgKey } = req.body;
@@ -512,7 +514,7 @@ module.exports = function registerRoutes(router, context) {
     res.status(201).json(team);
   });
 
-  router.patch('/structure/teams/:teamId', requireAdmin, function(req, res) {
+  router.patch('/structure/teams/:teamId', requireTeamAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
     const { name } = req.body;
@@ -523,7 +525,7 @@ module.exports = function registerRoutes(router, context) {
     res.json(team);
   });
 
-  router.delete('/structure/teams/:teamId', requireAdmin, function(req, res) {
+  router.delete('/structure/teams/:teamId', requireTeamAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
     const result = teamStore.deleteTeam(storage, req.params.teamId, req.auditActor);
@@ -556,7 +558,7 @@ module.exports = function registerRoutes(router, context) {
       return res.status(400).json({ error: 'uids array is required' });
     }
     // All-or-nothing permission check
-    if (!req.isAdmin) {
+    if (!req.isAdmin && !req.isTeamAdmin) {
       if (!req.userUid) return res.status(403).json({ error: 'Cannot determine your identity' });
       const managed = permissions.getManagedUids(req.userUid, managerMap);
       const denied = uids.filter(uid => !managed.has(uid));
@@ -599,8 +601,8 @@ module.exports = function registerRoutes(router, context) {
 
   router.get('/structure/field-definitions', function(req, res) {
     const defs = fieldStore.readFieldDefinitions(storage);
-    // Filter out soft-deleted fields for non-admin users
-    if (!req.isAdmin) {
+    // Filter out soft-deleted fields for non-admin/team-admin users
+    if (!req.isAdmin && !req.isTeamAdmin) {
       defs.personFields = defs.personFields.filter(f => !f.deleted);
       defs.teamFields = defs.teamFields.filter(f => !f.deleted);
     }
@@ -609,7 +611,7 @@ module.exports = function registerRoutes(router, context) {
 
   const VALID_FIELD_TYPES = ['free-text', 'constrained', 'person-reference-linked'];
 
-  router.post('/structure/field-definitions/person', requireAdmin, function(req, res) {
+  router.post('/structure/field-definitions/person', requireTeamAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
     const { label, type, required, visible, primaryDisplay, allowedValues, multiValue } = req.body;
@@ -626,7 +628,7 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
-  router.patch('/structure/field-definitions/person/:fieldId', requireAdmin, function(req, res) {
+  router.patch('/structure/field-definitions/person/:fieldId', requireTeamAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
     try {
@@ -638,7 +640,7 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
-  router.delete('/structure/field-definitions/person/:fieldId', requireAdmin, function(req, res) {
+  router.delete('/structure/field-definitions/person/:fieldId', requireTeamAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
     const result = fieldStore.softDeleteField(storage, 'person', req.params.fieldId, req.auditActor);
@@ -646,7 +648,7 @@ module.exports = function registerRoutes(router, context) {
     res.json(result);
   });
 
-  router.post('/structure/field-definitions/person/reorder', requireAdmin, function(req, res) {
+  router.post('/structure/field-definitions/person/reorder', requireTeamAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
     const { orderedIds } = req.body;
@@ -657,7 +659,7 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Team Field Definitions ───
 
-  router.post('/structure/field-definitions/team', requireAdmin, function(req, res) {
+  router.post('/structure/field-definitions/team', requireTeamAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
     const { label, type, required, visible, primaryDisplay, allowedValues, multiValue } = req.body;
@@ -674,7 +676,7 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
-  router.patch('/structure/field-definitions/team/:fieldId', requireAdmin, function(req, res) {
+  router.patch('/structure/field-definitions/team/:fieldId', requireTeamAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
     try {
@@ -686,7 +688,7 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
-  router.delete('/structure/field-definitions/team/:fieldId', requireAdmin, function(req, res) {
+  router.delete('/structure/field-definitions/team/:fieldId', requireTeamAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
     const result = fieldStore.softDeleteField(storage, 'team', req.params.fieldId, req.auditActor);
@@ -694,7 +696,7 @@ module.exports = function registerRoutes(router, context) {
     res.json(result);
   });
 
-  router.post('/structure/field-definitions/team/reorder', requireAdmin, function(req, res) {
+  router.post('/structure/field-definitions/team/reorder', requireTeamAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
     const { orderedIds } = req.body;
@@ -731,7 +733,7 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Team Field Values ───
 
-  router.patch('/structure/teams/:teamId/fields', requireAdmin, function(req, res) {
+  router.patch('/structure/teams/:teamId/fields', requireTeamAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
     if (typeof req.body !== 'object' || Array.isArray(req.body) || !req.body) {

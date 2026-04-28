@@ -312,6 +312,7 @@ const props = defineProps({
   activeViewId: String,
   user: Object,
   isAdmin: Boolean,
+  isTeamAdmin: { type: Boolean, default: false },
   modules: { type: Array, default: () => [] },
   builtInManifests: { type: Array, default: () => [] },
   titlePrefix: { type: String, default: '' }
@@ -378,13 +379,20 @@ const navSections = computed(() => {
       expanded: expandedSections.value[manifest.slug] || false,
       headerLabel: manifest.name,
       headerIcon: resolveIcon(manifest.icon),
-      items: navItems.map(item => ({
-        id: `${manifest.slug}::${item.id}`,
-        label: item.label,
-        icon: resolveIcon(item.icon),
-        disabled: item.disabled || false,
-        separatorBefore: item.separatorBefore || false
-      }))
+      items: navItems
+        .filter(item => {
+          if (!item.requireRole) return true
+          if (props.isAdmin) return true
+          if (item.requireRole === 'team-admin') return props.isTeamAdmin
+          return false
+        })
+        .map(item => ({
+          id: `${manifest.slug}::${item.id}`,
+          label: item.label,
+          icon: resolveIcon(item.icon),
+          disabled: item.disabled || false,
+          separatorBefore: item.separatorBefore || false
+        }))
     })
   }
 

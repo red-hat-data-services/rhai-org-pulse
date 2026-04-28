@@ -27,15 +27,17 @@ export function usePermissions() {
   const managedUids = computed(() => new Set(permissionData.value?.managedUids || []))
   const userUid = computed(() => permissionData.value?.uid || null)
   const isAdmin = computed(() => tier.value === 'admin')
+  const isTeamAdmin = computed(() => tier.value === 'team-admin' || tier.value === 'admin')
   const isManager = computed(() => tier.value === 'manager' || tier.value === 'admin')
 
   function canEdit(uid) {
     if (isAdmin.value) return true
+    if (isTeamAdmin.value) return true
     return managedUids.value.has(uid)
   }
 
   function canEditTeam(_teamId) {
-    return isAdmin.value
+    return isAdmin.value || isTeamAdmin.value
   }
 
   return {
@@ -44,6 +46,7 @@ export function usePermissions() {
     managedUids,
     userUid,
     isAdmin,
+    isTeamAdmin,
     isManager,
     canEdit,
     canEditTeam,

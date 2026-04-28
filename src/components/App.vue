@@ -8,6 +8,7 @@
       :active-view-id="activeViewId"
       :user="authUser"
       :is-admin="authIsAdmin"
+      :is-team-admin="authIsTeamAdmin"
       :modules="gitStaticModules"
       :built-in-manifests="builtInManifests"
       :title-prefix="titlePrefix"
@@ -228,7 +229,7 @@ export default {
     BackendConnectivityModal
   },
   setup() {
-    const { user: authUser, isAdmin: authIsAdmin, refresh: refreshAuth } = useAuth()
+    const { user: authUser, isAdmin: authIsAdmin, isTeamAdmin: authIsTeamAdmin, refresh: refreshAuth } = useAuth()
     const { isImpersonating, impersonatingUid: impersonatingUidRef, impersonatingName: impersonatingNameRef, stopImpersonating } = useImpersonation()
     const { refresh: refreshPermissions } = usePermissions()
     const { loadRoster, teams, selectedOrgKey, selectOrg } = useRoster()
@@ -365,6 +366,7 @@ export default {
     return {
       authUser,
       authIsAdmin,
+      authIsTeamAdmin,
       isImpersonating,
       impersonatingUidValue,
       impersonatingDisplayName,

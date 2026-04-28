@@ -367,3 +367,29 @@ export async function removeFromAllowlist(email) {
     method: 'DELETE'
   })
 }
+
+// ─── Roles ───
+
+export async function fetchRoles() {
+  return apiRequest('/roles')
+}
+
+export async function fetchMyRoles() {
+  return apiRequest('/roles/me')
+}
+
+export async function assignRole(email, role) {
+  return apiRequest('/roles/assign', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, role })
+  })
+}
+
+export async function revokeRole(email, role) {
+  return apiRequest('/roles/revoke', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, role })
+  })
+}

@@ -149,31 +149,44 @@ describe('getPermissionTier', () => {
   it('returns user for null uid when not admin', () => {
     expect(getPermissionTier(null, registry, false)).toBe('user');
   });
+
+  it('returns team-admin when isTeamAdminFlag is true', () => {
+    expect(getPermissionTier('bsmith', registry, false, true)).toBe('team-admin');
+  });
+
+  it('admin takes precedence over team-admin', () => {
+    expect(getPermissionTier('bsmith', registry, true, true)).toBe('admin');
+  });
 });
 
 describe('canEditPerson', () => {
   const map = buildManagerMap(registry);
 
   it('admin can edit anyone', () => {
-    expect(canEditPerson(null, 'bsmith', true, map)).toBe(true);
-    expect(canEditPerson('achen', 'gkim', true, map)).toBe(true);
+    expect(canEditPerson(null, 'bsmith', true, false, map)).toBe(true);
+    expect(canEditPerson('achen', 'gkim', true, false, map)).toBe(true);
+  });
+
+  it('team-admin can edit anyone', () => {
+    expect(canEditPerson(null, 'bsmith', false, true, map)).toBe(true);
+    expect(canEditPerson('achen', 'gkim', false, true, map)).toBe(true);
   });
 
   it('manager can edit subordinates', () => {
-    expect(canEditPerson('achen', 'bsmith', false, map)).toBe(true);
-    expect(canEditPerson('achen', 'cwilliams', false, map)).toBe(true);
+    expect(canEditPerson('achen', 'bsmith', false, false, map)).toBe(true);
+    expect(canEditPerson('achen', 'cwilliams', false, false, map)).toBe(true);
   });
 
   it('manager cannot edit people outside subtree', () => {
-    expect(canEditPerson('achen', 'gkim', false, map)).toBe(false);
-    expect(canEditPerson('fjohnson', 'bsmith', false, map)).toBe(false);
+    expect(canEditPerson('achen', 'gkim', false, false, map)).toBe(false);
+    expect(canEditPerson('fjohnson', 'bsmith', false, false, map)).toBe(false);
   });
 
   it('non-manager cannot edit anyone', () => {
-    expect(canEditPerson('bsmith', 'cwilliams', false, map)).toBe(false);
+    expect(canEditPerson('bsmith', 'cwilliams', false, false, map)).toBe(false);
   });
 
   it('null actorUid (non-admin) cannot edit', () => {
-    expect(canEditPerson(null, 'bsmith', false, map)).toBe(false);
+    expect(canEditPerson(null, 'bsmith', false, false, map)).toBe(false);
   });
 });

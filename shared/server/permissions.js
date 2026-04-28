@@ -98,10 +98,12 @@ function isManager(uid, registry) {
  * @param {string|null} uid - The user's UID (null if not in registry)
  * @param {{ people: Object }} registry
  * @param {boolean} isAdminFlag - Whether the user is an admin
- * @returns {'admin'|'manager'|'user'}
+ * @param {boolean} [isTeamAdminFlag] - Whether the user is a team admin
+ * @returns {'admin'|'team-admin'|'manager'|'user'}
  */
-function getPermissionTier(uid, registry, isAdminFlag) {
+function getPermissionTier(uid, registry, isAdminFlag, isTeamAdminFlag) {
   if (isAdminFlag) return 'admin';
+  if (isTeamAdminFlag) return 'team-admin';
   if (!uid) return 'user';
   if (isManager(uid, registry)) return 'manager';
   return 'user';
@@ -112,11 +114,13 @@ function getPermissionTier(uid, registry, isAdminFlag) {
  * @param {string|null} actorUid
  * @param {string} targetUid
  * @param {boolean} isAdminFlag
+ * @param {boolean} isTeamAdminFlag
  * @param {Map<string, Set<string>>} managerMap
  * @returns {boolean}
  */
-function canEditPerson(actorUid, targetUid, isAdminFlag, managerMap) {
+function canEditPerson(actorUid, targetUid, isAdminFlag, isTeamAdminFlag, managerMap) {
   if (isAdminFlag) return true;
+  if (isTeamAdminFlag) return true;
   if (!actorUid) return false;
   const managed = getManagedUids(actorUid, managerMap);
   return managed.has(targetUid);
