@@ -361,7 +361,11 @@ Stores all in-app managed teams. Created when `teamDataSource` is set to `"in-ap
       "createdBy": "admin@example.com",
       "metadata": {
         "field_g7h8i9": "Pat Manager"
-      }
+      },
+      "boards": [
+        { "url": "https://redhat.atlassian.net/jira/software/c/projects/RHOAIENG/boards/1103", "name": "RHOAIENG - Platform" },
+        { "url": "https://redhat.atlassian.net/jira/software/c/projects/RHOAIENG/boards/1200", "name": "" }
+      ]
     }
   }
 }
@@ -373,6 +377,9 @@ Stores all in-app managed teams. Created when `teamDataSource` is set to `"in-ap
 - `orgKey` links the team to an org root UID.
 - `metadata` stores team-level custom field values, keyed by field definition ID. Empty object `{}` when no team fields are set.
 - `createdBy` is the email of the user who created the team.
+- `boards` is an array of `{ url, name }` objects representing user-managed Jira board links. `url` is required (non-empty string), `name` is optional (empty string means no display name set). Defaults to `[]` on new teams. Populated during Sheets-to-In-App migration from `teams-metadata.json` board data.
+
+**Note:** Sprint tracking boards (`sprint-data/teams.json`) and team record boards (`team-data/teams.json[].boards`) are separate data stores with different lifecycles. Sprint tracking boards are auto-discovered from Jira and include sprint-specific metadata (filters, staleness). Team record boards are user-managed URLs. A future enhancement may link these two systems.
 
 ## Field Definitions — `data/team-data/field-definitions.json`
 
@@ -419,7 +426,7 @@ Stores custom field definitions for person-level and team-level fields. Created 
 - `personFields` and `teamFields` are arrays sorted by `order`.
 - Field IDs follow the pattern `field_` + 6 hex characters (e.g., `field_x1y2z3`).
 - `type` is one of: `"free-text"`, `"constrained"`, `"person-reference-linked"`.
-- `multiValue` is a boolean. When `true` (only valid for `constrained` type), the field accepts an array of selected values. Defaults to `false`.
+- `multiValue` is a boolean. When `true`, the field accepts an array of values. Valid for all field types (`constrained`, `free-text`, `person-reference-linked`). Defaults to `false`.
 - `deleted` supports soft-delete — deleted fields are hidden from the UI but values are preserved.
 - `allowedValues` is an array of strings for `constrained` fields (the set of selectable options), or `null` for other field types. Maximum 100 items, each up to 200 characters.
 - At most one person field can have `primaryDisplay: true`.
@@ -451,7 +458,7 @@ Append-only log of team structure management actions. Entries are added by team,
 
 **Notes:**
 - `entries` is ordered newest-first (prepended). Capped at `maxEntries` (10,000) — oldest entries are trimmed.
-- `action` values include: `team.create`, `team.rename`, `team.delete`, `person.team.assign`, `person.team.unassign`, `person.fields.update`, `team.fields.update`, `field.create`, `field.update`, `field.delete`, `field.reorder`, `migration.sheets_to_inapp`.
+- `action` values include: `team.create`, `team.rename`, `team.delete`, `team.boards.update`, `person.team.assign`, `person.team.unassign`, `person.fields.update`, `team.fields.update`, `field.create`, `field.update`, `field.delete`, `field.reorder`, `migration.sheets_to_inapp`.
 - `entityType` is one of: `"team"`, `"person"`, `"field"`, `"system"`.
 - `field`, `oldValue`, `newValue` are used for change-tracking (e.g., rename, field value updates). `null` when not applicable.
 - `detail` is a human-readable summary of the action.

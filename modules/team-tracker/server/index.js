@@ -770,6 +770,38 @@ module.exports = function registerRoutes(router, context) {
     res.json(response);
   });
 
+  // ─── Team Boards ───
+
+  router.patch('/structure/teams/:teamId/boards', requireTeamAdmin, function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const { boards } = req.body;
+    if (!Array.isArray(boards)) {
+      return res.status(400).json({ error: 'boards must be an array' });
+    }
+    if (boards.length > 50) {
+      return res.status(400).json({ error: 'boards array exceeds maximum of 50 entries' });
+    }
+    for (const b of boards) {
+      if (!b.url || typeof b.url !== 'string') {
+        return res.status(400).json({ error: 'Each board must have a url string' });
+      }
+      if (!b.url.startsWith('https://') && !b.url.startsWith('http://')) {
+        return res.status(400).json({ error: 'Each board url must start with https:// or http://' });
+      }
+      if (b.url.length > 2048) {
+        return res.status(400).json({ error: 'Board url exceeds maximum length of 2048 characters' });
+      }
+    }
+    try {
+      const result = teamStore.updateTeamBoards(storage, req.params.teamId, boards, req.auditActor);
+      if (!result) return res.status(404).json({ error: 'Team not found' });
+      res.json({ boards: result });
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
+  });
+
   // ─── Audit Log ───
 
   router.get('/structure/audit-log', function(req, res) {

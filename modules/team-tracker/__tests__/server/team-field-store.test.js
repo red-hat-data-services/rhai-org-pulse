@@ -11,6 +11,65 @@ function makeStorage(initial = {}) {
   }
 }
 
+describe('team-store createTeam', () => {
+  it('initializes boards as empty array', () => {
+    const storage = makeStorage({
+      'team-data/teams.json': { teams: {} },
+      'audit-log.json': { entries: [] }
+    })
+    const team = teamStore.createTeam(storage, 'New Team', 'org1', 'admin@test.com')
+    expect(team.boards).toEqual([])
+  })
+})
+
+describe('team-store updateTeamBoards', () => {
+  it('replaces boards array', () => {
+    const storage = makeStorage({
+      'team-data/teams.json': {
+        teams: {
+          team_abc: { id: 'team_abc', name: 'Platform', orgKey: 'achen', metadata: {}, boards: [] }
+        }
+      },
+      'audit-log.json': { entries: [] }
+    })
+
+    const boards = [
+      { url: 'https://jira.example.com/board/1', name: 'Board 1' },
+      { url: 'https://jira.example.com/board/2' }
+    ]
+    const result = teamStore.updateTeamBoards(storage, 'team_abc', boards, 'admin@test.com')
+    expect(result).toHaveLength(2)
+    expect(result[0].url).toBe('https://jira.example.com/board/1')
+    expect(result[0].name).toBe('Board 1')
+    expect(result[1].name).toBe('') // defaults to empty string
+  })
+
+  it('returns null for unknown team', () => {
+    const storage = makeStorage({
+      'team-data/teams.json': { teams: {} },
+      'audit-log.json': { entries: [] }
+    })
+    const result = teamStore.updateTeamBoards(storage, 'team_nope', [], 'admin@test.com')
+    expect(result).toBeNull()
+  })
+
+  it('creates audit log entry', () => {
+    const storage = makeStorage({
+      'team-data/teams.json': {
+        teams: {
+          team_abc: { id: 'team_abc', name: 'Platform', orgKey: 'achen', metadata: {}, boards: [] }
+        }
+      },
+      'audit-log.json': { entries: [] }
+    })
+
+    teamStore.updateTeamBoards(storage, 'team_abc', [{ url: 'https://example.com', name: '' }], 'admin@test.com')
+    const log = storage._data['audit-log.json']
+    expect(log.entries.length).toBeGreaterThan(0)
+    expect(log.entries[0].action).toBe('team.boards.update')
+  })
+})
+
 describe('team-store updateTeamFields', () => {
   it('sets team field values', () => {
     const storage = makeStorage({

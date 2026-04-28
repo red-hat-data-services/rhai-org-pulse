@@ -51,13 +51,22 @@ describe('field-store', () => {
       expect(field.allowedValues).toEqual(['Go', 'Rust'])
     })
 
-    it('ignores multiValue for non-constrained types', () => {
+    it('allows multiValue on free-text fields', () => {
       const storage = makeStorageWithFieldDefs({ personFields: [], teamFields: [] })
       const field = fieldStore.createFieldDefinition(storage, 'person', {
         label: 'Notes', type: 'free-text', multiValue: true
       }, 'admin@test.com')
 
-      expect(field.multiValue).toBe(false)
+      expect(field.multiValue).toBe(true)
+    })
+
+    it('allows multiValue on person-reference-linked fields', () => {
+      const storage = makeStorageWithFieldDefs({ personFields: [], teamFields: [] })
+      const field = fieldStore.createFieldDefinition(storage, 'person', {
+        label: 'Leads', type: 'person-reference-linked', multiValue: true
+      }, 'admin@test.com')
+
+      expect(field.multiValue).toBe(true)
     })
 
     it('rejects invalid allowedValues (not array)', () => {

@@ -339,6 +339,7 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/modules/team-tracker/structure/field-definitions/team/:fieldId` — edit team field definition (admin/team-admin)
 - `/api/modules/team-tracker/structure/person/:uid/fields` — update person field values (manager/admin)
 - `/api/modules/team-tracker/structure/teams/:teamId/fields` — update team field values (admin/team-admin). Returns flat metadata object `{ fieldId: value, ... }` with optional `_warnings` array, not the full team object.
+- `/api/modules/team-tracker/structure/teams/:teamId/boards` — update team boards `{ boards: [{url, name?}] }` (admin/team-admin). Returns `{ boards: [...] }`
 
 **DELETE:**
 - `/api/tokens/:id` — revoke own API token

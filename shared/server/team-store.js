@@ -41,7 +41,8 @@ function createTeam(storage, name, orgKey, actorEmail) {
     orgKey,
     createdAt: new Date().toISOString(),
     createdBy: actorEmail,
-    metadata: {}
+    metadata: {},
+    boards: []
   };
 
   data.teams[id] = team;
@@ -323,8 +324,68 @@ function updateTeamFields(storage, teamId, fields, actorEmail) {
   return team;
 }
 
+/**
+ * Update a team's boards array (replace semantics).
+ * @param {object} storage
+ * @param {string} teamId
+ * @param {Array<{ url: string, name?: string }>} boards
+ * @param {string} actorEmail
+ * @returns {object|null} The updated boards array, or null if team not found
+ */
+const MAX_BOARDS = 50;
+const MAX_URL_LENGTH = 2048;
+const MAX_NAME_LENGTH = 200;
+
+function isValidBoardUrl(url) {
+  return typeof url === 'string' && (url.startsWith('https://') || url.startsWith('http://'));
+}
+
+function updateTeamBoards(storage, teamId, boards, actorEmail) {
+  const data = readTeams(storage);
+  const team = data.teams[teamId];
+  if (!team) return null;
+
+  if (boards.length > MAX_BOARDS) {
+    throw new Error(`boards array exceeds maximum of ${MAX_BOARDS} entries`);
+  }
+
+  // Validate and normalize board entries
+  for (const b of boards) {
+    if (!isValidBoardUrl(b.url)) {
+      throw new Error('Each board url must start with https:// or http://');
+    }
+    if (b.url.length > MAX_URL_LENGTH) {
+      throw new Error(`Board url exceeds maximum length of ${MAX_URL_LENGTH} characters`);
+    }
+  }
+
+  const normalized = boards.map(b => ({
+    url: b.url,
+    name: typeof b.name === 'string' ? b.name.slice(0, MAX_NAME_LENGTH) : ''
+  }));
+
+  const oldBoards = team.boards || [];
+  team.boards = normalized;
+  writeTeams(storage, data);
+
+  appendAuditEntry(storage, {
+    action: 'team.boards.update',
+    actor: actorEmail,
+    entityType: 'team',
+    entityId: teamId,
+    entityLabel: team.name,
+    field: 'boards',
+    oldValue: oldBoards,
+    newValue: normalized,
+    detail: `Updated boards for team "${team.name}" (${normalized.length} boards)`
+  });
+
+  return normalized;
+}
+
 module.exports = {
   readTeams,
+  writeTeams,
   createTeam,
   renameTeam,
   deleteTeam,
@@ -333,6 +394,8 @@ module.exports = {
   unassignMember,
   getUnassigned,
   updateTeamFields,
+  updateTeamBoards,
+  generateTeamId,
   TEAMS_KEY,
   REGISTRY_KEY
 };

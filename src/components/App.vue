@@ -12,6 +12,7 @@
       :modules="gitStaticModules"
       :built-in-manifests="builtInManifests"
       :title-prefix="titlePrefix"
+      :team-data-source="rosterData?.teamDataSource || ''"
       @navigate="handleSidebarNavigate"
       @toggle-collapse="sidebarCollapsed = !sidebarCollapsed"
       @close-mobile="mobileMenuOpen = false"
@@ -232,7 +233,7 @@ export default {
     const { user: authUser, isAdmin: authIsAdmin, isTeamAdmin: authIsTeamAdmin, refresh: refreshAuth } = useAuth()
     const { isImpersonating, impersonatingUid: impersonatingUidRef, impersonatingName: impersonatingNameRef, stopImpersonating } = useImpersonation()
     const { refresh: refreshPermissions } = usePermissions()
-    const { loadRoster, teams, selectedOrgKey, selectOrg } = useRoster()
+    const { loadRoster, teams, selectedOrgKey, selectOrg, rosterData } = useRoster()
     const { loadGithubStats } = useGithubStats()
     const { loadGitlabStats } = useGitlabStats()
     const { modulesData, loadModules, enabledBuiltInSlugs, loadEnabledBuiltInSlugs } = useModules()
@@ -387,6 +388,7 @@ export default {
       allBuiltInManifests,
       builtInManifests,
       loadBuiltInManifestsFromApi,
+      rosterData,
       rosterTeams: teams,
       selectedOrgKey,
       selectOrg,

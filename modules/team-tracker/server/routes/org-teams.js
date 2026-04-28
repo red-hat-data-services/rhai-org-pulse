@@ -7,7 +7,7 @@
 const { runSync, calculateHeadcountByRole, parseTeamBoardsTab } = require('../org-sync');
 const { fetchAllRfeBacklog } = require('../rfe');
 const { getAllPeople, getTeamRollup, collectRoleNames } = require('../../../../shared/server/roster');
-const { getOrgDisplayNames } = require('../../../../shared/server/roster-sync/config');
+const { getOrgDisplayNames, loadConfig: loadRosterSyncConfig } = require('../../../../shared/server/roster-sync/config');
 const { fetchRawSheet } = require('../../../../shared/server/google-sheets');
 
 let orgSyncInProgress = false;
@@ -64,6 +64,9 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
   }
 
   function buildEnrichedTeams(orgFilter) {
+    const rosterConfig = loadRosterSyncConfig(storage);
+    const isInAppMode = (rosterConfig?.teamDataSource || 'sheets') === 'in-app';
+
     const metaData = readFromStorage('org-roster/teams-metadata.json');
     const compData = readFromStorage('org-roster/components.json');
     const componentMap = compData?.components || {};
@@ -82,8 +85,12 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
     const orgKeyToDisplay = buildOrgKeyToDisplayName();
     const orgTeamPeopleMap = groupPeopleByOrgTeam(allPeople, orgKeyToDisplay);
 
-    const rosterNames = new Set(allPeople.map(p => p.name).filter(Boolean));
-    const allNames = collectRoleNames(allPeople, ['engineeringLead', 'productManager'], rosterNames);
+    // In in-app mode, PM/Eng Lead are team fields in metadata — skip person-level rollup
+    let allNames = new Set();
+    if (!isInAppMode) {
+      const rosterNames = new Set(allPeople.map(p => p.name).filter(Boolean));
+      allNames = collectRoleNames(allPeople, ['engineeringLead', 'productManager'], rosterNames);
+    }
 
     const teams = [];
     for (const [compositeKey, teamPeople] of Object.entries(orgTeamPeopleMap)) {
@@ -93,8 +100,8 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
       if (orgFilter && org !== orgFilter) continue;
 
       const counts = calculateHeadcountByRole(teamPeople);
-      const engLeads = getTeamRollup(teamPeople, 'engineeringLead', allNames);
-      const productManagers = getTeamRollup(teamPeople, 'productManager', allNames);
+      const engLeads = isInAppMode ? [] : getTeamRollup(teamPeople, 'engineeringLead', allNames);
+      const productManagers = isInAppMode ? [] : getTeamRollup(teamPeople, 'productManager', allNames);
 
       const filterCounts = {};
       for (const p of teamPeople) {
@@ -103,10 +110,12 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
       }
       const jiraFilter = Object.entries(filterCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
 
-      // Enrich with metadata (board URLs, etc.) if available
+      // Boards: will be enriched after structure lookup (priority cascade)
       const meta = metaByKey[compositeKey];
       const teamBoardUrls = meta?.boardUrls || [];
-      const boards = teamBoardUrls.map(url => ({ url, name: boardNames[url] || null }));
+      const metaBoards = teamBoardUrls.map(url => ({ url, name: boardNames[url] || null }));
+      // Default to metadata boards; overridden below if structure boards exist
+      let boards = metaBoards;
 
       const components = [];
       for (const [comp, teamNames] of Object.entries(componentMap)) {
@@ -130,6 +139,11 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
       if (structure) {
         team.structureId = structure.id;
         team.metadata = structure.metadata || {};
+        // Priority cascade: prefer structure boards over metadata boards
+        if (Array.isArray(structure.boards)) {
+          team.boards = structure.boards;
+          team.boardUrls = structure.boards.map(b => b.url);
+        }
       }
     }
 

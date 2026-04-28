@@ -55,8 +55,41 @@
             </label>
           </div>
 
+          <!-- Scope selector -->
+          <div class="flex flex-wrap items-center gap-3 mb-3">
+            <label class="text-sm text-gray-600 dark:text-gray-400">Scope:</label>
+            <div class="inline-flex rounded-md shadow-sm" role="group">
+              <button
+                type="button"
+                @click="overrides[field.key].scope = 'person'"
+                class="px-3 py-1 text-xs font-medium border rounded-l-md transition-colors"
+                :class="overrides[field.key].scope === 'person'
+                  ? 'bg-primary-600 text-white border-primary-600'
+                  : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'"
+              >
+                Person Field
+              </button>
+              <button
+                type="button"
+                @click="overrides[field.key].scope = 'team'"
+                class="px-3 py-1 text-xs font-medium border-t border-b border-r rounded-r-md transition-colors"
+                :class="overrides[field.key].scope === 'team'
+                  ? 'bg-primary-600 text-white border-primary-600'
+                  : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'"
+              >
+                Team Field
+              </button>
+            </div>
+          </div>
+
           <!-- Info badges -->
           <div class="flex flex-wrap gap-2 mb-2">
+            <span v-if="field.suggestedScope === 'team'" class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+              {{ field.uniformTeamPct }}% of teams have uniform values — suggested as team field
+            </span>
+            <span v-if="overrides[field.key].scope === 'team' && !overrides[field.key].multiValue" class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
+              Non-uniform teams will store multiple values automatically
+            </span>
             <span v-if="field.hasCommas" class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
               Comma-separated values detected
             </span>
@@ -141,7 +174,8 @@ onMounted(async () => {
     for (const field of data.fields) {
       overrides[field.key] = {
         type: field.suggestedType,
-        multiValue: field.suggestedMultiValue
+        multiValue: field.suggestedMultiValue,
+        scope: field.suggestedScope || 'person'
       }
     }
   } catch (err) {
@@ -155,7 +189,8 @@ const fieldOverridesList = computed(() =>
   preview.value.fields.map(f => ({
     key: f.key,
     type: overrides[f.key]?.type || 'free-text',
-    multiValue: overrides[f.key]?.multiValue || false
+    multiValue: overrides[f.key]?.multiValue || false,
+    scope: overrides[f.key]?.scope || 'person'
   }))
 )
 </script>

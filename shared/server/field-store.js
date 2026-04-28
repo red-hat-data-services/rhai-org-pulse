@@ -137,7 +137,7 @@ function createFieldDefinition(storage, scope, definition, actorEmail) {
     id: generateFieldId(),
     label: definition.label,
     type: fieldType,
-    multiValue: fieldType === 'constrained' ? (definition.multiValue || false) : false,
+    multiValue: definition.multiValue || false,
     required: definition.required || false,
     visible: definition.visible !== false,
     primaryDisplay: definition.primaryDisplay || false,

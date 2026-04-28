@@ -315,7 +315,8 @@ const props = defineProps({
   isTeamAdmin: { type: Boolean, default: false },
   modules: { type: Array, default: () => [] },
   builtInManifests: { type: Array, default: () => [] },
-  titlePrefix: { type: String, default: '' }
+  titlePrefix: { type: String, default: '' },
+  teamDataSource: { type: String, default: '' }
 })
 
 defineEmits(['navigate', 'toggle-collapse', 'close-mobile'])
@@ -381,6 +382,7 @@ const navSections = computed(() => {
       headerIcon: resolveIcon(manifest.icon),
       items: navItems
         .filter(item => {
+          if (item.requireCondition === 'in-app-mode' && props.teamDataSource !== 'in-app') return false
           if (!item.requireRole) return true
           if (props.isAdmin) return true
           if (item.requireRole === 'team-admin') return props.isTeamAdmin
