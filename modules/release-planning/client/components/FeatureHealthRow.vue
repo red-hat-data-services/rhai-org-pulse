@@ -8,7 +8,9 @@ const props = defineProps({
   feature: { type: Object, required: true },
   expanded: { type: Boolean, default: false },
   canEdit: { type: Boolean, default: false },
-  jiraBaseUrl: { type: String, default: '' }
+  jiraBaseUrl: { type: String, default: '' },
+  isAdded: { type: Boolean, default: false },
+  showChanges: { type: Boolean, default: true }
 })
 
 const emit = defineEmits(['toggle', 'toggleDorItem', 'updateNotes', 'setOverride', 'removeOverride'])
@@ -78,15 +80,6 @@ var priorityScoreClass = computed(function() {
   return 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400'
 })
 
-var priorityTooltip = computed(function() {
-  if (!props.feature.priorityBreakdown) return ''
-  var b = props.feature.priorityBreakdown
-  return 'RICE: ' + b.rice + '% (30w)\n' +
-         'Big Rock: ' + b.bigRock + '% (30w)\n' +
-         'Priority: ' + b.priority + '% (25w)\n' +
-         'Complexity: ' + b.complexity + '% (15w)'
-})
-
 var featureUrl = computed(function() {
   if (props.feature.jiraUrl) return props.feature.jiraUrl
   if (props.jiraBaseUrl && props.feature.key) return props.jiraBaseUrl + '/' + props.feature.key
@@ -115,6 +108,7 @@ var flagSeverityClass = {
   <!-- Main row -->
   <tr
     class="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
+    :class="isAdded && showChanges ? 'border-l-4 border-l-green-500 bg-green-50/50 dark:bg-green-500/5' : ''"
     @click="handleToggle"
   >
     <!-- Expand toggle -->
@@ -153,7 +147,9 @@ var flagSeverityClass = {
       </div>
     </td>
     <!-- Summary -->
-    <td class="px-3 py-2 text-gray-900 dark:text-gray-100 max-w-[200px] truncate border border-gray-300 dark:border-gray-600 text-xs">{{ feature.summary }}</td>
+    <td class="px-3 py-2 text-gray-900 dark:text-gray-100 max-w-[300px] border border-gray-300 dark:border-gray-600 text-xs">
+      <span class="line-clamp-2" :title="feature.summary">{{ feature.summary }}</span>
+    </td>
     <!-- Status -->
     <td class="px-3 py-2 border border-gray-300 dark:border-gray-600">
       <StatusBadge :status="feature.status" />
@@ -178,13 +174,23 @@ var flagSeverityClass = {
       </div>
     </td>
     <!-- Priority -->
-    <td class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-center" :title="priorityTooltip">
+    <td class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-center relative group/priority">
       <span
         v-if="feature.priorityScore != null"
         class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold"
         :class="priorityScoreClass"
       >{{ feature.priorityScore }}</span>
       <span v-else class="text-gray-400 dark:text-gray-600 text-xs">-</span>
+      <div v-if="feature.priorityBreakdown"
+           class="hidden group-hover/priority:block absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-1 w-44 bg-gray-900 text-white text-[10px] rounded-lg p-2 shadow-lg pointer-events-none">
+        <div class="font-semibold mb-1">Priority Breakdown</div>
+        <div class="space-y-0.5">
+          <div class="flex justify-between"><span>RICE (30w)</span><span>{{ feature.priorityBreakdown.rice }}%</span></div>
+          <div class="flex justify-between"><span>Big Rock (30w)</span><span>{{ feature.priorityBreakdown.bigRock }}%</span></div>
+          <div class="flex justify-between"><span>Priority (25w)</span><span>{{ feature.priorityBreakdown.priority }}%</span></div>
+          <div class="flex justify-between"><span>Complexity (15w)</span><span>{{ feature.priorityBreakdown.complexity }}%</span></div>
+        </div>
+      </div>
     </td>
     <!-- RICE -->
     <td class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-center" @click.stop>
@@ -219,6 +225,13 @@ var flagSeverityClass = {
 
           <!-- Risk Flags & Details -->
           <div class="space-y-3">
+            <!-- Commitment Status -->
+            <div v-if="isAdded && showChanges" class="bg-green-50 dark:bg-green-500/10 rounded-lg border border-green-200 dark:border-green-500/30 p-3">
+              <div class="text-xs font-semibold text-green-700 dark:text-green-400 mb-1">Added After Commitment</div>
+              <div class="text-xs text-green-600 dark:text-green-400/80">
+                This feature was not in the committed list when the snapshot was taken.
+              </div>
+            </div>
             <!-- Risk flags -->
             <div v-if="riskFlags.length > 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
               <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Risk Flags</div>
@@ -309,6 +322,20 @@ var flagSeverityClass = {
                 <div v-if="feature.tshirtSize">
                   <span class="text-gray-500 dark:text-gray-400">Size:</span>
                   <span class="ml-1 text-gray-900 dark:text-gray-100">{{ feature.tshirtSize }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Version History -->
+            <div v-if="feature.versionHistory && feature.versionHistory.length > 0"
+                 class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+              <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Version History</div>
+              <div class="space-y-1">
+                <div v-for="(change, idx) in feature.versionHistory" :key="idx" class="text-xs text-gray-600 dark:text-gray-400">
+                  <span class="text-gray-400">{{ change.date ? new Date(change.date).toLocaleDateString() : '' }}:</span>
+                  <span v-if="change.from" class="line-through text-red-500 ml-1">{{ change.from }}</span>
+                  <span class="mx-1">&rarr;</span>
+                  <span class="text-green-600">{{ change.to }}</span>
                 </div>
               </div>
             </div>

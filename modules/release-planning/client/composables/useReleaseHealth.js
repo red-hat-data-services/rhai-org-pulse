@@ -116,6 +116,29 @@ export function useReleaseHealth() {
     }
   }
 
+  async function searchJiraFields(query) {
+    return apiRequest(API_BASE + '/releases/health-admin/jira-fields?query=' + encodeURIComponent(query))
+  }
+
+  async function loadRiceConfig() {
+    return apiRequest(API_BASE + '/releases/health-admin/config')
+  }
+
+  async function saveRiceConfig(fieldIds, enableRice) {
+    return apiRequest(API_BASE + '/releases/health-admin/config', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ riceFieldIds: fieldIds, enableRice: enableRice })
+    })
+  }
+
+  async function createSnapshot(version, phase) {
+    return apiRequest(
+      API_BASE + '/releases/' + encodeURIComponent(version) + '/health/snapshot/' + encodeURIComponent(phase),
+      { method: 'POST' }
+    )
+  }
+
   return {
     healthData: healthData,
     healthLoading: healthLoading,
@@ -127,6 +150,10 @@ export function useReleaseHealth() {
     setRiskOverride: setRiskOverride,
     removeRiskOverride: removeRiskOverride,
     triggerHealthRefresh: triggerHealthRefresh,
-    checkHealthRefreshStatus: checkHealthRefreshStatus
+    checkHealthRefreshStatus: checkHealthRefreshStatus,
+    createSnapshot: createSnapshot,
+    searchJiraFields: searchJiraFields,
+    loadRiceConfig: loadRiceConfig,
+    saveRiceConfig: saveRiceConfig
   }
 }

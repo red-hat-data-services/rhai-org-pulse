@@ -9,11 +9,13 @@ import ReleaseSelector from '../components/ReleaseSelector.vue'
 import MilestoneTimeline from '../components/MilestoneTimeline.vue'
 import HealthFilterBar from '../components/HealthFilterBar.vue'
 import FeatureHealthTable from '../components/FeatureHealthTable.vue'
+import RiceFieldConfig from '../components/RiceFieldConfig.vue'
 
 var {
   healthData, healthLoading, healthError, healthRefreshing, healthCacheStale,
   loadHealth, triggerHealthRefresh, checkHealthRefreshStatus,
-  removeRiskOverride: removeRiskOverrideApi
+  removeRiskOverride: removeRiskOverrideApi,
+  createSnapshot
 } = useReleaseHealth()
 
 var { toggleItem, updateNotes, cancelAll: cancelDorPending } = useDorChecklist()
@@ -24,6 +26,9 @@ var selectedVersion = ref('')
 
 // Phase tabs
 var activePhase = ref('EA1')
+
+// Admin settings
+var showRiceConfig = ref(false)
 
 // Filter state
 var bigRockFilter = ref('')
@@ -105,6 +110,45 @@ var phasedFeatures = computed(function() {
     return passesPhaseFilter(f, selectedVersion.value, activePhase.value, strict)
   })
 })
+
+// ─── Committed snapshot + visual diff ───
+
+var showChanges = ref(true)
+
+var committedSnapshot = computed(function() {
+  if (!healthData.value || !healthData.value.committedSnapshots) return null
+  return healthData.value.committedSnapshots[activePhase.value] || null
+})
+
+var addedFeatureKeys = computed(function() {
+  var snap = committedSnapshot.value
+  if (!snap || !isPhaseCommitted(activePhase.value)) return new Set()
+  var snapKeys = new Set(snap.featureKeys)
+  var added = new Set()
+  for (var i = 0; i < phasedFeatures.value.length; i++) {
+    if (!snapKeys.has(phasedFeatures.value[i].key)) {
+      added.add(phasedFeatures.value[i].key)
+    }
+  }
+  return added
+})
+
+var removedFeatures = computed(function() {
+  var snap = committedSnapshot.value
+  if (!snap || !isPhaseCommitted(activePhase.value)) return []
+  if (!snap.features) return []
+  var currentKeys = new Set(phasedFeatures.value.map(function(f) { return f.key }))
+  return snap.features.filter(function(f) { return !currentKeys.has(f.key) })
+})
+
+function handleResnapshot() {
+  if (!selectedVersion.value || !activePhase.value) return
+  createSnapshot(selectedVersion.value, activePhase.value).then(function() {
+    loadHealth(selectedVersion.value)
+  }).catch(function(err) {
+    healthError.value = err.message || 'Failed to create snapshot'
+  })
+}
 
 // ─── Tab feature counts ───
 
@@ -318,7 +362,24 @@ onUnmounted(function() {
         >
           {{ healthRefreshing ? 'Refreshing...' : 'Refresh' }}
         </button>
+        <button
+          v-if="canEdit"
+          @click="showRiceConfig = !showRiceConfig"
+          :title="showRiceConfig ? 'Hide RICE settings' : 'RICE settings'"
+          class="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 rounded"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </button>
       </div>
+    </div>
+
+    <!-- RICE Configuration (admin only) -->
+    <div v-if="showRiceConfig && canEdit" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+      <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">RICE Configuration</h3>
+      <RiceFieldConfig />
     </div>
 
     <!-- Demo mode banner -->
@@ -390,6 +451,41 @@ onUnmounted(function() {
         </div>
       </div>
 
+      <!-- Committed snapshot info -->
+      <div v-if="committedSnapshot && isPhaseCommitted(activePhase)" class="flex items-center gap-3 flex-wrap">
+        <span class="text-xs text-gray-500 dark:text-gray-400">
+          Committed {{ committedSnapshot.featureCount }} features on {{ formatDate(committedSnapshot.snapshotAt) }}
+        </span>
+        <label class="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400 cursor-pointer">
+          <input type="checkbox" v-model="showChanges" class="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500" />
+          Show changes since commit
+        </label>
+        <button v-if="canEdit" @click="handleResnapshot" class="text-xs text-primary-600 dark:text-primary-400 hover:underline">
+          Re-snapshot
+        </button>
+      </div>
+
+      <!-- Changes since commitment summary -->
+      <div v-if="committedSnapshot && isPhaseCommitted(activePhase) && showChanges && (addedFeatureKeys.size > 0 || removedFeatures.length > 0)"
+           class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          Changes Since Commitment
+        </h3>
+        <div class="flex gap-6 text-sm">
+          <div v-if="addedFeatureKeys.size > 0" class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-green-500"></span>
+            <span class="text-gray-600 dark:text-gray-400">{{ addedFeatureKeys.size }} added</span>
+          </div>
+          <div v-if="removedFeatures.length > 0" class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-red-500"></span>
+            <span class="text-gray-600 dark:text-gray-400">{{ removedFeatures.length }} removed</span>
+          </div>
+          <div class="text-gray-500 dark:text-gray-400">
+            {{ phasedFeatures.length }} current (was {{ committedSnapshot.featureCount }})
+          </div>
+        </div>
+      </div>
+
       <!-- Filters -->
       <HealthFilterBar
         v-model:bigRockFilter="bigRockFilter"
@@ -406,6 +502,9 @@ onUnmounted(function() {
         :features="filteredFeatures"
         :canEdit="canEdit"
         :jiraBaseUrl="jiraBaseUrl"
+        :addedKeys="addedFeatureKeys"
+        :removedFeatures="removedFeatures"
+        :showChanges="showChanges"
         @toggleDorItem="handleDorToggle"
         @updateNotes="handleNotesUpdate"
         @removeOverride="handleRemoveOverride"
