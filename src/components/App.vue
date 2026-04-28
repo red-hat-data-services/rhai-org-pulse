@@ -21,6 +21,26 @@
       class="min-h-screen transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)]"
       :class="sidebarCollapsed ? 'pl-[72px]' : 'pl-[260px]'"
     >
+      <!-- Impersonation banner -->
+      <div
+        v-if="isImpersonating"
+        class="sticky top-0 z-20 flex items-center justify-center gap-3 px-4 py-2 bg-amber-100 dark:bg-amber-900/40 border-b border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-200 text-sm font-medium"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+        </svg>
+        <span>
+          Viewing as: <strong>{{ impersonatingDisplayName }}</strong> ({{ impersonatingUidValue }})
+          <span v-if="authUser?.permissionTier"> — {{ authUser.permissionTier }} tier</span>
+        </span>
+        <button
+          @click="handleStopImpersonating"
+          class="ml-2 px-3 py-1 text-xs font-semibold bg-amber-200 dark:bg-amber-800 hover:bg-amber-300 dark:hover:bg-amber-700 text-amber-900 dark:text-amber-100 rounded transition-colors"
+        >
+          Stop Impersonating
+        </button>
+      </div>
+
       <!-- Top bar -->
       <header class="sticky top-0 z-10 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-b border-gray-200/60 dark:border-gray-700/60">
         <div class="flex items-center justify-between px-6 lg:px-8 h-16">
@@ -176,6 +196,8 @@ import ModuleIframeView from './ModuleIframeView.vue'
 import BackendConnectivityModal from './BackendConnectivityModal.vue'
 import { computed, ref, readonly, provide, onUnmounted, watch } from 'vue'
 import { useAuth } from '@shared/client/composables/useAuth'
+import { useImpersonation } from '@shared/client/composables/useImpersonation'
+import { usePermissions } from '@shared/client/composables/usePermissions'
 import { useRoster } from '@shared/client/composables/useRoster'
 import { useGithubStats } from '@shared/client/composables/useGithubStats'
 import { useGitlabStats } from '@shared/client/composables/useGitlabStats'
@@ -206,7 +228,9 @@ export default {
     BackendConnectivityModal
   },
   setup() {
-    const { user: authUser, isAdmin: authIsAdmin } = useAuth()
+    const { user: authUser, isAdmin: authIsAdmin, refresh: refreshAuth } = useAuth()
+    const { isImpersonating, impersonatingUid: impersonatingUidRef, impersonatingName: impersonatingNameRef, stopImpersonating } = useImpersonation()
+    const { refresh: refreshPermissions } = usePermissions()
     const { loadRoster, teams, selectedOrgKey, selectOrg } = useRoster()
     const { loadGithubStats } = useGithubStats()
     const { loadGitlabStats } = useGitlabStats()
@@ -331,9 +355,20 @@ export default {
       moduleSlug: readonly(activeModuleSlugRef)
     })
 
+    function handleStopImpersonating() {
+      stopImpersonating({ refreshAuth, refreshPermissions })
+    }
+
+    const impersonatingUidValue = computed(() => impersonatingUidRef.value)
+    const impersonatingDisplayName = computed(() => impersonatingNameRef.value || impersonatingUidRef.value)
+
     return {
       authUser,
       authIsAdmin,
+      isImpersonating,
+      impersonatingUidValue,
+      impersonatingDisplayName,
+      handleStopImpersonating,
       titlePrefix,
       fetchSiteConfig,
       lastRefreshedLabel,

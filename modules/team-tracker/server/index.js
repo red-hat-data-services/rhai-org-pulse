@@ -507,7 +507,7 @@ module.exports = function registerRoutes(router, context) {
     const { name, orgKey } = req.body;
     if (!name || !orgKey) return res.status(400).json({ error: 'name and orgKey are required' });
     if (typeof name !== 'string' || name.length > 100) return res.status(400).json({ error: 'name must be a string of 100 characters or fewer' });
-    const team = teamStore.createTeam(storage, name.trim(), orgKey, req.userEmail);
+    const team = teamStore.createTeam(storage, name.trim(), orgKey, req.auditActor);
     rebuildManagerMap();
     res.status(201).json(team);
   });
@@ -518,7 +518,7 @@ module.exports = function registerRoutes(router, context) {
     const { name } = req.body;
     if (!name) return res.status(400).json({ error: 'name is required' });
     if (typeof name !== 'string' || name.length > 100) return res.status(400).json({ error: 'name must be a string of 100 characters or fewer' });
-    const team = teamStore.renameTeam(storage, req.params.teamId, name.trim(), req.userEmail);
+    const team = teamStore.renameTeam(storage, req.params.teamId, name.trim(), req.auditActor);
     if (!team) return res.status(404).json({ error: 'Team not found' });
     res.json(team);
   });
@@ -526,7 +526,7 @@ module.exports = function registerRoutes(router, context) {
   router.delete('/structure/teams/:teamId', requireAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
-    const result = teamStore.deleteTeam(storage, req.params.teamId, req.userEmail);
+    const result = teamStore.deleteTeam(storage, req.params.teamId, req.auditActor);
     if (!result) return res.status(404).json({ error: 'Team not found' });
     rebuildManagerMap();
     res.json(result);
@@ -541,7 +541,7 @@ module.exports = function registerRoutes(router, context) {
       if (guard) return;
       const { uid } = req.body;
       if (!uid) return res.status(400).json({ error: 'uid is required' });
-      const result = teamStore.assignMember(storage, req.params.teamId, uid, req.userEmail);
+      const result = teamStore.assignMember(storage, req.params.teamId, uid, req.auditActor);
       if (result.error) return res.status(404).json(result);
       rebuildManagerMap();
       res.json(result);
@@ -564,7 +564,7 @@ module.exports = function registerRoutes(router, context) {
         return res.status(403).json({ error: 'Not authorized for all requested people', denied });
       }
     }
-    const result = teamStore.assignMembersBulk(storage, req.params.teamId, uids, req.userEmail);
+    const result = teamStore.assignMembersBulk(storage, req.params.teamId, uids, req.auditActor);
     if (result.error) return res.status(404).json(result);
     rebuildManagerMap();
     res.json(result);
@@ -575,7 +575,7 @@ module.exports = function registerRoutes(router, context) {
     function(req, res) {
       const guard = demoWriteGuard(res);
       if (guard) return;
-      const result = teamStore.unassignMember(storage, req.params.teamId, req.params.uid, req.userEmail);
+      const result = teamStore.unassignMember(storage, req.params.teamId, req.params.uid, req.auditActor);
       if (result.error) return res.status(404).json(result);
       rebuildManagerMap();
       res.json(result);
@@ -619,7 +619,7 @@ module.exports = function registerRoutes(router, context) {
     try {
       const field = fieldStore.createFieldDefinition(storage, 'person', {
         label: label.trim(), type, required, visible, primaryDisplay, allowedValues, multiValue
-      }, req.userEmail);
+      }, req.auditActor);
       res.status(201).json(field);
     } catch (err) {
       return res.status(400).json({ error: err.message });
@@ -630,7 +630,7 @@ module.exports = function registerRoutes(router, context) {
     const guard = demoWriteGuard(res);
     if (guard) return;
     try {
-      const result = fieldStore.updateFieldDefinition(storage, 'person', req.params.fieldId, req.body, req.userEmail);
+      const result = fieldStore.updateFieldDefinition(storage, 'person', req.params.fieldId, req.body, req.auditActor);
       if (!result) return res.status(404).json({ error: 'Field not found' });
       res.json(result);
     } catch (err) {
@@ -641,7 +641,7 @@ module.exports = function registerRoutes(router, context) {
   router.delete('/structure/field-definitions/person/:fieldId', requireAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
-    const result = fieldStore.softDeleteField(storage, 'person', req.params.fieldId, req.userEmail);
+    const result = fieldStore.softDeleteField(storage, 'person', req.params.fieldId, req.auditActor);
     if (!result) return res.status(404).json({ error: 'Field not found' });
     res.json(result);
   });
@@ -651,7 +651,7 @@ module.exports = function registerRoutes(router, context) {
     if (guard) return;
     const { orderedIds } = req.body;
     if (!Array.isArray(orderedIds)) return res.status(400).json({ error: 'orderedIds array is required' });
-    fieldStore.reorderFields(storage, 'person', orderedIds, req.userEmail);
+    fieldStore.reorderFields(storage, 'person', orderedIds, req.auditActor);
     res.json({ ok: true });
   });
 
@@ -667,7 +667,7 @@ module.exports = function registerRoutes(router, context) {
     try {
       const field = fieldStore.createFieldDefinition(storage, 'team', {
         label: label.trim(), type, required, visible, primaryDisplay, allowedValues, multiValue
-      }, req.userEmail);
+      }, req.auditActor);
       res.status(201).json(field);
     } catch (err) {
       return res.status(400).json({ error: err.message });
@@ -678,7 +678,7 @@ module.exports = function registerRoutes(router, context) {
     const guard = demoWriteGuard(res);
     if (guard) return;
     try {
-      const result = fieldStore.updateFieldDefinition(storage, 'team', req.params.fieldId, req.body, req.userEmail);
+      const result = fieldStore.updateFieldDefinition(storage, 'team', req.params.fieldId, req.body, req.auditActor);
       if (!result) return res.status(404).json({ error: 'Field not found' });
       res.json(result);
     } catch (err) {
@@ -689,7 +689,7 @@ module.exports = function registerRoutes(router, context) {
   router.delete('/structure/field-definitions/team/:fieldId', requireAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
-    const result = fieldStore.softDeleteField(storage, 'team', req.params.fieldId, req.userEmail);
+    const result = fieldStore.softDeleteField(storage, 'team', req.params.fieldId, req.auditActor);
     if (!result) return res.status(404).json({ error: 'Field not found' });
     res.json(result);
   });
@@ -699,7 +699,7 @@ module.exports = function registerRoutes(router, context) {
     if (guard) return;
     const { orderedIds } = req.body;
     if (!Array.isArray(orderedIds)) return res.status(400).json({ error: 'orderedIds array is required' });
-    fieldStore.reorderFields(storage, 'team', orderedIds, req.userEmail);
+    fieldStore.reorderFields(storage, 'team', orderedIds, req.auditActor);
     res.json({ ok: true });
   });
 
@@ -722,7 +722,7 @@ module.exports = function registerRoutes(router, context) {
       const { validated, warnings, errors } = fieldStore.validateFieldValues(storage, 'person', req.body, existingValues);
       if (errors.length > 0) return res.status(400).json({ error: errors.join('; ') });
 
-      const result = fieldStore.updatePersonFields(storage, req.params.uid, validated, req.userEmail);
+      const result = fieldStore.updatePersonFields(storage, req.params.uid, validated, req.auditActor);
       if (!result) return res.status(404).json({ error: 'Person not found' });
       if (warnings.length > 0) result._warnings = warnings;
       res.json(result);
@@ -746,7 +746,7 @@ module.exports = function registerRoutes(router, context) {
     const { validated, warnings, errors } = fieldStore.validateFieldValues(storage, 'team', req.body, existingValues);
     if (errors.length > 0) return res.status(400).json({ error: errors.join('; ') });
 
-    const result = teamStore.updateTeamFields(storage, req.params.teamId, validated, req.userEmail);
+    const result = teamStore.updateTeamFields(storage, req.params.teamId, validated, req.auditActor);
     if (!result) return res.status(404).json({ error: 'Team not found' });
     // Return flat metadata (not full team object) + optional warnings
     const response = { ...(result.metadata || {}) };
@@ -807,7 +807,7 @@ module.exports = function registerRoutes(router, context) {
     const config = rosterSyncConfig.loadConfig(storage);
     if (!config) return res.status(400).json({ error: 'No config found' });
     const fieldOverrides = req.body?.fieldOverrides || null;
-    const result = migrateToInApp(storage, config, req.userEmail, fieldOverrides);
+    const result = migrateToInApp(storage, config, req.auditActor, fieldOverrides);
     if (result.migrated) {
       config._migratedToInApp = new Date().toISOString();
       rosterSyncConfig.saveConfig(storage, config);

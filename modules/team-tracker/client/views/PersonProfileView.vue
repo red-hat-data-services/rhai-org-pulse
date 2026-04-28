@@ -6,13 +6,15 @@ import { useRoster } from '@shared/client/composables/useRoster.js'
 import { useGithubStats } from '@shared/client/composables/useGithubStats.js'
 import { useGitlabStats } from '@shared/client/composables/useGitlabStats.js'
 import { usePermissions } from '@shared/client/composables/usePermissions.js'
+import { useImpersonation } from '@shared/client/composables/useImpersonation.js'
 import { useFieldDefinitions } from '@shared/client/composables/useFieldDefinitions.js'
 import PersonFieldEditor from '../components/PersonFieldEditor.vue'
 
 const nav = inject('moduleNav')
-const { isAdmin } = useAuth()
+const { isAdmin, refresh: refreshAuth } = useAuth()
 const { getTeamsForPerson, teams: allTeams, rosterData } = useRoster()
-const { canEdit } = usePermissions()
+const { canEdit, refresh: refreshPermissions } = usePermissions()
+const { startImpersonating } = useImpersonation()
 const { definitions, fetchDefinitions } = useFieldDefinitions()
 
 const isInAppMode = computed(() => rosterData.value?.teamDataSource === 'in-app')
@@ -184,6 +186,12 @@ function sourceLabel(source) {
   return source
 }
 
+function handleImpersonate() {
+  if (person.value?.uid) {
+    startImpersonating(person.value.uid, person.value.name, { refreshAuth, refreshPermissions })
+  }
+}
+
 watch([uid, personName], loadPerson)
 onMounted(() => {
   loadPerson()
@@ -227,9 +235,16 @@ onMounted(() => {
                 </div>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{{ person.title }}</p>
               </div>
-              <div v-if="isAdmin && person.status === 'inactive'" class="flex gap-2 flex-shrink-0">
-                <button @click="reactivate" class="px-3 py-1.5 text-xs bg-green-600 text-white rounded-md hover:bg-green-700">Reactivate</button>
-                <button @click="purge" class="px-3 py-1.5 text-xs border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20">Purge</button>
+              <div v-if="isAdmin" class="flex gap-2 flex-shrink-0">
+                <button
+                  v-if="person.status === 'active' && person.uid"
+                  @click="handleImpersonate"
+                  class="px-3 py-1.5 text-xs border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400 rounded-md hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+                >Impersonate</button>
+                <template v-if="person.status === 'inactive'">
+                  <button @click="reactivate" class="px-3 py-1.5 text-xs bg-green-600 text-white rounded-md hover:bg-green-700">Reactivate</button>
+                  <button @click="purge" class="px-3 py-1.5 text-xs border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20">Purge</button>
+                </template>
               </div>
             </div>
 

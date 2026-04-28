@@ -1,5 +1,5 @@
 import { ref, computed } from 'vue'
-import { getApiBase } from '@shared/client/services/api'
+import { apiRequest } from '@shared/client/services/api'
 
 const user = ref(null)
 const loading = ref(true)
@@ -14,15 +14,17 @@ export function useAuth() {
 
   async function fetchCurrentUser() {
     try {
-      const res = await fetch(`${getApiBase()}/whoami`)
-      if (res.ok) {
-        user.value = await res.json()
-      }
+      user.value = await apiRequest('/whoami')
     } catch {
       // Server not available (local dev without backend)
     } finally {
       loading.value = false
     }
+  }
+
+  async function refresh() {
+    loading.value = true
+    await fetchCurrentUser()
   }
 
   const isAdmin = computed(() => user.value?.isAdmin === true)
@@ -32,6 +34,7 @@ export function useAuth() {
     user,
     loading,
     isAdmin,
-    permissionTier
+    permissionTier,
+    refresh
   }
 }

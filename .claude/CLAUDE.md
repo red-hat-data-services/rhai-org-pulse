@@ -257,9 +257,9 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 
 **GET:**
 - `/api/healthz` — health check (no auth)
-- `/api/whoami` — current user info (supports both proxy and token auth)
+- `/api/whoami` — current user info (supports both proxy and token auth). Response includes `permissionTier`. When `X-Impersonate-Uid` header is active, response adds `impersonating: true`, `realAdmin` (admin's email), and overrides `displayName`.
 - `/api/site-config` — site configuration (titlePrefix)
-- `/api/tokens` — list current user's API tokens
+- `/api/tokens` — list current user's API tokens (blocked during impersonation)
 - `/api/admin/tokens` — list all API tokens (admin)
 - `/api/roster` — org/team structure with members
 - `/api/team/:teamKey/metrics` — team member metrics (teamKey = `orgKey::teamName`)

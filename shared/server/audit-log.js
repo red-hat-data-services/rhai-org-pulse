@@ -66,7 +66,7 @@ function queryAuditLog(storage, filters = {}) {
     entries = entries.filter(e => e.action === filters.action);
   }
   if (filters.actor) {
-    entries = entries.filter(e => e.actor === filters.actor);
+    entries = entries.filter(e => e.actor.includes(filters.actor));
   }
   if (filters.entityId) {
     entries = entries.filter(e => e.entityId === filters.entityId);
