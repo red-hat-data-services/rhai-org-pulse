@@ -16,13 +16,14 @@
           </span>
         </h3>
       </div>
-      <RfeBacklogTable :issues="rfeIssues" :rfeConfig="rfeConfig" />
+      <RfeBacklogTable :issues="rfeIssues" :rfeConfig="rfeConfig" :assessments="assessments" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { apiRequest } from '@shared/client/services/api.js'
 import ComponentList from './ComponentList.vue'
 import RfeBacklogTable from './RfeBacklogTable.vue'
 
@@ -31,6 +32,23 @@ const props = defineProps({
   rfeIssues: { type: Array, default: () => [] },
   rfeConfig: { type: Object, default: () => ({}) }
 })
+
+const assessments = ref({})
+
+async function loadAssessments() {
+  try {
+    const data = await apiRequest('/modules/ai-impact/assessments')
+    assessments.value = data.assessments || {}
+  } catch {
+    // AI Impact module may be disabled or unavailable — degrade gracefully
+    assessments.value = {}
+  }
+}
+
+// Fetch assessments when RFE issues are available
+watch(() => props.rfeIssues, (issues) => {
+  if (issues.length > 0) loadAssessments()
+}, { immediate: true })
 
 const rfeCounts = computed(() => {
   const counts = {}

@@ -1,6 +1,10 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import TeamBacklogTab from '../../client/components/TeamBacklogTab.vue'
+
+vi.mock('@shared/client/services/api.js', () => ({
+  apiRequest: vi.fn().mockResolvedValue({ assessments: {} })
+}))
 
 const sampleIssues = [
   { key: 'RFE-1', summary: 'Feature A', components: ['KServe', 'ModelMesh'], status: 'New', statusCategory: 'To Do', priority: 'Major', created: '2025-06-01' },

@@ -102,4 +102,43 @@ describe('RfeBacklogTable', () => {
     const badges = wrapper.findAll('.rounded-full')
     expect(badges.length).toBeGreaterThan(0)
   })
+
+  it('renders PASS assessment with score', () => {
+    const assessments = {
+      'RHAIRFE-100': { total: 8, passFail: 'PASS', scores: {}, assessedAt: '2025-07-01' }
+    }
+    const wrapper = mount(RfeBacklogTable, { props: { issues: sampleIssues, rfeConfig, assessments } })
+    expect(wrapper.text()).toContain('8/10')
+    expect(wrapper.text()).toContain('✓')
+  })
+
+  it('renders FAIL assessment with score', () => {
+    const assessments = {
+      'RHAIRFE-200': { total: 3, passFail: 'FAIL', scores: {}, assessedAt: '2025-07-01' }
+    }
+    const wrapper = mount(RfeBacklogTable, { props: { issues: sampleIssues, rfeConfig, assessments } })
+    expect(wrapper.text()).toContain('3/10')
+    expect(wrapper.text()).toContain('✗')
+  })
+
+  it('renders N/A for unassessed RFEs', () => {
+    const wrapper = mount(RfeBacklogTable, { props: { issues: sampleIssues, rfeConfig, assessments: {} } })
+    expect(wrapper.text()).toContain('N/A')
+  })
+
+  it('sorts by assessment score', async () => {
+    const assessments = {
+      'RHAIRFE-100': { total: 8, passFail: 'PASS', scores: {}, assessedAt: '2025-07-01' },
+      'RHAIRFE-200': { total: 3, passFail: 'FAIL', scores: {}, assessedAt: '2025-07-01' },
+      'RHAIRFE-50': { total: 6, passFail: 'PASS', scores: {}, assessedAt: '2025-07-01' }
+    }
+    const wrapper = mount(RfeBacklogTable, { props: { issues: sampleIssues, rfeConfig, assessments } })
+    const assessmentHeader = wrapper.findAll('th').find(th => th.text().includes('Assessment'))
+    await assessmentHeader.trigger('click')
+    const rows = wrapper.findAll('tbody tr')
+    // Ascending: 3, 6, 8
+    expect(rows[0].text()).toContain('RHAIRFE-200')
+    expect(rows[1].text()).toContain('RHAIRFE-50')
+    expect(rows[2].text()).toContain('RHAIRFE-100')
+  })
 })

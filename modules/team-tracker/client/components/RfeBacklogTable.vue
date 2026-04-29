@@ -75,6 +75,24 @@
             </td>
             <td class="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-gray-400">{{ issue.priority }}</td>
             <td class="px-4 py-3 whitespace-nowrap text-gray-500 dark:text-gray-400">{{ formatDate(issue.created) }}</td>
+            <td class="px-4 py-3 whitespace-nowrap">
+              <span
+                v-if="assessments[issue.key]"
+                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold"
+                :class="assessments[issue.key].passFail === 'PASS'
+                  ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200'
+                  : 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200'"
+              >
+                {{ assessments[issue.key].passFail === 'PASS' ? '✓' : '✗' }}
+                {{ assessments[issue.key].total }}/10
+              </span>
+              <span
+                v-else
+                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-100 dark:bg-gray-700 border border-dashed border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500"
+              >
+                N/A
+              </span>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -94,7 +112,8 @@ import { ref, computed } from 'vue'
 
 const props = defineProps({
   issues: { type: Array, default: () => [] },
-  rfeConfig: { type: Object, default: () => ({}) }
+  rfeConfig: { type: Object, default: () => ({}) },
+  assessments: { type: Object, default: () => ({}) }
 })
 
 const columns = [
@@ -104,6 +123,7 @@ const columns = [
   { key: 'status', label: 'Status' },
   { key: 'priority', label: 'Priority' },
   { key: 'created', label: 'Created' },
+  { key: 'assessment', label: 'Assessment' },
 ]
 
 const PRIORITY_ORDER = { Blocker: 0, Critical: 1, Major: 2, Normal: 3, Minor: 4, Trivial: 5 }
@@ -142,6 +162,11 @@ const sortedIssues = computed(() => {
       case 'status': return dir * a.status.localeCompare(b.status)
       case 'priority': return dir * ((PRIORITY_ORDER[a.priority] ?? 99) - (PRIORITY_ORDER[b.priority] ?? 99))
       case 'created': return dir * a.created.localeCompare(b.created)
+      case 'assessment': {
+        const aScore = props.assessments[a.key]?.total ?? -1
+        const bScore = props.assessments[b.key]?.total ?? -1
+        return dir * (aScore - bScore)
+      }
       default: return 0
     }
   })
