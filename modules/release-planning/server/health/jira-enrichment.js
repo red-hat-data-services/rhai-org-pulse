@@ -12,6 +12,7 @@
  */
 
 const { ENRICHMENT_FIELDS, CHANGELOG_FIELDS, EARLY_STATUSES } = require('../constants')
+const { parseTshirtSize } = require('./tshirt-parser')
 
 /**
  * Check whether Jira credentials are configured.
@@ -203,7 +204,8 @@ async function runPass1(jiraRequest, fetchAllJqlResults, featureKeys, opts) {
           storyPoints: fields.customfield_10028 || null,
           dependencyLinks: parseIssueLinks(fields.issuelinks),
           refinementHistory: null,
-          rice: null
+          rice: null,
+          tshirtSize: parseTshirtSize(fields.description)
         })
       }
     } catch (err) {
@@ -217,6 +219,7 @@ async function runPass1(jiraRequest, fetchAllJqlResults, featureKeys, opts) {
             dependencyLinks: [],
             refinementHistory: null,
             rice: null,
+            tshirtSize: null,
             _error: true
           })
         }

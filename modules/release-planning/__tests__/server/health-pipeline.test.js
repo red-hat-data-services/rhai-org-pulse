@@ -173,28 +173,29 @@ describe('computePlanningDeadline', function() {
     ea2Freeze: '2026-06-18',
     gaFreeze: '2026-08-01'
   }
-
-  it('returns null when milestones is null', function() {
-    expect(computePlanningDeadline(null, 'EA1')).toBeNull()
-  })
+  var prevGaFreeze = '2026-04-17'
 
   it('returns null when phase is null', function() {
     expect(computePlanningDeadline(milestones, null)).toBeNull()
   })
 
-  it('computes deadline as freeze minus 7 days for EA1', function() {
-    var result = computePlanningDeadline(milestones, 'EA1')
+  it('computes EA1 deadline from previous version GA freeze minus 7 days', function() {
+    var result = computePlanningDeadline(milestones, 'EA1', prevGaFreeze)
+    expect(result.date).toBe('2026-04-10')
+  })
+
+  it('returns null for EA1 when no previous GA freeze', function() {
+    expect(computePlanningDeadline(milestones, 'EA1', null)).toBeNull()
+  })
+
+  it('computes EA2 deadline from EA1 freeze minus 7 days', function() {
+    var result = computePlanningDeadline(milestones, 'EA2')
     expect(result.date).toBe('2026-04-24')
   })
 
-  it('computes deadline as freeze minus 7 days for EA2', function() {
-    var result = computePlanningDeadline(milestones, 'EA2')
-    expect(result.date).toBe('2026-06-11')
-  })
-
-  it('computes deadline as freeze minus 7 days for GA', function() {
+  it('computes GA deadline from EA2 freeze minus 7 days', function() {
     var result = computePlanningDeadline(milestones, 'GA')
-    expect(result.date).toBe('2026-07-25')
+    expect(result.date).toBe('2026-06-11')
   })
 
   it('returns null for unknown phase', function() {
@@ -417,6 +418,63 @@ describe('loadMilestones', function() {
     expect(result.ea2Target).toBeNull()
     expect(result.gaFreeze).toBe('2026-08-01')
     expect(result.gaTarget).toBe('2026-08-15')
+  })
+
+  it('matches space-separated EA release numbers (expanded milestone format)', function() {
+    var storage = makeStorage(ppCache([
+      { productName: 'rhelai', releaseNumber: 'rhelai-3.5 EA1 release', dueDate: '2026-06-18', codeFreezeDate: null },
+      { productName: 'rhelai', releaseNumber: 'rhelai-3.5 EA2 release', dueDate: '2026-07-16', codeFreezeDate: null },
+      { productName: 'rhelai', releaseNumber: 'rhelai-3.5 GA', dueDate: '2026-08-20', codeFreezeDate: null }
+    ]))
+    var result = loadMilestones(storage.readFromStorage, '3.5')
+    expect(result).not.toBeNull()
+    expect(result.ea1Target).toBe('2026-06-18')
+    expect(result.ea2Target).toBe('2026-07-16')
+    expect(result.gaTarget).toBe('2026-08-20')
+    expect(result._matched.ea1).toBe('rhelai-3.5 EA1 release')
+    expect(result._matched.ea2).toBe('rhelai-3.5 EA2 release')
+    expect(result._matched.ga).toBe('rhelai-3.5 GA')
+  })
+
+  it('does not match EA releases as GA', function() {
+    var storage = makeStorage(ppCache([
+      { productName: 'RHAII', releaseNumber: 'RHAII-3.5 EA1', dueDate: '2026-06-02', codeFreezeDate: null },
+      { productName: 'RHAII', releaseNumber: 'RHAII-3.5 EA2', dueDate: '2026-07-01', codeFreezeDate: null },
+      { productName: 'RHAII', releaseNumber: 'RHAII-3.5 GA', dueDate: '2026-08-04', codeFreezeDate: null }
+    ]))
+    var result = loadMilestones(storage.readFromStorage, '3.5')
+    expect(result).not.toBeNull()
+    expect(result.ea1Target).toBe('2026-06-02')
+    expect(result.ea2Target).toBe('2026-07-01')
+    expect(result.gaTarget).toBe('2026-08-04')
+    expect(result._matched.ga).toBe('RHAII-3.5 GA')
+  })
+
+  it('prefers rhoai/rhelai product when multiple products match', function() {
+    var storage = makeStorage(ppCache([
+      { productName: 'RHAII', releaseNumber: 'RHAII-3.5 EA1', dueDate: '2026-06-02', codeFreezeDate: null },
+      { productName: 'rhelai', releaseNumber: 'rhelai-3.5 EA1 release', dueDate: '2026-06-18', codeFreezeDate: null },
+      { productName: 'RHAII', releaseNumber: 'RHAII-3.5 GA', dueDate: '2026-08-04', codeFreezeDate: null },
+      { productName: 'rhelai', releaseNumber: 'rhelai-3.5 GA', dueDate: '2026-08-20', codeFreezeDate: null }
+    ]))
+    var result = loadMilestones(storage.readFromStorage, '3.5')
+    expect(result.ea1Target).toBe('2026-06-18')
+    expect(result.gaTarget).toBe('2026-08-20')
+    expect(result._matched.ea1).toBe('rhelai-3.5 EA1 release')
+    expect(result._matched.ga).toBe('rhelai-3.5 GA')
+  })
+
+  it('returns _matched with release numbers for debugging', function() {
+    var storage = makeStorage(ppCache([
+      { productName: 'rhoai', releaseNumber: 'rhoai-3.5.EA1', dueDate: '2026-05-15', codeFreezeDate: '2026-05-01' },
+      { productName: 'rhoai', releaseNumber: 'rhoai-3.5', dueDate: '2026-08-15', codeFreezeDate: '2026-08-01' }
+    ]))
+    var result = loadMilestones(storage.readFromStorage, '3.5')
+    expect(result._matched).toEqual({
+      ea1: 'rhoai-3.5.EA1',
+      ea2: null,
+      ga: 'rhoai-3.5'
+    })
   })
 })
 
@@ -712,7 +770,32 @@ describe('runHealthPipeline', function() {
     expect(result.features[0]).toHaveProperty('dor')
   })
 
-  it('includes planningFreezes in cache output when milestones are present', async function() {
+  it('computes planningFreezes from previous phase code freeze minus 7 days', async function() {
+    var data = makeCandidatesCache([
+      { issueKey: 'T-1', summary: 'F1', status: 'In Progress', components: '', fixVersion: '', deliveryOwner: 'Jane', tier: 1 }
+    ])
+    data['release-analysis/product-pages-releases-cache.json'] = {
+      source: 'api',
+      fetchedAt: '2026-04-26T00:00:00Z',
+      releases: [
+        { productName: 'rhoai', releaseNumber: 'rhoai-3.4', dueDate: '2026-04-30', codeFreezeDate: '2026-04-17' },
+        { productName: 'rhoai', releaseNumber: 'rhoai-3.5.EA1', dueDate: '2026-05-15', codeFreezeDate: '2026-05-01' },
+        { productName: 'rhoai', releaseNumber: 'rhoai-3.5.EA2', dueDate: '2026-07-01', codeFreezeDate: '2026-06-15' },
+        { productName: 'rhoai', releaseNumber: 'rhoai-3.5', dueDate: '2026-08-15', codeFreezeDate: '2026-08-01' }
+      ]
+    }
+    var storage = makeStorage(data)
+    var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
+    expect(result.planningFreezes).not.toBeNull()
+    // EA1 planning freeze = previous version (3.4) GA code freeze - 7 = 2026-04-17 - 7 = 2026-04-10
+    expect(result.planningFreezes.ea1).toBe('2026-04-10')
+    // EA2 planning freeze = EA1 code freeze - 7 = 2026-05-01 - 7 = 2026-04-24
+    expect(result.planningFreezes.ea2).toBe('2026-04-24')
+    // GA planning freeze = EA2 code freeze - 7 = 2026-06-15 - 7 = 2026-06-08
+    expect(result.planningFreezes.ga).toBe('2026-06-08')
+  })
+
+  it('returns null ea1 planning freeze when no previous version data', async function() {
     var data = makeCandidatesCache([
       { issueKey: 'T-1', summary: 'F1', status: 'In Progress', components: '', fixVersion: '', deliveryOwner: 'Jane', tier: 1 }
     ])
@@ -727,19 +810,33 @@ describe('runHealthPipeline', function() {
     }
     var storage = makeStorage(data)
     var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
-    expect(result.planningFreezes).not.toBeNull()
-    // Planning freeze = code freeze - 7 days
-    expect(result.planningFreezes.ea1).toBe('2026-04-24')
-    expect(result.planningFreezes.ea2).toBe('2026-06-08')
-    expect(result.planningFreezes.ga).toBe('2026-07-25')
+    expect(result.planningFreezes.ea1).toBeNull()
+    expect(result.planningFreezes.ea2).toBe('2026-04-24')
+    expect(result.planningFreezes.ga).toBe('2026-06-08')
   })
 
-  it('returns null planningFreezes when milestones are null', async function() {
+  it('returns all null planningFreezes when no milestones and no previous version', async function() {
     var storage = makeStorage(makeCandidatesCache([
       { issueKey: 'T-1', summary: 'F1', status: 'In Progress', components: '', fixVersion: '', deliveryOwner: 'Jane', tier: 1 }
     ]))
     var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
-    expect(result.planningFreezes).toBeNull()
+    expect(result.planningFreezes.ea1).toBeNull()
+    expect(result.planningFreezes.ea2).toBeNull()
+    expect(result.planningFreezes.ga).toBeNull()
+  })
+
+  it('falls back to Smartsheet for previous GA freeze when Product Pages cache is missing', async function() {
+    smartsheetClient.isConfigured.mockReturnValue(true)
+    smartsheetClient.discoverReleasesPartial.mockResolvedValue([
+      { version: '3.4', ea1Freeze: '2025-12-01', ea1Target: '2025-12-15', ea2Freeze: '2026-02-01', ea2Target: '2026-02-15', gaFreeze: '2026-04-17', gaTarget: '2026-04-30' },
+      { version: '3.5', ea1Freeze: '2026-05-01', ea1Target: '2026-05-15', ea2Freeze: '2026-06-15', ea2Target: '2026-07-01', gaFreeze: '2026-08-01', gaTarget: '2026-08-15' }
+    ])
+    var storage = makeStorage(makeCandidatesCache([
+      { issueKey: 'T-1', summary: 'F1', status: 'In Progress', components: '', fixVersion: '', deliveryOwner: 'Jane', tier: 1 }
+    ]))
+    var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
+    // EA1 planning freeze = previous version (3.4) GA freeze from Smartsheet - 7 = 2026-04-17 - 7 = 2026-04-10
+    expect(result.planningFreezes.ea1).toBe('2026-04-10')
   })
 
   it('attaches priorityScore and priorityBreakdown to health features', async function() {

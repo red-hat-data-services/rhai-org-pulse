@@ -76,17 +76,7 @@
           </div>
           <div class="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-3 shrink-0"></div>
           <div class="flex items-center gap-2.5 shrink-0">
-            <div class="flex items-center gap-0.5 bg-gray-100 dark:bg-gray-700/60 rounded-lg p-0.5">
-              <button
-                v-for="opt in periodOptions"
-                :key="opt.value"
-                @click="selectedDays = opt.value"
-                class="px-2.5 py-1.5 rounded-md text-[13px] font-medium transition-all duration-200"
-                :class="selectedDays === opt.value
-                  ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
-              >{{ opt.label }}</button>
-            </div>
+            <PeriodSelector v-model="selectedDays" />
             <div v-if="periodLabel" class="hidden xl:flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-750/40 pl-2 pr-2.5 py-1 rounded-lg">
               <CalendarIcon :size="12" />
               <span>{{ periodLabel }}</span>
@@ -345,13 +335,32 @@
           <p class="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">Team influence in upstream governance</p>
         </div>
 
-        <!-- Leadership Strategy -->
-        <div v-if="orgActivity.length" class="mb-6">
-          <h4 class="text-base font-semibold text-gray-700 dark:text-gray-300 mb-3">Leadership Strategy</h4>
-          <LeadershipStrategy
-            :org-activity="orgActivity"
-            @org-click="(org) => nav.navigateTo('org-detail', { org })"
-          />
+        <!-- Strategic Summary -->
+        <div v-if="strategicTierCounts.total > 0" class="mb-6">
+          <div
+            class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 p-5 cursor-pointer hover:shadow-md hover:border-gray-200 dark:hover:border-gray-600 transition-all duration-200 group"
+            @click="nav.navigateTo('strategy')"
+          >
+            <div class="flex items-center justify-between mb-2.5">
+              <h4 class="text-base font-semibold text-gray-900 dark:text-gray-100">Strategic Communities</h4>
+              <span class="text-sm font-bold text-gray-900 dark:text-gray-100 tabular-nums">{{ strategicContributions.toLocaleString() }} <span class="text-xs font-normal text-gray-500 dark:text-gray-400">contributions</span></span>
+            </div>
+            <div class="flex items-center gap-4 text-sm">
+              <span v-if="strategicTierCounts.increasing > 0" class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                <span class="text-gray-600 dark:text-gray-400"><span class="font-medium text-gray-900 dark:text-gray-100">{{ strategicTierCounts.increasing }}</span> Increasing</span>
+              </span>
+              <span v-if="strategicTierCounts.sustaining > 0" class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                <span class="text-gray-600 dark:text-gray-400"><span class="font-medium text-gray-900 dark:text-gray-100">{{ strategicTierCounts.sustaining }}</span> Sustaining</span>
+              </span>
+              <span v-if="strategicTierCounts.evaluating > 0" class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-yellow-500"></span>
+                <span class="text-gray-600 dark:text-gray-400"><span class="font-medium text-gray-900 dark:text-gray-100">{{ strategicTierCounts.evaluating }}</span> Evaluating</span>
+              </span>
+              <span class="ml-auto text-sm text-blue-600 dark:text-blue-400 font-medium group-hover:text-blue-800 dark:group-hover:text-blue-300 transition-colors">View Strategy &rarr;</span>
+            </div>
+          </div>
         </div>
 
         <div v-if="!leadership && !communityOrgs.length" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 p-8 text-center">
@@ -558,10 +567,11 @@ import LeadershipCard from '../components/LeadershipCard.vue'
 import ContributionTrendChart from '../components/ContributionTrendChart.vue'
 import OrgActivityCard from '../components/OrgActivityCard.vue'
 import ProjectCard from '../components/ProjectCard.vue'
-import LeadershipStrategy from '../components/LeadershipStrategy.vue'
 import AddProjectModal from '../components/AddProjectModal.vue'
 import { StatCardSkeleton, ContributionCardSkeleton, OrgCardSkeleton, ProjectCardSkeleton, ContributorRowSkeleton } from '../components/SkeletonLoaders.vue'
 import { useGovernanceCards, uniqueRoles } from '../composables/useGovernanceCards.js'
+import { getStrategicTier } from '../composables/useStrategicClassification.js'
+import PeriodSelector from '../components/PeriodSelector.vue'
 
 const nav = inject('moduleNav')
 const { isAdmin } = useAuth()
@@ -569,13 +579,6 @@ const showAddProject = ref(false)
 const MODULE_API = '/modules/upstream-pulse'
 
 const DASHBOARD_ORG_LIMIT = 4
-
-const periodOptions = [
-  { label: '30d', value: '30' },
-  { label: '60d', value: '60' },
-  { label: '90d', value: '90' },
-  { label: 'All', value: '0' },
-]
 
 const selectedDays = ref('30')
 const loading = ref(true)
@@ -746,6 +749,24 @@ const totalGovernancePositions = computed(() => {
     }
   }
   return count
+})
+
+const strategicTierCounts = computed(() => {
+  const counts = { increasing: 0, sustaining: 0, evaluating: 0, total: 0 }
+  for (const org of orgActivity.value) {
+    const tier = getStrategicTier(org)
+    if (tier) {
+      counts[tier]++
+      counts.total++
+    }
+  }
+  return counts
+})
+
+const strategicContributions = computed(() => {
+  return orgActivity.value
+    .filter(o => getStrategicTier(o) !== null)
+    .reduce((sum, o) => sum + (o.total || 0), 0)
 })
 
 const projectCoveragePercent = computed(() => {

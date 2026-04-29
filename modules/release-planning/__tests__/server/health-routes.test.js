@@ -15,12 +15,35 @@ vi.mock('../../server/health/health-pipeline', () => ({
     summary: { totalFeatures: 0, byRisk: { green: 0, yellow: 0, red: 0 }, dorCompletionRate: 0, averageRiceScore: null },
     milestones: null,
     enrichmentStatus: { jiraQueriesRun: 0, featuresEnriched: 0, warnings: [] }
+  }),
+  loadMilestones: vi.fn().mockReturnValue({
+    ea1Freeze: null, ea1Target: '2026-06-18', ea2Freeze: null, ea2Target: '2026-07-16',
+    gaFreeze: null, gaTarget: '2026-08-20', _matched: { ea1: 'rhelai-3.5 EA1 release', ea2: 'rhelai-3.5 EA2 release', ga: 'rhelai-3.5 GA' }
+  }),
+  backfillFreezeDatesFromSmartsheet: vi.fn().mockResolvedValue({
+    milestones: {
+      ea1Freeze: '2026-05-15', ea1Target: '2026-06-18', ea2Freeze: '2026-06-19', ea2Target: '2026-07-16',
+      gaFreeze: '2026-07-24', gaTarget: '2026-08-20'
+    },
+    warnings: []
+  }),
+  deriveFreezeDates: vi.fn().mockReturnValue({
+    milestones: {
+      ea1Freeze: '2026-05-15', ea1Target: '2026-06-18', ea2Freeze: '2026-06-19', ea2Target: '2026-07-16',
+      gaFreeze: '2026-07-24', gaTarget: '2026-08-20'
+    },
+    warnings: []
   })
 }))
 
 vi.mock('../../../../shared/server/jira', () => ({
-  jiraRequest: vi.fn(),
+  jiraRequest: vi.fn().mockResolvedValue([]),
   fetchAllJqlResults: vi.fn()
+}))
+
+vi.mock('../../../../shared/server/smartsheet', () => ({
+  isConfigured: vi.fn().mockReturnValue(false),
+  discoverReleasesPartial: vi.fn().mockResolvedValue([])
 }))
 
 const healthRoutes = require('../../server/health/health-routes')
@@ -151,8 +174,15 @@ describe('health routes', function() {
         'PUT /releases/:version/health/dor/:featureKey',
         'PUT /releases/:version/health/override/:featureKey',
         'DELETE /releases/:version/health/override/:featureKey',
+        'GET /releases/:version/health/snapshot/:phase',
+        'POST /releases/:version/health/snapshot/:phase',
         'POST /releases/:version/health/refresh',
-        'GET /releases/:version/health/refresh/status'
+        'GET /releases/:version/health/refresh/status',
+        'GET /releases/health-admin/jira-fields',
+        'POST /releases/health-admin/rice-test',
+        'PUT /releases/health-admin/config',
+        'GET /releases/health-admin/config',
+        'GET /releases/:version/health/milestones/debug'
       ]
       for (var i = 0; i < expected.length; i++) {
         expect(router._routes[expected[i]]).toBeDefined()
@@ -587,6 +617,335 @@ describe('health routes', function() {
         makeReq({ params: { version: '3.5' } }))
       expect(res._json.running).toBe(true)
       expect(res._json.startedAt).toBe('2026-04-26T12:00:00Z')
+    })
+  })
+
+  // ─── GET /releases/:version/health with committedSnapshots ───
+
+  describe('GET /releases/:version/health with committed snapshots', function() {
+    it('includes committedSnapshots when snapshot files exist', function() {
+      storage._store['release-planning/health-cache-3.5-all.json'] = freshCache('3.5')
+      storage._store['release-planning/committed-snapshot-3.5-EA1.json'] = {
+        version: '3.5',
+        phase: 'EA1',
+        snapshotAt: '2026-04-28T10:00:00Z',
+        snapshotTrigger: 'auto',
+        featureKeys: ['T-1', 'T-2'],
+        features: [{ key: 'T-1', summary: 'F1' }, { key: 'T-2', summary: 'F2' }]
+      }
+      var res = callRoute(router._routes, 'GET', '/releases/:version/health',
+        makeReq({ params: { version: '3.5' } }))
+      expect(res._status).toBe(200)
+      expect(res._json.committedSnapshots).toBeDefined()
+      expect(res._json.committedSnapshots.EA1).toBeDefined()
+      expect(res._json.committedSnapshots.EA1.featureCount).toBe(2)
+      expect(res._json.committedSnapshots.EA1.trigger).toBe('auto')
+      expect(res._json.committedSnapshots.EA2).toBeUndefined()
+    })
+
+    it('returns empty committedSnapshots when no snapshots exist', function() {
+      storage._store['release-planning/health-cache-3.5-all.json'] = freshCache('3.5')
+      var res = callRoute(router._routes, 'GET', '/releases/:version/health',
+        makeReq({ params: { version: '3.5' } }))
+      expect(res._status).toBe(200)
+      expect(res._json.committedSnapshots).toBeDefined()
+      expect(Object.keys(res._json.committedSnapshots)).toHaveLength(0)
+    })
+  })
+
+  // ─── GET /releases/:version/health/snapshot/:phase ───
+
+  describe('GET /releases/:version/health/snapshot/:phase', function() {
+    it('returns 400 for invalid version', function() {
+      var res = callRoute(router._routes, 'GET', '/releases/:version/health/snapshot/:phase',
+        makeReq({ params: { version: '../bad', phase: 'EA1' } }))
+      expect(res._status).toBe(400)
+    })
+
+    it('returns 400 for invalid phase', function() {
+      var res = callRoute(router._routes, 'GET', '/releases/:version/health/snapshot/:phase',
+        makeReq({ params: { version: '3.5', phase: 'INVALID' } }))
+      expect(res._status).toBe(400)
+      expect(res._json.error).toContain('Invalid phase')
+    })
+
+    it('returns 404 when no snapshot exists', function() {
+      var res = callRoute(router._routes, 'GET', '/releases/:version/health/snapshot/:phase',
+        makeReq({ params: { version: '3.5', phase: 'EA1' } }))
+      expect(res._status).toBe(404)
+    })
+
+    it('returns snapshot data when it exists', function() {
+      storage._store['release-planning/committed-snapshot-3.5-EA1.json'] = {
+        version: '3.5',
+        phase: 'EA1',
+        snapshotAt: '2026-04-28T10:00:00Z',
+        snapshotTrigger: 'manual',
+        featureKeys: ['T-1'],
+        features: [{ key: 'T-1', summary: 'Feature 1' }]
+      }
+      var res = callRoute(router._routes, 'GET', '/releases/:version/health/snapshot/:phase',
+        makeReq({ params: { version: '3.5', phase: 'ea1' } }))
+      expect(res._status).toBe(200)
+      expect(res._json.phase).toBe('EA1')
+      expect(res._json.featureKeys).toEqual(['T-1'])
+    })
+  })
+
+  // ─── POST /releases/:version/health/snapshot/:phase ───
+
+  describe('POST /releases/:version/health/snapshot/:phase', function() {
+    it('returns 400 for invalid version', function() {
+      var res = callRoute(router._routes, 'POST', '/releases/:version/health/snapshot/:phase',
+        makeReq({ params: { version: '!bad', phase: 'EA1' } }))
+      expect(res._status).toBe(400)
+    })
+
+    it('returns 400 for invalid phase', function() {
+      var res = callRoute(router._routes, 'POST', '/releases/:version/health/snapshot/:phase',
+        makeReq({ params: { version: '3.5', phase: 'WRONG' } }))
+      expect(res._status).toBe(400)
+    })
+
+    it('returns 404 when no health cache exists', function() {
+      var res = callRoute(router._routes, 'POST', '/releases/:version/health/snapshot/:phase',
+        makeReq({ params: { version: '3.5', phase: 'EA1' } }))
+      expect(res._status).toBe(404)
+      expect(res._json.error).toContain('No health cache')
+    })
+
+    it('creates snapshot with matching features and writes audit log', function() {
+      storage._store['release-planning/health-cache-3.5-all.json'] = freshCache('3.5', {
+        features: [
+          { key: 'T-1', summary: 'F1', status: 'In Progress', fixVersions: 'rhoai-3.5.EA1', components: 'Comp1', deliveryOwner: 'owner1' },
+          { key: 'T-2', summary: 'F2', status: 'New', fixVersions: 'rhoai-3.5.GA', components: 'Comp2', deliveryOwner: 'owner2' },
+          { key: 'T-3', summary: 'F3', status: 'Done', fixVersions: 'rhoai-3.5.EA1, rhoai-3.5.EA2', components: 'Comp3', deliveryOwner: 'owner3' }
+        ]
+      })
+      var res = callRoute(router._routes, 'POST', '/releases/:version/health/snapshot/:phase',
+        makeReq({ params: { version: '3.5', phase: 'EA1' } }))
+      expect(res._status).toBe(200)
+      expect(res._json.phase).toBe('EA1')
+      expect(res._json.featureCount).toBe(2)
+
+      var snap = storage._store['release-planning/committed-snapshot-3.5-EA1.json']
+      expect(snap).toBeDefined()
+      expect(snap.snapshotTrigger).toBe('manual')
+      expect(snap.featureKeys).toEqual(['T-1', 'T-3'])
+      expect(snap.features).toHaveLength(2)
+      expect(snap.features[0].key).toBe('T-1')
+
+      var auditLog = storage._store['release-planning/audit-log.json']
+      expect(auditLog).toBeDefined()
+      var entry = auditLog.entries[auditLog.entries.length - 1]
+      expect(entry.action).toBe('committed_snapshot')
+      expect(entry.details.phase).toBe('EA1')
+    })
+  })
+
+  // ─── GET /releases/health-admin/jira-fields ───
+
+  describe('GET /releases/health-admin/jira-fields', function() {
+    it('returns 400 when query is too short', async function() {
+      var res = await callRoute(router._routes, 'GET', '/releases/health-admin/jira-fields',
+        makeReq({ query: { query: 'a' } }))
+      expect(res._status).toBe(400)
+      expect(res._json.error).toContain('2 characters')
+    })
+
+    it('returns 400 when query is missing', async function() {
+      var res = await callRoute(router._routes, 'GET', '/releases/health-admin/jira-fields',
+        makeReq({ query: {} }))
+      expect(res._status).toBe(400)
+    })
+
+    it('returns matching custom fields from cache', async function() {
+      storage._store['release-planning/jira-field-list-cache.json'] = {
+        fetchedAt: new Date().toISOString(),
+        fields: [
+          { id: 'customfield_10100', name: 'RICE Reach', custom: true, schema: { type: 'number' } },
+          { id: 'customfield_10101', name: 'RICE Impact', custom: true, schema: { type: 'number' } },
+          { id: 'status', name: 'Status', custom: false }
+        ]
+      }
+      var res = await callRoute(router._routes, 'GET', '/releases/health-admin/jira-fields',
+        makeReq({ query: { query: 'rice' } }))
+      expect(res._status).toBe(200)
+      expect(res._json.fields).toHaveLength(2)
+      expect(res._json.fields[0].id).toBe('customfield_10100')
+      expect(res._json.fields[0].type).toBe('number')
+    })
+
+    it('excludes non-custom fields from results', async function() {
+      storage._store['release-planning/jira-field-list-cache.json'] = {
+        fetchedAt: new Date().toISOString(),
+        fields: [
+          { id: 'customfield_10100', name: 'RICE Score', custom: true, schema: { type: 'number' } },
+          { id: 'status', name: 'Status RICE', custom: false }
+        ]
+      }
+      var res = await callRoute(router._routes, 'GET', '/releases/health-admin/jira-fields',
+        makeReq({ query: { query: 'rice' } }))
+      expect(res._status).toBe(200)
+      expect(res._json.fields).toHaveLength(1)
+      expect(res._json.fields[0].id).toBe('customfield_10100')
+    })
+  })
+
+  // ─── POST /releases/health-admin/rice-test ───
+
+  describe('POST /releases/health-admin/rice-test', function() {
+    it('returns 400 when no RICE field IDs are configured', async function() {
+      var res = await callRoute(router._routes, 'POST', '/releases/health-admin/rice-test', makeReq())
+      expect(res._status).toBe(400)
+      expect(res._json.error).toContain('No RICE field IDs configured')
+    })
+
+    it('validates configured field IDs against Jira field list', async function() {
+      storage._store['release-planning/config.json'] = {
+        customFieldIds: { riceReach: 'customfield_100', riceImpact: 'customfield_101', riceConfidence: 'customfield_102', riceEffort: 'customfield_103' },
+        healthConfig: { enableRice: true }
+      }
+      storage._store['release-planning/jira-field-list-cache.json'] = {
+        fetchedAt: new Date().toISOString(),
+        fields: [
+          { id: 'customfield_100', name: 'Reach Score', custom: true },
+          { id: 'customfield_102', name: 'Confidence Score', custom: true }
+        ]
+      }
+      var res = await callRoute(router._routes, 'POST', '/releases/health-admin/rice-test', makeReq())
+      expect(res._status).toBe(200)
+      expect(res._json.validCount).toBe(2)
+      expect(res._json.totalCount).toBe(4)
+      expect(res._json.results.riceReach.found).toBe(true)
+      expect(res._json.results.riceReach.name).toBe('Reach Score')
+      expect(res._json.results.riceImpact.found).toBe(false)
+      expect(res._json.results.riceConfidence.found).toBe(true)
+    })
+  })
+
+  // ─── GET /releases/health-admin/config ───
+
+  describe('GET /releases/health-admin/config', function() {
+    it('returns config with defaults when no config saved', function() {
+      var res = callRoute(router._routes, 'GET', '/releases/health-admin/config', makeReq())
+      expect(res._status).toBe(200)
+      expect(res._json.customFieldIds).toBeDefined()
+      expect(res._json.enableRice).toBe(false)
+    })
+
+    it('returns saved config', function() {
+      storage._store['release-planning/config.json'] = {
+        customFieldIds: { riceReach: 'cf_100' },
+        healthConfig: { enableRice: true }
+      }
+      var res = callRoute(router._routes, 'GET', '/releases/health-admin/config', makeReq())
+      expect(res._status).toBe(200)
+      expect(res._json.enableRice).toBe(true)
+    })
+  })
+
+  // ─── PUT /releases/health-admin/config ───
+
+  describe('PUT /releases/health-admin/config', function() {
+    it('saves RICE field IDs', function() {
+      var res = callRoute(router._routes, 'PUT', '/releases/health-admin/config',
+        makeReq({ body: { riceFieldIds: { riceReach: 'cf_100', riceImpact: 'cf_101' } } }))
+      expect(res._status).toBe(200)
+      expect(res._json.saved).toBe(true)
+      expect(res._json.customFieldIds.riceReach).toBe('cf_100')
+
+      var config = storage._store['release-planning/config.json']
+      expect(config.customFieldIds.riceReach).toBe('cf_100')
+      expect(config.customFieldIds.riceImpact).toBe('cf_101')
+    })
+
+    it('saves enableRice flag', function() {
+      var res = callRoute(router._routes, 'PUT', '/releases/health-admin/config',
+        makeReq({ body: { enableRice: true } }))
+      expect(res._status).toBe(200)
+      expect(res._json.enableRice).toBe(true)
+
+      var config = storage._store['release-planning/config.json']
+      expect(config.healthConfig.enableRice).toBe(true)
+    })
+
+    it('preserves existing field IDs when updating enableRice only', function() {
+      storage._store['release-planning/config.json'] = {
+        customFieldIds: { riceReach: 'cf_100' },
+        healthConfig: {}
+      }
+      callRoute(router._routes, 'PUT', '/releases/health-admin/config',
+        makeReq({ body: { enableRice: true } }))
+      var config = storage._store['release-planning/config.json']
+      expect(config.customFieldIds.riceReach).toBe('cf_100')
+      expect(config.healthConfig.enableRice).toBe(true)
+    })
+  })
+
+  // ─── GET /releases/:version/health/milestones/debug ───
+
+  describe('GET /releases/:version/health/milestones/debug', function() {
+    it('returns 400 for invalid version', async function() {
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health/milestones/debug',
+        makeReq({ params: { version: '../evil' } }))
+      expect(res._status).toBe(400)
+    })
+
+    it('returns full derivation chain', async function() {
+      storage._store['release-analysis/product-pages-releases-cache.json'] = {
+        releases: [
+          { releaseNumber: 'rhelai-3.5 EA1 release', targetDate: '2026-06-18' },
+          { releaseNumber: 'rhelai-3.5 GA', targetDate: '2026-08-20' }
+        ]
+      }
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health/milestones/debug',
+        makeReq({ params: { version: '3.5' } }))
+      expect(res._status).toBe(200)
+      expect(res._json.version).toBe('3.5')
+      expect(res._json.productPages).toHaveLength(2)
+      expect(res._json.afterLoadMilestones).toBeDefined()
+      expect(res._json.afterBackfill).toBeDefined()
+      expect(res._json.afterBackfill.milestones).toBeDefined()
+      expect(res._json.afterDerive).toBeDefined()
+      expect(res._json.afterDerive.milestones).toBeDefined()
+    })
+
+    it('filters product pages entries by version', async function() {
+      storage._store['release-analysis/product-pages-releases-cache.json'] = {
+        releases: [
+          { releaseNumber: 'rhelai-3.5 EA1 release' },
+          { releaseNumber: 'rhelai-3.4 GA' },
+          { releaseNumber: 'rhelai-3.5 GA' }
+        ]
+      }
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health/milestones/debug',
+        makeReq({ params: { version: '3.5' } }))
+      expect(res._json.productPages).toHaveLength(2)
+    })
+
+    it('includes smartsheet field in response', async function() {
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health/milestones/debug',
+        makeReq({ params: { version: '3.5' } }))
+      expect(res._status).toBe(200)
+      expect('smartsheet' in res._json).toBe(true)
+    })
+
+    it('returns smartsheet as null when not configured', async function() {
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health/milestones/debug',
+        makeReq({ params: { version: '3.5' } }))
+      expect(res._json.smartsheet).toBeNull()
+    })
+
+    it('returns 500 on internal error', async function() {
+      Object.defineProperty(storage._store, 'release-analysis/product-pages-releases-cache.json', {
+        get: function() { throw new Error('Storage read error') },
+        configurable: true
+      })
+      var res = await callRoute(router._routes, 'GET', '/releases/:version/health/milestones/debug',
+        makeReq({ params: { version: '3.5' } }))
+      expect(res._status).toBe(500)
+      expect(res._json.error).toContain('Storage read error')
     })
   })
 })

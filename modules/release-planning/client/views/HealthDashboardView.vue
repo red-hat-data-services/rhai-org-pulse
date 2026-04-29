@@ -7,14 +7,15 @@ import { useAuth } from '@shared/client'
 import { passesPhaseFilter } from '../utils/phase-filter'
 import ReleaseSelector from '../components/ReleaseSelector.vue'
 import MilestoneTimeline from '../components/MilestoneTimeline.vue'
-import HealthSummaryCards from '../components/HealthSummaryCards.vue'
 import HealthFilterBar from '../components/HealthFilterBar.vue'
 import FeatureHealthTable from '../components/FeatureHealthTable.vue'
+import RiceFieldConfig from '../components/RiceFieldConfig.vue'
 
 var {
   healthData, healthLoading, healthError, healthRefreshing, healthCacheStale,
   loadHealth, triggerHealthRefresh, checkHealthRefreshStatus,
-  removeRiskOverride: removeRiskOverrideApi
+  removeRiskOverride: removeRiskOverrideApi,
+  createSnapshot
 } = useReleaseHealth()
 
 var { toggleItem, updateNotes, cancelAll: cancelDorPending } = useDorChecklist()
@@ -24,14 +25,14 @@ var { isAdmin } = useAuth()
 var selectedVersion = ref('')
 
 // Phase tabs
-var activePhase = ref('all')
+var activePhase = ref('EA1')
+
+// Admin settings
+var showRiceConfig = ref(false)
 
 // Filter state
-var riskFilter = ref('')
-var dorFilter = ref('')
 var bigRockFilter = ref('')
 var selectedComponents = ref([])
-var tierFilter = ref('')
 var searchQuery = ref('')
 
 // Refresh polling
@@ -76,92 +77,85 @@ var enrichmentStatus = computed(function() {
 
 // ─── Phase tabs ───
 
+function isPhaseCommitted(phaseId) {
+  var pf = planningFreezes.value
+  if (!pf) return false
+  var freezeDate = pf[phaseId.toLowerCase()]
+  if (!freezeDate) return false
+  var today = new Date().toISOString().split('T')[0]
+  return today >= freezeDate
+}
+
 var phaseTabs = computed(function() {
-  var tabs = [{ id: 'all', label: 'All Features' }]
+  var tabs = []
   var ms = milestones.value
   if (!ms) return tabs
-  if (ms.ea1Freeze || ms.ea1Target) tabs.push({ id: 'EA1', label: 'EA1' })
-  if (ms.ea2Freeze || ms.ea2Target) tabs.push({ id: 'EA2', label: 'EA2' })
-  if (ms.gaFreeze || ms.gaTarget) tabs.push({ id: 'GA', label: 'GA' })
+  if (ms.ea1Freeze || ms.ea1Target) {
+    tabs.push({ id: 'EA1', label: isPhaseCommitted('EA1') ? 'EA1 Committed' : 'EA1' })
+  }
+  if (ms.ea2Freeze || ms.ea2Target) {
+    tabs.push({ id: 'EA2', label: isPhaseCommitted('EA2') ? 'EA2 Committed' : 'EA2' })
+  }
+  if (ms.gaFreeze || ms.gaTarget) {
+    tabs.push({ id: 'GA', label: isPhaseCommitted('GA') ? 'GA Committed' : 'GA' })
+  }
   return tabs
 })
 
 // ─── Phase-filtered features ───
 
 var phasedFeatures = computed(function() {
-  if (activePhase.value === 'all') return features.value
+  var strict = isPhaseCommitted(activePhase.value)
   return features.value.filter(function(f) {
-    return passesPhaseFilter(f, selectedVersion.value, activePhase.value)
+    return passesPhaseFilter(f, selectedVersion.value, activePhase.value, strict)
   })
 })
 
-// ─── Card counts (computed client-side from phasedFeatures) ───
+// ─── Committed snapshot + visual diff ───
 
-var cardCounts = computed(function() {
-  var feats = phasedFeatures.value
-  var total = feats.length
-  var ownerAssigned = 0
-  var scopeEstimated = 0
-  var riceComplete = 0
-  var dorComplete = 0
+var showChanges = ref(true)
 
-  for (var i = 0; i < feats.length; i++) {
-    var f = feats[i]
-    if (f.deliveryOwner) ownerAssigned++
-    if (f.storyPoints) scopeEstimated++
-    if (f.rice && f.rice.score != null) riceComplete++
-    if (f.dor && f.dor.completionPct >= 80) dorComplete++
-  }
-
-  return {
-    total: total,
-    ownerAssigned: ownerAssigned,
-    scopeEstimated: scopeEstimated,
-    riceComplete: riceComplete,
-    dorComplete: dorComplete
-  }
+var committedSnapshot = computed(function() {
+  if (!healthData.value || !healthData.value.committedSnapshots) return null
+  return healthData.value.committedSnapshots[activePhase.value] || null
 })
 
-// ─── Planning deadline (client-side for "all" tab) ───
-
-function daysUntil(dateStr, todayStr) {
-  var d = new Date(dateStr + 'T00:00:00Z')
-  var t = new Date(todayStr + 'T00:00:00Z')
-  return Math.ceil((d - t) / (1000 * 60 * 60 * 24))
-}
-
-var activePlanningDeadline = computed(function() {
-  var pf = planningFreezes.value
-  if (!pf) return null
-
-  var todayStr = new Date().toISOString().split('T')[0]
-
-  if (activePhase.value !== 'all') {
-    var phaseKey = activePhase.value.toLowerCase()
-    var dateStr = pf[phaseKey]
-    if (!dateStr) return null
-    return { date: dateStr, daysRemaining: daysUntil(dateStr, todayStr) }
-  }
-
-  var nearest = null
-  var phases = ['ea1', 'ea2', 'ga']
-  for (var i = 0; i < phases.length; i++) {
-    var ds = pf[phases[i]]
-    if (!ds || ds < todayStr) continue
-    if (!nearest || ds < nearest.date) {
-      nearest = { date: ds, daysRemaining: daysUntil(ds, todayStr) }
+var addedFeatureKeys = computed(function() {
+  var snap = committedSnapshot.value
+  if (!snap || !isPhaseCommitted(activePhase.value)) return new Set()
+  var snapKeys = new Set(snap.featureKeys)
+  var added = new Set()
+  for (var i = 0; i < phasedFeatures.value.length; i++) {
+    if (!snapKeys.has(phasedFeatures.value[i].key)) {
+      added.add(phasedFeatures.value[i].key)
     }
   }
-
-  return nearest
+  return added
 })
+
+var removedFeatures = computed(function() {
+  var snap = committedSnapshot.value
+  if (!snap || !isPhaseCommitted(activePhase.value)) return []
+  if (!snap.features) return []
+  var currentKeys = new Set(phasedFeatures.value.map(function(f) { return f.key }))
+  return snap.features.filter(function(f) { return !currentKeys.has(f.key) })
+})
+
+function handleResnapshot() {
+  if (!selectedVersion.value || !activePhase.value) return
+  createSnapshot(selectedVersion.value, activePhase.value).then(function() {
+    loadHealth(selectedVersion.value)
+  }).catch(function(err) {
+    healthError.value = err.message || 'Failed to create snapshot'
+  })
+}
 
 // ─── Tab feature counts ───
 
 function phaseFeatureCount(tabId) {
-  if (tabId === 'all') return features.value.length
+  var strict = isPhaseCommitted(tabId)
   return features.value.filter(function(f) {
-    return passesPhaseFilter(f, selectedVersion.value, tabId)
+    return passesPhaseFilter(f, selectedVersion.value, tabId, strict)
   }).length
 }
 
@@ -197,21 +191,6 @@ var filteredFeatures = computed(function() {
   if (!list || list.length === 0) return []
 
   return list.filter(function(f) {
-    // Risk filter
-    if (riskFilter.value) {
-      var featureRisk = f.risk ? f.risk.level : 'green'
-      if (f.risk && f.risk.override) featureRisk = f.risk.override.riskOverride || featureRisk
-      if (featureRisk !== riskFilter.value) return false
-    }
-
-    // DoR filter
-    if (dorFilter.value) {
-      var dorPct = f.dor ? f.dor.completionPct : 0
-      if (dorFilter.value === 'complete' && dorPct < 80) return false
-      if (dorFilter.value === 'partial' && (dorPct < 50 || dorPct >= 80)) return false
-      if (dorFilter.value === 'incomplete' && dorPct >= 50) return false
-    }
-
     // Big Rock filter
     if (bigRockFilter.value && f.bigRock !== bigRockFilter.value) return false
 
@@ -226,9 +205,6 @@ var filteredFeatures = computed(function() {
       if (!hasMatch) return false
     }
 
-    // Tier filter
-    if (tierFilter.value && String(f.tier) !== tierFilter.value) return false
-
     // Search
     if (searchQuery.value) {
       var q = searchQuery.value.toLowerCase()
@@ -241,15 +217,12 @@ var filteredFeatures = computed(function() {
 })
 
 var hasActiveFilters = computed(function() {
-  return !!(riskFilter.value || dorFilter.value || bigRockFilter.value || selectedComponents.value.length > 0 || tierFilter.value || searchQuery.value)
+  return !!(bigRockFilter.value || selectedComponents.value.length > 0 || searchQuery.value)
 })
 
 function clearFilters() {
-  riskFilter.value = ''
-  dorFilter.value = ''
   bigRockFilter.value = ''
   selectedComponents.value = []
-  tierFilter.value = ''
   searchQuery.value = ''
 }
 
@@ -345,7 +318,7 @@ function formatDate(iso) {
 
 watch(selectedVersion, function(newVersion) {
   healthError.value = null
-  activePhase.value = 'all'
+  activePhase.value = 'EA1'
   clearFilters()
   if (newVersion) {
     loadHealth(newVersion)
@@ -389,7 +362,24 @@ onUnmounted(function() {
         >
           {{ healthRefreshing ? 'Refreshing...' : 'Refresh' }}
         </button>
+        <button
+          v-if="canEdit"
+          @click="showRiceConfig = !showRiceConfig"
+          :title="showRiceConfig ? 'Hide RICE settings' : 'RICE settings'"
+          class="p-1.5 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 rounded"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </button>
       </div>
+    </div>
+
+    <!-- RICE Configuration (admin only) -->
+    <div v-if="showRiceConfig && canEdit" class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+      <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">RICE Configuration</h3>
+      <RiceFieldConfig />
     </div>
 
     <!-- Demo mode banner -->
@@ -461,16 +451,45 @@ onUnmounted(function() {
         </div>
       </div>
 
-      <!-- Summary Cards -->
-      <HealthSummaryCards :cardCounts="cardCounts" :planningDeadline="activePlanningDeadline" />
+      <!-- Committed snapshot info -->
+      <div v-if="committedSnapshot && isPhaseCommitted(activePhase)" class="flex items-center gap-3 flex-wrap">
+        <span class="text-xs text-gray-500 dark:text-gray-400">
+          Committed {{ committedSnapshot.featureCount }} features on {{ formatDate(committedSnapshot.snapshotAt) }}
+        </span>
+        <label class="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400 cursor-pointer">
+          <input type="checkbox" v-model="showChanges" class="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500" />
+          Show changes since commit
+        </label>
+        <button v-if="canEdit" @click="handleResnapshot" class="text-xs text-primary-600 dark:text-primary-400 hover:underline">
+          Re-snapshot
+        </button>
+      </div>
+
+      <!-- Changes since commitment summary -->
+      <div v-if="committedSnapshot && isPhaseCommitted(activePhase) && showChanges && (addedFeatureKeys.size > 0 || removedFeatures.length > 0)"
+           class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          Changes Since Commitment
+        </h3>
+        <div class="flex gap-6 text-sm">
+          <div v-if="addedFeatureKeys.size > 0" class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-green-500"></span>
+            <span class="text-gray-600 dark:text-gray-400">{{ addedFeatureKeys.size }} added</span>
+          </div>
+          <div v-if="removedFeatures.length > 0" class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-red-500"></span>
+            <span class="text-gray-600 dark:text-gray-400">{{ removedFeatures.length }} removed</span>
+          </div>
+          <div class="text-gray-500 dark:text-gray-400">
+            {{ phasedFeatures.length }} current (was {{ committedSnapshot.featureCount }})
+          </div>
+        </div>
+      </div>
 
       <!-- Filters -->
       <HealthFilterBar
-        v-model:riskFilter="riskFilter"
-        v-model:dorFilter="dorFilter"
         v-model:bigRockFilter="bigRockFilter"
         v-model:selectedComponents="selectedComponents"
-        v-model:tierFilter="tierFilter"
         v-model:searchQuery="searchQuery"
         :bigRocks="bigRockOptions"
         :components="componentOptions"
@@ -483,6 +502,9 @@ onUnmounted(function() {
         :features="filteredFeatures"
         :canEdit="canEdit"
         :jiraBaseUrl="jiraBaseUrl"
+        :addedKeys="addedFeatureKeys"
+        :removedFeatures="removedFeatures"
+        :showChanges="showChanges"
         @toggleDorItem="handleDorToggle"
         @updateNotes="handleNotesUpdate"
         @removeOverride="handleRemoveOverride"

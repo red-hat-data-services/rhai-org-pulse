@@ -37,6 +37,49 @@ export function getStrategicDescription(strategic) {
   return STRATEGIC_DESCRIPTIONS[strategic] || ''
 }
 
+export const TIER_CONFIG = {
+  increasing: {
+    label: 'Increasing',
+    borderClass: 'border-l-green-500',
+    ringClass: 'ring-green-500/40',
+    dotClass: 'bg-green-500',
+    bgClass: 'bg-green-50 dark:bg-green-900/20',
+    textClass: 'text-green-700 dark:text-green-400',
+  },
+  sustaining: {
+    label: 'Sustaining',
+    borderClass: 'border-l-blue-500',
+    ringClass: 'ring-blue-500/40',
+    dotClass: 'bg-blue-500',
+    bgClass: 'bg-blue-50 dark:bg-blue-900/20',
+    textClass: 'text-blue-700 dark:text-blue-400',
+  },
+  evaluating: {
+    label: 'Evaluating',
+    borderClass: 'border-l-yellow-500',
+    ringClass: 'ring-yellow-500/40',
+    dotClass: 'bg-yellow-500',
+    bgClass: 'bg-yellow-50 dark:bg-yellow-900/20',
+    textClass: 'text-yellow-700 dark:text-yellow-400',
+  },
+}
+
+export function getStrategicTier(org) {
+  const p = org.strategicParticipation || ''
+  const l = org.strategicLeadership || ''
+  if (p === 'increasing_participation' || l === 'increasing_leadership') return 'increasing'
+  if (p === 'sustaining_participation' || l === 'sustaining_leadership') return 'sustaining'
+  if (p === 'evaluating_participation' || l === 'evaluating_leadership') return 'evaluating'
+  return null
+}
+
+export function matchesScope(org, scope) {
+  const tier = getStrategicTier(org)
+  if (!tier) return false
+  if (scope === 'all') return true
+  return tier === scope
+}
+
 export function getEngagementStatus(leadershipCount, maintainerCount, total) {
   const hasGovernance = leadershipCount > 0 || maintainerCount > 0
   const highGovernance = leadershipCount >= 3 || maintainerCount >= 5

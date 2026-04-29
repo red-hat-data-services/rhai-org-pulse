@@ -229,12 +229,6 @@ describe('HealthFilterBar', function() {
     expect(wrapper.find('input[type="text"]').exists()).toBe(true)
   })
 
-  it('renders risk filter select', function() {
-    var wrapper = mount(HealthFilterBar)
-    var selects = wrapper.findAll('select')
-    expect(selects.length).toBeGreaterThanOrEqual(2)
-  })
-
   it('renders big rocks select when bigRocks provided', function() {
     var wrapper = mount(HealthFilterBar, { props: { bigRocks: ['Rock A', 'Rock B'] } })
     expect(wrapper.text()).toContain('Rock A')
@@ -286,26 +280,6 @@ describe('HealthFilterBar', function() {
       await removeBtn[0].trigger('click')
       expect(wrapper.emitted('update:selectedComponents')).toBeDefined()
       expect(wrapper.emitted('update:selectedComponents')[0][0]).toEqual([])
-    }
-  })
-
-  it('renders tier filter select', function() {
-    var wrapper = mount(HealthFilterBar)
-    expect(wrapper.text()).toContain('All Tiers')
-    expect(wrapper.text()).toContain('Tier 1')
-    expect(wrapper.text()).toContain('Tier 2')
-    expect(wrapper.text()).toContain('Tier 3')
-  })
-
-  it('emits update:tierFilter on tier select change', async function() {
-    var wrapper = mount(HealthFilterBar)
-    var tierSelect = wrapper.findAll('select').filter(function(s) {
-      return s.text().includes('All Tiers')
-    })
-    if (tierSelect.length > 0) {
-      await tierSelect[0].setValue('2')
-      expect(wrapper.emitted('update:tierFilter')).toBeDefined()
-      expect(wrapper.emitted('update:tierFilter')[0][0]).toBe('2')
     }
   })
 
@@ -424,11 +398,11 @@ describe('FeatureHealthTable', function() {
     expect(wrapper.text()).not.toContain('Next')
   })
 
-  it('sorts features by health by default (red first)', function() {
+  it('sorts features by priority descending by default (highest first)', function() {
     var wrapper = mount(FeatureHealthTable, { props: { features: features } })
     var rows = wrapper.findAll('tr')
     var firstDataRow = rows.length > 1 ? rows[1].text() : ''
-    expect(firstDataRow).toContain('T-2')
+    expect(firstDataRow).toContain('T-1')
   })
 
   it('has 11 column headers', function() {

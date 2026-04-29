@@ -8,15 +8,27 @@ const props = defineProps({
 
 const MILESTONE_ORDER = [
   { key: 'ea1PlanFreeze', label: 'EA1 PF', color: 'bg-blue-300 dark:bg-blue-300', style: 'dashed' },
-  { key: 'ea1Freeze', label: 'EA1 Code Freeze', color: 'bg-blue-500 dark:bg-blue-400' },
-  { key: 'ea1Target', label: 'EA1 Release', color: 'bg-blue-600 dark:bg-blue-500' },
+  { key: 'ea1Freeze', label: 'EA1 CF', color: 'bg-blue-500 dark:bg-blue-400' },
+  { key: 'ea1Target', label: 'EA1 Rel', color: 'bg-blue-600 dark:bg-blue-500' },
   { key: 'ea2PlanFreeze', label: 'EA2 PF', color: 'bg-amber-300 dark:bg-amber-300', style: 'dashed' },
-  { key: 'ea2Freeze', label: 'EA2 Code Freeze', color: 'bg-amber-500 dark:bg-amber-400' },
-  { key: 'ea2Target', label: 'EA2 Release', color: 'bg-amber-600 dark:bg-amber-500' },
+  { key: 'ea2Freeze', label: 'EA2 CF', color: 'bg-amber-500 dark:bg-amber-400' },
+  { key: 'ea2Target', label: 'EA2 Rel', color: 'bg-amber-600 dark:bg-amber-500' },
   { key: 'gaPlanFreeze', label: 'GA PF', color: 'bg-green-300 dark:bg-green-300', style: 'dashed' },
-  { key: 'gaFreeze', label: 'GA Code Freeze', color: 'bg-green-500 dark:bg-green-400' },
-  { key: 'gaTarget', label: 'GA Release', color: 'bg-green-600 dark:bg-green-500' }
+  { key: 'gaFreeze', label: 'GA CF', color: 'bg-green-500 dark:bg-green-400' },
+  { key: 'gaTarget', label: 'GA Rel', color: 'bg-green-600 dark:bg-green-500' }
 ]
+
+const LONG_LABELS = {
+  'EA1 PF': 'EA1 Planning Freeze',
+  'EA1 CF': 'EA1 Code Freeze',
+  'EA1 Rel': 'EA1 Release',
+  'EA2 PF': 'EA2 Planning Freeze',
+  'EA2 CF': 'EA2 Code Freeze',
+  'EA2 Rel': 'EA2 Release',
+  'GA PF': 'GA Planning Freeze',
+  'GA CF': 'GA Code Freeze',
+  'GA Rel': 'GA Release'
+}
 
 function parseDate(val) {
   if (!val) return null
@@ -45,6 +57,7 @@ const milestonePoints = computed(function() {
       points.push({
         key: m.key,
         label: m.label,
+        longLabel: LONG_LABELS[m.label] || m.label,
         color: m.color,
         style: m.style || null,
         date: date,
@@ -64,7 +77,6 @@ const timelineRange = computed(function() {
   var dates = milestonePoints.value.map(function(p) { return p.date.getTime() })
   var min = Math.min.apply(null, dates)
   var max = Math.max.apply(null, dates)
-  // Add 5% padding on each side
   var padding = (max - min) * 0.05 || 86400000
   return { start: min - padding, end: max + padding }
 })
@@ -92,7 +104,7 @@ const nextMilestone = computed(function() {
       var diff = milestonePoints.value[i].date.getTime() - now
       var days = Math.ceil(diff / 86400000)
       return {
-        label: milestonePoints.value[i].label,
+        label: milestonePoints.value[i].longLabel,
         days: days
       }
     }
@@ -100,31 +112,39 @@ const nextMilestone = computed(function() {
   return null
 })
 
-const STEM_HEIGHT = 28
-const OVERLAP_THRESHOLD = 10
-const CLOSE_DATE_THRESHOLD_MS = 7 * 24 * 60 * 60 * 1000 // 7 days in ms
+const CHAR_WIDTH_PCT = 0.6
+const LABEL_GAP_PCT = 1.5
+
+function estimateLabelWidthPct(label, dateStr) {
+  var chars = Math.max(label.length, dateStr.length)
+  return chars * CHAR_WIDTH_PCT
+}
 
 const staggeredPoints = computed(function() {
   var points = milestonePoints.value
   if (points.length === 0) return []
 
+  var aboveEdge = -Infinity
+  var belowEdge = -Infinity
   var result = []
+
   for (var i = 0; i < points.length; i++) {
     var pct = positionPct(points[i].date)
-    var above = true
+    var halfWidth = estimateLabelWidthPct(points[i].label, points[i].dateStr) / 2
+    var leftEdge = pct - halfWidth
 
-    if (i > 0) {
-      var prevPct = positionPct(points[i - 1].date)
-      var dateDiffMs = Math.abs(points[i].date.getTime() - points[i - 1].date.getTime())
+    var preferAbove = (i % 2 === 0)
+    var canAbove = leftEdge >= aboveEdge + LABEL_GAP_PCT
+    var canBelow = leftEdge >= belowEdge + LABEL_GAP_PCT
 
-      // When adjacent markers are within 7 days or overlap in position,
-      // stack labels vertically by alternating above/below
-      if (Math.abs(pct - prevPct) < OVERLAP_THRESHOLD || dateDiffMs < CLOSE_DATE_THRESHOLD_MS) {
-        above = !result[i - 1].above
-      }
-    }
+    var band
+    if (preferAbove && canAbove) { band = 'above'; aboveEdge = pct + halfWidth }
+    else if (!preferAbove && canBelow) { band = 'below'; belowEdge = pct + halfWidth }
+    else if (canAbove) { band = 'above'; aboveEdge = pct + halfWidth }
+    else if (canBelow) { band = 'below'; belowEdge = pct + halfWidth }
+    else { band = 'above'; aboveEdge = pct + halfWidth }
 
-    result.push(Object.assign({}, points[i], { pct: pct, above: above }))
+    result.push(Object.assign({}, points[i], { pct: pct, band: band }))
   }
   return result
 })
@@ -140,23 +160,36 @@ const staggeredPoints = computed(function() {
     </div>
 
     <!-- Desktop horizontal timeline -->
-    <div class="hidden sm:block relative mx-4" style="height: 120px">
-      <!-- Track line — centered vertically -->
+    <div class="hidden sm:block relative mx-4" style="height: 80px">
+      <!-- SVG layer for leader lines -->
+      <svg class="absolute inset-0 w-full h-full pointer-events-none">
+        <template v-for="point in staggeredPoints" :key="point.key + '-line'">
+          <line
+            :x1="point.pct + '%'" y1="50%"
+            :x2="point.pct + '%'"
+            :y2="point.band === 'above' ? '20%' : '80%'"
+            class="stroke-gray-300 dark:stroke-gray-500"
+            stroke-width="1"
+            stroke-dasharray="2,2"
+          />
+        </template>
+      </svg>
+
+      <!-- Track line -->
       <div class="absolute left-0 right-0 h-0.5 bg-gray-300 dark:bg-gray-600" style="top: 50%"></div>
 
       <!-- Today marker -->
       <div
         v-if="todayPosition != null"
         class="absolute -translate-x-1/2 z-10"
-        :style="{ left: todayPosition + '%', top: '10%', height: '80%' }"
+        :style="{ left: todayPosition + '%', top: '15%', height: '70%' }"
       >
         <div class="w-px h-full bg-red-400/40 dark:bg-red-400/30 mx-auto"></div>
-        <div class="text-[10px] font-medium text-red-600 dark:text-red-400 mt-0.5 whitespace-nowrap text-center -translate-x-1/4">Today</div>
+        <div class="text-[10px] font-medium text-red-600 dark:text-red-400 whitespace-nowrap text-center">Today</div>
       </div>
 
-      <!-- Milestone points -->
-      <template v-for="point in staggeredPoints" :key="point.key">
-        <!-- Dot — always on the track -->
+      <!-- Dots on track -->
+      <template v-for="point in staggeredPoints" :key="point.key + '-dot'">
         <div
           class="absolute -translate-x-1/2 -translate-y-1/2 z-[5]"
           :style="{ left: point.pct + '%', top: '50%' }"
@@ -164,29 +197,24 @@ const staggeredPoints = computed(function() {
           <div
             class="w-3 h-3 rounded-full border-2"
             :class="[point.color, point.style === 'dashed' ? 'border-dashed border-gray-500' : 'border-white dark:border-gray-800']"
+            :title="point.longLabel + ' — ' + point.dateStr"
           ></div>
         </div>
+      </template>
 
-        <!-- Stem + label above -->
-        <div
-          v-if="point.above"
-          class="absolute -translate-x-1/2 text-center flex flex-col items-center"
-          :style="{ left: point.pct + '%', bottom: '50%' }"
-        >
+      <!-- Labels -->
+      <template v-for="point in staggeredPoints" :key="point.key + '-label'">
+        <div v-if="point.band === 'above'"
+             class="absolute -translate-x-1/2 text-center"
+             :style="{ left: point.pct + '%', top: '0' }">
           <div class="text-[10px] text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ point.label }}</div>
           <div class="text-[10px] font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">{{ point.dateStr }}</div>
-          <div class="w-px bg-gray-300 dark:bg-gray-500 mt-0.5" :style="{ height: STEM_HEIGHT + 'px' }"></div>
         </div>
-
-        <!-- Stem + label below -->
-        <div
-          v-else
-          class="absolute -translate-x-1/2 text-center flex flex-col items-center"
-          :style="{ left: point.pct + '%', top: '50%' }"
-        >
-          <div class="w-px bg-gray-300 dark:bg-gray-500 mb-0.5" :style="{ height: STEM_HEIGHT + 'px' }"></div>
-          <div class="text-[10px] text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ point.label }}</div>
+        <div v-else
+             class="absolute -translate-x-1/2 text-center"
+             :style="{ left: point.pct + '%', bottom: '0' }">
           <div class="text-[10px] font-medium text-gray-900 dark:text-gray-100 whitespace-nowrap">{{ point.dateStr }}</div>
+          <div class="text-[10px] text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ point.label }}</div>
         </div>
       </template>
     </div>
@@ -203,7 +231,7 @@ const staggeredPoints = computed(function() {
           :class="[point.color, point.style === 'dashed' ? 'border border-dashed border-gray-500' : '']"
         ></div>
         <div class="flex-1 flex justify-between items-center">
-          <span class="text-xs text-gray-600 dark:text-gray-400">{{ point.label }}</span>
+          <span class="text-xs text-gray-600 dark:text-gray-400">{{ point.longLabel }}</span>
           <span class="text-xs font-medium text-gray-900 dark:text-gray-100">{{ point.dateStr }}</span>
         </div>
       </div>

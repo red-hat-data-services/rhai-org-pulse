@@ -7,82 +7,70 @@
       <span class="text-gray-900 dark:text-gray-100 font-medium">{{ displayName }}</span>
     </nav>
 
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
-      <div>
-        <div class="flex items-center gap-2 mb-1 flex-wrap">
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ displayName }}</h2>
-
-          <!-- Engagement Status Badge with Tooltip -->
-          <div v-if="dashboard" class="relative group/engagement">
-            <span
-              :class="engagementStatus.classes"
-              :title="engagementStatus.description"
-              :aria-label="engagementStatus.description"
-              class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border"
-            >
-              {{ engagementStatus.label }}
-            </span>
-            <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover/engagement:opacity-100 group-hover/engagement:visible transition-all duration-200 pointer-events-none whitespace-nowrap z-50">
-              {{ engagementStatus.description }}
-              <div class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-900 dark:border-t-gray-700"></div>
-            </div>
-          </div>
-
-          <!-- Strategic Leadership Badge with Tooltip -->
-          <div v-if="strategicLeadership" class="relative group/leadership">
-            <span
-              class="px-3 py-1 rounded-full text-xs font-semibold"
-              :class="getStrategicBadgeClass(strategicLeadership)"
-              :title="getStrategicDescription(strategicLeadership)"
-              :aria-label="getStrategicDescription(strategicLeadership)"
-            >
-              {{ getStrategicLabel(strategicLeadership) }}
-            </span>
-            <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover/leadership:opacity-100 group-hover/leadership:visible transition-all duration-200 pointer-events-none whitespace-nowrap z-50">
-              {{ getStrategicDescription(strategicLeadership) }}
-              <div class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-900 dark:border-t-gray-700"></div>
-            </div>
-          </div>
-
-          <!-- Strategic Participation Badge with Tooltip -->
-          <div v-if="strategicParticipation" class="relative group/participation">
-            <span
-              class="px-3 py-1 rounded-full text-xs font-semibold"
-              :class="getStrategicBadgeClass(strategicParticipation)"
-              :title="getStrategicDescription(strategicParticipation)"
-              :aria-label="getStrategicDescription(strategicParticipation)"
-            >
-              {{ getStrategicLabel(strategicParticipation) }}
-            </span>
-            <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover/participation:opacity-100 group-hover/participation:visible transition-all duration-200 pointer-events-none whitespace-nowrap z-50">
-              {{ getStrategicDescription(strategicParticipation) }}
-              <div class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-900 dark:border-t-gray-700"></div>
-            </div>
-          </div>
+    <!-- Badges -->
+    <div v-if="dashboard || strategicLeadership || strategicParticipation" class="flex items-center gap-2 flex-wrap mb-2">
+      <!-- Engagement Status Badge with Tooltip -->
+      <div v-if="dashboard" class="relative group/engagement">
+        <span
+          :class="engagementStatus.classes"
+          :title="engagementStatus.description"
+          :aria-label="engagementStatus.description"
+          class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap border"
+        >
+          {{ engagementStatus.label }}
+        </span>
+        <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover/engagement:opacity-100 group-hover/engagement:visible transition-all duration-200 pointer-events-none whitespace-nowrap z-50">
+          {{ engagementStatus.description }}
+          <div class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-900 dark:border-t-gray-700"></div>
         </div>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Team engagement in {{ displayName }} projects</p>
       </div>
-      <div class="flex items-center gap-3">
-        <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
-          <button
-            v-for="opt in periodOptions"
-            :key="opt.value"
-            @click="selectedDays = opt.value"
-            class="px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200"
-            :class="selectedDays === opt.value
-              ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm'
-              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'"
-          >
-            {{ opt.label }}
-          </button>
+
+      <!-- Strategic Leadership Badge with Tooltip -->
+      <div v-if="strategicLeadership" class="relative group/leadership">
+        <span
+          class="px-3 py-1 rounded-full text-xs font-semibold"
+          :class="getStrategicBadgeClass(strategicLeadership)"
+          :title="getStrategicDescription(strategicLeadership)"
+          :aria-label="getStrategicDescription(strategicLeadership)"
+        >
+          {{ getStrategicLabel(strategicLeadership) }}
+        </span>
+        <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover/leadership:opacity-100 group-hover/leadership:visible transition-all duration-200 pointer-events-none whitespace-nowrap z-50">
+          {{ getStrategicDescription(strategicLeadership) }}
+          <div class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-900 dark:border-t-gray-700"></div>
         </div>
-        <div v-if="dashboard?.summary" class="hidden lg:flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-lg">
-          <CalendarIcon :size="14" />
-          <span>{{ periodLabel }}</span>
+      </div>
+
+      <!-- Strategic Participation Badge with Tooltip -->
+      <div v-if="strategicParticipation" class="relative group/participation">
+        <span
+          class="px-3 py-1 rounded-full text-xs font-semibold"
+          :class="getStrategicBadgeClass(strategicParticipation)"
+          :title="getStrategicDescription(strategicParticipation)"
+          :aria-label="getStrategicDescription(strategicParticipation)"
+        >
+          {{ getStrategicLabel(strategicParticipation) }}
+        </span>
+        <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg shadow-lg opacity-0 invisible group-hover/participation:opacity-100 group-hover/participation:visible transition-all duration-200 pointer-events-none whitespace-nowrap z-50">
+          {{ getStrategicDescription(strategicParticipation) }}
+          <div class="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-4 border-r-4 border-t-4 border-l-transparent border-r-transparent border-t-gray-900 dark:border-t-gray-700"></div>
         </div>
       </div>
     </div>
+
+    <StickyPageHeader
+      v-model="selectedDays"
+      :title="displayName"
+      :subtitle="`Team engagement in ${displayName} projects`"
+      :loading="loading"
+    >
+      <template #extra>
+        <div v-if="dashboard?.summary" class="hidden lg:flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-750/40 pl-2 pr-2.5 py-1 rounded-lg">
+          <CalendarIcon :size="12" />
+          <span>{{ periodLabel }}</span>
+        </div>
+      </template>
+    </StickyPageHeader>
 
     <!-- Loading skeleton -->
     <div v-if="loading">
@@ -521,17 +509,11 @@ import ContributionTrendChart from '../components/ContributionTrendChart.vue'
 import ImpactBanner from '../components/ImpactBanner.vue'
 import { useGovernanceCards, uniqueRoles } from '../composables/useGovernanceCards.js'
 import { getStrategicLabel, getStrategicBadgeClass, getStrategicDescription, getEngagementStatus } from '../composables/useStrategicClassification.js'
+import StickyPageHeader from '../components/StickyPageHeader.vue'
 
 const nav = inject('moduleNav')
 
 const MODULE_API = '/modules/upstream-pulse'
-
-const periodOptions = [
-  { label: '30d', value: '30' },
-  { label: '60d', value: '60' },
-  { label: '90d', value: '90' },
-  { label: 'All', value: '0' },
-]
 
 const githubOrg = computed(() => nav.params.value?.org || '')
 const displayName = ref('')

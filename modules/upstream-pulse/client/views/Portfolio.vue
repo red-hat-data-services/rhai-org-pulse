@@ -1,25 +1,11 @@
 <template>
   <div>
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
-      <div>
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Portfolio</h2>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Organizations and projects your team is tracking</p>
-      </div>
-      <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
-        <button
-          v-for="opt in periodOptions"
-          :key="opt.value"
-          @click="selectedDays = opt.value"
-          class="px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200"
-          :class="selectedDays === opt.value
-            ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm'
-            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'"
-        >
-          {{ opt.label }}
-        </button>
-      </div>
-    </div>
+    <StickyPageHeader
+      v-model="selectedDays"
+      title="Portfolio"
+      subtitle="Organizations and projects your team is tracking"
+      :loading="loading"
+    />
 
     <!-- Loading -->
     <div v-if="loading">
@@ -515,6 +501,7 @@ import { useAuth } from '@shared/client/composables/useAuth'
 import OrgActivityCard from '../components/OrgActivityCard.vue'
 import AddProjectModal from '../components/AddProjectModal.vue'
 import { OrgCardSkeleton, StatCardSkeleton, TableRowSkeleton } from '../components/SkeletonLoaders.vue'
+import StickyPageHeader from '../components/StickyPageHeader.vue'
 import { getEngagementStatus } from '../composables/useStrategicClassification.js'
 
 const nav = inject('moduleNav')
@@ -522,13 +509,6 @@ const { isAdmin } = useAuth()
 const showAddProject = ref(false)
 
 const MODULE_API = '/modules/upstream-pulse'
-
-const periodOptions = [
-  { label: '30d', value: '30' },
-  { label: '60d', value: '60' },
-  { label: '90d', value: '90' },
-  { label: 'All', value: '0' },
-]
 
 const orgSortOptions = [
   { label: 'Contributions', value: 'contributionCount' },

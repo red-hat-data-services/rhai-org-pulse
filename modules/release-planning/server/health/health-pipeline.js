@@ -151,22 +151,29 @@ function loadFeaturesFromCandidates(readFromStorage, version, phase) {
 
 /**
  * Compute the planning deadline for a given phase.
- * The planning deadline is the code freeze date minus PLANNING_DEADLINE_OFFSET_DAYS.
+ * The planning freeze is 1 week before the PREVIOUS phase's code freeze:
+ *   EA1 planning freeze = previous version GA code freeze - 7 days
+ *   EA2 planning freeze = EA1 code freeze - 7 days
+ *   GA  planning freeze = EA2 code freeze - 7 days
  *
- * @param {object|null} milestones - Milestone dates from Product Pages
+ * @param {object|null} milestones - Milestone dates for the current version
  * @param {string|null} phase - Selected phase (EA1/EA2/GA)
+ * @param {string|null} prevGaFreeze - Previous version's GA code freeze date
  * @returns {{ date: string, daysRemaining: number }|null}
  */
-function computePlanningDeadline(milestones, phase) {
-  if (!milestones || !phase) return null
+function computePlanningDeadline(milestones, phase, prevGaFreeze) {
+  if (!phase) return null
 
-  var freezeMap = {
-    'EA1': milestones.ea1Freeze,
-    'EA2': milestones.ea2Freeze,
-    'GA': milestones.gaFreeze
+  var freezeDate = null
+  var p = phase.toUpperCase()
+  if (p === 'EA1') {
+    freezeDate = prevGaFreeze || null
+  } else if (p === 'EA2' && milestones) {
+    freezeDate = milestones.ea1Freeze
+  } else if (p === 'GA' && milestones) {
+    freezeDate = milestones.ea2Freeze
   }
 
-  var freezeDate = freezeMap[phase.toUpperCase()]
   if (!freezeDate) return null
 
   var freeze = new Date(freezeDate + 'T00:00:00Z')
@@ -229,6 +236,12 @@ function loadMilestones(readFromStorage, version) {
     return null
   }
 
+  var escapedVersion = version.replace(/\./g, '\\.')
+  var ea1Pattern = new RegExp('\\b' + escapedVersion + '[.\\s]EA1\\b', 'i')
+  var ea2Pattern = new RegExp('\\b' + escapedVersion + '[.\\s]EA2\\b', 'i')
+  var eaExclude = /\bEA\d?\b/i
+  var preferredProduct = /^(rhoai|rhelai)/i
+
   var ea1Entry = null
   var ea2Entry = null
   var gaEntry = null
@@ -236,12 +249,12 @@ function loadMilestones(readFromStorage, version) {
   for (var i = 0; i < cached.releases.length; i++) {
     var r = cached.releases[i]
     var rn = r.releaseNumber || ''
-    if (rn.indexOf(version + '.EA1') !== -1) {
-      ea1Entry = r
-    } else if (rn.indexOf(version + '.EA2') !== -1) {
-      ea2Entry = r
-    } else if (rn.indexOf(version) !== -1 && rn.indexOf('.EA') === -1) {
-      gaEntry = r
+    if (ea1Pattern.test(rn)) {
+      if (!ea1Entry || preferredProduct.test(rn)) ea1Entry = r
+    } else if (ea2Pattern.test(rn)) {
+      if (!ea2Entry || preferredProduct.test(rn)) ea2Entry = r
+    } else if (rn.indexOf(version) !== -1 && !eaExclude.test(rn)) {
+      if (!gaEntry || preferredProduct.test(rn)) gaEntry = r
     }
   }
 
@@ -255,8 +268,57 @@ function loadMilestones(readFromStorage, version) {
     ea2Freeze: ea2Entry ? ea2Entry.codeFreezeDate || null : null,
     ea2Target: ea2Entry ? ea2Entry.dueDate || null : null,
     gaFreeze: gaEntry ? gaEntry.codeFreezeDate || null : null,
-    gaTarget: gaEntry ? gaEntry.dueDate || null : null
+    gaTarget: gaEntry ? gaEntry.dueDate || null : null,
+    _matched: {
+      ea1: ea1Entry ? ea1Entry.releaseNumber : null,
+      ea2: ea2Entry ? ea2Entry.releaseNumber : null,
+      ga: gaEntry ? gaEntry.releaseNumber : null
+    }
   }
+}
+
+/**
+ * Look up the previous version's GA code freeze date from Product Pages cache.
+ * Used to compute EA1's planning freeze (1 week before previous GA code freeze).
+ *
+ * @param {Function} readFromStorage
+ * @param {string} version - Current version (e.g., '3.5')
+ * @returns {Promise<string|null>} Previous version's GA code freeze date, or null
+ */
+async function loadPreviousGaFreeze(readFromStorage, version) {
+  var parts = version.split('.')
+  if (parts.length < 2) return null
+  var prevMinor = parseInt(parts[1], 10) - 1
+  if (prevMinor < 0) return null
+  var prevVersion = parts[0] + '.' + prevMinor
+
+  // Try Product Pages cache first
+  var cached = readFromStorage('release-analysis/product-pages-releases-cache.json')
+  if (cached && cached.releases && Array.isArray(cached.releases)) {
+    for (var i = 0; i < cached.releases.length; i++) {
+      var r = cached.releases[i]
+      var rn = r.releaseNumber || ''
+      if (rn.indexOf(prevVersion) !== -1 && !/\bEA\d?\b/i.test(rn)) {
+        if (r.codeFreezeDate) return r.codeFreezeDate
+      }
+    }
+  }
+
+  // Fallback to Smartsheet
+  if (smartsheetClient.isConfigured()) {
+    try {
+      var releases = await smartsheetClient.discoverReleasesPartial()
+      for (var j = 0; j < releases.length; j++) {
+        if (releases[j].version === prevVersion && releases[j].gaFreeze) {
+          return releases[j].gaFreeze
+        }
+      }
+    } catch {
+      // fall through
+    }
+  }
+
+  return null
 }
 
 /**
@@ -553,6 +615,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
   var deriveResult = deriveFreezeDates(milestones)
   milestones = deriveResult.milestones
   warnings = warnings.concat(deriveResult.warnings)
+  var prevGaFreeze = await loadPreviousGaFreeze(readFromStorage, version)
 
   // Step 3: Run Jira enrichment
   var enrichResult = { enrichments: new Map(), riceData: new Map(), warnings: [], stats: { pass1: 0, pass2: 0, rice: 0 } }
@@ -569,7 +632,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
   var overrides = readFromStorage(DATA_PREFIX + '/health-overrides-' + version + '.json') || { overrides: {} }
 
   // Step 5: Build per-feature health assessments
-  var planningDeadline = computePlanningDeadline(milestones, phase)
+  var planningDeadline = computePlanningDeadline(milestones, phase, prevGaFreeze)
   var milestoneInfo = computeMilestoneInfo(milestones, today)
   var healthFeatures = []
   var riskCounts = { green: 0, yellow: 0, red: 0 }
@@ -647,6 +710,8 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
       pm: getDisplayName(feature.pm),
       deliveryOwner: getDisplayName(feature.assignee),
       components: components,
+      fixVersions: Array.isArray(feature.fixVersions) ? feature.fixVersions.join(', ') : '',
+      targetRelease: Array.isArray(feature.targetVersions) ? feature.targetVersions.join(', ') : '',
       completionPct: typeof feature.completionPct === 'number' ? feature.completionPct : 0,
       epicCount: feature.epicCount || 0,
       issueCount: feature.issueCount || 0,
@@ -661,6 +726,8 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
       dor: dorStatus,
       rice: riceResult,
       storyPoints: enrichment ? enrichment.storyPoints || null : null,
+      tshirtSize: enrichment ? enrichment.tshirtSize || null : null,
+      versionHistory: enrichment && enrichment.refinementHistory ? enrichment.refinementHistory : [],
       jiraUrl: JIRA_BROWSE_URL + '/' + key
     })
   }
@@ -681,6 +748,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
   var cache = {
     cachedAt: today.toISOString(),
     version: version,
+    warnings: warnings,
     milestones: milestones ? {
       ea1Freeze: milestones.ea1Freeze,
       ea1Target: milestones.ea1Target,
@@ -689,11 +757,11 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
       gaFreeze: milestones.gaFreeze,
       gaTarget: milestones.gaTarget
     } : null,
-    planningFreezes: milestones ? {
-      ea1: milestones.ea1Freeze ? offsetDate(milestones.ea1Freeze, -PLANNING_DEADLINE_OFFSET_DAYS) : null,
-      ea2: milestones.ea2Freeze ? offsetDate(milestones.ea2Freeze, -PLANNING_DEADLINE_OFFSET_DAYS) : null,
-      ga: milestones.gaFreeze ? offsetDate(milestones.gaFreeze, -PLANNING_DEADLINE_OFFSET_DAYS) : null
-    } : null,
+    planningFreezes: {
+      ea1: prevGaFreeze ? offsetDate(prevGaFreeze, -PLANNING_DEADLINE_OFFSET_DAYS) : null,
+      ea2: milestones && milestones.ea1Freeze ? offsetDate(milestones.ea1Freeze, -PLANNING_DEADLINE_OFFSET_DAYS) : null,
+      ga: milestones && milestones.ea2Freeze ? offsetDate(milestones.ea2Freeze, -PLANNING_DEADLINE_OFFSET_DAYS) : null
+    },
     phase: phaseKey,
     summary: {
       totalFeatures: features.length,

@@ -11,7 +11,8 @@
 
 const { getConfig } = require('../config')
 const { CACHE_MAX_AGE_MS, MANUAL_DOR_IDS, DOR_ITEM_IDS, VALID_PHASES } = require('../constants')
-const { runHealthPipeline } = require('./health-pipeline')
+const { runHealthPipeline, loadMilestones, backfillFreezeDatesFromSmartsheet, deriveFreezeDates } = require('./health-pipeline')
+const smartsheetClient = require('../../../../shared/server/smartsheet')
 const { DOR_ITEMS } = require('./dor-checker')
 const { logAudit } = require('../audit-log')
 const { jiraRequest, fetchAllJqlResults } = require('../../../../shared/server/jira')
@@ -24,6 +25,39 @@ var MAX_NOTES_LENGTH = 2000
 var MAX_REASON_LENGTH = 500
 
 var DEMO_MODE = process.env.DEMO_MODE === 'true'
+var PHASE_LABELS = ['EA1', 'EA2', 'GA']
+
+function getStrictPhaseKeys(features, version, phase) {
+  if (!features || !version || !phase) return []
+  var vUpper = version.toUpperCase()
+  var pUpper = phase.toUpperCase()
+  var keys = []
+  for (var i = 0; i < features.length; i++) {
+    var fvStr = features[i].fixVersions || ''
+    var parts = fvStr.split(',')
+    for (var j = 0; j < parts.length; j++) {
+      var fv = parts[j].trim().toUpperCase()
+      if (fv.indexOf(vUpper) !== -1 && fv.indexOf(pUpper) !== -1) {
+        keys.push(features[i].key)
+        break
+      }
+    }
+  }
+  return keys
+}
+
+function getCommittedPhases(planningFreezes) {
+  if (!planningFreezes) return []
+  var today = new Date().toISOString().split('T')[0]
+  var committed = []
+  for (var i = 0; i < PHASE_LABELS.length; i++) {
+    var freezeDate = planningFreezes[PHASE_LABELS[i].toLowerCase()]
+    if (freezeDate && today >= freezeDate) {
+      committed.push(PHASE_LABELS[i])
+    }
+  }
+  return committed
+}
 
 /**
  * Register health routes on the module router.
@@ -104,9 +138,24 @@ function healthRoutes(router, context) {
         triggerHealthRefresh(version, phase)
       }
 
+      var snapshots = {}
+      for (var si = 0; si < PHASE_LABELS.length; si++) {
+        var snap = readFromStorage(DATA_PREFIX + '/committed-snapshot-' + version + '-' + PHASE_LABELS[si] + '.json')
+        if (snap) {
+          snapshots[PHASE_LABELS[si]] = {
+            snapshotAt: snap.snapshotAt,
+            featureKeys: snap.featureKeys,
+            featureCount: snap.featureKeys.length,
+            trigger: snap.snapshotTrigger,
+            features: snap.features || []
+          }
+        }
+      }
+
       return sendJsonWithETag(req, res, Object.assign({}, cached, {
         _cacheStale: isStale,
-        _refreshing: getHealthRefreshState(version, phase).running
+        _refreshing: getHealthRefreshState(version, phase).running,
+        committedSnapshots: snapshots
       }))
     }
 
@@ -473,6 +522,81 @@ function healthRoutes(router, context) {
     res.json({ featureKey: featureKey, removed: true })
   })
 
+  // ─── GET /releases/:version/health/snapshot/:phase ───
+
+  router.get('/releases/:version/health/snapshot/:phase', requireAuth, function(req, res) {
+    var version = req.params.version
+    var phase = (req.params.phase || '').toUpperCase()
+    if (!isValidVersion(version)) {
+      return res.status(400).json({ error: 'Invalid version format' })
+    }
+    if (PHASE_LABELS.indexOf(phase) === -1) {
+      return res.status(400).json({ error: 'Invalid phase. Must be one of: ' + PHASE_LABELS.join(', ') })
+    }
+
+    var snap = readFromStorage(DATA_PREFIX + '/committed-snapshot-' + version + '-' + phase + '.json')
+    if (!snap) {
+      return res.status(404).json({ error: 'No committed snapshot found for ' + version + ' ' + phase })
+    }
+
+    res.json(snap)
+  })
+
+  // ─── POST /releases/:version/health/snapshot/:phase ───
+
+  router.post('/releases/:version/health/snapshot/:phase', requirePM, function(req, res) {
+    var version = req.params.version
+    var phase = (req.params.phase || '').toUpperCase()
+    if (!isValidVersion(version)) {
+      return res.status(400).json({ error: 'Invalid version format' })
+    }
+    if (PHASE_LABELS.indexOf(phase) === -1) {
+      return res.status(400).json({ error: 'Invalid phase. Must be one of: ' + PHASE_LABELS.join(', ') })
+    }
+
+    var pk = phaseKey(null)
+    var cached = readFromStorage(DATA_PREFIX + '/health-cache-' + version + '-' + pk + '.json')
+    if (!cached || !cached.features) {
+      return res.status(404).json({ error: 'No health cache available. Run a health refresh first.' })
+    }
+
+    var snapshotKeys = getStrictPhaseKeys(cached.features, version, phase)
+    var snapshotFeatures = []
+    for (var i = 0; i < cached.features.length; i++) {
+      if (snapshotKeys.indexOf(cached.features[i].key) !== -1) {
+        snapshotFeatures.push({
+          key: cached.features[i].key,
+          summary: cached.features[i].summary,
+          status: cached.features[i].status,
+          components: cached.features[i].components,
+          deliveryOwner: cached.features[i].deliveryOwner
+        })
+      }
+    }
+
+    var snapshotData = {
+      version: version,
+      phase: phase,
+      snapshotAt: new Date().toISOString(),
+      snapshotTrigger: 'manual',
+      featureKeys: snapshotKeys,
+      features: snapshotFeatures
+    }
+
+    writeToStorage(DATA_PREFIX + '/committed-snapshot-' + version + '-' + phase + '.json', snapshotData)
+
+    var user = req.userEmail || 'unknown'
+    logAudit(readFromStorage, writeToStorage, {
+      version: version,
+      action: 'committed_snapshot',
+      user: user,
+      summary: 'Manual committed snapshot for ' + phase + ' with ' + snapshotKeys.length + ' features',
+      details: { phase: phase, featureCount: snapshotKeys.length, trigger: 'manual' }
+    })
+
+    res.json({ phase: phase, featureCount: snapshotKeys.length, snapshotAt: snapshotData.snapshotAt })
+  })
+
   // ─── POST /releases/:version/health/refresh ───
 
   router.post('/releases/:version/health/refresh', requirePM, function(req, res) {
@@ -534,6 +658,10 @@ function healthRoutes(router, context) {
     var healthConfig = config.healthConfig || {}
     var timeoutMs = healthConfig.healthRefreshTimeoutMs || 480000
 
+    // Snapshot old cache for committed-list audit
+    var cacheFile = DATA_PREFIX + '/health-cache-' + version + '-' + pk + '.json'
+    var oldCache = readFromStorage(cacheFile)
+
     refreshStates.set(stateKey, {
       running: true,
       version: version,
@@ -561,6 +689,91 @@ function healthRoutes(router, context) {
             completedAt: new Date().toISOString()
           }
         })
+
+        // Audit committed list changes
+        try {
+          var newFreezes = result && result.planningFreezes
+          var committed = getCommittedPhases(newFreezes)
+          var oldFeatures = oldCache && oldCache.features ? oldCache.features : []
+          var newFeatures = result && result.features ? result.features : []
+
+          for (var i = 0; i < committed.length; i++) {
+            var cp = committed[i]
+            var oldKeys = getStrictPhaseKeys(oldFeatures, version, cp)
+            var newKeys = getStrictPhaseKeys(newFeatures, version, cp)
+
+            var oldSet = {}
+            for (var a = 0; a < oldKeys.length; a++) oldSet[oldKeys[a]] = true
+            var newSet = {}
+            for (var b = 0; b < newKeys.length; b++) newSet[newKeys[b]] = true
+
+            var added = newKeys.filter(function(k) { return !oldSet[k] })
+            var removed = oldKeys.filter(function(k) { return !newSet[k] })
+
+            if (added.length > 0 || removed.length > 0) {
+              logAudit(readFromStorage, writeToStorage, {
+                version: version,
+                action: 'committed_list_change',
+                user: 'system',
+                summary: 'Committed list changed for ' + cp + ': +' + added.length + ' added, -' + removed.length + ' removed',
+                details: { phase: cp, added: added, removed: removed }
+              })
+            }
+          }
+        } catch (auditErr) {
+          console.error('[health] Failed to audit committed list changes:', auditErr)
+        }
+
+        // Auto-snapshot: on first health refresh at/after planning freeze
+        try {
+          var snapFreezes = result && result.planningFreezes
+          if (snapFreezes) {
+            for (var si = 0; si < PHASE_LABELS.length; si++) {
+              var sp = PHASE_LABELS[si]
+              var freezeDate = snapFreezes[sp.toLowerCase()]
+              if (!freezeDate) continue
+              var todayStr = new Date().toISOString().split('T')[0]
+              if (todayStr < freezeDate) continue
+
+              var snapshotKey = DATA_PREFIX + '/committed-snapshot-' + version + '-' + sp + '.json'
+              var existingSnapshot = readFromStorage(snapshotKey)
+              if (existingSnapshot) continue
+
+              var snapshotKeys = getStrictPhaseKeys(newFeatures, version, sp)
+              var snapshotFeatures = []
+              for (var sf = 0; sf < newFeatures.length; sf++) {
+                if (snapshotKeys.indexOf(newFeatures[sf].key) !== -1) {
+                  snapshotFeatures.push({
+                    key: newFeatures[sf].key,
+                    summary: newFeatures[sf].summary,
+                    status: newFeatures[sf].status,
+                    components: newFeatures[sf].components,
+                    deliveryOwner: newFeatures[sf].deliveryOwner
+                  })
+                }
+              }
+
+              writeToStorage(snapshotKey, {
+                version: version,
+                phase: sp,
+                snapshotAt: new Date().toISOString(),
+                snapshotTrigger: 'auto',
+                featureKeys: snapshotKeys,
+                features: snapshotFeatures
+              })
+
+              logAudit(readFromStorage, writeToStorage, {
+                version: version,
+                action: 'committed_snapshot',
+                user: 'system',
+                summary: 'Auto-created committed snapshot for ' + sp + ' with ' + snapshotKeys.length + ' features',
+                details: { phase: sp, featureCount: snapshotKeys.length }
+              })
+            }
+          }
+        } catch (snapErr) {
+          console.error('[health] Failed to create committed snapshot:', snapErr)
+        }
       })
       .catch(function(err) {
         console.error('[health] Background health refresh failed for ' + version + ' phase ' + pk + ':', err)
@@ -576,6 +789,173 @@ function healthRoutes(router, context) {
         })
       })
   }
+
+  // ─── RICE admin: Jira field search ───
+
+  var FIELD_CACHE_KEY = DATA_PREFIX + '/jira-field-list-cache.json'
+  var FIELD_CACHE_TTL_MS = 60 * 60 * 1000
+
+  async function getCachedFieldList() {
+    var cached = readFromStorage(FIELD_CACHE_KEY)
+    if (cached && cached.fetchedAt) {
+      var age = Date.now() - new Date(cached.fetchedAt).getTime()
+      if (age < FIELD_CACHE_TTL_MS) return cached.fields
+    }
+    var fields = await jiraRequest('/rest/api/3/field')
+    writeToStorage(FIELD_CACHE_KEY, { fetchedAt: new Date().toISOString(), fields: fields })
+    return fields
+  }
+
+  router.get('/releases/health-admin/jira-fields', requirePM, async function(req, res) {
+    var query = (req.query.query || '').toLowerCase()
+    if (!query || query.length < 2) {
+      return res.status(400).json({ error: 'Query must be at least 2 characters' })
+    }
+
+    try {
+      var allFields = await getCachedFieldList()
+
+      var matches = allFields.filter(function(f) {
+        if (!f.custom) return false
+        var name = (f.name || '').toLowerCase()
+        var id = (f.id || '').toLowerCase()
+        return name.indexOf(query) !== -1 || id.indexOf(query) !== -1
+      }).slice(0, 50).map(function(f) {
+        return {
+          id: f.id,
+          name: f.name,
+          description: f.description || '',
+          type: f.schema ? f.schema.type : 'unknown'
+        }
+      })
+
+      res.json({ fields: matches, total: matches.length })
+    } catch (err) {
+      console.error('[health] Jira field search failed:', err.message)
+      res.status(500).json({ error: 'Failed to search Jira fields: ' + err.message })
+    }
+  })
+
+  // ─── RICE admin: save config ───
+
+  router.put('/releases/health-admin/config', requirePM, function(req, res) {
+    var config = getConfig(readFromStorage)
+
+    if (req.body.riceFieldIds) {
+      var ids = req.body.riceFieldIds
+      config.customFieldIds = Object.assign({}, config.customFieldIds, {
+        riceReach: ids.riceReach || config.customFieldIds.riceReach || '',
+        riceImpact: ids.riceImpact || config.customFieldIds.riceImpact || '',
+        riceConfidence: ids.riceConfidence || config.customFieldIds.riceConfidence || '',
+        riceEffort: ids.riceEffort || config.customFieldIds.riceEffort || ''
+      })
+    }
+
+    if (req.body.enableRice !== undefined) {
+      config.healthConfig = Object.assign({}, config.healthConfig, {
+        enableRice: !!req.body.enableRice
+      })
+    }
+
+    writeToStorage('release-planning/config.json', config)
+    res.json({ saved: true, customFieldIds: config.customFieldIds, enableRice: config.healthConfig ? config.healthConfig.enableRice : false })
+  })
+
+  // ─── RICE admin: test configured field IDs ───
+
+  router.post('/releases/health-admin/rice-test', requirePM, async function(req, res) {
+    var config = getConfig(readFromStorage)
+    var ids = config.customFieldIds || {}
+    var fieldIds = [ids.riceReach, ids.riceImpact, ids.riceConfidence, ids.riceEffort].filter(Boolean)
+
+    if (fieldIds.length === 0) {
+      return res.status(400).json({ error: 'No RICE field IDs configured. Save field IDs first.' })
+    }
+
+    try {
+      var allFields = await getCachedFieldList()
+      var fieldMap = {}
+      for (var i = 0; i < allFields.length; i++) {
+        fieldMap[allFields[i].id] = allFields[i]
+      }
+
+      var results = {}
+      var RICE_KEYS = ['riceReach', 'riceImpact', 'riceConfidence', 'riceEffort']
+      var RICE_LABELS = ['Reach', 'Impact', 'Confidence', 'Effort']
+      var validCount = 0
+      for (var j = 0; j < RICE_KEYS.length; j++) {
+        var fid = ids[RICE_KEYS[j]]
+        if (fid && fieldMap[fid]) {
+          results[RICE_KEYS[j]] = { id: fid, name: fieldMap[fid].name, label: RICE_LABELS[j], found: true }
+          validCount++
+        } else if (fid) {
+          results[RICE_KEYS[j]] = { id: fid, name: null, label: RICE_LABELS[j], found: false }
+        } else {
+          results[RICE_KEYS[j]] = { id: null, name: null, label: RICE_LABELS[j], found: false }
+        }
+      }
+
+      res.json({ results: results, validCount: validCount, totalCount: 4 })
+    } catch (err) {
+      console.error('[health] RICE field test failed:', err.message)
+      res.status(500).json({ error: 'Failed to validate RICE fields: ' + err.message })
+    }
+  })
+
+  // ─── RICE admin: get config ───
+
+  router.get('/releases/health-admin/config', requirePM, function(req, res) {
+    var config = getConfig(readFromStorage)
+    res.json({
+      customFieldIds: config.customFieldIds || {},
+      enableRice: config.healthConfig ? !!config.healthConfig.enableRice : false
+    })
+  })
+
+  // ─── GET /releases/:version/health/milestones/debug ───
+
+  router.get('/releases/:version/health/milestones/debug', requirePM, async function(req, res) {
+    var version = req.params.version
+    if (!isValidVersion(version)) {
+      return res.status(400).json({ error: 'Invalid version format' })
+    }
+
+    try {
+      var ppCache = readFromStorage('release-analysis/product-pages-releases-cache.json')
+      var ppEntries = []
+      if (ppCache && ppCache.releases) {
+        ppEntries = ppCache.releases.filter(function(r) {
+          return (r.releaseNumber || '').indexOf(version) !== -1
+        })
+      }
+
+      var ssData = null
+      if (smartsheetClient.isConfigured()) {
+        try {
+          var releases = await smartsheetClient.discoverReleasesPartial()
+          ssData = releases.filter(function(r) { return r.version === version })
+        } catch (err) {
+          ssData = { error: err.message }
+        }
+      }
+
+      var derived = loadMilestones(readFromStorage, version)
+      var backfilled = await backfillFreezeDatesFromSmartsheet(derived, version)
+      var final = deriveFreezeDates(backfilled.milestones)
+
+      res.json({
+        version: version,
+        productPages: ppEntries,
+        smartsheet: ssData,
+        afterLoadMilestones: derived,
+        afterBackfill: { milestones: backfilled.milestones, warnings: backfilled.warnings },
+        afterDerive: { milestones: final.milestones, warnings: final.warnings }
+      })
+    } catch (err) {
+      console.error('[health] Milestones debug failed:', err)
+      res.status(500).json({ error: 'Debug endpoint failed: ' + err.message })
+    }
+  })
 }
 
 module.exports = healthRoutes
