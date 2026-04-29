@@ -4,6 +4,9 @@ import {
   getStrategicLabel,
   getStrategicBadgeClass,
   getStrategicDescription,
+  getStrategicTier,
+  matchesScope,
+  TIER_CONFIG,
 } from '../../client/composables/useStrategicClassification.js'
 
 describe('useStrategicClassification', () => {
@@ -142,6 +145,108 @@ describe('useStrategicClassification', () => {
 
     it('returns empty string for unknown values', () => {
       expect(getStrategicDescription('unknown')).toBe('')
+    })
+  })
+
+  describe('TIER_CONFIG', () => {
+    it('has config for all three tiers', () => {
+      expect(TIER_CONFIG).toHaveProperty('increasing')
+      expect(TIER_CONFIG).toHaveProperty('sustaining')
+      expect(TIER_CONFIG).toHaveProperty('evaluating')
+    })
+
+    it('each tier has required class properties', () => {
+      for (const tier of ['increasing', 'sustaining', 'evaluating']) {
+        expect(TIER_CONFIG[tier]).toHaveProperty('label')
+        expect(TIER_CONFIG[tier]).toHaveProperty('borderClass')
+        expect(TIER_CONFIG[tier]).toHaveProperty('ringClass')
+        expect(TIER_CONFIG[tier]).toHaveProperty('dotClass')
+        expect(TIER_CONFIG[tier]).toHaveProperty('bgClass')
+        expect(TIER_CONFIG[tier]).toHaveProperty('textClass')
+      }
+    })
+  })
+
+  describe('getStrategicTier', () => {
+    it('returns increasing for increasing_participation', () => {
+      expect(getStrategicTier({ strategicParticipation: 'increasing_participation' })).toBe('increasing')
+    })
+
+    it('returns increasing for increasing_leadership', () => {
+      expect(getStrategicTier({ strategicLeadership: 'increasing_leadership' })).toBe('increasing')
+    })
+
+    it('returns sustaining for sustaining_participation', () => {
+      expect(getStrategicTier({ strategicParticipation: 'sustaining_participation' })).toBe('sustaining')
+    })
+
+    it('returns sustaining for sustaining_leadership', () => {
+      expect(getStrategicTier({ strategicLeadership: 'sustaining_leadership' })).toBe('sustaining')
+    })
+
+    it('returns evaluating for evaluating_participation', () => {
+      expect(getStrategicTier({ strategicParticipation: 'evaluating_participation' })).toBe('evaluating')
+    })
+
+    it('returns evaluating for evaluating_leadership', () => {
+      expect(getStrategicTier({ strategicLeadership: 'evaluating_leadership' })).toBe('evaluating')
+    })
+
+    it('returns null for org with no strategic tags', () => {
+      expect(getStrategicTier({})).toBeNull()
+      expect(getStrategicTier({ strategicParticipation: null, strategicLeadership: null })).toBeNull()
+    })
+
+    it('increasing takes precedence over sustaining (mixed tags)', () => {
+      expect(getStrategicTier({
+        strategicParticipation: 'sustaining_participation',
+        strategicLeadership: 'increasing_leadership',
+      })).toBe('increasing')
+    })
+
+    it('increasing takes precedence over evaluating (mixed tags)', () => {
+      expect(getStrategicTier({
+        strategicParticipation: 'evaluating_participation',
+        strategicLeadership: 'increasing_leadership',
+      })).toBe('increasing')
+    })
+
+    it('sustaining takes precedence over evaluating (mixed tags)', () => {
+      expect(getStrategicTier({
+        strategicParticipation: 'evaluating_participation',
+        strategicLeadership: 'sustaining_leadership',
+      })).toBe('sustaining')
+    })
+  })
+
+  describe('matchesScope', () => {
+    const increasingOrg = { strategicParticipation: 'increasing_participation' }
+    const sustainingOrg = { strategicLeadership: 'sustaining_leadership' }
+    const noStrategyOrg = {}
+
+    it('returns true for strategic org with scope all', () => {
+      expect(matchesScope(increasingOrg, 'all')).toBe(true)
+      expect(matchesScope(sustainingOrg, 'all')).toBe(true)
+    })
+
+    it('returns false for non-strategic org with scope all', () => {
+      expect(matchesScope(noStrategyOrg, 'all')).toBe(false)
+    })
+
+    it('returns true when tier matches scope', () => {
+      expect(matchesScope(increasingOrg, 'increasing')).toBe(true)
+      expect(matchesScope(sustainingOrg, 'sustaining')).toBe(true)
+    })
+
+    it('returns false when tier does not match scope', () => {
+      expect(matchesScope(increasingOrg, 'sustaining')).toBe(false)
+      expect(matchesScope(sustainingOrg, 'increasing')).toBe(false)
+    })
+
+    it('returns false for non-strategic org regardless of scope', () => {
+      expect(matchesScope(noStrategyOrg, 'increasing')).toBe(false)
+      expect(matchesScope(noStrategyOrg, 'sustaining')).toBe(false)
+      expect(matchesScope(noStrategyOrg, 'evaluating')).toBe(false)
     })
   })
 })
