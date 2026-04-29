@@ -139,7 +139,7 @@ function isPersonRefType(field) {
     <!-- Divider between core info and custom fields -->
     <div v-if="visibleFields.length > 0" class="border-t border-gray-100 dark:border-gray-700/50 mt-4 pt-3">
       <div class="grid grid-cols-2 gap-3 text-sm">
-        <div v-for="field in visibleFields" :key="field.id" class="group">
+        <div v-for="field in visibleFields" :key="field.id" :class="['group', editingFieldId === field.id ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md px-2 py-1.5' : '']">
           <!-- Edit mode -->
           <template v-if="editingFieldId === field.id">
             <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">
@@ -203,9 +203,9 @@ function isPersonRefType(field) {
               @keyup.enter="saveEdit(field.id)"
               @keyup.escape="editingFieldId = null"
             >
-            <div class="flex gap-2 mt-1.5">
-              <button class="text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700" :disabled="saving" @click="saveEdit(field.id)">Save</button>
-              <button class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-600" @click="editingFieldId = null">Cancel</button>
+            <div class="flex gap-1.5 mt-1.5">
+              <button class="px-2 py-0.5 text-xs font-medium text-white bg-primary-600 rounded hover:bg-primary-700 disabled:opacity-50 transition-colors" :disabled="saving" @click="saveEdit(field.id)">Save</button>
+              <button class="px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" @click="editingFieldId = null">Cancel</button>
             </div>
           </template>
 
