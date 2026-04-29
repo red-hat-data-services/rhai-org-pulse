@@ -398,8 +398,10 @@ function registerIpaRegistryRoutes(router, context) {
 
         var people = getPeopleMap();
         var enriched = results.map(function(p) {
+          var existing = people[p.uid];
           return Object.assign({}, p, {
-            inRegistry: !!people[p.uid]
+            inRegistry: !!existing,
+            registryStatus: existing ? existing.status : null
           });
         });
         res.json({ results: enriched });

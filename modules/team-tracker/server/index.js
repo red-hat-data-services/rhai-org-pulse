@@ -150,7 +150,7 @@ module.exports = function registerRoutes(router, context) {
 
     for (const [orgKey, orgData] of Object.entries(full.orgs)) {
       const teamMap = {};
-      const allMembers = [orgData.leader, ...orgData.members];
+      const allMembers = [orgData.leader, ...orgData.members].filter(Boolean);
 
       for (const person of allMembers) {
         const memberEntry = {
@@ -238,12 +238,12 @@ module.exports = function registerRoutes(router, context) {
 
       orgs.push({
         key: orgKey,
-        displayName: orgDisplayNames[orgKey] || orgData.leader.name,
-        leader: {
+        displayName: orgDisplayNames[orgKey] || orgData.leader?.name || orgKey,
+        leader: orgData.leader ? {
           name: orgData.leader.name,
           uid: orgData.leader.uid,
           title: orgData.leader.title
-        },
+        } : null,
         teams: teamMap
       });
     }
