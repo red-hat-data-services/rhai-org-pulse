@@ -11,7 +11,6 @@ const DEFAULT_CONFIG = {
   productPagesBaseUrl: 'https://productpages.redhat.com',
   productPagesTokenUrl: 'https://auth.redhat.com/auth/realms/EmployeeIDP/protocol/openid-connect/token',
   jiraAllProjects: false,
-  targetVersionField: 'customfield_10855',
   targetVersionJqlFragment: '',
   velocityDiscountFactor: 0.5,
   velocityExtraJqlByProject: {
@@ -82,9 +81,6 @@ function applyEnvOverrides(config) {
       console.warn('[release-analysis] Invalid RELEASE_ANALYSIS_VELOCITY_EXTRA_JQL_BY_PROJECT JSON; ignoring');
     }
   }
-  if (env.RELEASE_ANALYSIS_TARGET_VERSION_FIELD) {
-    config.targetVersionField = String(env.RELEASE_ANALYSIS_TARGET_VERSION_FIELD).trim();
-  }
   if (env.RELEASE_ANALYSIS_TARGET_VERSION_JQL_FRAGMENT) {
     config.targetVersionJqlFragment = String(env.RELEASE_ANALYSIS_TARGET_VERSION_JQL_FRAGMENT).trim();
   }
@@ -152,14 +148,6 @@ function saveConfig(writeToStorage, config) {
       throw new Error('featureWeightField must be empty or match customfield_NNNNN');
     }
     merged.featureWeightField = config.featureWeightField;
-  }
-
-  // targetVersionField — optional customfield (empty allowed)
-  if (config.targetVersionField !== undefined) {
-    if (typeof config.targetVersionField !== 'string' || !OPTIONAL_CUSTOM_FIELD_PATTERN.test(config.targetVersionField)) {
-      throw new Error('targetVersionField must be empty or match customfield_NNNNN');
-    }
-    merged.targetVersionField = config.targetVersionField;
   }
 
   // baselineDays — integer 1–730

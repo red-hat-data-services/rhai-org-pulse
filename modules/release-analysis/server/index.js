@@ -4,70 +4,11 @@ const { fetchProductsByShortname, fetchAllProducts, getProductPagesToken, getAut
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true'
 
-/** When field id is not customfield_* (discovery path), JQL uses the multi-picker name. */
-const TARGET_VERSION_JQL_NAME_FALLBACK = '"Target Version[Version Picker (multiple versions)]" is not EMPTY'
+const FIX_VERSION_FIELD_KEY = 'fixVersions'
 
-/**
- * Default JQL for Target Version: REST uses customfield_10855; JQL uses cf[10855] (same field).
- */
-function getDefaultTargetVersionJql(config) {
-  const m = /^customfield_(\d+)$/i.exec(config.targetVersionField)
-  if (m) return `cf[${m[1]}] is not EMPTY`
-  return TARGET_VERSION_JQL_NAME_FALLBACK
-}
-
-const SCHEMA_MULTI_VERSION = 'com.atlassian.jira.plugin.system.customfieldtypes:multiversion'
-const SCHEMA_SINGLE_VERSION = 'com.atlassian.jira.plugin.system.customfieldtypes:version'
-
-/**
- * Resolves the Jira Cloud "Target Version" version-picker field (not Fix version).
- * Prefers multi-version picker with exact name "Target Version".
- */
-async function resolveTargetVersionFieldMeta(jiraRequest, config) {
-  if (/^customfield_\d+$/i.test(config.targetVersionField)) {
-    const id = config.targetVersionField
-    const allFields = await jiraRequest('/rest/api/3/field')
-    const f = Array.isArray(allFields) && allFields.find(x => String(x.id || '').toLowerCase() === id.toLowerCase())
-    return f
-      ? {
-          id: f.id,
-          name: String(f.name || id).trim(),
-          schemaCustom: String(f.schema?.custom || '')
-        }
-      : { id, name: id, schemaCustom: '' }
-  }
-
-  const allFields = await jiraRequest('/rest/api/3/field')
-  if (!Array.isArray(allFields)) {
-    throw new Error('Unexpected Jira /field response')
-  }
-
-  const isCustom = f => f && /^customfield_\d+$/i.test(String(f.id || ''))
-  const versionPickers = allFields.filter(f => {
-    if (!isCustom(f)) return false
-    const c = String(f.schema?.custom || '')
-    return c === SCHEMA_MULTI_VERSION || c === SCHEMA_SINGLE_VERSION
-  })
-
-  let chosen =
-    versionPickers.find(f => String(f.name || '').trim() === 'Target Version' && String(f.schema?.custom || '') === SCHEMA_MULTI_VERSION) ||
-    versionPickers.find(f => String(f.name || '').trim() === 'Target Version') ||
-    versionPickers.find(
-      f => String(f.name || '').includes('Target Version') && String(f.schema?.custom || '') === SCHEMA_MULTI_VERSION
-    ) ||
-    versionPickers.find(f => String(f.name || '').includes('Target Version'))
-
-  if (!chosen?.id) {
-    throw new Error(
-      'Could not find Target Version (version picker) field. Set RELEASE_ANALYSIS_TARGET_VERSION_FIELD=customfield_XXX from Jira issue JSON.'
-    )
-  }
-
-  return {
-    id: chosen.id,
-    name: String(chosen.name || chosen.id).trim(),
-    schemaCustom: String(chosen.schema?.custom || '')
-  }
+function getDefaultFixVersionJql(config) {
+  if (config.targetVersionJqlFragment) return config.targetVersionJqlFragment
+  return 'fixVersion is not EMPTY'
 }
 
 function normalizeText(value) {
@@ -144,7 +85,7 @@ function normalizeVersionNameFromJira(v) {
   return null
 }
 
-/** Version names from the Target Version field (multi/single version picker or string). */
+/** Version names from a Jira version field (fixVersions, multi/single version picker, or string). */
 function extractVersionNamesFromField(fields, fieldId) {
   if (!fields || !fieldId) return []
   const raw = fields[fieldId]
@@ -161,9 +102,8 @@ function extractVersionNamesFromField(fields, fieldId) {
   return n ? [n] : []
 }
 
-function extractTargetVersions(issue, targetVersionFieldKey) {
-  if (!targetVersionFieldKey) return []
-  return extractVersionNamesFromField(issue.fields || {}, targetVersionFieldKey)
+function extractFixVersions(issue) {
+  return extractVersionNamesFromField(issue.fields || {}, FIX_VERSION_FIELD_KEY)
 }
 
 function percentile(values, p) {
@@ -308,10 +248,7 @@ function filterUnreleased(releases) {
 }
 
 async function fetchIssuesFromJira(config) {
-  const meta = await resolveTargetVersionFieldMeta(jiraRequest, config)
-  const fieldKey = meta.id
-
-  const clause = config.targetVersionJqlFragment || getDefaultTargetVersionJql(config)
+  const clause = getDefaultFixVersionJql(config)
 
   const jql = config.jiraAllProjects
     ? `${clause} ORDER BY updated DESC`
@@ -327,31 +264,18 @@ async function fetchIssuesFromJira(config) {
     'parent',
     'customfield_10014',
     config.storyPointsField,
-    config.featureWeightField
+    config.featureWeightField,
+    FIX_VERSION_FIELD_KEY
   ]
-  if (!fieldList.includes(fieldKey)) {
-    fieldList.push(fieldKey)
-  }
   const fields = [...new Set(fieldList)].join(',')
   const issues = await fetchAllJqlResults(jiraRequest, jql, fields, { maxResults: 100 }) || []
-
-  if (issues.length > 0 && fieldKey) {
-    const raw0 = issues[0].fields?.[fieldKey]
-    if (raw0 === undefined || raw0 === null) {
-      const cfKeys = Object.keys(issues[0].fields || {}).filter(k => /^customfield_/i.test(k))
-      console.warn(
-        `[release-analysis] Target Version field "${fieldKey}" not present on Jira search response. ` +
-          `Custom field keys returned: ${cfKeys.slice(0, 12).join(', ') || '(none)'}`
-      )
-    }
-  }
 
   return {
     issues,
     fieldMeta: {
-      id: fieldKey,
-      name: meta.name,
-      schemaCustom: meta.schemaCustom
+      id: FIX_VERSION_FIELD_KEY,
+      name: 'Fix Version',
+      schemaCustom: ''
     }
   }
 }
@@ -445,7 +369,7 @@ function enrichJiraReleasesWithProductPages(jiraReleases, productPagesReleases) 
 }
 
 /**
- * Cards are keyed by Product Pages or Jira Target Version name. Names often differ only by
+ * Cards are keyed by Product Pages or Jira Fix Version name. Names often differ only by
  * punctuation/spacing (e.g. rhoai-3.4.EA2 vs rhoai-3.4 EA2). Match exact normalized text first, then
  * alphanumeric-only key (same idea as enrichJiraReleasesWithProductPages).
  */
@@ -456,9 +380,6 @@ function findReleaseForTargetVersion(releaseByText, releaseByKey, versionName) {
 }
 
 function buildAnalysis(releases, issues, fieldMeta, config) {
-  const resolvedAnalysisTargetVersionFieldKey = fieldMeta?.id || null
-  const resolvedTargetVersionFieldName = fieldMeta?.name || ''
-  const resolvedTargetVersionSchemaCustom = fieldMeta?.schemaCustom || ''
   const releaseByText = new Map()
   const releaseByKey = new Map()
   for (const r of releases) {
@@ -497,9 +418,8 @@ function buildAnalysis(releases, issues, fieldMeta, config) {
 
   const throughputByTeamMonthly = {}
 
-  let firstIssueMissingTargetField = false
-  let issuesWithParsedTargetVersion = 0
-  const sampleTargetVersionNames = []
+  let issuesWithParsedFixVersion = 0
+  const sampleFixVersionNames = []
 
   for (let ii = 0; ii < issues.length; ii++) {
     const issue = issues[ii]
@@ -511,27 +431,22 @@ function buildAnalysis(releases, issues, fieldMeta, config) {
     const bucket = statusCategoryBucket(statusObj)
     const weight = getWeight(issue, config)
     const unitWeight = weight == null ? 1 : weight
-    const targetVersions = extractTargetVersions(issue, resolvedAnalysisTargetVersionFieldKey)
+    const fixVersions = extractFixVersions(issue)
 
-    if (ii === 0 && resolvedAnalysisTargetVersionFieldKey) {
-      const raw = issue.fields?.[resolvedAnalysisTargetVersionFieldKey]
-      firstIssueMissingTargetField = raw === undefined || raw === null
-    }
-    if (targetVersions.length > 0) {
-      issuesWithParsedTargetVersion++
-      for (const n of targetVersions) {
-        if (sampleTargetVersionNames.length < 15 && !sampleTargetVersionNames.includes(n)) {
-          sampleTargetVersionNames.push(n)
+    if (fixVersions.length > 0) {
+      issuesWithParsedFixVersion++
+      for (const n of fixVersions) {
+        if (sampleFixVersionNames.length < 15 && !sampleFixVersionNames.includes(n)) {
+          sampleFixVersionNames.push(n)
         }
       }
     }
 
-    if (targetVersions.length === 0) continue
+    if (fixVersions.length === 0) continue
 
     const link = `${JIRA_HOST}/browse/${encodeURIComponent(key)}`
     const resolvedAt = issue.fields?.resolutiondate
 
-    // Historical throughput baseline: done issues with Target Version, over trailing window.
     if (bucket === 'done' && resolvedAt) {
       const resolvedDate = new Date(resolvedAt)
       if (!Number.isNaN(resolvedDate.getTime()) && resolvedDate >= cutoff) {
@@ -544,10 +459,8 @@ function buildAnalysis(releases, issues, fieldMeta, config) {
       }
     }
 
-    // Deduplicate by release row: multi-version picker can list the same version twice or aliases that
-    // resolve to the same release — Jira issue counts compare to distinct issues, not sum of rows.
     const releasesForIssue = new Map()
-    for (const target of targetVersions) {
+    for (const target of fixVersions) {
       const release = findReleaseForTargetVersion(releaseByText, releaseByKey, target)
       if (!release) continue
       if (!releasesForIssue.has(release)) {
@@ -571,7 +484,7 @@ function buildAnalysis(releases, issues, fieldMeta, config) {
         statusBucket: bucket,
         weight: unitWeight,
         link,
-        targetVersion: target,
+        fixVersion: target,
         components,
         resolvedAt: resolvedAt || null,
         parentKey
@@ -687,15 +600,13 @@ function buildAnalysis(releases, issues, fieldMeta, config) {
     capacityMode: config.baselineMode,
     projects: config.projectKeys,
     jiraQueryScope: config.jiraAllProjects ? 'all_projects' : 'project_list',
-    targetVersionField: resolvedAnalysisTargetVersionFieldKey,
-    targetVersionFieldName: resolvedTargetVersionFieldName,
-    targetVersionSchemaCustom: resolvedTargetVersionSchemaCustom,
-    targetVersionJql: config.targetVersionJqlFragment || getDefaultTargetVersionJql(config),
-    targetVersionDiagnostics: {
+    fixVersionField: FIX_VERSION_FIELD_KEY,
+    fixVersionFieldName: 'Fix Version',
+    fixVersionJql: getDefaultFixVersionJql(config),
+    fixVersionDiagnostics: {
       jiraIssuesFetched: issues.length,
-      issuesWithTargetVersionParsed: issuesWithParsedTargetVersion,
-      firstIssueMissingTargetVersionField: issues.length > 0 ? firstIssueMissingTargetField : false,
-      sampleTargetVersionNames: sampleTargetVersionNames
+      issuesWithFixVersionParsed: issuesWithParsedFixVersion,
+      sampleFixVersionNames: sampleFixVersionNames
     },
     riskThresholds: {
       issuesPerDayGreenMax: config.riskIssuesPerDayGreen,
@@ -1047,18 +958,11 @@ async function runFullAnalysis(storage, config) {
 
   if (jiraWarning) result.warning = jiraWarning
 
-  const d = result.targetVersionDiagnostics
-  if (d && issues.length > 0) {
-    if (d.firstIssueMissingTargetVersionField) {
-      const msg =
-        `Jira issue JSON did not include Target Version (${result.targetVersionField}). ` +
-        'Confirm the Target Version Field setting matches the custom field id in an issue JSON view.'
-      result.warning = result.warning ? `${result.warning} | ${msg}` : msg
-    } else if (d.issuesWithTargetVersionParsed === 0) {
-      const msg =
-        'No Target Version values could be parsed from fetched issues; the field id or response shape may not match.'
-      result.warning = result.warning ? `${result.warning} | ${msg}` : msg
-    }
+  const d = result.fixVersionDiagnostics
+  if (d && issues.length > 0 && d.issuesWithFixVersionParsed === 0) {
+    const msg =
+      'No Fix Version values could be parsed from fetched issues.'
+    result.warning = result.warning ? `${result.warning} | ${msg}` : msg
   }
 
   return result

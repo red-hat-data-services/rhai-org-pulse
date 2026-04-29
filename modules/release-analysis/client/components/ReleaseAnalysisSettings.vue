@@ -256,24 +256,14 @@ onMounted(() => {
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Target Version Field</label>
-            <input
-              v-model="config.targetVersionField"
-              type="text"
-              placeholder="customfield_10855"
-              class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500"
-            />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Target Version JQL Fragment</label>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fix Version JQL Fragment</label>
             <input
               v-model="config.targetVersionJqlFragment"
               type="text"
-              placeholder="Auto-derived if empty"
+              placeholder="fixVersion is not EMPTY"
               class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-gray-300 placeholder-gray-400 dark:placeholder-gray-500"
             />
-            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Advanced — raw JQL WHERE clause fragment</p>
+            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Advanced — raw JQL WHERE clause fragment (uses Jira Fix Version field)</p>
           </div>
         </div>
       </div>
