@@ -16,6 +16,7 @@ module.exports = function registerRoutes(router, context) {
   const { RESERVED_KEYS } = require('../../../shared/server/roster-sync/constants');
   const sheetsModule = require('../../../shared/server/roster-sync/sheets');
   const snapshots = require('./snapshots');
+  const { computeTeamThroughput } = require('./throughput');
 
   // ─── Refresh State Tracker ───
 
@@ -1451,6 +1452,53 @@ module.exports = function registerRoutes(router, context) {
       res.json({ jira, github, gitlab });
     } catch (error) {
       console.error('Trends error:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/throughput/{teamKey}:
+   *   get:
+   *     tags: ['TT: Throughput']
+   *     summary: Get team throughput metrics
+   *     parameters:
+   *       - in: path
+   *         name: teamKey
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Team key (format orgKey::teamName)
+   *       - in: query
+   *         name: periods
+   *         schema:
+   *           type: integer
+   *           default: 12
+   *         description: Number of 2-week periods to return
+   *     responses:
+   *       200:
+   *         description: Throughput metrics data
+   *       404:
+   *         description: Team not found
+   */
+  router.get('/throughput/:teamKey', function(req, res) {
+    try {
+      const teamKey = decodeURIComponent(req.params.teamKey);
+      const periods = parseInt(req.query.periods) || 12;
+
+      if (periods < 1 || periods > 52) {
+        return res.status(400).json({ error: 'periods must be between 1 and 52' });
+      }
+
+      const roster = deriveRoster();
+      const metrics = computeTeamThroughput(storage, roster, teamKey, { periods });
+
+      res.json(metrics);
+    } catch (error) {
+      if (error.message.includes('not found')) {
+        return res.status(404).json({ error: error.message });
+      }
+      console.error(`Throughput metrics error (${req.params.teamKey}):`, error);
       res.status(500).json({ error: error.message });
     }
   });

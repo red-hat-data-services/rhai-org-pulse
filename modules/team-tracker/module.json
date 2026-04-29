@@ -10,6 +10,7 @@
       { "id": "dashboard", "label": "Dashboard", "icon": "BarChart3", "default": true },
       { "id": "people", "label": "People", "icon": "Users" },
       { "id": "trends", "label": "Trends", "icon": "TrendingUp" },
+      { "id": "throughput", "label": "Throughput", "icon": "Activity" },
       { "id": "reports", "label": "Reports", "icon": "FileText" }
     ],
     "settingsComponent": "./client/components/TeamTrackerSettings.vue"

@@ -183,6 +183,12 @@ export async function getTeamMetrics(teamKey, onData) {
   return cachedRequest(`team:${teamKey}`, `/team/${encodeURIComponent(teamKey)}/metrics`, onData)
 }
 
+export async function getThroughputMetrics(teamKey, options = {}) {
+  const periods = options.periods || 12
+  const path = `/modules/team-tracker/throughput/${encodeURIComponent(teamKey)}?periods=${periods}`
+  return cachedRequest(`throughput:${teamKey}:${periods}`, path, options.onData, { ttl: 5 * 60 * 1000 })
+}
+
 // ─── Unified Refresh ───
 
 export async function refreshMetrics({ scope, name, teamKey, orgKey, force, sources } = {}) {
