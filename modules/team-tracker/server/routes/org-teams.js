@@ -68,9 +68,19 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
     const isInAppMode = (rosterConfig?.teamDataSource || 'sheets') === 'in-app';
 
     const metaData = readFromStorage('org-roster/teams-metadata.json');
-    const compData = readFromStorage('org-roster/components.json');
-    const componentMap = compData?.components || {};
     const boardNames = metaData?.boardNames || {};
+
+    // Resolve component field from team field definitions via optionsRef
+    const fieldStore = require('../../../../shared/server/field-store');
+    const fieldDefs = fieldStore.readFieldDefinitions(storage);
+    const componentFieldDef = (fieldDefs.teamFields || []).find(
+      f => !f.deleted && f.optionsRef === 'components'
+    );
+    const componentFieldId = componentFieldDef?.id;
+
+    // Fallback: legacy component map for pre-migration state
+    const compData = !componentFieldId ? readFromStorage('org-roster/components.json') : null;
+    const componentMap = compData?.components || {};
 
     // Build a lookup of metadata by composite key for enrichment
     const metaByKey = {};
@@ -117,9 +127,12 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
       // Default to metadata boards; overridden below if structure boards exist
       let boards = metaBoards;
 
-      const components = [];
-      for (const [comp, teamNames] of Object.entries(componentMap)) {
-        if (teamNames.includes(name)) components.push(comp);
+      // Components: sourced from team metadata after structure enrichment; legacy fallback here
+      let components = [];
+      if (!componentFieldId) {
+        for (const [comp, teamNames] of Object.entries(componentMap)) {
+          if (teamNames.includes(name)) components.push(comp);
+        }
       }
 
       teams.push({ org, name, boardUrls: teamBoardUrls, boards, engLeads, productManagers, headcount: counts, components, memberCount: teamPeople.length, jiraFilter });
@@ -147,6 +160,15 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
       }
     }
 
+    // Source components from team metadata when component field exists
+    if (componentFieldId) {
+      for (const team of teams) {
+        if (team.metadata && team.metadata[componentFieldId]) {
+          team.components = [].concat(team.metadata[componentFieldId]);
+        }
+      }
+    }
+
     // Add empty structure teams that have no members assigned yet
     const existingKeys = new Set(teams.map(t => `${t.org}::${t.name}`));
     for (const [compositeKey, structure] of Object.entries(structureByComposite)) {
@@ -155,7 +177,10 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
       const org = compositeKey.substring(0, sepIdx);
       const name = compositeKey.substring(sepIdx + 2);
       if (orgFilter && org !== orgFilter) continue;
-      teams.push({ org, name, boardUrls: [], boards: [], engLeads: [], productManagers: [], headcount: {}, components: [], memberCount: 0, jiraFilter: null, structureId: structure.id, metadata: structure.metadata || {} });
+      const emptyTeamComponents = componentFieldId && structure.metadata?.[componentFieldId]
+        ? [].concat(structure.metadata[componentFieldId])
+        : [];
+      teams.push({ org, name, boardUrls: [], boards: [], engLeads: [], productManagers: [], headcount: {}, components: emptyTeamComponents, memberCount: 0, jiraFilter: null, structureId: structure.id, metadata: structure.metadata || {} });
     }
 
     // Find people with no team assignment
@@ -311,13 +336,7 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
         roleFte[role] = (roleFte[role] || 0) + (1 / Math.max(teamCount, 1));
       }
 
-      const compData = readFromStorage('org-roster/components.json');
-      const orgComponents = [];
-      if (compData) {
-        for (const [comp, teamNames] of Object.entries(compData.components || {})) {
-          if (teams.some(t => teamNames.includes(t.name))) orgComponents.push(comp);
-        }
-      }
+      const orgComponents = [...new Set(teams.flatMap(t => t.components || []))];
 
       const rfeData = readFromStorage('org-roster/rfe-backlog.json');
       let totalRfeCount = 0;
@@ -350,7 +369,18 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
 
   router.get('/components', function(req, res) {
     try {
-      res.json(readFromStorage('org-roster/components.json') || { components: {} });
+      const { teams } = buildEnrichedTeams();
+      const components = {};
+      for (const team of teams) {
+        for (const comp of (team.components || [])) {
+          if (!components[comp]) components[comp] = [];
+          if (!components[comp].includes(team.name)) {
+            components[comp].push(team.name);
+          }
+        }
+      }
+      res.set('X-Deprecated', 'Use team metadata components field instead');
+      res.json({ components });
     } catch {
       res.status(500).json({ error: 'Failed to load component data' });
     }

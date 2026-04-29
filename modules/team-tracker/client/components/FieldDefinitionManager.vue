@@ -334,7 +334,7 @@ async function toggleVisibility(field) {
               @click="addEditOption"
             >Add</button>
           </div>
-          <ul v-if="editOptions.length > 0" class="space-y-1">
+          <ul v-if="editOptions.length > 0" class="space-y-1 max-h-64 overflow-y-auto">
             <li v-for="(opt, i) in editOptions" :key="i" class="flex items-center justify-between bg-gray-50 dark:bg-gray-700/50 rounded px-3 py-1.5 text-sm">
               <span class="text-gray-900 dark:text-gray-100">{{ opt }}</span>
               <button class="text-red-500 hover:text-red-700 text-xs ml-2" @click="removeEditOption(i)">&times;</button>

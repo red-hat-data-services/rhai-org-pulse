@@ -15,6 +15,11 @@ function makeStorage(initial = {}) {
   return {
     readFromStorage(key) { return data[key] ? JSON.parse(JSON.stringify(data[key])) : null },
     writeToStorage: vi.fn((key, val) => { data[key] = JSON.parse(JSON.stringify(val)) }),
+    listStorageFiles(dir) {
+      return Object.keys(data)
+        .filter(k => k.startsWith(dir + '/') && k.endsWith('.json'))
+        .map(k => k.split('/').pop())
+    },
     _data: data
   }
 }
@@ -44,6 +49,10 @@ function buildRegistryAndConfig(orgRootUid, orgDisplayName, teams) {
     },
     'team-data/config.json': {
       orgRoots: [{ uid: orgRootUid, displayName: orgDisplayName }]
+    },
+    'team-data/field-definitions.json': {
+      personFields: [],
+      teamFields: []
     }
   }
 }
@@ -159,6 +168,73 @@ describe('buildEnrichedTeams board cascade', () => {
     expect(team.boards[0].url).toBe('https://meta-board.example.com')
     expect(team.boards[0].name).toBe('Meta Board')
     expect(team.structureId).toBeUndefined()
+  })
+
+  it('sources components from team metadata when component field exists', () => {
+    const storageData = {
+      ...buildRegistryAndConfig('org1', 'Org One', ['Platform']),
+      'org-roster/teams-metadata.json': {
+        teams: [{ org: 'Org One', name: 'Platform', boardUrls: [] }],
+        boardNames: {}
+      },
+      'org-roster/components.json': { components: {} },
+      'team-data/teams.json': {
+        teams: {
+          team_abc: {
+            id: 'team_abc',
+            name: 'Platform',
+            orgKey: 'org1',
+            metadata: { field_comp01: ['Platform Core', 'Dashboard'] }
+          }
+        }
+      },
+      'audit-log.json': { entries: [] }
+    }
+
+    // Override field definitions to include the component field
+    storageData['team-data/field-definitions.json'] = {
+      personFields: [],
+      teamFields: [{
+        id: 'field_comp01', label: 'Components', type: 'constrained',
+        multiValue: true, optionsRef: 'components', allowedValues: null,
+        deleted: false, order: 0
+      }]
+    }
+
+    const storage = makeStorage(storageData)
+    const handlers = setupRoutes(storage)
+    const res = mockRes()
+
+    handlers['GET /org-teams']({ query: {} }, res)
+
+    expect(res._status).toBe(200)
+    const team = res._body.teams.find(t => t.name === 'Platform')
+    expect(team).toBeDefined()
+    expect(team.components).toEqual(['Platform Core', 'Dashboard'])
+  })
+
+  it('falls back to legacy componentMap when no component field exists', () => {
+    const storageData = {
+      ...buildRegistryAndConfig('org1', 'Org One', ['Platform']),
+      'org-roster/teams-metadata.json': {
+        teams: [{ org: 'Org One', name: 'Platform', boardUrls: [] }],
+        boardNames: {}
+      },
+      'org-roster/components.json': { components: { 'Legacy Comp': ['Platform'] } },
+      'team-data/teams.json': { teams: {} },
+      'audit-log.json': { entries: [] }
+    }
+
+    const storage = makeStorage(storageData)
+    const handlers = setupRoutes(storage)
+    const res = mockRes()
+
+    handlers['GET /org-teams']({ query: {} }, res)
+
+    expect(res._status).toBe(200)
+    const team = res._body.teams.find(t => t.name === 'Platform')
+    expect(team).toBeDefined()
+    expect(team.components).toEqual(['Legacy Comp'])
   })
 
   it('handles missing boards array on structure team gracefully', () => {

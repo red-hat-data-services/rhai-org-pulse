@@ -65,7 +65,7 @@ function coerceFieldValue(value, fieldDef) {
  * @param {Object<string,*>} [existingValues] - Full current field values for required-field checks
  * @returns {{ validated: Object, warnings: string[], errors: string[] }}
  */
-function validateFieldValues(storage, scope, fieldValues, existingValues) {
+function validateFieldValues(storage, scope, fieldValues, existingValues, { optionsResolver } = {}) {
   const defs = readFieldDefinitions(storage);
   const key = scope === 'person' ? 'personFields' : 'teamFields';
   const fields = defs[key] || [];
@@ -87,12 +87,19 @@ function validateFieldValues(storage, scope, fieldValues, existingValues) {
 
     const value = coerceFieldValue(rawValue, fieldDef);
 
-    if (fieldDef.type === 'constrained' && fieldDef.allowedValues) {
-      const allowed = fieldDef.allowedValues;
-      const vals = Array.isArray(value) ? value : (value ? [value] : []);
-      for (const v of vals) {
-        if (!allowed.includes(v)) {
-          warnings.push(`Value "${v}" is not in the allowed options for "${fieldDef.label}"`);
+    if (fieldDef.type === 'constrained') {
+      let allowed = fieldDef.allowedValues;
+
+      if (!allowed && fieldDef.optionsRef && optionsResolver) {
+        allowed = optionsResolver(fieldDef.optionsRef);
+      }
+
+      if (allowed && allowed.length > 0) {
+        const vals = Array.isArray(value) ? value : (value ? [value] : []);
+        for (const v of vals) {
+          if (!allowed.includes(v)) {
+            warnings.push(`Value "${v}" is not in the allowed options for "${fieldDef.label}"`);
+          }
         }
       }
     }
@@ -142,6 +149,7 @@ function createFieldDefinition(storage, scope, definition, actorEmail) {
     visible: definition.visible !== false,
     primaryDisplay: definition.primaryDisplay || false,
     allowedValues: definition.allowedValues || null,
+    optionsRef: definition.optionsRef || null,
     deleted: false,
     order: fields.length,
     createdAt: new Date().toISOString(),
@@ -191,7 +199,7 @@ function updateFieldDefinition(storage, scope, fieldId, updates, actorEmail) {
 
   const changes = {};
   for (const [k, v] of Object.entries(updates)) {
-    if (['label', 'type', 'required', 'visible', 'primaryDisplay', 'allowedValues', 'multiValue'].includes(k)) {
+    if (['label', 'type', 'required', 'visible', 'primaryDisplay', 'allowedValues', 'multiValue', 'optionsRef'].includes(k)) {
       changes[k] = { old: field[k], new: v };
       field[k] = v;
     }

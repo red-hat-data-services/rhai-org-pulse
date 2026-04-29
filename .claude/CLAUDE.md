@@ -63,6 +63,7 @@ npm run dev:full       # Starts Vite (5173) + Express (3001)
 - **Trends**: Built dynamically from person metric files by bucketing resolved issues by month, with org/team breakdowns.
 - **Site config**: `data/site-config.json` stores platform-level settings (title prefix). Editable by admins via Settings > General.
 - **Composite keys**: Teams are identified by `orgKey::teamName` (e.g., `shgriffi::Model Serving`).
+- **Field options**: `data/team-data/field-options/<name>.json` stores named sets of allowed values for constrained fields. Field definitions reference an option set via the `optionsRef` property (e.g., `optionsRef: "components"`). When `optionsRef` is set, `allowedValues` is `null` in storage and resolved at runtime. Currently only the "components" option set exists.
 - **Data file formats**: See `docs/DATA-FORMATS.md` for the JSON schema of every data file. Demo fixtures in `fixtures/` must always match production format.
 
 ### Roster Sync (`shared/server/roster-sync/`)
@@ -292,11 +293,16 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/modules/team-tracker/permissions/me` — current user's permission tier and managed UIDs
 - `/api/modules/team-tracker/structure/teams` — list all teams (optional `orgKey` filter)
 - `/api/modules/team-tracker/structure/unassigned` — list unassigned people (query: `scope=direct|org|all`)
-- `/api/modules/team-tracker/structure/field-definitions` — list all field definitions (person + team)
+- `/api/modules/team-tracker/structure/field-definitions` — list all field definitions (person + team). Field definitions with `optionsRef` have their `allowedValues` resolved from the referenced field option set (with `_resolvedFromOptions: true` flag).
 - `/api/modules/team-tracker/structure/audit-log` — query audit log (query: `from`, `to`, `action`, `actor`, `entityId`, `limit`, `offset`)
 - `/api/modules/team-tracker/registry/people/search/ldap` — search LDAP for people by name/uid/email (authenticated, rate-limited 5 req/10s per user). Query params: `q` (search term), `limit` (max results, default 10, max 50). Returns `503` with `code: "LDAP_UNAVAILABLE"` if LDAP not configured or in demo mode. Returns `429` if rate limited.
+- `/api/modules/team-tracker/field-options` — list all field option sets (authenticated). Returns `{ options: [{ name, label, count }] }`.
+- `/api/modules/team-tracker/field-options/:name` — get single field option set by name (authenticated). Returns full values list.
+- `/api/modules/team-tracker/components` — **(deprecated)** backward-compat adapter returning `{ components: { name: [teams] } }` from team metadata. Use team metadata components field instead.
+- `/api/modules/team-tracker/structure/migrate/field-to-options/preview` — preview a field-to-options migration (team-admin). Query: `fieldId`. Returns extracted values, scope, field info.
 
 **PUT:**
+- `/api/modules/team-tracker/field-options/:name` — replace a field option set's values (admin). Body: `{ values: [...], label? }`
 - `/api/modules/ai-impact/assessments/:key` — upsert single assessment (admin)
 - `/api/modules/ai-impact/features/:key` — upsert single feature (admin)
 
@@ -333,6 +339,8 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/modules/team-tracker/structure/field-definitions/team` — create team-level field (admin/team-admin)
 - `/api/modules/team-tracker/structure/field-definitions/team/reorder` — reorder team fields (admin/team-admin)
 - `/api/modules/team-tracker/structure/migrate` — trigger Sheets-to-in-app migration (admin)
+- `/api/modules/team-tracker/structure/migrate/field-to-options` — generic field-to-field-options migration (team-admin). Body: `{ sourceFieldId, optionSetName, optionSetLabel, createCounterpart?, counterpartLabel?, seedFromMembers? }`
+- `/api/modules/team-tracker/field-options/:name/values` — add values to a field option set (team-admin). Body: `{ values: [...] }`
 - `/api/modules/team-tracker/registry/people/ldap-import` — create auxiliary registry entry from LDAP lookup (team-admin/admin, audit-logged). Body: `{ uid: "someuid" }`. Returns `503` if LDAP unavailable.
 
 **PATCH:**
@@ -353,6 +361,7 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/modules/team-tracker/structure/teams/:teamId/members/:uid` — unassign person (manager/admin)
 - `/api/modules/team-tracker/structure/field-definitions/person/:fieldId` — soft-delete person field (admin/team-admin)
 - `/api/modules/team-tracker/structure/field-definitions/team/:fieldId` — soft-delete team field (admin/team-admin)
+- `/api/modules/team-tracker/field-options/:name/values` — remove values from a field option set (admin). Body: `{ values: [...] }`
 
 **GET (snapshots):**
 - `/api/modules/team-tracker/snapshots/:teamKey` — all snapshots for a team

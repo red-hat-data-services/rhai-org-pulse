@@ -345,8 +345,13 @@ describe('field-store', () => {
         expect(typeof field.visible).toBe('boolean')
 
         if (field.type === 'constrained' && field.multiValue) {
-          expect(Array.isArray(field.allowedValues)).toBe(true)
-          expect(field.allowedValues.length).toBeGreaterThan(0)
+          // optionsRef-backed fields have allowedValues: null (resolved at runtime)
+          if (field.optionsRef) {
+            expect(field.allowedValues).toBeNull()
+          } else {
+            expect(Array.isArray(field.allowedValues)).toBe(true)
+            expect(field.allowedValues.length).toBeGreaterThan(0)
+          }
         }
       }
 
@@ -357,6 +362,130 @@ describe('field-store', () => {
       // Verify at least one required field exists
       const hasRequired = fixture.personFields.some(f => f.required === true)
       expect(hasRequired).toBe(true)
+    })
+  })
+
+  describe('optionsRef support', () => {
+    it('persists optionsRef through createFieldDefinition', () => {
+      const storage = makeStorageWithFieldDefs({ personFields: [], teamFields: [] })
+      const field = fieldStore.createFieldDefinition(storage, 'team', {
+        label: 'Components', type: 'constrained', multiValue: true, optionsRef: 'components'
+      }, 'admin@test.com')
+
+      expect(field.optionsRef).toBe('components')
+      expect(field.allowedValues).toBeNull()
+    })
+
+    it('persists optionsRef through updateFieldDefinition', () => {
+      const storage = makeStorageWithFieldDefs({
+        personFields: [{
+          id: 'field_abc', label: 'Component', type: 'free-text', multiValue: false,
+          required: false, visible: true, primaryDisplay: false, allowedValues: null,
+          optionsRef: null, deleted: false, order: 0, createdAt: '2026-01-01', createdBy: 'admin@test.com'
+        }],
+        teamFields: []
+      })
+
+      const result = fieldStore.updateFieldDefinition(storage, 'person', 'field_abc', {
+        type: 'constrained', multiValue: true, optionsRef: 'components'
+      }, 'admin@test.com')
+
+      expect(result.optionsRef).toBe('components')
+      expect(result.type).toBe('constrained')
+    })
+
+    it('defaults optionsRef to null when not provided', () => {
+      const storage = makeStorageWithFieldDefs({ personFields: [], teamFields: [] })
+      const field = fieldStore.createFieldDefinition(storage, 'person', {
+        label: 'Simple', type: 'free-text'
+      }, 'admin@test.com')
+
+      expect(field.optionsRef).toBeNull()
+    })
+  })
+
+  describe('validateFieldValues with optionsResolver', () => {
+    it('uses optionsResolver for constrained fields with optionsRef', () => {
+      const defs = {
+        personFields: [{
+          id: 'field_comp', label: 'Component', type: 'constrained', multiValue: true,
+          required: false, visible: true, primaryDisplay: false, allowedValues: null,
+          optionsRef: 'components', deleted: false, order: 0
+        }],
+        teamFields: []
+      }
+      const storage = makeStorageWithFieldDefs(defs)
+      const resolver = (ref) => {
+        if (ref === 'components') return ['Platform Core', 'ML Models']
+        return null
+      }
+
+      const { validated, warnings, errors } = fieldStore.validateFieldValues(
+        storage, 'person', { field_comp: ['Platform Core'] }, {}, { optionsResolver: resolver }
+      )
+
+      expect(errors).toHaveLength(0)
+      expect(warnings).toHaveLength(0)
+      expect(validated.field_comp).toEqual(['Platform Core'])
+    })
+
+    it('warns on value not in resolved options', () => {
+      const defs = {
+        personFields: [{
+          id: 'field_comp', label: 'Component', type: 'constrained', multiValue: true,
+          required: false, visible: true, primaryDisplay: false, allowedValues: null,
+          optionsRef: 'components', deleted: false, order: 0
+        }],
+        teamFields: []
+      }
+      const storage = makeStorageWithFieldDefs(defs)
+      const resolver = (ref) => ref === 'components' ? ['Platform Core'] : null
+
+      const { warnings } = fieldStore.validateFieldValues(
+        storage, 'person', { field_comp: ['Unknown Component'] }, {}, { optionsResolver: resolver }
+      )
+
+      expect(warnings.some(w => w.includes('Unknown Component'))).toBe(true)
+    })
+
+    it('skips options validation when no resolver provided', () => {
+      const defs = {
+        personFields: [{
+          id: 'field_comp', label: 'Component', type: 'constrained', multiValue: true,
+          required: false, visible: true, primaryDisplay: false, allowedValues: null,
+          optionsRef: 'components', deleted: false, order: 0
+        }],
+        teamFields: []
+      }
+      const storage = makeStorageWithFieldDefs(defs)
+
+      const { warnings, errors } = fieldStore.validateFieldValues(
+        storage, 'person', { field_comp: ['Anything'] }
+      )
+
+      expect(errors).toHaveLength(0)
+      expect(warnings).toHaveLength(0)
+    })
+
+    it('handles resolver returning null (unknown option set)', () => {
+      const defs = {
+        personFields: [{
+          id: 'field_comp', label: 'Component', type: 'constrained', multiValue: true,
+          required: false, visible: true, primaryDisplay: false, allowedValues: null,
+          optionsRef: 'nonexistent', deleted: false, order: 0
+        }],
+        teamFields: []
+      }
+      const storage = makeStorageWithFieldDefs(defs)
+      const resolver = () => null
+
+      const { warnings, errors } = fieldStore.validateFieldValues(
+        storage, 'person', { field_comp: ['Anything'] }, {}, { optionsResolver: resolver }
+      )
+
+      expect(errors).toHaveLength(0)
+      // No warning because resolved values are null (no option set found)
+      expect(warnings).toHaveLength(0)
     })
   })
 })

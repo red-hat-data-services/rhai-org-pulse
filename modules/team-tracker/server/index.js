@@ -496,7 +496,11 @@ module.exports = function registerRoutes(router, context) {
   const teamStore = require('../../../shared/server/team-store');
   const fieldStore = require('../../../shared/server/field-store');
   const auditLog = require('../../../shared/server/audit-log');
+  const fieldOptionsStore = require('./field-options-store');
   const { migrateToInApp, previewMigration } = require('../../../shared/server/team-migration');
+
+  // Options resolver for field validation — resolves optionsRef to allowed values
+  const optionsResolver = (ref) => fieldOptionsStore.getValues(storage, ref);
 
   // Helper: check if demo mode and return demo flag on write ops
   function demoWriteGuard(res) {
@@ -620,6 +624,18 @@ module.exports = function registerRoutes(router, context) {
       defs.personFields = defs.personFields.filter(f => !f.deleted);
       defs.teamFields = defs.teamFields.filter(f => !f.deleted);
     }
+    // Resolve optionsRef fields: inject allowedValues from field options into response
+    for (const scope of ['personFields', 'teamFields']) {
+      for (const field of (defs[scope] || [])) {
+        if (field.optionsRef && !field.allowedValues) {
+          const values = fieldOptionsStore.getValues(storage, field.optionsRef);
+          if (values) {
+            field.allowedValues = values;
+            field._resolvedFromOptions = true;
+          }
+        }
+      }
+    }
     res.json(defs);
   });
 
@@ -628,13 +644,13 @@ module.exports = function registerRoutes(router, context) {
   router.post('/structure/field-definitions/person', requireTeamAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
-    const { label, type, required, visible, primaryDisplay, allowedValues, multiValue } = req.body;
+    const { label, type, required, visible, primaryDisplay, allowedValues, multiValue, optionsRef } = req.body;
     if (!label) return res.status(400).json({ error: 'label is required' });
     if (typeof label !== 'string' || label.length > 100) return res.status(400).json({ error: 'label must be a string of 100 characters or fewer' });
     if (type && !VALID_FIELD_TYPES.includes(type)) return res.status(400).json({ error: `Invalid type. Must be one of: ${VALID_FIELD_TYPES.join(', ')}` });
     try {
       const field = fieldStore.createFieldDefinition(storage, 'person', {
-        label: label.trim(), type, required, visible, primaryDisplay, allowedValues, multiValue
+        label: label.trim(), type, required, visible, primaryDisplay, allowedValues, multiValue, optionsRef
       }, req.auditActor);
       res.status(201).json(field);
     } catch (err) {
@@ -676,13 +692,13 @@ module.exports = function registerRoutes(router, context) {
   router.post('/structure/field-definitions/team', requireTeamAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
-    const { label, type, required, visible, primaryDisplay, allowedValues, multiValue } = req.body;
+    const { label, type, required, visible, primaryDisplay, allowedValues, multiValue, optionsRef } = req.body;
     if (!label) return res.status(400).json({ error: 'label is required' });
     if (typeof label !== 'string' || label.length > 100) return res.status(400).json({ error: 'label must be a string of 100 characters or fewer' });
     if (type && !VALID_FIELD_TYPES.includes(type)) return res.status(400).json({ error: `Invalid type. Must be one of: ${VALID_FIELD_TYPES.join(', ')}` });
     try {
       const field = fieldStore.createFieldDefinition(storage, 'team', {
-        label: label.trim(), type, required, visible, primaryDisplay, allowedValues, multiValue
+        label: label.trim(), type, required, visible, primaryDisplay, allowedValues, multiValue, optionsRef
       }, req.auditActor);
       res.status(201).json(field);
     } catch (err) {
@@ -719,6 +735,107 @@ module.exports = function registerRoutes(router, context) {
     res.json({ ok: true });
   });
 
+  // ─── Field Options ───
+
+  const MAX_FIELD_OPTION_VALUES = 500;
+  const MAX_FIELD_OPTION_VALUE_LENGTH = 200;
+
+  function sanitizeOptionsName(name) {
+    return name.replace(/[^a-z0-9_-]/gi, '');
+  }
+
+  function validateFieldOptionValues(values) {
+    for (let i = 0; i < values.length; i++) {
+      if (typeof values[i] !== 'string') {
+        return `values[${i}] must be a string`;
+      }
+      if (values[i].length > MAX_FIELD_OPTION_VALUE_LENGTH) {
+        return `values[${i}] exceeds maximum length of ${MAX_FIELD_OPTION_VALUE_LENGTH} characters`;
+      }
+    }
+    return null;
+  }
+
+  router.get('/field-options', function(req, res) {
+    try {
+      const options = fieldOptionsStore.listFieldOptions(storage);
+      res.json({ options });
+    } catch {
+      res.status(500).json({ error: 'Failed to list field options' });
+    }
+  });
+
+  router.get('/field-options/:name', function(req, res) {
+    const safeName = sanitizeOptionsName(req.params.name);
+    if (!safeName) return res.status(400).json({ error: 'Invalid option set name' });
+    try {
+      const data = fieldOptionsStore.readFieldOptions(storage, safeName);
+      if (!data) return res.status(404).json({ error: 'Field option set not found' });
+      res.json(data);
+    } catch {
+      res.status(500).json({ error: 'Failed to load field options' });
+    }
+  });
+
+  router.put('/field-options/:name', requireAdmin, function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const safeName = sanitizeOptionsName(req.params.name);
+    if (!safeName) return res.status(400).json({ error: 'Invalid option set name' });
+    const { values, label } = req.body;
+    if (!Array.isArray(values)) return res.status(400).json({ error: 'values must be an array' });
+    if (values.length > MAX_FIELD_OPTION_VALUES) return res.status(400).json({ error: `values exceeds maximum of ${MAX_FIELD_OPTION_VALUES} entries` });
+    const valErr = validateFieldOptionValues(values);
+    if (valErr) return res.status(400).json({ error: valErr });
+    try {
+      const result = fieldOptionsStore.replaceValues(storage, safeName, values, label, req.auditActor);
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  router.post('/field-options/:name/values', requireTeamAdmin, function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const safeName = sanitizeOptionsName(req.params.name);
+    if (!safeName) return res.status(400).json({ error: 'Invalid option set name' });
+    const { values } = req.body;
+    if (!Array.isArray(values) || values.length === 0) return res.status(400).json({ error: 'values must be a non-empty array' });
+    const valErr = validateFieldOptionValues(values);
+    if (valErr) return res.status(400).json({ error: valErr });
+    // Check total count after add
+    const existing = fieldOptionsStore.getValues(storage, safeName);
+    const currentCount = existing ? existing.length : 0;
+    if (currentCount + values.length > MAX_FIELD_OPTION_VALUES) {
+      return res.status(400).json({ error: `Adding ${values.length} values would exceed maximum of ${MAX_FIELD_OPTION_VALUES} (current: ${currentCount})` });
+    }
+    try {
+      const result = fieldOptionsStore.addValues(storage, safeName, values, req.auditActor);
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  router.delete('/field-options/:name/values', requireAdmin, function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const safeName = sanitizeOptionsName(req.params.name);
+    if (!safeName) return res.status(400).json({ error: 'Invalid option set name' });
+    const { values } = req.body;
+    if (!Array.isArray(values) || values.length === 0) return res.status(400).json({ error: 'values must be a non-empty array' });
+    const valErr = validateFieldOptionValues(values);
+    if (valErr) return res.status(400).json({ error: valErr });
+    try {
+      const result = fieldOptionsStore.removeValues(storage, safeName, values, req.auditActor);
+      if (!result) return res.status(404).json({ error: 'Field option set not found' });
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   // ─── Person Field Values ───
 
   router.patch('/structure/person/:uid/fields',
@@ -735,7 +852,7 @@ module.exports = function registerRoutes(router, context) {
       const person = registry && registry.people && registry.people[req.params.uid];
       const existingValues = person && person._appFields ? person._appFields : {};
 
-      const { validated, warnings, errors } = fieldStore.validateFieldValues(storage, 'person', req.body, existingValues);
+      const { validated, warnings, errors } = fieldStore.validateFieldValues(storage, 'person', req.body, existingValues, { optionsResolver });
       if (errors.length > 0) return res.status(400).json({ error: errors.join('; ') });
 
       const result = fieldStore.updatePersonFields(storage, req.params.uid, validated, req.auditActor);
@@ -759,7 +876,7 @@ module.exports = function registerRoutes(router, context) {
     const team = teamsData.teams && teamsData.teams[req.params.teamId];
     const existingValues = team && team.metadata ? team.metadata : {};
 
-    const { validated, warnings, errors } = fieldStore.validateFieldValues(storage, 'team', req.body, existingValues);
+    const { validated, warnings, errors } = fieldStore.validateFieldValues(storage, 'team', req.body, existingValues, { optionsResolver });
     if (errors.length > 0) return res.status(400).json({ error: errors.join('; ') });
 
     const result = teamStore.updateTeamFields(storage, req.params.teamId, validated, req.auditActor);
@@ -870,6 +987,47 @@ module.exports = function registerRoutes(router, context) {
       res.json(result);
     } catch (err) {
       console.error('[migration] Migration failed:', err);
+      res.status(500).json({ error: 'Migration failed: ' + err.message });
+    }
+  });
+
+  // ─── Field-to-Field-Options Migration ───
+
+  const fieldOptionsMigration = require('./migration/field-options-migration');
+
+  router.get('/structure/migrate/field-to-options/preview', requireTeamAdmin, function(req, res) {
+    try {
+      const { fieldId } = req.query;
+      if (!fieldId || typeof fieldId !== 'string') {
+        return res.status(400).json({ error: 'fieldId query parameter is required' });
+      }
+      const result = fieldOptionsMigration.previewMigration(storage, fieldId);
+      if (result.error) return res.status(400).json({ error: result.error });
+      res.json(result);
+    } catch (err) {
+      console.error('[migration] Preview failed:', err);
+      res.status(500).json({ error: 'Preview failed: ' + err.message });
+    }
+  });
+
+  router.post('/structure/migrate/field-to-options', requireTeamAdmin, function(req, res) {
+    try {
+      const guard = demoWriteGuard(res);
+      if (guard) return;
+      const { sourceFieldId, optionSetName, optionSetLabel, createCounterpart, counterpartLabel, seedFromMembers } = req.body;
+      if (!sourceFieldId || !optionSetName) {
+        return res.status(400).json({ error: 'sourceFieldId and optionSetName are required' });
+      }
+      if (typeof optionSetName !== 'string' || !/^[a-z0-9_-]+$/.test(optionSetName)) {
+        return res.status(400).json({ error: 'optionSetName must be lowercase alphanumeric with hyphens/underscores' });
+      }
+      const result = fieldOptionsMigration.executeMigration(storage, {
+        sourceFieldId, optionSetName, optionSetLabel, createCounterpart, counterpartLabel, seedFromMembers
+      }, req.auditActor);
+      if (result.error) return res.status(400).json({ error: result.error });
+      res.json(result);
+    } catch (err) {
+      console.error('[migration] Field-to-options migration failed:', err);
       res.status(500).json({ error: 'Migration failed: ' + err.message });
     }
   });

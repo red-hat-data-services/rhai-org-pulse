@@ -23,6 +23,7 @@
 
       <TeamManagement v-if="activeTab === 'teams'" />
       <FieldDefinitionManager v-if="activeTab === 'fields'" />
+      <FieldOptionsManager v-if="activeTab === 'field-options'" />
     </template>
   </div>
 </template>
@@ -32,13 +33,15 @@ import { ref, computed, onMounted, inject } from 'vue'
 import { usePermissions } from '@shared/client/composables/usePermissions'
 import TeamManagement from '../components/TeamManagement.vue'
 import FieldDefinitionManager from '../components/FieldDefinitionManager.vue'
+import FieldOptionsManager from '../components/FieldOptionsManager.vue'
 
 const { isAdmin, isTeamAdmin, loading } = usePermissions()
 const moduleNav = inject('moduleNav')
 
 const tabs = [
   { id: 'teams', label: 'Teams' },
-  { id: 'fields', label: 'Fields' }
+  { id: 'fields', label: 'Fields' },
+  { id: 'field-options', label: 'Field Options' }
 ]
 
 const activeTab = ref('teams')

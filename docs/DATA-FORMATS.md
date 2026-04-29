@@ -401,6 +401,7 @@ Stores custom field definitions for person-level and team-level fields. Created 
       "visible": true,
       "primaryDisplay": true,
       "allowedValues": null,
+      "optionsRef": null,
       "deleted": false,
       "order": 0,
       "createdAt": "2026-01-01T00:00:00.000Z",
@@ -417,6 +418,7 @@ Stores custom field definitions for person-level and team-level fields. Created 
       "visible": true,
       "primaryDisplay": false,
       "allowedValues": null,
+      "optionsRef": null,
       "deleted": false,
       "order": 0,
       "createdAt": "2026-01-01T00:00:00.000Z",
@@ -432,8 +434,39 @@ Stores custom field definitions for person-level and team-level fields. Created 
 - `type` is one of: `"free-text"`, `"constrained"`, `"person-reference-linked"`.
 - `multiValue` is a boolean. When `true`, the field accepts an array of values. Valid for all field types (`constrained`, `free-text`, `person-reference-linked`). Defaults to `false`.
 - `deleted` supports soft-delete — deleted fields are hidden from the UI but values are preserved.
-- `allowedValues` is an array of strings for `constrained` fields (the set of selectable options), or `null` for other field types. Maximum 100 items, each up to 200 characters.
+- `allowedValues` is an array of strings for `constrained` fields (the set of selectable options), or `null` for other field types. Maximum 100 items, each up to 200 characters. When `optionsRef` is set, `allowedValues` is `null` in storage and resolved at runtime from the referenced field option set.
+- `optionsRef` is an optional string referencing a named field option set (e.g., `"components"`). When set, the field's allowed values are sourced dynamically from `data/team-data/field-options/<optionsRef>.json` instead of from the static `allowedValues` array. The `GET /structure/field-definitions` API response resolves `optionsRef` fields by injecting the option values into `allowedValues` (with a `_resolvedFromOptions: true` flag). Defaults to `null`.
 - At most one person field can have `primaryDisplay: true`.
+
+## Field Options — `data/team-data/field-options/<name>.json`
+
+Each field option set is a separate JSON file, identified by name. Used by field definitions with `optionsRef` to source allowed values dynamically.
+
+```json
+{
+  "name": "components",
+  "label": "Components",
+  "values": [
+    "Data Pipelines",
+    "Infrastructure Services",
+    "ML Models",
+    "Platform Core",
+    "Platform Dashboard"
+  ],
+  "updatedAt": "2026-04-29T12:00:00Z",
+  "updatedBy": "admin@example.com",
+  "migrationDone": true,
+  "migratedAt": "2026-04-29T12:00:00Z",
+  "migratedBy": "admin@example.com"
+}
+```
+
+**Notes:**
+- `name` is the stable identifier referenced by `optionsRef` on field definitions (e.g., `"components"`).
+- `label` is the human-readable name shown in the Manage UI.
+- `values` is an ordered array of valid entries. Maximum 500 items, each up to 200 characters. Values are deduplicated and sorted alphabetically on write.
+- `updatedAt` and `updatedBy` track the last modification.
+- `migrationDone`, `migratedAt`, `migratedBy` are set by the component model migration to prevent re-running. Only present on the "components" option set after migration.
 
 ## Audit Log — `data/audit-log.json`
 
@@ -462,8 +495,8 @@ Append-only log of team structure management actions. Entries are added by team,
 
 **Notes:**
 - `entries` is ordered newest-first (prepended). Capped at `maxEntries` (10,000) — oldest entries are trimmed.
-- `action` values include: `team.create`, `team.rename`, `team.delete`, `team.boards.update`, `person.team.assign`, `person.team.unassign`, `person.fields.update`, `team.fields.update`, `field.create`, `field.update`, `field.delete`, `field.reorder`, `migration.sheets_to_inapp`.
-- `entityType` is one of: `"team"`, `"person"`, `"field"`, `"system"`.
+- `action` values include: `team.create`, `team.rename`, `team.delete`, `team.boards.update`, `person.team.assign`, `person.team.unassign`, `person.fields.update`, `team.fields.update`, `field.create`, `field.update`, `field.delete`, `field.reorder`, `migration.sheets_to_inapp`, `field-options.add`, `field-options.replace`, `field-options.remove`, `migration.field-to-options`.
+- `entityType` is one of: `"team"`, `"person"`, `"field"`, `"system"`, `"field-options"`, `"migration"`.
 - `field`, `oldValue`, `newValue` are used for change-tracking (e.g., rename, field value updates). `null` when not applicable.
 - `detail` is a human-readable summary of the action.
 
