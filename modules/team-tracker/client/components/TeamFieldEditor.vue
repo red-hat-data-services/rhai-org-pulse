@@ -12,7 +12,7 @@ const props = defineProps({
   inline: { type: Boolean, default: false }
 })
 
-const emit = defineEmits(['updated'])
+const emit = defineEmits(['updated', 'navigate-person'])
 
 const { demoToast, updateTeamFields } = useTeams()
 
@@ -112,15 +112,13 @@ async function saveEdit(fieldId) {
   }
 }
 
-function resolvePersonName(rawUid) {
-  const uid = Array.isArray(rawUid) ? rawUid[0] : rawUid
-  if (!uid) return null
-  const person = props.people.find(p => p.uid === uid)
-  return person ? person.name : null
-}
-
-function resolvePersonUid(rawUid) {
-  return Array.isArray(rawUid) ? rawUid[0] : rawUid
+function resolvePersonEntries(field) {
+  const raw = props.metadata[field.id]
+  const uids = Array.isArray(raw) ? raw : (raw ? [raw] : [])
+  return uids.map(uid => {
+    const person = props.people.find(p => p.uid === uid)
+    return { uid, name: person?.name || null }
+  })
 }
 
 function isPersonRefType(field) {
@@ -217,9 +215,16 @@ function isPersonRefType(field) {
         </div>
         <!-- Person reference linked display -->
         <span v-else-if="field.type === 'person-reference-linked'" class="text-sm text-gray-900 dark:text-gray-100 flex-1">
-          <template v-if="resolvePersonUid(metadata[field.id])">
-            <span v-if="resolvePersonName(metadata[field.id])" class="text-primary-600 dark:text-primary-400">{{ resolvePersonName(metadata[field.id]) }}</span>
-            <span v-else class="text-gray-400 dark:text-gray-500">{{ resolvePersonUid(metadata[field.id]) }} <span class="text-xs">(not found)</span></span>
+          <template v-if="resolvePersonEntries(field).length > 0">
+            <template v-for="(entry, i) in resolvePersonEntries(field)" :key="entry.uid">
+              <template v-if="i > 0">, </template>
+              <button
+                v-if="entry.name"
+                class="text-primary-600 dark:text-primary-400 hover:underline"
+                @click="emit('navigate-person', entry.name)"
+              >{{ entry.name }}</button>
+              <span v-else class="text-gray-400 dark:text-gray-500">{{ entry.uid }} <span class="text-xs">(not found)</span></span>
+            </template>
           </template>
           <span v-else class="text-gray-400 dark:text-gray-500">-</span>
         </span>

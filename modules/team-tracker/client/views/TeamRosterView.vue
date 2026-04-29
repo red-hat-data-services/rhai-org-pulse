@@ -130,6 +130,7 @@
             :people="allPeople"
             :inline="true"
             @updated="reloadRoster"
+            @navigate-person="navigateToPerson"
           />
         </div>
 
