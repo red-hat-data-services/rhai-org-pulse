@@ -9,7 +9,8 @@
     "navItems": [
       { "id": "dashboard", "label": "Dashboard", "icon": "BarChart3", "default": true },
       { "id": "insights", "label": "Insights", "icon": "Lightbulb" },
-      { "id": "portfolio", "label": "Portfolio", "icon": "Briefcase" }
+      { "id": "portfolio", "label": "Portfolio", "icon": "Briefcase" },
+      { "id": "strategy", "label": "Strategy", "icon": "Target" }
     ],
     "settingsComponent": "./client/components/UpstreamPulseSettings.vue"
   },
