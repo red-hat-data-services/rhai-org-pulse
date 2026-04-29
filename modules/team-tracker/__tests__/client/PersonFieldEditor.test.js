@@ -87,7 +87,7 @@ describe('PersonFieldEditor', () => {
     expect(wrapper.text()).not.toContain('Hidden')
   })
 
-  it('renders select dropdown for single-value constrained', async () => {
+  it('renders autocomplete for single-value constrained', async () => {
     const wrapper = mount(PersonFieldEditor, {
       props: {
         uid: 'achen',
@@ -97,11 +97,10 @@ describe('PersonFieldEditor', () => {
       }
     })
     await wrapper.find('button').trigger('click') // Edit button
-    expect(wrapper.find('select').exists()).toBe(true)
-    expect(wrapper.findAll('option').length).toBe(4) // 3 values + empty option
+    expect(wrapper.find('input[role="combobox"]').exists()).toBe(true)
   })
 
-  it('renders checkbox group for multi-value constrained with <=8 options', async () => {
+  it('renders autocomplete for multi-value constrained with <=8 options', async () => {
     const wrapper = mount(PersonFieldEditor, {
       props: {
         uid: 'achen',
@@ -111,11 +110,10 @@ describe('PersonFieldEditor', () => {
       }
     })
     await wrapper.find('button').trigger('click') // Edit button
-    const checkboxes = wrapper.findAll('input[type="checkbox"]')
-    expect(checkboxes.length).toBe(5) // 5 options
+    expect(wrapper.find('input[role="combobox"]').exists()).toBe(true)
   })
 
-  it('renders combobox for multi-value constrained with 9+ options', async () => {
+  it('renders autocomplete for multi-value constrained with 9+ options', async () => {
     const wrapper = mount(PersonFieldEditor, {
       props: {
         uid: 'achen',
@@ -125,8 +123,7 @@ describe('PersonFieldEditor', () => {
       }
     })
     await wrapper.find('button').trigger('click') // Edit button
-    // Should render a select dropdown for adding values (not checkboxes)
-    expect(wrapper.find('select').exists()).toBe(true)
+    expect(wrapper.find('input[role="combobox"]').exists()).toBe(true)
   })
 
   it('shows required field asterisk', () => {

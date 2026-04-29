@@ -50,7 +50,7 @@ describe('TeamFieldEditor', () => {
     expect(wrapper.text()).toContain('Notes')
   })
 
-  it('renders select dropdown for single-value constrained', async () => {
+  it('renders autocomplete for single-value constrained', async () => {
     const wrapper = mount(TeamFieldEditor, {
       props: {
         teamId: 'team_abc',
@@ -60,10 +60,10 @@ describe('TeamFieldEditor', () => {
       }
     })
     await wrapper.find('button').trigger('click')
-    expect(wrapper.find('select').exists()).toBe(true)
+    expect(wrapper.find('input[role="combobox"]').exists()).toBe(true)
   })
 
-  it('renders checkbox group for multi-value constrained', async () => {
+  it('renders autocomplete for multi-value constrained', async () => {
     const wrapper = mount(TeamFieldEditor, {
       props: {
         teamId: 'team_abc',
@@ -73,8 +73,7 @@ describe('TeamFieldEditor', () => {
       }
     })
     await wrapper.find('button').trigger('click')
-    const checkboxes = wrapper.findAll('input[type="checkbox"]')
-    expect(checkboxes.length).toBe(3)
+    expect(wrapper.find('input[role="combobox"]').exists()).toBe(true)
   })
 
   it('shows required field asterisk', () => {

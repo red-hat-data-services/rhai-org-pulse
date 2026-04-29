@@ -2,6 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { useTeams } from '@shared/client/composables/useTeams'
 import PersonAutocomplete from './PersonAutocomplete.vue'
+import ConstrainedAutocomplete from './ConstrainedAutocomplete.vue'
 
 const props = defineProps({
   teamId: { type: String, required: true },
@@ -164,47 +165,17 @@ function isPersonRefType(field) {
         {{ field.label }}<span v-if="field.required" class="text-red-500 ml-0.5">*</span>:
       </span>
       <template v-if="editingFieldId === field.id">
-        <!-- Multi-value constrained: checkbox group (<=8) -->
-        <div v-if="isMultiValueConstrained(field) && field.allowedValues && field.allowedValues.length <= 8" class="flex-1 space-y-1">
-          <label v-for="opt in field.allowedValues" :key="opt" class="flex items-center gap-2">
-            <input
-              type="checkbox"
-              :value="opt"
-              v-model="editValue"
-              class="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500"
-            />
-            <span class="text-sm text-gray-700 dark:text-gray-300">{{ opt }}</span>
-          </label>
-        </div>
-        <!-- Multi-value constrained: combobox (9+) -->
-        <div v-else-if="isMultiValueConstrained(field) && field.allowedValues && field.allowedValues.length > 8" class="flex-1 space-y-1">
-          <div class="flex flex-wrap gap-1 mb-1">
-            <span
-              v-for="v in editValue"
-              :key="v"
-              class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
-            >
-              {{ v }}
-              <button class="ml-1 text-primary-500 hover:text-primary-700" @click="editValue = editValue.filter(x => x !== v)">&times;</button>
-            </span>
-          </div>
-          <select
-            class="flex-1 w-full rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm"
-            @change="(e) => { if (e.target.value && !editValue.includes(e.target.value)) editValue.push(e.target.value); e.target.value = '' }"
-          >
-            <option value="">Add option...</option>
-            <option v-for="opt in field.allowedValues.filter(o => !editValue.includes(o))" :key="opt" :value="opt">{{ opt }}</option>
-          </select>
-        </div>
-        <!-- Single-value constrained -->
-        <select
-          v-else-if="field.type === 'constrained' && field.allowedValues"
-          v-model="editValue"
-          class="flex-1 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm"
-        >
-          <option value="">-- None --</option>
-          <option v-for="opt in field.allowedValues" :key="opt" :value="opt">{{ opt }}</option>
-        </select>
+        <!-- Constrained field (single or multi-value): autocomplete -->
+        <ConstrainedAutocomplete
+          v-if="field.type === 'constrained' && field.allowedValues"
+          class="flex-1"
+          :model-value="editValue"
+          :options="field.allowedValues"
+          :multi-value="!!field.multiValue"
+          @update:model-value="editValue = $event"
+          @save="saveEdit(field.id)"
+          @cancel="editingFieldId = null"
+        />
         <!-- Multi-value person reference -->
         <div v-else-if="isMultiValuePersonRef(field)" class="flex-1 space-y-1">
           <div class="flex flex-wrap gap-1 mb-1">
