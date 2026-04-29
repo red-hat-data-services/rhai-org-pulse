@@ -13,6 +13,7 @@
     "lint": "eslint .",
     "validate:modules": "node scripts/validate-modules.js",
     "validate:openapi": "node scripts/validate-openapi.js",
+    "validate:pr": "node scripts/validate-pr.js",
     "prepare": "husky || true"
   },
   "dependencies": {

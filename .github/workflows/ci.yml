@@ -45,6 +45,10 @@ jobs:
         if: steps.changes.outputs.app == 'true'
         run: npm run lint
 
+      - name: Validate PR quality
+        if: steps.changes.outputs.app == 'true'
+        run: npm run validate:pr
+
       - name: Run tests
         if: steps.changes.outputs.app == 'true'
         run: npm test
