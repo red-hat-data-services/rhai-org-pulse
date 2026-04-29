@@ -8,7 +8,8 @@ const props = defineProps({
   metadata: { type: Object, default: () => ({}) },
   fieldDefinitions: { type: Array, default: () => [] },
   canEdit: { type: Boolean, default: false },
-  people: { type: Array, default: () => [] }
+  people: { type: Array, default: () => [] },
+  inline: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['updated'])
@@ -128,12 +129,12 @@ function isPersonRefType(field) {
 </script>
 
 <template>
-  <div class="space-y-2">
-    <div v-if="demoInfo" class="p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-blue-700 dark:text-blue-300 text-xs">
+  <div :class="inline ? 'flex flex-wrap items-center gap-x-6 gap-y-2' : 'space-y-2'">
+    <div v-if="demoInfo" class="p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-blue-700 dark:text-blue-300 text-xs w-full">
       {{ demoInfo }}
     </div>
-    <div v-for="field in visibleFields" :key="field.id" class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-      <span class="text-sm text-gray-600 dark:text-gray-400 w-32 shrink-0">
+    <div v-for="field in visibleFields" :key="field.id" :class="inline ? 'flex items-center gap-1.5' : 'flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2'">
+      <span :class="inline ? 'text-sm text-gray-400 dark:text-gray-500 shrink-0' : 'text-sm text-gray-600 dark:text-gray-400 w-32 shrink-0'">
         {{ field.label }}<span v-if="field.required" class="text-red-500 ml-0.5">*</span>:
       </span>
       <template v-if="editingFieldId === field.id">
