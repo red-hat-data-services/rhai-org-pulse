@@ -38,8 +38,29 @@ function coerceForDisplay(value, fieldDef) {
   return Array.isArray(value) ? (value[0] || null) : value
 }
 
-function isMultiValue(field) {
+function isMultiValueConstrained(field) {
   return field.type === 'constrained' && field.multiValue
+}
+
+function isMultiValuePersonRef(field) {
+  return field.type === 'person-reference-linked' && field.multiValue
+}
+
+function personNameByUid(uid) {
+  const person = props.people.find(p => p.uid === uid)
+  return person?.name || uid
+}
+
+function addPersonToEditValue(uid) {
+  if (Array.isArray(editValue.value) && !editValue.value.includes(uid)) {
+    editValue.value.push(uid)
+  }
+}
+
+function removePersonFromEditValue(uid) {
+  if (Array.isArray(editValue.value)) {
+    editValue.value = editValue.value.filter(u => u !== uid)
+  }
 }
 
 function displayValues(field) {
@@ -66,7 +87,7 @@ function startEdit(fieldId) {
   const field = props.fieldDefinitions.find(f => f.id === fieldId)
   const raw = props.metadata[fieldId] ?? null
 
-  if (field?.type === 'constrained' && field?.multiValue) {
+  if (field?.multiValue) {
     editValue.value = Array.isArray(raw) ? [...raw] : (raw ? [raw] : [])
   } else if (isPersonRefType(field)) {
     editValue.value = (Array.isArray(raw) ? raw[0] : raw) || ''
@@ -131,13 +152,20 @@ function isPersonRefType(field) {
     <div v-if="demoInfo" class="p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-blue-700 dark:text-blue-300 text-xs w-full">
       {{ demoInfo }}
     </div>
-    <div v-for="field in visibleFields" :key="field.id" :class="inline ? 'flex items-center gap-1.5' : 'flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2'">
+    <div
+      v-for="field in visibleFields"
+      :key="field.id"
+      :class="[
+        inline ? 'flex items-center gap-1.5' : 'flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2',
+        editingFieldId === field.id ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md px-2 py-1' : ''
+      ]"
+    >
       <span :class="inline ? 'text-sm text-gray-400 dark:text-gray-500 shrink-0' : 'text-sm text-gray-600 dark:text-gray-400 w-32 shrink-0'">
         {{ field.label }}<span v-if="field.required" class="text-red-500 ml-0.5">*</span>:
       </span>
       <template v-if="editingFieldId === field.id">
         <!-- Multi-value constrained: checkbox group (<=8) -->
-        <div v-if="isMultiValue(field) && field.allowedValues && field.allowedValues.length <= 8" class="flex-1 space-y-1">
+        <div v-if="isMultiValueConstrained(field) && field.allowedValues && field.allowedValues.length <= 8" class="flex-1 space-y-1">
           <label v-for="opt in field.allowedValues" :key="opt" class="flex items-center gap-2">
             <input
               type="checkbox"
@@ -149,7 +177,7 @@ function isPersonRefType(field) {
           </label>
         </div>
         <!-- Multi-value constrained: combobox (9+) -->
-        <div v-else-if="isMultiValue(field) && field.allowedValues && field.allowedValues.length > 8" class="flex-1 space-y-1">
+        <div v-else-if="isMultiValueConstrained(field) && field.allowedValues && field.allowedValues.length > 8" class="flex-1 space-y-1">
           <div class="flex flex-wrap gap-1 mb-1">
             <span
               v-for="v in editValue"
@@ -177,7 +205,28 @@ function isPersonRefType(field) {
           <option value="">-- None --</option>
           <option v-for="opt in field.allowedValues" :key="opt" :value="opt">{{ opt }}</option>
         </select>
-        <!-- Person reference -->
+        <!-- Multi-value person reference -->
+        <div v-else-if="isMultiValuePersonRef(field)" class="flex-1 space-y-1">
+          <div class="flex flex-wrap gap-1 mb-1">
+            <span
+              v-for="uid in editValue"
+              :key="uid"
+              class="inline-flex items-center px-2 py-0.5 rounded text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
+            >
+              {{ personNameByUid(uid) }}
+              <button class="ml-1 text-primary-500 hover:text-primary-700" @click="removePersonFromEditValue(uid)">&times;</button>
+            </span>
+          </div>
+          <PersonAutocomplete
+            :model-value="''"
+            :people="people.filter(p => !editValue.includes(p.uid))"
+            placeholder="Add person..."
+            @update:model-value="addPersonToEditValue($event)"
+            @save="saveEdit(field.id)"
+            @cancel="editingFieldId = null"
+          />
+        </div>
+        <!-- Single-value person reference -->
         <PersonAutocomplete
           v-else-if="isPersonRefType(field)"
           class="flex-1"
@@ -195,14 +244,14 @@ function isPersonRefType(field) {
           @keyup.enter="saveEdit(field.id)"
           @keyup.escape="editingFieldId = null"
         >
-        <div class="flex gap-1 shrink-0">
-          <button class="text-xs text-primary-600 dark:text-primary-400" :disabled="saving" @click="saveEdit(field.id)">Save</button>
-          <button class="text-xs text-gray-500 dark:text-gray-400" @click="editingFieldId = null">Cancel</button>
+        <div class="flex gap-1.5 shrink-0">
+          <button class="px-2 py-0.5 text-xs font-medium text-white bg-primary-600 rounded hover:bg-primary-700 disabled:opacity-50 transition-colors" :disabled="saving" @click="saveEdit(field.id)">Save</button>
+          <button class="px-2 py-0.5 text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" @click="editingFieldId = null">Cancel</button>
         </div>
       </template>
       <template v-else>
         <!-- Multi-value display -->
-        <div v-if="isMultiValue(field)" class="flex flex-wrap gap-1 flex-1">
+        <div v-if="isMultiValueConstrained(field)" class="flex flex-wrap gap-1 flex-1">
           <span
             v-for="v in displayValues(field)"
             :key="v"
