@@ -155,20 +155,34 @@ function rfeLinksToOutcome(issueLinks, outcomeSet) {
  * Find Tier 1 features: children of outcome keys with matching target version.
  * Uses parentKey from the index to identify outcome children.
  */
-function findTier1Features(readFromStorage, index, outcomeKeys) {
+function findTier1Features(readFromStorage, index, outcomeKeys, stats) {
   const outcomeSet = new Set(outcomeKeys)
   const results = []
+
+  if (stats) {
+    stats.totalMatches = 0
+    stats.closedFiltered = 0
+    stats.noTargetVersion = 0
+  }
 
   const features = index.features || []
   for (let i = 0; i < features.length; i++) {
     const f = features[i]
     if (!f.parentKey || !outcomeSet.has(f.parentKey)) continue
 
+    if (stats) stats.totalMatches++
+
     const versions = getTargetVersions(f)
-    if (versions.length === 0) continue
+    if (versions.length === 0) {
+      if (stats) stats.noTargetVersion++
+      continue
+    }
 
     const status = f.status || ''
-    if (CLOSED_STATUSES.indexOf(status) !== -1) continue
+    if (CLOSED_STATUSES.indexOf(status) !== -1) {
+      if (stats) stats.closedFiltered++
+      continue
+    }
 
     // Load detail for components and issueLinks
     const detail = loadFeatureDetail(readFromStorage, f.key)

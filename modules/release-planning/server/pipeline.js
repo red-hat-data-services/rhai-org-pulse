@@ -35,9 +35,7 @@ function runPipeline(config, bigRocks, release, readFromStorage, opts) {
   const warnings = []
 
   for (let w = 0; w < rocksWithout.length; w++) {
-    const msg = 'Big Rock "' + rocksWithout[w].name + '" has no outcome keys and was skipped'
-    warnings.push(msg)
-    console.warn('[release-planning] ' + msg)
+    console.log('[release-planning] Big Rock "' + rocksWithout[w].name + '" has no outcome keys — skipped (tracked in rocksWithoutOutcomes)')
   }
 
   // Defense-in-depth: filter outcome keys that don't match the expected pattern
@@ -70,10 +68,10 @@ function runPipeline(config, bigRocks, release, readFromStorage, opts) {
   // Fetch outcome summaries from cache
   const outcomeSummaries = findOutcomeSummaries(index, allOutcomeKeys)
 
-  // Warn about outcome keys not found in index
+  // Track outcome keys not found in the feature-traffic index (info-level, not a warning)
   const missingOutcomes = allOutcomeKeys.filter(function(key) { return !outcomeSummaries[key] })
   if (missingOutcomes.length > 0) {
-    warnings.push(missingOutcomes.length + ' outcome key(s) not found in feature-traffic data: ' + missingOutcomes.join(', '))
+    console.log('[release-planning] ' + missingOutcomes.length + ' outcome key(s) not in feature-traffic index: ' + missingOutcomes.join(', '))
   }
 
   // Phase A: Discover children for each rock's outcomes
@@ -87,8 +85,11 @@ function runPipeline(config, bigRocks, release, readFromStorage, opts) {
     const rock = rocksWithOutcomes[ri]
     let rockChildCount = 0
 
-    // Find Tier 1 features for this rock's outcomes
-    const rawFeatures = findTier1Features(readFromStorage, index, rock.outcomeKeys)
+    // Find Tier 1 features for this rock's outcomes (with stats tracking)
+    var rockStats = { totalMatches: 0, closedFiltered: 0, noTargetVersion: 0 }
+    const rawFeatures = findTier1Features(readFromStorage, index, rock.outcomeKeys, rockStats)
+    var rockTerminalFiltered = 0
+    var rockReleaseMismatch = 0
     for (let fi = 0; fi < rawFeatures.length; fi++) {
       const feat = rawFeatures[fi]
       const candidate = mapToCandidate(feat, rock.name, 'outcome')
@@ -96,12 +97,14 @@ function runPipeline(config, bigRocks, release, readFromStorage, opts) {
       // Filter by release match
       if (!candidate.targetRelease.includes(release)) {
         skippedCount++
+        rockReleaseMismatch++
         continue
       }
 
       // Filter terminal statuses
       if (TERMINAL_STATUSES.indexOf(candidate.status) !== -1) {
         terminalFilteredCount++
+        rockTerminalFiltered++
         continue
       }
 
@@ -138,7 +141,18 @@ function runPipeline(config, bigRocks, release, readFromStorage, opts) {
     }
 
     if (rockChildCount === 0 && rock.outcomeKeys.length > 0) {
-      const msg = 'Big Rock "' + rock.name + '" has outcomes (' + rock.outcomeKeys.join(', ') + ') but no qualifying features or RFEs for this release'
+      var msg
+      if (rockStats.totalMatches === 0) {
+        msg = 'Big Rock "' + rock.name + '" has outcomes (' + rock.outcomeKeys.join(', ') + ') but no features with matching parentKey found in the index. Check parent-child links in Jira.'
+      } else {
+        var parts = []
+        parts.push(rockStats.totalMatches + ' candidate(s) with matching parentKey')
+        if (rockStats.closedFiltered > 0) parts.push(rockStats.closedFiltered + ' excluded (closed status)')
+        if (rockStats.noTargetVersion > 0) parts.push(rockStats.noTargetVersion + ' excluded (no target version)')
+        if (rockReleaseMismatch > 0) parts.push(rockReleaseMismatch + ' excluded (wrong release)')
+        if (rockTerminalFiltered > 0) parts.push(rockTerminalFiltered + ' excluded (terminal status)')
+        msg = 'Big Rock "' + rock.name + '" has outcomes (' + rock.outcomeKeys.join(', ') + ') but no qualifying features: ' + parts.join(', ')
+      }
       warnings.push(msg)
       console.warn('[release-planning] ' + msg)
     }
@@ -279,6 +293,7 @@ function runPipeline(config, bigRocks, release, readFromStorage, opts) {
     skippedCount: skippedCount,
     terminalFilteredCount: terminalFilteredCount,
     rocksWithoutOutcomes: rocksWithout.map(function(r) { return r.name }),
+    missingOutcomes: missingOutcomes,
     warnings: warnings
   }
 }

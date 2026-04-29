@@ -228,6 +228,48 @@ describe('findTier1Features', () => {
     const results = findTier1Features(readFromStorage, index, ['KEY-1'])
     expect(results).toHaveLength(0)
   })
+
+  it('populates stats object when provided', () => {
+    const index = {
+      features: [
+        makeFeatureIndex('RHAISTRAT-100', { parentKey: 'KEY-1', targetVersions: ['rhoai-3.5'], status: 'In Progress' }),
+        makeFeatureIndex('RHAISTRAT-101', { parentKey: 'KEY-1', targetVersions: null, status: 'In Progress' }),
+        makeFeatureIndex('RHAISTRAT-102', { parentKey: 'KEY-1', targetVersions: ['rhoai-3.5'], status: 'Closed' }),
+        makeFeatureIndex('RHAISTRAT-103', { parentKey: 'OTHER', targetVersions: ['rhoai-3.5'], status: 'New' })
+      ],
+      rfes: []
+    }
+    const details = [
+      makeFeatureDetail('RHAISTRAT-100', { parentKey: 'KEY-1', targetVersions: ['rhoai-3.5'] })
+    ]
+    const readFromStorage = createMockStorage(details)
+    const stats = {}
+
+    const results = findTier1Features(readFromStorage, index, ['KEY-1'], stats)
+
+    expect(results).toHaveLength(1)
+    expect(stats.totalMatches).toBe(3)
+    expect(stats.noTargetVersion).toBe(1)
+    expect(stats.closedFiltered).toBe(1)
+  })
+
+  it('works unchanged when stats parameter is not provided', () => {
+    const index = {
+      features: [
+        makeFeatureIndex('RHAISTRAT-100', { parentKey: 'KEY-1', targetVersions: ['rhoai-3.5'], status: 'In Progress' })
+      ],
+      rfes: []
+    }
+    const details = [
+      makeFeatureDetail('RHAISTRAT-100', { parentKey: 'KEY-1', targetVersions: ['rhoai-3.5'] })
+    ]
+    const readFromStorage = createMockStorage(details)
+
+    // Call without stats parameter -- should work exactly as before
+    const results = findTier1Features(readFromStorage, index, ['KEY-1'])
+    expect(results).toHaveLength(1)
+    expect(results[0].key).toBe('RHAISTRAT-100')
+  })
 })
 
 describe('findTier1Rfes', () => {

@@ -277,7 +277,8 @@ describe('runPipeline', () => {
 
     expect(result.features).toHaveLength(0)
     expect(result.rocksWithoutOutcomes).toContain('NoOutcome')
-    expect(result.warnings).toEqual(
+    // TBD rocks are tracked in rocksWithoutOutcomes but NOT in warnings
+    expect(result.warnings).not.toEqual(
       expect.arrayContaining([expect.stringContaining('NoOutcome')])
     )
   })
@@ -309,7 +310,61 @@ describe('runPipeline', () => {
     )
   })
 
-  it('accumulates warnings for missing outcomes and empty index', () => {
+  it('provides diagnostic detail when rock has outcomes but no qualifying features', () => {
+    const index = {
+      features: [
+        makeFeatureIndex('KEY-1', { summary: 'Outcome', status: 'New' }),
+        makeFeatureIndex('RHAISTRAT-100', { parentKey: 'KEY-1', targetVersions: ['rhoai-3.4'], status: 'In Progress' }),
+        makeFeatureIndex('RHAISTRAT-101', { parentKey: 'KEY-1', targetVersions: null, status: 'New' }),
+        makeFeatureIndex('RHAISTRAT-102', { parentKey: 'KEY-1', targetVersions: ['rhoai-3.5'], status: 'Closed' })
+      ],
+      rfes: []
+    }
+    const details = [
+      makeFeatureDetail('RHAISTRAT-100', { parentKey: 'KEY-1', targetVersions: ['rhoai-3.4'] }),
+      makeFeatureDetail('RHAISTRAT-102', { parentKey: 'KEY-1', targetVersions: ['rhoai-3.5'], status: 'Closed' })
+    ]
+    const readFromStorage = createMockStorage(index, details)
+
+    const config = makeConfig()
+    const bigRocks = [
+      { priority: 1, name: 'TestRock', outcomeKeys: ['KEY-1'], pillar: 'Platform' }
+    ]
+
+    const result = runPipeline(config, bigRocks, '3.5', readFromStorage)
+
+    // Should have a diagnostic warning with filter breakdown
+    expect(result.warnings).toEqual(
+      expect.arrayContaining([expect.stringContaining('candidate(s) with matching parentKey')])
+    )
+    // Should mention specific filter reasons
+    const diagWarning = result.warnings.find(function(w) { return w.indexOf('candidate(s) with matching parentKey') !== -1 })
+    expect(diagWarning).toBeDefined()
+    expect(diagWarning).toContain('excluded')
+  })
+
+  it('warns about missing parentKey when no features match at all', () => {
+    const index = {
+      features: [
+        makeFeatureIndex('KEY-1', { summary: 'Outcome', status: 'New' })
+      ],
+      rfes: []
+    }
+    const readFromStorage = createMockStorage(index)
+
+    const config = makeConfig()
+    const bigRocks = [
+      { priority: 1, name: 'EmptyRock', outcomeKeys: ['KEY-1'], pillar: 'Platform' }
+    ]
+
+    const result = runPipeline(config, bigRocks, '3.5', readFromStorage)
+
+    expect(result.warnings).toEqual(
+      expect.arrayContaining([expect.stringContaining('no features with matching parentKey found in the index')])
+    )
+  })
+
+  it('accumulates warnings for empty index', () => {
     const index = { features: [], rfes: [] }
     const readFromStorage = createMockStorage(index)
 
@@ -320,12 +375,36 @@ describe('runPipeline', () => {
 
     const result = runPipeline(config, bigRocks, '3.5', readFromStorage)
 
-    expect(result.warnings.length).toBeGreaterThanOrEqual(2)
     expect(result.warnings).toEqual(
       expect.arrayContaining([
-        expect.stringContaining('Feature-traffic index is empty'),
-        expect.stringContaining('KEY-999')
+        expect.stringContaining('Feature-traffic index is empty')
       ])
+    )
+  })
+
+  it('returns missingOutcomes array listing keys not found in index', () => {
+    const index = {
+      features: [
+        makeFeatureIndex('KEY-1', { summary: 'Outcome Found' })
+      ],
+      rfes: []
+    }
+    const readFromStorage = createMockStorage(index)
+
+    const config = makeConfig()
+    const bigRocks = [
+      { priority: 1, name: 'Rock', outcomeKeys: ['KEY-1', 'KEY-999', 'KEY-888'], pillar: 'Platform' }
+    ]
+
+    const result = runPipeline(config, bigRocks, '3.5', readFromStorage)
+
+    expect(result.missingOutcomes).toBeDefined()
+    expect(result.missingOutcomes).toContain('KEY-999')
+    expect(result.missingOutcomes).toContain('KEY-888')
+    expect(result.missingOutcomes).not.toContain('KEY-1')
+    // Missing outcomes should NOT be in warnings (downgraded to info)
+    expect(result.warnings).not.toEqual(
+      expect.arrayContaining([expect.stringContaining('not found in feature-traffic data')])
     )
   })
 

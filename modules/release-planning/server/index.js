@@ -7,6 +7,7 @@ const { withConfigLock } = require('./config-lock')
 const { backupConfig } = require('./config-backup')
 const { validateBigRock } = require('./validation')
 const { createRequirePM, getPMUsers, addPMUser, removePMUser, isPM } = require('./pm-auth')
+const { getOutcomeSummaries } = require('./outcome-fetch')
 const { previewDocImport, executeDocImport } = require('./doc-import')
 const { logAudit, getAuditLog } = require('./audit-log')
 const smartsheetClient = require('../../../shared/server/smartsheet')
@@ -104,6 +105,9 @@ module.exports = function registerRoutes(router, context) {
       return
     }
 
+    console.log('[release-planning] Background refresh started for ' + version)
+    var refreshStartTime = Date.now()
+
     function doRefresh(attempt) {
       const pipeline = new Promise(function(resolve) { resolve(runPipeline(config, bigRocks, version, readFromStorage)) })
       const timeout = new Promise(function(_, reject) {
@@ -112,19 +116,40 @@ module.exports = function registerRoutes(router, context) {
 
       Promise.race([pipeline, timeout])
         .then(function(result) {
-          const response = buildCandidateResponse(result, version, bigRocks, false)
-          writeToStorage(DATA_PREFIX + '/candidates-cache-' + version + '.json', {
-            cachedAt: new Date().toISOString(),
-            data: response
-          })
-          refreshStates.set(version, {
-            running: false,
-            lastResult: {
-              status: 'success',
-              version: version,
-              message: 'Pipeline completed: ' + result.features.length + ' features, ' + result.rfes.length + ' RFEs',
-              completedAt: new Date().toISOString()
-            }
+          // Jira fallback: fetch missing outcome summaries asynchronously
+          var fallback
+          if (result.missingOutcomes && result.missingOutcomes.length > 0) {
+            fallback = getOutcomeSummaries(result.missingOutcomes, version, readFromStorage, writeToStorage)
+              .then(function(fetched) {
+                // Merge fetched summaries into the pipeline result
+                for (var key in fetched) {
+                  result.outcomeSummaries[key] = fetched[key]
+                }
+              })
+              .catch(function(err) {
+                console.warn('[release-planning] Jira outcome summary fallback failed: ' + err.message)
+              })
+          } else {
+            fallback = Promise.resolve()
+          }
+
+          return fallback.then(function() {
+            const response = buildCandidateResponse(result, version, bigRocks, false)
+            writeToStorage(DATA_PREFIX + '/candidates-cache-' + version + '.json', {
+              cachedAt: new Date().toISOString(),
+              data: response
+            })
+            var elapsed = ((Date.now() - refreshStartTime) / 1000).toFixed(1)
+            console.log('[release-planning] Background refresh completed for ' + version + ': ' + result.features.length + ' features, ' + result.rfes.length + ' RFEs in ' + elapsed + 's')
+            refreshStates.set(version, {
+              running: false,
+              lastResult: {
+                status: 'success',
+                version: version,
+                message: 'Pipeline completed: ' + result.features.length + ' features, ' + result.rfes.length + ' RFEs',
+                completedAt: new Date().toISOString()
+              }
+            })
           })
         })
         .catch(function(err) {
@@ -134,6 +159,15 @@ module.exports = function registerRoutes(router, context) {
             return
           }
           console.error('[release-planning] Background refresh failed for ' + version + ':', err)
+
+          // Remove _invalidatedAt marker so cache reverts to normal
+          // stale-while-revalidate behavior (15-min cycle)
+          var staleCache = readFromStorage(DATA_PREFIX + '/candidates-cache-' + version + '.json')
+          if (staleCache && staleCache._invalidatedAt) {
+            delete staleCache._invalidatedAt
+            writeToStorage(DATA_PREFIX + '/candidates-cache-' + version + '.json', staleCache)
+          }
+
           refreshStates.set(version, {
             running: false,
             lastResult: {
@@ -213,8 +247,9 @@ module.exports = function registerRoutes(router, context) {
     if (hasCachedData) {
       const age = Date.now() - new Date(cached.cachedAt).getTime()
       const isStale = age >= CACHE_MAX_AGE_MS
+      const isInvalidated = !!cached._invalidatedAt
 
-      if (isStale) {
+      if (isStale || isInvalidated) {
         triggerBackgroundRefresh(version)
       }
 
@@ -233,7 +268,7 @@ module.exports = function registerRoutes(router, context) {
 
       return sendJsonWithETag(req, res, {
         ...data,
-        _cacheStale: isStale,
+        _cacheStale: isStale || isInvalidated,
         _refreshing: getRefreshState(version).running
       })
     }
@@ -303,16 +338,30 @@ module.exports = function registerRoutes(router, context) {
   // ─── Cache Invalidation Helper ───
 
   function invalidateCache(version) {
-    // Delete the candidates cache file so next GET re-fetches
+    // Do NOT delete the candidates cache -- let triggerBackgroundRefresh
+    // overwrite it atomically when the rebuild completes. This prevents
+    // serving empty 202 responses during the rebuild window.
+    //
+    // DO delete health caches -- they are rebuilt lazily by GET /health,
+    // not by triggerBackgroundRefresh. Keeping stale health data would
+    // serve wrong feature associations for up to 15 minutes.
     if (deleteFromStorage) {
-      deleteFromStorage(`${DATA_PREFIX}/candidates-cache-${version}.json`)
-      // Delete all phase-specific health caches -- rebuilt lazily on next GET /health request
       var healthPhases = ['all', 'EA1', 'EA2', 'GA']
       for (var hp = 0; hp < healthPhases.length; hp++) {
         deleteFromStorage(`${DATA_PREFIX}/health-cache-${version}-${healthPhases[hp]}.json`)
       }
+      // Delete outcome summary cache so it's re-fetched with current keys
+      deleteFromStorage(`${DATA_PREFIX}/outcome-summaries-cache-${version}.json`)
     }
-    // Trigger background refresh to rebuild the candidates cache
+
+    // Mark the existing cache as invalidated so the GET endpoint knows
+    // a refresh is pending, without deleting the data.
+    var cached = readFromStorage(`${DATA_PREFIX}/candidates-cache-${version}.json`)
+    if (cached) {
+      cached._invalidatedAt = new Date().toISOString()
+      writeToStorage(`${DATA_PREFIX}/candidates-cache-${version}.json`, cached)
+    }
+
     triggerBackgroundRefresh(version)
   }
 
