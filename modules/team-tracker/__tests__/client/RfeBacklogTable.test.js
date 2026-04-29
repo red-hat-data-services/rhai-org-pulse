@@ -88,6 +88,15 @@ describe('RfeBacklogTable', () => {
     expect(wrapper.text()).toContain('No RFEs match')
   })
 
+  it('navigates to AI Impact on key click', async () => {
+    const wrapper = mount(RfeBacklogTable, { props: { issues: sampleIssues, rfeConfig } })
+    const buttons = wrapper.findAll('button')
+    const rfeButton = buttons.find(b => b.text() === 'RHAIRFE-100')
+    expect(rfeButton).toBeTruthy()
+    await rfeButton.trigger('click')
+    expect(window.location.hash).toBe('#/ai-impact/rfe-review?select=RHAIRFE-100')
+  })
+
   it('renders status badges with appropriate classes', () => {
     const wrapper = mount(RfeBacklogTable, { props: { issues: sampleIssues, rfeConfig } })
     const badges = wrapper.findAll('.rounded-full')

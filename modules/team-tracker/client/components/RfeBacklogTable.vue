@@ -32,14 +32,26 @@
         <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
           <tr v-for="issue in sortedIssues" :key="issue.key" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
             <td class="px-4 py-3 whitespace-nowrap">
-              <a
-                :href="jiraIssueUrl(issue.key)"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-primary-600 hover:text-primary-800 dark:hover:text-primary-400 hover:underline font-medium"
-              >
-                {{ issue.key }}
-              </a>
+              <div class="flex items-center gap-1">
+                <button
+                  class="text-primary-600 hover:text-primary-800 dark:hover:text-primary-400 hover:underline font-medium"
+                  @click="navigateToAIImpact(issue.key)"
+                >
+                  {{ issue.key }}
+                </button>
+                <a
+                  :href="jiraIssueUrl(issue.key)"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+                  title="View in Jira"
+                  @click.stop
+                >
+                  <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              </div>
             </td>
             <td class="px-4 py-3 text-gray-800 dark:text-gray-200">{{ issue.summary }}</td>
             <td class="px-4 py-3">
@@ -144,6 +156,10 @@ function statusClass(category) {
   if (category === 'Done') return 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400'
   if (category === 'In Progress') return 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400'
   return 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+}
+
+function navigateToAIImpact(key) {
+  window.location.hash = `#/ai-impact/rfe-review?select=${encodeURIComponent(key)}`
 }
 
 function formatDate(iso) {
