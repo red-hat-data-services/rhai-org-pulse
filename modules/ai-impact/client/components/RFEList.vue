@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import RFEListItem from './RFEListItem.vue'
 
 const props = defineProps({
@@ -12,14 +12,7 @@ const props = defineProps({
   sortBy: { type: String, default: 'default' },
   passFailFilter: { type: String, default: 'all' },
   priorityFilter: { type: String, default: 'all' },
-  statusFilter: { type: String, default: 'all' },
-  timeWindow: { type: String, default: 'month' }
-})
-
-const windowDescription = computed(() => {
-  const days = props.timeWindow === 'week' ? 7 : props.timeWindow === '3months' ? 90 : 30
-  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
-  return `since ${cutoff.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+  statusFilter: { type: String, default: 'all' }
 })
 
 const emit = defineEmits(['update:filter', 'update:searchQuery', 'update:sortBy', 'update:passFailFilter', 'update:priorityFilter', 'update:statusFilter', 'selectRFE'])
@@ -89,6 +82,21 @@ const sortedAndFilteredRFEs = computed(() => {
   return rfes
 })
 
+const PAGE_SIZE = 50
+const currentPage = ref(1)
+
+const totalPages = computed(() => Math.max(1, Math.ceil(sortedAndFilteredRFEs.value.length / PAGE_SIZE)))
+
+const paginatedRFEs = computed(() => {
+  const start = (currentPage.value - 1) * PAGE_SIZE
+  return sortedAndFilteredRFEs.value.slice(start, start + PAGE_SIZE)
+})
+
+watch(
+  () => [props.filter, props.searchQuery, props.sortBy, props.passFailFilter, props.priorityFilter, props.statusFilter],
+  () => { currentPage.value = 1 }
+)
+
 const HINT_KEY = 'ai-impact:rfe-hint-dismissed'
 const showHint = ref(false)
 
@@ -116,7 +124,7 @@ function handleSelectRFE(rfe) {
             d="M4 6h16M4 10h16M4 14h16M4 18h16" />
         </svg>
         RFE List
-        <span class="text-sm font-normal text-gray-500 dark:text-gray-400">({{ sortedAndFilteredRFEs.length }}) · {{ windowDescription }}</span>
+        <span class="text-sm font-normal text-gray-500 dark:text-gray-400">({{ sortedAndFilteredRFEs.length }} of {{ rfes.length }} total)</span>
       </h3>
       <div class="flex gap-2">
         <div class="relative">
@@ -204,13 +212,34 @@ function handleSelectRFE(rfe) {
 
     <div v-else class="space-y-2">
       <RFEListItem
-        v-for="rfe in sortedAndFilteredRFEs"
+        v-for="rfe in paginatedRFEs"
         :key="rfe.key"
         :rfe="rfe"
         :selected="selectedRFE?.key === rfe.key"
         :assessment="assessments[rfe.key] || null"
         @select="handleSelectRFE"
       />
+    </div>
+
+    <!-- Pagination -->
+    <div v-if="totalPages > 1" class="flex items-center justify-between mt-4 pt-4 pb-16 border-t border-gray-200 dark:border-gray-700">
+      <button
+        :disabled="currentPage <= 1"
+        @click="currentPage--"
+        class="px-4 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:dark:bg-gray-700 disabled:dark:text-gray-500 disabled:cursor-not-allowed transition-colors"
+      >
+        Previous
+      </button>
+      <span class="text-sm font-medium text-gray-600 dark:text-gray-300">
+        Page {{ currentPage }} of {{ totalPages }}
+      </span>
+      <button
+        :disabled="currentPage >= totalPages"
+        @click="currentPage++"
+        class="px-4 py-2 text-sm font-medium rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:dark:bg-gray-700 disabled:dark:text-gray-500 disabled:cursor-not-allowed transition-colors"
+      >
+        Next
+      </button>
     </div>
   </div>
 </template>

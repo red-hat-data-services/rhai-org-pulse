@@ -5,12 +5,13 @@ import { useAssessments } from '../composables/useAssessments.js'
 import { useFeatures } from '../composables/useFeatures.js'
 import { PHASES } from '../constants.js'
 import PhaseContent from '../components/PhaseContent.vue'
-import RFEDetailPanel from '../components/RFEDetailPanel.vue'
+import RFEDetailModal from '../components/RFEDetailModal.vue'
 import AIImpactGuide from '../components/AIImpactGuide.vue'
 
 const moduleNav = inject('moduleNav')
 
 const selectedRFE = ref(null)
+const notFoundRFE = ref(null)
 const timeWindow = ref('month')
 const filter = ref('all')
 const searchQuery = ref('')
@@ -37,18 +38,21 @@ const timeWindowCutoff = computed(() => {
   return new Date(Date.now() - days * 24 * 60 * 60 * 1000)
 })
 
-const filteredRFEs = computed(() => {
+const listRFEs = computed(() => {
   if (!rfeData.value?.issues) return []
   return rfeData.value.issues.filter(rfe => {
-    const matchesTime = new Date(rfe.created) >= timeWindowCutoff.value
     const matchesFilter = filter.value === 'all' || rfe.aiInvolvement === filter.value
     const q = searchQuery.value.toLowerCase()
     const matchesSearch = !q ||
       rfe.summary.toLowerCase().includes(q) ||
       rfe.key.toLowerCase().includes(q) ||
       (rfe.creatorDisplayName && rfe.creatorDisplayName.toLowerCase().includes(q))
-    return matchesTime && matchesFilter && matchesSearch
+    return matchesFilter && matchesSearch
   })
+})
+
+const timeFilteredRFEs = computed(() => {
+  return listRFEs.value.filter(rfe => new Date(rfe.created) >= timeWindowCutoff.value)
 })
 
 // Reverse lookup: sourceRfe -> feature key/status for cross-linking
@@ -73,7 +77,7 @@ const enrichedSelectedRFE = computed(() => {
 })
 
 const filteredAssessments = computed(() => {
-  const rfeKeys = new Set(filteredRFEs.value.map(r => r.key))
+  const rfeKeys = new Set(timeFilteredRFEs.value.map(r => r.key))
   const result = {}
   for (const [key, assessment] of Object.entries(assessments.value)) {
     if (rfeKeys.has(key)) {
@@ -93,7 +97,8 @@ function handleNavigateToFeature(featureKey) {
 }
 
 // Handle incoming select param (cross-link from Feature Review)
-watch(() => moduleNav.params.value, (params) => {
+// Watch both params and rfeData — params may arrive before data is loaded
+watch([() => moduleNav.params.value, rfeData], ([params]) => {
   if (params?.select && rfeData.value?.issues) {
     const rfe = rfeData.value.issues.find(r => r.key === params.select)
     if (rfe) {
@@ -103,6 +108,9 @@ watch(() => moduleNav.params.value, (params) => {
       priorityFilter.value = 'all'
       statusFilter.value = 'all'
       selectedRFE.value = rfe
+      notFoundRFE.value = null
+    } else {
+      notFoundRFE.value = params.select
     }
   }
 }, { immediate: true })
@@ -118,7 +126,7 @@ watch(() => moduleNav.params.value, (params) => {
       :metrics="metrics"
       :trendData="trendData"
       :breakdown="breakdown"
-      :filteredRFEs="filteredRFEs"
+      :filteredRFEs="listRFEs"
       :timeWindow="timeWindow"
       :filter="filter"
       :searchQuery="searchQuery"
@@ -129,6 +137,7 @@ watch(() => moduleNav.params.value, (params) => {
       :passFailFilter="passFailFilter"
       :priorityFilter="priorityFilter"
       :statusFilter="statusFilter"
+      :selectedRFE="selectedRFE"
       @update:timeWindow="timeWindow = $event"
       @update:filter="filter = $event"
       @update:searchQuery="searchQuery = $event"
@@ -141,8 +150,47 @@ watch(() => moduleNav.params.value, (params) => {
       @retry="handleRetry"
     />
 
-    <RFEDetailPanel
-      v-if="enrichedSelectedRFE"
+    <!-- Not-found banner for cross-link to missing RFE -->
+    <Teleport to="body">
+      <Transition name="notfound">
+        <div
+          v-if="notFoundRFE"
+          class="fixed top-4 right-4 z-50 max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-lg border-l-4 border-yellow-500 p-4"
+          role="alert"
+        >
+          <div class="flex items-start gap-3">
+            <svg class="h-5 w-5 text-yellow-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div class="flex-1">
+              <p class="text-sm font-medium text-gray-900 dark:text-gray-100">RFE not found</p>
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                <span class="font-mono">{{ notFoundRFE }}</span> is not in the assessment dataset.
+                <a
+                  v-if="rfeData?.jiraHost"
+                  :href="`${rfeData.jiraHost}/browse/${notFoundRFE}`"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-blue-600 dark:text-blue-400 hover:underline"
+                >View in Jira</a>
+              </p>
+            </div>
+            <button
+              @click="notFoundRFE = null"
+              aria-label="Dismiss"
+              class="shrink-0 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            >
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <RFEDetailModal
+      :show="!!enrichedSelectedRFE"
       :rfe="enrichedSelectedRFE"
       :phases="PHASES"
       :jiraHost="rfeData?.jiraHost"
@@ -155,3 +203,9 @@ watch(() => moduleNav.params.value, (params) => {
     <AIImpactGuide />
   </div>
 </template>
+
+<style scoped>
+.notfound-enter-active, .notfound-leave-active { transition: all 0.3s ease; }
+.notfound-enter-from { transform: translateX(100%); opacity: 0; }
+.notfound-leave-to { transform: translateY(-20px); opacity: 0; }
+</style>
