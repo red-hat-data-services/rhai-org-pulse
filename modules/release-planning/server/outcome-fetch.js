@@ -38,7 +38,7 @@ async function fetchOutcomeSummaries(keys) {
   if (safeKeys.length === 0) return {}
 
   var jql = 'key in (' + safeKeys.join(',') + ')'
-  var params = new URLSearchParams({ jql: jql, fields: 'summary', maxResults: String(keys.length) })
+  var params = new URLSearchParams({ jql: jql, fields: 'summary', maxResults: String(safeKeys.length) })
   var data = await jiraRequest('/rest/api/3/search/jql?' + params)
 
   var summaries = {}
