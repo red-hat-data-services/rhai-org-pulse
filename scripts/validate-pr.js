@@ -220,6 +220,43 @@ async function checkModuleStructure() {
   }
 }
 
+// Check 6: Production build exists
+function checkProductionBuild() {
+  info('Checking for production build...')
+
+  if (!existsSync('dist')) {
+    warn('No dist/ directory found. Run `npm run build` before creating PR.')
+    console.warn('  This verifies the production build works (required by CONTRIBUTING.md)')
+    return
+  }
+
+  // Check if build is recent by comparing with package.json modification time
+  try {
+    const distStat = existsSync('dist/index.html') ? require('fs').statSync('dist/index.html') : null
+    const pkgStat = require('fs').statSync('package.json')
+
+    if (!distStat) {
+      warn('dist/ exists but dist/index.html is missing. Run `npm run build`.')
+      return
+    }
+
+    const buildAge = Date.now() - distStat.mtimeMs
+
+    // If package.json changed more recently than build, warn about stale build
+    if (pkgStat.mtimeMs > distStat.mtimeMs) {
+      warn('Production build may be stale (package.json modified after build).')
+      console.warn('  Run `npm run build` to ensure latest changes are included.')
+    } else if (buildAge > 24 * 60 * 60 * 1000) {
+      info(`Production build is ${Math.floor(buildAge / (60 * 60 * 1000))} hours old (may be stale)`)
+    } else {
+      success('Production build exists and appears recent')
+    }
+  } catch {
+    // If we can't check timestamps, just verify dist exists
+    success('Production build exists')
+  }
+}
+
 // Run all checks
 async function main() {
   console.log('=== PR Validation Checks ===\n')
@@ -229,6 +266,7 @@ async function main() {
   checkCommitAuthorship()
   checkBranchName()
   await checkModuleStructure()
+  checkProductionBuild()
 
   console.log('\n=== Validation Complete ===')
 
