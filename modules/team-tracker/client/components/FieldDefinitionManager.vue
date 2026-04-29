@@ -182,7 +182,7 @@ async function toggleVisibility(field) {
     <!-- Field list -->
     <div v-if="loading" class="text-sm text-gray-500">Loading...</div>
     <ul v-else class="divide-y divide-gray-200 border rounded">
-      <li v-for="field in activeFields" :key="field.id" class="flex items-center justify-between p-3">
+      <li v-for="field in activeFields" :key="field.id" :class="['flex items-center justify-between p-3', editingFieldId === field.id ? 'bg-blue-50 dark:bg-blue-900/20 border-l-2 border-l-blue-300 dark:border-l-blue-700' : '']">
         <div v-if="editingFieldId === field.id" class="flex items-center gap-2 flex-1">
           <input
             v-model="editLabel"
@@ -190,8 +190,8 @@ async function toggleVisibility(field) {
             @keyup.enter="saveEdit(field.id)"
             @keyup.escape="editingFieldId = null"
           >
-          <button class="text-sm text-primary-600" @click="saveEdit(field.id)">Save</button>
-          <button class="text-sm text-gray-500" @click="editingFieldId = null">Cancel</button>
+          <button class="px-2.5 py-1 text-xs font-medium text-white bg-primary-600 rounded hover:bg-primary-700 transition-colors" @click="saveEdit(field.id)">Save</button>
+          <button class="px-2.5 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" @click="editingFieldId = null">Cancel</button>
         </div>
         <div v-else class="flex-1">
           <span class="font-medium text-gray-900">{{ field.label }}</span>
