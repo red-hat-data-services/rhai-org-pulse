@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import { apiRequest } from '@shared/client/services/api.js'
 
 const props = defineProps({
@@ -44,6 +44,10 @@ function initSearchText() {
 }
 
 initSearchText()
+
+onUnmounted(() => {
+  if (ldapDebounceTimer) clearTimeout(ldapDebounceTimer)
+})
 
 // Re-initialize when modelValue changes externally
 watch(() => props.modelValue, () => {

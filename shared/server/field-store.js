@@ -136,6 +136,10 @@ function createFieldDefinition(storage, scope, definition, actorEmail) {
 
   const fieldType = definition.type || 'free-text';
 
+  if (!VALID_FIELD_TYPES.includes(fieldType)) {
+    throw new Error(`Invalid type. Must be one of: ${VALID_FIELD_TYPES.join(', ')}`);
+  }
+
   // Validate allowedValues
   const avError = validateAllowedValues(definition.allowedValues);
   if (avError) throw new Error(avError);

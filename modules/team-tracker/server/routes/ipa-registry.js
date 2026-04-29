@@ -355,7 +355,7 @@ function registerIpaRegistryRoutes(router, context) {
     }
 
     // Rate limiting
-    var userEmail = req.headers['x-forwarded-email'] || 'anonymous';
+    var userEmail = req.userEmail || 'anonymous';
     var now = Date.now();
     // Prune old entries
     rateLimitMap.forEach(function(timestamps, key) {
@@ -384,7 +384,9 @@ function registerIpaRegistryRoutes(router, context) {
         conn.client.unbind(function() {});
         conn = null;
       }
-      res.status(504).json({ error: 'LDAP connection timeout' });
+      if (!res.headersSent) {
+        res.status(504).json({ error: 'LDAP connection timeout' });
+      }
     }, 5000);
 
     (async function() {
@@ -450,7 +452,9 @@ function registerIpaRegistryRoutes(router, context) {
         conn.client.unbind(function() {});
         conn = null;
       }
-      res.status(504).json({ error: 'LDAP connection timeout' });
+      if (!res.headersSent) {
+        res.status(504).json({ error: 'LDAP connection timeout' });
+      }
     }, 5000);
 
     (async function() {

@@ -29,7 +29,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, inject } from 'vue'
+import { ref, computed, watch, inject } from 'vue'
 import { usePermissions } from '@shared/client/composables/usePermissions'
 import TeamManagement from '../components/TeamManagement.vue'
 import FieldDefinitionManager from '../components/FieldDefinitionManager.vue'
@@ -48,15 +48,9 @@ const activeTab = ref('teams')
 
 const hasAccess = computed(() => isAdmin.value || isTeamAdmin.value)
 
-onMounted(() => {
-  // Redirect non-authorized users after permissions load
-  const check = () => {
-    if (!loading.value && !hasAccess.value && moduleNav) {
-      moduleNav.navigateTo('home')
-    }
+watch(loading, (isLoading) => {
+  if (!isLoading && !hasAccess.value && moduleNav) {
+    moduleNav.navigateTo('home')
   }
-  // Check immediately and after a short delay for async permission loading
-  check()
-  setTimeout(check, 500)
-})
+}, { immediate: true })
 </script>

@@ -84,7 +84,7 @@ export function useTeams() {
   }
 
   async function fetchUnassigned(scope = 'all') {
-    const data = await apiRequest(`/modules/team-tracker/structure/unassigned?scope=${scope}`)
+    const data = await apiRequest(`/modules/team-tracker/structure/unassigned?scope=${encodeURIComponent(scope)}`)
     return data.people || []
   }
 
