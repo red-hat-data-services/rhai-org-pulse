@@ -62,6 +62,7 @@ Use this checklist before marking any Jira ticket as complete or creating a pull
 - [ ] All commits are clean and logical
 - [ ] No merge conflicts
 - [ ] No untracked test files or directories (like `modules/backlog-health/`)
+- [ ] Production build verified: `npm run build` (automated check warns if missing)
 
 ## Documentation
 
