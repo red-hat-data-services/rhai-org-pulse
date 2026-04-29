@@ -41,7 +41,8 @@ function onInput() {
 
 function selectPerson(person) {
   emit('update:modelValue', person.uid)
-  searchText.value = person.name
+  // In multi-value mode (modelValue stays ''), clear the search box after adding
+  searchText.value = props.modelValue === '' ? '' : person.name
   isOpen.value = false
 }
 
