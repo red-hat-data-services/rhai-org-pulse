@@ -616,6 +616,47 @@ Per-feature detail file with epic breakdown.
 }
 ```
 
+**Optional — Traffic Signals (`trafficSignals`):**
+
+Heuristic narrative signals for the Feature detail **Traffic Signals** panel (blockers / warnings / flowing). Produced by `feature-traffic` (`deriveTrafficSignals`) or the offline augment script; **not** fetched separately from Jira.
+
+```json
+{
+  "trafficSignals": {
+    "schemaVersion": "1",
+    "generatedAt": "2026-04-29T12:00:00.000Z",
+    "source": "derived",
+    "blockers": [
+      {
+        "title": "RHOAIENG-999 — integration epic in backlog",
+        "detail": "Integration-related epic is Backlog while the feature is incomplete.",
+        "issueKeys": ["RHOAIENG-999"]
+      }
+    ],
+    "warnings": [
+      {
+        "title": "2 stale in-progress issue(s)",
+        "detail": "Issues in In Progress with no update in 7+ days.",
+        "issueKeys": []
+      }
+    ],
+    "flowing": [
+      {
+        "title": "RHOAIENG-100 complete",
+        "detail": "\"Foundation API layer\" — epic resolved (Closed).",
+        "issueKeys": ["RHOAIENG-100"]
+      }
+    ]
+  }
+}
+```
+
+**Notes:**
+
+- Each signal item has `title` (short headline), `detail` (one or two sentences), and `issueKeys` (Jira keys cited in the signal; may be empty).
+- **`source`**: `"derived"` from embedded epic/issue JSON; editors may set `"edited"` after manual refinement (your pipeline may still overwrite on the next fetch unless you preserve edits out-of-band).
+- Traffic **blockers** here are **not** the same as Jira **priority = Blocker** — they reflect backlog/integration risk and explicit **`isBlocked`** links on issues.
+
 ## Feature Traffic — Config (`data/feature-traffic/config.json`)
 
 Admin-configurable settings for GitLab CI artifact fetching.
