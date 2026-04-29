@@ -85,16 +85,24 @@ async function handleCreate() {
   }
 }
 
+const editType = ref('')
+
 function startEdit(field) {
   editingFieldId.value = field.id
   editLabel.value = field.label
+  editType.value = field.type
 }
 
 async function saveEdit(fieldId) {
   if (!editLabel.value.trim()) return
   error.value = null
   try {
-    await updateField(activeTab.value, fieldId, { label: editLabel.value.trim() })
+    const updates = { label: editLabel.value.trim() }
+    const originalField = activeFields.value.find(f => f.id === fieldId)
+    if (originalField && editType.value !== originalField.type) {
+      updates.type = editType.value
+    }
+    await updateField(activeTab.value, fieldId, updates)
     editingFieldId.value = null
   } catch (e) {
     error.value = e.message || 'Failed to update field'
@@ -190,6 +198,12 @@ async function toggleVisibility(field) {
             @keyup.enter="saveEdit(field.id)"
             @keyup.escape="editingFieldId = null"
           >
+          <select
+            v-model="editType"
+            class="rounded border-gray-300 shadow-sm text-sm focus:ring-primary-500 focus:border-primary-500"
+          >
+            <option v-for="t in fieldTypes" :key="t.value" :value="t.value">{{ t.label }}</option>
+          </select>
           <button class="px-2.5 py-1 text-xs font-medium text-white bg-primary-600 rounded hover:bg-primary-700 transition-colors" @click="saveEdit(field.id)">Save</button>
           <button class="px-2.5 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" @click="editingFieldId = null">Cancel</button>
         </div>

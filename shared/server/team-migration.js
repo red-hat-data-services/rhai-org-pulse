@@ -6,6 +6,7 @@
 
 const { REGISTRY_KEY } = require('./team-store');
 const { appendAuditEntry } = require('./audit-log');
+const { mergePerson } = require('./roster-sync/lifecycle');
 
 /**
  * Build a name→uid lookup from the registry for person-reference resolution.
@@ -28,9 +29,9 @@ function buildNameToUid(registry) {
 function resolvePersonNames(rawValue, nameToUid) {
   if (!rawValue || typeof rawValue !== 'string') return [];
 
-  // Split by comma first if present, then resolve each part
-  const parts = rawValue.includes(',')
-    ? rawValue.split(',').map(s => s.trim()).filter(Boolean)
+  // Split by comma or slash first, then resolve each part
+  const parts = /[,/]/.test(rawValue)
+    ? rawValue.split(/[,/]/).map(s => s.trim()).filter(Boolean)
     : [rawValue.trim()];
 
   const sortedNames = Object.keys(nameToUid).sort((a, b) => b.length - a.length);
@@ -91,11 +92,140 @@ function buildTeamMap(registry) {
 }
 
 /**
+ * Try to resolve unmatched person names via LDAP search-by-cn.
+ * For each unmatched name, searches LDAP and if exactly one result is found,
+ * creates an auxiliary registry entry (with manager chain) and adds
+ * the name→uid mapping.
+ *
+ * @param {string[]} unmatchedNames - names to look up
+ * @param {object} nameToUid - mutable map, updated with new resolutions
+ * @param {object} registry - mutable registry, updated with new auxiliary people
+ * @param {object} conn - { client, config } from ipaClient.createClient()
+ * @returns {Promise<{ resolved: string[], unresolved: string[] }>}
+ */
+async function resolveNamesViaLdap(unmatchedNames, nameToUid, registry, conn) {
+  const ipaClient = require('./roster-sync/ipa-client');
+  const resolved = [];
+  const unresolved = [];
+  const lookupCache = {};
+  const now = new Date().toISOString();
+
+  for (const name of unmatchedNames) {
+    // Search by cn (full name) — exact match preferred
+    const escaped = ipaClient.escapeLdapFilter(name);
+    const filter = '(cn=' + escaped + ')';
+    let entries;
+    try {
+      entries = await new Promise(function(resolve, reject) {
+        const opts = {
+          filter: filter,
+          scope: 'sub',
+          attributes: ['cn', 'uid', 'mail', 'title', 'l', 'co', 'manager',
+            'rhatGeo', 'rhatLocation', 'rhatOfficeLocation', 'rhatCostCenter',
+            'rhatSocialUrl', 'memberOf'],
+          sizeLimit: 5
+        };
+        conn.client.search(conn.config.baseDn, opts, function(err, res) {
+          if (err) return reject(err);
+          var results = [];
+          res.on('searchEntry', function(entry) {
+            var obj = {};
+            for (var i = 0; i < entry.attributes.length; i++) {
+              var attr = entry.attributes[i];
+              obj[attr.type] = attr.values.length === 1 ? attr.values[0] : attr.values;
+            }
+            results.push(obj);
+          });
+          res.on('error', function(e) { reject(e); });
+          res.on('end', function() { resolve(results); });
+        });
+      });
+    } catch (err) {
+      console.warn('[migration] LDAP lookup failed for "' + name + '":', err.message);
+      unresolved.push(name);
+      continue;
+    }
+
+    if (entries.length !== 1) {
+      // 0 or ambiguous results — can't auto-resolve
+      unresolved.push(name);
+      continue;
+    }
+
+    const entry = entries[0];
+    const person = ipaClient.entryToPerson(entry);
+    const uid = person.uid;
+
+    if (!uid) {
+      unresolved.push(name);
+      continue;
+    }
+
+    // Already in registry? Just add name mapping
+    if (registry.people[uid]) {
+      nameToUid[person.name.toLowerCase().trim()] = uid;
+      resolved.push(name);
+      continue;
+    }
+
+    // Create auxiliary entry
+    const result = mergePerson(null, person, '_auxiliary', now);
+    result.person.orgType = 'auxiliary';
+    registry.people[uid] = result.person;
+    lookupCache[uid] = person;
+
+    // Walk manager chain
+    let current = result.person;
+    let depth = 0;
+    while (current && current.managerUid && depth < 20) {
+      const mgrUid = current.managerUid;
+      if (registry.people[mgrUid]) break;
+
+      let mgrPerson = lookupCache[mgrUid];
+      if (!mgrPerson) {
+        try {
+          mgrPerson = await ipaClient.lookupPerson(conn.client, conn.config.baseDn, mgrUid);
+        } catch {
+          break;
+        }
+        lookupCache[mgrUid] = mgrPerson;
+      }
+      if (!mgrPerson) break;
+
+      const mgrResult = mergePerson(null, mgrPerson, '_auxiliary', now);
+      mgrResult.person.orgType = 'auxiliary';
+      registry.people[mgrUid] = mgrResult.person;
+      current = mgrResult.person;
+      depth++;
+    }
+
+    nameToUid[person.name.toLowerCase().trim()] = uid;
+    resolved.push(name);
+  }
+
+  return { resolved, unresolved };
+}
+
+/**
+ * Create an LDAP connection if credentials are available.
+ * Returns { client, config } or null.
+ */
+function tryCreateLdapConnection() {
+  if (!process.env.IPA_BIND_DN || !process.env.IPA_BIND_PASSWORD) return null;
+  try {
+    const ipaClient = require('./roster-sync/ipa-client');
+    return ipaClient.createClient();
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Analyze existing field data and return a preview for the migration UI.
  * For each custom field, returns unique values, suggested type, multi-value detection,
  * and person-reference match info.
  */
-function previewMigration(storage, config) {
+async function previewMigration(storage, config) {
   const registry = storage.readFromStorage(REGISTRY_KEY);
   if (!registry || !registry.people) {
     return { fields: [], totalPeople: 0 };
@@ -108,6 +238,21 @@ function previewMigration(storage, config) {
 
   const nameToUid = buildNameToUid(registry);
   const teamMap = buildTeamMap(registry);
+
+  // Try to connect to LDAP for resolving unknown person names
+  const ldapConn = await (async () => {
+    try {
+      const conn = tryCreateLdapConnection();
+      if (conn) {
+        const ipaClient = require('./roster-sync/ipa-client');
+        await ipaClient.bindClient(conn.client, conn.config.bindDn, conn.config.bindPassword);
+      }
+      return conn;
+    } catch (err) {
+      console.warn('[migration] Could not connect to LDAP for name resolution:', err.message);
+      return null;
+    }
+  })();
 
   const fields = [];
 
@@ -124,14 +269,14 @@ function previewMigration(storage, config) {
       }
     }
 
-    // Detect multi-value by checking for commas
-    const hasCommas = rawValues.some(v => typeof v === 'string' && v.includes(','));
+    // Detect multi-value by checking for commas or slashes
+    const hasDelimiters = rawValues.some(v => typeof v === 'string' && /[,/]/.test(v));
 
-    // Split all values (by comma if multi-value detected) to get individual values
+    // Split all values (by comma/slash if multi-value detected) to get individual values
     const individualValues = new Set();
     for (const v of rawValues) {
-      if (hasCommas && typeof v === 'string') {
-        for (const part of v.split(',').map(s => s.trim()).filter(Boolean)) {
+      if (hasDelimiters && typeof v === 'string') {
+        for (const part of v.split(/[,/]/).map(s => s.trim()).filter(Boolean)) {
           individualValues.add(part);
         }
       } else {
@@ -160,6 +305,33 @@ function previewMigration(storage, config) {
       }
     }
 
+    // LDAP resolution pass for unmatched values in person-reference fields
+    let ldapResolved = [];
+    if (unmatchedValues.size > 0 && ldapConn) {
+      const ldapResult = await resolveNamesViaLdap(
+        [...unmatchedValues], nameToUid, registry, ldapConn
+      );
+      ldapResolved = ldapResult.resolved;
+
+      // Re-check previously unmatched concatenated values with newly-known names
+      for (const resolvedName of ldapResolved) {
+        unmatchedValues.delete(resolvedName);
+        personMatchCount++;
+        matchedNames.add(resolvedName);
+      }
+
+      // Re-try remaining unmatched values that might be concatenations of now-known names
+      const stillUnmatched = [...unmatchedValues];
+      for (const val of stillUnmatched) {
+        const resolved = resolvePersonNames(val, nameToUid);
+        if (resolved.length > 0) {
+          unmatchedValues.delete(val);
+          personMatchCount++;
+          matchedNames.add(val);
+        }
+      }
+    }
+
     const uniqueCount = individualValues.size;
     const matchRate = uniqueCount > 0 ? personMatchCount / uniqueCount : 0;
 
@@ -171,7 +343,7 @@ function previewMigration(storage, config) {
       suggestedType = 'constrained';
     }
 
-    const suggestedMultiValue = hasCommas || (suggestedType === 'person-reference-linked' && rawValues.some(v => {
+    const suggestedMultiValue = hasDelimiters || (suggestedType === 'person-reference-linked' && rawValues.some(v => {
       const resolved = resolvePersonNames(v, nameToUid);
       return resolved.length > 1;
     }));
@@ -208,19 +380,25 @@ function previewMigration(storage, config) {
       populatedCount,
       uniqueValues: [...individualValues].sort(),
       uniqueCount,
-      hasCommas,
+      hasDelimiters,
       suggestedType,
       suggestedMultiValue,
       suggestedScope,
       uniformTeamPct,
       personMatchRate: Math.round(matchRate * 100),
       matchedNames: [...matchedNames].sort(),
-      unmatchedValues: [...unmatchedValues].sort()
+      unmatchedValues: [...unmatchedValues].sort(),
+      ldapResolved: ldapResolved.length > 0 ? ldapResolved.sort() : undefined
     });
   }
 
+  // Cleanup LDAP connection
+  if (ldapConn && ldapConn.client) {
+    ldapConn.client.unbind(function() {});
+  }
+
   const activePeople = Object.values(registry.people).filter(p => p.status === 'active').length;
-  return { fields, totalPeople: activePeople };
+  return { fields, totalPeople: activePeople, ldapAvailable: !!ldapConn };
 }
 
 /**
@@ -234,7 +412,7 @@ function previewMigration(storage, config) {
  * @param {Array<{key: string, type: string, multiValue: boolean, scope?: string}>} [fieldOverrides] - per-field type overrides
  * @returns {{ migrated: boolean, teams: number, fields: number, assignments: number, boardsMigrated: number }}
  */
-function migrateToInApp(storage, config, actorEmail, fieldOverrides) {
+async function migrateToInApp(storage, config, actorEmail, fieldOverrides) {
   // Already migrated — skip
   if (config._migratedToInApp) {
     return { migrated: false, teams: 0, fields: 0, assignments: 0, boardsMigrated: 0 };
@@ -263,6 +441,66 @@ function migrateToInApp(storage, config, actorEmail, fieldOverrides) {
 
   // Build name→uid for person-reference resolution
   const nameToUid = buildNameToUid(registry);
+  const customFieldsConfig = config.teamStructure?.customFields;
+
+  // ─── Step 0: LDAP resolution for person-reference fields ───
+  // Collect all unmatched names from person-reference-linked fields, then batch-resolve via LDAP
+  let ldapConn = null;
+  const personRefKeys = [];
+  if (Array.isArray(customFieldsConfig)) {
+    for (const cfConfig of customFieldsConfig) {
+      const override = overrideMap[cfConfig.key] || {};
+      if ((override.type || 'free-text') === 'person-reference-linked') {
+        personRefKeys.push(cfConfig.key);
+      }
+    }
+  }
+
+  if (personRefKeys.length > 0) {
+    // Collect all unique individual names from person-reference fields
+    const allNames = new Set();
+    for (const person of Object.values(registry.people)) {
+      if (person.status !== 'active') continue;
+      for (const key of personRefKeys) {
+        const val = person[key];
+        if (val && typeof val === 'string') {
+          for (const part of val.split(/[,/]/).map(s => s.trim()).filter(Boolean)) {
+            allNames.add(part);
+          }
+        }
+      }
+    }
+
+    // Find unmatched names
+    const unmatchedNames = [];
+    for (const name of allNames) {
+      if (nameToUid[name.toLowerCase().trim()]) continue;
+      const resolved = resolvePersonNames(name, nameToUid);
+      if (resolved.length === 0) {
+        unmatchedNames.push(name);
+      }
+    }
+
+    // Resolve via LDAP
+    if (unmatchedNames.length > 0) {
+      try {
+        ldapConn = tryCreateLdapConnection();
+        if (ldapConn) {
+          const ipaClient = require('./roster-sync/ipa-client');
+          await ipaClient.bindClient(ldapConn.client, ldapConn.config.bindDn, ldapConn.config.bindPassword);
+          const ldapResult = await resolveNamesViaLdap(unmatchedNames, nameToUid, registry, ldapConn);
+          console.log('[migration] LDAP resolved ' + ldapResult.resolved.length + ' names, ' +
+            ldapResult.unresolved.length + ' still unresolved');
+        }
+      } catch (err) {
+        console.warn('[migration] LDAP name resolution failed:', err.message);
+      } finally {
+        if (ldapConn && ldapConn.client) {
+          ldapConn.client.unbind(function() {});
+        }
+      }
+    }
+  }
 
   // ─── Step 1: Migrate teams from _teamGrouping (batched in memory) ───
 
@@ -384,7 +622,6 @@ function migrateToInApp(storage, config, actorEmail, fieldOverrides) {
   // ─── Step 2: Migrate custom fields ───
 
   let fieldsCreated = 0;
-  const customFieldsConfig = config.teamStructure?.customFields;
   let personFieldOrder = fieldDefs.personFields ? fieldDefs.personFields.length : 0;
   let teamFieldOrder = fieldDefs.teamFields ? fieldDefs.teamFields.length : 0;
 
@@ -406,8 +643,8 @@ function migrateToInApp(storage, config, actorEmail, fieldOverrides) {
         const value = person[cfConfig.key];
         if (value !== undefined && value !== null && value !== '') {
           rawEntries.push({ person, uid, rawValue: value });
-          if (multiValue && typeof value === 'string' && value.includes(',')) {
-            for (const part of value.split(',').map(s => s.trim()).filter(Boolean)) {
+          if (multiValue && typeof value === 'string' && /[,/]/.test(value)) {
+            for (const part of value.split(/[,/]/).map(s => s.trim()).filter(Boolean)) {
               allIndividualValues.add(part);
             }
           } else {
@@ -458,8 +695,8 @@ function migrateToInApp(storage, config, actorEmail, fieldOverrides) {
               if (fieldType === 'person-reference-linked') {
                 const resolved = resolvePersonNames(val, nameToUid);
                 for (const r of resolved) distinctValues.add(r);
-              } else if (multiValue && typeof val === 'string' && val.includes(',')) {
-                for (const part of val.split(',').map(s => s.trim()).filter(Boolean)) {
+              } else if (multiValue && typeof val === 'string' && /[,/]/.test(val)) {
+                for (const part of val.split(/[,/]/).map(s => s.trim()).filter(Boolean)) {
                   distinctValues.add(part);
                 }
               } else {
@@ -493,8 +730,8 @@ function migrateToInApp(storage, config, actorEmail, fieldOverrides) {
           if (fieldType === 'person-reference-linked') {
             const resolved = resolvePersonNames(rawValue, nameToUid);
             person._appFields[fieldId] = multiValue ? resolved : (resolved[0] || null);
-          } else if (multiValue && typeof rawValue === 'string' && rawValue.includes(',')) {
-            person._appFields[fieldId] = rawValue.split(',').map(s => s.trim()).filter(Boolean);
+          } else if (multiValue && typeof rawValue === 'string' && /[,/]/.test(rawValue)) {
+            person._appFields[fieldId] = rawValue.split(/[,/]/).map(s => s.trim()).filter(Boolean);
           } else {
             person._appFields[fieldId] = rawValue;
           }

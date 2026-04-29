@@ -76,7 +76,7 @@ describe('previewMigration - scope detection', () => {
     })
   }
 
-  it('suggests team scope when 80%+ uniform', () => {
+  it('suggests team scope when 80%+ uniform', async () => {
     // Make all people in all teams have the same PM value
     const registry = {
       meta: { generatedAt: '2026-01-01T00:00:00.000Z', provider: 'test', orgRoots: ['org1'] },
@@ -93,14 +93,14 @@ describe('previewMigration - scope detection', () => {
         customFields: [{ key: 'focus', displayLabel: 'Focus Area' }]
       }
     }
-    const result = previewMigration(storage, config)
+    const result = await previewMigration(storage, config)
     const field = result.fields[0]
     // Both Alpha and Beta are uniform -> 100%
     expect(field.suggestedScope).toBe('team')
     expect(field.uniformTeamPct).toBe(100)
   })
 
-  it('suggests person scope when below 80%', () => {
+  it('suggests person scope when below 80%', async () => {
     const registry = baseRegistry()
     // Make Platform non-uniform by giving alice a different PM
     registry.people.alice.productManager = 'Carol Davis'
@@ -110,7 +110,7 @@ describe('previewMigration - scope detection', () => {
         customFields: [{ key: 'productManager', displayLabel: 'PM' }]
       }
     }
-    const result = previewMigration(storage, config)
+    const result = await previewMigration(storage, config)
     const field = result.fields[0]
     // Platform has Alice=Carol, Bob=Bob, Eve=Eve -> 3 distinct -> not uniform
     // Serving has Carol=Eve, Dave=Eve, Eve=Eve -> 1 distinct -> uniform
@@ -119,7 +119,7 @@ describe('previewMigration - scope detection', () => {
     expect(field.uniformTeamPct).toBe(50)
   })
 
-  it('excludes teams with no values from denominator', () => {
+  it('excludes teams with no values from denominator', async () => {
     const registry = baseRegistry()
     // Remove PM from all Platform members
     delete registry.people.alice.productManager
@@ -131,7 +131,7 @@ describe('previewMigration - scope detection', () => {
         customFields: [{ key: 'productManager', displayLabel: 'PM' }]
       }
     }
-    const result = previewMigration(storage, config)
+    const result = await previewMigration(storage, config)
     const field = result.fields[0]
     // Platform: only Eve has value -> 1 distinct -> uniform
     // Serving: Carol=Eve, Dave=Eve, Eve=Eve -> uniform
@@ -153,11 +153,11 @@ describe('migrateToInApp', () => {
     })
   }
 
-  it('creates teams and assigns members', () => {
+  it('creates teams and assigns members', async () => {
     const registry = baseRegistry()
     const storage = makeMigrationStorage(registry)
     const config = { teamStructure: { customFields: [] } }
-    const result = migrateToInApp(storage, config, 'admin@test.com', [])
+    const result = await migrateToInApp(storage, config, 'admin@test.com', [])
 
     expect(result.migrated).toBe(true)
     expect(result.teams).toBe(2)
@@ -167,15 +167,15 @@ describe('migrateToInApp', () => {
     expect(Object.keys(teams).length).toBe(2)
   })
 
-  it('skips if already migrated', () => {
+  it('skips if already migrated', async () => {
     const registry = baseRegistry()
     const storage = makeMigrationStorage(registry)
     const config = { _migratedToInApp: '2026-01-01', teamStructure: { customFields: [] } }
-    const result = migrateToInApp(storage, config, 'admin@test.com', [])
+    const result = await migrateToInApp(storage, config, 'admin@test.com', [])
     expect(result.migrated).toBe(false)
   })
 
-  it('creates team-scoped field definitions in teamFields', () => {
+  it('creates team-scoped field definitions in teamFields', async () => {
     const registry = baseRegistry()
     const storage = makeMigrationStorage(registry)
     const config = {
@@ -184,7 +184,7 @@ describe('migrateToInApp', () => {
       }
     }
     const overrides = [{ key: 'productManager', type: 'person-reference-linked', multiValue: false, scope: 'team' }]
-    const result = migrateToInApp(storage, config, 'admin@test.com', overrides)
+    const result = await migrateToInApp(storage, config, 'admin@test.com', overrides)
 
     expect(result.fields).toBe(1)
 
@@ -194,7 +194,7 @@ describe('migrateToInApp', () => {
     expect(fieldDefs.teamFields[0].type).toBe('person-reference-linked')
   })
 
-  it('rolls up uniform team values as single value', () => {
+  it('rolls up uniform team values as single value', async () => {
     // All teams have the same uniform value -> no auto-promotion
     const registry = {
       meta: { generatedAt: '2026-01-01T00:00:00.000Z', provider: 'test', orgRoots: ['org1'] },
@@ -211,7 +211,7 @@ describe('migrateToInApp', () => {
       }
     }
     const overrides = [{ key: 'focus', type: 'free-text', multiValue: false, scope: 'team' }]
-    migrateToInApp(storage, config, 'admin@test.com', overrides)
+    await migrateToInApp(storage, config, 'admin@test.com', overrides)
 
     const teams = storage._data['team-data/teams.json'].teams
     const fieldDefs = storage._data['team-data/field-definitions.json']
@@ -222,7 +222,7 @@ describe('migrateToInApp', () => {
     expect(alpha.metadata[fieldId]).toBe('ML')
   })
 
-  it('auto-promotes to multiValue for mixed team values', () => {
+  it('auto-promotes to multiValue for mixed team values', async () => {
     const registry = baseRegistry()
     // Platform: alice=Bob Smith, bob=Bob Smith, eve=Eve White -> 2 distinct UIDs
     const storage = makeMigrationStorage(registry)
@@ -232,7 +232,7 @@ describe('migrateToInApp', () => {
       }
     }
     const overrides = [{ key: 'productManager', type: 'person-reference-linked', multiValue: false, scope: 'team' }]
-    migrateToInApp(storage, config, 'admin@test.com', overrides)
+    await migrateToInApp(storage, config, 'admin@test.com', overrides)
 
     const fieldDefs = storage._data['team-data/field-definitions.json']
     // multiValue should be auto-promoted to true
@@ -244,7 +244,7 @@ describe('migrateToInApp', () => {
     expect(Array.isArray(platform.metadata[fieldId])).toBe(true)
   })
 
-  it('does NOT write to _appFields for team-scoped fields', () => {
+  it('does NOT write to _appFields for team-scoped fields', async () => {
     const registry = baseRegistry()
     const storage = makeMigrationStorage(registry)
     const config = {
@@ -253,7 +253,7 @@ describe('migrateToInApp', () => {
       }
     }
     const overrides = [{ key: 'productManager', type: 'person-reference-linked', multiValue: false, scope: 'team' }]
-    migrateToInApp(storage, config, 'admin@test.com', overrides)
+    await migrateToInApp(storage, config, 'admin@test.com', overrides)
 
     const reg = storage._data['team-data/registry.json']
     const fieldDefs = storage._data['team-data/field-definitions.json']
@@ -267,7 +267,7 @@ describe('migrateToInApp', () => {
     }
   })
 
-  it('preserves stale flat values on person records', () => {
+  it('preserves stale flat values on person records', async () => {
     const registry = baseRegistry()
     const storage = makeMigrationStorage(registry)
     const config = {
@@ -276,14 +276,14 @@ describe('migrateToInApp', () => {
       }
     }
     const overrides = [{ key: 'productManager', type: 'person-reference-linked', multiValue: false, scope: 'team' }]
-    migrateToInApp(storage, config, 'admin@test.com', overrides)
+    await migrateToInApp(storage, config, 'admin@test.com', overrides)
 
     const reg = storage._data['team-data/registry.json']
     // Original flat value should still be present
     expect(reg.people.alice.productManager).toBe('Bob Smith')
   })
 
-  it('deduplicates teams on retry (reuses existing team)', () => {
+  it('deduplicates teams on retry (reuses existing team)', async () => {
     const registry = baseRegistry()
     // Pre-create a team with the same name
     const storage = makeMigrationStorage(registry, {
@@ -294,7 +294,7 @@ describe('migrateToInApp', () => {
       }
     })
     const config = { teamStructure: { customFields: [] } }
-    const result = migrateToInApp(storage, config, 'admin@test.com', [])
+    const result = await migrateToInApp(storage, config, 'admin@test.com', [])
 
     // Should create only 1 new team (Serving), not Platform
     expect(result.teams).toBe(1)
@@ -305,7 +305,7 @@ describe('migrateToInApp', () => {
     expect(teams.team_exist1.name).toBe('Platform')
   })
 
-  it('uses batched I/O (single write per data file)', () => {
+  it('uses batched I/O (single write per data file)', async () => {
     const registry = baseRegistry()
     const storage = makeMigrationStorage(registry)
     const config = {
@@ -314,7 +314,7 @@ describe('migrateToInApp', () => {
       }
     }
     const overrides = [{ key: 'productManager', type: 'free-text', multiValue: false, scope: 'person' }]
-    migrateToInApp(storage, config, 'admin@test.com', overrides)
+    await migrateToInApp(storage, config, 'admin@test.com', overrides)
 
     // Exactly 1 write each for teams.json, registry.json, field-definitions.json
     expect(storage._writes['team-data/teams.json']).toBe(1)
@@ -323,7 +323,7 @@ describe('migrateToInApp', () => {
   })
 
   describe('board migration', () => {
-    it('copies boards from teams-metadata.json', () => {
+    it('copies boards from teams-metadata.json', async () => {
       const registry = baseRegistry()
       const storage = makeMigrationStorage(registry, {
         'team-data/config.json': { orgRoots: [{ uid: 'org1', displayName: 'Org One' }] },
@@ -339,7 +339,7 @@ describe('migrateToInApp', () => {
         }
       })
       const config = { teamStructure: { customFields: [] } }
-      const result = migrateToInApp(storage, config, 'admin@test.com', [])
+      const result = await migrateToInApp(storage, config, 'admin@test.com', [])
 
       expect(result.boardsMigrated).toBe(3)
 
@@ -351,7 +351,7 @@ describe('migrateToInApp', () => {
       expect(platform.boards[1].name).toBe('') // no boardName entry
     })
 
-    it('uses case-insensitive matching for org and team names', () => {
+    it('uses case-insensitive matching for org and team names', async () => {
       const registry = baseRegistry()
       const storage = makeMigrationStorage(registry, {
         'team-data/config.json': { orgRoots: [{ uid: 'org1', displayName: 'Org One' }] },
@@ -363,20 +363,20 @@ describe('migrateToInApp', () => {
         }
       })
       const config = { teamStructure: { customFields: [] } }
-      const result = migrateToInApp(storage, config, 'admin@test.com', [])
+      const result = await migrateToInApp(storage, config, 'admin@test.com', [])
       expect(result.boardsMigrated).toBe(1)
     })
 
-    it('handles missing metadata gracefully', () => {
+    it('handles missing metadata gracefully', async () => {
       const registry = baseRegistry()
       const storage = makeMigrationStorage(registry)
       // No teams-metadata.json
       const config = { teamStructure: { customFields: [] } }
-      const result = migrateToInApp(storage, config, 'admin@test.com', [])
+      const result = await migrateToInApp(storage, config, 'admin@test.com', [])
       expect(result.boardsMigrated).toBe(0)
     })
 
-    it('handles teams with no boards in metadata', () => {
+    it('handles teams with no boards in metadata', async () => {
       const registry = baseRegistry()
       const storage = makeMigrationStorage(registry, {
         'team-data/config.json': { orgRoots: [{ uid: 'org1', displayName: 'Org One' }] },
@@ -388,11 +388,11 @@ describe('migrateToInApp', () => {
         }
       })
       const config = { teamStructure: { customFields: [] } }
-      const result = migrateToInApp(storage, config, 'admin@test.com', [])
+      const result = await migrateToInApp(storage, config, 'admin@test.com', [])
       expect(result.boardsMigrated).toBe(0)
     })
 
-    it('skips boards with invalid URL schemes (javascript:, data:, etc.)', () => {
+    it('skips boards with invalid URL schemes (javascript:, data:, etc.)', async () => {
       const registry = baseRegistry()
       const storage = makeMigrationStorage(registry, {
         'team-data/config.json': { orgRoots: [{ uid: 'org1', displayName: 'Org One' }] },
@@ -413,7 +413,7 @@ describe('migrateToInApp', () => {
         }
       })
       const config = { teamStructure: { customFields: [] } }
-      const result = migrateToInApp(storage, config, 'admin@test.com', [])
+      const result = await migrateToInApp(storage, config, 'admin@test.com', [])
 
       // Only the two https:// boards should be migrated
       expect(result.boardsMigrated).toBe(2)

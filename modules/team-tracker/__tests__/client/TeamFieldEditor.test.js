@@ -10,6 +10,11 @@ vi.mock('@shared/client/composables/useTeams', () => ({
   })
 }))
 
+const personRefField = {
+  id: 'field_pm', label: 'Product Manager', type: 'person-reference-linked', multiValue: false,
+  required: false, visible: true, deleted: false, allowedValues: null
+}
+
 const constrainedField = {
   id: 'field_c1', label: 'Status', type: 'constrained', multiValue: false,
   required: false, visible: true, deleted: false, allowedValues: ['Active', 'Forming', 'Sunset']
@@ -107,5 +112,24 @@ describe('TeamFieldEditor', () => {
       }
     })
     expect(wrapper.text()).toContain('Frontend')
+  })
+
+  it('emits navigate-person with UID not name for person-reference fields', async () => {
+    const wrapper = mount(TeamFieldEditor, {
+      props: {
+        teamId: 'team_abc',
+        metadata: { field_pm: 'pm1' },
+        fieldDefinitions: [personRefField],
+        canEdit: false,
+        people: [{ uid: 'pm1', name: 'Pat Manager' }]
+      }
+    })
+    // Find the person link button and click it
+    const personBtn = wrapper.findAll('button').find(b => b.text() === 'Pat Manager')
+    expect(personBtn).toBeDefined()
+    await personBtn.trigger('click')
+    const emitted = wrapper.emitted('navigate-person')
+    expect(emitted).toBeTruthy()
+    expect(emitted[0][0]).toBe('pm1') // UID, not 'Pat Manager'
   })
 })

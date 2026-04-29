@@ -246,7 +246,7 @@ function isPersonRefType(field) {
               <!-- Edit pencil (hover-visible) -->
               <button
                 v-if="canEdit"
-                class="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex-shrink-0"
+                class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 flex-shrink-0"
                 @click="startEdit(field.id)"
                 :title="'Edit ' + field.label"
               >

@@ -294,6 +294,7 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/modules/team-tracker/structure/unassigned` — list unassigned people (query: `scope=direct|org|all`)
 - `/api/modules/team-tracker/structure/field-definitions` — list all field definitions (person + team)
 - `/api/modules/team-tracker/structure/audit-log` — query audit log (query: `from`, `to`, `action`, `actor`, `entityId`, `limit`, `offset`)
+- `/api/modules/team-tracker/registry/people/search/ldap` — search LDAP for people by name/uid/email (authenticated, rate-limited 5 req/10s per user). Query params: `q` (search term), `limit` (max results, default 10, max 50). Returns `503` with `code: "LDAP_UNAVAILABLE"` if LDAP not configured or in demo mode. Returns `429` if rate limited.
 
 **PUT:**
 - `/api/modules/ai-impact/assessments/:key` — upsert single assessment (admin)
@@ -332,6 +333,7 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/modules/team-tracker/structure/field-definitions/team` — create team-level field (admin/team-admin)
 - `/api/modules/team-tracker/structure/field-definitions/team/reorder` — reorder team fields (admin/team-admin)
 - `/api/modules/team-tracker/structure/migrate` — trigger Sheets-to-in-app migration (admin)
+- `/api/modules/team-tracker/registry/people/ldap-import` — create auxiliary registry entry from LDAP lookup (team-admin/admin, audit-logged). Body: `{ uid: "someuid" }`. Returns `503` if LDAP unavailable.
 
 **PATCH:**
 - `/api/modules/team-tracker/structure/teams/:teamId` — rename a team (admin/team-admin)

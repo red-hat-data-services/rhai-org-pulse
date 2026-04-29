@@ -270,7 +270,7 @@ function isPersonRefType(field) {
               <button
                 v-if="entry.name"
                 class="text-primary-600 dark:text-primary-400 hover:underline"
-                @click="emit('navigate-person', entry.name)"
+                @click="emit('navigate-person', entry.uid)"
               >{{ entry.name }}</button>
               <span v-else class="text-gray-400 dark:text-gray-500">{{ entry.uid }} <span class="text-xs">(not found)</span></span>
             </template>
@@ -281,9 +281,14 @@ function isPersonRefType(field) {
         <span v-else class="text-sm text-gray-900 dark:text-gray-100 flex-1">{{ coercedDisplay(field) || '-' }}</span>
         <button
           v-if="canEdit"
-          class="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 shrink-0"
+          class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 shrink-0"
           @click="startEdit(field.id)"
-        >Edit</button>
+          :title="'Edit ' + field.label"
+        >
+          <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+          </svg>
+        </button>
       </template>
       <!-- Required field warning -->
       <div

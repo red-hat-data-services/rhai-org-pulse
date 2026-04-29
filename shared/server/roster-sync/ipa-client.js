@@ -124,13 +124,14 @@ function bindClient(client, bindDn, bindPassword) {
   });
 }
 
-function searchEntries(client, baseDn, filter, attrs) {
+function searchEntries(client, baseDn, filter, attrs, options) {
   return new Promise(function(resolve, reject) {
     var opts = {
       filter: filter,
       scope: 'sub',
       attributes: attrs || LDAP_ATTRS
     };
+    if (options && options.sizeLimit) opts.sizeLimit = options.sizeLimit;
 
     client.search(baseDn, opts, function(err, res) {
       if (err) return reject(err);
@@ -274,13 +275,33 @@ async function testConnection() {
   }
 }
 
+/**
+ * Search for people across multiple LDAP fields (cn, uid, mail).
+ * Returns an array of entryToPerson() results.
+ *
+ * @param {object} client - Bound LDAP client
+ * @param {string} baseDn - LDAP base DN
+ * @param {string} query - Search query string
+ * @param {number} [limit=10] - Maximum results (passed as sizeLimit to LDAP)
+ */
+async function searchPeople(client, baseDn, query, limit) {
+  if (!query || !query.trim()) return [];
+  var escaped = escapeLdapFilter(query.trim());
+  var filter = '(|(cn=*' + escaped + '*)(uid=*' + escaped + '*)(mail=*' + escaped + '*))';
+  var sizeLimit = limit || 10;
+  var entries = await searchEntries(client, baseDn, filter, LDAP_ATTRS, { sizeLimit: sizeLimit });
+  return entries.map(entryToPerson);
+}
+
 module.exports = {
   createClient,
   bindClient,
   traverseOrg,
   lookupPerson,
+  searchPeople,
   testConnection,
   getIpaStatus,
+  getConfig,
   entryToPerson,
   escapeLdapFilter,
   extractGithubUsername,

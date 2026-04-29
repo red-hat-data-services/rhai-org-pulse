@@ -842,26 +842,36 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Migration ───
 
-  router.get('/structure/migrate/preview', requireAdmin, function(req, res) {
-    const config = rosterSyncConfig.loadConfig(storage);
-    if (!config) return res.status(400).json({ error: 'No config found' });
-    const preview = previewMigration(storage, config);
-    res.json(preview);
+  router.get('/structure/migrate/preview', requireAdmin, async function(req, res) {
+    try {
+      const config = rosterSyncConfig.loadConfig(storage);
+      if (!config) return res.status(400).json({ error: 'No config found' });
+      const preview = await previewMigration(storage, config);
+      res.json(preview);
+    } catch (err) {
+      console.error('[migration] Preview failed:', err);
+      res.status(500).json({ error: 'Migration preview failed: ' + err.message });
+    }
   });
 
-  router.post('/structure/migrate', requireAdmin, function(req, res) {
-    const guard = demoWriteGuard(res);
-    if (guard) return;
-    const config = rosterSyncConfig.loadConfig(storage);
-    if (!config) return res.status(400).json({ error: 'No config found' });
-    const fieldOverrides = req.body?.fieldOverrides || null;
-    const result = migrateToInApp(storage, config, req.auditActor, fieldOverrides);
-    if (result.migrated) {
-      config._migratedToInApp = new Date().toISOString();
-      rosterSyncConfig.saveConfig(storage, config);
-      rebuildManagerMap();
+  router.post('/structure/migrate', requireAdmin, async function(req, res) {
+    try {
+      const guard = demoWriteGuard(res);
+      if (guard) return;
+      const config = rosterSyncConfig.loadConfig(storage);
+      if (!config) return res.status(400).json({ error: 'No config found' });
+      const fieldOverrides = req.body?.fieldOverrides || null;
+      const result = await migrateToInApp(storage, config, req.auditActor, fieldOverrides);
+      if (result.migrated) {
+        config._migratedToInApp = new Date().toISOString();
+        rosterSyncConfig.saveConfig(storage, config);
+        rebuildManagerMap();
+      }
+      res.json(result);
+    } catch (err) {
+      console.error('[migration] Migration failed:', err);
+      res.status(500).json({ error: 'Migration failed: ' + err.message });
     }
-    res.json(result);
   });
 
   // ─── Routes: Unified Refresh ───

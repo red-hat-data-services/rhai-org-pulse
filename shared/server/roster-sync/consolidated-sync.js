@@ -179,24 +179,233 @@ async function runConsolidatedSync(storage) {
       }
     }
 
-    for (var ei = 0; ei < freshUids.length; ei++) {
-      var euid = freshUids[ei];
-      var enrichedPerson = freshPeopleMap[euid].person;
-      var registryPerson = merged[euid];
-      if (!registryPerson) continue;
+    // Only clear and re-apply enrichment fields if Sheets data was actually fetched.
+    // Without this guard, a sync that skips or fails Sheets would wipe existing
+    // enrichment data (_teamGrouping, etc.) with nothing to replace it.
+    if (sheetsData) {
+      for (var ei = 0; ei < freshUids.length; ei++) {
+        var euid = freshUids[ei];
+        var enrichedPerson = freshPeopleMap[euid].person;
+        var registryPerson = merged[euid];
+        if (!registryPerson) continue;
 
-      // Clear stale enrichment fields first (prevents old team data persisting)
-      for (var fi = 0; fi < effectiveEnrichmentFields.length; fi++) {
-        delete registryPerson[effectiveEnrichmentFields[fi]];
-      }
+        // Clear stale enrichment fields first (prevents old team data persisting)
+        for (var fi = 0; fi < effectiveEnrichmentFields.length; fi++) {
+          delete registryPerson[effectiveEnrichmentFields[fi]];
+        }
 
-      // Copy enrichment fields from enriched LDAP person (deep copy to avoid aliasing)
-      for (var ci = 0; ci < effectiveEnrichmentFields.length; ci++) {
-        var field = effectiveEnrichmentFields[ci];
-        if (enrichedPerson[field] !== undefined) {
-          registryPerson[field] = deepCopy(enrichedPerson[field]);
+        // Copy enrichment fields from enriched LDAP person (deep copy to avoid aliasing)
+        for (var ci = 0; ci < effectiveEnrichmentFields.length; ci++) {
+          var field = effectiveEnrichmentFields[ci];
+          if (enrichedPerson[field] !== undefined) {
+            registryPerson[field] = deepCopy(enrichedPerson[field]);
+          }
         }
       }
+    }
+
+    // ─── Phase 5a: Set orgType on freshPeopleMap entries ───
+    for (var oi = 0; oi < freshUids.length; oi++) {
+      if (merged[freshUids[oi]]) {
+        merged[freshUids[oi]].orgType = 'engineering';
+      }
+    }
+
+    // ─── Phase 5b: Resolve auxiliary person references ───
+    var auxiliaryResolved = 0;
+    var auxiliaryManagersAdded = 0;
+    var unresolvedPersonRefs = [];
+
+    try {
+      var fieldDefsData = storage.readFromStorage('team-data/field-definitions.json');
+      var teamsData = storage.readFromStorage('team-data/teams.json');
+
+      if (fieldDefsData && teamsData && teamsData.teams) {
+        // Find person-reference-linked team fields
+        var personRefFields = [];
+        var teamFields = fieldDefsData.teamFields || [];
+        for (var pfi = 0; pfi < teamFields.length; pfi++) {
+          if (teamFields[pfi].type === 'person-reference-linked' && !teamFields[pfi].deleted) {
+            personRefFields.push(teamFields[pfi].id);
+          }
+        }
+
+        if (personRefFields.length > 0) {
+          // Collect all person-reference values from team metadata
+          var refValues = []; // { teamId, fieldId, value, index (for arrays) }
+          var teamIds = Object.keys(teamsData.teams);
+          for (var ti = 0; ti < teamIds.length; ti++) {
+            var team = teamsData.teams[teamIds[ti]];
+            var meta = team.metadata || {};
+            for (var pri = 0; pri < personRefFields.length; pri++) {
+              var fieldId = personRefFields[pri];
+              var rawVal = meta[fieldId];
+              if (!rawVal) continue;
+              var vals = Array.isArray(rawVal) ? rawVal : [rawVal];
+              for (var vi = 0; vi < vals.length; vi++) {
+                if (vals[vi]) {
+                  refValues.push({
+                    teamId: teamIds[ti],
+                    fieldId: fieldId,
+                    value: vals[vi],
+                    index: Array.isArray(rawVal) ? vi : -1
+                  });
+                }
+              }
+            }
+          }
+
+          // Open a new LDAP connection for auxiliary lookups
+          var auxConn = null;
+          var lookupCache = {};
+          var teamsModified = false;
+
+          try {
+            auxConn = ipaClient.createClient();
+            await ipaClient.bindClient(auxConn.client, auxConn.config.bindDn, auxConn.config.bindPassword);
+
+            async function cachedLookup(uid) {
+              if (lookupCache[uid] !== undefined) return lookupCache[uid];
+              var person = await ipaClient.lookupPerson(auxConn.client, auxConn.config.baseDn, uid);
+              lookupCache[uid] = person;
+              return person;
+            }
+
+            async function createAuxiliaryEntry(ldapPerson) {
+              var now2 = new Date().toISOString();
+              var mergeResult = mergePerson(merged[ldapPerson.uid], ldapPerson, '_auxiliary', now2);
+              merged[ldapPerson.uid] = mergeResult.person;
+              merged[ldapPerson.uid].orgType = 'auxiliary';
+              return mergeResult;
+            }
+
+            async function walkManagerChain(startUid) {
+              var current = merged[startUid];
+              var depth = 0;
+              while (current && current.managerUid && depth < 20) {
+                var mgrUid = current.managerUid;
+                if (merged[mgrUid]) break; // already in registry
+                var mgrPerson = await cachedLookup(mgrUid);
+                if (!mgrPerson) break;
+                await createAuxiliaryEntry(mgrPerson);
+                auxiliaryManagersAdded++;
+                current = merged[mgrUid];
+                depth++;
+              }
+            }
+
+            // Resolve each person-reference value
+            for (var rvi = 0; rvi < refValues.length; rvi++) {
+              var ref = refValues[rvi];
+              var val = ref.value;
+
+              // Check if it's already a UID in the registry
+              if (merged[val]) continue;
+
+              // Check if it looks like a UID (no spaces)
+              var looksLikeUid = /^[a-z0-9_.-]+$/.test(val);
+
+              if (looksLikeUid) {
+                // Look up by UID in LDAP
+                var ldapPerson = await cachedLookup(val);
+                if (ldapPerson) {
+                  await createAuxiliaryEntry(ldapPerson);
+                  auxiliaryResolved++;
+                  await walkManagerChain(val);
+                } else {
+                  unresolvedPersonRefs.push(val);
+                }
+              } else {
+                // It contains spaces -- likely a name
+                // Search registry by name
+                var nameMatches = [];
+                var mkeys = Object.keys(merged);
+                for (var mki = 0; mki < mkeys.length; mki++) {
+                  if (merged[mkeys[mki]].name === val) nameMatches.push(mkeys[mki]);
+                }
+
+                if (nameMatches.length === 1) {
+                  // Replace name with UID in team metadata
+                  var resolvedUid = nameMatches[0];
+                  var tTeam = teamsData.teams[ref.teamId];
+                  if (ref.index >= 0) {
+                    tTeam.metadata[ref.fieldId][ref.index] = resolvedUid;
+                  } else {
+                    tTeam.metadata[ref.fieldId] = resolvedUid;
+                  }
+                  teamsModified = true;
+                  auxiliaryResolved++;
+                } else if (nameMatches.length === 0) {
+                  // Search LDAP by cn
+                  var cnFilter = '(cn=' + ipaClient.escapeLdapFilter(val) + ')';
+                  var cnEntries = await (function() {
+                    return new Promise(function(resolve, reject) {
+                      var searchOpts = {
+                        filter: cnFilter,
+                        scope: 'sub',
+                        attributes: ['cn', 'uid', 'mail', 'title', 'l', 'co', 'manager', 'rhatGeo', 'rhatLocation', 'rhatOfficeLocation', 'rhatCostCenter', 'rhatSocialUrl', 'memberOf'],
+                        sizeLimit: 2
+                      };
+                      auxConn.client.search(auxConn.config.baseDn, searchOpts, function(err, res) {
+                        if (err) return reject(err);
+                        var results = [];
+                        res.on('searchEntry', function(entry) {
+                          var obj = {};
+                          for (var ai = 0; ai < entry.attributes.length; ai++) {
+                            var attr = entry.attributes[ai];
+                            obj[attr.type] = attr.values.length === 1 ? attr.values[0] : attr.values;
+                          }
+                          results.push(obj);
+                        });
+                        res.on('error', function(e) { reject(e); });
+                        res.on('end', function() { resolve(results); });
+                      });
+                    });
+                  })();
+
+                  if (cnEntries.length === 1) {
+                    var cnPerson = ipaClient.entryToPerson(cnEntries[0]);
+                    await createAuxiliaryEntry(cnPerson);
+                    // Replace name with UID in team metadata
+                    var tTeam2 = teamsData.teams[ref.teamId];
+                    if (ref.index >= 0) {
+                      tTeam2.metadata[ref.fieldId][ref.index] = cnPerson.uid;
+                    } else {
+                      tTeam2.metadata[ref.fieldId] = cnPerson.uid;
+                    }
+                    teamsModified = true;
+                    auxiliaryResolved++;
+                    await walkManagerChain(cnPerson.uid);
+                  } else {
+                    unresolvedPersonRefs.push(val);
+                  }
+                } else {
+                  // Ambiguous name match
+                  unresolvedPersonRefs.push(val);
+                }
+              }
+            }
+
+            // Write back updated teams.json if any names were replaced with UIDs
+            if (teamsModified) {
+              storage.writeToStorage('team-data/teams.json', teamsData);
+              console.log('[consolidated-sync] Phase 5b: Updated teams.json with resolved person references');
+            }
+          } catch (auxErr) {
+            console.warn('[consolidated-sync] Phase 5b auxiliary resolution failed (continuing): ' + auxErr.message);
+          } finally {
+            if (auxConn && auxConn.client) {
+              auxConn.client.unbind(function() {});
+            }
+          }
+        }
+      }
+    } catch (phase5bErr) {
+      console.warn('[consolidated-sync] Phase 5b skipped: ' + phase5bErr.message);
+    }
+
+    if (auxiliaryResolved > 0 || unresolvedPersonRefs.length > 0) {
+      console.log('[consolidated-sync] Phase 5b: resolved=' + auxiliaryResolved + ' managers=' + auxiliaryManagersAdded + ' unresolved=' + unresolvedPersonRefs.length);
     }
 
     // ─── Phase 6: Write registry + sync log ───
@@ -231,7 +440,10 @@ async function runConsolidatedSync(storage) {
         changed: changelog.changed,
         sheetsEnriched: sheetsData ? sheetsData.size : 0,
         githubInferred: usernamesInferred.github,
-        gitlabInferred: usernamesInferred.gitlab
+        gitlabInferred: usernamesInferred.gitlab,
+        auxiliaryResolved: auxiliaryResolved,
+        auxiliaryManagersAdded: auxiliaryManagersAdded,
+        unresolvedPersonRefs: unresolvedPersonRefs
       },
       coverage: computeCoverage(merged)
     };

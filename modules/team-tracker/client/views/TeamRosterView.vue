@@ -282,7 +282,15 @@ const { definitions, fetchDefinitions } = useFieldDefinitions()
 
 const isInAppMode = computed(() => rosterData.value?.teamDataSource === 'in-app')
 
-const allPeople = computed(() => {
+// --- Team resolution (moved up for use by allPeople) ---
+const team = computed(() => {
+  const teamKey = nav.params.value?.teamKey
+  if (!teamKey) return null
+  return allTeams.value.find(t => t.key === teamKey || t.displayKey === teamKey) || null
+})
+
+// People from org teams (for autocomplete and person-reference display)
+const orgPeople = computed(() => {
   if (!team.value) return []
   const orgKey = team.value.key.split('::')[0]
   const seen = new Set()
@@ -299,16 +307,69 @@ const allPeople = computed(() => {
   return result
 })
 
+// Resolve UIDs in person-reference metadata that aren't in org members (e.g. auxiliary PMs)
+const metadataReferencedPeople = ref([])
+
+async function resolveMetadataReferences() {
+  const metadata = team.value?.metadata
+  const teamFields = definitions.value.teamFields || []
+  if (!metadata) return
+
+  const orgUids = new Set(orgPeople.value.map(p => p.uid))
+  const unknownUids = new Set()
+
+  for (const field of teamFields) {
+    if (field.type !== 'person-reference-linked' || field.deleted) continue
+    const val = metadata[field.id]
+    const uids = Array.isArray(val) ? val : (val ? [val] : [])
+    for (const uid of uids) {
+      if (uid && !orgUids.has(uid)) unknownUids.add(uid)
+    }
+  }
+
+  if (unknownUids.size === 0) {
+    metadataReferencedPeople.value = []
+    return
+  }
+
+  const results = []
+  for (const uid of unknownUids) {
+    try {
+      const data = await apiRequest('/modules/team-tracker/registry/people/' + encodeURIComponent(uid))
+      if (data && data.person) results.push({ uid: data.person.uid, name: data.person.name })
+    } catch {
+      // Person not in registry
+    }
+  }
+  metadataReferencedPeople.value = results
+}
+
+watch(
+  [() => team.value && team.value.metadata, () => definitions.value.teamFields, orgPeople],
+  resolveMetadataReferences
+)
+
+const allPeople = computed(() => {
+  const seen = new Set()
+  const result = []
+  for (const p of orgPeople.value) {
+    if (!seen.has(p.uid)) {
+      seen.add(p.uid)
+      result.push(p)
+    }
+  }
+  for (const p of metadataReferencedPeople.value) {
+    if (!seen.has(p.uid)) {
+      seen.add(p.uid)
+      result.push(p)
+    }
+  }
+  return result
+})
+
 const hasVisibleTeamFields = computed(() =>
   (definitions.value.teamFields || []).some(f => f.visible && !f.deleted)
 )
-
-// --- Team resolution ---
-const team = computed(() => {
-  const teamKey = nav.params.value?.teamKey
-  if (!teamKey) return null
-  return allTeams.value.find(t => t.key === teamKey || t.displayKey === teamKey) || null
-})
 
 const uniqueMembers = computed(() => {
   if (!team.value) return []
@@ -388,8 +449,14 @@ const memberUidByName = computed(() => {
   return map
 })
 
-function navigateToPerson(name) {
-  const uid = memberUidByName.value.get(name)
+function navigateToPerson(identifier) {
+  // If it looks like a UID (no spaces), navigate directly
+  if (!identifier.includes(' ')) {
+    nav.navigateTo('person-detail', { uid: identifier })
+    return
+  }
+  // Legacy fallback: look up by name
+  const uid = memberUidByName.value.get(identifier)
   if (uid) {
     nav.navigateTo('person-detail', { uid })
   }

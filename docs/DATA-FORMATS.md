@@ -311,6 +311,7 @@ The single source of truth for all people data. Built by the consolidated sync p
       "title": "Engineering Manager",
       "managerUid": "vpuid",
       "orgRoot": "jsmith",
+      "orgType": "engineering",
       "github": { "username": "janesmith", "source": "ldap" },
       "gitlab": { "username": "janesmith", "source": "ldap" },
       "status": "active",
@@ -328,6 +329,9 @@ The single source of truth for all people data. Built by the consolidated sync p
 
 **Notes:**
 - `people` is a flat `{ uid: person }` map with structured `github`/`gitlab` fields and lifecycle tracking (`status`, `firstSeenAt`, `lastSeenAt`, `inactiveSince`).
+- `orgType` is `"engineering"` (default) or `"auxiliary"` for non-engineering people (e.g., product managers, designers). Entries without `orgType` are treated as `"engineering"` for backward compatibility.
+- `orgRoot` for auxiliary people uses the sentinel value `"_auxiliary"`. This keeps them out of the engineering org tree while satisfying the `orgRoot` field requirement.
+- Auxiliary people are excluded from GitHub/GitLab coverage statistics (`computeCoverage()`) and from the legacy roster shape (`readRosterFull()` filters out the `_auxiliary` org bucket).
 - `readRosterFull()` in `shared/server/roster.js` transforms this into the legacy `{ orgs: { key: { leader, members } } }` format for backward compatibility with `deriveRoster()` and downstream consumers.
 - Leaders are identified by matching a person's `uid` against the configured `orgRoots[].uid` values.
 - Enrichment fields from Google Sheets (`_teamGrouping`, `specialty`, `jiraTeam`, etc.) are stored as top-level fields on person records.
