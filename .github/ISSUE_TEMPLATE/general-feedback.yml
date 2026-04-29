@@ -1,0 +1,39 @@
+name: Feature Request / Feedback
+description: Suggest a feature, new module, or UX improvement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to share feedback! Please fill in as much detail as you can.
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - Feature request
+        - New module idea
+        - UX / design improvement
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What would you like to see added or changed?
+      placeholder: Describe the feature or improvement you'd like
+    validations:
+      required: true
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: Why is this important? What problem does it solve?
+      placeholder: Explain the use case or pain point
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Have you considered any workarounds or alternative approaches?

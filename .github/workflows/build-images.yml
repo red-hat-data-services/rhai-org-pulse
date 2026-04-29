@@ -3,7 +3,7 @@ name: Build & Push Images
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, preprod]
     paths:
       # Backend
       - 'server/**'
@@ -27,7 +27,7 @@ on:
       - 'package*.json'
 
 concurrency:
-  group: build-images
+  group: build-images-${{ github.ref_name }}
   cancel-in-progress: true
 
 env:
@@ -139,9 +139,10 @@ jobs:
 
       - name: Push image
         run: |
-          docker tag ${{ env.BACKEND_IMAGE }}:${{ github.sha }} ${{ env.BACKEND_IMAGE }}:latest
+          BRANCH_TAG=${{ github.ref_name == 'preprod' && 'preprod' || 'latest' }}
+          docker tag ${{ env.BACKEND_IMAGE }}:${{ github.sha }} ${{ env.BACKEND_IMAGE }}:${BRANCH_TAG}
           docker push ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
-          docker push ${{ env.BACKEND_IMAGE }}:latest
+          docker push ${{ env.BACKEND_IMAGE }}:${BRANCH_TAG}
 
   build-frontend:
     name: Build & Push Frontend
@@ -193,9 +194,71 @@ jobs:
 
       - name: Push image
         run: |
-          docker tag ${{ env.FRONTEND_IMAGE }}:${{ github.sha }} ${{ env.FRONTEND_IMAGE }}:latest
+          BRANCH_TAG=${{ github.ref_name == 'preprod' && 'preprod' || 'latest' }}
+          docker tag ${{ env.FRONTEND_IMAGE }}:${{ github.sha }} ${{ env.FRONTEND_IMAGE }}:${BRANCH_TAG}
           docker push ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
-          docker push ${{ env.FRONTEND_IMAGE }}:latest
+          docker push ${{ env.FRONTEND_IMAGE }}:${BRANCH_TAG}
+
+  update-preprod-image:
+    name: Update Preprod Image Tags
+    needs: [detect-changes, build-backend, build-frontend]
+    if: |
+      always() &&
+      github.ref == 'refs/heads/preprod' &&
+      (needs.build-backend.result == 'success' || needs.build-frontend.result == 'success') &&
+      needs.build-backend.result != 'failure' &&
+      needs.build-frontend.result != 'failure'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v4
+        with:
+          ref: preprod
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Install kustomize
+        uses: imranismail/setup-kustomize@v3
+        with:
+          kustomize-version: '5.8.1'
+
+      - name: Update backend image tag
+        if: needs.build-backend.result == 'success'
+        working-directory: deploy/openshift/overlays/preprod
+        run: |
+          kustomize edit set image ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+
+      - name: Update frontend image tag
+        if: needs.build-frontend.result == 'success'
+        working-directory: deploy/openshift/overlays/preprod
+        run: |
+          kustomize edit set image ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+
+      - name: Validate kustomize build
+        run: kustomize build deploy/openshift/overlays/preprod > /dev/null
+
+      - name: Push deploy commit
+        run: |
+          PARTS=""
+          if [ "${{ needs.build-backend.result }}" = "success" ]; then
+            PARTS="backend"
+          fi
+          if [ "${{ needs.build-frontend.result }}" = "success" ]; then
+            [ -n "$PARTS" ] && PARTS="$PARTS + "
+            PARTS="${PARTS}frontend"
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add deploy/openshift/overlays/preprod/kustomization.yaml
+          git diff --cached --quiet && { echo "No changes to commit"; exit 0; }
+          git commit -m "deploy: update ${PARTS} image to ${{ github.sha }}"
+          git push origin preprod
 
   update-prod-image:
     name: Update Prod Image Tags
@@ -221,7 +284,9 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Install kustomize
-        uses: imranismail/setup-kustomize@v2
+        uses: imranismail/setup-kustomize@v3
+        with:
+          kustomize-version: '5.8.1'
 
       - name: Update backend image tag
         if: needs.build-backend.result == 'success'

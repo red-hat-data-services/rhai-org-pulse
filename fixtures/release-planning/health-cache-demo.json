@@ -1,0 +1,415 @@
+{
+  "cachedAt": "2026-04-25T14:30:00.000Z",
+  "version": "3.5",
+  "milestones": {
+    "ea1Freeze": "2026-05-01",
+    "ea1Target": "2026-05-15",
+    "ea2Freeze": "2026-06-15",
+    "ea2Target": "2026-07-01",
+    "gaFreeze": "2026-08-01",
+    "gaTarget": "2026-08-15"
+  },
+  "phase": "all",
+  "summary": {
+    "totalFeatures": 8,
+    "byRisk": { "green": 2, "yellow": 3, "red": 3 },
+    "dorCompletionRate": 62,
+    "averageRiceScore": 310,
+    "blockedCount": 1,
+    "unestimatedCount": 2,
+    "currentPhase": "Pre-EA1",
+    "daysToNextMilestone": 5,
+    "nextMilestone": "EA1 Code Freeze",
+    "planningDeadline": { "date": "2026-04-24", "daysRemaining": -2 }
+  },
+  "features": [
+    {
+      "key": "RHOAIENG-1001",
+      "summary": "MaaS: Multi-model serving with shared GPU",
+      "status": "In Progress",
+      "priority": "Critical",
+      "phase": "GA",
+      "bigRock": "MaaS",
+      "tier": 1,
+      "pm": "Sarah Chen",
+      "deliveryOwner": "David Kim",
+      "components": ["Model Serving"],
+      "completionPct": 75,
+      "epicCount": 4,
+      "issueCount": 28,
+      "blockerCount": 0,
+      "health": "",
+      "risk": {
+        "level": "green",
+        "score": 0,
+        "flags": [],
+        "override": null
+      },
+      "dor": {
+        "checkedCount": 12,
+        "totalCount": 13,
+        "completionPct": 92,
+        "items": [
+          { "id": "F-1", "label": "Summary and description", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-2", "label": "Target version set", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-3", "label": "Stakeholders identified", "type": "manual", "checked": true, "source": "manual" },
+          { "id": "F-4", "label": "PM assigned", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-5", "label": "Delivery owner assigned", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-6", "label": "Component assigned", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-7", "label": "Story points estimated", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-8", "label": "No unresolved blockers", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-9", "label": "Acceptance criteria defined", "type": "manual", "checked": true, "source": "manual" },
+          { "id": "F-10", "label": "Release type set", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-11", "label": "Test plan exists", "type": "manual", "checked": true, "source": "manual" },
+          { "id": "F-12", "label": "Documentation plan exists", "type": "manual", "checked": true, "source": "manual" },
+          { "id": "F-13", "label": "Security review completed", "type": "manual", "checked": false, "source": "manual" }
+        ]
+      },
+      "rice": { "reach": 2000, "impact": 3, "confidence": 90, "effort": 8, "score": 675, "complete": true },
+      "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1001"
+    },
+    {
+      "key": "RHOAIENG-1002",
+      "summary": "Gen AI Studio: Notebook-based agent builder",
+      "status": "In Progress",
+      "priority": "Major",
+      "phase": "GA",
+      "bigRock": "Gen AI Studio",
+      "tier": 1,
+      "pm": "Maria Lopez",
+      "deliveryOwner": "James Park",
+      "components": ["Workbenches"],
+      "completionPct": 80,
+      "epicCount": 3,
+      "issueCount": 22,
+      "blockerCount": 0,
+      "health": "",
+      "risk": {
+        "level": "green",
+        "score": 0,
+        "flags": [],
+        "override": null
+      },
+      "dor": {
+        "checkedCount": 11,
+        "totalCount": 13,
+        "completionPct": 85,
+        "items": [
+          { "id": "F-1", "label": "Summary and description", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-2", "label": "Target version set", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-3", "label": "Stakeholders identified", "type": "manual", "checked": true, "source": "manual" },
+          { "id": "F-4", "label": "PM assigned", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-5", "label": "Delivery owner assigned", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-6", "label": "Component assigned", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-7", "label": "Story points estimated", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-8", "label": "No unresolved blockers", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-9", "label": "Acceptance criteria defined", "type": "manual", "checked": true, "source": "manual" },
+          { "id": "F-10", "label": "Release type set", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-11", "label": "Test plan exists", "type": "manual", "checked": true, "source": "manual" },
+          { "id": "F-12", "label": "Documentation plan exists", "type": "manual", "checked": false, "source": "manual" },
+          { "id": "F-13", "label": "Security review completed", "type": "manual", "checked": false, "source": "manual" }
+        ]
+      },
+      "rice": { "reach": 1500, "impact": 2, "confidence": 85, "effort": 5, "score": 510, "complete": true },
+      "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1002"
+    },
+    {
+      "key": "RHOAIENG-1003",
+      "summary": "llm-d: Disaggregated serving with KV cache routing",
+      "status": "In Progress",
+      "priority": "Major",
+      "phase": "DP",
+      "bigRock": "llm-d / xKS",
+      "tier": 1,
+      "pm": "Alex Nguyen",
+      "deliveryOwner": "Priya Sharma",
+      "components": ["Model Serving"],
+      "completionPct": 55,
+      "epicCount": 5,
+      "issueCount": 35,
+      "blockerCount": 0,
+      "health": "",
+      "risk": {
+        "level": "yellow",
+        "score": 2,
+        "flags": [
+          { "category": "DOR_INCOMPLETE", "severity": "medium", "message": "DoR completion at 54% (below 80% threshold)" },
+          { "category": "UNESTIMATED", "severity": "medium", "message": "No story point estimate" }
+        ],
+        "override": null
+      },
+      "dor": {
+        "checkedCount": 7,
+        "totalCount": 13,
+        "completionPct": 54,
+        "items": [
+          { "id": "F-1", "label": "Summary and description", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-2", "label": "Target version set", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-3", "label": "Stakeholders identified", "type": "manual", "checked": false, "source": "manual" },
+          { "id": "F-4", "label": "PM assigned", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-5", "label": "Delivery owner assigned", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-6", "label": "Component assigned", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-7", "label": "Story points estimated", "type": "automated", "checked": false, "source": "jira" },
+          { "id": "F-8", "label": "No unresolved blockers", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-9", "label": "Acceptance criteria defined", "type": "manual", "checked": false, "source": "manual" },
+          { "id": "F-10", "label": "Release type set", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-11", "label": "Test plan exists", "type": "manual", "checked": false, "source": "manual" },
+          { "id": "F-12", "label": "Documentation plan exists", "type": "manual", "checked": false, "source": "manual" },
+          { "id": "F-13", "label": "Security review completed", "type": "manual", "checked": false, "source": "manual" }
+        ]
+      },
+      "rice": null,
+      "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1003"
+    },
+    {
+      "key": "RHOAIENG-1004",
+      "summary": "Observability: Distributed tracing for inference pipelines",
+      "status": "In Progress",
+      "priority": "Major",
+      "phase": "GA",
+      "bigRock": "Observability",
+      "tier": 2,
+      "pm": "Tom Wilson",
+      "deliveryOwner": "Rachel Green",
+      "components": ["Dashboard"],
+      "completionPct": 40,
+      "epicCount": 2,
+      "issueCount": 14,
+      "blockerCount": 0,
+      "health": "",
+      "risk": {
+        "level": "yellow",
+        "score": 1,
+        "flags": [
+          { "category": "DOR_INCOMPLETE", "severity": "medium", "message": "DoR completion at 62% (below 80% threshold)" }
+        ],
+        "override": null
+      },
+      "dor": {
+        "checkedCount": 8,
+        "totalCount": 13,
+        "completionPct": 62,
+        "items": [
+          { "id": "F-1", "label": "Summary and description", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-2", "label": "Target version set", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-3", "label": "Stakeholders identified", "type": "manual", "checked": true, "source": "manual" },
+          { "id": "F-4", "label": "PM assigned", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-5", "label": "Delivery owner assigned", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-6", "label": "Component assigned", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-7", "label": "Story points estimated", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-8", "label": "No unresolved blockers", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-9", "label": "Acceptance criteria defined", "type": "manual", "checked": false, "source": "manual" },
+          { "id": "F-10", "label": "Release type set", "type": "automated", "checked": false, "source": "jira" },
+          { "id": "F-11", "label": "Test plan exists", "type": "manual", "checked": false, "source": "manual" },
+          { "id": "F-12", "label": "Documentation plan exists", "type": "manual", "checked": false, "source": "manual" },
+          { "id": "F-13", "label": "Security review completed", "type": "manual", "checked": false, "source": "manual" }
+        ]
+      },
+      "rice": { "reach": 800, "impact": 2, "confidence": 70, "effort": 3, "score": 373, "complete": true },
+      "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1004"
+    },
+    {
+      "key": "RHOAIENG-1005",
+      "summary": "Tool Calling: MCP server integration for agent workflows",
+      "status": "Refinement",
+      "priority": "Major",
+      "phase": "GA",
+      "bigRock": "Tool Calling",
+      "tier": 1,
+      "pm": "Linda Zhang",
+      "deliveryOwner": "",
+      "components": ["Agents"],
+      "completionPct": 20,
+      "epicCount": 1,
+      "issueCount": 6,
+      "blockerCount": 0,
+      "health": "",
+      "risk": {
+        "level": "yellow",
+        "score": 3,
+        "flags": [
+          { "category": "UNESTIMATED", "severity": "medium", "message": "No story point estimate" },
+          { "category": "DOR_INCOMPLETE", "severity": "medium", "message": "DoR completion at 46% (below 80% threshold)" },
+          { "category": "MISSING_OWNER", "severity": "medium", "message": "No delivery owner assigned" }
+        ],
+        "override": null
+      },
+      "dor": {
+        "checkedCount": 6,
+        "totalCount": 13,
+        "completionPct": 46,
+        "items": [
+          { "id": "F-1", "label": "Summary and description", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-2", "label": "Target version set", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-3", "label": "Stakeholders identified", "type": "manual", "checked": false, "source": "manual" },
+          { "id": "F-4", "label": "PM assigned", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-5", "label": "Delivery owner assigned", "type": "automated", "checked": false, "source": "jira" },
+          { "id": "F-6", "label": "Component assigned", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-7", "label": "Story points estimated", "type": "automated", "checked": false, "source": "jira" },
+          { "id": "F-8", "label": "No unresolved blockers", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-9", "label": "Acceptance criteria defined", "type": "manual", "checked": false, "source": "manual" },
+          { "id": "F-10", "label": "Release type set", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-11", "label": "Test plan exists", "type": "manual", "checked": false, "source": "manual" },
+          { "id": "F-12", "label": "Documentation plan exists", "type": "manual", "checked": false, "source": "manual" },
+          { "id": "F-13", "label": "Security review completed", "type": "manual", "checked": false, "source": "manual" }
+        ]
+      },
+      "rice": null,
+      "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1005"
+    },
+    {
+      "key": "RHOAIENG-1006",
+      "summary": "Upgrade Support: In-place upgrade from 3.4 to 3.5",
+      "status": "New",
+      "priority": "Critical",
+      "phase": "GA",
+      "bigRock": "Upgrade Support",
+      "tier": 1,
+      "pm": "Tom Wilson",
+      "deliveryOwner": "Chris Evans",
+      "components": ["Operator"],
+      "completionPct": 0,
+      "epicCount": 0,
+      "issueCount": 2,
+      "blockerCount": 1,
+      "health": "",
+      "risk": {
+        "level": "red",
+        "score": 3,
+        "flags": [
+          { "category": "DOR_INCOMPLETE", "severity": "high", "message": "DoR completion at 31% (below 50% threshold)" },
+          { "category": "UNESTIMATED", "severity": "medium", "message": "No story point estimate" },
+          { "category": "BLOCKED", "severity": "high", "message": "Blocked by RHOAIENG-998 (In Progress)" }
+        ],
+        "override": null
+      },
+      "dor": {
+        "checkedCount": 4,
+        "totalCount": 13,
+        "completionPct": 31,
+        "items": [
+          { "id": "F-1", "label": "Summary and description", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-2", "label": "Target version set", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-3", "label": "Stakeholders identified", "type": "manual", "checked": false, "source": "manual" },
+          { "id": "F-4", "label": "PM assigned", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-5", "label": "Delivery owner assigned", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-6", "label": "Component assigned", "type": "automated", "checked": false, "source": "jira" },
+          { "id": "F-7", "label": "Story points estimated", "type": "automated", "checked": false, "source": "jira" },
+          { "id": "F-8", "label": "No unresolved blockers", "type": "automated", "checked": false, "source": "jira" },
+          { "id": "F-9", "label": "Acceptance criteria defined", "type": "manual", "checked": false, "source": "manual" },
+          { "id": "F-10", "label": "Release type set", "type": "automated", "checked": false, "source": "jira" },
+          { "id": "F-11", "label": "Test plan exists", "type": "manual", "checked": false, "source": "manual" },
+          { "id": "F-12", "label": "Documentation plan exists", "type": "manual", "checked": false, "source": "manual" },
+          { "id": "F-13", "label": "Security review completed", "type": "manual", "checked": false, "source": "manual" }
+        ]
+      },
+      "rice": { "reach": 3000, "impact": 3, "confidence": 60, "effort": 12, "score": 450, "complete": true },
+      "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1006"
+    },
+    {
+      "key": "RHOAIENG-1007",
+      "summary": "Eval Hub: Centralized evaluation framework",
+      "status": "New",
+      "priority": "Major",
+      "phase": "TP",
+      "bigRock": "Eval Hub",
+      "tier": 2,
+      "pm": "",
+      "deliveryOwner": "",
+      "components": [],
+      "completionPct": 0,
+      "epicCount": 0,
+      "issueCount": 1,
+      "blockerCount": 0,
+      "health": "",
+      "risk": {
+        "level": "red",
+        "score": 4,
+        "flags": [
+          { "category": "DOR_INCOMPLETE", "severity": "high", "message": "DoR completion at 15% (below 50% threshold)" },
+          { "category": "UNESTIMATED", "severity": "medium", "message": "No story point estimate" },
+          { "category": "MISSING_OWNER", "severity": "medium", "message": "No delivery owner assigned" },
+          { "category": "VELOCITY_LAG", "severity": "medium", "message": "Completion at 0% vs expected 30% for TP at Pre-EA1" }
+        ],
+        "override": null
+      },
+      "dor": {
+        "checkedCount": 2,
+        "totalCount": 13,
+        "completionPct": 15,
+        "items": [
+          { "id": "F-1", "label": "Summary and description", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-2", "label": "Target version set", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-3", "label": "Stakeholders identified", "type": "manual", "checked": false, "source": "manual" },
+          { "id": "F-4", "label": "PM assigned", "type": "automated", "checked": false, "source": "jira" },
+          { "id": "F-5", "label": "Delivery owner assigned", "type": "automated", "checked": false, "source": "jira" },
+          { "id": "F-6", "label": "Component assigned", "type": "automated", "checked": false, "source": "jira" },
+          { "id": "F-7", "label": "Story points estimated", "type": "automated", "checked": false, "source": "jira" },
+          { "id": "F-8", "label": "No unresolved blockers", "type": "automated", "checked": false, "source": "jira" },
+          { "id": "F-9", "label": "Acceptance criteria defined", "type": "manual", "checked": false, "source": "manual" },
+          { "id": "F-10", "label": "Release type set", "type": "automated", "checked": false, "source": "jira" },
+          { "id": "F-11", "label": "Test plan exists", "type": "manual", "checked": false, "source": "manual" },
+          { "id": "F-12", "label": "Documentation plan exists", "type": "manual", "checked": false, "source": "manual" },
+          { "id": "F-13", "label": "Security review completed", "type": "manual", "checked": false, "source": "manual" }
+        ]
+      },
+      "rice": null,
+      "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1007"
+    },
+    {
+      "key": "RHOAIENG-1008",
+      "summary": "Multitenancy: Namespace-scoped model serving isolation",
+      "status": "Refinement",
+      "priority": "Critical",
+      "phase": "GA",
+      "bigRock": "Multitenancy",
+      "tier": 1,
+      "pm": "Sarah Chen",
+      "deliveryOwner": "Priya Sharma",
+      "components": ["Model Serving", "Dashboard"],
+      "completionPct": 15,
+      "epicCount": 3,
+      "issueCount": 18,
+      "blockerCount": 0,
+      "health": "",
+      "risk": {
+        "level": "red",
+        "score": 2,
+        "flags": [
+          { "category": "DOR_INCOMPLETE", "severity": "high", "message": "DoR completion at 38% (below 50% threshold)" },
+          { "category": "VELOCITY_LAG", "severity": "high", "message": "Completion at 15% vs expected 70% for GA at Pre-EA1" }
+        ],
+        "override": { "riskOverride": "yellow", "reason": "Team confirmed design is complete, implementation sprint starting next week", "updatedBy": "sarah@redhat.com", "updatedAt": "2026-04-24T09:15:00.000Z" }
+      },
+      "dor": {
+        "checkedCount": 5,
+        "totalCount": 13,
+        "completionPct": 38,
+        "items": [
+          { "id": "F-1", "label": "Summary and description", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-2", "label": "Target version set", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-3", "label": "Stakeholders identified", "type": "manual", "checked": true, "source": "manual" },
+          { "id": "F-4", "label": "PM assigned", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-5", "label": "Delivery owner assigned", "type": "automated", "checked": true, "source": "jira" },
+          { "id": "F-6", "label": "Component assigned", "type": "automated", "checked": false, "source": "jira" },
+          { "id": "F-7", "label": "Story points estimated", "type": "automated", "checked": false, "source": "jira" },
+          { "id": "F-8", "label": "No unresolved blockers", "type": "automated", "checked": false, "source": "jira" },
+          { "id": "F-9", "label": "Acceptance criteria defined", "type": "manual", "checked": false, "source": "manual" },
+          { "id": "F-10", "label": "Release type set", "type": "automated", "checked": false, "source": "jira" },
+          { "id": "F-11", "label": "Test plan exists", "type": "manual", "checked": false, "source": "manual" },
+          { "id": "F-12", "label": "Documentation plan exists", "type": "manual", "checked": false, "source": "manual" },
+          { "id": "F-13", "label": "Security review completed", "type": "manual", "checked": false, "source": "manual" }
+        ]
+      },
+      "rice": { "reach": 1200, "impact": 3, "confidence": 75, "effort": 10, "score": 270, "complete": true },
+      "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1008"
+    }
+  ],
+  "enrichmentStatus": {
+    "jiraQueriesRun": 3,
+    "featuresEnriched": 8,
+    "featuresSkipped": 0,
+    "riceAvailable": true,
+    "warnings": []
+  }
+}

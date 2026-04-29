@@ -18,7 +18,9 @@
         :orgSummary="orgSummary"
         :projects="projects"
         :projectSummaries="projectSummaries"
+        :metricMode="metricMode"
         @select-project="onSelectProject"
+        @update:metricMode="metricMode = $event"
       />
       <LoadingOverlay v-if="isLoading" />
     </div>
@@ -39,6 +41,7 @@ const {
   projects,
   projectSummaries,
   configError,
+  metricMode,
   isLoading,
   loadInitialData,
   handleSelectProject

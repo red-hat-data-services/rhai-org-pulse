@@ -62,25 +62,29 @@
             </button>
             <!-- Sub-items when expanded -->
             <div v-if="section.expanded" class="ml-4 mt-1 space-y-0.5">
-              <button
-                v-for="item in section.items"
-                :key="item.id"
-                @click="$emit('navigate', item.id)"
-                :aria-current="isNavItemActive(item, section) ? 'page' : undefined"
-                :aria-label="item.label"
-                class="group relative w-full flex items-center py-2 rounded-lg text-sm font-medium transition-all duration-200 gap-3 px-3"
-                :class="isNavItemActive(item, section)
-                  ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
-                  : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-700 dark:hover:text-gray-200'"
-              >
-                <component
-                  :is="item.icon"
-                  :size="18"
-                  :stroke-width="1.5"
-                  class="flex-shrink-0"
-                />
-                <span class="truncate">{{ item.label }}</span>
-              </button>
+              <template v-for="item in section.items" :key="item.id">
+                <div v-if="item.separatorBefore" class="border-t border-gray-200 dark:border-gray-700 my-2 mx-3" />
+                <button
+                  :disabled="item.disabled"
+                  @click="!item.disabled && $emit('navigate', item.id)"
+                  :aria-current="isNavItemActive(item, section) ? 'page' : undefined"
+                  :aria-label="item.label"
+                  class="group relative w-full flex items-center py-2 rounded-lg text-sm font-medium transition-all duration-200 gap-3 px-3"
+                  :class="item.disabled
+                    ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                    : isNavItemActive(item, section)
+                      ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+                      : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-700 dark:hover:text-gray-200'"
+                >
+                  <component
+                    :is="item.icon"
+                    :size="18"
+                    :stroke-width="1.5"
+                    class="flex-shrink-0"
+                  />
+                  <span class="truncate">{{ item.label }}</span>
+                </button>
+              </template>
             </div>
           </template>
 
@@ -122,28 +126,28 @@
         </div>
       </nav>
 
-      <!-- Docs (bottom-justified, above user) -->
+      <!-- About (bottom-justified, above user) -->
       <div class="px-3 pt-3 pb-1 border-t border-gray-100 dark:border-gray-700">
         <button
-          @click="$emit('navigate', 'docs')"
-          :aria-current="activeModule === 'docs' ? 'page' : undefined"
+          @click="$emit('navigate', 'about')"
+          :aria-current="activeModule === 'about' ? 'page' : undefined"
           class="group relative w-full flex items-center py-2.5 rounded-xl text-sm font-medium transition-all duration-200"
           :class="[
-            activeModule === 'docs'
+            activeModule === 'about'
               ? 'bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 shadow-sm'
               : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100',
             collapsed ? 'justify-center px-0' : 'gap-3 px-3'
           ]"
         >
-          <BookOpen :size="20" :stroke-width="activeModule === 'docs' ? 2 : 1.7" class="flex-shrink-0" />
+          <Info :size="20" :stroke-width="activeModule === 'about' ? 2 : 1.7" class="flex-shrink-0" />
           <transition name="fade">
-            <span v-if="!collapsed" class="truncate">Docs</span>
+            <span v-if="!collapsed" class="truncate">About</span>
           </transition>
           <span
             v-if="collapsed"
             class="absolute left-full ml-3 px-2.5 py-1.5 bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 text-xs font-medium rounded-lg whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 shadow-lg"
           >
-            Docs
+            About
           </span>
         </button>
       </div>
@@ -202,13 +206,6 @@
                 <FileCode2 :size="18" :stroke-width="1.7" class="flex-shrink-0" />
                 API Docs
               </a>
-              <button
-                @click="userMenuOpen = false; $emit('navigate', 'help')"
-                class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
-              >
-                <Wrench :size="18" :stroke-width="1.7" class="flex-shrink-0" />
-                Help & Debug
-              </button>
             </div>
           </transition>
         </div>
@@ -232,8 +229,19 @@
 import {
   Home,
   BarChart3,
+  Briefcase,
   Building2,
+  ChartColumnStacked,
+  FolderOpen,
+  FolderTree,
+  Lightbulb,
+  Map,
+  Milestone,
+  Target,
+  UserCog,
   Users,
+  UsersRound,
+  User,
   TrendingUp,
   FileText,
   FileCode2,
@@ -246,17 +254,33 @@ import {
   ChevronLeft,
   ChevronRight,
   ChartCandlestick,
+  GitBranch,
+  PieChart,
   Sparkles,
   Activity,
-  Wrench,
+  Wand2,
+  Info,
   KeyRound,
-  BookOpen
+  ClipboardList,
+  History
 } from 'lucide-vue-next'
 import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 
 const ICON_MAP = {
   BarChart3,
+  Briefcase,
+  Building2,
+  ChartColumnStacked,
+  FolderOpen,
+  FolderTree,
+  Lightbulb,
+  Map,
+  Milestone,
+  Target,
+  UserCog,
   Users,
+  UsersRound,
+  User,
   TrendingUp,
   FileText,
   Home,
@@ -267,12 +291,18 @@ const ICON_MAP = {
   Layers,
   Sparkles,
   Activity,
-  Building2,
+  Wand2,
   'bar-chart': BarChart3,
+  'users-round': UsersRound,
   'chart-candlestick': ChartCandlestick,
+  'pie-chart': PieChart,
+  'git-branch': GitBranch,
   'sparkles': Sparkles,
   'activity': Activity,
-  'network': Network
+  'network': Network,
+  'clipboard-list': ClipboardList,
+  ClipboardList,
+  History
 }
 
 const props = defineProps({
@@ -351,7 +381,9 @@ const navSections = computed(() => {
       items: navItems.map(item => ({
         id: `${manifest.slug}::${item.id}`,
         label: item.label,
-        icon: resolveIcon(item.icon)
+        icon: resolveIcon(item.icon),
+        disabled: item.disabled || false,
+        separatorBefore: item.separatorBefore || false
       }))
     })
   }

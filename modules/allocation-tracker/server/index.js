@@ -35,7 +35,7 @@ module.exports = function registerRoutes(router, context) {
   const jiraClient = createJiraClient({ jiraRequest, jiraHost: JIRA_HOST });
 
   // Import orchestration and classification
-  const { discoverBoards, processBoard, processKanbanBoard } = require('./jira/orchestration');
+  const { discoverBoards, processBoard, processKanbanBoard, performMultiProjectRefresh } = require('./jira/orchestration');
   const { getStoragePrefix, createPrefixedStorage } = require('./jira/config');
 
   // ─── Storage helpers ───
@@ -47,7 +47,8 @@ module.exports = function registerRoutes(router, context) {
     if (project && project !== 'RHOAIENG') {
       return moduleRead(`data/${project}/${key}`);
     }
-    return moduleRead(`data/RHOAIENG/${key}`) || moduleRead(key);
+    // RHOAIENG uses root-level storage (legacy); data/RHOAIENG/ is only a fallback
+    return moduleRead(key) || moduleRead(`data/RHOAIENG/${key}`);
   }
 
   /**
@@ -114,8 +115,8 @@ module.exports = function registerRoutes(router, context) {
       }
     }
 
-    const projectKey = req.body.projectKey || 'RHOAIENG';
-    if (!isValidProjectKey(projectKey)) {
+    const projectKey = req.body.projectKey;
+    if (projectKey && !isValidProjectKey(projectKey)) {
       return res.status(400).json({ error: 'Invalid request parameter' });
     }
     const hardRefresh = req.body.hardRefresh || false;
@@ -127,77 +128,113 @@ module.exports = function registerRoutes(router, context) {
     // Process in background (matches dev-server setImmediate pattern)
     setImmediate(async function() {
       try {
-        const deps = getDepsForProject(projectKey);
-        const teamsData = deps.readStorage('teams.json');
-        const enabledTeams = teamsData?.teams?.filter(t => t.enabled !== false) || [];
+        if (projectKey) {
+          // Single-project refresh
+          const deps = getDepsForProject(projectKey);
+          const teamsData = deps.readStorage('teams.json');
+          const enabledTeams = teamsData?.teams?.filter(t => t.enabled !== false) || [];
 
-        console.log(`\n[allocation-tracker] Starting refresh for ${projectKey}: ${enabledTeams.length} boards`);
-        const boardResults = [];
+          console.log(`\n[allocation-tracker] Starting refresh for ${projectKey}: ${enabledTeams.length} boards`);
+          const boardResults = [];
 
-        for (const team of enabledTeams) {
-          try {
-            const board = {
-              id: team.boardId,
-              name: team.boardName || team.displayName,
-              teamId: team.teamId || String(team.boardId),
-              sprintFilter: team.sprintFilter || '',
-              calculationMode: team.calculationMode || 'points',
-              boardType: team.boardType || 'scrum'
-            };
+          for (const team of enabledTeams) {
+            try {
+              const board = {
+                id: team.boardId,
+                name: team.boardName || team.displayName,
+                teamId: team.teamId || String(team.boardId),
+                sprintFilter: team.sprintFilter || '',
+                calculationMode: team.calculationMode || 'points',
+                boardType: team.boardType || 'scrum'
+              };
 
-            let result;
-            if (board.boardType === 'kanban') {
-              result = await processKanbanBoard({
-                board,
-                fetchBoardConfiguration: jiraClient.fetchBoardConfiguration,
-                fetchFilterJql: jiraClient.fetchFilterJql,
-                fetchIssuesByJql: jiraClient.fetchIssuesByJql,
-                readStorage: deps.readStorage,
-                writeStorage: deps.writeStorage
-              });
-            } else {
-              result = await processBoard({
-                board,
-                hardRefresh,
-                fetchSprints: jiraClient.fetchSprints,
-                fetchSprintIssues: jiraClient.fetchSprintIssues,
-                readStorage: deps.readStorage,
-                writeStorage: deps.writeStorage
-              });
+              let result;
+              if (board.boardType === 'kanban') {
+                result = await processKanbanBoard({
+                  board,
+                  fetchBoardConfiguration: jiraClient.fetchBoardConfiguration,
+                  fetchFilterJql: jiraClient.fetchFilterJql,
+                  fetchIssuesByJql: jiraClient.fetchIssuesByJql,
+                  readStorage: deps.readStorage,
+                  writeStorage: deps.writeStorage
+                });
+              } else {
+                result = await processBoard({
+                  board,
+                  hardRefresh,
+                  fetchSprints: jiraClient.fetchSprints,
+                  fetchSprintIssues: jiraClient.fetchSprintIssues,
+                  readStorage: deps.readStorage,
+                  writeStorage: deps.writeStorage
+                });
+              }
+              boardResults.push(result);
+              console.log(`  [allocation-tracker] Board ${team.boardName || team.displayName}: ${result.sprintResults.length} sprints`);
+            } catch (error) {
+              console.error(`  [allocation-tracker] Board ${team.boardName || team.displayName} failed:`, error.message);
             }
-            boardResults.push(result);
-            console.log(`  [allocation-tracker] Board ${team.boardName || team.displayName}: ${result.sprintResults.length} sprints`);
-          } catch (error) {
-            console.error(`  [allocation-tracker] Board ${team.boardName || team.displayName} failed:`, error.message);
           }
-        }
 
-        // Build dashboard summary AFTER all boards complete (no race condition)
-        const dashboardSummary = { lastUpdated: new Date().toISOString(), boards: {} };
-        for (const { board, dashboardSprint, dashboardSprintResult } of boardResults) {
-          if (dashboardSprint && dashboardSprintResult) {
-            dashboardSummary.boards[board.teamId || board.id] = {
-              sprint: {
-                id: dashboardSprint.id,
-                name: dashboardSprint.name,
-                state: dashboardSprint.state,
-                startDate: dashboardSprint.startDate,
-                endDate: dashboardSprint.endDate
-              },
-              summary: dashboardSprintResult.summary
-            };
+          const dashboardSummary = { lastUpdated: new Date().toISOString(), boards: {} };
+          for (const { board, dashboardSprint, dashboardSprintResult } of boardResults) {
+            if (dashboardSprint && dashboardSprintResult) {
+              dashboardSummary.boards[board.teamId || board.id] = {
+                sprint: {
+                  id: dashboardSprint.id,
+                  name: dashboardSprint.name,
+                  state: dashboardSprint.state,
+                  startDate: dashboardSprint.startDate,
+                  endDate: dashboardSprint.endDate
+                },
+                summary: dashboardSprintResult.summary
+              };
+            }
           }
-        }
-        deps.writeStorage('dashboard-summary.json', dashboardSummary);
+          deps.writeStorage('dashboard-summary.json', dashboardSummary);
 
-        const completedAt = new Date().toISOString();
-        refreshState.lastResult = {
-          status: 'success',
-          message: `Processed ${boardResults.length} boards`,
-          completedAt
-        };
-        refreshState.completedAt = completedAt;
-        console.log(`[allocation-tracker] Refresh complete: ${boardResults.length} boards processed`);
+          const completedAt = new Date().toISOString();
+          refreshState.lastResult = {
+            status: 'success',
+            message: `Processed ${boardResults.length} boards`,
+            completedAt
+          };
+          refreshState.completedAt = completedAt;
+          console.log(`[allocation-tracker] Refresh complete: ${boardResults.length} boards processed`);
+        } else {
+          // Multi-project refresh: refresh all configured projects
+          const orgConfig = moduleRead('config/orgs.json') || {
+            projects: [
+              { key: 'RHOAIENG', name: 'OpenShift AI Engineering' },
+              { key: 'AIPCC', name: 'AI Platform Core Components' },
+              { key: 'INFERENG', name: 'Inference Engineering' }
+            ]
+          };
+          const allProjects = orgConfig.projects || [];
+          console.log(`\n[allocation-tracker] Starting multi-project refresh for ${allProjects.length} projects`);
+
+          const result = await performMultiProjectRefresh({
+            projects: allProjects,
+            hardRefresh,
+            fetchSprints: jiraClient.fetchSprints,
+            fetchSprintIssues: jiraClient.fetchSprintIssues,
+            fetchBoardConfiguration: jiraClient.fetchBoardConfiguration,
+            fetchFilterJql: jiraClient.fetchFilterJql,
+            fetchIssuesByJql: jiraClient.fetchIssuesByJql,
+            readStorage: moduleRead,
+            writeStorage: moduleWrite,
+            getDeps: getDepsForProject
+          });
+
+          const totalBoards = result.projects.reduce((sum, p) => sum + (p.boardCount || 0), 0);
+          const completedAt = new Date().toISOString();
+          refreshState.lastResult = {
+            status: 'success',
+            message: `Processed ${allProjects.length} projects (${totalBoards} boards)`,
+            completedAt
+          };
+          refreshState.completedAt = completedAt;
+          console.log(`[allocation-tracker] Multi-project refresh complete: ${allProjects.length} projects`);
+        }
       } catch (error) {
         console.error('[allocation-tracker] Background refresh error:', error);
         const completedAt = new Date().toISOString();
@@ -236,7 +273,11 @@ module.exports = function registerRoutes(router, context) {
       if (!data) {
         return res.json({
           orgName: 'AI Engineering',
-          projects: [{ key: 'RHOAIENG', name: 'OpenShift AI Engineering', pillar: 'OpenShift AI' }]
+          projects: [
+            { key: 'RHOAIENG', name: 'OpenShift AI Engineering', pillar: 'OpenShift AI' },
+            { key: 'AIPCC', name: 'AI Platform Core Components', pillar: 'AIPCC' },
+            { key: 'INFERENG', name: 'Inference Engineering', pillar: 'INFERENG' }
+          ]
         });
       }
 

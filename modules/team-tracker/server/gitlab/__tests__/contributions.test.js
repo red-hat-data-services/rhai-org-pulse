@@ -294,13 +294,16 @@ describe('fetchGitlabData integration', () => {
       expect(results.dhellmann).toBeTruthy()
       expect(results.dhellmann.totalContributions).toBe(1200) // 100 * 12 months
       expect(results.dhellmann.source).toBe('graphql')
+      expect(results.dhellmann.instances).toBeDefined()
       expect(results.dhellmann.fetchedAt).toBeTruthy()
       expect(Object.keys(results.dhellmann.months).length).toBe(12)
-      // Should have instances array
-      expect(results.dhellmann.instances).toBeTruthy()
-      expect(results.dhellmann.instances).toHaveLength(1)
-      expect(results.dhellmann.instances[0].baseUrl).toBe('https://gitlab.test')
-      expect(results.dhellmann.instances[0].contributions).toBe(1200)
+      // instances should be an object keyed by baseUrl
+      expect(typeof results.dhellmann.instances).toBe('object')
+      expect(Array.isArray(results.dhellmann.instances)).toBe(false)
+      const inst = results.dhellmann.instances['https://gitlab.test']
+      expect(inst).toBeTruthy()
+      expect(inst.totalContributions).toBe(1200)
+      expect(typeof inst.months).toBe('object')
 
       // Should not include otheruser (not in requested usernames)
       expect(results.otheruser).toBeUndefined()
@@ -451,7 +454,8 @@ describe('fetchGitlabData integration', () => {
 
       // Only the first instance contributes (second is skipped)
       expect(results.testuser.totalContributions).toBe(120) // 10 * 12
-      expect(results.testuser.instances).toHaveLength(1)
+      expect(Object.keys(results.testuser.instances)).toHaveLength(1)
+      expect(results.testuser.instances['https://gitlab.test'].totalContributions).toBe(120)
     } finally {
       cleanup(refs)
     }
@@ -515,12 +519,12 @@ describe('fetchGitlabData integration', () => {
 
       // 10 + 5 = 15 per month, 12 months = 180
       expect(results.testuser.totalContributions).toBe(180)
-      expect(results.testuser.instances).toHaveLength(2)
+      expect(Object.keys(results.testuser.instances)).toHaveLength(2)
 
-      const inst1 = results.testuser.instances.find(i => i.baseUrl === 'https://gitlab.test')
-      const inst2 = results.testuser.instances.find(i => i.baseUrl === 'https://internal.gl')
-      expect(inst1.contributions).toBe(120)
-      expect(inst2.contributions).toBe(60)
+      const inst1 = results.testuser.instances['https://gitlab.test']
+      const inst2 = results.testuser.instances['https://internal.gl']
+      expect(inst1.totalContributions).toBe(120)
+      expect(inst2.totalContributions).toBe(60)
     } finally {
       delete process.env.GITLAB_TOKEN_2
       cleanup(refs)

@@ -58,6 +58,13 @@ oc create secret generic frontend-proxy-cookie \
 oc create secret generic google-sa-key \
   -n team-tracker \
   --from-file=google-sa-key.json=./secrets/google-sa-key.json
+
+# Optional: SmartSheet API token (for release-planning module -- release discovery)
+# Generate a token at: My Account > Personal Settings > API Access > Generate New Access Token
+oc patch secret team-tracker-secrets \
+  -n team-tracker \
+  --type merge \
+  -p "{\"stringData\":{\"SMARTSHEET_API_TOKEN\":\"$(tr -d '\n' < ~/.your-smartsheet-token)\"}}"
 ```
 
 ## 3. Build container images

@@ -1,5 +1,5 @@
 /**
- * Team Tracker API server
+ * People & Teams API server
  *
  * Combines fetcher and reader Express routes into a single
  * server, using local file storage.
@@ -55,7 +55,7 @@ apiTokens.init(storageModule);
 const PORT = process.env.API_PORT || 3001;
 
 const app = express();
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 
 // Enable CORS
 app.use(function(req, res, next) {
@@ -1093,7 +1093,7 @@ const { handleExport } = require('./export');
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-app.get('/api/export/test-data', function(req, res) {
+app.get('/api/export/test-data', requireAdmin, function(req, res) {
   handleExport(req, res, storageModule, builtInModules);
 });
 
@@ -1425,7 +1425,7 @@ if (!DEMO_MODE) {
 }
 
 app.listen(PORT, function() {
-  console.log(`\nTeam Tracker dev server running at http://localhost:${PORT}`);
+  console.log(`\nPeople & Teams dev server running at http://localhost:${PORT}`);
   console.log(`Jira host: ${process.env.JIRA_HOST || 'https://redhat.atlassian.net'}`);
   console.log(`Local storage: ./data/`);
   console.log(`JIRA_TOKEN: ${process.env.JIRA_TOKEN ? 'set' : 'NOT SET (refresh will fail)'}`);

@@ -25,6 +25,10 @@
       "linkedStatus": "Closed"
     }
   ],
+  "targetVersions": ["rhoai-3.5"],
+  "pm": {"displayName": "Jane PM", "accountId": "pm-001"},
+  "architect": {"displayName": "Bob Arch", "accountId": "arch-001"},
+  "parentKey": "TEST1-1016",
   "epics": [],
   "metrics": {
     "totalEpics": 0,

@@ -15,10 +15,11 @@ ENV NODE_EXTRA_CA_CERTS=/etc/pki/ca-trust/source/anchors/internal-root-ca.pem
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
-# Copy server code, shared modules, and built-in modules
+# Copy server code, shared modules, built-in modules, and fixtures
 COPY server/ ./server/
 COPY shared/server/ ./shared/server/
 COPY modules/ ./modules/
+COPY fixtures/ ./fixtures/
 
 # Create data directory for PVC mount
 RUN mkdir -p /app/data && chown -R 1001:0 /app/data && chmod -R g+rwX /app/data

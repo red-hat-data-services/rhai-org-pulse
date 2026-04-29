@@ -21,12 +21,12 @@
       </div>
 
       <div class="mt-3">
-        <AllocationBar :buckets="sprintData.summary.buckets" :totalPoints="sprintData.summary.totalPoints" />
+        <AllocationBar :buckets="sprintData.summary.buckets" :totalPoints="sprintData.summary.totalPoints" :totalCount="sprintData.summary.totalCount || 0" :metricMode="metricMode" />
       </div>
 
       <div class="flex items-center justify-between mt-2 text-sm">
         <span class="text-gray-600">
-          <span class="font-medium">{{ sprintData.summary.totalPoints }}</span> pts
+          <span class="font-medium">{{ displayTotal }}</span> {{ unitLabel }}
         </span>
         <span
           v-if="sprintData.summary.unestimatedIssueCount > 0"
@@ -38,7 +38,7 @@
         <span v-else class="text-gray-400 text-xs">All estimated</span>
       </div>
 
-      <div v-if="sprintData.sprint.state === 'closed' && sprintData.summary.totalPoints > 0" class="mt-1 text-xs text-gray-500">
+      <div v-if="sprintData.sprint.state === 'closed' && displayTotal > 0" class="mt-1 text-xs text-gray-500">
         Completed: {{ completionPercent }}%
       </div>
     </template>
@@ -60,13 +60,33 @@ const props = defineProps({
   sprintData: {
     type: Object,
     default: null
+  },
+  metricMode: {
+    type: String,
+    default: 'points'
   }
 })
 
 defineEmits(['select-team'])
 
+const displayTotal = computed(() => {
+  if (!props.sprintData) return 0
+  if (props.metricMode === 'counts') return props.sprintData.summary.totalCount || 0
+  return props.sprintData.summary.totalPoints || 0
+})
+
+const unitLabel = computed(() => props.metricMode === 'counts' ? 'issues' : 'pts')
+
 const completionPercent = computed(() => {
-  if (!props.sprintData || props.sprintData.summary.totalPoints === 0) return 0
+  if (!props.sprintData) return 0
+  if (props.metricMode === 'counts') {
+    const total = props.sprintData.summary.totalCount || 0
+    if (total === 0) return 0
+    const completed = Object.values(props.sprintData.summary.buckets)
+      .reduce((sum, b) => sum + (b.completedCount || 0), 0)
+    return Math.round((completed / total) * 100)
+  }
+  if (props.sprintData.summary.totalPoints === 0) return 0
   const completedPoints = Object.values(props.sprintData.summary.buckets)
     .reduce((sum, b) => sum + (b.completedPoints || 0), 0)
   return Math.round((completedPoints / props.sprintData.summary.totalPoints) * 100)

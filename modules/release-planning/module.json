@@ -1,0 +1,19 @@
+{
+  "name": "Release Planning",
+  "slug": "release-planning",
+  "defaultEnabled": true,
+  "description": "RHOAI release planning dashboard with Big Rock tracking and feature/RFE discovery from Jira",
+  "icon": "clipboard-list",
+  "order": 20,
+  "client": {
+    "entry": "./client/index.js",
+    "navItems": [
+      { "id": "main", "label": "Big Rocks Planning", "icon": "ClipboardList", "default": true },
+      { "id": "health", "label": "Release Plan Health", "icon": "HeartPulse" },
+      { "id": "audit-log", "label": "Audit Log", "icon": "History" }
+    ]
+  },
+  "server": {
+    "entry": "./server/index.js"
+  }
+}

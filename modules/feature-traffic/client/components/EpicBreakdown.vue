@@ -17,13 +17,20 @@ const priorityStyle = {
   'Undefined': 'bg-gray-100 dark:bg-gray-500/20 text-gray-500 dark:text-gray-500'
 }
 
+function isClosedOrResolvedStatus(status) {
+  const s = String(status || '').trim().toLowerCase()
+  return s === 'closed' || s === 'resolved'
+}
+
 function epicStats(epic) {
   const issues = epic.issues || []
   const total = issues.length
   const done = issues.filter(i => i.statusCategory === 'Done').length
   const inProgress = issues.filter(i => i.statusCategory === 'In Progress').length
   const todo = issues.filter(i => i.statusCategory === 'To Do').length
-  const blocked = issues.filter(i => i.priority === 'Blocker' || i.priority === 'Critical').length
+  // "Blocked" is only when the item is still open and explicitly marked blocked.
+  // Jira priority "Blocker" is not reliable as a blocked signal.
+  const blocked = issues.filter(i => !isClosedOrResolvedStatus(i.status) && i.isBlocked === true).length
   const pct = total > 0 ? Math.round((done / total) * 100) : 0
   return { issues, total, done, inProgress, todo, blocked, pct }
 }
@@ -134,7 +141,7 @@ const epicData = computed(() =>
         <div class="text-[10px] text-gray-400 dark:text-gray-500 mb-1.5 uppercase tracking-wide font-medium">Active Issues</div>
         <div class="space-y-1">
           <div
-            v-for="issue in stats.issues.filter(i => i.statusCategory === 'In Progress').slice(0, 5)"
+            v-for="issue in stats.issues.filter(i => !isClosedOrResolvedStatus(i.status)).slice(0, 5)"
             :key="issue.key"
             class="flex items-center gap-2 text-xs"
           >

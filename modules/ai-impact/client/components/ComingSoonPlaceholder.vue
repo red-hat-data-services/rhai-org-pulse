@@ -2,7 +2,7 @@
 defineProps({
   phaseName: {
     type: String,
-    required: true
+    default: 'this phase'
   }
 })
 </script>

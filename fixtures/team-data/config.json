@@ -1,0 +1,9 @@
+{
+  "orgRoots": [
+    { "uid": "achen", "name": "Alice Chen", "displayName": "Alice Chen" },
+    { "uid": "fjohnson", "name": "Frank Johnson", "displayName": "Frank Johnson" }
+  ],
+  "excludedTitles": [],
+  "gracePeriodDays": 30,
+  "autoSync": { "enabled": false, "intervalHours": 24 }
+}

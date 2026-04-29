@@ -1,0 +1,71 @@
+{
+  "releases": {
+    "3.5": {
+      "release": "3.5",
+      "bigRocks": [
+        {
+          "priority": 1,
+          "name": "MaaS",
+          "fullName": "MaaS (continue from 3.4)",
+          "pillar": "Inference",
+          "state": "continue from 3.4",
+          "owner": "jsmith@redhat.com",
+          "outcomeKeys": ["RHAISTRAT-1513"],
+          "notes": "Primary inference feature",
+          "description": "Model as a Service platform"
+        },
+        {
+          "priority": 2,
+          "name": "Gen AI Studio",
+          "fullName": "Gen AI Studio / Prompt Lab (continue from 3.4)",
+          "pillar": "Agents",
+          "state": "continue from 3.4",
+          "owner": "",
+          "outcomeKeys": ["RHAISTRAT-1312"],
+          "notes": "",
+          "description": ""
+        },
+        {
+          "priority": 3,
+          "name": "Tool Calling",
+          "fullName": "Enable tool calling for open source models (new for 3.5)",
+          "pillar": "Agents",
+          "state": "new for 3.5",
+          "owner": "",
+          "outcomeKeys": [],
+          "notes": "No specific outcome key listed",
+          "description": ""
+        }
+      ]
+    },
+    "3.6": {
+      "release": "3.6",
+      "bigRocks": [
+        {
+          "priority": 1,
+          "name": "Platform Hardening",
+          "fullName": "Platform Hardening for 3.6",
+          "pillar": "Platform",
+          "state": "new for 3.6",
+          "owner": "",
+          "outcomeKeys": [],
+          "notes": "",
+          "description": "Focus on stability and security improvements"
+        }
+      ]
+    }
+  },
+  "fieldMapping": {
+    "team": "customfield_10001",
+    "architect": "customfield_10467",
+    "deliveryOwner": "assignee",
+    "pm": "customfield_10469",
+    "targetRelease": "customfield_10855",
+    "rfeLinkType": "is required by"
+  },
+  "customFieldIds": {
+    "targetVersion": "customfield_10855",
+    "productManager": "customfield_10469",
+    "releaseType": "customfield_10851"
+  }
+}

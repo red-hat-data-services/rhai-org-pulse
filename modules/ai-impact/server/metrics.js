@@ -1,23 +1,18 @@
 /**
  * Compute adoption metrics for a given time window.
  *
+ * All windowing is based on issue.created (when the RFE was filed).
+ * The "revised" metric uses revisedLabelDate to count revisions that
+ * happened within the window, reported as a count rather than a percentage.
+ *
  * @param {Array} issues - Cached RFE issue list
  * @param {string} timeWindow - 'week' | 'month' | '3months'
  * @param {object} config - Module config (for trendThresholdPp)
  * @returns {{ metrics, trendData, breakdown }}
  */
-function getRelevantDate(issue) {
-  const dates = [issue.created];
-  if (issue.createdLabelDate) dates.push(issue.createdLabelDate);
-  if (issue.revisedLabelDate) dates.push(issue.revisedLabelDate);
-  return dates.reduce((latest, d) =>
-    new Date(d) > new Date(latest) ? d : latest
-  );
-}
-
 function computeAllMetrics(issues, timeWindow, config) {
   const { cutoff } = getTimeWindowDates(new Date(), timeWindow);
-  const windowIssues = issues.filter(i => new Date(getRelevantDate(i)) >= cutoff);
+  const windowIssues = issues.filter(i => new Date(i.created) >= cutoff);
   return {
     metrics: computeMetrics(issues, timeWindow, config),
     trendData: buildTrendData(issues, timeWindow),
@@ -37,36 +32,43 @@ function computeMetrics(issues, timeWindow, config) {
   const now = new Date();
   const { cutoff, priorCutoff } = getTimeWindowDates(now, timeWindow);
 
-  const currentIssues = issues.filter(i => new Date(getRelevantDate(i)) >= cutoff);
+  // Window issues filtered by creation date only
+  const currentIssues = issues.filter(i => new Date(i.created) >= cutoff);
   const priorIssues = issues.filter(i => {
-    const d = new Date(getRelevantDate(i));
+    const d = new Date(i.created);
     return d >= priorCutoff && d < cutoff;
   });
 
   const currentCreated = currentIssues.filter(i =>
     i.aiInvolvement === 'created' || i.aiInvolvement === 'both').length;
-  const currentRevised = currentIssues.filter(i =>
-    i.aiInvolvement === 'revised' || i.aiInvolvement === 'both').length;
   const currentTotal = currentIssues.length;
 
   const priorCreated = priorIssues.filter(i =>
     i.aiInvolvement === 'created' || i.aiInvolvement === 'both').length;
-  const priorRevised = priorIssues.filter(i =>
-    i.aiInvolvement === 'revised' || i.aiInvolvement === 'both').length;
   const priorTotal = priorIssues.length;
 
   const createdPct = currentTotal > 0 ? Math.round((currentCreated / currentTotal) * 100) : 0;
-  const revisedPct = currentTotal > 0 ? Math.round((currentRevised / currentTotal) * 100) : 0;
   const priorCreatedPct = priorTotal > 0 ? Math.round((priorCreated / priorTotal) * 100) : 0;
-  const priorRevisedPct = priorTotal > 0 ? Math.round((priorRevised / priorTotal) * 100) : 0;
 
   const createdChange = createdPct - priorCreatedPct;
-  const revisedChange = revisedPct - priorRevisedPct;
   const trend = createdChange > threshold ? 'growing' : createdChange < -threshold ? 'declining' : 'stable';
-  const revisedTrend = revisedChange > threshold ? 'growing' : revisedChange < -threshold ? 'declining' : 'stable';
+
+  // Revised count: number of RFEs revised with AI during this window (by label date)
+  const revisedCount = issues.filter(i => {
+    if (i.aiInvolvement !== 'revised' && i.aiInvolvement !== 'both') return false;
+    const d = new Date(i.revisedLabelDate || i.created);
+    return d >= cutoff;
+  }).length;
+
+  const priorRevisedCount = issues.filter(i => {
+    if (i.aiInvolvement !== 'revised' && i.aiInvolvement !== 'both') return false;
+    const d = new Date(i.revisedLabelDate || i.created);
+    return d >= priorCutoff && d < cutoff;
+  }).length;
 
   return {
-    createdPct, revisedPct, createdChange, revisedChange, trend, revisedTrend,
+    createdPct, createdChange, trend,
+    revisedCount, priorRevisedCount,
     windowTotal: currentTotal,
     totalRFEs: issues.length
   };
@@ -81,20 +83,26 @@ function buildTrendData(issues, timeWindow) {
     const weekEnd = new Date(now.getTime() - w * 7 * 24 * 60 * 60 * 1000);
     const weekStart = new Date(weekEnd.getTime() - 7 * 24 * 60 * 60 * 1000);
 
+    // Created %: bucket by issue creation date
     const weekIssues = issues.filter(i => {
-      const d = new Date(getRelevantDate(i));
+      const d = new Date(i.created);
       return d >= weekStart && d < weekEnd;
     });
     const total = weekIssues.length;
     const createdWithAI = weekIssues.filter(i =>
       i.aiInvolvement === 'created' || i.aiInvolvement === 'both').length;
-    const revisedWithAI = weekIssues.filter(i =>
-      i.aiInvolvement === 'revised' || i.aiInvolvement === 'both').length;
+
+    // Revised count: bucket by revisedLabelDate (when the revision happened)
+    const revisedCount = issues.filter(i => {
+      if (i.aiInvolvement !== 'revised' && i.aiInvolvement !== 'both') return false;
+      const d = new Date(i.revisedLabelDate || i.created);
+      return d >= weekStart && d < weekEnd;
+    }).length;
 
     points.push({
       date: weekEnd.toISOString().slice(0, 10),
       createdPct: total > 0 ? Math.round((createdWithAI / total) * 100) : 0,
-      revisedPct: total > 0 ? Math.round((revisedWithAI / total) * 100) : 0,
+      revisedCount,
       total
     });
   }
@@ -111,4 +119,4 @@ function buildBreakdownData(issues) {
   ];
 }
 
-module.exports = { computeAllMetrics, computeMetrics, buildTrendData, buildBreakdownData, getTimeWindowDates, getRelevantDate };
+module.exports = { computeAllMetrics, computeMetrics, buildTrendData, buildBreakdownData, getTimeWindowDates };

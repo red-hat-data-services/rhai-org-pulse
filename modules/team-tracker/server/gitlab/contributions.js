@@ -256,7 +256,7 @@ async function fetchGitlabData(usernames, options = {}) {
 
   // Merge results across instances
   // { username: { "YYYY-MM": count } } for aggregated months
-  // { username: [{ baseUrl, label, contributions }] } for per-instance breakdown
+  // { username: { baseUrl: { totalContributions, months } } } for per-instance breakdown
   const userMonths = {};
   const userInstances = {};
 
@@ -268,19 +268,18 @@ async function fetchGitlabData(usernames, options = {}) {
     const { counts, instanceInfo } = result.value;
     for (const [username, months] of Object.entries(counts)) {
       if (!userMonths[username]) userMonths[username] = {};
+      if (!userInstances[username]) userInstances[username] = {};
+      const instanceMonths = {};
       let instanceTotal = 0;
       for (const [monthKey, count] of Object.entries(months)) {
         userMonths[username][monthKey] = (userMonths[username][monthKey] || 0) + count;
+        instanceMonths[monthKey] = count;
         instanceTotal += count;
       }
-      if (instanceTotal > 0) {
-        if (!userInstances[username]) userInstances[username] = [];
-        userInstances[username].push({
-          baseUrl: instanceInfo.baseUrl,
-          label: instanceInfo.label,
-          contributions: instanceTotal
-        });
-      }
+      userInstances[username][instanceInfo.baseUrl] = {
+        totalContributions: instanceTotal,
+        months: instanceMonths
+      };
     }
   }
 
@@ -294,12 +293,10 @@ async function fetchGitlabData(usernames, options = {}) {
     results[username] = {
       totalContributions,
       months,
+      instances: userInstances[username] || {},
       fetchedAt: now,
       source: 'graphql'
     };
-    if (userInstances[username] && userInstances[username].length > 0) {
-      results[username].instances = userInstances[username];
-    }
   }
 
   const withContribs = Object.values(results).filter(r => r.totalContributions > 0).length;

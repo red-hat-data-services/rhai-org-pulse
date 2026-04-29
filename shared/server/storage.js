@@ -120,10 +120,33 @@ function deleteStorageDirectory(dir) {
   return { deleted };
 }
 
+/**
+ * Delete a single file from storage
+ * @param {string} key - S3-style key (e.g., 'release-planning/candidates-cache-3.5.json')
+ */
+function deleteFromStorage(key) {
+  const filePath = path.resolve(DATA_DIR, key);
+  if (!isPathSafe(filePath)) {
+    console.error(`[storage] Blocked path traversal attempt: ${key}`);
+    return;
+  }
+  try {
+    fs.unlinkSync(filePath);
+    console.log(`Deleted ${key} from local storage`);
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      // File doesn't exist — nothing to delete
+      return;
+    }
+    throw error;
+  }
+}
+
 module.exports = {
   readFromStorage,
   writeToStorage,
   listStorageFiles,
   deleteStorageDirectory,
+  deleteFromStorage,
   DATA_DIR
 };

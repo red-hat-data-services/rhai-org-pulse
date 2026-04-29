@@ -1,10 +1,12 @@
 import { defineAsyncComponent } from 'vue'
 
 export const routes = {
-  'dashboard': defineAsyncComponent(() => import('./views/Dashboard.vue')),
-  'people': defineAsyncComponent(() => import('./views/PeopleView.vue')),
+  'home': defineAsyncComponent(() => import('./views/TeamDirectoryView.vue')),
+  'people': defineAsyncComponent(() => import('./views/PeopleDirectoryView.vue')),
   'trends': defineAsyncComponent(() => import('./views/TrendsView.vue')),
   'reports': defineAsyncComponent(() => import('./views/ReportsView.vue')),
-  'team-roster': defineAsyncComponent(() => import('./views/TeamRosterView.vue')),
-  'person-detail': defineAsyncComponent(() => import('./views/PersonDetail.vue')),
+  'org-dashboard': defineAsyncComponent(() => import('./views/OrgDashboardView.vue')),
+  'org-explorer': defineAsyncComponent(() => import('./views/OrgExplorerView.vue')),
+  'team-detail': defineAsyncComponent(() => import('./views/TeamRosterView.vue')),
+  'person-detail': defineAsyncComponent(() => import('./views/PersonProfileView.vue')),
 }

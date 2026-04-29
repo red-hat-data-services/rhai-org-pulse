@@ -1,0 +1,147 @@
+{
+  "version": "3.5",
+  "jiraBaseUrl": "https://redhat.atlassian.net/browse",
+  "lastRefreshed": "2026-04-21T12:00:00.000Z",
+  "demoMode": true,
+  "summary": {
+    "totalFeatures": 22,
+    "totalRfes": 10,
+    "totalBigRocks": 5,
+    "rocksWithData": 5,
+    "tier1": {
+      "features": 19,
+      "rfes": 8,
+      "description": "Big Rock-associated features and RFEs that PM has identified as essential for this release."
+    },
+    "tier2": {
+      "features": 3,
+      "rfes": 2,
+      "description": "Features and RFEs not tied to Big Rocks, but PM believes are important for customers or represent significant usability improvements."
+    },
+    "tier3": {
+      "features": 3,
+      "rfes": 0,
+      "description": "Not Big Rock or customer demanded, but potentially could be worked on by other teams."
+    },
+    "perRock": {
+      "MaaS": { "features": 5, "rfes": 2 },
+      "Gen AI Studio": { "features": 4, "rfes": 1 },
+      "llm-d / xKS": { "features": 3, "rfes": 1 },
+      "Eval Hub": { "features": 3, "rfes": 2 },
+      "AI Hub incl MCP": { "features": 4, "rfes": 2 }
+    }
+  },
+  "bigRocks": [
+    {
+      "priority": 1,
+      "name": "MaaS",
+      "fullName": "MaaS (continue from 3.4)",
+      "pillar": "Inference",
+      "state": "continue from 3.4",
+      "owner": "Pat Johnson",
+      "outcomeKeys": ["RHAISTRAT-1001"],
+      "outcomeDescriptions": { "RHAISTRAT-1001": "Model as a Service enablement" },
+      "featureCount": 5,
+      "rfeCount": 2,
+      "notes": ""
+    },
+    {
+      "priority": 2,
+      "name": "Gen AI Studio",
+      "fullName": "Gen AI Studio / Prompt Lab (continue from 3.4)",
+      "pillar": "Agents",
+      "state": "continue from 3.4",
+      "owner": "Morgan Lee",
+      "outcomeKeys": ["RHAISTRAT-1002"],
+      "outcomeDescriptions": { "RHAISTRAT-1002": "GenAI Studio for enterprise AI workflows" },
+      "featureCount": 4,
+      "rfeCount": 1,
+      "notes": ""
+    },
+    {
+      "priority": 5,
+      "name": "llm-d / xKS",
+      "fullName": "Llm-d / llm-d on xKS (continue from 3.4)",
+      "pillar": "Inference",
+      "state": "continue from 3.4",
+      "owner": "Alex Rivera",
+      "outcomeKeys": ["RHAISTRAT-1003"],
+      "outcomeDescriptions": { "RHAISTRAT-1003": "llm-d inference gateway" },
+      "featureCount": 3,
+      "rfeCount": 1,
+      "notes": ""
+    },
+    {
+      "priority": 7,
+      "name": "Eval Hub",
+      "fullName": "Eval Hub (continue from 3.4)",
+      "pillar": "Data",
+      "state": "continue from 3.4",
+      "owner": "Jordan Taylor",
+      "outcomeKeys": ["RHAISTRAT-1004"],
+      "outcomeDescriptions": { "RHAISTRAT-1004": "Model evaluation hub" },
+      "featureCount": 3,
+      "rfeCount": 2,
+      "notes": ""
+    },
+    {
+      "priority": 8,
+      "name": "AI Hub incl MCP",
+      "fullName": "AI Hub including MCP catalog & registry (continue from 3.4)",
+      "pillar": "Platform",
+      "state": "continue from 3.4",
+      "owner": "Casey Martin",
+      "outcomeKeys": ["RHAISTRAT-1005"],
+      "outcomeDescriptions": { "RHAISTRAT-1005": "AI Hub and MCP catalog" },
+      "featureCount": 4,
+      "rfeCount": 2,
+      "notes": ""
+    }
+  ],
+  "features": [
+    { "bigRock": "MaaS", "issueKey": "RHAISTRAT-2001", "status": "In Progress", "priority": "Major", "phase": "EA1", "summary": "Support vLLM multi-node inference", "components": "Serving", "labels": "3.5-candidate", "targetRelease": "rhoai-3.5", "fixVersion": "rhoai-3.5", "team": "", "pm": "Jane Doe", "architect": "", "deliveryOwner": "John Smith", "rfe": "RHAIRFE-456", "rfeStatus": "", "source": "jira", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2001", "tier": 1 },
+    { "bigRock": "MaaS", "issueKey": "RHAISTRAT-2002", "status": "Refinement", "priority": "Critical", "phase": "EA2", "summary": "Auto-scaling for model endpoints", "components": "Serving, Platform", "labels": "3.5-candidate", "targetRelease": "rhoai-3.5", "fixVersion": "rhoai-3.5", "team": "", "pm": "Jane Doe", "architect": "", "deliveryOwner": "Alice Brown", "rfe": "", "rfeStatus": "", "source": "jira", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2002", "tier": 1 },
+    { "bigRock": "MaaS", "issueKey": "RHAISTRAT-2003", "status": "New", "priority": "Major", "phase": "GA", "summary": "GPU resource quota management", "components": "Serving", "labels": "", "targetRelease": "rhoai-3.5", "fixVersion": "", "team": "", "pm": "Bob Wilson", "architect": "", "deliveryOwner": "", "rfe": "RHAIRFE-457", "rfeStatus": "", "source": "jira", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2003", "tier": 1 },
+    { "bigRock": "MaaS", "issueKey": "RHAISTRAT-2004", "status": "In Progress", "priority": "Major", "phase": "EA1", "summary": "Model registry integration", "components": "Serving, Registry", "labels": "3.5-candidate", "targetRelease": "rhoai-3.5", "fixVersion": "rhoai-3.5", "team": "", "pm": "Jane Doe", "architect": "", "deliveryOwner": "Carol Davis", "rfe": "", "rfeStatus": "", "source": "jira", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2004", "tier": 1 },
+    { "bigRock": "MaaS", "issueKey": "RHAISTRAT-2005", "status": "New", "priority": "Normal", "phase": "", "summary": "Custom runtime environment support", "components": "Serving", "labels": "", "targetRelease": "rhoai-3.5", "fixVersion": "", "team": "", "pm": "Bob Wilson", "architect": "", "deliveryOwner": "", "rfe": "", "rfeStatus": "", "source": "jira", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2005", "tier": 1 },
+    { "bigRock": "Gen AI Studio", "issueKey": "RHAISTRAT-2006", "status": "In Progress", "priority": "Critical", "phase": "EA1", "summary": "Prompt playground with model comparison", "components": "GenAI Studio", "labels": "3.5-candidate", "targetRelease": "rhoai-3.5", "fixVersion": "rhoai-3.5", "team": "", "pm": "Sarah Lee", "architect": "", "deliveryOwner": "Dave Evans", "rfe": "RHAIRFE-500", "rfeStatus": "", "source": "jira", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2006", "tier": 1 },
+    { "bigRock": "Gen AI Studio", "issueKey": "RHAISTRAT-2007", "status": "Refinement", "priority": "Major", "phase": "EA2", "summary": "Agent workflow builder UI", "components": "GenAI Studio", "labels": "3.5-candidate", "targetRelease": "rhoai-3.5", "fixVersion": "rhoai-3.5", "team": "", "pm": "Sarah Lee", "architect": "", "deliveryOwner": "Eve Foster", "rfe": "", "rfeStatus": "", "source": "jira", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2007", "tier": 1 },
+    { "bigRock": "Gen AI Studio", "issueKey": "RHAISTRAT-2008", "status": "New", "priority": "Major", "phase": "GA", "summary": "Template library for common AI tasks", "components": "GenAI Studio", "labels": "", "targetRelease": "rhoai-3.5", "fixVersion": "", "team": "", "pm": "Sarah Lee", "architect": "", "deliveryOwner": "", "rfe": "", "rfeStatus": "", "source": "jira", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2008", "tier": 1 },
+    { "bigRock": "Gen AI Studio", "issueKey": "RHAISTRAT-2009", "status": "In Progress", "priority": "Normal", "phase": "EA1", "summary": "RAG pipeline integration", "components": "GenAI Studio, Data", "labels": "3.5-candidate", "targetRelease": "rhoai-3.5", "fixVersion": "rhoai-3.5", "team": "", "pm": "Sarah Lee", "architect": "", "deliveryOwner": "Frank Garcia", "rfe": "RHAIRFE-501", "rfeStatus": "", "source": "jira", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2009", "tier": 1 },
+    { "bigRock": "llm-d / xKS", "issueKey": "RHAISTRAT-2010", "status": "In Progress", "priority": "Critical", "phase": "EA1", "summary": "llm-d gateway for multi-model routing", "components": "Inference", "labels": "3.5-candidate", "targetRelease": "rhoai-3.5", "fixVersion": "rhoai-3.5", "team": "", "pm": "Mike Harris", "architect": "", "deliveryOwner": "Grace Ito", "rfe": "", "rfeStatus": "", "source": "jira", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2010", "tier": 1 },
+    { "bigRock": "llm-d / xKS", "issueKey": "RHAISTRAT-2011", "status": "New", "priority": "Major", "phase": "EA2", "summary": "KServe autoscaler improvements", "components": "Inference, Platform", "labels": "", "targetRelease": "rhoai-3.5", "fixVersion": "", "team": "", "pm": "Mike Harris", "architect": "", "deliveryOwner": "", "rfe": "RHAIRFE-600", "rfeStatus": "", "source": "jira", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2011", "tier": 1 },
+    { "bigRock": "llm-d / xKS", "issueKey": "RHAISTRAT-2012", "status": "Refinement", "priority": "Normal", "phase": "", "summary": "Token-based load balancing", "components": "Inference", "labels": "", "targetRelease": "rhoai-3.5", "fixVersion": "", "team": "", "pm": "Mike Harris", "architect": "", "deliveryOwner": "Henry Jones", "rfe": "", "rfeStatus": "", "source": "jira", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2012", "tier": 1 },
+    { "bigRock": "Eval Hub", "issueKey": "RHAISTRAT-2013", "status": "In Progress", "priority": "Major", "phase": "EA1", "summary": "Model evaluation benchmarking suite", "components": "Evaluation", "labels": "3.5-candidate", "targetRelease": "rhoai-3.5", "fixVersion": "rhoai-3.5", "team": "", "pm": "Nancy Kim", "architect": "", "deliveryOwner": "Iris Lee", "rfe": "RHAIRFE-700", "rfeStatus": "", "source": "jira", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2013", "tier": 1 },
+    { "bigRock": "Eval Hub", "issueKey": "RHAISTRAT-2014", "status": "New", "priority": "Normal", "phase": "EA2", "summary": "Custom evaluation metric framework", "components": "Evaluation", "labels": "", "targetRelease": "rhoai-3.5", "fixVersion": "", "team": "", "pm": "Nancy Kim", "architect": "", "deliveryOwner": "", "rfe": "", "rfeStatus": "", "source": "jira", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2014", "tier": 1 },
+    { "bigRock": "Eval Hub", "issueKey": "RHAISTRAT-2015", "status": "Refinement", "priority": "Major", "phase": "GA", "summary": "Automated regression testing for models", "components": "Evaluation, Data", "labels": "3.5-candidate", "targetRelease": "rhoai-3.5", "fixVersion": "rhoai-3.5", "team": "", "pm": "Nancy Kim", "architect": "", "deliveryOwner": "Jack Ma", "rfe": "RHAIRFE-701", "rfeStatus": "", "source": "jira", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2015", "tier": 1 },
+    { "bigRock": "AI Hub incl MCP", "issueKey": "RHAISTRAT-2016", "status": "In Progress", "priority": "Critical", "phase": "EA1", "summary": "MCP catalog and registry backend", "components": "Platform, Registry", "labels": "3.5-candidate", "targetRelease": "rhoai-3.5", "fixVersion": "rhoai-3.5", "team": "", "pm": "Oscar Park", "architect": "", "deliveryOwner": "Karen Quinn", "rfe": "RHAIRFE-800", "rfeStatus": "", "source": "jira", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2016", "tier": 1 },
+    { "bigRock": "AI Hub incl MCP", "issueKey": "RHAISTRAT-2017", "status": "Refinement", "priority": "Major", "phase": "EA2", "summary": "AI Hub unified search", "components": "Platform", "labels": "", "targetRelease": "rhoai-3.5", "fixVersion": "", "team": "", "pm": "Oscar Park", "architect": "", "deliveryOwner": "Larry Ross", "rfe": "", "rfeStatus": "", "source": "jira", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2017", "tier": 1 },
+    { "bigRock": "AI Hub incl MCP", "issueKey": "RHAISTRAT-2018", "status": "New", "priority": "Normal", "phase": "", "summary": "MCP tool discovery and versioning", "components": "Platform, Registry", "labels": "", "targetRelease": "rhoai-3.5", "fixVersion": "", "team": "", "pm": "Oscar Park", "architect": "", "deliveryOwner": "", "rfe": "RHAIRFE-801", "rfeStatus": "", "source": "jira", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2018", "tier": 1 },
+    { "bigRock": "AI Hub incl MCP", "issueKey": "RHAISTRAT-2019", "status": "In Progress", "priority": "Major", "phase": "EA1", "summary": "Community model import pipeline", "components": "Platform", "labels": "3.5-candidate", "targetRelease": "rhoai-3.5", "fixVersion": "rhoai-3.5", "team": "", "pm": "Oscar Park", "architect": "", "deliveryOwner": "Mia Sanchez", "rfe": "", "rfeStatus": "", "source": "jira", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2019", "tier": 1 },
+    { "bigRock": "", "issueKey": "RHAISTRAT-2020", "status": "In Progress", "priority": "Major", "phase": "EA1", "summary": "Notebook image lifecycle management", "components": "Platform", "labels": "3.5-candidate", "targetRelease": "rhoai-3.5", "fixVersion": "rhoai-3.5", "team": "", "pm": "Tina Nguyen", "architect": "", "deliveryOwner": "Paul Adams", "rfe": "", "rfeStatus": "", "source": "jira", "sourcePass": "tier2", "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2020", "tier": 2 },
+    { "bigRock": "", "issueKey": "RHAISTRAT-2021", "status": "Refinement", "priority": "Normal", "phase": "GA", "summary": "Dashboard usability improvements", "components": "Dashboard", "labels": "", "targetRelease": "rhoai-3.5", "fixVersion": "", "team": "", "pm": "Tina Nguyen", "architect": "", "deliveryOwner": "", "rfe": "RHAIRFE-850", "rfeStatus": "", "source": "jira", "sourcePass": "tier2", "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2021", "tier": 2 },
+    { "bigRock": "", "issueKey": "RHAISTRAT-2022", "status": "New", "priority": "Major", "phase": "", "summary": "Improved RBAC for data science projects", "components": "Platform, Auth", "labels": "", "targetRelease": "rhoai-3.5", "fixVersion": "", "team": "", "pm": "Oscar Park", "architect": "", "deliveryOwner": "", "rfe": "RHAIRFE-851", "rfeStatus": "", "source": "jira", "sourcePass": "tier2", "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2022", "tier": 2 },
+    { "bigRock": "", "issueKey": "RHAISTRAT-2023", "status": "In Progress", "priority": "Critical", "phase": "", "summary": "Ray Jobs integration for distributed training", "components": "Platform, Training", "labels": "", "targetRelease": "", "fixVersion": "", "team": "", "pm": "Tina Nguyen", "architect": "", "deliveryOwner": "Quinn Roberts", "rfe": "", "rfeStatus": "", "source": "jira", "sourcePass": "tier3", "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2023", "tier": 3 },
+    { "bigRock": "", "issueKey": "RHAISTRAT-2024", "status": "In Progress", "priority": "Major", "phase": "", "summary": "Feast feature store integration", "components": "Data, Platform", "labels": "", "targetRelease": "", "fixVersion": "", "team": "", "pm": "Oscar Park", "architect": "", "deliveryOwner": "Rita Santos", "rfe": "", "rfeStatus": "", "source": "jira", "sourcePass": "tier3", "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2024", "tier": 3 },
+    { "bigRock": "", "issueKey": "RHAISTRAT-2025", "status": "In Progress", "priority": "Normal", "phase": "", "summary": "Jupyter notebook template gallery", "components": "Platform", "labels": "", "targetRelease": "", "fixVersion": "", "team": "", "pm": "Tina Nguyen", "architect": "", "deliveryOwner": "", "rfe": "", "rfeStatus": "", "source": "jira", "sourcePass": "tier3", "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2025", "tier": 3 }
+  ],
+  "rfes": [
+    { "bigRock": "MaaS", "issueKey": "RHAIRFE-456", "status": "Approved", "priority": "Major", "phase": "", "summary": "Multi-node inference for large models", "components": "Serving", "labels": "3.5-candidate", "targetRelease": "", "fixVersion": "", "team": "", "pm": "Jane Doe", "architect": "", "deliveryOwner": "", "rfe": "", "rfeStatus": "", "source": "rfe", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAIRFE-456", "tier": 1 },
+    { "bigRock": "MaaS", "issueKey": "RHAIRFE-457", "status": "New", "priority": "Major", "phase": "", "summary": "GPU quota management for multi-tenant environments", "components": "Serving, Platform", "labels": "3.5-candidate", "targetRelease": "", "fixVersion": "", "team": "", "pm": "Bob Wilson", "architect": "", "deliveryOwner": "", "rfe": "", "rfeStatus": "", "source": "rfe", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAIRFE-457", "tier": 1 },
+    { "bigRock": "Gen AI Studio", "issueKey": "RHAIRFE-500", "status": "Approved", "priority": "Critical", "phase": "", "summary": "Interactive prompt testing with model comparison", "components": "GenAI Studio", "labels": "3.5-candidate", "targetRelease": "", "fixVersion": "", "team": "", "pm": "Sarah Lee", "architect": "", "deliveryOwner": "", "rfe": "", "rfeStatus": "", "source": "rfe", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAIRFE-500", "tier": 1 },
+    { "bigRock": "llm-d / xKS", "issueKey": "RHAIRFE-600", "status": "Stakeholder Review", "priority": "Major", "phase": "", "summary": "KServe autoscaler for bursty inference workloads", "components": "Inference", "labels": "3.5-candidate", "targetRelease": "", "fixVersion": "", "team": "", "pm": "Mike Harris", "architect": "", "deliveryOwner": "", "rfe": "", "rfeStatus": "", "source": "rfe", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAIRFE-600", "tier": 1 },
+    { "bigRock": "Eval Hub", "issueKey": "RHAIRFE-700", "status": "Approved", "priority": "Major", "phase": "", "summary": "Standardized model evaluation benchmarks", "components": "Evaluation", "labels": "3.5-candidate", "targetRelease": "", "fixVersion": "", "team": "", "pm": "Nancy Kim", "architect": "", "deliveryOwner": "", "rfe": "", "rfeStatus": "", "source": "rfe", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAIRFE-700", "tier": 1 },
+    { "bigRock": "Eval Hub", "issueKey": "RHAIRFE-701", "status": "In Progress", "priority": "Normal", "phase": "", "summary": "Automated regression testing framework", "components": "Evaluation", "labels": "3.5-candidate", "targetRelease": "", "fixVersion": "", "team": "", "pm": "Nancy Kim", "architect": "", "deliveryOwner": "", "rfe": "", "rfeStatus": "", "source": "rfe", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAIRFE-701", "tier": 1 },
+    { "bigRock": "AI Hub incl MCP", "issueKey": "RHAIRFE-800", "status": "Approved", "priority": "Critical", "phase": "", "summary": "MCP catalog backend with search and discovery", "components": "Platform", "labels": "3.5-candidate", "targetRelease": "", "fixVersion": "", "team": "", "pm": "Oscar Park", "architect": "", "deliveryOwner": "", "rfe": "", "rfeStatus": "", "source": "rfe", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAIRFE-800", "tier": 1 },
+    { "bigRock": "AI Hub incl MCP", "issueKey": "RHAIRFE-801", "status": "New", "priority": "Normal", "phase": "", "summary": "MCP tool versioning and lifecycle management", "components": "Platform, Registry", "labels": "3.5-candidate", "targetRelease": "", "fixVersion": "", "team": "", "pm": "Oscar Park", "architect": "", "deliveryOwner": "", "rfe": "", "rfeStatus": "", "source": "rfe", "sourcePass": "outcome", "jiraUrl": "https://redhat.atlassian.net/browse/RHAIRFE-801", "tier": 1 },
+    { "bigRock": "", "issueKey": "RHAIRFE-850", "status": "Stakeholder review", "priority": "Normal", "phase": "", "summary": "Dashboard UX refresh for data scientists", "components": "Dashboard", "labels": "3.5-candidate", "targetRelease": "", "fixVersion": "", "team": "", "pm": "Tina Nguyen", "architect": "", "deliveryOwner": "", "rfe": "", "rfeStatus": "", "source": "rfe", "sourcePass": "tier2", "jiraUrl": "https://redhat.atlassian.net/browse/RHAIRFE-850", "tier": 2 },
+    { "bigRock": "", "issueKey": "RHAIRFE-851", "status": "New", "priority": "Major", "phase": "", "summary": "Fine-grained RBAC for multi-tenant DS projects", "components": "Platform, Auth", "labels": "3.5-candidate", "targetRelease": "", "fixVersion": "", "team": "", "pm": "Oscar Park", "architect": "", "deliveryOwner": "", "rfe": "", "rfeStatus": "", "source": "rfe", "sourcePass": "tier2", "jiraUrl": "https://redhat.atlassian.net/browse/RHAIRFE-851", "tier": 2 }
+  ],
+  "filterOptions": {
+    "pillars": ["Agents", "Data", "Inference", "Platform"],
+    "rocks": ["MaaS", "Gen AI Studio", "llm-d / xKS", "Eval Hub", "AI Hub incl MCP"],
+    "statuses": ["Approved", "In Progress", "New", "Refinement", "Stakeholder Review", "Stakeholder review"],
+    "teams": ["Dashboard", "Data, Platform", "Evaluation", "Evaluation, Data", "GenAI Studio", "GenAI Studio, Data", "Inference", "Inference, Platform", "Platform", "Platform, Auth", "Platform, Registry", "Platform, Training", "Serving", "Serving, Platform", "Serving, Registry"],
+    "priorities": ["Critical", "Major", "Normal"]
+  }
+}

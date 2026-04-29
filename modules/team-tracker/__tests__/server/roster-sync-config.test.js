@@ -19,13 +19,13 @@ const mockRosterSync = {
 
 vi.mock('../../../../shared/server/roster-sync', () => ({
   loadConfig: vi.fn((storage) => {
-    return storage.readFromStorage('roster-sync-config.json')
+    return storage.readFromStorage('team-data/config.json')
   }),
   saveConfig: vi.fn((storage, config) => {
-    storage.writeToStorage('roster-sync-config.json', config)
+    storage.writeToStorage('team-data/config.json', config)
   }),
   isConfigured: vi.fn((storage) => {
-    const config = storage.readFromStorage('roster-sync-config.json')
+    const config = storage.readFromStorage('team-data/config.json')
     return !!(config?.orgRoots?.length > 0)
   }),
   isSyncInProgress: vi.fn(() => mockRosterSync.isSyncInProgress()),
@@ -148,7 +148,7 @@ describe('Roster Sync Config API', () => {
 
       expect(res.status).toBe(200)
       expect(writeToStorage).toHaveBeenCalledWith(
-        'roster-sync-config.json',
+        'team-data/config.json',
         expect.objectContaining({
           gitlabInstances: expect.arrayContaining([
             expect.objectContaining({
@@ -161,7 +161,7 @@ describe('Roster Sync Config API', () => {
 
     it('preserves existing excludeGroups when not provided', async () => {
       // Set up existing config with exclude groups
-      mockStorage['roster-sync-config.json'] = {
+      mockStorage['team-data/config.json'] = {
         orgRoots: [{ uid: 'testorg', displayName: 'Test Org' }],
         googleSheetId: 'test-sheet-id',
         githubOrgs: [],
@@ -190,7 +190,7 @@ describe('Roster Sync Config API', () => {
     })
 
     it('allows clearing excludeGroups with empty array', async () => {
-      mockStorage['roster-sync-config.json'] = {
+      mockStorage['team-data/config.json'] = {
         orgRoots: [{ uid: 'testorg', displayName: 'Test Org' }],
         gitlabInstances: [{
           label: 'GitLab.com',
@@ -266,7 +266,7 @@ describe('Roster Sync Config API', () => {
 
   describe('GET /api/admin/roster-sync/config', () => {
     it('includes excludeGroups in gitlabInstances response', async () => {
-      mockStorage['roster-sync-config.json'] = {
+      mockStorage['team-data/config.json'] = {
         orgRoots: [{ uid: 'testorg', displayName: 'Test Org' }],
         googleSheetId: 'test-sheet-id',
         githubOrgs: ['test-org'],
@@ -290,7 +290,7 @@ describe('Roster Sync Config API', () => {
     })
 
     it('handles instances without excludeGroups', async () => {
-      mockStorage['roster-sync-config.json'] = {
+      mockStorage['team-data/config.json'] = {
         orgRoots: [{ uid: 'testorg', displayName: 'Test Org' }],
         githubOrgs: [],
         gitlabInstances: [{
@@ -331,7 +331,7 @@ describe('Roster Sync Config API', () => {
       expect(written.gitlabInstances[0].excludeGroups).toEqual(['mirror-group'])
 
       // Step 3: Simulate it being persisted by updating mockStorage
-      mockStorage['roster-sync-config.json'] = written
+      mockStorage['team-data/config.json'] = written
 
       // Step 4: Retrieve via config endpoint
       const configRes = await request(app, 'GET', '/api/modules/team-tracker/admin/roster-sync/config')
@@ -341,7 +341,7 @@ describe('Roster Sync Config API', () => {
 
     it('updates excludeGroups and persists changes', async () => {
       // Initial config
-      mockStorage['roster-sync-config.json'] = {
+      mockStorage['team-data/config.json'] = {
         orgRoots: [{ uid: 'testorg', displayName: 'Test Org' }],
         gitlabInstances: [{
           label: 'GitLab.com',
@@ -376,7 +376,7 @@ describe('Roster Sync Config API', () => {
   describe('Backwards compatibility', () => {
     it('handles configs from before gitlabInstances was added', async () => {
       // Old config with legacy gitlabGroups field (will be auto-migrated to instances)
-      mockStorage['roster-sync-config.json'] = {
+      mockStorage['team-data/config.json'] = {
         orgRoots: [{ uid: 'testorg', displayName: 'Test Org' }],
         gitlabGroups: ['group-a']
       }

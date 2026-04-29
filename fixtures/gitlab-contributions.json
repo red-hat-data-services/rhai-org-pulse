@@ -3,45 +3,73 @@
     "bobsmith": {
       "username": "bobsmith",
       "totalContributions": 198,
-      "fetchedAt": "2026-03-10T12:00:00.000Z",
-      "instances": [
-        { "baseUrl": "https://gitlab.com", "label": "GitLab.com", "contributions": 150 },
-        { "baseUrl": "https://gitlab.internal.example.com", "label": "Internal GitLab", "contributions": 48 }
-      ]
+      "instances": {
+        "https://gitlab.cee.redhat.com": { "totalContributions": 151, "months": {} },
+        "https://gitlab.com": { "totalContributions": 47, "months": {} }
+      },
+      "fetchedAt": "2026-03-10T12:00:00.000Z"
     },
     "carolw": {
       "username": "carolw",
       "totalContributions": 143,
+      "instances": {
+        "https://gitlab.cee.redhat.com": { "totalContributions": 143, "months": {} },
+        "https://gitlab.com": { "totalContributions": 0, "months": {} }
+      },
       "fetchedAt": "2026-03-10T12:00:00.000Z"
     },
     "davidlee": {
       "username": "davidlee",
       "totalContributions": 267,
+      "instances": {
+        "https://gitlab.cee.redhat.com": { "totalContributions": 200, "months": {} },
+        "https://gitlab.com": { "totalContributions": 67, "months": {} }
+      },
       "fetchedAt": "2026-03-10T12:00:00.000Z"
     },
     "emmagarcia": {
       "username": "emmagarcia",
       "totalContributions": 112,
+      "instances": {
+        "https://gitlab.cee.redhat.com": { "totalContributions": 112, "months": {} },
+        "https://gitlab.com": { "totalContributions": 0, "months": {} }
+      },
       "fetchedAt": "2026-03-10T12:00:00.000Z"
     },
     "gracekim": {
       "username": "gracekim",
       "totalContributions": 231,
+      "instances": {
+        "https://gitlab.cee.redhat.com": { "totalContributions": 189, "months": {} },
+        "https://gitlab.com": { "totalContributions": 42, "months": {} }
+      },
       "fetchedAt": "2026-03-10T12:00:00.000Z"
     },
     "henryw": {
       "username": "henryw",
       "totalContributions": 98,
+      "instances": {
+        "https://gitlab.cee.redhat.com": { "totalContributions": 98, "months": {} },
+        "https://gitlab.com": { "totalContributions": 0, "months": {} }
+      },
       "fetchedAt": "2026-03-10T12:00:00.000Z"
     },
     "alicechen": {
       "username": "alicechen",
       "totalContributions": 67,
+      "instances": {
+        "https://gitlab.cee.redhat.com": { "totalContributions": 40, "months": {} },
+        "https://gitlab.com": { "totalContributions": 27, "months": {} }
+      },
       "fetchedAt": "2026-03-10T12:00:00.000Z"
     },
     "frankj": {
       "username": "frankj",
       "totalContributions": 55,
+      "instances": {
+        "https://gitlab.cee.redhat.com": { "totalContributions": 55, "months": {} },
+        "https://gitlab.com": { "totalContributions": 0, "months": {} }
+      },
       "fetchedAt": "2026-03-10T12:00:00.000Z"
     }
   },

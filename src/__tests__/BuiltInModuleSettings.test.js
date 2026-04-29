@@ -18,7 +18,7 @@ const sampleModules = {
   modules: [
     {
       slug: 'team-tracker',
-      name: 'Team Tracker',
+      name: 'People & Teams',
       description: 'Delivery metrics',
       icon: 'bar-chart',
       requires: [],
@@ -27,10 +27,10 @@ const sampleModules = {
       requiredBy: []
     },
     {
-      slug: 'org-roster',
-      name: 'Org Roster',
-      description: 'Team composition',
-      icon: 'network',
+      slug: 'release-analysis',
+      name: 'Release Analysis',
+      description: 'Release tracking',
+      icon: 'activity',
       requires: [],
       defaultEnabled: true,
       enabled: true,
@@ -48,8 +48,8 @@ describe('BuiltInModuleSettings', () => {
   it('renders module list after loading', async () => {
     const wrapper = mount(BuiltInModuleSettings)
     await flushPromises()
-    expect(wrapper.text()).toContain('Team Tracker')
-    expect(wrapper.text()).toContain('Org Roster')
+    expect(wrapper.text()).toContain('People & Teams')
+    expect(wrapper.text()).toContain('Release Analysis')
   })
 
   it('shows loading state', () => {
@@ -101,7 +101,7 @@ describe('BuiltInModuleSettings', () => {
     const modulesWithDeps = {
       modules: [{
         ...sampleModules.modules[0],
-        requires: ['org-roster'],
+        requires: ['release-analysis'],
         requiredBy: []
       }, {
         ...sampleModules.modules[1],
@@ -113,8 +113,8 @@ describe('BuiltInModuleSettings', () => {
     const wrapper = mount(BuiltInModuleSettings)
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Requires: Org Roster')
-    expect(wrapper.text()).toContain('Required by: Team Tracker')
+    expect(wrapper.text()).toContain('Requires: Release Analysis')
+    expect(wrapper.text()).toContain('Required by: People & Teams')
   })
 
   it('shows confirmation dialog when enabling with unmet deps', async () => {
@@ -173,7 +173,7 @@ describe('BuiltInModuleSettings', () => {
   })
 
   it('shows inline error when disable is blocked', async () => {
-    const err = new Error('Cannot disable: required by org-roster')
+    const err = new Error('Cannot disable: required by release-analysis')
     err.status = 400
     mockDisableModule.mockRejectedValue(err)
 

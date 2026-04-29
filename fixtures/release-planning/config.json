@@ -1,0 +1,176 @@
+{
+  "releases": {
+    "3.5": {
+      "release": "3.5",
+      "bigRocks": [
+        {
+          "priority": 1,
+          "name": "MaaS",
+          "fullName": "MaaS (continue from 3.4)",
+          "pillar": "Inference",
+          "state": "continue from 3.4",
+          "owner": "",
+          "outcomeKeys": ["RHAISTRAT-1513"],
+          "notes": "",
+          "description": ""
+        },
+        {
+          "priority": 2,
+          "name": "Gen AI Studio",
+          "fullName": "Gen AI Studio / Prompt Lab (continue from 3.4)",
+          "pillar": "Agents",
+          "state": "continue from 3.4",
+          "owner": "",
+          "outcomeKeys": ["RHAISTRAT-1312"],
+          "notes": "",
+          "description": ""
+        },
+        {
+          "priority": 3,
+          "name": "Bring Your Own Agent",
+          "fullName": "Bring Your Own Agent (continue from 3.4)",
+          "pillar": "Agents",
+          "state": "continue from 3.4",
+          "owner": "",
+          "outcomeKeys": [],
+          "notes": "Outcome TBD",
+          "description": ""
+        },
+        {
+          "priority": 4,
+          "name": "Tool Calling",
+          "fullName": "Enable tool calling for open source models (new for 3.5)",
+          "pillar": "Agents",
+          "state": "new for 3.5",
+          "owner": "",
+          "outcomeKeys": [],
+          "notes": "No specific outcome key listed",
+          "description": ""
+        },
+        {
+          "priority": 5,
+          "name": "llm-d / xKS",
+          "fullName": "LLm-d / llm-d on xKS (continue from 3.4)",
+          "pillar": "Inference",
+          "state": "continue from 3.4",
+          "owner": "",
+          "outcomeKeys": ["RHAISTRAT-1515", "RHAISTRAT-1403"],
+          "notes": "",
+          "description": ""
+        },
+        {
+          "priority": 6,
+          "name": "Upgrade Support",
+          "fullName": "2.25 to 3.5 upgrade support",
+          "pillar": "Platform",
+          "state": "",
+          "owner": "",
+          "outcomeKeys": ["RHAISTRAT-1480"],
+          "notes": "",
+          "description": ""
+        },
+        {
+          "priority": 7,
+          "name": "Eval Hub",
+          "fullName": "Eval Hub (continue from 3.4)",
+          "pillar": "Data",
+          "state": "continue from 3.4",
+          "owner": "",
+          "outcomeKeys": ["RHAISTRAT-1498"],
+          "notes": "",
+          "description": ""
+        },
+        {
+          "priority": 8,
+          "name": "AI Hub incl MCP",
+          "fullName": "AI Hub including MCP catalog & registry (continue from 3.4)",
+          "pillar": "Platform",
+          "state": "continue from 3.4",
+          "owner": "",
+          "outcomeKeys": ["RHAISTRAT-1339"],
+          "notes": "",
+          "description": ""
+        },
+        {
+          "priority": 9,
+          "name": "Observability",
+          "fullName": "Observability (continue from 3.4)",
+          "pillar": "Platform",
+          "state": "continue from 3.4",
+          "owner": "",
+          "outcomeKeys": ["RHAISTRAT-1517", "RHAISTRAT-1446"],
+          "notes": "",
+          "description": ""
+        },
+        {
+          "priority": 10,
+          "name": "Multitenancy",
+          "fullName": "Multitenancy for RHAIE (new for 3.5)",
+          "pillar": "Platform",
+          "state": "new for 3.5",
+          "owner": "",
+          "outcomeKeys": ["RHAISTRAT-1516", "RHAISTRAT-898"],
+          "notes": "",
+          "description": ""
+        },
+        {
+          "priority": 11,
+          "name": "AutoRAG",
+          "fullName": "AutoRAG (continue from 3.4)",
+          "pillar": "Data",
+          "state": "continue from 3.4",
+          "owner": "",
+          "outcomeKeys": ["RHAISTRAT-188"],
+          "notes": "",
+          "description": ""
+        },
+        {
+          "priority": 12,
+          "name": "AI Safety",
+          "fullName": "AI safety - model validation (new for 3.5)",
+          "pillar": "Data",
+          "state": "new for 3.5",
+          "owner": "",
+          "outcomeKeys": [],
+          "notes": "No specific outcome key listed",
+          "description": ""
+        },
+        {
+          "priority": 13,
+          "name": "vLLM Multimodal",
+          "fullName": "vLLM multimodal (new for 3.5)",
+          "pillar": "Inference",
+          "state": "new for 3.5",
+          "owner": "",
+          "outcomeKeys": [],
+          "notes": "No specific outcome key listed",
+          "description": ""
+        },
+        {
+          "priority": 14,
+          "name": "AutoML",
+          "fullName": "AutoML (continue from 3.4)",
+          "pillar": "Data",
+          "state": "continue from 3.4",
+          "owner": "",
+          "outcomeKeys": [],
+          "notes": "No specific outcome key listed",
+          "description": ""
+        }
+      ]
+    }
+  },
+  "fieldMapping": {
+    "team": "customfield_10001",
+    "architect": "customfield_10467",
+    "deliveryOwner": "assignee",
+    "pm": "customfield_10469",
+    "targetRelease": "customfield_10855",
+    "rfeLinkType": "is required by"
+  },
+  "customFieldIds": {
+    "targetVersion": "customfield_10855",
+    "productManager": "customfield_10469",
+    "releaseType": "customfield_10851"
+  }
+}

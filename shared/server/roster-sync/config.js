@@ -3,12 +3,16 @@
  * Manages org roots, Google Sheet settings, and sync metadata.
  */
 
-const CONFIG_KEY = 'roster-sync-config.json';
+const CONFIG_KEY = 'team-data/config.json';
+const LEGACY_CONFIG_KEY = 'roster-sync-config.json';
 
 // Simple cache for getOrgDisplayNames — invalidated on saveConfig
 let _orgDisplayNamesCache = null;
 
 function loadConfig(storage) {
+  // One-time migration: merge legacy roster-sync-config.json into team-data/config.json
+  migrateFromLegacyConfig(storage);
+
   const config = storage.readFromStorage(CONFIG_KEY);
   if (config) {
     const migrated = migrateConfig(config);
@@ -16,6 +20,30 @@ function loadConfig(storage) {
     return instancesMigrated;
   }
   return config;
+}
+
+/**
+ * Idempotent migration: merge fields from legacy roster-sync-config.json
+ * into team-data/config.json. Uses _migratedFrom guard flag to run only once.
+ * The old file is never deleted (rollback safety net).
+ */
+function migrateFromLegacyConfig(storage) {
+  if (!storage.writeToStorage) return;
+
+  var target = storage.readFromStorage(CONFIG_KEY);
+
+  // Already migrated — skip
+  if (target && target._migratedFrom === LEGACY_CONFIG_KEY) return;
+
+  var legacy = storage.readFromStorage(LEGACY_CONFIG_KEY);
+  if (!legacy) return;
+
+  // Merge legacy fields into target (target fields take precedence)
+  var merged = Object.assign({}, legacy, target || {});
+  merged._migratedFrom = LEGACY_CONFIG_KEY;
+
+  storage.writeToStorage(CONFIG_KEY, merged);
+  console.log('[config-migration] Merged roster-sync-config.json into team-data/config.json');
 }
 
 /**

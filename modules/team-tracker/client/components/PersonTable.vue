@@ -6,15 +6,11 @@
           <th
             v-for="col in columns"
             :key="col.key"
-            class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-300"
+            class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
             @click="toggleSort(col.key)"
           >
-            <span class="inline-flex items-center gap-1">
-              {{ col.label }}
-              <svg v-if="sortKey === col.key" class="h-3 w-3" :class="sortAsc ? '' : 'rotate-180'" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-              </svg>
-            </span>
+            {{ col.label }}
+            <span v-if="sortKey === col.key" class="ml-1">{{ sortAsc ? '↑' : '↓' }}</span>
           </th>
         </tr>
       </thead>
@@ -25,45 +21,43 @@
           class="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
           @click="$emit('select', member)"
         >
-          <td class="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap">
-            {{ member.name }}
+          <td class="px-4 py-3 text-sm whitespace-nowrap">
+            <a
+              :href="personLink(member)"
+              class="text-primary-600 hover:underline"
+              @click.stop
+            >
+              {{ member.name }}
+            </a>
           </td>
-          <td v-if="primaryDisplayField" class="px-4 py-2 text-sm whitespace-nowrap">
+          <td v-if="primaryDisplayField" class="px-4 py-3 text-sm whitespace-nowrap">
             <DynamicFieldBadge :value="member.customFields?.[primaryDisplayField]" />
           </td>
-          <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-            {{ member.manager || '—' }}
-          </td>
-          <td
-            v-for="field in nonPrimaryVisibleFields"
-            :key="'cf-' + field.key"
-            class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap"
-          >
-            {{ member.customFields?.[field.key] || '—' }}
-          </td>
-          <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+          <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
             <span v-if="getMemberMetric(member, 'nameNotFound')" class="text-gray-400 dark:text-gray-500 italic">no Jira user</span>
             <template v-else>{{ getMemberMetric(member, 'resolvedCount') ?? '—' }}</template>
           </td>
-          <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+          <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
             <span v-if="getMemberMetric(member, 'nameNotFound')" class="text-gray-400 dark:text-gray-500 italic">no Jira user</span>
             <template v-else>{{ getMemberMetric(member, 'resolvedPoints') ?? '—' }}</template>
           </td>
-          <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+          <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
             <span v-if="getMemberMetric(member, 'nameNotFound')" class="text-gray-400 dark:text-gray-500 italic">no Jira user</span>
             <template v-else>{{ getMemberMetric(member, 'avgCycleTimeDays') != null ? getMemberMetric(member, 'avgCycleTimeDays') + 'd' : '—' }}</template>
           </td>
-          <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+          <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
             <template v-if="getGithubContribCount(member) != null">{{ getGithubContribCount(member) }}</template>
             <span v-else-if="member.githubUsername" class="text-gray-300 dark:text-gray-600">—</span>
             <span v-else class="text-gray-300 dark:text-gray-600 italic text-xs" title="GitHub username not configured">no GitHub</span>
           </td>
-          <td class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
-            <template v-if="getGitlabContribCount(member) != null">{{ getGitlabContribCount(member) }}</template>
+          <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+            <template v-if="getGitlabContribCount(member) != null">
+              <span :title="getGitlabInstanceTooltip(member) || undefined">{{ getGitlabContribCount(member) }}</span>
+            </template>
             <span v-else-if="member.gitlabUsername" class="text-gray-300 dark:text-gray-600">—</span>
             <span v-else class="text-gray-300 dark:text-gray-600 italic text-xs" title="GitLab username not configured">no GitLab</span>
           </td>
-          <td class="px-4 py-2 text-sm whitespace-nowrap">
+          <td class="px-4 py-3 text-sm whitespace-nowrap">
             <span
               v-if="getTeamCount(member) > 1"
               class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-700"
@@ -72,7 +66,7 @@
             </span>
             <span v-else class="text-gray-400 dark:text-gray-500">1</span>
           </td>
-          <td class="px-4 py-2 text-sm whitespace-nowrap">
+          <td class="px-4 py-3 text-sm whitespace-nowrap">
             <button
               @click.stop="$emit('view-history', member)"
               class="text-xs text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 font-medium"
@@ -90,9 +84,11 @@
 import { ref, computed } from 'vue'
 import DynamicFieldBadge from './DynamicFieldBadge.vue'
 import { useRoster } from '@shared/client/composables/useRoster'
+import { useModuleLink } from '@shared/client/composables/useModuleLink'
 import { useGithubStats } from '@shared/client/composables/useGithubStats'
 import { useGitlabStats } from '@shared/client/composables/useGitlabStats'
 
+const { linkTo } = useModuleLink()
 const { visibleFields, primaryDisplayField } = useRoster()
 const { getContributions } = useGithubStats()
 const { getContributions: getGitlabContributions } = useGitlabStats()
@@ -101,23 +97,21 @@ const props = defineProps({
   members: { type: Array, required: true },
   multiTeamMembers: { type: Set, default: () => new Set() },
   getTeamsForPerson: { type: Function, default: () => () => [] },
-  memberMetrics: { type: Map, default: () => new Map() }
+  memberMetrics: { type: Map, default: () => new Map() },
+  teamKey: { type: String, default: null }
 })
 defineEmits(['select', 'view-history'])
 
-const nonPrimaryVisibleFields = computed(() => {
-  return visibleFields.value.filter(f => f.key !== primaryDisplayField.value)
-})
+function personLink(member) {
+  if (member.uid) return linkTo('team-tracker', 'person-detail', { uid: member.uid, ...(props.teamKey && { teamKey: props.teamKey }) })
+  return linkTo('team-tracker', 'person-detail', { person: member.name, ...(props.teamKey && { teamKey: props.teamKey }) })
+}
 
 const columns = computed(() => {
   const cols = [{ key: 'name', label: 'Name' }]
   if (primaryDisplayField.value) {
     const pf = visibleFields.value.find(f => f.key === primaryDisplayField.value)
     cols.push({ key: primaryDisplayField.value, label: pf?.label || primaryDisplayField.value })
-  }
-  cols.push({ key: 'manager', label: 'Manager' })
-  for (const field of nonPrimaryVisibleFields.value) {
-    cols.push({ key: field.key, label: field.label })
   }
   cols.push(
     { key: 'resolved', label: 'Resolved (90d)' },
@@ -160,6 +154,15 @@ function getGithubContribCount(member) {
 function getGitlabContribCount(member) {
   if (!member.gitlabUsername) return null
   return getGitlabContributions(member.gitlabUsername)?.totalContributions ?? null
+}
+
+function getGitlabInstanceTooltip(member) {
+  if (!member.gitlabUsername) return ''
+  const instances = getGitlabContributions(member.gitlabUsername)?.instances
+  if (!instances || Object.keys(instances).length <= 1) return ''
+  return Object.entries(instances)
+    .map(([url, data]) => `${url.replace(/^https?:\/\//, '')}: ${data.totalContributions}`)
+    .join('\n')
 }
 
 const sortedMembers = computed(() => {

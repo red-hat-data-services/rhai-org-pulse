@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeMetrics, buildTrendData, buildBreakdownData, computeAllMetrics, getRelevantDate } from '../../server/metrics.js';
+import { computeMetrics, buildTrendData, buildBreakdownData, computeAllMetrics } from '../../server/metrics.js';
 
 function makeIssue(daysAgo, aiInvolvement = 'none', { createdLabelDate, revisedLabelDate } = {}) {
   const created = new Date();
@@ -15,47 +15,8 @@ function makeIssue(daysAgo, aiInvolvement = 'none', { createdLabelDate, revisedL
   };
 }
 
-describe('getRelevantDate', () => {
-  it('returns created when no label dates exist', () => {
-    const issue = { created: '2026-03-01T10:00:00Z', createdLabelDate: null, revisedLabelDate: null };
-    expect(getRelevantDate(issue)).toBe('2026-03-01T10:00:00Z');
-  });
-
-  it('returns created when label date fields are missing (backward compat)', () => {
-    const issue = { created: '2026-03-01T10:00:00Z' };
-    expect(getRelevantDate(issue)).toBe('2026-03-01T10:00:00Z');
-  });
-
-  it('returns createdLabelDate when it is later than created', () => {
-    const issue = {
-      created: '2026-03-01T10:00:00Z',
-      createdLabelDate: '2026-03-20T14:30:00Z',
-      revisedLabelDate: null
-    };
-    expect(getRelevantDate(issue)).toBe('2026-03-20T14:30:00Z');
-  });
-
-  it('returns revisedLabelDate when it is the latest', () => {
-    const issue = {
-      created: '2026-03-01T10:00:00Z',
-      createdLabelDate: '2026-03-10T10:00:00Z',
-      revisedLabelDate: '2026-03-25T09:15:00Z'
-    };
-    expect(getRelevantDate(issue)).toBe('2026-03-25T09:15:00Z');
-  });
-
-  it('returns the latest of all dates', () => {
-    const issue = {
-      created: '2026-03-30T10:00:00Z',
-      createdLabelDate: '2026-03-10T10:00:00Z',
-      revisedLabelDate: '2026-03-20T10:00:00Z'
-    };
-    expect(getRelevantDate(issue)).toBe('2026-03-30T10:00:00Z');
-  });
-});
-
 describe('computeMetrics', () => {
-  it('computes percentages for "month" time window', () => {
+  it('computes created percentage for "month" time window', () => {
     const issues = [
       makeIssue(5, 'created'),  // within month
       makeIssue(10, 'both'),    // within month
@@ -68,8 +29,6 @@ describe('computeMetrics', () => {
 
     // Current: 3 issues, 2 with created (created + both) = 67%
     expect(result.createdPct).toBe(67);
-    // Current: 3 issues, 1 with revised (both) = 33%
-    expect(result.revisedPct).toBe(33);
     expect(result.windowTotal).toBe(3);
     expect(result.totalRFEs).toBe(5);
   });
@@ -85,7 +44,6 @@ describe('computeMetrics', () => {
 
     expect(result.windowTotal).toBe(3);
     expect(result.createdPct).toBe(33);
-    expect(result.revisedPct).toBe(33);
   });
 
   it('computes "3months" time window', () => {
@@ -160,7 +118,7 @@ describe('computeMetrics', () => {
     const result = computeMetrics([], 'month', { trendThresholdPp: 2 });
 
     expect(result.createdPct).toBe(0);
-    expect(result.revisedPct).toBe(0);
+    expect(result.revisedCount).toBe(0);
     expect(result.windowTotal).toBe(0);
     expect(result.totalRFEs).toBe(0);
     expect(result.trend).toBe('stable');
@@ -175,7 +133,6 @@ describe('computeMetrics', () => {
     const result = computeMetrics(issues, 'month', { trendThresholdPp: 2 });
 
     expect(result.createdPct).toBe(100);
-    expect(result.revisedPct).toBe(100);
   });
 
   it('uses default threshold of 2 when config is null', () => {
@@ -183,8 +140,8 @@ describe('computeMetrics', () => {
     expect(result.trend).toBe('stable');
   });
 
-  it('includes old issue in window when label was recently added', () => {
-    // Issue created 60 days ago, but label added 5 days ago
+  it('windows issues by created date, not label date', () => {
+    // Issue created 60 days ago, label added 5 days ago — should NOT be in the month window
     const labelDate = new Date();
     labelDate.setDate(labelDate.getDate() - 5);
     const issues = [
@@ -194,28 +151,51 @@ describe('computeMetrics', () => {
 
     const result = computeMetrics(issues, 'month', { trendThresholdPp: 2 });
 
-    // Both issues should be in the window (label date pulls old issue in)
-    expect(result.windowTotal).toBe(2);
-    expect(result.createdPct).toBe(50);
-    // Percentage must be <= 100%
-    expect(result.createdPct).toBeLessThanOrEqual(100);
+    // Only the recently-created issue should be in the window
+    expect(result.windowTotal).toBe(1);
+    expect(result.createdPct).toBe(0);
   });
 
-  it('old cached data without label date fields falls back to created', () => {
-    const created = new Date();
-    created.setDate(created.getDate() - 5);
-    const issues = [{
-      key: 'RFE-old',
-      summary: 'Old cached',
-      status: 'New',
-      created: created.toISOString(),
-      aiInvolvement: 'created'
-      // No createdLabelDate or revisedLabelDate fields
-    }];
+  it('counts revisions by revisedLabelDate within the window', () => {
+    const recentLabel = new Date();
+    recentLabel.setDate(recentLabel.getDate() - 3);
+    const issues = [
+      // Old issue revised recently — should count as a revision in this window
+      makeIssue(60, 'revised', { revisedLabelDate: recentLabel.toISOString() }),
+      // Recent issue revised recently
+      makeIssue(5, 'both', { revisedLabelDate: recentLabel.toISOString() }),
+      // Recent issue, no revision
+      makeIssue(5, 'none'),
+    ];
 
     const result = computeMetrics(issues, 'month', { trendThresholdPp: 2 });
-    expect(result.windowTotal).toBe(1);
-    expect(result.createdPct).toBe(100);
+
+    expect(result.revisedCount).toBe(2);
+    // windowTotal only counts issues created in the window
+    expect(result.windowTotal).toBe(2);
+  });
+
+  it('falls back to created date when revisedLabelDate is missing', () => {
+    const issues = [
+      makeIssue(5, 'revised'), // no revisedLabelDate, falls back to created (5 days ago)
+    ];
+
+    const result = computeMetrics(issues, 'month', { trendThresholdPp: 2 });
+
+    expect(result.revisedCount).toBe(1);
+  });
+
+  it('returns priorRevisedCount for the prior window', () => {
+    const priorLabel = new Date();
+    priorLabel.setDate(priorLabel.getDate() - 35);
+    const issues = [
+      makeIssue(60, 'revised', { revisedLabelDate: priorLabel.toISOString() }),
+    ];
+
+    const result = computeMetrics(issues, 'month', { trendThresholdPp: 2 });
+
+    expect(result.revisedCount).toBe(0);
+    expect(result.priorRevisedCount).toBe(1);
   });
 });
 
@@ -226,7 +206,7 @@ describe('buildTrendData', () => {
     expect(buildTrendData([], '3months')).toHaveLength(13);
   });
 
-  it('buckets issues by week', () => {
+  it('buckets issues by week using created date', () => {
     const issues = [
       makeIssue(1, 'created'),
       makeIssue(2, 'both'),
@@ -241,7 +221,7 @@ describe('buildTrendData', () => {
     expect(lastPoint.date).toBeTruthy();
   });
 
-  it('computes per-week percentages correctly', () => {
+  it('computes per-week created percentages correctly', () => {
     // All issues in the same recent week
     const issues = [
       makeIssue(1, 'created'),
@@ -263,13 +243,13 @@ describe('buildTrendData', () => {
     const points = buildTrendData([], 'week');
     for (const p of points) {
       expect(p.createdPct).toBe(0);
-      expect(p.revisedPct).toBe(0);
+      expect(p.revisedCount).toBe(0);
       expect(p.total).toBe(0);
     }
   });
 
-  it('counts label-added issues in the correct week bucket', () => {
-    // Issue created 60 days ago, label added 3 days ago → should appear in recent week
+  it('buckets revised count by revisedLabelDate', () => {
+    // Issue created 60 days ago, label added 3 days ago → revised count in recent week
     const labelDate = new Date();
     labelDate.setDate(labelDate.getDate() - 3);
     const issues = [
@@ -278,9 +258,9 @@ describe('buildTrendData', () => {
 
     const points = buildTrendData(issues, 'month');
     const lastPoint = points[points.length - 1];
-    // The issue should be bucketed in the most recent week (by label date, not created)
-    expect(lastPoint.total).toBe(1);
-    expect(lastPoint.revisedPct).toBe(100);
+    expect(lastPoint.revisedCount).toBe(1);
+    // Total (created-based) should NOT include this old issue
+    expect(lastPoint.total).toBe(0);
   });
 });
 

@@ -1,25 +1,11 @@
 <template>
   <div>
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
-      <div>
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Portfolio</h2>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Organizations and projects your team is tracking</p>
-      </div>
-      <div class="flex items-center gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
-        <button
-          v-for="opt in periodOptions"
-          :key="opt.value"
-          @click="selectedDays = opt.value"
-          class="px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200"
-          :class="selectedDays === opt.value
-            ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100 shadow-sm'
-            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'"
-        >
-          {{ opt.label }}
-        </button>
-      </div>
-    </div>
+    <StickyPageHeader
+      v-model="selectedDays"
+      title="Portfolio"
+      subtitle="Organizations and projects your team is tracking"
+      :loading="loading"
+    />
 
     <!-- Loading -->
     <div v-if="loading">
@@ -262,6 +248,14 @@
                 >
                   <td class="px-6 py-4">
                     <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ org.name }}</span>
+                  </td>
+                  <td class="px-6 py-4">
+                    <span
+                      :class="getEngagementStatus(org.leadershipCount || 0, org.maintainerCount || 0, org.contributionCount || 0).classes"
+                      class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap border"
+                    >
+                      {{ getEngagementStatus(org.leadershipCount || 0, org.maintainerCount || 0, org.contributionCount || 0).label }}
+                    </span>
                   </td>
                   <td class="px-6 py-4 text-right">
                     <span class="text-sm font-bold text-gray-900 dark:text-gray-100 tabular-nums">{{ (org.contributionCount || 0).toLocaleString() }}</span>
@@ -507,6 +501,8 @@ import { useAuth } from '@shared/client/composables/useAuth'
 import OrgActivityCard from '../components/OrgActivityCard.vue'
 import AddProjectModal from '../components/AddProjectModal.vue'
 import { OrgCardSkeleton, StatCardSkeleton, TableRowSkeleton } from '../components/SkeletonLoaders.vue'
+import StickyPageHeader from '../components/StickyPageHeader.vue'
+import { getEngagementStatus } from '../composables/useStrategicClassification.js'
 
 const nav = inject('moduleNav')
 const { isAdmin } = useAuth()
@@ -514,22 +510,17 @@ const showAddProject = ref(false)
 
 const MODULE_API = '/modules/upstream-pulse'
 
-const periodOptions = [
-  { label: '30d', value: '30' },
-  { label: '60d', value: '60' },
-  { label: '90d', value: '90' },
-  { label: 'All', value: '0' },
-]
-
 const orgSortOptions = [
   { label: 'Contributions', value: 'contributionCount' },
   { label: 'Team Share', value: 'teamSharePercent' },
   { label: 'Active Members', value: 'activeTeamMembers' },
+  { label: 'Strategic Importance', value: 'strategicImportance' },
   { label: 'Name', value: 'name' },
 ]
 
 const orgTableColumns = [
   { label: 'Organization', field: 'name', align: 'left' },
+  { label: 'Engagement Status', field: 'engagementStatus', align: 'left' },
   { label: 'Contributions', field: 'contributionCount', align: 'right' },
   { label: 'Team Share', field: 'teamSharePercent', align: 'right' },
   { label: 'Members', field: 'activeTeamMembers', align: 'right' },
@@ -592,7 +583,7 @@ watch(searchInput, (val) => {
 watch(orgPageSize, () => { orgCurrentPage.value = 1 })
 watch(projectPageSize, () => { projectCurrentPage.value = 1 })
 watch(orgSortField, (field) => {
-  orgSortDirection.value = field === 'name' ? 'asc' : 'desc'
+  orgSortDirection.value = (field === 'name') ? 'asc' : 'desc'
   orgCurrentPage.value = 1
 })
 
@@ -605,7 +596,7 @@ function handleOrgTableSort(field) {
     orgSortDirection.value = orgSortDirection.value === 'asc' ? 'desc' : 'asc'
   } else {
     orgSortField.value = field
-    orgSortDirection.value = field === 'name' ? 'asc' : 'desc'
+    orgSortDirection.value = (field === 'name') ? 'asc' : 'desc'
   }
   orgCurrentPage.value = 1
 }
@@ -634,6 +625,31 @@ const sortedOrgsList = computed(() => {
     const field = orgSortField.value
     if (field === 'name') {
       const cmp = (a.name || '').localeCompare(b.name || '')
+      return orgSortDirection.value === 'asc' ? cmp : -cmp
+    }
+    if (field === 'engagementStatus') {
+      const statusOrder = {
+        'Established Leader': 4,
+        'Core Contributor': 3,
+        'Active': 2,
+        'New Entrant': 1
+      }
+      const aStatus = getEngagementStatus(a.leadershipCount || 0, a.maintainerCount || 0, a.contributionCount || 0).label
+      const bStatus = getEngagementStatus(b.leadershipCount || 0, b.maintainerCount || 0, b.contributionCount || 0).label
+      const aVal = statusOrder[aStatus] || 0
+      const bVal = statusOrder[bStatus] || 0
+      const cmp = aVal - bVal
+      return orgSortDirection.value === 'asc' ? cmp : -cmp
+    }
+    if (field === 'strategicImportance') {
+      const importanceOrder = {
+        increasing_leadership: 6, increasing_participation: 5,
+        sustaining_leadership: 4, sustaining_participation: 3,
+        evaluating_leadership: 2, evaluating_participation: 1,
+      }
+      const aVal = Math.max(importanceOrder[a.strategicLeadership] || 0, importanceOrder[a.strategicParticipation] || 0)
+      const bVal = Math.max(importanceOrder[b.strategicLeadership] || 0, importanceOrder[b.strategicParticipation] || 0)
+      const cmp = aVal - bVal
       return orgSortDirection.value === 'asc' ? cmp : -cmp
     }
     const cmp = (a[field] || 0) - (b[field] || 0)

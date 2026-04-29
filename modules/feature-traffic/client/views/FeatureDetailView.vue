@@ -34,14 +34,15 @@ function renderAdf(node) {
 
   switch (node.type) {
     case 'doc': return children
-    case 'paragraph': return `<p class="mb-2 last:mb-0">${children || '&nbsp;'}</p>`
+    case 'paragraph': return `<p class="mb-1 last:mb-0">${children || '&nbsp;'}</p>`
     case 'heading': {
       const level = Math.min(6, Math.max(1, Number(node.attrs?.level) || 3))
       const cls = level <= 2 ? 'text-base font-semibold mb-1' : 'text-sm font-semibold mb-1'
       return `<h${level} class="${cls}">${children}</h${level}>`
     }
-    case 'bulletList': return `<ul class="list-disc list-inside mb-2 space-y-0.5">${children}</ul>`
-    case 'listItem': return `<li>${children}</li>`
+    // NOTE: list-inside + block children (e.g. <p>) can render the bullet on its own line.
+    case 'bulletList': return `<ul class="list-disc list-outside pl-5 mb-2 space-y-0.5">${children}</ul>`
+    case 'listItem': return `<li class="[&>p]:inline [&>p]:m-0">${children}</li>`
     case 'hardBreak': return '<br/>'
     case 'emoji': return escHtml(node.attrs?.text || node.attrs?.shortName || '')
     case 'mention': return `<span class="text-primary-600 dark:text-blue-400 font-medium">@${escHtml(node.attrs?.text || node.attrs?.id || '')}</span>`
@@ -76,6 +77,8 @@ function renderStatusNotes(notes) {
   if (typeof notes === 'object' && notes.type === 'doc') return renderAdf(notes)
   return escHtml(String(notes))
 }
+
+const ownerStatusColor = computed(() => feature.value?.ownerStatusColor || null)
 
 const featureKey = computed(() => nav.params.value.key)
 
@@ -157,18 +160,21 @@ onMounted(() => {
       <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
         <div class="flex items-start justify-between gap-4">
           <div class="flex-1">
-            <div class="flex items-center gap-3 mb-2">
+            <div class="flex items-center gap-3 mb-2 flex-wrap">
               <a
                 :href="JIRA_BASE + feature.key"
                 class="text-primary-600 dark:text-blue-400 hover:underline font-mono text-sm"
                 target="_blank"
               >{{ feature.key }}</a>
               <StatusBadge :status="feature.status" />
-              <StatusBadge :health="feature.metrics?.health">{{ feature.metrics?.health }}</StatusBadge>
+              <StatusBadge v-if="ownerStatusColor" :health="ownerStatusColor">{{ ownerStatusColor }}</StatusBadge>
+              <StatusBadge v-else status="Status color missing" />
             </div>
             <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ feature.summary }}</h1>
             <div class="flex flex-wrap gap-3 mt-3 text-xs text-gray-500 dark:text-gray-400">
               <span v-if="feature.assignee">Owner: <span class="text-gray-700 dark:text-gray-300">{{ feature.assignee.displayName }}</span></span>
+              <span v-if="feature.pm">PM: <span class="text-gray-700 dark:text-gray-300">{{ feature.pm.displayName }}</span></span>
+              <span v-if="feature.releaseType">Release type: <span class="text-gray-700 dark:text-gray-300">{{ feature.releaseType }}</span></span>
               <span>Created: {{ formatDate(feature.created) }}</span>
               <span>Updated: {{ formatDate(feature.updated) }}</span>
               <span
@@ -292,29 +298,6 @@ onMounted(() => {
         <EpicBreakdown :epics="feature.epics || []" />
       </div>
 
-      <!-- Issue links -->
-      <div v-if="(feature.issueLinks || []).length > 0">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Related Issues</h2>
-        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div class="space-y-2">
-            <div
-              v-for="(link, i) in feature.issueLinks"
-              :key="i"
-              class="flex items-center gap-2 text-sm"
-            >
-              <span class="text-gray-400 dark:text-gray-500 text-xs min-w-[80px]">{{ link.type }}</span>
-              <a
-                :href="JIRA_BASE + link.linkedKey"
-                class="text-primary-600 dark:text-blue-400 hover:underline font-mono text-xs"
-                target="_blank"
-              >{{ link.linkedKey }}</a>
-              <span class="text-gray-700 dark:text-gray-300 truncate">{{ link.linkedSummary }}</span>
-              <StatusBadge v-if="link.linkedStatus" :status="link.linkedStatus" class="ml-auto" />
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- Repo breakdown -->
       <div v-if="(feature.topology?.repos || []).length > 0">
         <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Repository Breakdown</h2>
@@ -323,7 +306,6 @@ onMounted(() => {
             <thead>
               <tr class="border-b border-gray-200 dark:border-gray-700">
                 <th class="px-4 py-2 text-left text-gray-500 dark:text-gray-400">Repository</th>
-                <th class="px-4 py-2 text-left text-gray-500 dark:text-gray-400">Issues</th>
                 <th class="px-4 py-2 text-left text-gray-500 dark:text-gray-400">Components</th>
               </tr>
             </thead>
@@ -340,7 +322,6 @@ onMounted(() => {
                     target="_blank"
                   >{{ repo.url }}</a>
                 </td>
-                <td class="px-4 py-2 text-gray-700 dark:text-gray-300">{{ repo.issueCount }}</td>
                 <td class="px-4 py-2">
                   <span
                     v-for="c in (repo.components || [])"

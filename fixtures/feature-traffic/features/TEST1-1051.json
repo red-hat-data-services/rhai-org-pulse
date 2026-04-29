@@ -64,6 +64,10 @@
       "linkedStatus": "New"
     }
   ],
+  "targetVersions": ["rhoai-3.5"],
+  "pm": null,
+  "architect": null,
+  "parentKey": null,
   "epics": [
     {
       "key": "TEST2-50657",

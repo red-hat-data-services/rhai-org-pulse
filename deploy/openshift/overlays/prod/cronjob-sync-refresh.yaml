@@ -132,12 +132,12 @@ spec:
                     echo "WARNING: AI Impact refresh timed out (non-fatal, continuing)"
                   fi
 
-                  # Step 4: Trigger Allocation Tracker refresh
+                  # Step 4: Trigger Allocation Tracker refresh (all projects)
                   echo "=== Triggering Allocation Tracker refresh ==="
                   curl -sf -X POST "$BACKEND/api/modules/allocation-tracker/refresh" \
                     -H "Content-Type: application/json" \
                     -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" \
-                    -d '{"projectKey":"RHOAIENG"}' || echo "Allocation Tracker refresh failed (non-fatal)"
+                    -d '{}' || echo "Allocation Tracker refresh failed (non-fatal)"
                   sleep 5
                   ATTEMPTS=0
                   MAX_ATTEMPTS=60

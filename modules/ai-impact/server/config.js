@@ -7,7 +7,9 @@ const DEFAULT_CONFIG = {
   linkTypeName: 'Cloners',
   excludedStatuses: ['Closed'],
   lookbackMonths: 12,
-  trendThresholdPp: 2
+  trendThresholdPp: 2,
+  autofixProjects: ['AIPCC', 'RHOAIENG'],
+  autofixCreatedAfter: null
 };
 
 // Characters that could enable JQL injection when interpolated into queries
@@ -53,6 +55,16 @@ function saveConfig(writeToStorage, config) {
     }
   }
 
+  // autofixCreatedAfter — nullable string, validated only when non-empty
+  if (config.autofixCreatedAfter !== undefined) {
+    if (config.autofixCreatedAfter === null || config.autofixCreatedAfter === '') {
+      merged.autofixCreatedAfter = null;
+    } else {
+      validateJqlSafeString(config.autofixCreatedAfter, 'autofixCreatedAfter');
+      merged.autofixCreatedAfter = config.autofixCreatedAfter;
+    }
+  }
+
   // excludedStatuses — must be array of JQL-safe strings
   if (config.excludedStatuses !== undefined) {
     if (!Array.isArray(config.excludedStatuses)) {
@@ -80,6 +92,17 @@ function saveConfig(writeToStorage, config) {
       throw new Error('trendThresholdPp must be a number between 0 and 50');
     }
     merged.trendThresholdPp = val;
+  }
+
+  // autofixProjects — must be array of JQL-safe strings
+  if (config.autofixProjects !== undefined) {
+    if (!Array.isArray(config.autofixProjects)) {
+      throw new Error('autofixProjects must be an array');
+    }
+    for (const p of config.autofixProjects) {
+      validateJqlSafeString(p, 'autofixProjects entry');
+    }
+    merged.autofixProjects = config.autofixProjects;
   }
 
   writeToStorage('ai-impact/config.json', merged);

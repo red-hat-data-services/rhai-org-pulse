@@ -1,16 +1,21 @@
 <template>
   <div class="container mx-auto px-6 py-6">
+    <!-- Metric toggle -->
+    <div class="flex items-center justify-end mb-4">
+      <MetricToggle :modelValue="metricMode" @update:modelValue="$emit('update:metricMode', $event)" />
+    </div>
+
     <!-- Org-wide allocation bar -->
-    <div v-if="orgSummary && orgSummary.totalPoints > 0" class="mb-6">
+    <div v-if="orgSummary && orgTotal > 0" class="mb-6">
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <div class="flex items-center justify-between mb-2">
           <h2 class="text-lg font-semibold text-gray-900">{{ orgName }} — Organization Overview</h2>
           <span class="text-sm text-gray-500">
-            {{ orgSummary.totalPoints }} pts across {{ orgSummary.boardCount }} {{ orgSummary.boardCount === 1 ? 'board' : 'boards' }}
+            {{ orgTotal }} {{ unitLabel }} across {{ orgSummary.boardCount }} {{ orgSummary.boardCount === 1 ? 'board' : 'boards' }}
           </span>
         </div>
         <p class="text-xs text-gray-400 mb-2">Aggregated from each board's currently active sprint</p>
-        <AllocationBar :buckets="orgSummary.buckets" :totalPoints="orgSummary.totalPoints" />
+        <AllocationBar :buckets="orgSummary.buckets" :totalPoints="orgSummary.totalPoints" :totalCount="orgSummary.totalCount || 0" :metricMode="metricMode" />
       </div>
     </div>
 
@@ -53,6 +58,7 @@
         :key="project.key"
         :project="project"
         :summary="projectSummaries[project.key] || null"
+        :metricMode="metricMode"
         @select-project="$emit('select-project', $event)"
       />
     </div>
@@ -60,10 +66,12 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import AllocationBar from './AllocationBar.vue'
+import MetricToggle from './MetricToggle.vue'
 import ProjectCard from './ProjectCard.vue'
 
-defineProps({
+const props = defineProps({
   orgName: {
     type: String,
     default: 'AI Engineering'
@@ -79,8 +87,20 @@ defineProps({
   projectSummaries: {
     type: Object,
     default: () => ({})
+  },
+  metricMode: {
+    type: String,
+    default: 'points'
   }
 })
 
-defineEmits(['select-project'])
+defineEmits(['select-project', 'update:metricMode'])
+
+const orgTotal = computed(() => {
+  if (!props.orgSummary) return 0
+  if (props.metricMode === 'counts') return props.orgSummary.totalCount || 0
+  return props.orgSummary.totalPoints || 0
+})
+
+const unitLabel = computed(() => props.metricMode === 'counts' ? 'issues' : 'pts')
 </script>
