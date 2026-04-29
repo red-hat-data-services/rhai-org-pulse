@@ -956,24 +956,6 @@ async function runFullAnalysis(storage, config) {
     }
   }
 
-  // Enrich Feature issues with health scoring (blocker/status/sentiment analysis)
-  const { enrichFeaturesWithHealth } = require('./feature-health')
-  const featureEntries = []
-  for (const release of result.releases) {
-    for (const issue of release.issues) {
-      if (issue.issueType === 'Feature') {
-        featureEntries.push({ issue, dueDate: release.dueDate })
-      }
-    }
-  }
-  if (featureEntries.length > 0) {
-    try {
-      await enrichFeaturesWithHealth(jiraRequest, fetchAllJqlResults, featureEntries)
-    } catch (err) {
-      console.warn(`[release-analysis] Feature health enrichment failed: ${err.message}`)
-    }
-  }
-
   if (jiraWarning) result.warning = jiraWarning
 
   const d = result.fixVersionDiagnostics
