@@ -502,7 +502,7 @@ function registerIpaRegistryRoutes(router, context) {
         storage.writeToStorage(REGISTRY_KEY, reg);
 
         // Audit log
-        var actorEmail = req.headers['x-forwarded-email'] || 'unknown';
+        var actorEmail = req.auditActor || req.userEmail || 'unknown';
         appendAuditEntry(storage, {
           action: 'person.ldap-import',
           actor: actorEmail,
