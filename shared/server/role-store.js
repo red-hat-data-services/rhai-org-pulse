@@ -10,6 +10,11 @@ const ALLOWLIST_FILE = 'allowlist.json';
 const VALID_ROLES = ['admin', 'team-admin'];
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 
+/** Guard against prototype pollution via user-controlled object keys. */
+function isSafeKey(key) {
+  return typeof key === 'string' && !['__proto__', 'constructor', 'prototype'].includes(key);
+}
+
 function createRoleStore(readFromStorage, writeToStorage) {
   function readRoles() {
     return readFromStorage(ROLES_FILE) || { version: 1, assignments: {} };
@@ -21,8 +26,10 @@ function createRoleStore(readFromStorage, writeToStorage) {
 
   function getRoles(email) {
     if (!email) return [];
+    const key = email.toLowerCase();
+    if (!isSafeKey(key)) return [];
     const data = readRoles();
-    const entry = data.assignments[email.toLowerCase()];
+    const entry = data.assignments[key];
     return entry ? entry.roles : [];
   }
 
@@ -39,6 +46,7 @@ function createRoleStore(readFromStorage, writeToStorage) {
     }
 
     const normalized = email.trim().toLowerCase();
+    if (!isSafeKey(normalized)) throw new Error('Invalid email');
     const data = readRoles();
 
     if (!data.assignments[normalized]) {
@@ -78,6 +86,7 @@ function createRoleStore(readFromStorage, writeToStorage) {
     }
 
     const normalized = email.trim().toLowerCase();
+    if (!isSafeKey(normalized)) throw new Error('Invalid email');
     const data = readRoles();
     const entry = data.assignments[normalized];
 
@@ -140,6 +149,7 @@ function createRoleStore(readFromStorage, writeToStorage) {
     const now = new Date().toISOString();
     for (const email of allowlist.emails) {
       const normalized = email.trim().toLowerCase();
+      if (!isSafeKey(normalized)) continue;
       rolesData.assignments[normalized] = {
         roles: ['admin'],
         assignedBy: 'migration',
