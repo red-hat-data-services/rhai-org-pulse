@@ -80,11 +80,21 @@ if (!props.multiValue && props.modelValue) {
   searchText.value = props.modelValue
 }
 
+function onFocus() {
+  isOpen.value = true
+  if (!props.multiValue) {
+    searchText.value = ''
+  }
+}
+
 const rootEl = ref(null)
 
 function onClickOutside(e) {
   if (rootEl.value && !rootEl.value.contains(e.target)) {
     isOpen.value = false
+    if (!props.multiValue) {
+      searchText.value = props.modelValue || ''
+    }
   }
 }
 
@@ -113,9 +123,10 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onClickOutside))
       aria-autocomplete="list"
       :aria-activedescendant="highlightedIndex >= 0 ? `ca-opt-${highlightedIndex}` : undefined"
       class="w-full rounded border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 text-sm"
-      :placeholder="multiValue ? 'Type to add...' : placeholder"
+      :placeholder="multiValue ? 'Type to add...' : (modelValue || placeholder)"
       @input="onInput"
-      @focus="isOpen = true"
+      @focus="onFocus"
+      @click="onFocus"
       @keydown="onKeydown"
     >
     <ul
