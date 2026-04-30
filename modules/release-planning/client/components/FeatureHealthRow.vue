@@ -193,8 +193,8 @@ var flagSeverityClass = {
       </div>
     </td>
     <!-- RICE -->
-    <td class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-center" @click.stop>
-      <RiceScoreDisplay :rice="feature.rice" :jiraUrl="featureUrl" />
+    <td class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-center">
+      <RiceScoreDisplay :rice="feature.rice" />
     </td>
     <!-- Component -->
     <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600">{{ feature.components || '-' }}</td>

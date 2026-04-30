@@ -12,10 +12,7 @@ const DEFAULT_CONFIG = {
     targetVersion: 'customfield_10855',
     productManager: 'customfield_10469',
     releaseType: 'customfield_10851',
-    riceReach: '',
-    riceImpact: '',
-    riceConfidence: '',
-    riceEffort: ''
+    riceScoreField: ''
   },
   healthConfig: {
     enableRice: false,
@@ -37,11 +34,26 @@ function releaseFilePath(version) {
   return 'release-planning/releases/' + version + '.json'
 }
 
+/**
+ * Auto-detect old 4-field RICE config and disable RICE scoring
+ * until the admin configures the new single riceScoreField.
+ * @param {object} config
+ */
+function migrateRiceConfig(config) {
+  var ids = config.customFieldIds || {}
+  var hasOldKeys = ids.riceReach || ids.riceImpact || ids.riceConfidence || ids.riceEffort
+  if (hasOldKeys && !ids.riceScoreField) {
+    console.warn('[release-planning] Old 4-field RICE config detected. RICE scoring disabled until riceScoreField is configured via Settings.')
+    config.healthConfig = config.healthConfig || {}
+    config.healthConfig.enableRice = false
+  }
+}
+
 function getConfig(readFromStorage) {
   const stored = readFromStorage('release-planning/config.json')
   if (stored && typeof stored === 'object') {
     const storedHealth = stored.healthConfig || {}
-    return {
+    var config = {
       ...DEFAULT_CONFIG,
       ...stored,
       fieldMapping: { ...DEFAULT_CONFIG.fieldMapping, ...(stored.fieldMapping || {}) },
@@ -55,6 +67,8 @@ function getConfig(readFromStorage) {
         }
       }
     }
+    migrateRiceConfig(config)
+    return config
   }
   return { ...DEFAULT_CONFIG }
 }
@@ -347,6 +361,7 @@ function renumberPriorities(bigRocks) {
 module.exports = {
   DEFAULT_CONFIG,
   getConfig,
+  migrateRiceConfig,
   loadReleaseData,
   loadBigRocks,
   loadFieldMapping,

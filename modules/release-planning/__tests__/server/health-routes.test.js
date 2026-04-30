@@ -795,32 +795,47 @@ describe('health routes', function() {
   // ─── POST /releases/health-admin/rice-test ───
 
   describe('POST /releases/health-admin/rice-test', function() {
-    it('returns 400 when no RICE field IDs are configured', async function() {
+    it('returns 400 when no RICE field ID is configured', async function() {
       var res = await callRoute(router._routes, 'POST', '/releases/health-admin/rice-test', makeReq())
       expect(res._status).toBe(400)
-      expect(res._json.error).toContain('No RICE field IDs configured')
+      expect(res._json.error).toContain('No RICE field ID configured')
     })
 
-    it('validates configured field IDs against Jira field list', async function() {
+    it('validates configured riceScoreField against Jira field list', async function() {
       storage._store['release-planning/config.json'] = {
-        customFieldIds: { riceReach: 'customfield_100', riceImpact: 'customfield_101', riceConfidence: 'customfield_102', riceEffort: 'customfield_103' },
+        customFieldIds: { riceScoreField: 'customfield_10864' },
         healthConfig: { enableRice: true }
       }
       storage._store['release-planning/jira-field-list-cache.json'] = {
         fetchedAt: new Date().toISOString(),
         fields: [
-          { id: 'customfield_100', name: 'Reach Score', custom: true },
-          { id: 'customfield_102', name: 'Confidence Score', custom: true }
+          { id: 'customfield_10864', name: 'RICE Score', custom: true }
         ]
       }
       var res = await callRoute(router._routes, 'POST', '/releases/health-admin/rice-test', makeReq())
       expect(res._status).toBe(200)
-      expect(res._json.validCount).toBe(2)
-      expect(res._json.totalCount).toBe(4)
-      expect(res._json.results.riceReach.found).toBe(true)
-      expect(res._json.results.riceReach.name).toBe('Reach Score')
-      expect(res._json.results.riceImpact.found).toBe(false)
-      expect(res._json.results.riceConfidence.found).toBe(true)
+      expect(res._json.validCount).toBe(1)
+      expect(res._json.totalCount).toBe(1)
+      expect(res._json.results.riceScore.found).toBe(true)
+      expect(res._json.results.riceScore.name).toBe('RICE Score')
+    })
+
+    it('reports not found when riceScoreField is not in Jira', async function() {
+      storage._store['release-planning/config.json'] = {
+        customFieldIds: { riceScoreField: 'customfield_99999' },
+        healthConfig: { enableRice: true }
+      }
+      storage._store['release-planning/jira-field-list-cache.json'] = {
+        fetchedAt: new Date().toISOString(),
+        fields: [
+          { id: 'customfield_10864', name: 'RICE Score', custom: true }
+        ]
+      }
+      var res = await callRoute(router._routes, 'POST', '/releases/health-admin/rice-test', makeReq())
+      expect(res._status).toBe(200)
+      expect(res._json.validCount).toBe(0)
+      expect(res._json.totalCount).toBe(1)
+      expect(res._json.results.riceScore.found).toBe(false)
     })
   })
 
@@ -836,28 +851,28 @@ describe('health routes', function() {
 
     it('returns saved config', function() {
       storage._store['release-planning/config.json'] = {
-        customFieldIds: { riceReach: 'cf_100' },
+        customFieldIds: { riceScoreField: 'customfield_10864' },
         healthConfig: { enableRice: true }
       }
       var res = callRoute(router._routes, 'GET', '/releases/health-admin/config', makeReq())
       expect(res._status).toBe(200)
       expect(res._json.enableRice).toBe(true)
+      expect(res._json.customFieldIds.riceScoreField).toBe('customfield_10864')
     })
   })
 
   // ─── PUT /releases/health-admin/config ───
 
   describe('PUT /releases/health-admin/config', function() {
-    it('saves RICE field IDs', function() {
+    it('saves riceScoreField', function() {
       var res = callRoute(router._routes, 'PUT', '/releases/health-admin/config',
-        makeReq({ body: { riceFieldIds: { riceReach: 'cf_100', riceImpact: 'cf_101' } } }))
+        makeReq({ body: { riceScoreField: 'customfield_10864' } }))
       expect(res._status).toBe(200)
       expect(res._json.saved).toBe(true)
-      expect(res._json.customFieldIds.riceReach).toBe('cf_100')
+      expect(res._json.customFieldIds.riceScoreField).toBe('customfield_10864')
 
       var config = storage._store['release-planning/config.json']
-      expect(config.customFieldIds.riceReach).toBe('cf_100')
-      expect(config.customFieldIds.riceImpact).toBe('cf_101')
+      expect(config.customFieldIds.riceScoreField).toBe('customfield_10864')
     })
 
     it('saves enableRice flag', function() {
@@ -870,15 +885,33 @@ describe('health routes', function() {
       expect(config.healthConfig.enableRice).toBe(true)
     })
 
-    it('preserves existing field IDs when updating enableRice only', function() {
+    it('rejects invalid riceScoreField format', function() {
+      var res = callRoute(router._routes, 'PUT', '/releases/health-admin/config',
+        makeReq({ body: { riceScoreField: 'invalid field; DROP TABLE' } }))
+      expect(res._status).toBe(400)
+      expect(res._json.error).toMatch(/Invalid riceScoreField/)
+    })
+
+    it('allows empty riceScoreField to clear config', function() {
       storage._store['release-planning/config.json'] = {
-        customFieldIds: { riceReach: 'cf_100' },
+        customFieldIds: { riceScoreField: 'customfield_10864' },
+        healthConfig: {}
+      }
+      var res = callRoute(router._routes, 'PUT', '/releases/health-admin/config',
+        makeReq({ body: { riceScoreField: '' } }))
+      expect(res._status).toBe(200)
+      expect(res._json.customFieldIds.riceScoreField).toBe('')
+    })
+
+    it('preserves existing riceScoreField when updating enableRice only', function() {
+      storage._store['release-planning/config.json'] = {
+        customFieldIds: { riceScoreField: 'customfield_10864' },
         healthConfig: {}
       }
       callRoute(router._routes, 'PUT', '/releases/health-admin/config',
         makeReq({ body: { enableRice: true } }))
       var config = storage._store['release-planning/config.json']
-      expect(config.customFieldIds.riceReach).toBe('cf_100')
+      expect(config.customFieldIds.riceScoreField).toBe('customfield_10864')
       expect(config.healthConfig.enableRice).toBe(true)
     })
   })

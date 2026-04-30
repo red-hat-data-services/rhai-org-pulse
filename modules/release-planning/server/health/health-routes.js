@@ -841,13 +841,13 @@ function healthRoutes(router, context) {
   router.put('/releases/health-admin/config', requirePM, function(req, res) {
     var config = getConfig(readFromStorage)
 
-    if (req.body.riceFieldIds) {
-      var ids = req.body.riceFieldIds
+    if (req.body.riceScoreField !== undefined) {
+      var fieldVal = req.body.riceScoreField || ''
+      if (fieldVal && !/^[a-zA-Z0-9_]+$/.test(fieldVal)) {
+        return res.status(400).json({ error: 'Invalid riceScoreField: must contain only letters, digits, and underscores' })
+      }
       config.customFieldIds = Object.assign({}, config.customFieldIds, {
-        riceReach: ids.riceReach || config.customFieldIds.riceReach || '',
-        riceImpact: ids.riceImpact || config.customFieldIds.riceImpact || '',
-        riceConfidence: ids.riceConfidence || config.customFieldIds.riceConfidence || '',
-        riceEffort: ids.riceEffort || config.customFieldIds.riceEffort || ''
+        riceScoreField: fieldVal
       })
     }
 
@@ -866,10 +866,10 @@ function healthRoutes(router, context) {
   router.post('/releases/health-admin/rice-test', requirePM, async function(req, res) {
     var config = getConfig(readFromStorage)
     var ids = config.customFieldIds || {}
-    var fieldIds = [ids.riceReach, ids.riceImpact, ids.riceConfidence, ids.riceEffort].filter(Boolean)
+    var riceScoreField = ids.riceScoreField || ''
 
-    if (fieldIds.length === 0) {
-      return res.status(400).json({ error: 'No RICE field IDs configured. Save field IDs first.' })
+    if (!riceScoreField) {
+      return res.status(400).json({ error: 'No RICE field ID configured. Save the riceScoreField first.' })
     }
 
     try {
@@ -880,22 +880,15 @@ function healthRoutes(router, context) {
       }
 
       var results = {}
-      var RICE_KEYS = ['riceReach', 'riceImpact', 'riceConfidence', 'riceEffort']
-      var RICE_LABELS = ['Reach', 'Impact', 'Confidence', 'Effort']
       var validCount = 0
-      for (var j = 0; j < RICE_KEYS.length; j++) {
-        var fid = ids[RICE_KEYS[j]]
-        if (fid && fieldMap[fid]) {
-          results[RICE_KEYS[j]] = { id: fid, name: fieldMap[fid].name, label: RICE_LABELS[j], found: true }
-          validCount++
-        } else if (fid) {
-          results[RICE_KEYS[j]] = { id: fid, name: null, label: RICE_LABELS[j], found: false }
-        } else {
-          results[RICE_KEYS[j]] = { id: null, name: null, label: RICE_LABELS[j], found: false }
-        }
+      if (fieldMap[riceScoreField]) {
+        results.riceScore = { id: riceScoreField, name: fieldMap[riceScoreField].name, found: true }
+        validCount++
+      } else {
+        results.riceScore = { id: riceScoreField, name: null, found: false }
       }
 
-      res.json({ results: results, validCount: validCount, totalCount: 4 })
+      res.json({ results: results, validCount: validCount, totalCount: 1 })
     } catch (err) {
       console.error('[health] RICE field test failed:', err.message)
       res.status(500).json({ error: 'Failed to validate RICE fields: ' + err.message })

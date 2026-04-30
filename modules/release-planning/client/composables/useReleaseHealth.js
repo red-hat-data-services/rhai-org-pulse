@@ -124,11 +124,11 @@ export function useReleaseHealth() {
     return apiRequest(API_BASE + '/releases/health-admin/config')
   }
 
-  async function saveRiceConfig(fieldIds, enableRice) {
+  async function saveRiceConfig(riceScoreField, enableRice) {
     return apiRequest(API_BASE + '/releases/health-admin/config', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ riceFieldIds: fieldIds, enableRice: enableRice })
+      body: JSON.stringify({ riceScoreField: riceScoreField, enableRice: enableRice })
     })
   }
 

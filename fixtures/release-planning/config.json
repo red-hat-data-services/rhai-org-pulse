@@ -171,6 +171,7 @@
   "customFieldIds": {
     "targetVersion": "customfield_10855",
     "productManager": "customfield_10469",
-    "releaseType": "customfield_10851"
+    "releaseType": "customfield_10851",
+    "riceScoreField": ""
   }
 }
