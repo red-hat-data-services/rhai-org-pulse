@@ -9,6 +9,11 @@ const { appendAuditEntry } = require('./audit-log');
 const FIELD_DEFS_KEY = 'team-data/field-definitions.json';
 const REGISTRY_KEY = 'team-data/registry.json';
 
+/** Guard against prototype pollution via user-controlled object keys. */
+function isSafeKey(key) {
+  return typeof key === 'string' && !['__proto__', 'constructor', 'prototype'].includes(key);
+}
+
 function generateFieldId() {
   return 'field_' + crypto.randomBytes(3).toString('hex');
 }
@@ -79,6 +84,10 @@ function validateFieldValues(storage, scope, fieldValues, existingValues, { opti
   const errors = [];
 
   for (const [fieldId, rawValue] of Object.entries(fieldValues)) {
+    if (!isSafeKey(fieldId)) {
+      errors.push(`Invalid field key: ${fieldId}`);
+      continue;
+    }
     const fieldDef = byId[fieldId];
     if (!fieldDef) {
       errors.push(`Unknown field: ${fieldId}`);
@@ -263,6 +272,7 @@ function reorderFields(storage, scope, orderedIds, actorEmail) {
 
   // Assign order based on position in orderedIds
   for (let i = 0; i < orderedIds.length; i++) {
+    if (!isSafeKey(orderedIds[i])) continue;
     if (byId[orderedIds[i]]) {
       byId[orderedIds[i]].order = i;
     }
@@ -296,6 +306,9 @@ function updatePersonFields(storage, uid, fieldValues, actorEmail) {
   if (!person._appFields) person._appFields = {};
 
   for (const [fieldId, value] of Object.entries(fieldValues)) {
+    if (!isSafeKey(fieldId)) {
+      throw new Error(`Invalid field key: ${fieldId}`);
+    }
     const oldValue = person._appFields[fieldId] || null;
     person._appFields[fieldId] = value;
 

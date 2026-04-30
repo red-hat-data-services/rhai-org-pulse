@@ -9,6 +9,11 @@ const { appendAuditEntry } = require('./audit-log');
 const TEAMS_KEY = 'team-data/teams.json';
 const REGISTRY_KEY = 'team-data/registry.json';
 
+/** Guard against prototype pollution via user-controlled object keys. */
+function isSafeKey(key) {
+  return typeof key === 'string' && !['__proto__', 'constructor', 'prototype'].includes(key);
+}
+
 function generateTeamId(existingIds) {
   for (let i = 0; i < 10; i++) {
     const id = 'team_' + crypto.randomBytes(3).toString('hex');
@@ -45,6 +50,7 @@ function createTeam(storage, name, orgKey, actorEmail) {
     boards: []
   };
 
+  if (!isSafeKey(id)) throw new Error('Generated team ID is invalid');
   data.teams[id] = team;
   writeTeams(storage, data);
 
@@ -65,6 +71,7 @@ function createTeam(storage, name, orgKey, actorEmail) {
  * @returns {object} The updated team
  */
 function renameTeam(storage, teamId, newName, actorEmail) {
+  if (!isSafeKey(teamId)) return null;
   const data = readTeams(storage);
   const team = data.teams[teamId];
   if (!team) return null;
@@ -92,6 +99,7 @@ function renameTeam(storage, teamId, newName, actorEmail) {
  * Delete a team. Removes teamId from all person records.
  */
 function deleteTeam(storage, teamId, actorEmail) {
+  if (!isSafeKey(teamId)) return null;
   const data = readTeams(storage);
   const team = data.teams[teamId];
   if (!team) return null;
@@ -134,6 +142,8 @@ function deleteTeam(storage, teamId, actorEmail) {
  * Assign a person to a team.
  */
 function assignMember(storage, teamId, uid, actorEmail) {
+  if (!isSafeKey(teamId)) return { error: 'Invalid team ID' };
+  if (!isSafeKey(uid)) return { error: 'Invalid person UID' };
   const data = readTeams(storage);
   if (!data.teams[teamId]) return { error: 'Team not found' };
 
@@ -173,6 +183,7 @@ function assignMember(storage, teamId, uid, actorEmail) {
  * @returns {{ assigned: string[], skipped: string[] }}
  */
 function assignMembersBulk(storage, teamId, uids, actorEmail) {
+  if (!isSafeKey(teamId)) return { error: 'Invalid team ID' };
   const data = readTeams(storage);
   if (!data.teams[teamId]) return { error: 'Team not found' };
 
@@ -183,6 +194,7 @@ function assignMembersBulk(storage, teamId, uids, actorEmail) {
   const skipped = [];
 
   for (const uid of uids) {
+    if (!isSafeKey(uid)) { skipped.push(uid); continue; }
     const person = registry.people[uid];
     if (!person) { skipped.push(uid); continue; }
 
@@ -219,6 +231,8 @@ function assignMembersBulk(storage, teamId, uids, actorEmail) {
  * Unassign a person from a team.
  */
 function unassignMember(storage, teamId, uid, actorEmail) {
+  if (!isSafeKey(teamId)) return { error: 'Invalid team ID' };
+  if (!isSafeKey(uid)) return { error: 'Invalid person UID' };
   const data = readTeams(storage);
   if (!data.teams[teamId]) return { error: 'Team not found' };
 
@@ -298,6 +312,7 @@ function getUnassigned(storage, scope, actorUid, isAdmin, managerMap, registry) 
  * Update team-level field values.
  */
 function updateTeamFields(storage, teamId, fields, actorEmail) {
+  if (!isSafeKey(teamId)) return null;
   const data = readTeams(storage);
   const team = data.teams[teamId];
   if (!team) return null;
@@ -305,6 +320,9 @@ function updateTeamFields(storage, teamId, fields, actorEmail) {
   if (!team.metadata) team.metadata = {};
 
   for (const [fieldId, value] of Object.entries(fields)) {
+    if (!isSafeKey(fieldId)) {
+      throw new Error(`Invalid field key: ${fieldId}`);
+    }
     const oldValue = team.metadata[fieldId] || null;
     team.metadata[fieldId] = value;
 
@@ -341,6 +359,7 @@ function isValidBoardUrl(url) {
 }
 
 function updateTeamBoards(storage, teamId, boards, actorEmail) {
+  if (!isSafeKey(teamId)) return null;
   const data = readTeams(storage);
   const team = data.teams[teamId];
   if (!team) return null;
