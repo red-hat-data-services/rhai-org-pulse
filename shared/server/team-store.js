@@ -317,7 +317,7 @@ function updateTeamFields(storage, teamId, fields, actorEmail) {
   const team = data.teams[teamId];
   if (!team) return null;
 
-  if (!team.metadata) team.metadata = {};
+  if (!team.metadata) team.metadata = Object.create(null);
 
   for (const [fieldId, value] of Object.entries(fields)) {
     if (!isSafeKey(fieldId)) {
