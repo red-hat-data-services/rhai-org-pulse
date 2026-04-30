@@ -5,6 +5,7 @@ import { useDorChecklist } from '../composables/useDorChecklist'
 import { useReleases } from '../composables/useReleasePlanning'
 import { useAuth } from '@shared/client'
 import { passesPhaseFilter } from '../utils/phase-filter'
+import { exportHealthMarkdown, exportHealthCsv } from '../utils/health-export'
 import ReleaseSelector from '../components/ReleaseSelector.vue'
 import MilestoneTimeline from '../components/MilestoneTimeline.vue'
 import HealthFilterBar from '../components/HealthFilterBar.vue'
@@ -226,6 +227,44 @@ function clearFilters() {
   searchQuery.value = ''
 }
 
+// ─── Export menu ───
+
+var exportMenuOpen = ref(false)
+
+function toggleExportMenu() {
+  exportMenuOpen.value = !exportMenuOpen.value
+}
+
+function closeExportMenu() {
+  exportMenuOpen.value = false
+}
+
+function handleExportMarkdown() {
+  closeExportMenu()
+  exportHealthMarkdown({
+    version: selectedVersion.value,
+    phase: activePhase.value,
+    features: phasedFeatures.value,
+    milestones: milestones.value,
+    planningFreezes: planningFreezes.value,
+    cachedAt: healthData.value.cachedAt
+  })
+}
+
+function handleExportCsv() {
+  closeExportMenu()
+  exportHealthCsv({
+    version: selectedVersion.value,
+    phase: activePhase.value,
+    features: phasedFeatures.value,
+    cachedAt: healthData.value.cachedAt
+  })
+}
+
+function handleClickOutside() {
+  exportMenuOpen.value = false
+}
+
 // ─── Data refresh ───
 
 function startRefreshPolling() {
@@ -326,6 +365,7 @@ watch(selectedVersion, function(newVersion) {
 })
 
 onMounted(async function() {
+  document.addEventListener('click', handleClickOutside)
   await loadReleases()
   if (releases.value.length > 0) {
     selectedVersion.value = releases.value[0].version
@@ -333,6 +373,7 @@ onMounted(async function() {
 })
 
 onUnmounted(function() {
+  document.removeEventListener('click', handleClickOutside)
   stopRefreshPolling()
   cancelDorPending()
 })
@@ -447,6 +488,40 @@ onUnmounted(function() {
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'"
               >{{ phaseFeatureCount(tab.id) }}</span>
             </button>
+          </div>
+          <div v-if="isPhaseCommitted(activePhase)" class="relative pb-2" @click.stop @keydown.escape="closeExportMenu">
+            <button
+              @click="toggleExportMenu"
+              :disabled="phasedFeatures.length === 0"
+              :aria-expanded="exportMenuOpen"
+              aria-haspopup="menu"
+              aria-label="Download health report"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Download
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <div
+              v-if="exportMenuOpen"
+              role="menu"
+              class="absolute right-0 mt-1 w-40 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-10"
+            >
+              <button
+                role="menuitem"
+                @click="handleExportMarkdown"
+                class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              >Markdown (.md)</button>
+              <button
+                role="menuitem"
+                @click="handleExportCsv"
+                class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              >CSV (.csv)</button>
+            </div>
           </div>
         </div>
       </div>
