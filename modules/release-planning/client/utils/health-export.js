@@ -65,7 +65,7 @@ function computePhaseSummary(features) {
     var f = features[i]
     var risk = riskLabel(f)
     if (byRisk[risk] !== undefined) byRisk[risk]++
-    else byRisk[risk]++   // unexpected value -- still count
+    else byRisk[risk] = 1
 
     dorSum += (f.dor && f.dor.completionPct) ? f.dor.completionPct : 0
     if (f.rice && f.rice.score != null) {
