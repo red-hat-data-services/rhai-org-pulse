@@ -187,36 +187,38 @@ describe('RiceScoreDisplay', function() {
     expect(wrapper.text()).toContain('N/A')
   })
 
-  it('shows score when rice data is complete', function() {
+  it('shows score when rice data is present', function() {
     var wrapper = mount(RiceScoreDisplay, {
-      props: { rice: { reach: 1000, impact: 2, confidence: 80, effort: 4, score: 400, complete: true } }
+      props: { rice: { score: 400 } }
     })
     expect(wrapper.text()).toContain('400')
   })
 
   it('shows N/A when rice has no score', function() {
     var wrapper = mount(RiceScoreDisplay, {
-      props: { rice: { reach: 1000, impact: null, confidence: 80, effort: 4, score: null, complete: false } }
+      props: { rice: { score: null } }
     })
     expect(wrapper.text()).toContain('N/A')
   })
 
-  it('expands breakdown on click when score exists', async function() {
+  it('renders score as a simple badge without interactive expansion', function() {
     var wrapper = mount(RiceScoreDisplay, {
-      props: { rice: { reach: 1000, impact: 2, confidence: 80, effort: 4, score: 400, complete: true } }
+      props: { rice: { score: 400 } }
     })
-    await wrapper.find('button').trigger('click')
-    expect(wrapper.text()).toContain('Reach')
-    expect(wrapper.text()).toContain('1000')
-    expect(wrapper.text()).toContain('Impact')
-    expect(wrapper.text()).toContain('Confidence')
-    expect(wrapper.text()).toContain('Effort')
+    expect(wrapper.text()).toContain('400')
+    // No button element -- just a span badge
+    expect(wrapper.find('button').exists()).toBe(false)
+    // No popover content
+    expect(wrapper.text()).not.toContain('Reach')
+    expect(wrapper.text()).not.toContain('Breakdown')
   })
 
-  it('does not expand on click when score is null', async function() {
-    var wrapper = mount(RiceScoreDisplay, { props: { rice: null } })
-    await wrapper.find('button').trigger('click')
-    expect(wrapper.text()).not.toContain('Reach')
+  it('shows score of 0 as valid', function() {
+    var wrapper = mount(RiceScoreDisplay, {
+      props: { rice: { score: 0 } }
+    })
+    expect(wrapper.text()).toContain('0')
+    expect(wrapper.text()).not.toContain('N/A')
   })
 })
 
@@ -364,7 +366,7 @@ describe('FeatureHealthTable', function() {
       key: 'T-2', summary: 'Feature 2', status: 'New',
       risk: { level: 'red', flags: [{ category: 'MILESTONE_MISS', severity: 'high', message: 'Past deadline' }], riskScore: 1 },
       dor: { checkedCount: 3, totalCount: 13, completionPct: 23, items: [] },
-      rice: { score: 250, complete: true }, components: 'Pipelines', phase: 'TP', bigRock: null,
+      rice: { score: 250 }, components: 'Pipelines', phase: 'TP', bigRock: null,
       deliveryOwner: 'Bob', priorityScore: 42, priorityBreakdown: { rice: 40, bigRock: 60, priority: 40, complexity: 30 }
     }
   ]

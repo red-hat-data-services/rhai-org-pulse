@@ -264,6 +264,75 @@ describe('runPass1', function() {
     var result = await runPass1(vi.fn(), vi.fn(), [], { throttleMs: 0 })
     expect(result.size).toBe(0)
   })
+
+  it('reads and normalizes RICE score field when riceScoreField is set', async function() {
+    var mockFetch = vi.fn().mockResolvedValue([{
+      key: 'TEST-1',
+      fields: {
+        description: 'A desc',
+        customfield_10028: 5,
+        issuelinks: [],
+        customfield_10864: 42
+      }
+    }])
+    var result = await runPass1(vi.fn(), mockFetch, ['TEST-1'], { batchSize: 40, throttleMs: 0, riceScoreField: 'customfield_10864' })
+    expect(result.get('TEST-1').rice).toEqual({ score: 42 })
+  })
+
+  it('handles RICE score of 0 as valid', async function() {
+    var mockFetch = vi.fn().mockResolvedValue([{
+      key: 'TEST-1',
+      fields: {
+        description: 'A desc',
+        customfield_10028: 5,
+        issuelinks: [],
+        customfield_10864: 0
+      }
+    }])
+    var result = await runPass1(vi.fn(), mockFetch, ['TEST-1'], { batchSize: 40, throttleMs: 0, riceScoreField: 'customfield_10864' })
+    expect(result.get('TEST-1').rice).toEqual({ score: 0 })
+  })
+
+  it('handles RICE score as object with .value property', async function() {
+    var mockFetch = vi.fn().mockResolvedValue([{
+      key: 'TEST-1',
+      fields: {
+        description: 'A desc',
+        customfield_10028: 5,
+        issuelinks: [],
+        customfield_10864: { value: 99 }
+      }
+    }])
+    var result = await runPass1(vi.fn(), mockFetch, ['TEST-1'], { batchSize: 40, throttleMs: 0, riceScoreField: 'customfield_10864' })
+    expect(result.get('TEST-1').rice).toEqual({ score: 99 })
+  })
+
+  it('returns null rice when RICE field is empty string', async function() {
+    var mockFetch = vi.fn().mockResolvedValue([{
+      key: 'TEST-1',
+      fields: {
+        description: 'A desc',
+        customfield_10028: 5,
+        issuelinks: [],
+        customfield_10864: ''
+      }
+    }])
+    var result = await runPass1(vi.fn(), mockFetch, ['TEST-1'], { batchSize: 40, throttleMs: 0, riceScoreField: 'customfield_10864' })
+    expect(result.get('TEST-1').rice).toBeNull()
+  })
+
+  it('returns null rice when riceScoreField is not set', async function() {
+    var mockFetch = vi.fn().mockResolvedValue([{
+      key: 'TEST-1',
+      fields: {
+        description: 'A desc',
+        customfield_10028: 5,
+        issuelinks: []
+      }
+    }])
+    var result = await runPass1(vi.fn(), mockFetch, ['TEST-1'], { batchSize: 40, throttleMs: 0 })
+    expect(result.get('TEST-1').rice).toBeNull()
+  })
 })
 
 describe('runPass2', function() {
@@ -337,33 +406,36 @@ describe('enrichFeatures', function() {
     expect(result.stats.pass1).toBe(1)
   })
 
-  it('fetches RICE from parents when enabled and configured', async function() {
+  it('reads RICE score directly from feature when riceScoreField is configured', async function() {
     process.env.JIRA_TOKEN = 'test'
     process.env.JIRA_EMAIL = 'test@test.com'
-    var features = [{ key: 'T-1', status: 'In Progress', targetVersions: ['3.5'], parentKey: 'STRAT-1' }]
-    var mockFetch = vi.fn().mockImplementation(function(jiraReq, jql) {
-      if (jql.indexOf('STRAT-1') !== -1) {
-        return Promise.resolve([{
-          key: 'STRAT-1',
-          fields: { cf_reach: 1000, cf_impact: 2, cf_conf: 80, cf_effort: 4 }
-        }])
-      }
-      return Promise.resolve([{
-        key: 'T-1',
-        fields: { description: 'desc', customfield_10028: 3, issuelinks: [] }
-      }])
-    })
+    var features = [{ key: 'T-1', status: 'In Progress', targetVersions: ['3.5'] }]
+    var mockFetch = vi.fn().mockResolvedValue([{
+      key: 'T-1',
+      fields: { description: 'desc', customfield_10028: 3, issuelinks: [], customfield_10864: 675 }
+    }])
     var result = await enrichFeatures(vi.fn(), mockFetch, features, {
       healthConfig: { enableRice: true, enrichmentThrottleMs: 0 },
-      customFieldIds: {
-        riceReach: 'cf_reach',
-        riceImpact: 'cf_impact',
-        riceConfidence: 'cf_conf',
-        riceEffort: 'cf_effort'
-      }
+      customFieldIds: { riceScoreField: 'customfield_10864' }
     })
     var enrichment = result.enrichments.get('T-1')
-    expect(enrichment.rice).toBeDefined()
-    expect(enrichment.rice.reach).toBe(1000)
+    expect(enrichment.rice).toEqual({ score: 675 })
+  })
+
+  it('warns when RICE enabled but riceScoreField not configured', async function() {
+    process.env.JIRA_TOKEN = 'test'
+    process.env.JIRA_EMAIL = 'test@test.com'
+    var features = [{ key: 'T-1', status: 'In Progress', targetVersions: ['3.5'] }]
+    var mockFetch = vi.fn().mockResolvedValue([{
+      key: 'T-1',
+      fields: { description: 'desc', customfield_10028: 3, issuelinks: [] }
+    }])
+    var result = await enrichFeatures(vi.fn(), mockFetch, features, {
+      healthConfig: { enableRice: true, enrichmentThrottleMs: 0 },
+      customFieldIds: {}
+    })
+    expect(result.warnings).toContain('RICE scoring enabled but riceScoreField not configured')
+    var enrichment = result.enrichments.get('T-1')
+    expect(enrichment.rice).toBeNull()
   })
 })

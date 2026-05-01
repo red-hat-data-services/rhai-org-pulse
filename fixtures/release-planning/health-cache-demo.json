@@ -9,6 +9,11 @@
     "gaFreeze": "2026-08-01",
     "gaTarget": "2026-08-15"
   },
+  "planningFreezes": {
+    "ea1": "2026-04-15",
+    "ea2": "2026-06-01",
+    "ga": "2026-07-15"
+  },
   "phase": "all",
   "summary": {
     "totalFeatures": 8,
@@ -33,7 +38,10 @@
       "tier": 1,
       "pm": "Sarah Chen",
       "deliveryOwner": "David Kim",
-      "components": ["Model Serving"],
+      "components": "Model Serving",
+      "fixVersions": "3.5-GA",
+      "targetRelease": "RHOAI 3.5",
+      "priorityScore": 90,
       "completionPct": 75,
       "epicCount": 4,
       "issueCount": 28,
@@ -65,7 +73,7 @@
           { "id": "F-13", "label": "Security review completed", "type": "manual", "checked": false, "source": "manual" }
         ]
       },
-      "rice": { "reach": 2000, "impact": 3, "confidence": 90, "effort": 8, "score": 675, "complete": true },
+      "rice": { "score": 675 },
       "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1001"
     },
     {
@@ -78,7 +86,10 @@
       "tier": 1,
       "pm": "Maria Lopez",
       "deliveryOwner": "James Park",
-      "components": ["Workbenches"],
+      "components": "Workbenches",
+      "fixVersions": "3.5-GA",
+      "targetRelease": "RHOAI 3.5",
+      "priorityScore": 80,
       "completionPct": 80,
       "epicCount": 3,
       "issueCount": 22,
@@ -110,7 +121,7 @@
           { "id": "F-13", "label": "Security review completed", "type": "manual", "checked": false, "source": "manual" }
         ]
       },
-      "rice": { "reach": 1500, "impact": 2, "confidence": 85, "effort": 5, "score": 510, "complete": true },
+      "rice": { "score": 510 },
       "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1002"
     },
     {
@@ -123,7 +134,10 @@
       "tier": 1,
       "pm": "Alex Nguyen",
       "deliveryOwner": "Priya Sharma",
-      "components": ["Model Serving"],
+      "components": "Model Serving",
+      "fixVersions": "3.5-DP",
+      "targetRelease": "RHOAI 3.5",
+      "priorityScore": 75,
       "completionPct": 55,
       "epicCount": 5,
       "issueCount": 35,
@@ -171,7 +185,10 @@
       "tier": 2,
       "pm": "Tom Wilson",
       "deliveryOwner": "Rachel Green",
-      "components": ["Dashboard"],
+      "components": "Dashboard",
+      "fixVersions": "3.5-GA",
+      "targetRelease": "RHOAI 3.5",
+      "priorityScore": 55,
       "completionPct": 40,
       "epicCount": 2,
       "issueCount": 14,
@@ -205,7 +222,7 @@
           { "id": "F-13", "label": "Security review completed", "type": "manual", "checked": false, "source": "manual" }
         ]
       },
-      "rice": { "reach": 800, "impact": 2, "confidence": 70, "effort": 3, "score": 373, "complete": true },
+      "rice": { "score": 373 },
       "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1004"
     },
     {
@@ -218,7 +235,10 @@
       "tier": 1,
       "pm": "Linda Zhang",
       "deliveryOwner": "",
-      "components": ["Agents"],
+      "components": "Agents",
+      "fixVersions": "3.5-GA",
+      "targetRelease": "RHOAI 3.5",
+      "priorityScore": 60,
       "completionPct": 20,
       "epicCount": 1,
       "issueCount": 6,
@@ -267,7 +287,10 @@
       "tier": 1,
       "pm": "Tom Wilson",
       "deliveryOwner": "Chris Evans",
-      "components": ["Operator"],
+      "components": "Operator",
+      "fixVersions": "3.5-GA",
+      "targetRelease": "RHOAI 3.5",
+      "priorityScore": 85,
       "completionPct": 0,
       "epicCount": 0,
       "issueCount": 2,
@@ -303,7 +326,7 @@
           { "id": "F-13", "label": "Security review completed", "type": "manual", "checked": false, "source": "manual" }
         ]
       },
-      "rice": { "reach": 3000, "impact": 3, "confidence": 60, "effort": 12, "score": 450, "complete": true },
+      "rice": { "score": 450 },
       "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1006"
     },
     {
@@ -316,7 +339,10 @@
       "tier": 2,
       "pm": "",
       "deliveryOwner": "",
-      "components": [],
+      "components": "",
+      "fixVersions": "3.5-TP",
+      "targetRelease": "RHOAI 3.5",
+      "priorityScore": 40,
       "completionPct": 0,
       "epicCount": 0,
       "issueCount": 1,
@@ -366,7 +392,10 @@
       "tier": 1,
       "pm": "Sarah Chen",
       "deliveryOwner": "Priya Sharma",
-      "components": ["Model Serving", "Dashboard"],
+      "components": "Model Serving, Dashboard",
+      "fixVersions": "3.5-GA",
+      "targetRelease": "RHOAI 3.5",
+      "priorityScore": 70,
       "completionPct": 15,
       "epicCount": 3,
       "issueCount": 18,
@@ -401,7 +430,7 @@
           { "id": "F-13", "label": "Security review completed", "type": "manual", "checked": false, "source": "manual" }
         ]
       },
-      "rice": { "reach": 1200, "impact": 3, "confidence": 75, "effort": 10, "score": 270, "complete": true },
+      "rice": { "score": 270 },
       "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1008"
     }
   ],
