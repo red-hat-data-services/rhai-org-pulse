@@ -260,11 +260,20 @@ function expandReleaseMilestones(r, productName) {
  * e.g. (rhelai-3.4, "rhelai-3.4 EA1 release") → "rhelai-3.4.EA1"
  *      (rhelai-3.4, "rhelai-3.4 GA") → "rhelai-3.4"
  *      (RHAIIS-3.4, "rhaiis-3.4 EA2 GA") → "RHAIIS-3.4.EA2"
+ *
+ * Prevents duplicate EA tags when shortname already includes the EA suffix.
  */
 function milestoneToReleaseNumber(shortname, milestoneName) {
   const eaMatch = milestoneName.match(/\b(EA\d?)\b/i)
   if (eaMatch) {
-    return `${shortname}.${eaMatch[1].toUpperCase()}`
+    const eaTag = eaMatch[1].toUpperCase()
+    // Check if shortname already ends with this EA tag (case-insensitive)
+    const endsWithEa = new RegExp(`[.\\-_]${eaTag}$`, 'i').test(shortname)
+    if (endsWithEa) {
+      // Already has the EA tag, return as-is
+      return shortname
+    }
+    return `${shortname}.${eaTag}`
   }
   // GA milestone → use the parent shortname as-is
   return shortname
@@ -419,5 +428,6 @@ module.exports = {
   getAuthStatus,
   extractGaDate,
   extractCodeFreezeDate,
+  milestoneToReleaseNumber,
   _resetForTesting
 }
