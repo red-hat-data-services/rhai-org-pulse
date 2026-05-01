@@ -428,5 +428,6 @@ module.exports = {
   getAuthStatus,
   extractGaDate,
   extractCodeFreezeDate,
+  milestoneToReleaseNumber,
   _resetForTesting
 }

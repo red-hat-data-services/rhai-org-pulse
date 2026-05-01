@@ -75,25 +75,4 @@ describe('product-pages', () => {
       expect(productPages.extractCodeFreezeDate(release)).toBeNull()
     })
   })
-
-  describe('milestone expansion and deduplication', () => {
-    // This tests the fix for duplicate EA tags (RHAI-3.5.EA1.EA1)
-    // We test indirectly through the behavior of expandReleaseMilestones
-    // which calls milestoneToReleaseNumber internally
-
-    it('should not create duplicate EA tags in release numbers', () => {
-      // Simulating Product Pages data that would cause duplicates:
-      // - shortname already has .EA1
-      // - milestone name also has EA1
-      // The milestoneToReleaseNumber function should detect this and not append again
-
-      // We can't directly test milestoneToReleaseNumber since it's not exported,
-      // but we can verify the behavior through the public API by checking that
-      // release numbers don't have patterns like "RHAI-3.5.EA1.EA1"
-
-      // This is a regression test - if the bug returns, release numbers will have
-      // duplicate EA tags visible in the analysis output
-      expect(true).toBe(true) // Placeholder - actual test would need fetchProductsByShortname mock
-    })
-  })
 })
