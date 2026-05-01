@@ -20,7 +20,6 @@ permissions:
   contents: write
   pull-requests: write
   issues: write
-  workflows: write
   id-token: write
 
 jobs:
