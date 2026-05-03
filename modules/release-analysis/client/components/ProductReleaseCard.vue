@@ -324,7 +324,7 @@ const releaseTeamsList = computed(() => {
 })
 
 function daysUntilDeadline() {
-  const deadline = props.release?.codeFreezeDate || props.release?.dueDate
+  const deadline = props.release?.dueDate
   if (!deadline) return 0
   const target = new Date(deadline + 'T00:00:00')
   if (isNaN(target.getTime())) return 0
