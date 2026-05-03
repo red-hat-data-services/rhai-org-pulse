@@ -58,7 +58,7 @@
       <div v-if="comp.globalTotalOpen > 0" class="mb-3 flex items-center gap-2 rounded-md bg-teal-50/70 dark:bg-teal-900/20 border border-teal-200/60 dark:border-teal-700/40 px-2.5 py-1.5">
         <span class="text-[10px] text-teal-600 dark:text-teal-400 font-medium">True Capacity Load:</span>
         <span class="text-xs font-bold text-teal-700 dark:text-teal-300 tabular-nums">{{ comp.globalTotalOpen + (comp.issues_done || 0) }}</span>
-        <span class="text-[10px] text-teal-500 dark:text-teal-500">total issues across all versions</span>
+        <span class="text-[10px] text-teal-500 dark:text-teal-400">total issues across all versions</span>
       </div>
 
       <!-- Compact forecast metrics -->
