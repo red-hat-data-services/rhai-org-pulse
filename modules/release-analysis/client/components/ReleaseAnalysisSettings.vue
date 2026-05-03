@@ -297,19 +297,6 @@ onMounted(() => {
           </div>
 
           <div>
-            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Velocity Discount Factor</label>
-            <input
-              v-model.number="config.velocityDiscountFactor"
-              type="number"
-              min="0.01"
-              max="1"
-              step="0.05"
-              class="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 text-sm bg-white dark:bg-gray-800 dark:text-gray-300"
-            />
-            <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">Fraction of raw resolved-issue count used for velocity (0.01–1). Default 0.5 discounts 50% to approximate release-supporting work.</p>
-          </div>
-
-          <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Risk Threshold Green (issues/day)</label>
             <input
               v-model.number="config.riskIssuesPerDayGreen"

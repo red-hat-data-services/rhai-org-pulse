@@ -154,6 +154,7 @@
             :mc-inputs="mcInputsMap.get(release.releaseNumber) || null"
             :active-mc-target="getMcTarget(release.releaseNumber)"
             :component-velocity="componentVelocity"
+            :component-global-workload="componentGlobalWorkload"
             :selected-projects="selectedProjects"
             @set-mc-target="(rn, target) => $emit('set-mc-target', rn, target)"
           />
@@ -177,6 +178,7 @@ const props = defineProps({
   mcInputsMap: { type: Map, required: true },
   getMcTarget: { type: Function, required: true },
   componentVelocity: { type: Object, default: () => ({}) },
+  componentGlobalWorkload: { type: Object, default: () => ({}) },
   selectedProjects: { type: Set, default: () => new Set() },
   defaultOpen: { type: Boolean, default: true }
 })

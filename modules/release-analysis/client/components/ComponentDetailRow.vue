@@ -1,49 +1,112 @@
 <template>
-  <div>
+  <article
+    class="rounded-xl border shadow-sm overflow-hidden transition-all duration-200"
+    :class="cardClasses"
+  >
+    <!-- Card header -->
     <button
-      class="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left transition-colors"
+      class="w-full text-left px-5 pt-5 pb-4 transition-colors"
       :class="variant === 'risk'
-        ? 'hover:bg-red-100/40 dark:hover:bg-red-900/20'
-        : 'hover:bg-gray-50/60 dark:hover:bg-gray-800/30'"
+        ? 'hover:bg-red-50/60 dark:hover:bg-red-900/10'
+        : 'hover:bg-gray-50/60 dark:hover:bg-gray-800/20'"
       @click="toggleExpand"
     >
-      <div class="flex items-center gap-2.5 min-w-0 flex-wrap">
+      <!-- Top row: name + project chips + expand caret -->
+      <div class="flex items-start justify-between gap-2 mb-3">
+        <div class="flex items-center gap-2 min-w-0 flex-wrap">
+          <span class="font-semibold text-gray-800 dark:text-gray-100 text-base leading-tight truncate">{{ comp.name }}</span>
+          <span class="text-sm text-gray-400 dark:text-gray-500 shrink-0">{{ total }}</span>
+          <span
+            v-for="proj in comp.projects"
+            :key="proj"
+            class="inline-flex items-center rounded-md bg-indigo-50 dark:bg-indigo-900/40 border border-indigo-200/70 dark:border-indigo-700/50 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-indigo-600 dark:text-indigo-300"
+          >{{ proj }}</span>
+        </div>
         <span
-          class="transition-transform text-[10px]"
+          class="transition-transform duration-200 text-[10px] shrink-0 mt-0.5"
           :class="[
             isExpanded ? 'rotate-90' : '',
             variant === 'risk' ? 'text-red-400 dark:text-red-500' : 'text-gray-400 dark:text-gray-500'
           ]"
         >&#9654;</span>
-        <span class="font-medium text-gray-700 dark:text-gray-200 text-sm">{{ comp.name }}</span>
-        <span class="text-xs text-gray-400 dark:text-gray-500">{{ total }} issue{{ total !== 1 ? 's' : '' }}</span>
-        <span class="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold" :class="confidenceBadgeClass(comp.forecast.level)">
-          <span class="h-1.5 w-1.5 rounded-full" :class="confidenceDotClass(comp.forecast.level)" />
+      </div>
+
+      <!-- Pace badge + capacity summary -->
+      <div class="flex items-center gap-2 mb-3.5 flex-wrap">
+        <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold" :class="confidenceBadgeClass(comp.forecast.level)">
+          <span class="h-2 w-2 rounded-full" :class="confidenceDotClass(comp.forecast.level)" />
           {{ comp.forecast.paceStatus }}
         </span>
-        <span
-          v-for="proj in comp.projects"
-          :key="proj"
-          class="inline-flex items-center rounded-md bg-indigo-50 dark:bg-indigo-900/40 border border-indigo-200/70 dark:border-indigo-700/50 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-indigo-600 dark:text-indigo-300"
-        >{{ proj }}</span>
+        <span v-if="comp.forecast.remaining > 0" class="text-[11px] text-gray-500 dark:text-gray-400 tabular-nums">
+          Needs {{ comp.forecast.remaining }}; Projected {{ comp.forecast.totalCapacity }}
+          <span class="font-semibold" :class="comp.forecast.delta >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'">({{ comp.forecast.delta >= 0 ? '+' : '' }}{{ comp.forecast.delta }})</span>
+        </span>
+        <span v-else class="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">All issues resolved</span>
       </div>
-      <div class="flex items-center gap-3 shrink-0">
-        <div class="grid grid-cols-3 gap-1.5 text-[10px]">
-          <span class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500" />{{ fmtCount(comp.issues_done) }}</span>
-          <span class="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400"><span class="h-1.5 w-1.5 rounded-full bg-blue-500" />{{ fmtCount(comp.issues_doing) }}</span>
-          <span class="inline-flex items-center gap-1 text-gray-500 dark:text-gray-400"><span class="h-1.5 w-1.5 rounded-full bg-gray-400" />{{ fmtCount(comp.issues_to_do) }}</span>
+
+      <!-- True Capacity workload metrics -->
+      <div class="grid grid-cols-2 gap-2 mb-3">
+        <div class="rounded-lg bg-indigo-50/70 dark:bg-indigo-900/20 border border-indigo-200/60 dark:border-indigo-700/40 px-2.5 py-2 text-center">
+          <p class="text-[10px] text-indigo-500 dark:text-indigo-400 mb-0.5 leading-tight font-medium">Release Load</p>
+          <p class="text-sm font-bold text-indigo-700 dark:text-indigo-300 tabular-nums">{{ comp.currentReleaseLoad }}</p>
         </div>
-        <div class="flex h-2 w-24 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 ring-1 ring-inset ring-gray-200/60 dark:ring-gray-700/60">
-          <div class="h-full bg-emerald-500" :style="{ width: pct(comp.issues_done, total) }" />
-          <div class="h-full bg-blue-500" :style="{ width: pct(comp.issues_doing, total) }" />
-          <div class="h-full bg-gray-400" :style="{ width: pct(comp.issues_to_do, total) }" />
+        <div class="rounded-lg bg-orange-50/70 dark:bg-orange-900/20 border border-orange-200/60 dark:border-orange-700/40 px-2.5 py-2 text-center" title="Currently open (unclosed) issues assigned to this component in other fixVersions or with no version assigned">
+          <p class="text-[10px] text-orange-500 dark:text-orange-400 mb-0.5 leading-tight font-medium">Other Open Work</p>
+          <p class="text-sm font-bold tabular-nums" :class="comp.globalOtherWorkload > 0 ? 'text-orange-700 dark:text-orange-300' : 'text-gray-400 dark:text-gray-500'">{{ comp.globalOtherWorkload }}</p>
         </div>
+      </div>
+      <!-- Compact forecast metrics -->
+      <div class="grid grid-cols-2 gap-2 mb-4">
+        <div class="rounded-lg bg-sky-50/70 dark:bg-sky-900/20 border border-sky-200/60 dark:border-sky-700/40 px-2.5 py-2 text-center">
+          <p class="text-[10px] text-sky-500 dark:text-sky-400 mb-0.5 leading-tight font-medium">Component Velocity</p>
+          <p class="text-sm font-bold text-sky-700 dark:text-sky-300 tabular-nums">{{ comp.forecast.velocity }}<span class="text-[10px] font-normal text-sky-400 dark:text-sky-500 ml-0.5">/14d</span></p>
+        </div>
+        <div class="rounded-lg bg-amber-50/70 dark:bg-amber-900/20 border border-amber-200/60 dark:border-amber-700/40 px-2.5 py-2 text-center">
+          <p class="text-[10px] text-amber-500 dark:text-amber-400 mb-0.5 leading-tight font-medium">Unresolved Issues</p>
+          <p class="text-sm font-bold tabular-nums" :class="comp.forecast.remaining > 0 ? 'text-amber-700 dark:text-amber-300' : 'text-emerald-600 dark:text-emerald-400'">{{ comp.forecast.remaining }}</p>
+        </div>
+        <div class="rounded-lg bg-violet-50/70 dark:bg-violet-900/20 border border-violet-200/60 dark:border-violet-700/40 px-2.5 py-2 text-center">
+          <p class="text-[10px] text-violet-500 dark:text-violet-400 mb-0.5 leading-tight font-medium">14d Windows Left</p>
+          <p class="text-sm font-bold text-violet-700 dark:text-violet-300 tabular-nums">{{ comp.forecast.windowsRemaining }}</p>
+        </div>
+        <div class="rounded-lg bg-emerald-50/70 dark:bg-emerald-900/20 border border-emerald-200/60 dark:border-emerald-700/40 px-2.5 py-2 text-center">
+          <p class="text-[10px] text-emerald-500 dark:text-emerald-400 mb-0.5 leading-tight font-medium">Projected Capacity</p>
+          <p class="text-sm font-bold tabular-nums" :class="comp.forecast.delta >= 0 ? 'text-emerald-700 dark:text-emerald-300' : 'text-red-600 dark:text-red-400'">{{ comp.forecast.totalCapacity }}</p>
+        </div>
+      </div>
+
+      <!-- Issue counts row -->
+      <div class="flex items-center gap-3 mb-2.5">
+        <div class="flex items-center gap-4 text-xs">
+          <span class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
+            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            <span class="font-semibold">{{ fmtCount(comp.issues_done) }}</span>
+            <span class="text-gray-400 dark:text-gray-500 font-normal">done</span>
+          </span>
+          <span class="inline-flex items-center gap-1 text-blue-600 dark:text-blue-400">
+            <span class="h-1.5 w-1.5 rounded-full bg-blue-500" />
+            <span class="font-semibold">{{ fmtCount(comp.issues_doing) }}</span>
+            <span class="text-gray-400 dark:text-gray-500 font-normal">doing</span>
+          </span>
+          <span class="inline-flex items-center gap-1 text-gray-500 dark:text-gray-400">
+            <span class="h-1.5 w-1.5 rounded-full bg-gray-400" />
+            <span class="font-semibold">{{ fmtCount(comp.issues_to_do) }}</span>
+            <span class="text-gray-400 dark:text-gray-500 font-normal">to do</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="flex h-2.5 w-full rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 ring-1 ring-inset ring-gray-200/60 dark:ring-gray-700/60">
+        <div class="h-full bg-emerald-500" :style="{ width: pct(comp.issues_done, total) }" />
+        <div class="h-full bg-blue-500" :style="{ width: pct(comp.issues_doing, total) }" />
+        <div class="h-full bg-gray-400" :style="{ width: pct(comp.issues_to_do, total) }" />
       </div>
     </button>
 
     <!-- Expanded detail -->
     <div v-if="isExpanded" class="border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900/50">
-      <!-- Capacity strip -->
+      <!-- Full capacity strip -->
       <div class="px-4 py-2.5 bg-gray-50/40 dark:bg-gray-800/20 border-b border-gray-100 dark:border-gray-800">
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-1.5 text-[11px]">
           <div>
@@ -85,7 +148,7 @@
         class="border-b border-gray-100/60 dark:border-gray-800/60 last:border-b-0"
       >
         <button
-          class="w-full flex items-center justify-between gap-3 px-4 py-2 pl-8 text-left hover:bg-gray-50/40 dark:hover:bg-gray-800/20 transition-colors"
+          class="w-full flex items-center justify-between gap-3 px-4 py-2 pl-6 text-left hover:bg-gray-50/40 dark:hover:bg-gray-800/20 transition-colors"
           @click.stop="toggleStrategic(si.key)"
         >
           <div class="flex items-center gap-2 min-w-0 flex-wrap">
@@ -106,7 +169,7 @@
         </button>
 
         <!-- Children table -->
-        <div v-if="isStrategicExpanded(si.key) && si.children.length" class="px-4 pb-2 pl-14">
+        <div v-if="isStrategicExpanded(si.key) && si.children.length" class="px-4 pb-2 pl-10">
           <div class="overflow-x-auto rounded-lg border border-gray-200/80 dark:border-gray-700/80">
             <table class="min-w-full text-sm">
               <thead class="bg-gray-50 dark:bg-gray-800/60 text-left text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
@@ -135,7 +198,7 @@
             </table>
           </div>
         </div>
-        <div v-else-if="isStrategicExpanded(si.key) && !si.children.length" class="px-4 pb-2 pl-14">
+        <div v-else-if="isStrategicExpanded(si.key) && !si.children.length" class="px-4 pb-2 pl-10">
           <p class="text-[10px] text-gray-400 dark:text-gray-500 italic">No child issues in this release.</p>
         </div>
       </div>
@@ -143,7 +206,7 @@
       <!-- Other items -->
       <div v-if="comp.otherItems.length" class="border-t border-gray-100/60 dark:border-gray-800/60">
         <button
-          class="w-full flex items-center justify-between gap-3 px-4 py-2 pl-8 text-left hover:bg-gray-50/40 dark:hover:bg-gray-800/20 transition-colors"
+          class="w-full flex items-center justify-between gap-3 px-4 py-2 pl-6 text-left hover:bg-gray-50/40 dark:hover:bg-gray-800/20 transition-colors"
           @click.stop="toggleStrategic('__other__')"
         >
           <div class="flex items-center gap-2 min-w-0">
@@ -158,7 +221,7 @@
           </div>
         </button>
 
-        <div v-if="isStrategicExpanded('__other__')" class="px-4 pb-2 pl-14">
+        <div v-if="isStrategicExpanded('__other__')" class="px-4 pb-2 pl-10">
           <div class="overflow-x-auto rounded-lg border border-gray-200/80 dark:border-gray-700/80">
             <table class="min-w-full text-sm">
               <thead class="bg-gray-50 dark:bg-gray-800/60 text-left text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">
@@ -189,7 +252,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </article>
 </template>
 
 <script setup>
@@ -204,6 +267,17 @@ const expandedSelf = reactive({ open: false })
 const expandedStrategic = reactive(new Set())
 
 const isExpanded = computed(() => expandedSelf.open)
+
+const cardClasses = computed(() => {
+  if (isExpanded.value) {
+    return props.variant === 'risk'
+      ? 'border-red-300 dark:border-red-700/70 bg-white dark:bg-gray-900/60 shadow-md col-span-full'
+      : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900/60 shadow-md col-span-full'
+  }
+  return props.variant === 'risk'
+    ? 'border-red-200/80 dark:border-red-800/50 bg-white dark:bg-gray-900/50 hover:shadow-md'
+    : 'border-gray-200/70 dark:border-gray-700/60 bg-white dark:bg-gray-900/50 hover:shadow-md'
+})
 
 function toggleExpand() {
   expandedSelf.open = !expandedSelf.open

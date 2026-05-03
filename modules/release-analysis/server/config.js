@@ -11,11 +11,7 @@ const DEFAULT_CONFIG = {
   productPagesBaseUrl: 'https://productpages.redhat.com',
   productPagesTokenUrl: 'https://auth.redhat.com/auth/realms/EmployeeIDP/protocol/openid-connect/token',
   jiraAllProjects: false,
-  targetVersionJqlFragment: '',
-  velocityDiscountFactor: 0.5,
-  velocityExtraJqlByProject: {
-    AIPCC: 'issuetype = Epic AND labels = package'
-  }
+  targetVersionJqlFragment: ''
 };
 
 const PROJECT_KEY_PATTERN = /^[A-Z][A-Z0-9_]+$/;
@@ -66,20 +62,6 @@ function applyEnvOverrides(config) {
     config.jiraAllProjects = ['1', 'true', 'yes'].includes(
       String(env.RELEASE_ANALYSIS_JIRA_ALL_PROJECTS).toLowerCase()
     );
-  }
-  if (env.RELEASE_ANALYSIS_VELOCITY_DISCOUNT_FACTOR) {
-    const parsed = parseFloat(env.RELEASE_ANALYSIS_VELOCITY_DISCOUNT_FACTOR);
-    if (Number.isFinite(parsed) && parsed > 0 && parsed <= 1) config.velocityDiscountFactor = parsed;
-  }
-  if (env.RELEASE_ANALYSIS_VELOCITY_EXTRA_JQL_BY_PROJECT) {
-    try {
-      const parsed = JSON.parse(env.RELEASE_ANALYSIS_VELOCITY_EXTRA_JQL_BY_PROJECT);
-      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-        config.velocityExtraJqlByProject = parsed;
-      }
-    } catch {
-      console.warn('[release-analysis] Invalid RELEASE_ANALYSIS_VELOCITY_EXTRA_JQL_BY_PROJECT JSON; ignoring');
-    }
   }
   if (env.RELEASE_ANALYSIS_TARGET_VERSION_JQL_FRAGMENT) {
     config.targetVersionJqlFragment = String(env.RELEASE_ANALYSIS_TARGET_VERSION_JQL_FRAGMENT).trim();
@@ -243,41 +225,6 @@ function saveConfig(writeToStorage, config) {
   // jiraAllProjects — boolean
   if (config.jiraAllProjects !== undefined) {
     merged.jiraAllProjects = Boolean(config.jiraAllProjects);
-  }
-
-  // velocityDiscountFactor — number > 0 and <= 1
-  if (config.velocityDiscountFactor !== undefined) {
-    const val = Number(config.velocityDiscountFactor);
-    if (isNaN(val) || val <= 0 || val > 1) {
-      throw new Error('velocityDiscountFactor must be a number between 0 (exclusive) and 1 (inclusive)');
-    }
-    merged.velocityDiscountFactor = val;
-  }
-
-  // velocityExtraJqlByProject — map of project key → extra JQL filter for velocity queries
-  if (config.velocityExtraJqlByProject !== undefined) {
-    const val = config.velocityExtraJqlByProject;
-    if (typeof val !== 'object' || val === null || Array.isArray(val)) {
-      throw new Error('velocityExtraJqlByProject must be a plain object');
-    }
-    for (const [key, jql] of Object.entries(val)) {
-      if (!PROJECT_KEY_PATTERN.test(key)) {
-        throw new Error(`Invalid project key "${key}" in velocityExtraJqlByProject`);
-      }
-      if (typeof jql !== 'string' || !jql.trim()) {
-        throw new Error(`velocityExtraJqlByProject["${key}"] must be a non-empty string`);
-      }
-      if (jql.length > 500) {
-        throw new Error(`velocityExtraJqlByProject["${key}"] must be 500 characters or fewer`);
-      }
-      if (/ORDER\s+BY/i.test(jql)) {
-        throw new Error(`velocityExtraJqlByProject["${key}"] must not contain ORDER BY`);
-      }
-      if (jql.includes(';') || jql.includes('--')) {
-        throw new Error(`velocityExtraJqlByProject["${key}"] contains invalid characters`);
-      }
-    }
-    merged.velocityExtraJqlByProject = val;
   }
 
   // targetVersionJqlFragment — string, security-checked

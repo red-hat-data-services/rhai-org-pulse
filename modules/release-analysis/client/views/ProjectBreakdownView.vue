@@ -435,7 +435,7 @@ function lookupHistoricalVelocity(componentNames) {
     const entry = cv[name]
     if (entry) total += entry.velocity
   }
-  return Math.round(total * 10) / 10
+  return Math.floor(total)
 }
 
 function computeForecast(issues, daysRemaining, componentNames) {
