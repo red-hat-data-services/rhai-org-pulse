@@ -324,13 +324,22 @@ const releaseTeamsList = computed(() => {
 })
 
 function daysUntilDeadline() {
-  const deadline = props.release?.codeFreezeDate || props.release?.dueDate
-  if (!deadline) return 0
-  const target = new Date(deadline + 'T00:00:00')
-  if (isNaN(target.getTime())) return 0
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  return Math.max(0, Math.ceil((target - today) / (1000 * 60 * 60 * 24)))
+
+  const candidates = [props.release?.codeFreezeDate, props.release?.dueDate].filter(Boolean)
+  let deadline = null
+  for (const d of candidates) {
+    const dt = new Date(d + 'T00:00:00')
+    if (!isNaN(dt.getTime()) && dt >= today) {
+      deadline = d
+      break
+    }
+  }
+  if (!deadline) return 0
+
+  const target = new Date(deadline + 'T00:00:00')
+  return Math.ceil((target - today) / (1000 * 60 * 60 * 24))
 }
 
 function lookupVelocity(componentNames) {
