@@ -50,7 +50,7 @@
           <p class="text-[10px] text-indigo-500 dark:text-indigo-400 mb-0.5 leading-tight font-medium">Release Load</p>
           <p class="text-sm font-bold text-indigo-700 dark:text-indigo-300 tabular-nums">{{ comp.currentReleaseLoad }}</p>
         </div>
-        <div class="rounded-lg bg-orange-50/70 dark:bg-orange-900/20 border border-orange-200/60 dark:border-orange-700/40 px-2.5 py-2 text-center" title="Currently open (unclosed) issues assigned to this component in other fixVersions or with no version assigned">
+        <div class="rounded-lg bg-orange-50/70 dark:bg-orange-900/20 border border-orange-200/60 dark:border-orange-700/40 px-2.5 py-2 text-center" title="Currently open (unclosed) issues assigned to this component in other fixVersions (excludes issues with no version assigned)">
           <p class="text-[10px] text-orange-500 dark:text-orange-400 mb-0.5 leading-tight font-medium">Other Open Work</p>
           <p class="text-sm font-bold tabular-nums" :class="comp.globalOtherWorkload > 0 ? 'text-orange-700 dark:text-orange-300' : 'text-gray-400 dark:text-gray-500'">{{ comp.globalOtherWorkload }}</p>
         </div>
