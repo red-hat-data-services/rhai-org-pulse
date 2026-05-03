@@ -725,66 +725,24 @@ const VELOCITY_WORK_TYPES = ['Story', 'Task', 'Bug', 'Spike', 'Sub-task']
  * Fetches all issues resolved in the past 6 months for the configured projects
  * and aggregates per-component velocity (average issues per 2-week window).
  *
- * Issue type rules:
- *  - All projects: Story, Task, Bug, Spike, Sub-task
- *  - Per-project extras via config.velocityExtraJqlByProject (e.g. AIPCC
- *    Epics with label "package")
- *
- * A 50% discount is applied to the raw count to approximate release-supporting work.
+ * Counted issue types: Story, Task, Bug, Spike, Sub-task.
  */
 async function fetchHistoricalComponentVelocity(config) {
   const weeksBack = Math.ceil((VELOCITY_MONTHS * 30) / 7)
   const dateClause = `resolutiondate >= -${weeksBack}w AND statusCategory = Done`
   const typeList = VELOCITY_WORK_TYPES.map(t => `"${t}"`).join(',')
 
-  const extraJqlByProject = config.velocityExtraJqlByProject || {}
-  const activeExtraProjects = config.jiraAllProjects
-    ? Object.keys(extraJqlByProject)
-    : config.projectKeys.filter(k => k in extraJqlByProject)
-  const extraProjectSet = new Set(activeExtraProjects)
-  const regularProjects = config.jiraAllProjects
-    ? null
-    : config.projectKeys.filter(k => !extraProjectSet.has(k))
-
-  const queries = []
-
-  if (regularProjects === null) {
-    queries.push({
-      jql: `issuetype in (${typeList}) AND ${dateClause} ORDER BY resolutiondate DESC`,
-      fields: 'components,resolutiondate,project'
-    })
-  } else if (regularProjects.length) {
-    queries.push({
-      jql: `project in (${regularProjects.join(',')}) AND issuetype in (${typeList}) AND ${dateClause} ORDER BY resolutiondate DESC`,
-      fields: 'components,resolutiondate,project'
-    })
+  let jql
+  if (config.jiraAllProjects) {
+    jql = `issuetype in (${typeList}) AND ${dateClause} ORDER BY resolutiondate DESC`
+  } else {
+    if (!config.projectKeys.length) return {}
+    jql = `project in (${config.projectKeys.join(',')}) AND issuetype in (${typeList}) AND ${dateClause} ORDER BY resolutiondate DESC`
   }
 
-  for (const projKey of activeExtraProjects) {
-    queries.push({
-      jql: `project = ${projKey} AND issuetype in (${typeList}) AND ${dateClause} ORDER BY resolutiondate DESC`,
-      fields: 'components,resolutiondate,project'
-    })
-    queries.push({
-      jql: `project = ${projKey} AND ${extraJqlByProject[projKey]} AND ${dateClause} ORDER BY resolutiondate DESC`,
-      fields: 'components,resolutiondate,project'
-    })
-  }
-
-  let allIssues = []
-  const seenKeys = new Set()
+  let allIssues
   try {
-    const results = await Promise.all(
-      queries.map(q => fetchAllJqlResults(jiraRequest, q.jql, q.fields, { maxResults: 100 }))
-    )
-    for (const batch of results) {
-      for (const issue of (batch || [])) {
-        if (!seenKeys.has(issue.key)) {
-          seenKeys.add(issue.key)
-          allIssues.push(issue)
-        }
-      }
-    }
+    allIssues = (await fetchAllJqlResults(jiraRequest, jql, 'components,resolutiondate,project', { maxResults: 100 })) || []
   } catch (err) {
     console.warn(`[release-analysis] Historical velocity fetch failed: ${err.message}`)
     return {}
@@ -804,16 +762,61 @@ async function fetchHistoricalComponentVelocity(config) {
     }
   }
 
-  const discountFactor = config.velocityDiscountFactor ?? 0.5
   const velocity = {}
   for (const [comp, count] of Object.entries(compCounts)) {
     velocity[comp] = {
       resolved6m: count,
       windows: Math.round(numWindows * 10) / 10,
-      velocity: Math.round(((count * discountFactor) / numWindows) * 10) / 10
+      velocity: Math.floor(count / numWindows)
     }
   }
   return velocity
+}
+
+/**
+ * Fetches all unclosed (statusCategory != Done) work-item issues per component
+ * across ALL fixVersions (or no version). Returns a map of
+ * { componentName: { totalOpen, openByVersion: { versionName: count } } }.
+ *
+ * This powers the "True Capacity" view — letting leadership see total open
+ * workload on a component team, not just what's in the target release.
+ */
+async function fetchComponentGlobalWorkload(config) {
+  const typeList = VELOCITY_WORK_TYPES.map(t => `"${t}"`).join(',')
+
+  let jql
+  if (config.jiraAllProjects) {
+    jql = `issuetype in (${typeList}) AND statusCategory != Done ORDER BY key ASC`
+  } else {
+    if (!config.projectKeys.length) return {}
+    jql = `project in (${config.projectKeys.join(',')}) AND issuetype in (${typeList}) AND statusCategory != Done ORDER BY key ASC`
+  }
+
+  let allIssues
+  try {
+    allIssues = (await fetchAllJqlResults(jiraRequest, jql, `components,${FIX_VERSION_FIELD_KEY}`, { maxResults: 100 })) || []
+  } catch (err) {
+    console.warn(`[release-analysis] Global workload fetch failed: ${err.message}`)
+    return {}
+  }
+
+  const workload = {}
+  for (const issue of allIssues) {
+    const components = (issue.fields?.components || [])
+      .map(c => String(c.name || '').trim())
+      .filter(Boolean)
+    if (!components.length) continue
+
+    const versions = extractFixVersions(issue)
+    const versionLabel = versions.length ? versions[0] : '(none)'
+
+    for (const comp of components) {
+      if (!workload[comp]) workload[comp] = { totalOpen: 0, openByVersion: {} }
+      workload[comp].totalOpen++
+      workload[comp].openByVersion[versionLabel] = (workload[comp].openByVersion[versionLabel] || 0) + 1
+    }
+  }
+  return workload
 }
 
 /**
@@ -870,17 +873,20 @@ async function runFullAnalysis(storage, config) {
   let jiraReleases = []
   let sprintWindow = null
   let componentVelocity = {}
+  let componentGlobalWorkload = {}
   try {
-    const [jiraResult, unreleasedJiraFixVersionData, detectedWindow, historicalVelocity] = await Promise.all([
+    const [jiraResult, unreleasedJiraFixVersionData, detectedWindow, historicalVelocity, globalWorkload] = await Promise.all([
       fetchIssuesFromJira(config),
       fetchUnreleasedJiraFixVersions(config),
       detectSprintWindow(config),
-      fetchHistoricalComponentVelocity(config)
+      fetchHistoricalComponentVelocity(config),
+      fetchComponentGlobalWorkload(config)
     ])
     sprintWindow = detectedWindow
     issues = jiraResult.issues
     fieldMeta = jiraResult.fieldMeta
     componentVelocity = historicalVelocity
+    componentGlobalWorkload = globalWorkload
     jiraReleases = unreleasedJiraFixVersionData.releases
     if (unreleasedJiraFixVersionData.warnings.length) {
       jiraWarning = unreleasedJiraFixVersionData.warnings.join(' | ')
@@ -930,6 +936,7 @@ async function runFullAnalysis(storage, config) {
   }
   result.sprintWindow.sprintIssueKeys = sprintIssueKeys
   result.componentVelocity = componentVelocity
+  result.componentGlobalWorkload = componentGlobalWorkload
 
   // Enrich deliverables (epic/feature/initiative) with child issue counts
   const deliverableKeys = new Set()

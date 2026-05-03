@@ -86,6 +86,7 @@
               :mc-inputs-map="mcInputsMap"
               :get-mc-target="getMcTarget"
               :component-velocity="analysis?.componentVelocity || {}"
+              :component-global-workload="analysis?.componentGlobalWorkload || {}"
               :selected-projects="selectedProjects"
               :default-open="false"
               @set-mc-target="setMcTarget"
@@ -166,7 +167,7 @@ function lookupHistoricalVelocity(componentNames) {
     const entry = cv[name]
     if (entry) total += entry.velocity
   }
-  return Math.round(total * 10) / 10
+  return Math.floor(total)
 }
 
 function getMonteCarloInputs(release) {

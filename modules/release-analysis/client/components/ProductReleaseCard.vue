@@ -153,28 +153,38 @@
         No issues mapped to this release yet.
       </div>
 
-      <!-- Component rows -->
-      <div v-else class="flex flex-col gap-3">
-        <!-- At Risk block -->
-        <div v-if="atRiskComponents.length" class="rounded-lg bg-red-50/60 dark:bg-red-950/20 border border-red-200/80 dark:border-red-800/50 overflow-hidden">
-          <div class="flex items-center gap-2 px-4 py-2 border-b border-red-200/60 dark:border-red-800/40">
-            <span class="h-2 w-2 rounded-full bg-red-500" />
-            <span class="text-xs font-semibold text-red-700 dark:text-red-300 uppercase tracking-wide">At Risk</span>
-            <span class="text-[10px] text-red-500/70 dark:text-red-400/60">{{ atRiskComponents.length }} component{{ atRiskComponents.length !== 1 ? 's' : '' }}</span>
+      <!-- Component cards -->
+      <div v-else class="flex flex-col gap-5">
+        <!-- At Risk section -->
+        <div
+          v-if="atRiskComponents.length"
+          class="rounded-xl border border-red-200/80 dark:border-red-800/50 bg-gradient-to-br from-red-50/80 via-red-50/40 to-white dark:from-red-950/30 dark:via-red-950/10 dark:to-gray-900/50 p-4 shadow-sm"
+        >
+          <div class="flex items-center justify-center gap-2 mb-4">
+            <span class="flex h-5 w-5 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/50">
+              <span class="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+            </span>
+            <span class="text-xs font-bold text-red-700 dark:text-red-300 uppercase tracking-wider">At Risk</span>
+            <span class="inline-flex items-center rounded-full bg-red-100 dark:bg-red-900/40 px-2 py-0.5 text-[10px] font-semibold text-red-700 dark:text-red-300">{{ atRiskComponents.length }} component{{ atRiskComponents.length !== 1 ? 's' : '' }}</span>
           </div>
-          <div class="divide-y divide-red-100 dark:divide-red-900/30">
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             <ComponentDetailRow v-for="comp in atRiskComponents" :key="comp.name" :comp="comp" variant="risk" />
           </div>
         </div>
 
-        <!-- On Track / Complete block -->
-        <div v-if="nonRiskComponents.length" class="rounded-lg border border-emerald-200/80 dark:border-emerald-800/50 overflow-hidden">
-          <div class="flex items-center gap-2 px-4 py-2 border-b border-emerald-200/60 dark:border-emerald-800/40 bg-emerald-50/60 dark:bg-emerald-950/20">
-            <span class="h-2 w-2 rounded-full bg-emerald-500" />
-            <span class="text-xs font-semibold text-emerald-700 dark:text-emerald-300 uppercase tracking-wide">On Track</span>
-            <span class="text-[10px] text-emerald-500/70 dark:text-emerald-400/60">{{ nonRiskComponents.length }} component{{ nonRiskComponents.length !== 1 ? 's' : '' }}</span>
+        <!-- On Track / Complete section -->
+        <div
+          v-if="nonRiskComponents.length"
+          class="rounded-xl border border-emerald-200/80 dark:border-emerald-800/50 bg-gradient-to-br from-emerald-50/80 via-emerald-50/40 to-white dark:from-emerald-950/30 dark:via-emerald-950/10 dark:to-gray-900/50 p-4 shadow-sm"
+        >
+          <div class="flex items-center justify-center gap-2 mb-4">
+            <span class="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/50">
+              <span class="h-2 w-2 rounded-full bg-emerald-500" />
+            </span>
+            <span class="text-xs font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider">On Track</span>
+            <span class="inline-flex items-center rounded-full bg-emerald-100 dark:bg-emerald-900/40 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">{{ nonRiskComponents.length }} component{{ nonRiskComponents.length !== 1 ? 's' : '' }}</span>
           </div>
-          <div class="divide-y divide-gray-100 dark:divide-gray-800">
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             <ComponentDetailRow v-for="comp in nonRiskComponents" :key="comp.name" :comp="comp" />
           </div>
         </div>
@@ -297,6 +307,7 @@ const props = defineProps({
   mcInputs: { type: Object, default: null },
   activeMcTarget: { type: String, default: 'codeFreeze' },
   componentVelocity: { type: Object, default: () => ({}) },
+  componentGlobalWorkload: { type: Object, default: () => ({}) },
   selectedProjects: { type: Set, default: () => new Set() },
   defaultExpanded: { type: Boolean, default: false }
 })
@@ -332,7 +343,7 @@ function lookupVelocity(componentNames) {
     const entry = cv[name]
     if (entry) total += entry.velocity
   }
-  return Math.round(total * 10) / 10
+  return Math.floor(total)
 }
 
 function computeForecast(remaining, componentNames) {
@@ -438,12 +449,21 @@ const componentList = computed(() => {
         c.allIssues.filter(i => !compStrategicKeys.has(i.key) && !childKeySet.has(i.key))
       )
 
+      const currentReleaseLoad = c.issues_to_do + c.issues_doing + c.issues_done
+      const globalEntry = props.componentGlobalWorkload[c.name]
+      const globalTotalOpen = globalEntry?.totalOpen || 0
+      const currentReleaseOpen = c.issues_to_do + c.issues_doing
+      const globalOtherWorkload = Math.max(0, globalTotalOpen - currentReleaseOpen)
+
       return {
         name: c.name,
         projects: [...c.projects].sort(),
         issues_to_do: c.issues_to_do,
         issues_doing: c.issues_doing,
         issues_done: c.issues_done,
+        currentReleaseLoad,
+        globalTotalOpen,
+        globalOtherWorkload,
         forecast: computeForecast(remaining, [c.name]),
         strategicItems,
         otherItems,
@@ -457,6 +477,7 @@ const componentList = computed(() => {
       const ra = riskOrder[a.forecast.level] ?? 0
       const rb = riskOrder[b.forecast.level] ?? 0
       if (ra !== rb) return ra - rb
+      if (a.forecast.delta !== b.forecast.delta) return a.forecast.delta - b.forecast.delta
       return a.name.localeCompare(b.name)
     })
 })
