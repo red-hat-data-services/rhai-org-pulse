@@ -786,10 +786,10 @@ async function fetchComponentGlobalWorkload(config) {
 
   let jql
   if (config.jiraAllProjects) {
-    jql = `issuetype in (${typeList}) AND statusCategory != Done ORDER BY key ASC`
+    jql = `issuetype in (${typeList}) AND statusCategory != Done AND created >= -1y ORDER BY key ASC`
   } else {
     if (!config.projectKeys.length) return {}
-    jql = `project in (${config.projectKeys.join(',')}) AND issuetype in (${typeList}) AND statusCategory != Done ORDER BY key ASC`
+    jql = `project in (${config.projectKeys.join(',')}) AND issuetype in (${typeList}) AND statusCategory != Done AND created >= -1y ORDER BY key ASC`
   }
 
   let allIssues
