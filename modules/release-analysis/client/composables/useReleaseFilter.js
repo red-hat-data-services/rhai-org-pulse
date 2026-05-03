@@ -12,6 +12,14 @@ export function extractVersion(releaseNumber) {
   return dash > 0 ? s.slice(dash + 1) : s
 }
 
+/**
+ * Normalize a version string for grouping so that punctuation/spacing
+ * differences (e.g. "3.5.EA1" vs "3.5 EA1") map to the same group key.
+ */
+export function normalizeVersionKey(version) {
+  return (version || '').replace(/[\s.]+/g, '.').toLowerCase()
+}
+
 
 function aggregateRisk(releases) {
   if (releases.some(r => r.risk === 'red')) return 'red'
@@ -48,16 +56,23 @@ export function useReleaseFilter(allReleases) {
     [...new Set(allReleases.value.map(r => extractProduct(r.releaseNumber)).filter(Boolean))].sort()
   )
 
-  const allVersions = computed(() =>
-    [...new Set(allReleases.value.map(r => extractVersion(r.releaseNumber)).filter(Boolean))]
-      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
-  )
+  const allVersions = computed(() => {
+    const seen = new Map()
+    for (const r of allReleases.value) {
+      const raw = extractVersion(r.releaseNumber)
+      if (!raw) continue
+      const key = normalizeVersionKey(raw)
+      if (!seen.has(key)) seen.set(key, raw)
+    }
+    return [...seen.values()].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+  })
 
   const visibleProducts = computed(() => {
     if (!selectedVersions.size) return allProducts.value
+    const selKeys = new Set([...selectedVersions].map(normalizeVersionKey))
     return [...new Set(
       allReleases.value
-        .filter(r => selectedVersions.has(extractVersion(r.releaseNumber)))
+        .filter(r => selKeys.has(normalizeVersionKey(extractVersion(r.releaseNumber))))
         .map(r => extractProduct(r.releaseNumber))
         .filter(Boolean)
     )].sort()
@@ -65,12 +80,15 @@ export function useReleaseFilter(allReleases) {
 
   const visibleVersions = computed(() => {
     if (!selectedProducts.size) return allVersions.value
-    return [...new Set(
-      allReleases.value
-        .filter(r => selectedProducts.has(extractProduct(r.releaseNumber)))
-        .map(r => extractVersion(r.releaseNumber))
-        .filter(Boolean)
-    )].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+    const seen = new Map()
+    for (const r of allReleases.value) {
+      if (!selectedProducts.has(extractProduct(r.releaseNumber))) continue
+      const raw = extractVersion(r.releaseNumber)
+      if (!raw) continue
+      const key = normalizeVersionKey(raw)
+      if (!seen.has(key)) seen.set(key, raw)
+    }
+    return [...seen.values()].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
   })
 
   watch(visibleProducts, (available) => {
@@ -96,23 +114,32 @@ export function useReleaseFilter(allReleases) {
   }
 
   const filteredReleases = computed(() => {
+    const selVerKeys = selectedVersions.size
+      ? new Set([...selectedVersions].map(normalizeVersionKey))
+      : null
     return allReleases.value.filter(r => {
       if (selectedProducts.size && !selectedProducts.has(extractProduct(r.releaseNumber))) return false
-      if (selectedVersions.size && !selectedVersions.has(extractVersion(r.releaseNumber))) return false
+      if (selVerKeys && !selVerKeys.has(normalizeVersionKey(extractVersion(r.releaseNumber)))) return false
       return true
     })
   })
 
   const groupedByVersion = computed(() => {
     const map = new Map()
+    const displayVersion = new Map()
     for (const r of filteredReleases.value) {
-      const majorVer = extractVersion(r.releaseNumber)
-      if (!map.has(majorVer)) map.set(majorVer, [])
-      map.get(majorVer).push(r)
+      const rawVer = extractVersion(r.releaseNumber)
+      const groupKey = normalizeVersionKey(rawVer)
+      if (!map.has(groupKey)) {
+        map.set(groupKey, [])
+        displayVersion.set(groupKey, rawVer)
+      }
+      map.get(groupKey).push(r)
     }
 
     const groups = []
-    for (const [version, releases] of map) {
+    for (const [groupKey, releases] of map) {
+      const version = displayVersion.get(groupKey)
       const earliest = releases.reduce((min, r) => {
         const d = new Date(r.dueDate)
         return d < min ? d : min

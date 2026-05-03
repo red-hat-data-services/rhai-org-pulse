@@ -774,22 +774,22 @@ async function fetchHistoricalComponentVelocity(config) {
 }
 
 /**
- * Fetches all unclosed (statusCategory != Done) work-item issues per component
- * across ALL fixVersions (or no version). Returns a map of
+ * Fetches unclosed (statusCategory != Done) work-item issues per component
+ * that have a fixVersion assigned. Returns a map of
  * { componentName: { totalOpen, openByVersion: { versionName: count } } }.
  *
- * This powers the "True Capacity" view — letting leadership see total open
- * workload on a component team, not just what's in the target release.
+ * "Other Open Work" on a release card = totalOpen − currentReleaseOpen,
+ * i.e. versioned open work on other releases.
  */
 async function fetchComponentGlobalWorkload(config) {
   const typeList = VELOCITY_WORK_TYPES.map(t => `"${t}"`).join(',')
 
   let jql
   if (config.jiraAllProjects) {
-    jql = `issuetype in (${typeList}) AND statusCategory != Done AND created >= -1y ORDER BY key ASC`
+    jql = `issuetype in (${typeList}) AND statusCategory != Done AND fixVersion is not EMPTY ORDER BY key ASC`
   } else {
     if (!config.projectKeys.length) return {}
-    jql = `project in (${config.projectKeys.join(',')}) AND issuetype in (${typeList}) AND statusCategory != Done AND created >= -1y ORDER BY key ASC`
+    jql = `project in (${config.projectKeys.join(',')}) AND issuetype in (${typeList}) AND statusCategory != Done AND fixVersion is not EMPTY ORDER BY key ASC`
   }
 
   let allIssues
@@ -808,7 +808,9 @@ async function fetchComponentGlobalWorkload(config) {
     if (!components.length) continue
 
     const versions = extractFixVersions(issue)
-    const versionLabel = versions.length ? versions[0] : '(none)'
+    if (!versions.length) continue
+
+    const versionLabel = versions[0]
 
     for (const comp of components) {
       if (!workload[comp]) workload[comp] = { totalOpen: 0, openByVersion: {} }
