@@ -12,14 +12,9 @@ export function extractVersion(releaseNumber) {
   return dash > 0 ? s.slice(dash + 1) : s
 }
 
-/**
- * Normalize a version string for grouping so that punctuation/spacing
- * differences (e.g. "3.5.EA1" vs "3.5 EA1") map to the same group key.
- */
 export function normalizeVersionKey(version) {
   return (version || '').replace(/[\s.]+/g, '.').toLowerCase()
 }
-
 
 function aggregateRisk(releases) {
   if (releases.some(r => r.risk === 'red')) return 'red'
@@ -98,8 +93,9 @@ export function useReleaseFilter(allReleases) {
   })
 
   watch(visibleVersions, (available) => {
+    const availableKeys = new Set(available.map(normalizeVersionKey))
     for (const v of [...selectedVersions]) {
-      if (!available.includes(v)) selectedVersions.delete(v)
+      if (!availableKeys.has(normalizeVersionKey(v))) selectedVersions.delete(v)
     }
   })
 
