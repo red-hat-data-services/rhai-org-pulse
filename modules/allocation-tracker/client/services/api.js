@@ -132,3 +132,14 @@ export async function classifyIssue(issueKey, dryRun = true) {
     body: JSON.stringify({ issueKey, dryRun })
   })
 }
+
+/**
+ * Bulk classify issues matching a JQL query
+ */
+export async function bulkClassifyIssues(jql, dryRun = true, limit = 100) {
+  return apiRequest(`${BASE}/classify/bulk`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jql, dryRun, limit })
+  })
+}
