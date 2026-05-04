@@ -159,6 +159,30 @@ spec:
                     echo "WARNING: Allocation Tracker refresh timed out (non-fatal, continuing)"
                   fi
 
+                  # Step 4b: Sync feature labels from Jira
+                  echo "=== Triggering Feature Jira Sync ==="
+                  curl -sf -X POST "$BACKEND/api/modules/ai-impact/features/sync" \
+                    -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" || echo "Feature Jira sync skipped"
+
+                  ATTEMPTS=0
+                  MAX_ATTEMPTS=30
+                  while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
+                    sleep 10
+                    ATTEMPTS=$((ATTEMPTS + 1))
+                    STATUS=$(curl -sf "$BACKEND/api/modules/ai-impact/features/sync/status" \
+                      -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER")
+                    RUNNING=$(echo "$STATUS" | grep -oE '"running"\s*:\s*true' || true)
+                    if [ -z "$RUNNING" ]; then
+                      echo "Feature Jira sync complete after $ATTEMPTS checks"
+                      break
+                    fi
+                    echo "Still syncing... (attempt $ATTEMPTS/$MAX_ATTEMPTS)"
+                  done
+
+                  if [ $ATTEMPTS -ge $MAX_ATTEMPTS ]; then
+                    echo "WARNING: Feature Jira sync timed out (non-fatal, continuing)"
+                  fi
+
                   # Step 5: Trigger Feature Traffic refresh
                   echo "=== Triggering Feature Traffic refresh ==="
                   curl -sf -X POST "$BACKEND/api/modules/feature-traffic/refresh" \

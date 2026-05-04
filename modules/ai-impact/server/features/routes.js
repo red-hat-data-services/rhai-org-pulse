@@ -7,12 +7,56 @@ const {
   getLatestProjection,
   countHistoryEntries
 } = require('./storage');
+const { syncFeaturesFromJira, acquireLock, releaseLock } = require('./jira-sync');
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 const jsonLimit = express.json({ limit: '10mb' });
 
 // Max entries in a single bulk request
 const BULK_CAP = 5000;
+
+// ─── Sync state (in-memory) ───
+
+const syncState = {
+  running: false,
+  startedAt: null,
+  lastResult: null
+};
+
+/**
+ * Run the Jira sync in the background. Updates syncState.
+ * @param {Function} readFromStorage
+ */
+async function runSync(readFromStorage) {
+  if (syncState.running) return;
+  if (!acquireLock()) {
+    console.warn('[ai-impact] Feature sync skipped: write lock held');
+    return;
+  }
+
+  syncState.running = true;
+  syncState.startedAt = new Date().toISOString();
+
+  try {
+    const result = await syncFeaturesFromJira(readFromStorage);
+    syncState.lastResult = {
+      status: result.errors.length > 0 ? 'partial' : 'success',
+      message: `Synced ${result.synced} features: ${result.updated} updated (${result.statusChanged} review status changes), ${result.notFound} not found in Jira`,
+      errors: result.errors.length > 0 ? result.errors : undefined,
+      completedAt: new Date().toISOString()
+    };
+  } catch (err) {
+    console.error('[ai-impact] Feature Jira sync failed:', err);
+    syncState.lastResult = {
+      status: 'error',
+      message: err.message,
+      completedAt: new Date().toISOString()
+    };
+  } finally {
+    syncState.running = false;
+    releaseLock();
+  }
+}
 
 /**
  * Register feature routes on the module router.
@@ -32,9 +76,28 @@ module.exports = function registerFeatureRoutes(router, context) {
     const data = readFeatures(readFromStorage);
     res.json({
       lastSyncedAt: data.lastSyncedAt,
+      lastJiraSyncAt: data.lastJiraSyncAt || null,
       totalFeatures: data.totalFeatures,
       totalHistoryEntries: countHistoryEntries(data)
     });
+  });
+
+  // GET /features/sync/status — sync state for polling
+  router.get('/features/sync/status', function(req, res) {
+    res.json(syncState);
+  });
+
+  // POST /features/sync (Admin) — trigger Jira label sync
+  router.post('/features/sync', requireAdmin, async function(req, res) {
+    if (DEMO_MODE) {
+      return res.json({ status: 'skipped', message: 'Sync disabled in demo mode' });
+    }
+    if (syncState.running) {
+      return res.json({ status: 'already_running' });
+    }
+
+    res.json({ status: 'started' });
+    runSync(readFromStorage);
   });
 
   // POST /features/bulk (Admin) — bulk upsert features
@@ -82,6 +145,15 @@ module.exports = function registerFeatureRoutes(router, context) {
       unchanged: counts.unchanged,
       errors
     });
+
+    // Fire-and-forget: sync labels from Jira after bulk ingest.
+    // Delay to allow remaining batches from the same pipeline push to complete.
+    if (counts.created > 0 || counts.updated > 0) {
+      setTimeout(() => {
+        console.log('[ai-impact] Triggering post-ingest Jira sync');
+        runSync(readFromStorage);
+      }, 10000);
+    }
   });
 
   // DELETE /features (Admin) — clear all feature data

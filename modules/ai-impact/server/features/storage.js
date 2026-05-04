@@ -132,7 +132,9 @@ function getLatestProjection(data) {
       humanReviewStatus: entry.latest.humanReviewStatus,
       scores: entry.latest.scores,
       reviewers: entry.latest.reviewers,
-      reviewedAt: entry.latest.reviewedAt
+      reviewedAt: entry.latest.reviewedAt,
+      approvedBy: entry.latest.approvedBy || null,
+      approvedAt: entry.latest.approvedAt || null
     };
   }
   return {
