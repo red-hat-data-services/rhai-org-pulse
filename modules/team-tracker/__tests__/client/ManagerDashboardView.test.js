@@ -278,7 +278,7 @@ describe('ManagerDashboardView', () => {
       expect(wrapper.text()).not.toContain('incomplete fields')
     })
 
-    it('does NOT show banner during bulk edit mode', async () => {
+    it('keeps banner visible during bulk edit mode', async () => {
       mockDirectReports.value = [
         { uid: 'alice', name: 'Alice', email: 'alice@example.com', title: 'Engineer', teamIds: [], customFields: { field_f1: '' } }
       ]
@@ -292,12 +292,12 @@ describe('ManagerDashboardView', () => {
 
       expect(wrapper.text()).toContain('incomplete fields')
 
-      // Enter bulk edit
+      // Enter bulk edit — banner should still be visible
       const editBtn = wrapper.findAll('button').find(b => b.text().includes('Edit All Fields'))
       await editBtn.trigger('click')
       await nextTick()
 
-      expect(wrapper.text()).not.toContain('incomplete fields')
+      expect(wrapper.text()).toContain('incomplete fields')
     })
 
     it('"Show incomplete only" filter works correctly', async () => {
@@ -427,7 +427,7 @@ describe('ManagerDashboardView', () => {
       expect(wrapper.text()).toContain('1 of 1 person has incomplete fields')
     })
 
-    it('resets incomplete filter when entering bulk edit', async () => {
+    it('preserves incomplete filter when entering bulk edit', async () => {
       mockDirectReports.value = [
         { uid: 'alice', name: 'Alice', email: 'alice@example.com', title: 'Engineer', teamIds: [], customFields: { field_f1: '' } },
         { uid: 'bob', name: 'Bob', email: 'bob@example.com', title: 'Designer', teamIds: [], customFields: { field_f1: 'backend' } }
@@ -448,13 +448,13 @@ describe('ManagerDashboardView', () => {
       // Only Alice visible
       expect(wrapper.text()).not.toContain('Bob')
 
-      // Enter bulk edit — filter should reset, both visible again
+      // Enter bulk edit — filter should be preserved, only Alice still visible
       const editBtn = wrapper.findAll('button').find(b => b.text().includes('Edit All Fields'))
       await editBtn.trigger('click')
       await nextTick()
 
       expect(wrapper.text()).toContain('Alice')
-      expect(wrapper.text()).toContain('Bob')
+      expect(wrapper.text()).not.toContain('Bob')
     })
 
     it('resets both filter and dismiss on tab switch', async () => {

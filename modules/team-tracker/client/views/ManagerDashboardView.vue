@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-5xl mx-auto px-4 py-6">
+  <div class="max-w-7xl mx-auto px-4 py-6">
     <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">My Teams</h2>
 
     <!-- Loading state -->
@@ -114,7 +114,7 @@
 
           <!-- Field completeness banner -->
           <div
-            v-if="!bannerDismissed && incompleteReports.length > 0 && !bulkEditing"
+            v-if="!bannerDismissed && incompleteReports.length > 0"
             class="flex items-center gap-3 px-4 py-3 mb-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-sm"
           >
             <AlertTriangle class="w-4 h-4 flex-shrink-0" />
@@ -366,7 +366,7 @@
 
           <!-- Field completeness banner -->
           <div
-            v-if="!teamBannerDismissed && incompleteTeams.length > 0 && !teamBulkEditing"
+            v-if="!teamBannerDismissed && incompleteTeams.length > 0"
             class="flex items-center gap-3 px-4 py-3 mb-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 text-sm"
           >
             <AlertTriangle class="w-4 h-4 flex-shrink-0" />
@@ -1198,13 +1198,12 @@ watch(activeTab, () => {
 })
 
 watch(bulkEditing, () => {
-  showIncompleteOnly.value = false
+  // Cross-tab filter is irrelevant, clear it; same-tab filter is preserved
   showIncompleteTeamsOnly.value = false
 })
 
 watch(teamBulkEditing, () => {
   showIncompleteOnly.value = false
-  showIncompleteTeamsOnly.value = false
 })
 
 onMounted(() => {
