@@ -269,6 +269,20 @@ module.exports = function registerRoutes(router, context) {
   const { classifyAndWrite, shouldClassify } = require('./classification');
 
   /**
+   * Transform a Jira API issue response to classification format
+   */
+  function transformJiraIssue(jiraIssue) {
+    return {
+      key: jiraIssue.key,
+      issueType: jiraIssue.fields.issuetype?.name,
+      summary: jiraIssue.fields.summary || '',
+      description: jiraIssue.fields.description?.content?.[0]?.content?.[0]?.text || '',
+      activityType: jiraIssue.fields.customfield_10464?.value || jiraIssue.fields.customfield_10464 || null,
+      project: jiraIssue.fields.project?.key
+    };
+  }
+
+  /**
    * Classify a single issue and write Activity Type to Jira
    * POST /api/modules/allocation-tracker/classify
    * Body: { issueKey: 'AIPCC-12345', dryRun?: boolean }
@@ -289,14 +303,7 @@ module.exports = function registerRoutes(router, context) {
       const jiraIssue = await jiraRequest(`/rest/api/3/issue/${issueKey}?fields=summary,description,issuetype,customfield_10464,project`);
 
       // Transform to classification format
-      const issue = {
-        key: jiraIssue.key,
-        issueType: jiraIssue.fields.issuetype?.name,
-        summary: jiraIssue.fields.summary || '',
-        description: jiraIssue.fields.description?.content?.[0]?.content?.[0]?.text || '',
-        activityType: jiraIssue.fields.customfield_10464 || null,
-        project: jiraIssue.fields.project?.key
-      };
+      const issue = transformJiraIssue(jiraIssue);
 
       // Check if should classify
       if (!shouldClassify(issue)) {
@@ -317,6 +324,91 @@ module.exports = function registerRoutes(router, context) {
       if (error.message?.includes('404')) {
         return res.status(404).json({ error: 'Issue not found' });
       }
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  /**
+   * Bulk classify issues matching a JQL query
+   * POST /api/modules/allocation-tracker/classify/bulk
+   * Body: { jql: 'project = AIPCC AND ...', dryRun?: boolean, limit?: number }
+   */
+  router.post('/classify/bulk', requireAdmin, async function(req, res) {
+    try {
+      const { jql, dryRun = true, limit = 100 } = req.body;
+
+      if (!jql || typeof jql !== 'string') {
+        return res.status(400).json({ error: 'jql is required' });
+      }
+
+      const parsedLimit = Number(limit);
+      if (!Number.isFinite(parsedLimit) || parsedLimit < 1 || parsedLimit > 1000) {
+        return res.status(400).json({ error: 'limit must be between 1 and 1000' });
+      }
+
+      console.log(`[allocation-tracker] Bulk classify: ${parsedLimit} issues, dryRun=${dryRun}`);
+      console.log(`[allocation-tracker] JQL: ${jql}`);
+
+      // Fetch issues from Jira matching JQL
+      const response = await jiraRequest(
+        `/rest/api/3/search?jql=${encodeURIComponent(jql)}&maxResults=${parsedLimit}&fields=summary,description,issuetype,customfield_10464,project`
+      );
+
+      const results = {
+        total: response.total,
+        fetched: response.issues.length,
+        processed: 0,
+        classified: 0,
+        skipped: 0,
+        errors: [],
+        details: []
+      };
+
+      // Process each issue
+      for (const jiraIssue of response.issues) {
+        try {
+          const issue = transformJiraIssue(jiraIssue);
+          const result = await classifyAndWrite(issue, { dryRun });
+
+          results.processed++;
+
+          const wasClassified = result.classified || result.written;
+          const detail = {
+            issueKey: issue.key,
+            status: wasClassified ? 'classified' : 'skipped',
+            reason: result.reason || result.classification?.method,
+            category: result.classification?.category,
+            confidence: result.classification?.confidence
+          };
+
+          if (wasClassified) {
+            results.classified++;
+            console.log(`  ✅ ${issue.key}: ${result.classification.category} (${result.classification.confidence})`);
+          } else {
+            results.skipped++;
+            console.log(`  ⏭️  ${issue.key}: ${result.reason || 'skipped'}`);
+          }
+
+          results.details.push(detail);
+
+          // Add delay between Jira writes to avoid rate limiting
+          if (!dryRun && results.processed < response.issues.length) {
+            await new Promise(resolve => setTimeout(resolve, 200));
+          }
+        } catch (error) {
+          results.errors.push({
+            issueKey: jiraIssue.key,
+            error: error.message
+          });
+          console.error(`  ❌ ${jiraIssue.key}: ${error.message}`);
+        }
+      }
+
+      console.log(`[allocation-tracker] Bulk classify complete: ${results.classified} classified, ${results.skipped} skipped, ${results.errors.length} errors`);
+
+      res.json(results);
+    } catch (error) {
+      console.error('[allocation-tracker] Bulk classification error:', error);
       res.status(500).json({ error: 'Internal server error' });
     }
   });

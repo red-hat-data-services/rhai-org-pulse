@@ -282,11 +282,94 @@
           </div>
         </div>
 
+        <!-- Bulk Classification Card -->
+        <div class="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
+          <h3 class="text-sm font-semibold text-gray-900 mb-3">Bulk Classification</h3>
+          <p class="text-xs text-gray-500 mb-3">
+            Classify multiple existing unclassified issues using a JQL query. Use dry run to preview before writing to Jira.
+          </p>
+
+          <div class="space-y-3">
+            <label class="block">
+              <span class="block text-xs font-medium text-gray-600 mb-1">JQL Query</span>
+              <textarea
+                v-model="bulkJql"
+                rows="3"
+                placeholder='project in (AIPCC, RHOIENG) AND type in (Story, Bug, Spike) AND "Activity Type" is EMPTY AND created >= -30d'
+                class="text-xs border border-gray-300 rounded-md px-3 py-2 w-full font-mono focus:outline-none focus:ring-2 focus:ring-primary-300"
+              />
+            </label>
+
+            <label class="block">
+              <span class="block text-xs font-medium text-gray-600 mb-1">Max Issues (1-1000)</span>
+              <input
+                v-model.number="bulkLimit"
+                type="number"
+                min="1"
+                max="1000"
+                class="text-sm border border-gray-300 rounded-md px-3 py-2 w-32 focus:outline-none focus:ring-2 focus:ring-primary-300"
+              />
+            </label>
+
+            <div class="flex gap-3">
+              <button
+                @click="handleBulkClassify(true)"
+                :disabled="!bulkJql?.trim() || isBulkClassifying"
+                class="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-md font-medium hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {{ isBulkClassifying ? 'Processing...' : 'Preview (Dry Run)' }}
+              </button>
+              <button
+                @click="handleBulkClassify(false)"
+                :disabled="!bulkJql?.trim() || isBulkClassifying"
+                class="px-4 py-2 text-sm bg-primary-600 text-white rounded-md font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {{ isBulkClassifying ? 'Classifying...' : 'Classify & Write' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Bulk Result -->
+          <div v-if="bulkResult" class="mt-4 p-3 rounded-md border bg-blue-50 border-blue-200">
+            <div class="text-sm">
+              <p class="font-medium text-blue-900">
+                {{ bulkResult.dryRun ? '📋 Preview Results' : '✅ Bulk Classification Complete' }}
+              </p>
+              <div class="mt-2 space-y-1 text-xs text-blue-800">
+                <div><span class="font-semibold">Total matched:</span> {{ bulkResult.total }}</div>
+                <div><span class="font-semibold">Fetched:</span> {{ bulkResult.fetched }}</div>
+                <div><span class="font-semibold">Classified:</span> {{ bulkResult.classified }}</div>
+                <div><span class="font-semibold">Skipped:</span> {{ bulkResult.skipped }}</div>
+                <div v-if="bulkResult.errors.length > 0" class="text-red-700">
+                  <span class="font-semibold">Errors:</span> {{ bulkResult.errors.length }}
+                </div>
+              </div>
+
+              <!-- Show first few classified issues -->
+              <div v-if="bulkResult.details?.length > 0" class="mt-3 max-h-48 overflow-y-auto">
+                <p class="font-semibold text-blue-900 mb-1">Sample Results:</p>
+                <div class="space-y-1">
+                  <div v-for="detail in bulkResult.details.slice(0, 10)" :key="detail.issueKey" class="text-xs">
+                    <span class="font-mono">{{ detail.issueKey }}:</span>
+                    <span v-if="detail.status === 'classified'" class="text-green-700">
+                      {{ detail.category }} ({{ (detail.confidence * 100).toFixed(0) }}%)
+                    </span>
+                    <span v-else class="text-gray-600">{{ detail.reason }}</span>
+                  </div>
+                  <p v-if="bulkResult.details.length > 10" class="text-xs italic text-blue-700 mt-2">
+                    ... and {{ bulkResult.details.length - 10 }} more
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Configuration Notice -->
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
           <p class="text-sm text-blue-900">
             <span class="font-semibold">Current Configuration:</span>
-            Projects: AIPCC | Confidence Threshold: 0.85 | Issue Types: Story, Bug, Spike, Task, Epic
+            Projects: AIPCC, RHOIENG, INFERENG, RHAIENG | Confidence Threshold: 0.85 | Issue Types: Story, Bug, Spike, Task, Epic
           </p>
           <p class="text-xs text-blue-700 mt-1">
             Classification is rule-based using keyword matching. Jira automation webhook (not yet deployed) will trigger real-time classification on issue creation/update.
@@ -299,7 +382,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { getTeams, saveTeams, saveProjects, discoverBoards, getProjects, classifyIssue } from '../services/api.js'
+import { getTeams, saveTeams, saveProjects, discoverBoards, getProjects, classifyIssue, bulkClassifyIssues } from '../services/api.js'
 
 const emit = defineEmits(['saved'])
 
@@ -523,6 +606,12 @@ const testIssueKey = ref('')
 const isClassifying = ref(false)
 const testResult = ref(null)
 
+// Bulk classification state
+const bulkJql = ref('project in (AIPCC, RHOIENG, INFERENG, RHAIENG) AND type in (Story, Bug, Spike, Task, Epic) AND "Activity Type" is EMPTY AND created >= -30d')
+const bulkLimit = ref(100)
+const isBulkClassifying = ref(false)
+const bulkResult = ref(null)
+
 async function handleTestClassify(dryRun) {
   if (!testIssueKey.value?.trim()) return
 
@@ -540,6 +629,31 @@ async function handleTestClassify(dryRun) {
     }
   } finally {
     isClassifying.value = false
+  }
+}
+
+async function handleBulkClassify(dryRun) {
+  if (!bulkJql.value?.trim()) return
+
+  isBulkClassifying.value = true
+  bulkResult.value = null
+
+  try {
+    const result = await bulkClassifyIssues(bulkJql.value.trim(), dryRun, bulkLimit.value)
+    bulkResult.value = { dryRun, ...result }
+  } catch (error) {
+    console.error('Bulk classification error:', error)
+    bulkResult.value = {
+      dryRun,
+      error: error.message || 'Failed to bulk classify issues',
+      total: 0,
+      fetched: 0,
+      classified: 0,
+      skipped: 0,
+      errors: [{ error: error.message }]
+    }
+  } finally {
+    isBulkClassifying.value = false
   }
 }
 </script>
