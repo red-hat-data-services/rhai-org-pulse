@@ -168,6 +168,19 @@ const history = computed(() => featureDetail.value?.history || [])
               </div>
             </div>
 
+            <!-- Approval info -->
+            <div v-if="feature.humanReviewStatus === 'approved' && (feature.approvedBy || featureDetail?.latest?.approvedBy)" class="mb-6 px-3 py-2.5 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+              <div class="flex items-center gap-2 text-sm text-green-800 dark:text-green-300">
+                <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span>
+                  Approved by <span class="font-medium">{{ feature.approvedBy || featureDetail?.latest?.approvedBy }}</span>
+                  <span v-if="feature.approvedAt || featureDetail?.latest?.approvedAt" class="text-green-600 dark:text-green-400">
+                    on {{ new Date(feature.approvedAt || featureDetail?.latest?.approvedAt).toLocaleDateString() }}
+                  </span>
+                </span>
+              </div>
+            </div>
+
             <!-- Source RFE -->
             <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mb-4">
               <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Source RFE</h4>

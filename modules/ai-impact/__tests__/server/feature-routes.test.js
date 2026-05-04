@@ -97,6 +97,7 @@ describe('GET /features/status', () => {
     const { res } = await callHandler(routes, 'GET', '/features/status');
     expect(res.json).toHaveBeenCalledWith({
       lastSyncedAt: '2026-04-19T12:00:00Z',
+      lastJiraSyncAt: null,
       totalFeatures: 2,
       totalHistoryEntries: 3
     });
@@ -137,6 +138,8 @@ describe('GET /features', () => {
     const { res } = await callHandler(routes, 'GET', '/features');
     const payload = res.json.mock.calls[0][0];
     expect(payload.features.A.scores).toBeDefined();
+    expect(payload.features.A.approvedBy).toBeNull();
+    expect(payload.features.A.approvedAt).toBeNull();
     expect(payload.features.A.labels).toBeUndefined();
     expect(payload.features.A.runId).toBeUndefined();
     expect(payload.features.A.runTimestamp).toBeUndefined();
