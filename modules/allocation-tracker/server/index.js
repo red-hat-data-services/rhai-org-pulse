@@ -341,16 +341,17 @@ module.exports = function registerRoutes(router, context) {
         return res.status(400).json({ error: 'jql is required' });
       }
 
-      if (limit < 1 || limit > 1000) {
+      const parsedLimit = Number(limit);
+      if (!Number.isFinite(parsedLimit) || parsedLimit < 1 || parsedLimit > 1000) {
         return res.status(400).json({ error: 'limit must be between 1 and 1000' });
       }
 
-      console.log(`[allocation-tracker] Bulk classify: ${limit} issues, dryRun=${dryRun}`);
+      console.log(`[allocation-tracker] Bulk classify: ${parsedLimit} issues, dryRun=${dryRun}`);
       console.log(`[allocation-tracker] JQL: ${jql}`);
 
       // Fetch issues from Jira matching JQL
       const response = await jiraRequest(
-        `/rest/api/3/search?jql=${encodeURIComponent(jql)}&maxResults=${limit}&fields=summary,description,issuetype,customfield_10464,project`
+        `/rest/api/3/search?jql=${encodeURIComponent(jql)}&maxResults=${parsedLimit}&fields=summary,description,issuetype,customfield_10464,project`
       );
 
       const results = {
@@ -371,15 +372,16 @@ module.exports = function registerRoutes(router, context) {
 
           results.processed++;
 
+          const wasClassified = result.classified || result.written;
           const detail = {
             issueKey: issue.key,
-            status: result.written ? 'classified' : 'skipped',
+            status: wasClassified ? 'classified' : 'skipped',
             reason: result.reason || result.classification?.method,
             category: result.classification?.category,
             confidence: result.classification?.confidence
           };
 
-          if (result.written) {
+          if (wasClassified) {
             results.classified++;
             console.log(`  ✅ ${issue.key}: ${result.classification.category} (${result.classification.confidence})`);
           } else {
