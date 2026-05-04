@@ -31,6 +31,18 @@
         >
           Boards
         </button>
+        <button
+          data-testid="settings-tab"
+          @click="activeTab = 'classification'"
+          :class="[
+            'px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
+            activeTab === 'classification'
+              ? 'border-primary-600 text-primary-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          ]"
+        >
+          Classification
+        </button>
       </div>
 
       <!-- Projects tab -->
@@ -208,13 +220,86 @@
           </div>
         </div>
       </div>
+
+      <!-- Classification tab -->
+      <div v-if="activeTab === 'classification'" data-testid="classification-tab-content">
+        <p class="text-sm text-gray-500 mb-6">
+          Auto-classify Jira issues into 40/40/20 allocation buckets (Tech Debt & Quality, New Features, Learning & Enablement) by setting the Activity Type field.
+        </p>
+
+        <!-- Test Classification Card -->
+        <div class="bg-gray-50 rounded-lg p-4 mb-6 border border-gray-200">
+          <h3 class="text-sm font-semibold text-gray-900 mb-3">Test Classification</h3>
+          <p class="text-xs text-gray-500 mb-3">
+            Classify a single issue to test the classification logic. Dry run mode won't write to Jira.
+          </p>
+
+          <div class="flex items-end gap-3">
+            <label class="flex-1">
+              <span class="block text-xs font-medium text-gray-600 mb-1">Jira Issue Key</span>
+              <input
+                v-model="testIssueKey"
+                placeholder="e.g., AIPCC-15430"
+                class="text-sm border border-gray-300 rounded-md px-3 py-2 w-full font-mono focus:outline-none focus:ring-2 focus:ring-primary-300"
+              />
+            </label>
+            <button
+              @click="handleTestClassify(true)"
+              :disabled="!testIssueKey?.trim() || isClassifying"
+              class="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-md font-medium hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {{ isClassifying ? 'Testing...' : 'Test (Dry Run)' }}
+            </button>
+            <button
+              @click="handleTestClassify(false)"
+              :disabled="!testIssueKey?.trim() || isClassifying"
+              class="px-4 py-2 text-sm bg-primary-600 text-white rounded-md font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {{ isClassifying ? 'Classifying...' : 'Classify & Write' }}
+            </button>
+          </div>
+
+          <!-- Test Result -->
+          <div v-if="testResult" class="mt-4 p-3 rounded-md border" :class="testResult.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'">
+            <div v-if="testResult.success" class="text-sm">
+              <p class="font-medium text-green-900">
+                {{ testResult.skipped ? '⚠️ Skipped' : testResult.written ? '✅ Classified & Written' : '✅ Classification Result' }}
+              </p>
+              <div class="mt-2 space-y-1 text-xs text-green-800">
+                <div v-if="testResult.reason"><span class="font-semibold">Reason:</span> {{ testResult.reason }}</div>
+                <div v-if="testResult.classification">
+                  <span class="font-semibold">Category:</span> {{ testResult.classification.category || 'None' }}
+                  <span class="ml-3 font-semibold">Confidence:</span> {{ (testResult.classification.confidence * 100).toFixed(0) }}%
+                  <span class="ml-3 font-semibold">Method:</span> {{ testResult.classification.method }}
+                </div>
+                <div v-if="testResult.classification?.reason" class="italic">{{ testResult.classification.reason }}</div>
+              </div>
+            </div>
+            <div v-else class="text-sm">
+              <p class="font-medium text-red-900">❌ Error</p>
+              <p class="mt-1 text-xs text-red-800">{{ testResult.message }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Configuration Notice -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+          <p class="text-sm text-blue-900">
+            <span class="font-semibold">Current Configuration:</span>
+            Projects: AIPCC | Confidence Threshold: 0.85 | Issue Types: Story, Bug, Spike, Task, Epic
+          </p>
+          <p class="text-xs text-blue-700 mt-1">
+            Classification is rule-based using keyword matching. Jira automation webhook (not yet deployed) will trigger real-time classification on issue creation/update.
+          </p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { getTeams, saveTeams, saveProjects, discoverBoards, getProjects } from '../services/api.js'
+import { getTeams, saveTeams, saveProjects, discoverBoards, getProjects, classifyIssue } from '../services/api.js'
 
 const emit = defineEmits(['saved'])
 
@@ -430,6 +515,31 @@ async function handleDiscover() {
     console.error('Failed to discover boards:', error)
   } finally {
     isDiscovering.value = false
+  }
+}
+
+// Classification tab state
+const testIssueKey = ref('')
+const isClassifying = ref(false)
+const testResult = ref(null)
+
+async function handleTestClassify(dryRun) {
+  if (!testIssueKey.value?.trim()) return
+
+  isClassifying.value = true
+  testResult.value = null
+
+  try {
+    const result = await classifyIssue(testIssueKey.value.trim(), dryRun)
+    testResult.value = { success: true, ...result }
+  } catch (error) {
+    console.error('Classification error:', error)
+    testResult.value = {
+      success: false,
+      message: error.message || 'Failed to classify issue'
+    }
+  } finally {
+    isClassifying.value = false
   }
 }
 </script>

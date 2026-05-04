@@ -40,13 +40,14 @@ describe('AllocationTrackerSettings', () => {
   })
 
   describe('Tabs', () => {
-    it('renders two tabs: Projects and Boards', async () => {
+    it('renders three tabs: Projects, Boards, and Classification', async () => {
       const wrapper = mount(AllocationTrackerSettings)
       await flushPromises()
       const tabs = wrapper.findAll('[data-testid="settings-tab"]')
-      expect(tabs).toHaveLength(2)
+      expect(tabs).toHaveLength(3)
       expect(tabs[0].text()).toBe('Projects')
       expect(tabs[1].text()).toBe('Boards')
+      expect(tabs[2].text()).toBe('Classification')
     })
 
     it('shows Projects tab by default', async () => {

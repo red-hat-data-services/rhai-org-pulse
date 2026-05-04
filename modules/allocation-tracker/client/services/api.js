@@ -121,3 +121,14 @@ export async function saveProjects({ orgName, projects }) {
     body: JSON.stringify({ orgName, projects })
   })
 }
+
+/**
+ * Classify a single Jira issue
+ */
+export async function classifyIssue(issueKey, dryRun = true) {
+  return apiRequest(`${BASE}/classify`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ issueKey, dryRun })
+  })
+}
