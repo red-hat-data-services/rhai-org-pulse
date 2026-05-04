@@ -390,6 +390,11 @@ module.exports = function registerRoutes(router, context) {
           }
 
           results.details.push(detail);
+
+          // Add delay between Jira writes to avoid rate limiting
+          if (!dryRun && results.processed < response.issues.length) {
+            await new Promise(resolve => setTimeout(resolve, 200));
+          }
         } catch (error) {
           results.errors.push({
             issueKey: jiraIssue.key,
