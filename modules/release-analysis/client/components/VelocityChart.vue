@@ -22,10 +22,6 @@ const props = defineProps({
   velocity: {
     type: Number,
     required: true
-  },
-  componentName: {
-    type: String,
-    default: 'Component'
   }
 })
 

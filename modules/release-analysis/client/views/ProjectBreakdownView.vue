@@ -245,7 +245,7 @@
                 <!-- Component-level charts -->
                 <div class="mx-4 mt-3 mb-4 grid grid-cols-1 lg:grid-cols-3 gap-3">
                   <IssueCountChart :counts="comp.counts" />
-                  <VelocityChart :velocity="comp.forecast.velocity" :component-name="comp.name" />
+                  <VelocityChart :velocity="comp.forecast.velocity" />
                   <BacklogHealthChart :forecast="comp.forecast" />
                 </div>
 

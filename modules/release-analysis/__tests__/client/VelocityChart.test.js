@@ -94,17 +94,4 @@ describe('VelocityChart', () => {
     expect(label).toBe('3.7 issues / 14d')
   })
 
-  it('uses default component name when not provided', () => {
-    const wrapper = mount(VelocityChart, {
-      props: { velocity: 2.5 }
-    })
-    expect(wrapper.props('componentName')).toBe('Component')
-  })
-
-  it('accepts custom component name', () => {
-    const wrapper = mount(VelocityChart, {
-      props: { velocity: 3.2, componentName: 'API Gateway' }
-    })
-    expect(wrapper.props('componentName')).toBe('API Gateway')
-  })
 })
