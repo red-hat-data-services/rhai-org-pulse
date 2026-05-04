@@ -19,6 +19,8 @@ const featureStatus = ref(null)
 const featureStatusLoading = ref(false)
 const clearingFeatures = ref(false)
 const clearFeaturesResult = ref(null)
+const syncStatus = ref(null)
+const syncTriggering = ref(false)
 
 async function loadConfig() {
   loading.value = true
@@ -89,6 +91,39 @@ async function pollRefreshStatus() {
   setTimeout(poll, 2000)
 }
 
+async function triggerFeatureSync() {
+  syncTriggering.value = true
+  try {
+    const result = await apiRequest('/modules/ai-impact/features/sync', { method: 'POST' })
+    syncStatus.value = result
+    if (result.status === 'started') {
+      pollSyncStatus()
+    }
+  } catch (e) {
+    syncStatus.value = { status: 'error', message: e.message }
+  } finally {
+    syncTriggering.value = false
+  }
+}
+
+async function pollSyncStatus() {
+  const poll = async () => {
+    try {
+      const status = await apiRequest('/modules/ai-impact/features/sync/status')
+      syncStatus.value = status
+      if (status.running) {
+        setTimeout(poll, 3000)
+      } else {
+        // Reload feature status after sync completes
+        loadFeatureStatus()
+      }
+    } catch {
+      // ignore polling errors
+    }
+  }
+  setTimeout(poll, 2000)
+}
+
 async function clearCache() {
   clearingCache.value = true
   clearCacheResult.value = null
@@ -106,6 +141,14 @@ async function clearCache() {
 async function checkRefreshStatus() {
   try {
     refreshStatus.value = await apiRequest('/modules/ai-impact/refresh/status')
+  } catch {
+    // ignore
+  }
+}
+
+async function checkSyncStatus() {
+  try {
+    syncStatus.value = await apiRequest('/modules/ai-impact/features/sync/status')
   } catch {
     // ignore
   }
@@ -166,6 +209,7 @@ async function clearFeatures() {
 onMounted(() => {
   loadConfig()
   checkRefreshStatus()
+  checkSyncStatus()
   loadAssessmentStatus()
   loadFeatureStatus()
 })
@@ -326,39 +370,85 @@ function getAutofixProjectsDisplay() {
       </div>
     </div>
 
-    <!-- Manual Refresh -->
+    <!-- Data Refresh -->
     <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-      <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Data Refresh</h4>
-      <div class="flex items-center gap-3">
-        <button
-          @click="triggerRefresh"
-          :disabled="refreshTriggering || refreshStatus?.running"
-          class="px-4 py-2 bg-gray-800 text-white rounded-md text-sm hover:bg-gray-900 disabled:opacity-50"
-        >
-          {{ refreshStatus?.running ? 'Refreshing...' : 'Refresh Now' }}
-        </button>
-        <button
-          @click="clearCache"
-          :disabled="clearingCache"
-          class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
-        >
-          {{ clearingCache ? 'Clearing...' : 'Clear Cached Data' }}
-        </button>
-        <span v-if="clearCacheResult" class="text-sm" :class="clearCacheResult.status === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
-          {{ clearCacheResult.message }}
-        </span>
-        <div v-if="refreshStatus?.lastResult" class="text-sm text-gray-500 dark:text-gray-400">
-          Last refresh:
-          <span :class="refreshStatus.lastResult.status === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
-            {{ refreshStatus.lastResult.status }}
-          </span>
-          <span v-if="refreshStatus.lastResult.message"> &mdash; {{ refreshStatus.lastResult.message }}</span>
-          <span v-if="refreshStatus.lastResult.completedAt">
-            at {{ new Date(refreshStatus.lastResult.completedAt).toLocaleString() }}
-          </span>
+      <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Data Refresh</h4>
+      <div class="space-y-4">
+        <!-- RFE & AutoFix refresh -->
+        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <h5 class="text-sm font-medium text-gray-800 dark:text-gray-200">RFE & AutoFix Data</h5>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Fetches RFE issues and AutoFix pipeline data from Jira</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button
+                @click="triggerRefresh"
+                :disabled="refreshTriggering || refreshStatus?.running"
+                class="px-3 py-1.5 bg-gray-800 dark:bg-gray-600 text-white rounded-md text-sm hover:bg-gray-900 dark:hover:bg-gray-500 disabled:opacity-50"
+              >
+                {{ refreshStatus?.running ? 'Refreshing...' : 'Refresh' }}
+              </button>
+              <button
+                @click="clearCache"
+                :disabled="clearingCache"
+                class="px-3 py-1.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md text-sm hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+              >
+                {{ clearingCache ? 'Clearing...' : 'Clear Cache' }}
+              </button>
+            </div>
+          </div>
+          <div v-if="clearCacheResult" class="text-sm mb-1" :class="clearCacheResult.status === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+            {{ clearCacheResult.message }}
+          </div>
+          <div v-if="refreshStatus?.lastResult" class="text-xs text-gray-500 dark:text-gray-400">
+            Last refresh:
+            <span :class="refreshStatus.lastResult.status === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+              {{ refreshStatus.lastResult.status }}
+            </span>
+            <span v-if="refreshStatus.lastResult.message"> &mdash; {{ refreshStatus.lastResult.message }}</span>
+            <span v-if="refreshStatus.lastResult.completedAt">
+              at {{ new Date(refreshStatus.lastResult.completedAt).toLocaleString() }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Feature Jira Sync -->
+        <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <h5 class="text-sm font-medium text-gray-800 dark:text-gray-200">Feature Jira Sync</h5>
+              <p class="text-xs text-gray-500 dark:text-gray-400">Syncs title, status, priority, and labels (including human sign-off) from Jira for all tracked features</p>
+            </div>
+            <button
+              @click="triggerFeatureSync"
+              :disabled="syncTriggering || syncStatus?.running"
+              class="px-3 py-1.5 bg-gray-800 dark:bg-gray-600 text-white rounded-md text-sm hover:bg-gray-900 dark:hover:bg-gray-500 disabled:opacity-50"
+            >
+              {{ syncStatus?.running ? 'Syncing...' : 'Sync Now' }}
+            </button>
+          </div>
+          <div v-if="syncStatus?.lastResult" class="text-xs text-gray-500 dark:text-gray-400">
+            Last sync:
+            <span :class="{
+              'text-green-600 dark:text-green-400': syncStatus.lastResult.status === 'success',
+              'text-amber-600 dark:text-amber-400': syncStatus.lastResult.status === 'partial',
+              'text-red-600 dark:text-red-400': syncStatus.lastResult.status === 'error'
+            }">
+              {{ syncStatus.lastResult.status }}
+            </span>
+            <span v-if="syncStatus.lastResult.message"> &mdash; {{ syncStatus.lastResult.message }}</span>
+            <span v-if="syncStatus.lastResult.completedAt">
+              at {{ new Date(syncStatus.lastResult.completedAt).toLocaleString() }}
+            </span>
+            <div v-if="syncStatus.lastResult.errors" class="mt-1 text-red-500 dark:text-red-400">
+              <div v-for="(err, i) in syncStatus.lastResult.errors" :key="i">{{ err }}</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
+
     <!-- Assessment Data -->
     <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
       <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Assessment Data</h4>
@@ -395,12 +485,13 @@ function getAutofixProjectsDisplay() {
       </template>
       <div v-else class="text-sm text-gray-500 dark:text-gray-400">No assessment data available</div>
     </div>
+
     <!-- Feature Review Data -->
     <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
       <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Feature Reviews</h4>
       <div v-if="featureStatusLoading" class="text-sm text-gray-500 dark:text-gray-400">Loading feature status...</div>
       <template v-else-if="featureStatus">
-        <div class="grid grid-cols-3 gap-4 mb-3">
+        <div class="grid grid-cols-4 gap-4 mb-3">
           <div class="bg-gray-50 dark:bg-gray-700 rounded-md p-3">
             <p class="text-xs text-gray-500 dark:text-gray-400">Total Features</p>
             <p class="text-lg font-semibold dark:text-gray-200">{{ featureStatus.totalFeatures }}</p>
@@ -410,9 +501,15 @@ function getAutofixProjectsDisplay() {
             <p class="text-lg font-semibold dark:text-gray-200">{{ featureStatus.totalHistoryEntries }}</p>
           </div>
           <div class="bg-gray-50 dark:bg-gray-700 rounded-md p-3">
-            <p class="text-xs text-gray-500 dark:text-gray-400">Last Synced</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Last Pipeline Sync</p>
             <p class="text-sm font-medium dark:text-gray-200">
               {{ featureStatus.lastSyncedAt ? new Date(featureStatus.lastSyncedAt).toLocaleString() : 'Never' }}
+            </p>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700 rounded-md p-3">
+            <p class="text-xs text-gray-500 dark:text-gray-400">Last Jira Sync</p>
+            <p class="text-sm font-medium dark:text-gray-200">
+              {{ featureStatus.lastJiraSyncAt ? new Date(featureStatus.lastJiraSyncAt).toLocaleString() : 'Never' }}
             </p>
           </div>
         </div>
