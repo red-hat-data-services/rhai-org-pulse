@@ -264,6 +264,63 @@ module.exports = function registerRoutes(router, context) {
     res.json(sanitized);
   });
 
+  // ─── Classification routes ───
+
+  const { classifyAndWrite, shouldClassify } = require('./classification');
+
+  /**
+   * Classify a single issue and write Activity Type to Jira
+   * POST /api/modules/allocation-tracker/classify
+   * Body: { issueKey: 'AIPCC-12345', dryRun?: boolean }
+   */
+  router.post('/classify', requireAdmin, async function(req, res) {
+    try {
+      const { issueKey, dryRun } = req.body;
+
+      if (!issueKey || typeof issueKey !== 'string') {
+        return res.status(400).json({ error: 'issueKey is required' });
+      }
+
+      if (!/^[A-Z][A-Z0-9]+-\d+$/.test(issueKey)) {
+        return res.status(400).json({ error: 'Invalid issue key format' });
+      }
+
+      // Fetch issue from Jira
+      const jiraIssue = await jiraRequest(`/rest/api/3/issue/${issueKey}?fields=summary,description,issuetype,customfield_10464,project`);
+
+      // Transform to classification format
+      const issue = {
+        key: jiraIssue.key,
+        issueType: jiraIssue.fields.issuetype?.name,
+        summary: jiraIssue.fields.summary || '',
+        description: jiraIssue.fields.description?.content?.[0]?.content?.[0]?.text || '',
+        activityType: jiraIssue.fields.customfield_10464 || null,
+        project: jiraIssue.fields.project?.key
+      };
+
+      // Check if should classify
+      if (!shouldClassify(issue)) {
+        return res.json({
+          issueKey,
+          skipped: true,
+          reason: 'not-in-scope',
+          message: `Issue ${issueKey} not in configured projects or issue types`
+        });
+      }
+
+      // Classify and write
+      const result = await classifyAndWrite(issue, { dryRun: dryRun || false });
+
+      res.json(result);
+    } catch (error) {
+      console.error('[allocation-tracker] Classification error:', error);
+      if (error.message?.includes('404')) {
+        return res.status(404).json({ error: 'Issue not found' });
+      }
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // ─── Data reader routes ───
 
   router.get('/projects', function(req, res) {
