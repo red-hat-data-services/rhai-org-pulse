@@ -12,7 +12,7 @@ const CONFIG = {
   enabled: true,
   projects: ['AIPCC'], // Expand later: ['RHOIENG', 'INFERENG', 'RHAIENG']
   confidenceThreshold: 0.85,
-  issueTypes: ['Story', 'Bug', 'Spike', 'Task', 'Epic']
+  issueTypes: ['Story', 'Bug', 'Spike', 'Task', 'Epic', 'Vulnerability', 'Weakness']
 };
 
 /**
@@ -61,11 +61,12 @@ async function classifyAndWrite(issue, options = {}) {
         classification
       };
     } catch (error) {
+      console.error(`[classification] Failed to write Activity Type for ${issue.key}:`, error.message);
       return {
         issueKey: issue.key,
         classified: true,
         written: false,
-        error: error.message,
+        error: 'Failed to write to Jira',
         classification
       };
     }

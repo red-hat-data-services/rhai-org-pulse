@@ -30,6 +30,22 @@ describe('classification endpoint logic', () => {
       };
       expect(shouldClassify(issue)).toBe(false);
     });
+
+    it('should return true for Vulnerability issue type', () => {
+      const issue = {
+        project: 'AIPCC',
+        issueType: 'Vulnerability'
+      };
+      expect(shouldClassify(issue)).toBe(true);
+    });
+
+    it('should return true for Weakness issue type', () => {
+      const issue = {
+        project: 'AIPCC',
+        issueType: 'Weakness'
+      };
+      expect(shouldClassify(issue)).toBe(true);
+    });
   });
 
   describe('classifyAndWrite', () => {
@@ -115,7 +131,7 @@ describe('classification endpoint logic', () => {
       expect(CONFIG.enabled).toBe(true);
       expect(CONFIG.projects).toContain('AIPCC');
       expect(CONFIG.confidenceThreshold).toBe(0.85);
-      expect(CONFIG.issueTypes).toEqual(['Story', 'Bug', 'Spike', 'Task', 'Epic']);
+      expect(CONFIG.issueTypes).toEqual(['Story', 'Bug', 'Spike', 'Task', 'Epic', 'Vulnerability', 'Weakness']);
     });
   });
 });
