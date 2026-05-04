@@ -179,4 +179,4 @@ function validateFeature(body) {
   };
 }
 
-module.exports = { validateFeature, DIMENSIONS, PRIORITIES, RECOMMENDATIONS };
+module.exports = { validateFeature, deriveHumanReviewStatus, DIMENSIONS, PRIORITIES, RECOMMENDATIONS };
