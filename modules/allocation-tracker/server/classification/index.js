@@ -10,7 +10,7 @@ const { updateActivityType } = require('./jira-writer');
  */
 const CONFIG = {
   enabled: true,
-  projects: ['AIPCC'], // Expand later: ['RHOIENG', 'INFERENG', 'RHAIENG']
+  projects: ['AIPCC', 'RHOAIENG', 'INFERENG', 'RHAIENG'],
   confidenceThreshold: 0.85,
   issueTypes: ['Story', 'Bug', 'Spike', 'Task', 'Epic', 'Vulnerability', 'Weakness']
 };

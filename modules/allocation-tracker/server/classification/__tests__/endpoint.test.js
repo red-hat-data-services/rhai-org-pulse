@@ -17,7 +17,7 @@ describe('classification endpoint logic', () => {
 
     it('should return false for non-configured project', () => {
       const issue = {
-        project: 'RHOAIENG',
+        project: 'OTHER',
         issueType: 'Story'
       };
       expect(shouldClassify(issue)).toBe(false);

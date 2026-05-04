@@ -166,7 +166,7 @@ If >20% of issues remain unclassified:
 
 ## Expanding to Other Projects
 
-To enable classification for RHOIENG, INFERENG, RHAIENG:
+To enable classification for RHOAIENG, INFERENG, RHAIENG:
 
 1. **Update backend configuration:**
    - Edit `modules/allocation-tracker/server/classification/index.js`
