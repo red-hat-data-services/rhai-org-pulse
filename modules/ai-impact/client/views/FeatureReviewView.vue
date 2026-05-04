@@ -82,7 +82,7 @@ watch(() => Object.keys(features.value).length, () => {
     />
 
     <FeatureDetailPanel
-      v-if="selectedFeature"
+      :show="!!selectedFeature"
       :feature="selectedFeature"
       :phases="PHASES"
       :jiraHost="rfeData?.jiraHost"
