@@ -36,7 +36,7 @@
             <div>
               <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ team.displayName }}</h2>
               <p class="text-sm text-gray-500 dark:text-gray-400">
-                {{ team.org }}<span v-if="uniqueCount"> · {{ uniqueCount }} members</span>
+                {{ teamOrgName }}<span v-if="uniqueCount"> · {{ uniqueCount }} members</span>
               </p>
             </div>
           </div>
@@ -63,13 +63,49 @@
           </div>
         </div>
 
-        <!-- Enriched header details (from org-teams) -->
-        <div v-if="teamDetail" class="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-600 dark:text-gray-400">
-          <div v-if="teamDetail.productManagers?.length > 0" class="flex items-start gap-1.5">
+        <!-- Enriched header details: inline row with boards, PM/Eng Lead, and team fields -->
+        <div class="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-600 dark:text-gray-400">
+          <!-- Boards (read-only inline) -->
+          <template v-if="!editingBoards">
+            <div v-if="boardLinks.length > 0" class="flex items-center gap-1.5">
+              <span class="text-gray-400 dark:text-gray-500 shrink-0">Board{{ boardLinks.length > 1 ? 's' : '' }}:</span>
+              <a
+                v-for="(board, i) in boardLinks"
+                :key="i"
+                :href="board.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-primary-600 hover:underline"
+              >
+                {{ board.label }}
+              </a>
+              <button
+                v-if="isInAppMode && canEditBoards"
+                @click="startEditingBoards"
+                class="ml-1 p-0.5 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+                title="Edit boards"
+              >
+                <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                </svg>
+              </button>
+            </div>
+            <div v-else-if="isInAppMode && canEditBoards" class="flex items-center gap-1.5">
+              <button
+                @click="startEditingBoards"
+                class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 text-xs hover:underline transition-colors"
+              >
+                + Add board
+              </button>
+            </div>
+          </template>
+
+          <!-- PM / Eng Lead (non-in-app mode only) -->
+          <div v-if="!isInAppMode && teamDetail?.productManagers?.length > 0" class="flex items-center gap-1.5">
             <span class="text-gray-400 dark:text-gray-500 shrink-0">PM:</span>
             <span>{{ teamDetail.productManagers.join(', ') }}</span>
           </div>
-          <div v-if="teamDetail.engLeads?.length > 0" class="flex items-start gap-1.5">
+          <div v-if="!isInAppMode && teamDetail?.engLeads?.length > 0" class="flex items-center gap-1.5">
             <span class="text-gray-400 dark:text-gray-500 shrink-0">Eng Lead:</span>
             <span>
               <template v-for="(lead, i) in teamDetail.engLeads" :key="i">
@@ -83,20 +119,69 @@
               </template>
             </span>
           </div>
-          <div v-if="boardLinks.length > 0" class="flex items-center gap-1.5">
-            <span class="text-gray-400 dark:text-gray-500 shrink-0">Board{{ boardLinks.length > 1 ? 's' : '' }}:</span>
-            <div class="flex gap-2">
-              <a
-                v-for="(board, i) in boardLinks"
-                :key="i"
-                :href="board.url"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-primary-600 hover:underline"
-              >
-                {{ board.label }}
-              </a>
-            </div>
+
+          <!-- Team fields (in-app mode, inline) -->
+          <TeamFieldEditor
+            v-if="isInAppMode && team.teamId && hasVisibleTeamFields"
+            :teamId="team.teamId"
+            :metadata="team.metadata"
+            :fieldDefinitions="definitions.teamFields"
+            :canEdit="canManageMembers"
+            :people="allPeople"
+            :inline="true"
+            @updated="reloadRoster"
+            @navigate-person="navigateToPerson"
+          />
+        </div>
+
+        <!-- Board editing (expanded below inline row) -->
+        <div v-if="editingBoards" class="mt-3 bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Edit Boards</span>
+          </div>
+          <div v-for="(board, i) in editBoardsList" :key="i" class="flex items-center gap-2 mb-2">
+            <input
+              v-model="board.url"
+              type="text"
+              placeholder="Board URL"
+              class="flex-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            />
+            <input
+              v-model="board.name"
+              type="text"
+              placeholder="Display name (optional)"
+              class="w-48 text-sm border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            />
+            <button
+              @click="editBoardsList.splice(i, 1)"
+              class="p-1 text-red-400 hover:text-red-600 transition-colors"
+              title="Remove board"
+            >
+              <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+          <button
+            @click="editBoardsList.push({ url: '', name: '' })"
+            class="text-sm text-primary-600 dark:text-primary-400 hover:underline"
+          >
+            + Add board
+          </button>
+          <div class="flex gap-2 mt-3">
+            <button
+              @click="saveBoards"
+              :disabled="savingBoards"
+              class="px-3 py-1 text-xs font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 disabled:opacity-50 transition-colors"
+            >
+              {{ savingBoards ? 'Saving...' : 'Save' }}
+            </button>
+            <button
+              @click="editingBoards = false"
+              class="px-3 py-1 text-xs font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       </div>
@@ -127,6 +212,11 @@
           :headcount="teamDetail?.headcount"
           :members="uniqueMembers"
           :teamKey="team?.key"
+          :fieldDefinitions="definitions?.personFields || []"
+          :canManage="isInAppMode && canManageMembers"
+          :teamId="team.teamId"
+          :allPeople="allPeople"
+          @updated="reloadRoster"
         />
       </div>
 
@@ -172,25 +262,114 @@ import { computed, ref, onMounted, inject, watch } from 'vue'
 import TeamOverviewTab from '../components/TeamOverviewTab.vue'
 import TeamDeliveryTab from '../components/TeamDeliveryTab.vue'
 import TeamBacklogTab from '../components/TeamBacklogTab.vue'
+import TeamFieldEditor from '../components/TeamFieldEditor.vue'
 import RefreshModal from '@shared/client/components/RefreshModal.vue'
 import { useRoster } from '@shared/client/composables/useRoster'
 import { useGitlabStats } from '@shared/client/composables/useGitlabStats'
 import { useAuth } from '@shared/client/composables/useAuth'
+import { usePermissions } from '@shared/client/composables/usePermissions'
+import { useFieldDefinitions } from '@shared/client/composables/useFieldDefinitions'
 import { useOrgRoster } from '../composables/useOrgRoster'
-import { refreshMetrics, getTeamMetrics } from '@shared/client/services/api'
+import { refreshMetrics, getTeamMetrics, apiRequest } from '@shared/client/services/api'
 
 const nav = inject('moduleNav')
-const { teams: allTeams, loading: rosterLoading } = useRoster()
+const { teams: allTeams, rosterData, loading: rosterLoading, reloadRoster } = useRoster()
 const { loadTeamDetail, loadRfeConfig } = useOrgRoster()
 const { loadGitlabStats } = useGitlabStats()
 const { isAdmin } = useAuth()
+const { canEditTeam, managedUids } = usePermissions()
+const { definitions, fetchDefinitions } = useFieldDefinitions()
 
-// --- Team resolution ---
+const isInAppMode = computed(() => rosterData.value?.teamDataSource === 'in-app')
+
+// --- Team resolution (moved up for use by allPeople) ---
 const team = computed(() => {
   const teamKey = nav.params.value?.teamKey
   if (!teamKey) return null
   return allTeams.value.find(t => t.key === teamKey || t.displayKey === teamKey) || null
 })
+
+// People from org teams (for autocomplete and person-reference display)
+const orgPeople = computed(() => {
+  if (!team.value) return []
+  const orgKey = team.value.key.split('::')[0]
+  const seen = new Set()
+  const result = []
+  for (const t of allTeams.value) {
+    if (t.key.split('::')[0] !== orgKey) continue
+    for (const m of t.members) {
+      if (m.uid && !seen.has(m.uid)) {
+        seen.add(m.uid)
+        result.push({ uid: m.uid, name: m.name })
+      }
+    }
+  }
+  return result
+})
+
+// Resolve UIDs in person-reference metadata that aren't in org members (e.g. auxiliary PMs)
+const metadataReferencedPeople = ref([])
+
+async function resolveMetadataReferences() {
+  const metadata = team.value?.metadata
+  const teamFields = definitions.value.teamFields || []
+  if (!metadata) return
+
+  const orgUids = new Set(orgPeople.value.map(p => p.uid))
+  const unknownUids = new Set()
+
+  for (const field of teamFields) {
+    if (field.type !== 'person-reference-linked' || field.deleted) continue
+    const val = metadata[field.id]
+    const uids = Array.isArray(val) ? val : (val ? [val] : [])
+    for (const uid of uids) {
+      if (uid && !orgUids.has(uid)) unknownUids.add(uid)
+    }
+  }
+
+  if (unknownUids.size === 0) {
+    metadataReferencedPeople.value = []
+    return
+  }
+
+  const results = []
+  for (const uid of unknownUids) {
+    try {
+      const data = await apiRequest('/modules/team-tracker/registry/people/' + encodeURIComponent(uid))
+      if (data && data.person) results.push({ uid: data.person.uid, name: data.person.name })
+    } catch {
+      // Person not in registry
+    }
+  }
+  metadataReferencedPeople.value = results
+}
+
+watch(
+  [() => team.value && team.value.metadata, () => definitions.value.teamFields, orgPeople],
+  resolveMetadataReferences
+)
+
+const allPeople = computed(() => {
+  const seen = new Set()
+  const result = []
+  for (const p of orgPeople.value) {
+    if (!seen.has(p.uid)) {
+      seen.add(p.uid)
+      result.push(p)
+    }
+  }
+  for (const p of metadataReferencedPeople.value) {
+    if (!seen.has(p.uid)) {
+      seen.add(p.uid)
+      result.push(p)
+    }
+  }
+  return result
+})
+
+const hasVisibleTeamFields = computed(() =>
+  (definitions.value.teamFields || []).some(f => f.visible && !f.deleted)
+)
 
 const uniqueMembers = computed(() => {
   if (!team.value) return []
@@ -203,6 +382,21 @@ const uniqueMembers = computed(() => {
 })
 
 const uniqueCount = computed(() => uniqueMembers.value.length)
+
+const teamOrgName = computed(() => {
+  if (!team.value) return ''
+  const key = team.value.displayKey || team.value.key
+  const sepIdx = key.indexOf('::')
+  return sepIdx !== -1 ? key.substring(0, sepIdx) : ''
+})
+
+const canManageMembers = computed(() => {
+  if (!team.value?.teamId) return false
+  if (canEditTeam(team.value.teamId)) return true
+  const managed = managedUids.value
+  if (managed.size === 0) return false
+  return (team.value.members || []).some(m => m.uid && managed.has(m.uid))
+})
 
 // --- Org-teams detail (enriched data) ---
 const teamDetail = ref(null)
@@ -257,8 +451,14 @@ const memberUidByName = computed(() => {
   return map
 })
 
-function navigateToPerson(name) {
-  const uid = memberUidByName.value.get(name)
+function navigateToPerson(identifier) {
+  // If it looks like a UID (no spaces), navigate directly
+  if (!identifier.includes(' ')) {
+    nav.navigateTo('person-detail', { uid: identifier })
+    return
+  }
+  // Legacy fallback: look up by name
+  const uid = memberUidByName.value.get(identifier)
   if (uid) {
     nav.navigateTo('person-detail', { uid })
   }
@@ -280,6 +480,44 @@ function fallbackBoardLabel(url, index) {
     return `Board ${index + 1} — ${u.hostname}`
   } catch {
     return `Board ${index + 1}`
+  }
+}
+
+// --- Board editing ---
+const editingBoards = ref(false)
+const editBoardsList = ref([])
+const savingBoards = ref(false)
+
+const canEditBoards = computed(() => {
+  if (!team.value?.teamId) return false
+  return canEditTeam(team.value.teamId)
+})
+
+function startEditingBoards() {
+  const boards = teamDetail.value?.boards || []
+  editBoardsList.value = boards.map(b => ({ url: b.url, name: b.name || '' }))
+  if (editBoardsList.value.length === 0) {
+    editBoardsList.value.push({ url: '', name: '' })
+  }
+  editingBoards.value = true
+}
+
+async function saveBoards() {
+  if (!team.value?.teamId) return
+  savingBoards.value = true
+  try {
+    const boards = editBoardsList.value.filter(b => b.url.trim())
+    await apiRequest(`/modules/team-tracker/structure/teams/${team.value.teamId}/boards`, {
+      method: 'PATCH',
+      body: JSON.stringify({ boards }),
+      headers: { 'Content-Type': 'application/json' }
+    })
+    editingBoards.value = false
+    await fetchTeamDetail()
+  } catch (error) {
+    console.error('Failed to save boards:', error)
+  } finally {
+    savingBoards.value = false
   }
 }
 
@@ -334,6 +572,7 @@ onMounted(() => {
   fetchTeamDetail()
   fetchRfeConfig()
   loadGitlabStats()
+  fetchDefinitions()
 })
 
 watch(() => nav.params.value?.teamKey, () => {

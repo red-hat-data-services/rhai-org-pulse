@@ -11,7 +11,8 @@
       { "id": "people", "label": "People", "icon": "User" },
       { "id": "trends", "label": "Trends", "icon": "TrendingUp" },
       { "id": "reports", "label": "Reports", "icon": "FileText" },
-      { "id": "org-dashboard", "label": "Org Dashboard", "icon": "Building2" }
+      { "id": "org-dashboard", "label": "Org Dashboard", "icon": "Building2" },
+      { "id": "manage", "label": "Manage", "icon": "Settings", "requireRole": "team-admin", "requireCondition": "in-app-mode" }
     ],
     "settingsComponent": "./client/components/TeamTrackerSettings.vue"
   },

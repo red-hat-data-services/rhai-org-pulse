@@ -7,6 +7,8 @@
  * no client-side token management needed.
  */
 
+import { impersonatingUid } from '@shared/client/state/impersonation'
+
 const CACHE_PREFIX = 'app_cache:'
 /** Prefix for sessionStorage-only caches (same family as app_cache: localStorage keys). */
 export const SESSION_CACHE_PREFIX = 'app_cache:session:'
@@ -108,7 +110,12 @@ export function clearApiCache() {
 }
 
 export async function apiRequest(path, options = {}) {
-  const response = await fetch(`${getApiBase()}${path}`, options)
+  const headers = { ...(options.headers || {}) }
+  if (impersonatingUid.value) {
+    headers['X-Impersonate-Uid'] = impersonatingUid.value
+  }
+
+  const response = await fetch(`${getApiBase()}${path}`, { ...options, headers })
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))
@@ -358,5 +365,31 @@ export async function addToAllowlist(email) {
 export async function removeFromAllowlist(email) {
   return apiRequest(`/allowlist/${encodeURIComponent(email)}`, {
     method: 'DELETE'
+  })
+}
+
+// ─── Roles ───
+
+export async function fetchRoles() {
+  return apiRequest('/roles')
+}
+
+export async function fetchMyRoles() {
+  return apiRequest('/roles/me')
+}
+
+export async function assignRole(email, role) {
+  return apiRequest('/roles/assign', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, role })
+  })
+}
+
+export async function revokeRole(email, role) {
+  return apiRequest('/roles/revoke', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, role })
   })
 }

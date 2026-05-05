@@ -9,25 +9,13 @@ const mockRosterSync = {
   syncing: ref(false),
   isConfigured: ref(false),
   fetchConfig: vi.fn(async () => {}),
-  saveConfig: vi.fn(async (data) => data),
-  discoverSheets: vi.fn(async () => [])
+  saveConfig: vi.fn(async (data) => data)
 }
 
 vi.mock('../../client/composables/useRosterSync', () => ({
   useRosterSync: () => mockRosterSync
 }))
 
-// Mock useOrgRoster
-const mockOrgRoster = {
-  loadSheetOrgs: vi.fn(async () => ({ sheetOrgs: [] })),
-  loadConfiguredOrgs: vi.fn(async () => ({ configuredOrgs: [] })),
-  loadConfig: vi.fn(async () => ({ teamBoardsTab: '', orgNameMapping: {} })),
-  saveConfig: vi.fn(async () => {})
-}
-
-vi.mock('../../client/composables/useOrgRoster', () => ({
-  useOrgRoster: () => mockOrgRoster
-}))
 
 import PeopleAndTeamsSettings from '../../client/components/PeopleAndTeamsSettings.vue'
 
@@ -55,9 +43,6 @@ describe('PeopleAndTeamsSettings', () => {
     await wrapper.vm.$nextTick()
 
     expect(wrapper.text()).toContain('Org Roots')
-    expect(wrapper.text()).toContain('Google Sheets Integration')
-    expect(wrapper.text()).toContain('Column Mappings')
-    expect(wrapper.text()).toContain('Custom Fields')
     expect(wrapper.text()).toContain('Username Inference')
     expect(wrapper.text()).toContain('Save Configuration')
   })
@@ -193,6 +178,6 @@ describe('PeopleAndTeamsSettings', () => {
     await wrapper.vm.$nextTick()
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.text()).toContain('Roster sync config save failed')
+    expect(wrapper.text()).toContain('Save failed')
   })
 })

@@ -22,7 +22,8 @@ errorBuffer.install();
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 const storageModule = DEMO_MODE ? require('../shared/server/demo-storage') : require('../shared/server/storage');
 const { readFromStorage, writeToStorage } = storageModule;
-const { createAuthMiddleware, proxySecretGuard } = require('../shared/server/auth');
+const { createAuthMiddleware, proxySecretGuard, blockDuringImpersonation } = require('../shared/server/auth');
+const { createRoleStore } = require('../shared/server/role-store');
 const apiTokens = require('./api-tokens');
 
 const modulesConfig = require('./modules/config');
@@ -96,8 +97,10 @@ if (DEMO_MODE) {
 
 // ─── Auth (from shared package) ───
 
-const { authMiddleware, requireAdmin, seedAdminList } = createAuthMiddleware(readFromStorage, writeToStorage, {
-  tokenValidator: apiTokens
+const roleStore = createRoleStore(readFromStorage, writeToStorage);
+const { authMiddleware, requireAdmin, requireTeamAdmin, seedRoles } = createAuthMiddleware(readFromStorage, writeToStorage, {
+  tokenValidator: apiTokens,
+  roleStore
 });
 
 // ─── Swagger UI (before auth) ───
@@ -198,6 +201,16 @@ app.use(authMiddleware);
  *                 authMethod:
  *                   type: string
  *                   enum: [token, proxy, local-dev]
+ *                 permissionTier:
+ *                   type: string
+ *                   enum: [admin, manager, user]
+ *                 impersonating:
+ *                   type: boolean
+ *                   description: Present and true when X-Impersonate-Uid header is active
+ *                 realAdmin:
+ *                   type: string
+ *                   format: email
+ *                   description: The real admin's email (only present during impersonation)
  */
 app.get('/api/whoami', function(req, res) {
   // For proxy-authenticated users, try to get display name from headers
@@ -208,12 +221,24 @@ app.get('/api/whoami', function(req, res) {
     const email = req.headers['x-forwarded-email'];
     displayName = preferred || user || email || req.userEmail;
   }
-  res.json({
+
+  const response = {
     email: req.userEmail,
     displayName,
     isAdmin: req.isAdmin,
+    isTeamAdmin: req.isTeamAdmin || false,
+    roles: roleStore.getRoles(req.userEmail),
+    permissionTier: req.permissionTier || (req.isAdmin ? 'admin' : 'user'),
     authMethod: req.authMethod || (req.headers['x-forwarded-email'] ? 'proxy' : 'local-dev')
-  });
+  };
+
+  if (req.isImpersonating) {
+    response.impersonating = true;
+    response.realAdmin = req.realAdminEmail;
+    if (req.impersonatedDisplayName) response.displayName = req.impersonatedDisplayName;
+  }
+
+  res.json(response);
 });
 
 // ─── Routes: Site Config ───
@@ -304,7 +329,7 @@ app.post('/api/site-config', requireAdmin, function(req, res) {
  *                   items:
  *                     $ref: '#/components/schemas/ApiToken'
  */
-app.get('/api/tokens', function(req, res) {
+app.get('/api/tokens', blockDuringImpersonation, function(req, res) {
   try {
     const tokens = apiTokens.listUserTokens(req.userEmail);
     res.json({ tokens });
@@ -359,7 +384,7 @@ app.get('/api/tokens', function(req, res) {
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-app.post('/api/tokens', async function(req, res) {
+app.post('/api/tokens', blockDuringImpersonation, async function(req, res) {
   try {
     const { name, expiresIn } = req.body;
 
@@ -405,7 +430,7 @@ app.post('/api/tokens', async function(req, res) {
  *       404:
  *         $ref: '#/components/responses/NotFound'
  */
-app.delete('/api/tokens/:id', async function(req, res) {
+app.delete('/api/tokens/:id', blockDuringImpersonation, async function(req, res) {
   try {
     const revoked = await apiTokens.revokeToken(req.params.id, req.userEmail);
     if (!revoked) {
@@ -469,7 +494,7 @@ app.get('/api/admin/tokens', requireAdmin, function(req, res) {
  *       404:
  *         $ref: '#/components/responses/NotFound'
  */
-app.delete('/api/admin/tokens/:id', requireAdmin, async function(req, res) {
+app.delete('/api/admin/tokens/:id', requireAdmin, blockDuringImpersonation, async function(req, res) {
   try {
     const revoked = await apiTokens.adminRevokeToken(req.params.id);
     if (!revoked) {
@@ -504,8 +529,7 @@ app.delete('/api/admin/tokens/:id', requireAdmin, async function(req, res) {
  */
 app.get('/api/allowlist', requireAdmin, function(req, res) {
   try {
-    const data = readFromStorage('allowlist.json') || { emails: [] };
-    res.json({ emails: data.emails });
+    res.json({ emails: roleStore.getAdminEmails() });
   } catch (error) {
     console.error('Read allowlist error:', error);
     res.status(500).json({ error: error.message });
@@ -553,7 +577,7 @@ app.get('/api/allowlist', requireAdmin, function(req, res) {
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-app.post('/api/allowlist', requireAdmin, function(req, res) {
+app.post('/api/allowlist', requireAdmin, blockDuringImpersonation, function(req, res) {
   try {
     const { email } = req.body;
     if (!email || typeof email !== 'string') {
@@ -565,14 +589,13 @@ app.post('/api/allowlist', requireAdmin, function(req, res) {
       return res.status(400).json({ error: 'A valid email address is required' });
     }
 
-    const data = readFromStorage('allowlist.json') || { emails: [] };
-    if (data.emails.includes(normalized)) {
+    if (roleStore.hasRole(normalized, 'admin')) {
       return res.status(409).json({ error: 'Email is already on the allowlist' });
     }
 
-    data.emails.push(normalized);
-    writeToStorage('allowlist.json', data);
-    res.json({ emails: data.emails });
+    const result = roleStore.assignRole(normalized, 'admin', req.auditActor || req.userEmail);
+    if (result.demo) return res.json(result);
+    res.json({ emails: roleStore.getAdminEmails() });
   } catch (error) {
     console.error('Add to allowlist error:', error);
     res.status(500).json({ error: error.message });
@@ -612,25 +635,77 @@ app.post('/api/allowlist', requireAdmin, function(req, res) {
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-app.delete('/api/allowlist/:email', requireAdmin, function(req, res) {
+app.delete('/api/allowlist/:email', requireAdmin, blockDuringImpersonation, function(req, res) {
   try {
     const email = decodeURIComponent(req.params.email).toLowerCase();
-    const data = readFromStorage('allowlist.json') || { emails: [] };
 
-    if (!data.emails.includes(email)) {
+    if (!roleStore.hasRole(email, 'admin')) {
       return res.status(404).json({ error: 'Email not found on allowlist' });
     }
 
-    if (data.emails.length <= 1) {
+    const result = roleStore.revokeRole(email, 'admin', req.auditActor || req.userEmail);
+    if (result.demo) return res.json(result);
+    res.json({ emails: roleStore.getAdminEmails() });
+  } catch (error) {
+    if (error.message === 'Cannot remove the last admin') {
       return res.status(400).json({ error: 'Cannot remove the last user from the allowlist' });
     }
-
-    data.emails = data.emails.filter(e => e !== email);
-    writeToStorage('allowlist.json', data);
-    res.json({ emails: data.emails });
-  } catch (error) {
     console.error('Remove from allowlist error:', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// ─── Routes: Role Management ───
+
+app.get('/api/roles/me', function(req, res) {
+  res.json({ roles: roleStore.getRoles(req.userEmail) });
+});
+
+app.get('/api/roles', requireAdmin, function(req, res) {
+  try {
+    res.json({ assignments: roleStore.listAssignments() });
+  } catch (error) {
+    console.error('List roles error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/roles/assign', requireAdmin, blockDuringImpersonation, function(req, res) {
+  try {
+    const { email, role } = req.body;
+    if (!email || typeof email !== 'string') {
+      return res.status(400).json({ error: 'email is required' });
+    }
+    if (!role || typeof role !== 'string') {
+      return res.status(400).json({ error: 'role is required' });
+    }
+    const result = roleStore.assignRole(email, role, req.auditActor || req.userEmail);
+    if (result.demo) return res.json(result);
+    res.json(result);
+  } catch (error) {
+    console.error('Assign role error:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.post('/api/roles/revoke', requireAdmin, blockDuringImpersonation, function(req, res) {
+  try {
+    const { email, role } = req.body;
+    if (!email || typeof email !== 'string') {
+      return res.status(400).json({ error: 'email is required' });
+    }
+    if (!role || typeof role !== 'string') {
+      return res.status(400).json({ error: 'role is required' });
+    }
+    const result = roleStore.revokeRole(email, role, req.auditActor || req.userEmail);
+    if (result.demo) return res.json(result);
+    res.json(result);
+  } catch (error) {
+    if (error.message === 'Cannot remove the last admin') {
+      return res.status(400).json({ error: error.message });
+    }
+    console.error('Revoke role error:', error);
+    res.status(400).json({ error: error.message });
   }
 });
 
@@ -673,7 +748,7 @@ app.get('/api/modules', function(req, res) {
 // builtInModules is populated once via getDiscoveredModules() (see top of file).
 
 const diagnosticsRegistry = {};
-const moduleContext = { storage: storageModule, requireAuth: authMiddleware, requireAdmin, registerDiagnostics: null };
+const moduleContext = { storage: storageModule, requireAuth: authMiddleware, requireAdmin, requireTeamAdmin, roleStore, registerDiagnostics: null };
 
 const persistedState = loadModuleState(storageModule);
 // Persist defaults for any newly discovered modules at startup (not in GET handlers).
@@ -1416,7 +1491,7 @@ app.options('/api/{*path}', function(req, res) { res.status(200).end(); });
 
 // ─── Start ───
 
-seedAdminList();
+seedRoles();
 modulesConfig.seedIfMissing(storageModule);
 
 // Start daily module sync

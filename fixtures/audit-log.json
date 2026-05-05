@@ -1,0 +1,44 @@
+{
+  "entries": [
+    {
+      "id": "evt_demo0001",
+      "timestamp": "2026-01-15T10:00:00.000Z",
+      "actor": "admin@example.com",
+      "action": "team.create",
+      "entityType": "team",
+      "entityId": "team_a1b2c3",
+      "entityLabel": "Platform",
+      "field": null,
+      "oldValue": null,
+      "newValue": null,
+      "detail": "Created team \"Platform\" in org achen"
+    },
+    {
+      "id": "evt_demo0002",
+      "timestamp": "2026-01-15T10:01:00.000Z",
+      "actor": "admin@example.com",
+      "action": "person.team.assign",
+      "entityType": "person",
+      "entityId": "bsmith",
+      "entityLabel": "Bob Smith",
+      "field": "teamIds",
+      "oldValue": [],
+      "newValue": ["team_a1b2c3"],
+      "detail": "Assigned to team \"Platform\""
+    },
+    {
+      "id": "evt_demo0003",
+      "timestamp": "2026-01-15T10:02:00.000Z",
+      "actor": "admin@example.com",
+      "action": "field.create",
+      "entityType": "field",
+      "entityId": "field_x1y2z3",
+      "entityLabel": "Focus Area",
+      "field": null,
+      "oldValue": null,
+      "newValue": null,
+      "detail": "Created person field \"Focus Area\" (type: free-text)"
+    }
+  ],
+  "maxEntries": 10000
+}

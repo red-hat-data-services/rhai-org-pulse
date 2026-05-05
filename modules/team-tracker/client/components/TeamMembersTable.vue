@@ -13,6 +13,41 @@
       />
     </div>
 
+    <!-- Custom field filters -->
+    <div v-for="field in visibleFilterFields" :key="field.id" class="mb-3 flex flex-wrap gap-2">
+      <button
+        @click="setMemberFieldFilter(field.id, [])"
+        class="px-3 py-1 rounded text-xs font-medium transition-colors border"
+        :class="!(memberFieldFilters[field.id] || []).length
+          ? 'bg-primary-600 text-white border-primary-600'
+          : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'"
+      >
+        All {{ field.label }}
+      </button>
+      <button
+        v-for="opt in (field.allowedValues || []).filter(v => (memberFieldFilterCounts[field.id] || {})[v] > 0)"
+        :key="opt"
+        @click="setMemberFieldFilter(field.id, (memberFieldFilters[field.id] || []).includes(opt) ? (memberFieldFilters[field.id] || []).filter(v => v !== opt) : [...(memberFieldFilters[field.id] || []), opt])"
+        class="px-3 py-1 rounded text-xs font-medium transition-colors border"
+        :class="(memberFieldFilters[field.id] || []).includes(opt)
+          ? 'bg-primary-600 text-white border-primary-600'
+          : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'"
+      >
+        {{ opt }} <span class="text-gray-400 dark:text-gray-500 ml-1">{{ (memberFieldFilterCounts[field.id] || {})[opt] || 0 }}</span>
+      </button>
+    </div>
+    <div v-if="hasMoreFilters" class="mb-3">
+      <button
+        class="text-xs text-primary-600 dark:text-primary-400 hover:underline"
+        @click="showMoreFilters = !showMoreFilters"
+      >
+        {{ showMoreFilters ? 'Show fewer filters' : `More filters (${constrainedPersonFields.length - 2})` }}
+      </button>
+    </div>
+    <div v-if="isMemberFieldFilterActive" class="mb-3 text-sm text-gray-500 dark:text-gray-400">
+      Showing {{ sortedMembers.length }} of {{ props.members.length }} members
+    </div>
+
     <!-- Filter by role -->
     <div v-if="uniqueRoles.length > 1" class="mb-4 flex flex-wrap gap-2">
       <button
@@ -48,6 +83,8 @@
           >
             {{ col.label }}
             <span v-if="sortKey === col.key" class="ml-1">{{ sortAsc ? '↑' : '↓' }}</span>
+          </th>
+          <th v-if="canManage" class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
           </th>
         </tr>
       </thead>
@@ -86,6 +123,15 @@
           <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{{ getComponent(member) }}</td>
           <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ member.geo || member.region || '—' }}</td>
           <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">{{ getLocation(member) }}</td>
+          <td v-if="canManage" class="px-4 py-3 text-sm text-right whitespace-nowrap">
+            <button
+              v-if="member.uid"
+              @click.stop="emit('remove-member', member.uid)"
+              class="px-2.5 py-1 text-xs font-medium text-white bg-primary-600 rounded-md hover:bg-primary-700 transition-colors"
+            >
+              Remove from Team
+            </button>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -97,17 +143,63 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, toRef } from 'vue'
 import { useModuleLink } from '@shared/client/composables/useModuleLink'
 import { useRoster } from '@shared/client/composables/useRoster'
+import { useFieldFilters } from '../composables/useFieldFilters'
 
 const { linkTo } = useModuleLink()
 const { teams: allTeams } = useRoster()
 
 const props = defineProps({
   members: { type: Array, required: true },
-  teamKey: { type: String, default: null }
+  teamKey: { type: String, default: null },
+  fieldDefinitions: { type: Array, default: () => [] },
+  canManage: { type: Boolean, default: false },
+  teamId: { type: String, default: null }
 })
+
+const emit = defineEmits(['remove-member'])
+
+const showMoreFilters = ref(false)
+
+const constrainedPersonFields = computed(() =>
+  (props.fieldDefinitions || []).filter(f => f.visible && !f.deleted && f.type === 'constrained')
+)
+
+// Only show filters for fields with 2+ distinct values among current members
+const relevantFilterFields = computed(() =>
+  constrainedPersonFields.value.filter(f => {
+    const counts = memberFieldFilterCounts.value[f.id] || {}
+    const nonZeroValues = Object.values(counts).filter(c => c > 0).length
+    return nonZeroValues >= 2
+  })
+)
+
+const visibleFilterFields = computed(() => {
+  if (showMoreFilters.value) return relevantFilterFields.value
+  return relevantFilterFields.value.slice(0, 2)
+})
+
+const hasMoreFilters = computed(() => relevantFilterFields.value.length > 2)
+
+const membersRef = toRef(props, 'members')
+const fieldDefsRef = computed(() => constrainedPersonFields.value)
+
+const {
+  activeFilters: memberFieldFilters,
+  setFilter: setMemberFieldFilter,
+  filtered: memberFieldFiltered,
+  filterCounts: memberFieldFilterCounts
+} = useFieldFilters(
+  membersRef,
+  fieldDefsRef,
+  (member) => member._appFields || {}
+)
+
+const isMemberFieldFilterActive = computed(() =>
+  Object.values(memberFieldFilters.value).some(v => v && v.length > 0)
+)
 
 const uidToMember = computed(() => {
   const map = new Map()
@@ -150,16 +242,34 @@ function personLink(member) {
   return linkTo('team-tracker', 'person-detail', { person: member.name, ...(props.teamKey && { teamKey: props.teamKey }) })
 }
 
+function getCustomFieldByLabel(member, label) {
+  const cf = member.customFields
+  if (!cf) return null
+  // Try direct key match first (sheets mode uses key names like 'component')
+  let val = cf[label]
+  if (!val) {
+    // In-app mode: customFields keys are field IDs — find the matching definition
+    const def = props.fieldDefinitions.find(f => f.label.toLowerCase() === label.toLowerCase())
+    if (def) val = cf[def.id]
+  }
+  if (val == null) return null
+  // Format arrays as comma-separated for display
+  return Array.isArray(val) ? val.join(', ') : val
+}
+
 function getSpecialty(member) {
-  return member.engineeringSpeciality || member.specialty || member.title || '—'
+  return getCustomFieldByLabel(member, 'Engineering Speciality')
+    || member.engineeringSpeciality || member.specialty || member.title || '—'
 }
 
 function getStatus(member) {
-  return member.status || member.customFields?.status || 'Confirmed'
+  const cf = member.customFields
+  return member.status || cf?.status || 'Confirmed'
 }
 
 function getComponent(member) {
-  return member.customFields?.component || member.component || '—'
+  return getCustomFieldByLabel(member, 'Component')
+    || member.customFields?.component || member.customFields?.jiraComponent || member.component || '—'
 }
 
 function getLocation(member) {
@@ -193,7 +303,7 @@ const uniqueRoles = computed(() => {
 })
 
 const sortedMembers = computed(() => {
-  let result = props.members
+  let result = memberFieldFiltered.value
   if (searchQuery.value) {
     const q = searchQuery.value.toLowerCase()
     result = result.filter(m =>

@@ -5,10 +5,22 @@ import { useAuth } from '@shared/client/composables/useAuth.js'
 import { useRoster } from '@shared/client/composables/useRoster.js'
 import { useGithubStats } from '@shared/client/composables/useGithubStats.js'
 import { useGitlabStats } from '@shared/client/composables/useGitlabStats.js'
+import { usePermissions } from '@shared/client/composables/usePermissions.js'
+import { useImpersonation } from '@shared/client/composables/useImpersonation.js'
+import { useFieldDefinitions } from '@shared/client/composables/useFieldDefinitions.js'
+import PersonFieldEditor from '../components/PersonFieldEditor.vue'
 
 const nav = inject('moduleNav')
-const { isAdmin } = useAuth()
-const { getTeamsForPerson, teams: allTeams } = useRoster()
+const { isAdmin, refresh: refreshAuth } = useAuth()
+const { getTeamsForPerson, teams: allTeams, rosterData } = useRoster()
+const { canEdit, refresh: refreshPermissions } = usePermissions()
+const { startImpersonating } = useImpersonation()
+const { definitions, fetchDefinitions } = useFieldDefinitions()
+
+const isInAppMode = computed(() => rosterData.value?.teamDataSource === 'in-app')
+const visiblePersonFields = computed(() =>
+  (definitions.value.personFields || []).filter(f => f.visible && !f.deleted)
+)
 const { getContributions: getGithubContributions } = useGithubStats()
 const { getContributions: getGitlabContributions, loadGitlabStats } = useGitlabStats()
 
@@ -36,15 +48,25 @@ const rosterMember = computed(() => {
   return null
 })
 
-const personComponent = computed(() => {
-  return rosterMember.value?.customFields?.component || null
+// personComponent removed: after migration, person component is rendered by PersonFieldEditor
+
+const allPeople = computed(() => {
+  const seen = new Set()
+  const result = []
+  for (const t of allTeams.value) {
+    for (const m of t.members) {
+      if (m.uid && !seen.has(m.uid)) {
+        seen.add(m.uid)
+        result.push({ uid: m.uid, name: m.name })
+      }
+    }
+  }
+  return result
 })
 
-const engineeringSpeciality = computed(() => {
-  return rosterMember.value?.customFields?.engineeringSpeciality
-    || rosterMember.value?.engineeringSpeciality
-    || null
-})
+const associatedTeams = ref([])
+
+const isAuxiliary = computed(() => person.value?.orgType === 'auxiliary')
 
 const person = ref(null)
 const managerChain = ref([])
@@ -73,8 +95,10 @@ async function loadPerson() {
     person.value = data.person
     managerChain.value = data.managerChain || []
     directReports.value = data.directReports || []
+    associatedTeams.value = data.associatedTeams || []
 
-    if (person.value?.name) {
+    // Suppress Jira/GitHub/GitLab API calls for auxiliary people
+    if (person.value?.name && person.value?.orgType !== 'auxiliary') {
       try {
         jiraMetrics.value = await apiRequest(
           '/modules/team-tracker/person/' + encodeURIComponent(person.value.name) + '/metrics'
@@ -82,6 +106,8 @@ async function loadPerson() {
       } catch {
         jiraMetrics.value = null
       }
+    } else {
+      jiraMetrics.value = null
     }
   } catch (e) {
     error.value = e.message || 'Person not found'
@@ -170,10 +196,20 @@ function sourceLabel(source) {
   return source
 }
 
+function handleImpersonate() {
+  if (person.value?.uid) {
+    startImpersonating(person.value.uid, person.value.name, { refreshAuth, refreshPermissions })
+  }
+}
+
 watch([uid, personName], loadPerson)
+watch(isAuxiliary, (val) => {
+  if (!val) loadGitlabStats()
+})
 onMounted(() => {
   loadPerson()
   loadGitlabStats()
+  fetchDefinitions()
 })
 </script>
 
@@ -208,13 +244,19 @@ onMounted(() => {
                 <div class="flex items-center gap-2 flex-wrap">
                   <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ person.name }}</h2>
                   <span v-if="person.status === 'inactive'" class="text-xs font-normal px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400">Inactive</span>
-                  <span v-if="engineeringSpeciality" class="text-xs px-2.5 py-0.5 rounded-full bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300 font-medium">{{ engineeringSpeciality }}</span>
                 </div>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{{ person.title }}</p>
               </div>
-              <div v-if="isAdmin && person.status === 'inactive'" class="flex gap-2 flex-shrink-0">
-                <button @click="reactivate" class="px-3 py-1.5 text-xs bg-green-600 text-white rounded-md hover:bg-green-700">Reactivate</button>
-                <button @click="purge" class="px-3 py-1.5 text-xs border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20">Purge</button>
+              <div v-if="isAdmin" class="flex gap-2 flex-shrink-0">
+                <button
+                  v-if="person.status === 'active' && person.uid"
+                  @click="handleImpersonate"
+                  class="px-3 py-1.5 text-xs border border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400 rounded-md hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+                >Impersonate</button>
+                <template v-if="person.status === 'inactive'">
+                  <button @click="reactivate" class="px-3 py-1.5 text-xs bg-green-600 text-white rounded-md hover:bg-green-700">Reactivate</button>
+                  <button @click="purge" class="px-3 py-1.5 text-xs border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20">Purge</button>
+                </template>
               </div>
             </div>
 
@@ -244,13 +286,19 @@ onMounted(() => {
                 </svg>
                 <span class="text-gray-900 dark:text-gray-100">{{ person.geo || '—' }}</span>
               </div>
-              <div v-if="personComponent" class="flex items-center gap-2.5">
-                <svg class="h-4 w-4 text-gray-400 dark:text-gray-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                </svg>
-                <span class="text-gray-900 dark:text-gray-100">{{ personComponent }}</span>
-              </div>
+              <!-- Person component is now rendered via PersonFieldEditor below -->
             </div>
+
+            <!-- Custom Fields (in-app mode) -->
+            <PersonFieldEditor
+              v-if="isInAppMode && visiblePersonFields.length > 0"
+              :uid="person.uid"
+              :customFields="person._appFields || {}"
+              :fieldDefinitions="visiblePersonFields"
+              :canEdit="canEdit(person.uid)"
+              :people="allPeople"
+              @updated="loadPerson"
+            />
           </div>
 
           <!-- Identities -->
@@ -281,15 +329,19 @@ onMounted(() => {
                   </div>
                 </div>
                 <div v-if="isAdmin && editField !== platform" class="flex gap-2">
-                  <button @click="startEdit(platform)" class="text-xs text-primary-600 dark:text-primary-400 hover:underline">{{ person[platform] && person[platform].username ? 'Edit' : 'Set' }}</button>
+                  <button @click="startEdit(platform)" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" :title="person[platform] && person[platform].username ? 'Edit' : 'Set'">
+                    <svg class="h-3.5 w-3.5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </button>
                   <button v-if="person[platform] && person[platform].source === 'manual'" @click="removeId(platform)" class="text-xs text-red-500 hover:underline">Remove</button>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Metrics -->
-          <div v-if="(jiraMetrics && !jiraMetrics.nameNotFound) || githubContribs || gitlabContribs" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+          <!-- Metrics (hidden for auxiliary/non-engineering people) -->
+          <div v-if="!isAuxiliary && ((jiraMetrics && !jiraMetrics.nameNotFound) || githubContribs || gitlabContribs)" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
             <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4 uppercase tracking-wider">Metrics</h3>
             <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
               <template v-if="jiraMetrics && !jiraMetrics.nameNotFound">
@@ -321,8 +373,8 @@ onMounted(() => {
             </div>
           </div>
 
-          <!-- In-Progress Issues (collapsible) -->
-          <div v-if="jiraMetrics?.inProgress?.issues?.length" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <!-- In-Progress Issues (collapsible, hidden for auxiliary) -->
+          <div v-if="!isAuxiliary && jiraMetrics?.inProgress?.issues?.length" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <button
               @click="showInProgressIssues = !showInProgressIssues"
               class="w-full px-6 py-4 flex items-center justify-between text-left"
@@ -364,8 +416,8 @@ onMounted(() => {
             </div>
           </div>
 
-          <!-- Resolved Issues (collapsible) -->
-          <div v-if="jiraMetrics?.resolved?.issues?.length" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+          <!-- Resolved Issues (collapsible, hidden for auxiliary) -->
+          <div v-if="!isAuxiliary && jiraMetrics?.resolved?.issues?.length" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <button
               @click="showResolvedIssues = !showResolvedIssues"
               class="w-full px-6 py-4 flex items-center justify-between text-left"
@@ -434,6 +486,29 @@ onMounted(() => {
                   <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
                 <span class="text-sm text-primary-600 dark:text-primary-400 truncate">{{ t.displayName }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Associated Teams (for auxiliary/non-engineering people) -->
+          <div v-if="isAuxiliary && associatedTeams.length > 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4 uppercase tracking-wider">
+              Associated Teams <span class="font-normal text-gray-400">({{ associatedTeams.length }})</span>
+            </h3>
+            <div class="space-y-2">
+              <button
+                v-for="at in associatedTeams"
+                :key="at.teamId + '-' + at.fieldId"
+                @click="nav.navigateTo('team-detail', { teamKey: at.orgKey + '::' + at.teamName })"
+                class="w-full text-left flex items-center gap-2 py-1.5 px-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+              >
+                <svg class="h-4 w-4 text-gray-400 dark:text-gray-500 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <div class="min-w-0">
+                  <div class="text-sm text-primary-600 dark:text-primary-400 truncate">{{ at.teamName }}</div>
+                  <div class="text-[10px] text-gray-400 dark:text-gray-500">{{ at.fieldLabel }}</div>
+                </div>
               </button>
             </div>
           </div>

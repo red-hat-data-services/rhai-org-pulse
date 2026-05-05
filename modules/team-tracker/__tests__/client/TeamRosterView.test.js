@@ -18,11 +18,13 @@ vi.mock('@shared/client/composables/useRoster', () => ({
         ]
       }
     ]),
+    rosterData: ref({ teamDataSource: 'sheets' }),
     loading: ref(false),
     multiTeamMembers: ref(new Set()),
     getTeamsForPerson: () => ['Model Serving'],
     visibleFields: ref([]),
-    primaryDisplayField: ref(null)
+    primaryDisplayField: ref(null),
+    reloadRoster: vi.fn()
   })
 }))
 
@@ -35,6 +37,28 @@ vi.mock('@shared/client/composables/useGitlabStats', () => ({
 
 vi.mock('@shared/client/composables/useAuth', () => ({
   useAuth: () => ({ isAdmin: ref(false) })
+}))
+
+vi.mock('@shared/client/composables/usePermissions', () => ({
+  usePermissions: () => ({
+    canEditTeam: () => false,
+    canEdit: () => false,
+    isAdmin: ref(false),
+    isManager: ref(false),
+    tier: ref('user'),
+    managedUids: ref(new Set()),
+    userUid: ref(null),
+    loading: ref(false),
+    refresh: vi.fn()
+  })
+}))
+
+vi.mock('@shared/client/composables/useFieldDefinitions', () => ({
+  useFieldDefinitions: () => ({
+    definitions: ref({ personFields: [], teamFields: [] }),
+    loading: ref(false),
+    fetchDefinitions: vi.fn()
+  })
 }))
 
 const mockLoadTeamDetail = vi.fn()

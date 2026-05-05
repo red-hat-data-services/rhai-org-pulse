@@ -1,0 +1,106 @@
+{
+  "personFields": [
+    {
+      "id": "field_x1y2z3",
+      "label": "Focus Area",
+      "type": "free-text",
+      "multiValue": false,
+      "required": false,
+      "visible": true,
+      "primaryDisplay": true,
+      "allowedValues": null,
+      "deleted": false,
+      "order": 0,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "createdBy": "admin@example.com"
+    },
+    {
+      "id": "field_d4e5f6",
+      "label": "Component",
+      "type": "constrained",
+      "multiValue": true,
+      "required": false,
+      "visible": true,
+      "primaryDisplay": false,
+      "allowedValues": null,
+      "optionsRef": "components",
+      "deleted": false,
+      "order": 1,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "createdBy": "admin@example.com"
+    },
+    {
+      "id": "field_mv0001",
+      "label": "Skills",
+      "type": "constrained",
+      "multiValue": true,
+      "required": false,
+      "visible": true,
+      "primaryDisplay": false,
+      "allowedValues": ["Python", "Go", "Rust", "JavaScript", "Java", "ML/AI"],
+      "deleted": false,
+      "order": 2,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "createdBy": "admin@example.com"
+    },
+    {
+      "id": "field_rq0001",
+      "label": "Primary Role",
+      "type": "constrained",
+      "multiValue": false,
+      "required": true,
+      "visible": true,
+      "primaryDisplay": false,
+      "allowedValues": ["Backend", "Frontend", "Full Stack", "DevOps", "ML Engineer", "QE"],
+      "deleted": false,
+      "order": 3,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "createdBy": "admin@example.com"
+    }
+  ],
+  "teamFields": [
+    {
+      "id": "field_g7h8i9",
+      "label": "Product Manager",
+      "type": "person-reference-linked",
+      "multiValue": false,
+      "required": false,
+      "visible": true,
+      "primaryDisplay": false,
+      "allowedValues": null,
+      "deleted": false,
+      "order": 0,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "createdBy": "admin@example.com"
+    },
+    {
+      "id": "field_tf0001",
+      "label": "Team Status",
+      "type": "constrained",
+      "multiValue": false,
+      "required": false,
+      "visible": true,
+      "primaryDisplay": false,
+      "allowedValues": ["Active", "Forming", "Sunset"],
+      "deleted": false,
+      "order": 1,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "createdBy": "admin@example.com"
+    },
+    {
+      "id": "field_comp01",
+      "label": "Components",
+      "type": "constrained",
+      "multiValue": true,
+      "required": false,
+      "visible": true,
+      "primaryDisplay": false,
+      "allowedValues": null,
+      "optionsRef": "components",
+      "deleted": false,
+      "order": 2,
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "createdBy": "admin@example.com"
+    }
+  ]
+}

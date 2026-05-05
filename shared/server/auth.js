@@ -4,17 +4,59 @@
  */
 
 const crypto = require('crypto');
+const { getPermissionTier } = require('./permissions');
+
+function blockDuringImpersonation(req, res, next) {
+  if (req.isImpersonating) {
+    return res.status(403).json({
+      error: 'This action is not allowed while impersonating another user'
+    });
+  }
+  next();
+}
 
 function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
-  const { tokenValidator } = options;
+  const { tokenValidator, roleStore } = options;
 
   function isAdmin(email) {
+    if (roleStore) {
+      return roleStore.hasRole(email, 'admin');
+    }
     const adminList = readFromStorage('allowlist.json')
-    const result = adminList && adminList.emails && adminList.emails.includes(email)
-    return result
+    return adminList && adminList.emails && adminList.emails.includes(email)
   }
 
-  function seedAdminList() {
+  function seedRoles() {
+    if (roleStore) {
+      // Try migration from allowlist first
+      roleStore.migrateFromAllowlist();
+
+      const assignments = roleStore.listAssignments();
+      if (Object.keys(assignments).length > 0) {
+        const adminCount = roleStore.getAdminEmails().length;
+        console.log(`Roles: ${adminCount} admin(s) loaded`);
+        return;
+      }
+
+      const adminEmails = process.env.ADMIN_EMAILS;
+      if (!adminEmails) {
+        console.log('Roles: empty — first authenticated user will be auto-added');
+        return;
+      }
+
+      const emails = adminEmails
+        .split(',')
+        .map(e => e.trim().toLowerCase())
+        .filter(Boolean);
+
+      for (const email of emails) {
+        roleStore.assignRole(email, 'admin', 'system-seed');
+      }
+      console.log(`Roles: seeded with ${emails.length} admin(s) from ADMIN_EMAILS`);
+      return;
+    }
+
+    // Legacy path (no role store)
     const existing = readFromStorage('allowlist.json')
     const currentEmails = (existing && existing.emails) ? existing.emails : []
 
@@ -43,6 +85,59 @@ function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
     }
   }
 
+  function resolveUserUid(req) {
+    const registry = readFromStorage('team-data/registry.json');
+    req.userUid = null;
+    if (registry && registry.people) {
+      for (const [uid, person] of Object.entries(registry.people)) {
+        if (person.status !== 'active') continue;
+        if (person.email && person.email.toLowerCase() === req.userEmail) {
+          req.userUid = uid;
+          break;
+        }
+      }
+    }
+    req.isTeamAdmin = roleStore ? roleStore.hasRole(req.userEmail, 'team-admin') : false;
+    req.permissionTier = getPermissionTier(req.userUid, registry, req.isAdmin, req.isTeamAdmin);
+  }
+
+  function applyImpersonation(req, res) {
+    const impersonateUid = req.headers['x-impersonate-uid'];
+    if (!impersonateUid) {
+      req.auditActor = req.userEmail;
+      return null;
+    }
+
+    if (!req.isAdmin) {
+      return res.status(403).json({ error: 'Only admins can impersonate' });
+    }
+
+    if (req.userUid && impersonateUid === req.userUid) {
+      return res.status(400).json({ error: 'Cannot impersonate yourself' });
+    }
+
+    const registry = readFromStorage('team-data/registry.json');
+    if (!registry?.people?.[impersonateUid] || registry.people[impersonateUid].status !== 'active') {
+      return res.status(404).json({ error: 'Target user not found in roster' });
+    }
+
+    const target = registry.people[impersonateUid];
+
+    req.realAdminEmail = req.userEmail;
+    req.realAdminUid = req.userUid;
+
+    req.userEmail = target.email?.toLowerCase() || impersonateUid;
+    req.userUid = impersonateUid;
+    req.isAdmin = isAdmin(req.userEmail);
+    req.isTeamAdmin = roleStore ? roleStore.hasRole(req.userEmail, 'team-admin') : false;
+    req.permissionTier = getPermissionTier(req.userUid, registry, req.isAdmin, req.isTeamAdmin);
+    req.isImpersonating = true;
+    req.impersonatedDisplayName = target.name || null;
+
+    req.auditActor = `${req.userEmail} (impersonated by ${req.realAdminEmail})`;
+    return null;
+  }
+
   async function authMiddleware(req, res, next) {
     if (req.method === 'OPTIONS') return next()
 
@@ -62,6 +157,9 @@ function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
         req.authMethod = 'token';
         // Update lastUsedAt (fire-and-forget, throttled)
         tokenValidator.touchLastUsed(tokenRecord.id);
+        resolveUserUid(req);
+        const blocked = applyImpersonation(req, res);
+        if (blocked) return;
         return next();
       }
       // No token validator configured — reject token auth
@@ -76,14 +174,25 @@ function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
       req.userEmail = (process.env.ADMIN_EMAILS || 'local-dev@redhat.com').split(',')[0].trim().toLowerCase()
     }
 
-    const adminList = readFromStorage('allowlist.json')
-    if (!adminList || !adminList.emails || adminList.emails.length === 0) {
-      const seeded = { emails: [req.userEmail] }
-      writeToStorage('allowlist.json', seeded)
-      console.log(`Admin list: auto-added first user ${req.userEmail}`)
+    if (roleStore) {
+      const assignments = roleStore.listAssignments();
+      if (!assignments || Object.keys(assignments).length === 0) {
+        roleStore.assignRole(req.userEmail, 'admin', 'auto-first-user');
+        console.log(`Roles: auto-added first user ${req.userEmail} as admin`);
+      }
+    } else {
+      const adminList = readFromStorage('allowlist.json')
+      if (!adminList || !adminList.emails || adminList.emails.length === 0) {
+        const seeded = { emails: [req.userEmail] }
+        writeToStorage('allowlist.json', seeded)
+        console.log(`Admin list: auto-added first user ${req.userEmail}`)
+      }
     }
 
     req.isAdmin = isAdmin(req.userEmail)
+    resolveUserUid(req);
+    const blocked = applyImpersonation(req, res);
+    if (blocked) return;
     next()
   }
 
@@ -94,7 +203,14 @@ function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
     next()
   }
 
-  return { authMiddleware, requireAdmin, isAdmin, seedAdminList }
+  function requireTeamAdmin(req, res, next) {
+    if (!req.isAdmin && !req.isTeamAdmin) {
+      return res.status(403).json({ error: 'Team admin access required.' })
+    }
+    next()
+  }
+
+  return { authMiddleware, requireAdmin, requireTeamAdmin, isAdmin, seedRoles }
 }
 
 let _emptySecretWarned = false;
@@ -137,4 +253,4 @@ function proxySecretGuard(req, res, next, options = {}) {
   return res.status(401).json({ error: 'Unauthorized' });
 }
 
-module.exports = { createAuthMiddleware, proxySecretGuard }
+module.exports = { createAuthMiddleware, proxySecretGuard, blockDuringImpersonation }

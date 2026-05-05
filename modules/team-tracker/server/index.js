@@ -1,5 +1,5 @@
 module.exports = function registerRoutes(router, context) {
-  const { storage, requireAdmin } = context;
+  const { storage, requireAdmin, requireTeamAdmin, roleStore } = context;
   const { readFromStorage, writeToStorage, listStorageFiles, deleteStorageDirectory } = storage;
 
   const DEMO_MODE = process.env.DEMO_MODE === 'true';
@@ -114,10 +114,33 @@ module.exports = function registerRoutes(router, context) {
     const orgDisplayNames = getOrgDisplayNames();
     const liveConfig = rosterSyncConfig.loadConfig(storage);
     const teamStructure = liveConfig?.teamStructure || null;
+    const teamDataSource = liveConfig?.teamDataSource || 'sheets';
+
+    // In-app mode: load teams and field definitions
+    const teamsData = teamDataSource === 'in-app' ? teamStore.readTeams(storage) : null;
+    const fieldDefs = teamDataSource === 'in-app' ? fieldStore.readFieldDefinitions(storage) : null;
+    const personFieldDefs = fieldDefs ? fieldDefs.personFields.filter(f => !f.deleted) : [];
+
+    // Build team ID -> team name lookup for in-app mode
+    const teamIdToName = {};
+    const teamIdToTeam = {};
+    if (teamsData) {
+      for (const team of Object.values(teamsData.teams)) {
+        teamIdToName[team.id] = team.name;
+        teamIdToTeam[team.id] = team;
+      }
+    }
 
     let visibleFields = [];
     let primaryDisplayField = null;
-    if (teamStructure && Array.isArray(teamStructure.customFields)) {
+
+    if (teamDataSource === 'in-app') {
+      visibleFields = personFieldDefs
+        .filter(f => f.visible)
+        .map(f => ({ key: f.id, label: f.label }));
+      const primary = personFieldDefs.find(f => f.primaryDisplay);
+      if (primary) primaryDisplayField = primary.id;
+    } else if (teamStructure && Array.isArray(teamStructure.customFields)) {
       visibleFields = teamStructure.customFields
         .filter(f => f.visible)
         .map(f => ({ key: f.key, label: f.displayLabel || f.key }));
@@ -127,16 +150,9 @@ module.exports = function registerRoutes(router, context) {
 
     for (const [orgKey, orgData] of Object.entries(full.orgs)) {
       const teamMap = {};
-      const allMembers = [orgData.leader, ...orgData.members];
+      const allMembers = [orgData.leader, ...orgData.members].filter(Boolean);
 
       for (const person of allMembers) {
-        const groupingValue = teamStructure
-          ? (person._teamGrouping || person.miroTeam || null)
-          : (person.miroTeam || null);
-        const teamNames = groupingValue
-          ? groupingValue.split(',').map(t => t.trim()).filter(Boolean)
-          : ['_unassigned'];
-
         const memberEntry = {
           name: person.name,
           jiraDisplayName: person.name,
@@ -154,7 +170,12 @@ module.exports = function registerRoutes(router, context) {
           customFields: {}
         };
 
-        if (teamStructure && Array.isArray(teamStructure.customFields)) {
+        // Build customFields based on data source
+        if (teamDataSource === 'in-app') {
+          for (const fieldDef of personFieldDefs) {
+            memberEntry.customFields[fieldDef.id] = person._appFields?.[fieldDef.id] || null;
+          }
+        } else if (teamStructure && Array.isArray(teamStructure.customFields)) {
           for (const field of teamStructure.customFields) {
             memberEntry.customFields[field.key] = person[field.key] || null;
           }
@@ -163,25 +184,66 @@ module.exports = function registerRoutes(router, context) {
           memberEntry.customFields.jiraComponent = person.jiraComponent || null;
         }
 
+        // Determine team placement based on data source
+        let teamNames;
+        if (teamDataSource === 'in-app') {
+          if (Array.isArray(person.teamIds) && person.teamIds.length > 0) {
+            teamNames = person.teamIds.map(id => teamIdToName[id]).filter(Boolean);
+            if (teamNames.length === 0) teamNames = ['_unassigned'];
+          } else {
+            teamNames = ['_unassigned'];
+          }
+        } else {
+          const groupingValue = teamStructure
+            ? (person._teamGrouping || person.miroTeam || null)
+            : (person.miroTeam || null);
+          teamNames = groupingValue
+            ? groupingValue.split(',').map(t => t.trim()).filter(Boolean)
+            : ['_unassigned'];
+        }
+
         for (const teamName of teamNames) {
           if (!teamMap[teamName]) {
             teamMap[teamName] = {
               displayName: teamName === '_unassigned' ? 'Unassigned' : teamName,
-              members: []
+              members: [],
+              metadata: {}
             };
+            // Attach team metadata in in-app mode
+            if (teamDataSource === 'in-app') {
+              const teamObj = Object.values(teamsData.teams).find(t => t.name === teamName && t.orgKey === orgKey);
+              if (teamObj) {
+                teamMap[teamName].metadata = teamObj.metadata || {};
+                teamMap[teamName].teamId = teamObj.id;
+              }
+            }
           }
           teamMap[teamName].members.push(memberEntry);
         }
       }
 
+      // In in-app mode, add empty structure teams that had no members assigned
+      if (teamsData) {
+        for (const team of Object.values(teamsData.teams)) {
+          if (team.orgKey === orgKey && !teamMap[team.name]) {
+            teamMap[team.name] = {
+              displayName: team.name,
+              members: [],
+              metadata: team.metadata || {},
+              teamId: team.id
+            };
+          }
+        }
+      }
+
       orgs.push({
         key: orgKey,
-        displayName: orgDisplayNames[orgKey] || orgData.leader.name,
-        leader: {
+        displayName: orgDisplayNames[orgKey] || orgData.leader?.name || orgKey,
+        leader: orgData.leader ? {
           name: orgData.leader.name,
           uid: orgData.leader.uid,
           title: orgData.leader.title
-        },
+        } : null,
         teams: teamMap
       });
     }
@@ -231,7 +293,17 @@ module.exports = function registerRoutes(router, context) {
       console.log(`[roster] Merged org "${displayName}": ${mergedKeys.slice(1).join(', ')} merged into ${canonical.key}`);
     }
 
-    return { vp: full.vp, orgs, visibleFields, primaryDisplayField, mergedKeyMap };
+    const result = { vp: full.vp, orgs, visibleFields, primaryDisplayField, mergedKeyMap, teamDataSource };
+
+    // Add field definitions and permissions in in-app mode
+    if (teamDataSource === 'in-app') {
+      result.fieldDefinitions = {
+        personFields: personFieldDefs,
+        teamFields: fieldDefs.teamFields.filter(f => !f.deleted)
+      };
+    }
+
+    return result;
   }
 
   /**
@@ -365,6 +437,600 @@ module.exports = function registerRoutes(router, context) {
 
     return result;
   }
+
+  // ─── Permissions ───
+
+  const permissions = require('../../../shared/server/permissions');
+
+  // Build manager map at startup and rebuild on registry writes
+  let managerMap = new Map();
+  function rebuildManagerMap() {
+    const registry = readFromStorage('team-data/registry.json');
+    if (registry) {
+      managerMap = permissions.buildManagerMap(registry);
+    }
+  }
+  rebuildManagerMap();
+
+  /**
+   * requireManagerOrAdmin middleware factory.
+   * Takes a getter function that extracts the target UID from the request.
+   */
+  function requireManagerOrAdmin(getTargetUid) {
+    return (req, res, next) => {
+      if (req.isAdmin) return next();
+      if (req.isTeamAdmin) return next();
+      const targetUid = getTargetUid(req);
+      if (!req.userUid) return res.status(403).json({ error: 'Cannot determine your identity' });
+      const managed = permissions.getManagedUids(req.userUid, managerMap);
+      if (managed.has(targetUid)) return next();
+      return res.status(403).json({ error: 'Not authorized for this person' });
+    };
+  }
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/permissions/me:
+   *   get:
+   *     tags: ['TT: Permissions']
+   *     summary: Get current user's permission tier and managed UIDs
+   *     responses:
+   *       200:
+   *         description: Permission info
+   */
+  router.get('/permissions/me', function(req, res) {
+    const managed = req.userUid
+      ? [...permissions.getManagedUids(req.userUid, managerMap)]
+      : [];
+    res.json({
+      email: req.userEmail,
+      uid: req.userUid,
+      tier: req.permissionTier,
+      managedUids: managed,
+      roles: roleStore ? roleStore.getRoles(req.userEmail) : []
+    });
+  });
+
+  // ─── Routes: Team Structure Management ───
+
+  const teamStore = require('../../../shared/server/team-store');
+  const fieldStore = require('../../../shared/server/field-store');
+  const auditLog = require('../../../shared/server/audit-log');
+  const fieldOptionsStore = require('./field-options-store');
+  const { migrateToInApp, previewMigration } = require('../../../shared/server/team-migration');
+
+  // Options resolver for field validation — resolves optionsRef to allowed values
+  const optionsResolver = (ref) => fieldOptionsStore.getValues(storage, ref);
+
+  // Helper: check if demo mode and return demo flag on write ops
+  function demoWriteGuard(res) {
+    if (DEMO_MODE) {
+      return res.json({ demo: true, message: 'Demo mode — changes are not saved' });
+    }
+    return null;
+  }
+
+  // ─── Team CRUD ───
+
+  router.get('/structure/teams', function(req, res) {
+    const data = teamStore.readTeams(storage);
+    let teams = Object.values(data.teams);
+    if (req.query.orgKey) {
+      teams = teams.filter(t => t.orgKey === req.query.orgKey);
+    }
+    res.json({ teams });
+  });
+
+  router.post('/structure/teams', requireTeamAdmin, function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const { name, orgKey } = req.body;
+    if (!name || !orgKey) return res.status(400).json({ error: 'name and orgKey are required' });
+    if (typeof name !== 'string' || name.length > 100) return res.status(400).json({ error: 'name must be a string of 100 characters or fewer' });
+    const team = teamStore.createTeam(storage, name.trim(), orgKey, req.auditActor);
+    rebuildManagerMap();
+    res.status(201).json(team);
+  });
+
+  router.patch('/structure/teams/:teamId', requireTeamAdmin, function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const { name } = req.body;
+    if (!name) return res.status(400).json({ error: 'name is required' });
+    if (typeof name !== 'string' || name.length > 100) return res.status(400).json({ error: 'name must be a string of 100 characters or fewer' });
+    const team = teamStore.renameTeam(storage, req.params.teamId, name.trim(), req.auditActor);
+    if (!team) return res.status(404).json({ error: 'Team not found' });
+    res.json(team);
+  });
+
+  router.delete('/structure/teams/:teamId', requireTeamAdmin, function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const result = teamStore.deleteTeam(storage, req.params.teamId, req.auditActor);
+    if (!result) return res.status(404).json({ error: 'Team not found' });
+    rebuildManagerMap();
+    res.json(result);
+  });
+
+  // ─── Team Member Assignment ───
+
+  router.post('/structure/teams/:teamId/members',
+    requireManagerOrAdmin(req => req.body.uid),
+    function(req, res) {
+      const guard = demoWriteGuard(res);
+      if (guard) return;
+      const { uid } = req.body;
+      if (!uid) return res.status(400).json({ error: 'uid is required' });
+      const result = teamStore.assignMember(storage, req.params.teamId, uid, req.auditActor);
+      if (result.error) return res.status(404).json(result);
+      rebuildManagerMap();
+      res.json(result);
+    }
+  );
+
+  router.post('/structure/teams/:teamId/members/bulk', function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const { uids } = req.body;
+    if (!Array.isArray(uids) || uids.length === 0) {
+      return res.status(400).json({ error: 'uids array is required' });
+    }
+    // All-or-nothing permission check
+    if (!req.isAdmin && !req.isTeamAdmin) {
+      if (!req.userUid) return res.status(403).json({ error: 'Cannot determine your identity' });
+      const managed = permissions.getManagedUids(req.userUid, managerMap);
+      const denied = uids.filter(uid => !managed.has(uid));
+      if (denied.length > 0) {
+        return res.status(403).json({ error: 'Not authorized for all requested people', denied });
+      }
+    }
+    const result = teamStore.assignMembersBulk(storage, req.params.teamId, uids, req.auditActor);
+    if (result.error) return res.status(404).json(result);
+    rebuildManagerMap();
+    res.json(result);
+  });
+
+  router.delete('/structure/teams/:teamId/members/:uid',
+    requireManagerOrAdmin(req => req.params.uid),
+    function(req, res) {
+      const guard = demoWriteGuard(res);
+      if (guard) return;
+      const result = teamStore.unassignMember(storage, req.params.teamId, req.params.uid, req.auditActor);
+      if (result.error) return res.status(404).json(result);
+      rebuildManagerMap();
+      res.json(result);
+    }
+  );
+
+  // ─── Unassigned People ───
+
+  router.get('/structure/unassigned', function(req, res) {
+    const VALID_SCOPES = ['all', 'direct', 'org'];
+    const scope = req.query.scope || 'all';
+    if (!VALID_SCOPES.includes(scope)) {
+      return res.status(400).json({ error: `Invalid scope. Must be one of: ${VALID_SCOPES.join(', ')}` });
+    }
+    const registry = readFromStorage('team-data/registry.json');
+    const people = teamStore.getUnassigned(storage, scope, req.userUid, req.isAdmin, managerMap, registry);
+    res.json({ people });
+  });
+
+  // ─── Field Definitions ───
+
+  router.get('/structure/field-definitions', function(req, res) {
+    const defs = fieldStore.readFieldDefinitions(storage);
+    // Filter out soft-deleted fields for non-admin/team-admin users
+    if (!req.isAdmin && !req.isTeamAdmin) {
+      defs.personFields = defs.personFields.filter(f => !f.deleted);
+      defs.teamFields = defs.teamFields.filter(f => !f.deleted);
+    }
+    // Resolve optionsRef fields: inject allowedValues from field options into response
+    for (const scope of ['personFields', 'teamFields']) {
+      for (const field of (defs[scope] || [])) {
+        if (field.optionsRef && !field.allowedValues) {
+          const values = fieldOptionsStore.getValues(storage, field.optionsRef);
+          if (values) {
+            field.allowedValues = values;
+            field._resolvedFromOptions = true;
+          }
+        }
+      }
+    }
+    res.json(defs);
+  });
+
+  const VALID_FIELD_TYPES = ['free-text', 'constrained', 'person-reference-linked'];
+
+  router.post('/structure/field-definitions/person', requireTeamAdmin, function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const { label, type, required, visible, primaryDisplay, allowedValues, multiValue, optionsRef } = req.body;
+    if (!label) return res.status(400).json({ error: 'label is required' });
+    if (typeof label !== 'string' || label.length > 100) return res.status(400).json({ error: 'label must be a string of 100 characters or fewer' });
+    if (type && !VALID_FIELD_TYPES.includes(type)) return res.status(400).json({ error: `Invalid type. Must be one of: ${VALID_FIELD_TYPES.join(', ')}` });
+    try {
+      const field = fieldStore.createFieldDefinition(storage, 'person', {
+        label: label.trim(), type, required, visible, primaryDisplay, allowedValues, multiValue, optionsRef
+      }, req.auditActor);
+      res.status(201).json(field);
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
+  });
+
+  router.patch('/structure/field-definitions/person/:fieldId', requireTeamAdmin, function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    try {
+      const result = fieldStore.updateFieldDefinition(storage, 'person', req.params.fieldId, req.body, req.auditActor);
+      if (!result) return res.status(404).json({ error: 'Field not found' });
+      res.json(result);
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
+  });
+
+  router.delete('/structure/field-definitions/person/:fieldId', requireTeamAdmin, function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const result = fieldStore.softDeleteField(storage, 'person', req.params.fieldId, req.auditActor);
+    if (!result) return res.status(404).json({ error: 'Field not found' });
+    res.json(result);
+  });
+
+  router.post('/structure/field-definitions/person/reorder', requireTeamAdmin, function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const { orderedIds } = req.body;
+    if (!Array.isArray(orderedIds)) return res.status(400).json({ error: 'orderedIds array is required' });
+    fieldStore.reorderFields(storage, 'person', orderedIds, req.auditActor);
+    res.json({ ok: true });
+  });
+
+  // ─── Team Field Definitions ───
+
+  router.post('/structure/field-definitions/team', requireTeamAdmin, function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const { label, type, required, visible, primaryDisplay, allowedValues, multiValue, optionsRef } = req.body;
+    if (!label) return res.status(400).json({ error: 'label is required' });
+    if (typeof label !== 'string' || label.length > 100) return res.status(400).json({ error: 'label must be a string of 100 characters or fewer' });
+    if (type && !VALID_FIELD_TYPES.includes(type)) return res.status(400).json({ error: `Invalid type. Must be one of: ${VALID_FIELD_TYPES.join(', ')}` });
+    try {
+      const field = fieldStore.createFieldDefinition(storage, 'team', {
+        label: label.trim(), type, required, visible, primaryDisplay, allowedValues, multiValue, optionsRef
+      }, req.auditActor);
+      res.status(201).json(field);
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
+  });
+
+  router.patch('/structure/field-definitions/team/:fieldId', requireTeamAdmin, function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    try {
+      const result = fieldStore.updateFieldDefinition(storage, 'team', req.params.fieldId, req.body, req.auditActor);
+      if (!result) return res.status(404).json({ error: 'Field not found' });
+      res.json(result);
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
+  });
+
+  router.delete('/structure/field-definitions/team/:fieldId', requireTeamAdmin, function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const result = fieldStore.softDeleteField(storage, 'team', req.params.fieldId, req.auditActor);
+    if (!result) return res.status(404).json({ error: 'Field not found' });
+    res.json(result);
+  });
+
+  router.post('/structure/field-definitions/team/reorder', requireTeamAdmin, function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const { orderedIds } = req.body;
+    if (!Array.isArray(orderedIds)) return res.status(400).json({ error: 'orderedIds array is required' });
+    fieldStore.reorderFields(storage, 'team', orderedIds, req.auditActor);
+    res.json({ ok: true });
+  });
+
+  // ─── Field Options ───
+
+  const MAX_FIELD_OPTION_VALUES = 500;
+  const MAX_FIELD_OPTION_VALUE_LENGTH = 200;
+
+  function sanitizeOptionsName(name) {
+    return name.replace(/[^a-z0-9_-]/gi, '');
+  }
+
+  function validateFieldOptionValues(values) {
+    for (let i = 0; i < values.length; i++) {
+      if (typeof values[i] !== 'string') {
+        return `values[${i}] must be a string`;
+      }
+      if (values[i].length > MAX_FIELD_OPTION_VALUE_LENGTH) {
+        return `values[${i}] exceeds maximum length of ${MAX_FIELD_OPTION_VALUE_LENGTH} characters`;
+      }
+    }
+    return null;
+  }
+
+  router.get('/field-options', function(req, res) {
+    try {
+      const options = fieldOptionsStore.listFieldOptions(storage);
+      res.json({ options });
+    } catch {
+      res.status(500).json({ error: 'Failed to list field options' });
+    }
+  });
+
+  router.get('/field-options/:name', function(req, res) {
+    const safeName = sanitizeOptionsName(req.params.name);
+    if (!safeName) return res.status(400).json({ error: 'Invalid option set name' });
+    try {
+      const data = fieldOptionsStore.readFieldOptions(storage, safeName);
+      if (!data) return res.status(404).json({ error: 'Field option set not found' });
+      res.json(data);
+    } catch {
+      res.status(500).json({ error: 'Failed to load field options' });
+    }
+  });
+
+  router.put('/field-options/:name', requireAdmin, function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const safeName = sanitizeOptionsName(req.params.name);
+    if (!safeName) return res.status(400).json({ error: 'Invalid option set name' });
+    const { values, label } = req.body;
+    if (!Array.isArray(values)) return res.status(400).json({ error: 'values must be an array' });
+    if (values.length > MAX_FIELD_OPTION_VALUES) return res.status(400).json({ error: `values exceeds maximum of ${MAX_FIELD_OPTION_VALUES} entries` });
+    const valErr = validateFieldOptionValues(values);
+    if (valErr) return res.status(400).json({ error: valErr });
+    try {
+      const result = fieldOptionsStore.replaceValues(storage, safeName, values, label, req.auditActor);
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  router.post('/field-options/:name/values', requireTeamAdmin, function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const safeName = sanitizeOptionsName(req.params.name);
+    if (!safeName) return res.status(400).json({ error: 'Invalid option set name' });
+    const { values } = req.body;
+    if (!Array.isArray(values) || values.length === 0) return res.status(400).json({ error: 'values must be a non-empty array' });
+    const valErr = validateFieldOptionValues(values);
+    if (valErr) return res.status(400).json({ error: valErr });
+    // Check total count after add
+    const existing = fieldOptionsStore.getValues(storage, safeName);
+    const currentCount = existing ? existing.length : 0;
+    if (currentCount + values.length > MAX_FIELD_OPTION_VALUES) {
+      return res.status(400).json({ error: `Adding ${values.length} values would exceed maximum of ${MAX_FIELD_OPTION_VALUES} (current: ${currentCount})` });
+    }
+    try {
+      const result = fieldOptionsStore.addValues(storage, safeName, values, req.auditActor);
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  router.delete('/field-options/:name/values', requireAdmin, function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const safeName = sanitizeOptionsName(req.params.name);
+    if (!safeName) return res.status(400).json({ error: 'Invalid option set name' });
+    const { values } = req.body;
+    if (!Array.isArray(values) || values.length === 0) return res.status(400).json({ error: 'values must be a non-empty array' });
+    const valErr = validateFieldOptionValues(values);
+    if (valErr) return res.status(400).json({ error: valErr });
+    try {
+      const result = fieldOptionsStore.removeValues(storage, safeName, values, req.auditActor);
+      if (!result) return res.status(404).json({ error: 'Field option set not found' });
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // ─── Person Field Values ───
+
+  router.patch('/structure/person/:uid/fields',
+    requireManagerOrAdmin(req => req.params.uid),
+    function(req, res) {
+      const guard = demoWriteGuard(res);
+      if (guard) return;
+      if (typeof req.body !== 'object' || Array.isArray(req.body) || !req.body) {
+        return res.status(400).json({ error: 'Request body must be a JSON object' });
+      }
+
+      // Load existing person fields for required-field checks
+      const registry = readFromStorage('team-data/registry.json');
+      const person = registry && registry.people && registry.people[req.params.uid];
+      const existingValues = person && person._appFields ? person._appFields : {};
+
+      const { validated, warnings, errors } = fieldStore.validateFieldValues(storage, 'person', req.body, existingValues, { optionsResolver });
+      if (errors.length > 0) return res.status(400).json({ error: errors.join('; ') });
+
+      const result = fieldStore.updatePersonFields(storage, req.params.uid, validated, req.auditActor);
+      if (!result) return res.status(404).json({ error: 'Person not found' });
+      if (warnings.length > 0) result._warnings = warnings;
+      res.json(result);
+    }
+  );
+
+  // ─── Team Field Values ───
+
+  router.patch('/structure/teams/:teamId/fields', requireTeamAdmin, function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    if (typeof req.body !== 'object' || Array.isArray(req.body) || !req.body) {
+      return res.status(400).json({ error: 'Request body must be a JSON object' });
+    }
+
+    // Load existing team metadata for required-field checks
+    const teamsData = teamStore.readTeams(storage);
+    const team = teamsData.teams && teamsData.teams[req.params.teamId];
+    const existingValues = team && team.metadata ? team.metadata : {};
+
+    const { validated, warnings, errors } = fieldStore.validateFieldValues(storage, 'team', req.body, existingValues, { optionsResolver });
+    if (errors.length > 0) return res.status(400).json({ error: errors.join('; ') });
+
+    const result = teamStore.updateTeamFields(storage, req.params.teamId, validated, req.auditActor);
+    if (!result) return res.status(404).json({ error: 'Team not found' });
+    // Return flat metadata (not full team object) + optional warnings
+    const response = { ...(result.metadata || {}) };
+    if (warnings.length > 0) response._warnings = warnings;
+    res.json(response);
+  });
+
+  // ─── Team Boards ───
+
+  router.patch('/structure/teams/:teamId/boards', requireTeamAdmin, function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const { boards } = req.body;
+    if (!Array.isArray(boards)) {
+      return res.status(400).json({ error: 'boards must be an array' });
+    }
+    if (boards.length > 50) {
+      return res.status(400).json({ error: 'boards array exceeds maximum of 50 entries' });
+    }
+    for (const b of boards) {
+      if (!b.url || typeof b.url !== 'string') {
+        return res.status(400).json({ error: 'Each board must have a url string' });
+      }
+      if (!b.url.startsWith('https://') && !b.url.startsWith('http://')) {
+        return res.status(400).json({ error: 'Each board url must start with https:// or http://' });
+      }
+      if (b.url.length > 2048) {
+        return res.status(400).json({ error: 'Board url exceeds maximum length of 2048 characters' });
+      }
+    }
+    try {
+      const result = teamStore.updateTeamBoards(storage, req.params.teamId, boards, req.auditActor);
+      if (!result) return res.status(404).json({ error: 'Team not found' });
+      res.json({ boards: result });
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
+  });
+
+  // ─── Audit Log ───
+
+  router.get('/structure/audit-log', function(req, res) {
+    // Only admin and managers can view audit log
+    if (req.permissionTier === 'user') {
+      return res.status(403).json({ error: 'Manager or admin access required' });
+    }
+    const limit = req.query.limit ? Math.max(1, Math.min(200, parseInt(req.query.limit, 10) || 50)) : undefined;
+    const offset = req.query.offset ? Math.max(0, parseInt(req.query.offset, 10) || 0) : undefined;
+    const filters = {
+      from: req.query.from,
+      to: req.query.to,
+      action: req.query.action,
+      actor: req.query.actor,
+      entityId: req.query.entityId,
+      limit,
+      offset
+    };
+    const result = auditLog.queryAuditLog(storage, filters);
+
+    // For non-admin managers, filter entries to only their managed subtree
+    if (!req.isAdmin && req.userUid) {
+      const managed = permissions.getManagedUids(req.userUid, managerMap);
+      result.entries = result.entries.filter(e => {
+        // Allow entries about people/teams the manager manages
+        if (e.entityType === 'person') return managed.has(e.entityId);
+        // Allow system and field entries (no person-specific data)
+        if (e.entityType === 'field' || e.entityType === 'system') return true;
+        // For team entries, allow if manager can see at least one person on that team
+        if (e.entityType === 'team') return true;
+        return false;
+      });
+      result.total = result.entries.length;
+    }
+
+    res.json(result);
+  });
+
+  // ─── Migration ───
+
+  router.get('/structure/migrate/preview', requireAdmin, async function(req, res) {
+    try {
+      const config = rosterSyncConfig.loadConfig(storage);
+      if (!config) return res.status(400).json({ error: 'No config found' });
+      const preview = await previewMigration(storage, config);
+      res.json(preview);
+    } catch (err) {
+      console.error('[migration] Preview failed:', err);
+      res.status(500).json({ error: 'Migration preview failed: ' + err.message });
+    }
+  });
+
+  router.post('/structure/migrate', requireAdmin, async function(req, res) {
+    try {
+      const guard = demoWriteGuard(res);
+      if (guard) return;
+      const config = rosterSyncConfig.loadConfig(storage);
+      if (!config) return res.status(400).json({ error: 'No config found' });
+      const fieldOverrides = req.body?.fieldOverrides || null;
+      const result = await migrateToInApp(storage, config, req.auditActor, fieldOverrides);
+      if (result.migrated) {
+        config._migratedToInApp = new Date().toISOString();
+        rosterSyncConfig.saveConfig(storage, config);
+        rebuildManagerMap();
+      }
+      res.json(result);
+    } catch (err) {
+      console.error('[migration] Migration failed:', err);
+      res.status(500).json({ error: 'Migration failed: ' + err.message });
+    }
+  });
+
+  // ─── Field-to-Field-Options Migration ───
+
+  const fieldOptionsMigration = require('./migration/field-options-migration');
+
+  router.get('/structure/migrate/field-to-options/preview', requireTeamAdmin, function(req, res) {
+    try {
+      const { fieldId } = req.query;
+      if (!fieldId || typeof fieldId !== 'string') {
+        return res.status(400).json({ error: 'fieldId query parameter is required' });
+      }
+      const result = fieldOptionsMigration.previewMigration(storage, fieldId);
+      if (result.error) return res.status(400).json({ error: result.error });
+      res.json(result);
+    } catch (err) {
+      console.error('[migration] Preview failed:', err);
+      res.status(500).json({ error: 'Preview failed: ' + err.message });
+    }
+  });
+
+  router.post('/structure/migrate/field-to-options', requireTeamAdmin, function(req, res) {
+    try {
+      const guard = demoWriteGuard(res);
+      if (guard) return;
+      const { sourceFieldId, optionSetName, optionSetLabel, createCounterpart, counterpartLabel, seedFromMembers } = req.body;
+      if (!sourceFieldId || !optionSetName) {
+        return res.status(400).json({ error: 'sourceFieldId and optionSetName are required' });
+      }
+      if (typeof optionSetName !== 'string' || !/^[a-z0-9_-]+$/.test(optionSetName)) {
+        return res.status(400).json({ error: 'optionSetName must be lowercase alphanumeric with hyphens/underscores' });
+      }
+      const result = fieldOptionsMigration.executeMigration(storage, {
+        sourceFieldId, optionSetName, optionSetLabel, createCounterpart, counterpartLabel, seedFromMembers
+      }, req.auditActor);
+      if (result.error) return res.status(400).json({ error: result.error });
+      res.json(result);
+    } catch (err) {
+      console.error('[migration] Field-to-options migration failed:', err);
+      res.status(500).json({ error: 'Migration failed: ' + err.message });
+    }
+  });
 
   // ─── Routes: Unified Refresh ───
 
@@ -1107,6 +1773,19 @@ module.exports = function registerRoutes(router, context) {
       }
       const roster = deriveRoster();
       const { mergedKeyMap: _mergedKeyMap, ...rosterResponse } = roster;
+
+      // Add permissions context for in-app mode
+      if (rosterResponse.teamDataSource === 'in-app') {
+        const managed = req.userUid
+          ? [...permissions.getManagedUids(req.userUid, managerMap)]
+          : [];
+        rosterResponse.permissions = {
+          tier: req.permissionTier,
+          uid: req.userUid,
+          managedUids: managed
+        };
+      }
+
       res.json(rosterResponse);
     } catch (error) {
       console.error('Read roster error:', error);
@@ -1751,7 +2430,7 @@ module.exports = function registerRoutes(router, context) {
    */
   router.post('/admin/roster-sync/config', requireAdmin, function(req, res) {
     try {
-      const { orgRoots, googleSheetId, sheetNames, githubOrgs, gitlabGroups, gitlabInstances, teamStructure, excludedTitles } = req.body;
+      const { orgRoots, googleSheetId, sheetNames, githubOrgs, gitlabGroups, gitlabInstances, teamStructure, excludedTitles, teamDataSource } = req.body;
 
       if (orgRoots !== undefined) {
         if (!Array.isArray(orgRoots) || orgRoots.length === 0) {
@@ -1902,6 +2581,12 @@ module.exports = function registerRoutes(router, context) {
       if (gitlabInstances !== undefined) config.gitlabInstances = gitlabInstances || [];
       if (validatedTeamStructure !== undefined) config.teamStructure = validatedTeamStructure;
       if (validatedExcludedTitles !== undefined) config.excludedTitles = validatedExcludedTitles;
+      if (teamDataSource !== undefined) {
+        if (!['sheets', 'in-app'].includes(teamDataSource)) {
+          return res.status(400).json({ error: 'teamDataSource must be "sheets" or "in-app"' });
+        }
+        config.teamDataSource = teamDataSource;
+      }
 
       if (config.teamStructure) {
         const fm = {};
