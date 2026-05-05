@@ -282,13 +282,84 @@
           </div>
         </div>
 
-        <!-- Configuration Notice -->
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-          <p class="text-sm text-blue-900">
-            <span class="font-semibold">Current Configuration:</span>
-            Projects: AIPCC | Confidence Threshold: 0.85 | Issue Types: Story, Bug, Spike, Task, Epic
-          </p>
-          <p class="text-xs text-blue-700 mt-1">
+        <!-- Classification Configuration -->
+        <div class="bg-white rounded-lg p-4 mb-4 border border-gray-200">
+          <h3 class="text-sm font-semibold text-gray-900 mb-4">Classification Configuration</h3>
+
+          <div v-if="isLoadingConfig" class="text-sm text-gray-500">Loading configuration...</div>
+
+          <div v-else class="space-y-4">
+            <!-- Enabled Toggle -->
+            <label class="flex items-center gap-2">
+              <input
+                v-model="classificationConfig.enabled"
+                type="checkbox"
+                class="rounded border-gray-300 text-primary-600 focus:ring-primary-300"
+              />
+              <span class="text-sm text-gray-700">Enable automatic classification</span>
+            </label>
+
+            <!-- Projects -->
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Jira Projects (comma-separated)</label>
+              <input
+                v-model="projectsString"
+                placeholder="e.g., AIPCC, RHOAIENG, INFERENG"
+                class="text-sm border border-gray-300 rounded-md px-3 py-2 w-full font-mono focus:outline-none focus:ring-2 focus:ring-primary-300"
+              />
+              <p class="text-xs text-gray-500 mt-1">Only issues in these projects will be classified</p>
+            </div>
+
+            <!-- Confidence Threshold -->
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">
+                Confidence Threshold: {{ (classificationConfig.confidenceThreshold * 100).toFixed(0) }}%
+              </label>
+              <input
+                v-model.number="classificationConfig.confidenceThreshold"
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              />
+              <p class="text-xs text-gray-500 mt-1">Minimum confidence required for automatic classification</p>
+            </div>
+
+            <!-- Issue Types -->
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Issue Types (comma-separated)</label>
+              <input
+                v-model="issueTypesString"
+                placeholder="e.g., Story, Bug, Spike, Task, Epic"
+                class="text-sm border border-gray-300 rounded-md px-3 py-2 w-full font-mono focus:outline-none focus:ring-2 focus:ring-primary-300"
+              />
+              <p class="text-xs text-gray-500 mt-1">Only these issue types will be classified</p>
+            </div>
+
+            <!-- Save Button -->
+            <div class="flex items-center gap-3">
+              <button
+                @click="handleSaveClassificationConfig"
+                :disabled="isSavingConfig"
+                class="px-4 py-2 text-sm bg-primary-600 text-white rounded-md font-medium hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {{ isSavingConfig ? 'Saving...' : 'Save Configuration' }}
+              </button>
+            </div>
+
+            <!-- Save Result -->
+            <div v-if="configSaveResult" class="p-3 rounded-md border" :class="configSaveResult.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'">
+              <p class="text-sm" :class="configSaveResult.success ? 'text-green-900' : 'text-red-900'">
+                {{ configSaveResult.success ? '✅' : '❌' }} {{ configSaveResult.message }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info Notice -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <p class="text-xs text-blue-700">
             Classification is rule-based using keyword matching. Jira automation webhook (not yet deployed) will trigger real-time classification on issue creation/update.
           </p>
         </div>
@@ -299,7 +370,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { getTeams, saveTeams, saveProjects, discoverBoards, getProjects, classifyIssue } from '../services/api.js'
+import { getTeams, saveTeams, saveProjects, discoverBoards, getProjects, classifyIssue, getClassificationConfig, saveClassificationConfig } from '../services/api.js'
 
 const emit = defineEmits(['saved'])
 
@@ -332,6 +403,7 @@ onMounted(async () => {
     originalProjectKeys.value = new Set(localProjects.value.map(p => p.key))
     selectedProjectKey.value = localProjects.value.length > 0 ? localProjects.value[0].key : 'RHOAIENG'
     loadTeams()
+    loadClassificationConfig()
   } catch (error) {
     console.error('Failed to load projects:', error)
   }
@@ -522,6 +594,66 @@ async function handleDiscover() {
 const testIssueKey = ref('')
 const isClassifying = ref(false)
 const testResult = ref(null)
+
+const classificationConfig = ref({
+  enabled: true,
+  projects: [],
+  confidenceThreshold: 0.85,
+  issueTypes: []
+})
+const isLoadingConfig = ref(false)
+const isSavingConfig = ref(false)
+const configSaveResult = ref(null)
+
+// Computed properties for array <-> string conversion
+const projectsString = computed({
+  get: () => classificationConfig.value.projects.join(', '),
+  set: (val) => {
+    classificationConfig.value.projects = val.split(',').map(s => s.trim()).filter(Boolean)
+  }
+})
+
+const issueTypesString = computed({
+  get: () => classificationConfig.value.issueTypes.join(', '),
+  set: (val) => {
+    classificationConfig.value.issueTypes = val.split(',').map(s => s.trim()).filter(Boolean)
+  }
+})
+
+async function loadClassificationConfig() {
+  isLoadingConfig.value = true
+  try {
+    const config = await getClassificationConfig()
+    classificationConfig.value = {
+      enabled: config.enabled,
+      projects: [...config.projects],
+      confidenceThreshold: config.confidenceThreshold,
+      issueTypes: [...config.issueTypes]
+    }
+  } catch (error) {
+    console.error('Failed to load classification config:', error)
+  } finally {
+    isLoadingConfig.value = false
+  }
+}
+
+async function handleSaveClassificationConfig() {
+  isSavingConfig.value = true
+  configSaveResult.value = null
+
+  try {
+    await saveClassificationConfig(classificationConfig.value)
+    configSaveResult.value = { success: true, message: 'Configuration saved successfully' }
+  } catch (error) {
+    console.error('Failed to save classification config:', error)
+    configSaveResult.value = {
+      success: false,
+      message: error.message || 'Failed to save configuration'
+    }
+  } finally {
+    isSavingConfig.value = false
+  }
+}
 
 async function handleTestClassify(dryRun) {
   if (!testIssueKey.value?.trim()) return
