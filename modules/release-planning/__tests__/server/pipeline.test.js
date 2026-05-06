@@ -520,6 +520,7 @@ describe('buildCandidateResponse', () => {
         pillar: 'Inference',
         state: 'continue from 3.4',
         owner: 'Pat Johnson',
+        architect: 'Chris Lee',
         outcomeKeys: ['KEY-1'],
         notes: ''
       }
@@ -535,6 +536,7 @@ describe('buildCandidateResponse', () => {
     expect(response.summary.tier2.features).toBe(1)
     expect(response.bigRocks).toHaveLength(1)
     expect(response.bigRocks[0].featureCount).toBe(1)
+    expect(response.bigRocks[0].architect).toBe('Chris Lee')
     expect(response.features).toHaveLength(2)
     expect(response.rfes).toHaveLength(1)
     expect(response.filterOptions.statuses).toContain('In Progress')

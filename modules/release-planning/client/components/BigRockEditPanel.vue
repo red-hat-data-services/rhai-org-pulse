@@ -144,9 +144,9 @@ function handleRetry() {
           <p v-if="fieldErrors.owner" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ fieldErrors.owner }}</p>
         </div>
 
-        <!-- Architect -->
+        <!-- Engineering Lead -->
         <div>
-          <label for="rock-architect" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Architect</label>
+          <label for="rock-architect" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Engineering Lead</label>
           <input
             id="rock-architect"
             v-model="formData.architect"
