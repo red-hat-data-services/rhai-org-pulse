@@ -92,6 +92,18 @@ function handleRetry() {
   loadAssessments()
 }
 
+function handleSelectRFE(rfe) {
+  selectedRFE.value = rfe
+  if (rfe) {
+    moduleNav.navigateTo('rfe-review', { select: rfe.key })
+  }
+}
+
+function handleCloseModal() {
+  selectedRFE.value = null
+  moduleNav.navigateTo('rfe-review')
+}
+
 function handleNavigateToFeature(featureKey) {
   moduleNav.navigateTo('feature-review', { select: featureKey })
 }
@@ -101,7 +113,7 @@ function handleNavigateToFeature(featureKey) {
 watch([() => moduleNav.params.value, rfeData], ([params]) => {
   if (params?.select && rfeData.value?.issues) {
     const rfe = rfeData.value.issues.find(r => r.key === params.select)
-    if (rfe) {
+    if (rfe && selectedRFE.value?.key !== rfe.key) {
       filter.value = 'all'
       searchQuery.value = ''
       passFailFilter.value = 'all'
@@ -109,7 +121,7 @@ watch([() => moduleNav.params.value, rfeData], ([params]) => {
       statusFilter.value = 'all'
       selectedRFE.value = rfe
       notFoundRFE.value = null
-    } else {
+    } else if (!rfe) {
       notFoundRFE.value = params.select
     }
   }
@@ -146,7 +158,7 @@ watch([() => moduleNav.params.value, rfeData], ([params]) => {
       @update:passFailFilter="passFailFilter = $event"
       @update:priorityFilter="priorityFilter = $event"
       @update:statusFilter="statusFilter = $event"
-      @selectRFE="selectedRFE = $event"
+      @selectRFE="handleSelectRFE"
       @retry="handleRetry"
     />
 
@@ -196,7 +208,7 @@ watch([() => moduleNav.params.value, rfeData], ([params]) => {
       :jiraHost="rfeData?.jiraHost"
       :assessment="assessments[selectedRFE?.key] || null"
       :loadAssessmentDetail="loadAssessmentDetail"
-      @close="selectedRFE = null"
+      @close="handleCloseModal"
       @navigateToFeature="handleNavigateToFeature"
     />
 

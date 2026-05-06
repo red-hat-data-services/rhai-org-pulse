@@ -28,6 +28,18 @@ function handleRetry() {
   loadFeatures()
 }
 
+function handleSelectFeature(feature) {
+  selectedFeature.value = feature
+  if (feature) {
+    moduleNav.navigateTo('feature-review', { select: feature.key })
+  }
+}
+
+function handleCloseModal() {
+  selectedFeature.value = null
+  moduleNav.navigateTo('feature-review')
+}
+
 function handleNavigateToRFE(rfeKey) {
   moduleNav.navigateTo('rfe-review', { select: rfeKey })
 }
@@ -36,7 +48,7 @@ function handleNavigateToRFE(rfeKey) {
 watch(() => moduleNav.params.value, (params) => {
   if (params?.select && Object.keys(features.value).length > 0) {
     const feature = Object.values(features.value).find(f => f.key === params.select)
-    if (feature) {
+    if (feature && selectedFeature.value?.key !== feature.key) {
       searchQuery.value = ''
       recommendationFilter.value = 'all'
       priorityFilter.value = 'all'
@@ -77,7 +89,7 @@ watch(() => Object.keys(features.value).length, () => {
       @update:priorityFilter="priorityFilter = $event"
       @update:humanReviewFilter="humanReviewFilter = $event"
       @update:sortBy="sortBy = $event"
-      @selectFeature="selectedFeature = $event"
+      @selectFeature="handleSelectFeature"
       @retry="handleRetry"
     />
 
@@ -87,7 +99,7 @@ watch(() => Object.keys(features.value).length, () => {
       :phases="PHASES"
       :jiraHost="rfeData?.jiraHost"
       :loadFeatureDetail="loadFeatureDetail"
-      @close="selectedFeature = null"
+      @close="handleCloseModal"
       @navigateToRFE="handleNavigateToRFE"
     />
 
