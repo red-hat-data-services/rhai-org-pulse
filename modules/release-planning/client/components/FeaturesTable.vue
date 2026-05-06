@@ -1,6 +1,7 @@
 <script setup>
 import StatusBadge from './StatusBadge.vue'
 import RiskBadge from './RiskBadge.vue'
+import RiskPopover from './RiskPopover.vue'
 import TierSeparator from './TierSeparator.vue'
 import { computed } from 'vue'
 import { PRIORITY_STYLES } from '../constants'
@@ -92,13 +93,22 @@ const groupedFeatures = computed(() => {
               </td>
               <td class="px-3 py-2 border border-gray-300 dark:border-gray-600"><StatusBadge :status="item.data.status" /></td>
               <td v-if="hasHealth" class="px-3 py-2 border border-gray-300 dark:border-gray-600">
-                <RiskBadge
+                <RiskPopover
                   v-if="healthByKey[item.data.issueKey]"
                   :level="healthByKey[item.data.issueKey].risk ? healthByKey[item.data.issueKey].risk.level : 'green'"
-                  :flagCount="healthByKey[item.data.issueKey].risk ? healthByKey[item.data.issueKey].risk.score : 0"
                   :flags="healthByKey[item.data.issueKey].risk ? healthByKey[item.data.issueKey].risk.flags : []"
+                  :flagCount="healthByKey[item.data.issueKey].risk ? healthByKey[item.data.issueKey].risk.flags.length : 0"
                   :override="healthByKey[item.data.issueKey].risk ? healthByKey[item.data.issueKey].risk.override : null"
-                />
+                  :dor="healthByKey[item.data.issueKey].dor || null"
+                  variant="full"
+                >
+                  <RiskBadge
+                    :level="healthByKey[item.data.issueKey].risk ? healthByKey[item.data.issueKey].risk.level : 'green'"
+                    :flagCount="healthByKey[item.data.issueKey].risk ? healthByKey[item.data.issueKey].risk.flags.length : 0"
+                    :flags="healthByKey[item.data.issueKey].risk ? healthByKey[item.data.issueKey].risk.flags : []"
+                    :override="healthByKey[item.data.issueKey].risk ? healthByKey[item.data.issueKey].risk.override : null"
+                  />
+                </RiskPopover>
                 <span v-else class="text-gray-400 dark:text-gray-600 text-xs">-</span>
               </td>
               <td v-if="hasHealth" class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-xs text-center">

@@ -96,6 +96,28 @@ const healthByKey = computed(function() {
 const healthSummary = computed(function() {
   return healthData.value ? healthData.value.summary : null
 })
+
+var RISK_SEVERITY = { red: 0, yellow: 1, green: 2 }
+
+function isWorse(levelA, levelB) {
+  return (RISK_SEVERITY[levelA] != null ? RISK_SEVERITY[levelA] : 2) < (RISK_SEVERITY[levelB] != null ? RISK_SEVERITY[levelB] : 2)
+}
+
+const rfeKeyToHealth = computed(function() {
+  if (!features.value || Object.keys(healthByKey.value).length === 0) return {}
+  var map = {}
+  for (var i = 0; i < features.value.length; i++) {
+    var f = features.value[i]
+    if (!f.rfe) continue
+    var h = healthByKey.value[f.issueKey]
+    if (!h || !h.risk) continue
+    var existing = map[f.rfe]
+    if (!existing || isWorse(h.risk.level, existing.risk.level)) {
+      map[f.rfe] = { risk: h.risk, dor: h.dor || null }
+    }
+  }
+  return map
+})
 const warning = computed(() => candidates.value ? candidates.value.warning : null)
 const pipelineWarnings = computed(() => candidates.value ? candidates.value.pipelineWarnings || [] : [])
 const canEdit = computed(() => !demoMode.value && permissions.value && permissions.value.canEdit)
@@ -656,6 +678,7 @@ onUnmounted(function() {
           :bigRocks="bigRocks"
           :jiraBaseUrl="jiraBaseUrl"
           :summary="summary"
+          :rfeKeyToHealth="rfeKeyToHealth"
         />
       </div>
     </template>

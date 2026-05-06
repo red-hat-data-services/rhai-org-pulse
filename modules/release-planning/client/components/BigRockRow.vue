@@ -1,11 +1,13 @@
 <script setup>
 import { computed } from 'vue'
+import BigRockHealthPopover from './BigRockHealthPopover.vue'
 
 const props = defineProps({
   rock: { type: Object, required: true },
   jiraBaseUrl: { type: String, default: '' },
   health: { type: Object, default: null },
-  hasHealth: { type: Boolean, default: false }
+  hasHealth: { type: Boolean, default: false },
+  rockFeatures: { type: Array, default: () => [] }
 })
 
 const healthBadgeClass = computed(function() {
@@ -51,14 +53,19 @@ const healthBadgeClass = computed(function() {
   <td class="px-3 py-2 text-center border border-gray-300 dark:border-gray-600">
     <span class="font-semibold text-gray-700 dark:text-gray-300">{{ rock.rfeCount }}</span>
   </td>
-  <td class="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 max-w-xs truncate border border-gray-300 dark:border-gray-600">{{ rock.notes }}</td>
   <td v-if="hasHealth" class="px-3 py-2 text-center border border-gray-300 dark:border-gray-600">
-    <span
+    <BigRockHealthPopover
       v-if="health"
-      class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold"
-      :class="healthBadgeClass"
-      :title="health.totalFlags + ' risk flag(s) across ' + health.featureCount + ' feature(s)'"
-    >{{ health.worstLevel === 'green' ? 'OK' : health.worstLevel === 'yellow' ? 'At Risk' : 'Critical' }}</span>
+      :worstLevel="health.worstLevel"
+      :features="rockFeatures"
+      :totalFlags="health.totalFlags"
+    >
+      <span
+        class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold"
+        :class="[healthBadgeClass, health.totalFlags > 0 ? 'cursor-help' : '']"
+      >{{ health.worstLevel === 'green' ? 'OK' : health.worstLevel === 'yellow' ? 'At Risk' : 'Critical' }}</span>
+    </BigRockHealthPopover>
     <span v-else class="text-gray-400 dark:text-gray-600 text-xs">-</span>
   </td>
+  <td class="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 max-w-xs truncate border border-gray-300 dark:border-gray-600">{{ rock.notes }}</td>
 </template>

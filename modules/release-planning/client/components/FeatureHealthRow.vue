@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import RiceScoreDisplay from './RiceScoreDisplay.vue'
 import DorChecklist from './DorChecklist.vue'
 import StatusBadge from './StatusBadge.vue'
+import RiskPopover from './RiskPopover.vue'
 
 const props = defineProps({
   feature: { type: Object, required: true },
@@ -54,23 +55,6 @@ var dorPctClass = computed(function() {
   if (dorPct.value >= 80) return 'text-green-600 dark:text-green-400'
   if (dorPct.value >= 50) return 'text-yellow-600 dark:text-yellow-400'
   return 'text-red-600 dark:text-red-400'
-})
-
-var healthTooltip = computed(function() {
-  var lines = []
-  lines.push('Risk: ' + effectiveRisk.value.charAt(0).toUpperCase() + effectiveRisk.value.slice(1))
-  var dor = props.feature.dor
-  lines.push('DoR: ' + dorPct.value + '% (' + (dor ? dor.checkedCount : 0) + '/' + (dor ? dor.totalCount : 0) + ')')
-  if (riskFlags.value.length > 0) {
-    lines.push(riskFlags.value.length + ' risk flag(s):')
-    for (var i = 0; i < riskFlags.value.length; i++) {
-      lines.push('  - ' + riskFlags.value[i].category + ': ' + riskFlags.value[i].message)
-    }
-  }
-  if (riskOverride.value) {
-    lines.push('Override: ' + riskOverride.value.riskOverride + ' (' + riskOverride.value.reason + ')')
-  }
-  return lines.join('\n')
 })
 
 var priorityScoreClass = computed(function() {
@@ -156,17 +140,27 @@ var flagSeverityClass = {
     </td>
     <!-- Health (combined Risk + DoR) -->
     <td class="px-3 py-2 border border-gray-300 dark:border-gray-600">
-      <div class="flex items-center gap-1.5" :title="healthTooltip">
-        <span
-          class="w-2.5 h-2.5 rounded-full flex-shrink-0"
-          role="img"
-          :aria-label="'Risk level: ' + effectiveRisk"
-          :class="{
-            'bg-green-500': effectiveRisk === 'green',
-            'bg-yellow-500': effectiveRisk === 'yellow',
-            'bg-red-500': effectiveRisk === 'red'
-          }"
-        ></span>
+      <div class="flex items-center gap-1.5">
+        <RiskPopover
+          :level="riskLevel"
+          :flags="riskFlags"
+          :flagCount="riskFlags.length"
+          :override="riskOverride"
+          :dor="feature.dor"
+          variant="full"
+        >
+          <span
+            class="w-2.5 h-2.5 rounded-full flex-shrink-0"
+            :class="{
+              'cursor-help': riskFlags.length > 0 || riskOverride,
+              'bg-green-500': effectiveRisk === 'green',
+              'bg-yellow-500': effectiveRisk === 'yellow',
+              'bg-red-500': effectiveRisk === 'red'
+            }"
+            role="img"
+            :aria-label="'Risk level: ' + effectiveRisk"
+          ></span>
+        </RiskPopover>
         <span
           class="text-xs font-medium"
           :class="dorPctClass"

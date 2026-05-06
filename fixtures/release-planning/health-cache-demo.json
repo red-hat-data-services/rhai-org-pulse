@@ -11,8 +11,8 @@
   },
   "phase": "all",
   "summary": {
-    "totalFeatures": 8,
-    "byRisk": { "green": 2, "yellow": 3, "red": 3 },
+    "totalFeatures": 12,
+    "byRisk": { "green": 3, "yellow": 4, "red": 5 },
     "dorCompletionRate": 62,
     "averageRiceScore": 310,
     "blockedCount": 1,
@@ -403,11 +403,145 @@
       },
       "rice": { "reach": 1200, "impact": 3, "confidence": 75, "effort": 10, "score": 270, "complete": true },
       "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1008"
+    },
+    {
+      "key": "RHAISTRAT-2001",
+      "summary": "Support vLLM multi-node inference",
+      "status": "In Progress",
+      "priority": "Major",
+      "phase": "EA1",
+      "bigRock": "MaaS",
+      "tier": 1,
+      "pm": "Jane Doe",
+      "deliveryOwner": "John Smith",
+      "components": ["Serving"],
+      "completionPct": 60,
+      "epicCount": 2,
+      "issueCount": 12,
+      "blockerCount": 0,
+      "health": "",
+      "risk": {
+        "level": "yellow",
+        "score": 2,
+        "flags": [
+          { "category": "DOR_INCOMPLETE", "severity": "medium", "message": "DoR completion at 55% (below 80% threshold)" },
+          { "category": "UNESTIMATED", "severity": "medium", "message": "No story point estimate" }
+        ],
+        "override": null
+      },
+      "dor": {
+        "checkedCount": 7,
+        "totalCount": 13,
+        "completionPct": 55,
+        "items": []
+      },
+      "rice": null,
+      "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2001"
+    },
+    {
+      "key": "RHAISTRAT-2006",
+      "summary": "Prompt playground with model comparison",
+      "status": "In Progress",
+      "priority": "Critical",
+      "phase": "EA1",
+      "bigRock": "Gen AI Studio",
+      "tier": 1,
+      "pm": "Sarah Lee",
+      "deliveryOwner": "Dave Evans",
+      "components": ["GenAI Studio"],
+      "completionPct": 70,
+      "epicCount": 3,
+      "issueCount": 18,
+      "blockerCount": 0,
+      "health": "",
+      "risk": {
+        "level": "green",
+        "score": 0,
+        "flags": [],
+        "override": null
+      },
+      "dor": {
+        "checkedCount": 11,
+        "totalCount": 13,
+        "completionPct": 85,
+        "items": []
+      },
+      "rice": { "reach": 1800, "impact": 3, "confidence": 90, "effort": 6, "score": 810, "complete": true },
+      "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2006"
+    },
+    {
+      "key": "RHAISTRAT-2013",
+      "summary": "Model evaluation benchmarking suite",
+      "status": "In Progress",
+      "priority": "Major",
+      "phase": "EA1",
+      "bigRock": "Eval Hub",
+      "tier": 1,
+      "pm": "Nancy Kim",
+      "deliveryOwner": "Iris Lee",
+      "components": ["Evaluation"],
+      "completionPct": 35,
+      "epicCount": 2,
+      "issueCount": 10,
+      "blockerCount": 0,
+      "health": "",
+      "risk": {
+        "level": "red",
+        "score": 3,
+        "flags": [
+          { "category": "VELOCITY_LAG", "severity": "high", "message": "Completion at 35% vs expected 80% for EA1 at Pre-EA1" },
+          { "category": "DOR_INCOMPLETE", "severity": "high", "message": "DoR completion at 38% (below 50% threshold)" },
+          { "category": "MISSING_OWNER", "severity": "medium", "message": "No delivery owner assigned" }
+        ],
+        "override": null
+      },
+      "dor": {
+        "checkedCount": 5,
+        "totalCount": 13,
+        "completionPct": 38,
+        "items": []
+      },
+      "rice": null,
+      "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2013"
+    },
+    {
+      "key": "RHAISTRAT-2016",
+      "summary": "MCP catalog and registry backend",
+      "status": "In Progress",
+      "priority": "Critical",
+      "phase": "EA1",
+      "bigRock": "AI Hub incl MCP",
+      "tier": 1,
+      "pm": "Oscar Park",
+      "deliveryOwner": "Karen Quinn",
+      "components": ["Platform", "Registry"],
+      "completionPct": 50,
+      "epicCount": 3,
+      "issueCount": 20,
+      "blockerCount": 1,
+      "health": "",
+      "risk": {
+        "level": "red",
+        "score": 2,
+        "flags": [
+          { "category": "BLOCKED", "severity": "high", "message": "Blocked by dependency on auth service" },
+          { "category": "DOR_INCOMPLETE", "severity": "medium", "message": "DoR completion at 46% (below 80% threshold)" }
+        ],
+        "override": null
+      },
+      "dor": {
+        "checkedCount": 6,
+        "totalCount": 13,
+        "completionPct": 46,
+        "items": []
+      },
+      "rice": { "reach": 2500, "impact": 3, "confidence": 70, "effort": 8, "score": 656, "complete": true },
+      "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2016"
     }
   ],
   "enrichmentStatus": {
     "jiraQueriesRun": 3,
-    "featuresEnriched": 8,
+    "featuresEnriched": 12,
     "featuresSkipped": 0,
     "riceAvailable": true,
     "warnings": []

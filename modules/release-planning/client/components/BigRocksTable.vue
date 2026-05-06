@@ -33,9 +33,32 @@ const rockHealth = computed(function() {
     result[rockName].featureCount++
     result[rockName].totalFlags += (h.risk.score || 0)
     var level = h.risk.override ? (h.risk.override.riskOverride || h.risk.level) : h.risk.level
-    if ((RISK_SEVERITY[level] || 2) < (RISK_SEVERITY[result[rockName].worstLevel] || 2)) {
+    if ((RISK_SEVERITY[level] != null ? RISK_SEVERITY[level] : 2) < (RISK_SEVERITY[result[rockName].worstLevel] != null ? RISK_SEVERITY[result[rockName].worstLevel] : 2)) {
       result[rockName].worstLevel = level
     }
+  }
+  return result
+})
+
+const rockFeatures = computed(function() {
+  if (!hasHealth.value) return {}
+  var result = {}
+  for (var i = 0; i < props.features.length; i++) {
+    var f = props.features[i]
+    var rockName = f.bigRock
+    if (!rockName) continue
+    var h = props.healthByKey[f.issueKey]
+    if (!result[rockName]) result[rockName] = []
+    var level = h && h.risk
+      ? (h.risk.override ? h.risk.override.riskOverride || h.risk.level : h.risk.level)
+      : 'green'
+    var flags = h && h.risk ? h.risk.flags || [] : []
+    result[rockName].push({
+      key: f.issueKey,
+      level: level,
+      flagCount: flags.length,
+      flagCategories: flags.map(function(fl) { return fl.category })
+    })
   }
   return result
 })
@@ -118,7 +141,7 @@ function onDragEnd() {
                   &#x2807;
                 </span>
               </td>
-              <BigRockRow :rock="rock" :jiraBaseUrl="jiraBaseUrl" :health="rockHealth[rock.name]" :hasHealth="hasHealth" />
+              <BigRockRow :rock="rock" :jiraBaseUrl="jiraBaseUrl" :health="rockHealth[rock.name]" :hasHealth="hasHealth" :rockFeatures="rockFeatures[rock.name] || []" />
               <td class="px-2 py-2 text-center border border-gray-300 dark:border-gray-600">
                 <button
                   @click="handleDeleteClick($event, rock)"
@@ -139,7 +162,7 @@ function onDragEnd() {
             :key="rock.name"
             class="hover:bg-gray-50 dark:hover:bg-gray-700/50"
           >
-            <BigRockRow :rock="rock" :jiraBaseUrl="jiraBaseUrl" :health="rockHealth[rock.name]" :hasHealth="hasHealth" />
+            <BigRockRow :rock="rock" :jiraBaseUrl="jiraBaseUrl" :health="rockHealth[rock.name]" :hasHealth="hasHealth" :rockFeatures="rockFeatures[rock.name] || []" />
           </tr>
           <tr v-if="!bigRocks || bigRocks.length === 0">
             <td :colspan="hasHealth ? 10 : 9" class="px-3 py-8 text-center text-gray-500 border border-gray-300 dark:border-gray-600">
