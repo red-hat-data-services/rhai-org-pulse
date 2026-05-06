@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { usePopover } from '../composables/usePopover'
 
 const props = defineProps({
@@ -16,8 +16,6 @@ var hasContent = computed(function() {
 })
 
 var { isVisible, isPinned, popoverId, onMouseEnter, onMouseLeave, onClick, dismiss, onKeyDown } = usePopover()
-
-var popoverRef = ref(null)
 
 var displayLevel = computed(function() {
   if (props.override) return props.override.riskOverride || props.level
@@ -73,7 +71,6 @@ function formatDate(iso) {
 
     <div
       v-if="isVisible && hasContent"
-      ref="popoverRef"
       :data-popover-id="popoverId"
       role="dialog"
       aria-live="polite"
