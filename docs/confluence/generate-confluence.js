@@ -60,6 +60,24 @@ function readText(filePath, label, optional) {
 }
 
 /**
+ * Validate a module slug for path safety.
+ * Prevents path traversal attacks by ensuring slugs contain only safe characters.
+ * @param {string} slug - The module slug to validate
+ * @throws {Error} If the slug contains invalid characters or path traversal patterns
+ */
+function validateSlug(slug) {
+  if (typeof slug !== 'string' || !slug) {
+    throw new Error('Slug must be a non-empty string');
+  }
+  if (!/^[a-z0-9-]+$/.test(slug)) {
+    throw new Error(`Invalid slug "${slug}": must contain only lowercase letters, numbers, and hyphens`);
+  }
+  if (slug.includes('..')) {
+    throw new Error(`Invalid slug "${slug}": path traversal not allowed`);
+  }
+}
+
+/**
  * Parse a partial markdown file into sections keyed by H2 header text.
  * For example, "## Key Features" becomes the key "Key Features".
  * The value is the content between this header and the next H2 (or EOF),
@@ -357,6 +375,7 @@ function main() {
   console.log('\nGenerating module pages...');
   for (const mod of fullModules) {
     const slug = mod.slug;
+    validateSlug(slug);
     const modConfig = config.modules[slug];
     const partialPath = path.join(partialsDir, `${slug}.md`);
     const partialContent = readText(partialPath, `partial for ${slug}`);
@@ -393,6 +412,7 @@ function main() {
     console.log('\nGenerating stub pages for new modules...');
     for (const mod of stubModules) {
       const slug = mod.slug;
+      validateSlug(slug);
       const modDisplayName = displayName(mod);
       const modConfig = config.modules[slug];
 

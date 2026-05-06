@@ -43,7 +43,7 @@ on:
     paths:
       - "docs/confluence/**"
       - "modules/**/module.json"
-      - "scripts/generate-confluence.js"
+      - "scripts/validate-confluence-docs.js"
 
   # Allow manual runs from the Actions tab (see comment block above).
   workflow_dispatch:

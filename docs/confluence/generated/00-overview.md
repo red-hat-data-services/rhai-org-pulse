@@ -1,8 +1,8 @@
 <!-- Space: RHAI -->
-<!-- Title: Org Pulse Platform — Overview & Vision -->
+<!-- Title: Org Pulse Application — Overview & Vision -->
 <!-- Parent: Org Pulse Application -->
 
-# Org Pulse Platform
+# Org Pulse Application
 
 ## What is Org Pulse?
 
@@ -47,22 +47,13 @@ Simplify delivery visibility for RHAI engineering teams by providing **self-serv
 
 | Module | Status | Owner | Consumers |
 |---|---|---|---|
-| [Team Tracker](Org Pulse — Team Tracker) | Active | Alex Corvin (@accorvin) | ICs, Team Leads, Managers, Directors · RHAI Engineering, RHAI Platform |
-| [Org Roster](Org Pulse — Org Roster) | Active | Alex Corvin (@accorvin) | Team Leads, Managers, PMs · RHAI Engineering, Program Office |
-| [Release Analysis](Org Pulse — Release Analysis) | Active | Saiesh Prabhu (@saprabhu05) | PMs, Managers, Directors · Program Office, RHAI Engineering |
-| [Feature Traffic](Org Pulse — Feature Traffic) | Active | Unassigned | PMs, Team Leads · Program Office, RHAI Engineering |
+| [People & Teams](Org Pulse — People & Teams) | Active | Alex Corvin (@accorvin) | ICs, Team Leads, Managers, Directors · RHAI Engineering, RHAI Platform |
 | [AI Impact](Org Pulse — AI Impact) | Active | Alex Corvin (@accorvin) | Managers, Directors, PMs · RHAI Leadership, Program Office |
 | [Allocation Tracker](Org Pulse — Allocation Tracker) | Beta (Disabled) | Unassigned | Team Leads, Managers · RHAI Engineering, Program Office |
+| [Release Analysis](Org Pulse — Release Analysis) | Active | Saiesh Prabhu (@saprabhu05) | PMs, Managers, Directors · Program Office, RHAI Engineering |
 | [Upstream Pulse](Org Pulse — Upstream Pulse) | Beta (Disabled) | Unassigned | ICs, Team Leads, Managers · RHAI Engineering, OSPO |
-
-## Resources
-
-| Page | Description |
-|---|---|
-| [How to Engage](Org Pulse — How to Engage) | How teams interact with us, services provided, SLAs |
-| [Getting Started](Org Pulse — Getting Started) | Access prerequisites, onboarding, API tokens |
-| [Architecture & Design](Org Pulse — Architecture & Design) | System context, module system, data flow, tech stack |
-| [Contributor's Guide](Org Pulse — Contributor's Guide) | Development setup, code style, building new modules |
+| [Feature Traffic](Org Pulse — Feature Traffic) | Active | Unassigned | PMs, Team Leads · Program Office, RHAI Engineering |
+| [Release Planning](Org Pulse — Release Planning) | Active | Saiesh Prabhu (@saprabhu05) | TBD |
 
 ---
 

@@ -2,7 +2,7 @@
 <!-- Title: Org Pulse — How to Engage -->
 <!-- Parent: Org Pulse Application -->
 
-# How to Engage — Org Pulse Platform Team
+# How to Engage — Org Pulse Application Team
 
 This page defines how other teams interact with the Org Pulse platform team — what we offer, how to reach us, and what to expect.
 
@@ -10,7 +10,7 @@ This page defines how other teams interact with the Org Pulse platform team — 
 
 | Field | Value |
 |---|---|
-| **Team Name** | Org Pulse Platform Team |
+| **Team Name** | Org Pulse Application Team |
 | **Platform Lead** | Saiesh Prabhu (@saprabhu05) |
 | **Platform Co-Lead** | Erle Marion (@emarion) |
 
@@ -22,13 +22,13 @@ Provide self-service delivery visibility and organizational intelligence to RHAI
 
 | Service | Description | Status | Consumption Model |
 |---|---|---|---|
-| Team Tracker | Core delivery metrics and sprint tracking | Active | Self-Service |
-| Org Roster | Team structure, component mapping, RFE tracking | Active | Self-Service |
-| Release Analysis | Release velocity, Monte Carlo forecasting | Active | Self-Service |
-| Feature Traffic | RHAISTRAT feature delivery maps | Active | Self-Service |
-| AI Impact | AI adoption tracking across delivery pipeline | Active | Self-Service |
-| Allocation Tracker | Per-sprint 40-40-20 allocation tracking | Beta | Self-Service |
-| Upstream Pulse | Open-source contribution insights | Beta | Self-Service |
+| People & Teams | People, teams, delivery metrics, and org insights | Active | Self-Service |
+| AI Impact | Track AI adoption across the RHAI delivery pipeline | Active | Self-Service |
+| Allocation Tracker | Track per-sprint allocation against a 40-40-20 model | Beta | Self-Service |
+| Release Analysis | Release Analysis for RHAI Releases | Active | Self-Service |
+| Upstream Pulse | Upstream open-source contribution insights across GitHub organizations | Beta | Self-Service |
+| Feature Traffic | Traffic maps showing RHAISTRAT feature delivery across repos and components | Active | Self-Service |
+| Release Planning | RHOAI release planning dashboard with Big Rock tracking and feature/RFE discovery from Jira | Active | Self-Service |
 | REST API | Programmatic access to all platform data | Active | Self-Service |
 
 ## How Teams Engage With Us
