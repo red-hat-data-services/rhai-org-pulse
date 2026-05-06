@@ -536,7 +536,7 @@ onUnmounted(function() {
     <!-- No releases configured -->
     <div v-else-if="!healthLoading && releases.length === 0" class="text-center py-12">
       <p class="text-gray-500 dark:text-gray-400">No releases configured.</p>
-      <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Configure releases in the Big Rocks Planning view first.</p>
+      <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Configure releases in the Outcomes view first.</p>
     </div>
 
     <!-- No data yet, not loading -->
