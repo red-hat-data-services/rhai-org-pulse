@@ -161,7 +161,7 @@ function exportMarkdown() {
   if (activeTab.value === 'big-rocks') {
     lines.push('# Big Rocks - ' + selectedVersion.value)
     lines.push('')
-    lines.push('| **Priority** | **Pillar** | **Big Rock** | **Owner** | **Architect** | **Features** | **RFEs** | **Notes** |')
+    lines.push('| **Priority** | **Pillar** | **Big Rock** | **Owner** | **Engineering Lead** | **Features** | **RFEs** | **Notes** |')
     lines.push('|:--------:|--------|----------|-------|-----------|:--------:|:----:|-------|')
     for (const rock of bigRocks.value) {
       lines.push('| ' + [
@@ -233,7 +233,7 @@ function exportCsv() {
   let filename
 
   if (activeTab.value === 'big-rocks') {
-    rows.push(['Priority', 'Pillar', 'Big Rock', 'Owner', 'Architect', 'Features', 'RFEs', 'Notes'])
+    rows.push(['Priority', 'Pillar', 'Big Rock', 'Owner', 'Engineering Lead', 'Features', 'RFEs', 'Notes'])
     for (const rock of bigRocks.value) {
       rows.push([
         rock.priority,
