@@ -129,7 +129,7 @@ function loadFeaturesFromCandidates(readFromStorage, version, phase) {
 
   if (!cached || !cached.data || !cached.data.features) {
     warnings.push('No candidates found -- run a Big Rocks refresh first')
-    return { features: [], warnings: warnings }
+    return { features: [], bigRockNames: [], warnings: warnings }
   }
 
   var candidates = cached.data.features
@@ -146,7 +146,11 @@ function loadFeaturesFromCandidates(readFromStorage, version, phase) {
     features.push(mapCandidateToHealthFeature(candidate))
   }
 
-  return { features: features, warnings: warnings }
+  var bigRockNames = cached.data.filterOptions && cached.data.filterOptions.rocks
+    ? cached.data.filterOptions.rocks
+    : []
+
+  return { features: features, bigRockNames: bigRockNames, warnings: warnings }
 }
 
 /**
@@ -596,11 +600,13 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
   // Step 1: Load features from Big Rocks candidates cache
   var featureResult = loadFeaturesFromCandidates(readFromStorage, version, phase)
   var features = featureResult.features
+  var bigRockNames = featureResult.bigRockNames
   warnings = warnings.concat(featureResult.warnings)
 
   if (features.length === 0) {
     console.warn('[health] No features found for version ' + version + ' phase ' + phaseKey)
     var emptyCache = buildEmptyCache(version, warnings)
+    emptyCache.bigRockNames = bigRockNames
     writeToStorage(DATA_PREFIX + '/health-cache-' + version + '-' + phaseKey + '.json', emptyCache)
     return emptyCache
   }
@@ -775,6 +781,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
       nextMilestone: milestoneInfo.nextMilestone,
       planningDeadline: planningDeadline
     },
+    bigRockNames: bigRockNames,
     features: healthFeatures,
     enrichmentStatus: {
       jiraQueriesRun: enrichResult.stats.pass1 + enrichResult.stats.pass2,
