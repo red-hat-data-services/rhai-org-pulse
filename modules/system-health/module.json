@@ -1,0 +1,18 @@
+{
+  "name": "System Health",
+  "slug": "system-health",
+  "description": "Operational health signals for repositories and related systems",
+  "icon": "hospital",
+  "order": 18,
+  "defaultEnabled": true,
+  "requires": [],
+  "client": {
+    "entry": "./client/index.js",
+    "navItems": [
+      { "id": "quality-analysis", "label": "Quality analysis", "icon": "clipboard-list", "default": true }
+    ]
+  },
+  "server": {
+    "entry": "./server/index.js"
+  }
+}
