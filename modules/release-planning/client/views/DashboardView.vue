@@ -1,10 +1,12 @@
 <script setup>
-import { ref, computed, inject, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, inject, onMounted, watch } from 'vue'
 import { useReleasePlanning, useReleases } from '../composables/useReleasePlanning'
 import { useReleaseHealth } from '../composables/useReleaseHealth'
 import { useBigRockEditor } from '../composables/useBigRockEditor'
 import { useFilters } from '../composables/useFilters'
-import { isWorse } from '../utils/risk-levels'
+import { useHealthAggregation } from '../composables/useHealthAggregation'
+import { useRefreshPolling } from '../composables/useRefreshPolling'
+import { useClickOutside } from '../composables/useClickOutside'
 import { exportMarkdown as exportMd, exportCsv as exportCsvFile } from '../utils/outcomes-export'
 import { formatDate } from '@shared/client'
 import SummaryCards from '../components/SummaryCards.vue'
@@ -49,32 +51,10 @@ const newReleaseDialogOpen = ref(false)
 // Seed state
 const seeding = ref(false)
 
-// Refresh polling
-let refreshPollTimer = null
-
-function startRefreshPolling() {
-  stopRefreshPolling()
-  refreshPollTimer = setInterval(async function() {
-    const status = await checkRefreshStatus()
-    if (!status.running) {
-      stopRefreshPolling()
-      if (selectedVersion.value) {
-        loadCandidates(selectedVersion.value)
-      }
-    }
-  }, 3000)
-}
-
-function stopRefreshPolling() {
-  if (refreshPollTimer) {
-    clearInterval(refreshPollTimer)
-    refreshPollTimer = null
-  }
-}
-
-watch(refreshing, function(isRefreshing) {
-  if (isRefreshing) {
-    startRefreshPolling()
+// Refresh polling -- composable handles watch + cleanup
+useRefreshPolling(refreshing, checkRefreshStatus, function() {
+  if (selectedVersion.value) {
+    loadCandidates(selectedVersion.value)
   }
 })
 
@@ -86,35 +66,13 @@ const filterOptions = computed(() => candidates.value ? candidates.value.filterO
 const jiraBaseUrl = computed(() => candidates.value ? candidates.value.jiraBaseUrl || '' : '')
 const demoMode = computed(() => candidates.value ? candidates.value.demoMode : false)
 
-const healthByKey = computed(function() {
-  if (!healthData.value || !healthData.value.features) return {}
-  var map = {}
-  for (var i = 0; i < healthData.value.features.length; i++) {
-    var f = healthData.value.features[i]
-    map[f.key] = f
-  }
-  return map
-})
-
-const healthSummary = computed(function() {
-  return healthData.value ? healthData.value.summary : null
-})
-
-const rfeKeyToHealth = computed(function() {
-  if (!features.value || Object.keys(healthByKey.value).length === 0) return {}
-  var map = {}
-  for (var i = 0; i < features.value.length; i++) {
-    var f = features.value[i]
-    if (!f.rfe) continue
-    var h = healthByKey.value[f.issueKey]
-    if (!h || !h.risk) continue
-    var existing = map[f.rfe]
-    if (!existing || isWorse(h.risk.level, existing.risk.level)) {
-      map[f.rfe] = { risk: h.risk, dor: h.dor || null }
-    }
-  }
-  return map
-})
+const {
+  healthByKey,
+  rfeKeyToHealth,
+  rockHealth,
+  rockFeatures,
+  healthSummary
+} = useHealthAggregation(healthData, features, rfes, bigRocks)
 const warning = computed(() => candidates.value ? candidates.value.warning : null)
 const pipelineWarnings = computed(() => candidates.value ? candidates.value.pipelineWarnings || [] : [])
 const canEdit = computed(() => !demoMode.value && permissions.value && permissions.value.canEdit)
@@ -128,6 +86,7 @@ const {
   searchQuery,
   filteredFeatures,
   filteredRfes,
+  filteredBigRocks,
   hasActiveFilters,
   clearFilters
 } = useFilters(features, rfes, bigRocks)
@@ -142,7 +101,7 @@ const tabs = [
 
 const featureCount = computed(() => filteredFeatures.value.length)
 const rfeCount = computed(() => filteredRfes.value.length)
-const bigRockCount = computed(() => bigRocks.value.length)
+const bigRockCount = computed(() => filteredBigRocks.value.length)
 
 function tabCount(tabId) {
   if (tabId === 'features') return featureCount.value
@@ -165,7 +124,7 @@ function getExportData() {
   return {
     activeTab: activeTab.value,
     selectedVersion: selectedVersion.value,
-    bigRocks: bigRocks.value,
+    bigRocks: filteredBigRocks.value,
     filteredFeatures: filteredFeatures.value,
     filteredRfes: filteredRfes.value
   }
@@ -329,12 +288,12 @@ watch(activeTab, function() {
   error.value = null
 })
 
-function handleClickOutside() {
+// Close export menu on outside click (composable handles mount/unmount)
+useClickOutside(null, function() {
   exportMenuOpen.value = false
-}
+})
 
 onMounted(async function() {
-  document.addEventListener('click', handleClickOutside)
   loadPermissions()
   await loadReleases()
   if (releases.value.length > 0) {
@@ -347,11 +306,6 @@ onMounted(async function() {
       activeTab.value = 'features'
     }
   }
-})
-
-onUnmounted(function() {
-  document.removeEventListener('click', handleClickOutside)
-  stopRefreshPolling()
 })
 </script>
 
@@ -508,11 +462,11 @@ onUnmounted(function() {
       <!-- Tab content -->
       <div v-if="activeTab === 'big-rocks'" id="panel-big-rocks" role="tabpanel" aria-labelledby="tab-big-rocks">
         <BigRocksTable
-          :bigRocks="bigRocks"
+          :bigRocks="filteredBigRocks"
           :jiraBaseUrl="jiraBaseUrl"
           :canEdit="canEdit"
-          :healthByKey="healthByKey"
-          :features="features"
+          :rockHealth="rockHealth"
+          :rockFeatures="rockFeatures"
           @editRock="handleEditRock"
           @addRock="handleAddRock"
           @deleteRock="handleDeleteRock"

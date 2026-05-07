@@ -2,64 +2,17 @@
 import { ref, watch, computed } from 'vue'
 import draggable from 'vuedraggable'
 import BigRockRow from './BigRockRow.vue'
-import { RISK_SEVERITY } from '../utils/risk-levels'
 
 const props = defineProps({
   bigRocks: { type: Array, default: () => [] },
   jiraBaseUrl: { type: String, default: '' },
   canEdit: { type: Boolean, default: false },
-  healthByKey: { type: Object, default: () => ({}) },
-  features: { type: Array, default: () => [] }
+  rockHealth: { type: Object, default: () => ({}) },
+  rockFeatures: { type: Object, default: () => ({}) }
 })
 
 const hasHealth = computed(function() {
-  return Object.keys(props.healthByKey).length > 0
-})
-
-const rockHealth = computed(function() {
-  if (!hasHealth.value) return {}
-  var result = {}
-  for (var i = 0; i < props.features.length; i++) {
-    var f = props.features[i]
-    var rockName = f.bigRock
-    if (!rockName) continue
-    var h = props.healthByKey[f.issueKey]
-    if (!h || !h.risk) continue
-
-    if (!result[rockName]) {
-      result[rockName] = { worstLevel: 'green', totalFlags: 0, featureCount: 0 }
-    }
-    result[rockName].featureCount++
-    result[rockName].totalFlags += (h.risk.score || 0)
-    var level = h.risk.override ? (h.risk.override.riskOverride || h.risk.level) : h.risk.level
-    if ((RISK_SEVERITY[level] != null ? RISK_SEVERITY[level] : 2) < (RISK_SEVERITY[result[rockName].worstLevel] != null ? RISK_SEVERITY[result[rockName].worstLevel] : 2)) {
-      result[rockName].worstLevel = level
-    }
-  }
-  return result
-})
-
-const rockFeatures = computed(function() {
-  if (!hasHealth.value) return {}
-  var result = {}
-  for (var i = 0; i < props.features.length; i++) {
-    var f = props.features[i]
-    var rockName = f.bigRock
-    if (!rockName) continue
-    var h = props.healthByKey[f.issueKey]
-    if (!result[rockName]) result[rockName] = []
-    var level = h && h.risk
-      ? (h.risk.override ? h.risk.override.riskOverride || h.risk.level : h.risk.level)
-      : 'green'
-    var flags = h && h.risk ? h.risk.flags || [] : []
-    result[rockName].push({
-      key: f.issueKey,
-      level: level,
-      flagCount: flags.length,
-      flagCategories: flags.map(function(fl) { return fl.category })
-    })
-  }
-  return result
+  return Object.keys(props.rockHealth).length > 0
 })
 
 const emit = defineEmits(['editRock', 'addRock', 'deleteRock', 'reorder'])
