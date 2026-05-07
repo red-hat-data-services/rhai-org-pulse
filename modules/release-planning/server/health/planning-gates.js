@@ -28,7 +28,7 @@ function computeDoD(feature, enrichment) {
 
   var checks = [
     { id: 'DoD-1', label: 'Owner Assigned', passed: hasOwner, detail: ownerDetail },
-    { id: 'DoD-2', label: 'Fix Version Set', passed: hasFixVersion, detail: hasFixVersion ? fixVersions.join(', ') : versionDetail },
+    { id: 'DoD-2', label: 'Fix Version Set', passed: hasFixVersion, detail: versionDetail },
     { id: 'DoD-3', label: 'Blockers Resolved', passed: hasNoBlockers, detail: blockerDetail }
   ]
 
@@ -65,7 +65,7 @@ function computeDoR(feature, enrichment) {
     ],
     warnings: [
       { id: 'DoR-W1', label: 'Owner Assigned', passed: hasOwner, detail: ownerDetail },
-      { id: 'DoR-W2', label: 'Version Set', passed: hasVersion, detail: hasVersion ? versionDetail : 'No fixVersion or targetVersion' },
+      { id: 'DoR-W2', label: 'Version Set', passed: hasVersion, detail: versionDetail },
       { id: 'DoR-W3', label: 'Blockers Resolved', passed: hasNoBlockers, detail: blockerDetail }
     ]
   }
