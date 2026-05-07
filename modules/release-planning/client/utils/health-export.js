@@ -93,8 +93,7 @@ function computePhaseSummary(features) {
 
 // ─── Exported functions ───
 
-// eslint-disable-next-line no-unused-vars
-export function exportHealthMarkdown({ version, phase, features, milestones, planningFreezes, cachedAt }) {
+export function exportHealthMarkdown({ version, phase, features, milestones, cachedAt }) {
   var phaseSummary = computePhaseSummary(features)
   var generated = new Date().toISOString()
   var lines = []
@@ -259,4 +258,4 @@ export function exportHealthCsv({ version, phase, features, cachedAt }) {
 }
 
 // Export helpers for testing and shared use
-export { escapeCell, escapeCsv, computePhaseSummary, normalizeComponents, riskLabel }
+export { escapeCell, escapeCsv, computePhaseSummary, normalizeComponents, riskLabel, triggerDownload }

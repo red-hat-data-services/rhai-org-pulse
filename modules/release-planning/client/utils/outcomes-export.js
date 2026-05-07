@@ -1,16 +1,4 @@
-import { escapeCell, escapeCsv } from './health-export'
-
-/**
- * Trigger a browser download for the given Blob.
- */
-function triggerDownload(blob, filename) {
-  var url = URL.createObjectURL(blob)
-  var a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
-}
+import { escapeCell, escapeCsv, triggerDownload } from './health-export'
 
 /**
  * Export the active tab data as Markdown.

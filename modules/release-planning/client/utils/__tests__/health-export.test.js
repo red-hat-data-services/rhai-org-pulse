@@ -336,7 +336,6 @@ describe('exportHealthMarkdown', function() {
         gaFreeze: '2026-08-01',
         gaTarget: '2026-08-15'
       },
-      planningFreezes: { ea1: '2026-04-15' },
       cachedAt: '2026-04-25T14:30:00.000Z'
     })
 
@@ -367,7 +366,6 @@ describe('exportHealthMarkdown', function() {
         gaFreeze: '2026-08-01',
         gaTarget: '2026-08-15'
       },
-      planningFreezes: null,
       cachedAt: '2026-04-25T14:30:00.000Z'
     })
 
@@ -382,7 +380,6 @@ describe('exportHealthMarkdown', function() {
       phase: 'GA',
       features: [makeFeature()],
       milestones: null,
-      planningFreezes: null,
       cachedAt: '2026-04-25T14:30:00.000Z'
     })
 
@@ -395,7 +392,6 @@ describe('exportHealthMarkdown', function() {
       phase: 'GA',
       features: [makeRedFeature()],
       milestones: null,
-      planningFreezes: null,
       cachedAt: '2026-04-25T14:30:00.000Z'
     })
 
@@ -411,7 +407,6 @@ describe('exportHealthMarkdown', function() {
       phase: 'GA',
       features: [makeRedFeature()], // rice: null
       milestones: null,
-      planningFreezes: null,
       cachedAt: '2026-04-25T14:30:00.000Z'
     })
 
@@ -426,7 +421,6 @@ describe('exportHealthMarkdown', function() {
       phase: 'GA',
       features: [f],
       milestones: null,
-      planningFreezes: null,
       cachedAt: '2026-04-25T14:30:00.000Z'
     })
 
@@ -443,7 +437,6 @@ describe('exportHealthMarkdown', function() {
       phase: 'GA',
       features: features,
       milestones: null,
-      planningFreezes: null,
       cachedAt: '2026-04-25T14:30:00.000Z'
     })
 
@@ -463,7 +456,6 @@ describe('exportHealthMarkdown', function() {
       phase: 'EA2',
       features: [makeFeature()],
       milestones: null,
-      planningFreezes: null,
       cachedAt: '2026-04-25T14:30:00.000Z'
     })
 
@@ -476,7 +468,6 @@ describe('exportHealthMarkdown', function() {
       phase: 'GA',
       features: [],
       milestones: null,
-      planningFreezes: null,
       cachedAt: '2026-04-25T14:30:00.000Z'
     })
 
@@ -493,7 +484,6 @@ describe('exportHealthMarkdown', function() {
       phase: 'GA',
       features: [makeFeature()],
       milestones: null,
-      planningFreezes: null,
       cachedAt: '2026-04-25T14:30:00.000Z'
     })
 
@@ -506,7 +496,6 @@ describe('exportHealthMarkdown', function() {
       phase: 'GA',
       features: [makeOverriddenFeature()],
       milestones: null,
-      planningFreezes: null,
       cachedAt: '2026-04-25T14:30:00.000Z'
     })
 
@@ -524,7 +513,6 @@ describe('exportHealthMarkdown', function() {
       phase: 'GA',
       features: [f],
       milestones: null,
-      planningFreezes: null,
       cachedAt: '2026-04-25T14:30:00.000Z'
     })
 
