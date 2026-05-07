@@ -24,6 +24,11 @@ export default defineConfig({
         // Only proxy requests for git-static module content (HTML, assets).
         // Let Vite serve source files from the modules/ directory (for import.meta.glob).
         bypass(req) {
+          const pathOnly = (req.url || '').split('?')[0]
+          // Static HTML under modules/ (e.g. quality reports imported with ?url) must be served by Vite, not the API.
+          if (/\.html$/i.test(pathOnly)) {
+            return req.url
+          }
           const accept = req.headers.accept || ''
           // Vite module requests have JS accept headers or ?import/?t= query strings
           if (accept.includes('application/javascript') ||

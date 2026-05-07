@@ -1,15 +1,15 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useReleaseHealth } from '../composables/useReleaseHealth'
-import { useDorChecklist } from '../composables/useDorChecklist'
 import { useReleases } from '../composables/useReleasePlanning'
-import { useAuth } from '@shared/client'
+import { useAuth, formatDate } from '@shared/client'
 import { passesPhaseFilter } from '../utils/phase-filter'
 import ReleaseSelector from '../components/ReleaseSelector.vue'
 import MilestoneTimeline from '../components/MilestoneTimeline.vue'
 import HealthFilterBar from '../components/HealthFilterBar.vue'
 import FeatureHealthTable from '../components/FeatureHealthTable.vue'
 import RiceFieldConfig from '../components/RiceFieldConfig.vue'
+import HealthSummaryCards from '../components/HealthSummaryCards.vue'
 
 var {
   healthData, healthLoading, healthError, healthRefreshing, healthCacheStale,
@@ -18,7 +18,6 @@ var {
   createSnapshot
 } = useReleaseHealth()
 
-var { toggleItem, updateNotes, cancelAll: cancelDorPending } = useDorChecklist()
 var { releases, loadReleases } = useReleases()
 var { isAdmin } = useAuth()
 
@@ -34,6 +33,8 @@ var showRiceConfig = ref(false)
 var bigRockFilter = ref('')
 var selectedComponents = ref([])
 var searchQuery = ref('')
+var planningStatusFilter = ref('')
+var riskLevelFilter = ref('')
 
 // Refresh polling
 var refreshPollTimer = null
@@ -73,6 +74,14 @@ var jiraBaseUrl = computed(function() {
 
 var enrichmentStatus = computed(function() {
   return healthData.value ? healthData.value.enrichmentStatus : null
+})
+
+var summaryCardCounts = computed(function() {
+  return healthData.value && healthData.value.summary ? healthData.value.summary.cardCounts : null
+})
+
+var planningDeadline = computed(function() {
+  return healthData.value && healthData.value.summary ? healthData.value.summary.planningDeadline : null
 })
 
 // ─── Phase tabs ───
@@ -212,18 +221,29 @@ var filteredFeatures = computed(function() {
       if (searchFields.indexOf(q) === -1) return false
     }
 
+    // Planning status filter
+    if (planningStatusFilter.value && f.planningStatus !== planningStatusFilter.value) return false
+
+    // Risk level filter
+    if (riskLevelFilter.value) {
+      var effectiveLevel = f.risk && f.risk.override ? (f.risk.override.riskOverride || f.risk.level) : (f.risk ? f.risk.level : 'green')
+      if (effectiveLevel !== riskLevelFilter.value) return false
+    }
+
     return true
   })
 })
 
 var hasActiveFilters = computed(function() {
-  return !!(bigRockFilter.value || selectedComponents.value.length > 0 || searchQuery.value)
+  return !!(bigRockFilter.value || selectedComponents.value.length > 0 || searchQuery.value || planningStatusFilter.value || riskLevelFilter.value)
 })
 
 function clearFilters() {
   bigRockFilter.value = ''
   selectedComponents.value = []
   searchQuery.value = ''
+  planningStatusFilter.value = ''
+  riskLevelFilter.value = ''
 }
 
 // ─── Data refresh ───
@@ -264,54 +284,12 @@ function handleRefresh() {
   }
 }
 
-// ─── DoR interactions ───
-
-function handleDorToggle(featureKey, itemId, checked) {
-  // Optimistic UI update
-  if (healthData.value && healthData.value.features) {
-    for (var i = 0; i < healthData.value.features.length; i++) {
-      if (healthData.value.features[i].key === featureKey && healthData.value.features[i].dor) {
-        var items = healthData.value.features[i].dor.items
-        for (var j = 0; j < items.length; j++) {
-          if (items[j].id === itemId) {
-            items[j].checked = checked
-            break
-          }
-        }
-        // Recount
-        var checkedCount = 0
-        for (var k = 0; k < items.length; k++) {
-          if (items[k].checked) checkedCount++
-        }
-        healthData.value.features[i].dor.checkedCount = checkedCount
-        healthData.value.features[i].dor.completionPct = items.length > 0
-          ? Math.round((checkedCount / items.length) * 100) : 0
-        break
-      }
-    }
-  }
-
-  // Debounced save
-  toggleItem(selectedVersion.value, featureKey, itemId, checked)
-}
-
-function handleNotesUpdate(featureKey, notes) {
-  updateNotes(selectedVersion.value, featureKey, notes)
-}
-
 function handleRemoveOverride(featureKey) {
   removeRiskOverrideApi(selectedVersion.value, featureKey).then(function() {
     loadHealth(selectedVersion.value)
   }).catch(function(err) {
     healthError.value = err.message || 'Failed to remove override'
   })
-}
-
-// ─── Format helpers ───
-
-function formatDate(iso) {
-  if (!iso) return 'Never'
-  return new Date(iso).toLocaleString()
 }
 
 // ─── Lifecycle ───
@@ -334,7 +312,6 @@ onMounted(async function() {
 
 onUnmounted(function() {
   stopRefreshPolling()
-  cancelDorPending()
 })
 </script>
 
@@ -421,6 +398,9 @@ onUnmounted(function() {
       <!-- Milestone Timeline -->
       <MilestoneTimeline :milestones="milestones" :planningFreezes="planningFreezes" />
 
+      <!-- Summary Cards -->
+      <HealthSummaryCards :cardCounts="summaryCardCounts" :planningDeadline="planningDeadline" />
+
       <!-- Phase Tabs -->
       <div>
         <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
@@ -491,6 +471,8 @@ onUnmounted(function() {
         v-model:bigRockFilter="bigRockFilter"
         v-model:selectedComponents="selectedComponents"
         v-model:searchQuery="searchQuery"
+        v-model:planningStatusFilter="planningStatusFilter"
+        v-model:riskLevelFilter="riskLevelFilter"
         :bigRocks="bigRockOptions"
         :components="componentOptions"
         :hasActiveFilters="hasActiveFilters"
@@ -505,8 +487,6 @@ onUnmounted(function() {
         :addedKeys="addedFeatureKeys"
         :removedFeatures="removedFeatures"
         :showChanges="showChanges"
-        @toggleDorItem="handleDorToggle"
-        @updateNotes="handleNotesUpdate"
         @removeOverride="handleRemoveOverride"
       />
     </template>
@@ -536,7 +516,7 @@ onUnmounted(function() {
     <!-- No releases configured -->
     <div v-else-if="!healthLoading && releases.length === 0" class="text-center py-12">
       <p class="text-gray-500 dark:text-gray-400">No releases configured.</p>
-      <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Configure releases in the Big Rocks Planning view first.</p>
+      <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Configure releases in the Outcomes view first.</p>
     </div>
 
     <!-- No data yet, not loading -->

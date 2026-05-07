@@ -95,6 +95,16 @@ export function useBigRockEditor() {
     fieldErrors.value = errors || {}
   }
 
+  /** Reset all state. Intended for test isolation. */
+  function reset() {
+    isOpen.value = false
+    editingRock.value = null
+    formData.value = createEmptyForm()
+    saving.value = false
+    saveError.value = null
+    fieldErrors.value = {}
+  }
+
   return {
     isOpen,
     editingRock,
@@ -109,6 +119,7 @@ export function useBigRockEditor() {
     close,
     setSaving,
     setSaveError,
-    setFieldErrors
+    setFieldErrors,
+    reset
   }
 }

@@ -1,5 +1,7 @@
 <script setup>
 import StatusBadge from './StatusBadge.vue'
+import RiskBadge from './RiskBadge.vue'
+import RiskPopover from './RiskPopover.vue'
 import TierSeparator from './TierSeparator.vue'
 import { computed } from 'vue'
 import { PRIORITY_STYLES } from '../constants'
@@ -8,10 +10,17 @@ const props = defineProps({
   rfes: { type: Array, default: () => [] },
   bigRocks: { type: Array, default: () => [] },
   jiraBaseUrl: { type: String, default: '' },
-  summary: { type: Object, default: null }
+  summary: { type: Object, default: null },
+  rfeKeyToHealth: { type: Object, default: () => ({}) }
 })
 
-const COL_COUNT = 8
+const hasHealth = computed(function() {
+  return Object.keys(props.rfeKeyToHealth).length > 0
+})
+
+const COL_COUNT = computed(function() {
+  return hasHealth.value ? 9 : 8
+})
 
 const tierCounts = computed(() => {
   const counts = {}
@@ -49,6 +58,7 @@ const groupedRfes = computed(() => {
             <th scope="col" class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Big Rock</th>
             <th scope="col" class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">RFE</th>
             <th scope="col" class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Status</th>
+            <th v-if="hasHealth" scope="col" class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Risk</th>
             <th scope="col" class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Priority</th>
             <th scope="col" class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Title</th>
             <th scope="col" class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Components</th>
@@ -78,6 +88,27 @@ const groupedRfes = computed(() => {
                 >{{ item.data.issueKey }}</a>
               </td>
               <td class="px-3 py-2 border border-gray-300 dark:border-gray-600"><StatusBadge :status="item.data.status" /></td>
+              <td v-if="hasHealth" class="px-3 py-2 border border-gray-300 dark:border-gray-600">
+                <RiskPopover
+                  v-if="rfeKeyToHealth[item.data.issueKey]"
+                  :level="rfeKeyToHealth[item.data.issueKey].risk ? rfeKeyToHealth[item.data.issueKey].risk.level : 'green'"
+                  :flags="rfeKeyToHealth[item.data.issueKey].risk ? rfeKeyToHealth[item.data.issueKey].risk.flags : []"
+                  :flagCount="rfeKeyToHealth[item.data.issueKey].risk ? rfeKeyToHealth[item.data.issueKey].risk.flags.length : 0"
+                  :override="rfeKeyToHealth[item.data.issueKey].risk ? rfeKeyToHealth[item.data.issueKey].risk.override : null"
+                  :dor="rfeKeyToHealth[item.data.issueKey].dor || null"
+                  :dod="rfeKeyToHealth[item.data.issueKey].dod || null"
+                  :planningStatus="rfeKeyToHealth[item.data.issueKey].planningStatus || ''"
+                  variant="full"
+                >
+                  <RiskBadge
+                    :level="rfeKeyToHealth[item.data.issueKey].risk ? rfeKeyToHealth[item.data.issueKey].risk.level : 'green'"
+                    :flagCount="rfeKeyToHealth[item.data.issueKey].risk ? rfeKeyToHealth[item.data.issueKey].risk.flags.length : 0"
+                    :flags="rfeKeyToHealth[item.data.issueKey].risk ? rfeKeyToHealth[item.data.issueKey].risk.flags : []"
+                    :override="rfeKeyToHealth[item.data.issueKey].risk ? rfeKeyToHealth[item.data.issueKey].risk.override : null"
+                  />
+                </RiskPopover>
+                <span v-else class="text-gray-400 dark:text-gray-600 text-xs">-</span>
+              </td>
               <td class="px-3 py-2 border border-gray-300 dark:border-gray-600">
                 <span
                   v-if="item.data.priority"

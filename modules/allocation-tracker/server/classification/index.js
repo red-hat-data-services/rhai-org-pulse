@@ -6,11 +6,11 @@ const { classifyIssue, meetsThreshold } = require('./classifier');
 const { updateActivityType } = require('./jira-writer');
 
 /**
- * Configuration for classification service
+ * Default configuration for classification service
  */
-const CONFIG = {
+const DEFAULT_CONFIG = {
   enabled: true,
-  projects: ['AIPCC'], // Expand later: ['RHOIENG', 'INFERENG', 'RHAIENG']
+  projects: ['AIPCC', 'RHOAIENG', 'INFERENG', 'RHAIENG'],
   confidenceThreshold: 0.85,
   issueTypes: ['Story', 'Bug', 'Spike', 'Task', 'Epic', 'Vulnerability', 'Weakness']
 };
@@ -21,11 +21,13 @@ const CONFIG = {
  * @param {Object} options - Options
  * @param {boolean} options.dryRun - If true, don't write to Jira
  * @param {number} options.confidenceThreshold - Minimum confidence (default: 0.85)
+ * @param {Object} options.config - Classification config (default: DEFAULT_CONFIG)
  * @returns {Promise<Object>} Classification result
  */
 async function classifyAndWrite(issue, options = {}) {
   const dryRun = options.dryRun || false;
-  const threshold = options.confidenceThreshold || CONFIG.confidenceThreshold;
+  const config = options.config || DEFAULT_CONFIG;
+  const threshold = options.confidenceThreshold || config.confidenceThreshold;
 
   // Classify the issue
   const classification = classifyIssue(issue);
@@ -84,20 +86,21 @@ async function classifyAndWrite(issue, options = {}) {
 /**
  * Check if an issue should be classified based on project and issue type
  * @param {Object} issue - Jira issue object
+ * @param {Object} config - Classification config (default: DEFAULT_CONFIG)
  * @returns {boolean}
  */
-function shouldClassify(issue) {
-  if (!CONFIG.enabled) {
+function shouldClassify(issue, config = DEFAULT_CONFIG) {
+  if (!config.enabled) {
     return false;
   }
 
   // Check if issue is in configured projects
-  if (issue.project && !CONFIG.projects.includes(issue.project)) {
+  if (issue.project && !config.projects.includes(issue.project)) {
     return false;
   }
 
   // Check if issue type is supported
-  if (issue.issueType && !CONFIG.issueTypes.includes(issue.issueType)) {
+  if (issue.issueType && !config.issueTypes.includes(issue.issueType)) {
     return false;
   }
 
@@ -107,5 +110,5 @@ function shouldClassify(issue) {
 module.exports = {
   classifyAndWrite,
   shouldClassify,
-  CONFIG
+  DEFAULT_CONFIG
 };

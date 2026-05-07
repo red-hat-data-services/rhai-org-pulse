@@ -111,11 +111,10 @@ describe('expectedCompletionForPhase', function() {
 
 describe('computeFeatureRisk', function() {
   var healthyFeature = { status: 'In Progress', completionPct: 80, phase: 'GA', deliveryOwner: 'Jane', assignee: 'Jane', tier: 1 }
-  var healthyDor = { completionPct: 100, totalCount: 13 }
   var healthyEnrichment = { storyPoints: 8, dependencyLinks: [] }
 
   it('returns green with no flags for a healthy feature', function() {
-    var result = computeFeatureRisk(healthyFeature, null, healthyDor, healthyEnrichment, {
+    var result = computeFeatureRisk(healthyFeature, null, healthyEnrichment, {
       today: dateOf('2026-04-01')
     })
     expect(result.risk).toBe('green')
@@ -125,7 +124,7 @@ describe('computeFeatureRisk', function() {
 
   it('flags MILESTONE_MISS when feature in New status after freeze', function() {
     var feature = { status: 'New', completionPct: 0, phase: 'EA1' }
-    var result = computeFeatureRisk(feature, MILESTONES, healthyDor, healthyEnrichment, {
+    var result = computeFeatureRisk(feature, MILESTONES, healthyEnrichment, {
       today: dateOf('2026-05-10')
     })
     var milestoneFlag = result.flags.find(function(f) { return f.category === 'MILESTONE_MISS' })
@@ -136,7 +135,7 @@ describe('computeFeatureRisk', function() {
 
   it('flags VELOCITY_LAG medium when behind but above velocityYellowMin', function() {
     var feature = { status: 'In Progress', completionPct: 60, phase: 'GA' }
-    var result = computeFeatureRisk(feature, MILESTONES, healthyDor, healthyEnrichment, {
+    var result = computeFeatureRisk(feature, MILESTONES, healthyEnrichment, {
       today: dateOf('2026-08-01'),
       riskThresholds: { velocityYellowMin: 50 }
     })
@@ -148,7 +147,7 @@ describe('computeFeatureRisk', function() {
 
   it('flags VELOCITY_LAG high when below velocityYellowMin', function() {
     var feature = { status: 'In Progress', completionPct: 10, phase: 'GA' }
-    var result = computeFeatureRisk(feature, MILESTONES, healthyDor, healthyEnrichment, {
+    var result = computeFeatureRisk(feature, MILESTONES, healthyEnrichment, {
       today: dateOf('2026-08-01'),
       riskThresholds: { velocityYellowMin: 50 }
     })
@@ -158,35 +157,6 @@ describe('computeFeatureRisk', function() {
     }
   })
 
-  it('flags DOR_INCOMPLETE high when below 50%', function() {
-    var dor = { completionPct: 30, totalCount: 13 }
-    var result = computeFeatureRisk(healthyFeature, null, dor, healthyEnrichment, {
-      today: dateOf('2026-04-01')
-    })
-    var dorFlag = result.flags.find(function(f) { return f.category === 'DOR_INCOMPLETE' })
-    expect(dorFlag).toBeDefined()
-    expect(dorFlag.severity).toBe('high')
-  })
-
-  it('flags DOR_INCOMPLETE medium when between 50-80%', function() {
-    var dor = { completionPct: 65, totalCount: 13 }
-    var result = computeFeatureRisk(healthyFeature, null, dor, healthyEnrichment, {
-      today: dateOf('2026-04-01')
-    })
-    var dorFlag = result.flags.find(function(f) { return f.category === 'DOR_INCOMPLETE' })
-    expect(dorFlag).toBeDefined()
-    expect(dorFlag.severity).toBe('medium')
-  })
-
-  it('does not flag DOR_INCOMPLETE when above 80%', function() {
-    var dor = { completionPct: 85, totalCount: 13 }
-    var result = computeFeatureRisk(healthyFeature, null, dor, healthyEnrichment, {
-      today: dateOf('2026-04-01')
-    })
-    var dorFlag = result.flags.find(function(f) { return f.category === 'DOR_INCOMPLETE' })
-    expect(dorFlag).toBeUndefined()
-  })
-
   it('flags BLOCKED when unresolved inward Blocks link exists', function() {
     var enrichment = {
       storyPoints: 8,
@@ -194,7 +164,7 @@ describe('computeFeatureRisk', function() {
         { type: 'Blocks', direction: 'inward', linkedKey: 'TEST-999', linkedStatus: 'In Progress' }
       ]
     }
-    var result = computeFeatureRisk(healthyFeature, null, healthyDor, enrichment, {
+    var result = computeFeatureRisk(healthyFeature, null, enrichment, {
       today: dateOf('2026-04-01')
     })
     var blockedFlag = result.flags.find(function(f) { return f.category === 'BLOCKED' })
@@ -210,136 +180,60 @@ describe('computeFeatureRisk', function() {
         { type: 'Blocks', direction: 'inward', linkedKey: 'TEST-999', linkedStatus: 'Closed' }
       ]
     }
-    var result = computeFeatureRisk(healthyFeature, null, healthyDor, enrichment, {
+    var result = computeFeatureRisk(healthyFeature, null, enrichment, {
       today: dateOf('2026-04-01')
     })
     var blockedFlag = result.flags.find(function(f) { return f.category === 'BLOCKED' })
     expect(blockedFlag).toBeUndefined()
   })
 
-  it('flags UNESTIMATED when no story points', function() {
-    var enrichment = { storyPoints: null, dependencyLinks: [] }
-    var result = computeFeatureRisk(healthyFeature, null, healthyDor, enrichment, {
-      today: dateOf('2026-04-01')
-    })
-    var unestFlag = result.flags.find(function(f) { return f.category === 'UNESTIMATED' })
-    expect(unestFlag).toBeDefined()
-    expect(unestFlag.severity).toBe('medium')
-  })
-
   it('sets risk to red when any flag has high severity', function() {
-    var dor = { completionPct: 30, totalCount: 13 }
-    var result = computeFeatureRisk(healthyFeature, null, dor, healthyEnrichment, {
+    var enrichment = {
+      storyPoints: 8,
+      dependencyLinks: [
+        { type: 'Blocks', direction: 'inward', linkedKey: 'TEST-999', linkedStatus: 'In Progress' }
+      ]
+    }
+    var result = computeFeatureRisk(healthyFeature, null, enrichment, {
       today: dateOf('2026-04-01')
     })
     expect(result.risk).toBe('red')
   })
 
-  it('sets risk to yellow when worst severity is medium', function() {
-    var enrichment = { storyPoints: null, dependencyLinks: [] }
-    var dor = { completionPct: 85, totalCount: 13 }
-    var result = computeFeatureRisk(healthyFeature, null, dor, enrichment, {
-      today: dateOf('2026-04-01')
-    })
-    expect(result.risk).toBe('yellow')
-  })
-
   it('riskScore equals the number of flags', function() {
-    var dor = { completionPct: 30, totalCount: 13 }
-    var enrichment = { storyPoints: null, dependencyLinks: [] }
-    var result = computeFeatureRisk(healthyFeature, null, dor, enrichment, {
+    var enrichment = {
+      storyPoints: 8,
+      dependencyLinks: [
+        { type: 'Blocks', direction: 'inward', linkedKey: 'TEST-1', linkedStatus: 'In Progress' }
+      ]
+    }
+    var result = computeFeatureRisk(healthyFeature, null, enrichment, {
       today: dateOf('2026-04-01')
     })
     expect(result.riskScore).toBe(result.flags.length)
   })
 
-  // ─── Planning risk categories ───
-
-  it('flags MISSING_OWNER when no deliveryOwner or assignee', function() {
-    var feature = { status: 'In Progress', completionPct: 80, phase: 'GA', tier: 1 }
-    var result = computeFeatureRisk(feature, null, healthyDor, healthyEnrichment, {
-      today: dateOf('2026-04-01')
+  it('bumps green to yellow when planningStatus is not-ready', function() {
+    var result = computeFeatureRisk(healthyFeature, null, healthyEnrichment, {
+      today: dateOf('2026-04-01'),
+      planningStatus: 'not-ready'
     })
-    var flag = result.flags.find(function(f) { return f.category === 'MISSING_OWNER' })
-    expect(flag).toBeDefined()
-    expect(flag.severity).toBe('medium')
+    expect(result.risk).toBe('yellow')
   })
 
-  it('does not flag MISSING_OWNER when deliveryOwner is set', function() {
-    var result = computeFeatureRisk(healthyFeature, null, healthyDor, healthyEnrichment, {
-      today: dateOf('2026-04-01')
-    })
-    var flag = result.flags.find(function(f) { return f.category === 'MISSING_OWNER' })
-    expect(flag).toBeUndefined()
-  })
-
-  it('flags NO_BIG_ROCK when tier is 3', function() {
-    var feature = { status: 'In Progress', completionPct: 80, phase: 'GA', deliveryOwner: 'Jane', assignee: 'Jane', tier: 3 }
-    var result = computeFeatureRisk(feature, null, healthyDor, healthyEnrichment, {
-      today: dateOf('2026-04-01')
-    })
-    var flag = result.flags.find(function(f) { return f.category === 'NO_BIG_ROCK' })
-    expect(flag).toBeDefined()
-    expect(flag.severity).toBe('low')
-  })
-
-  it('NO_BIG_ROCK low severity does not escalate to yellow by itself', function() {
-    var feature = { status: 'In Progress', completionPct: 80, phase: 'GA', deliveryOwner: 'Jane', assignee: 'Jane', tier: 3 }
-    var result = computeFeatureRisk(feature, null, healthyDor, healthyEnrichment, {
-      today: dateOf('2026-04-01')
+  it('does not bump risk when planningStatus is in-planning', function() {
+    var result = computeFeatureRisk(healthyFeature, null, healthyEnrichment, {
+      today: dateOf('2026-04-01'),
+      planningStatus: 'in-planning'
     })
     expect(result.risk).toBe('green')
-    expect(result.flags.length).toBe(1)
-  })
-
-  it('does not flag NO_BIG_ROCK for tier 1 or 2', function() {
-    var result = computeFeatureRisk(healthyFeature, null, healthyDor, healthyEnrichment, {
-      today: dateOf('2026-04-01')
-    })
-    var flag = result.flags.find(function(f) { return f.category === 'NO_BIG_ROCK' })
-    expect(flag).toBeUndefined()
-  })
-
-  it('flags LATE_COMMITMENT when past planning deadline and no fixVersion', function() {
-    var feature = { status: 'In Progress', completionPct: 80, phase: 'GA', deliveryOwner: 'Jane', assignee: 'Jane', tier: 1, fixVersions: [] }
-    var result = computeFeatureRisk(feature, null, healthyDor, healthyEnrichment, {
-      today: dateOf('2026-04-01'),
-      planningDeadline: { date: '2026-03-25', daysRemaining: -7 },
-      version: '3.5'
-    })
-    var flag = result.flags.find(function(f) { return f.category === 'LATE_COMMITMENT' })
-    expect(flag).toBeDefined()
-    expect(flag.severity).toBe('high')
-    expect(flag.message).toContain('7 days')
-  })
-
-  it('does not flag LATE_COMMITMENT when feature has a matching fixVersion', function() {
-    var feature = { status: 'In Progress', completionPct: 80, phase: 'GA', deliveryOwner: 'Jane', assignee: 'Jane', tier: 1, fixVersions: ['rhoai-3.5'] }
-    var result = computeFeatureRisk(feature, null, healthyDor, healthyEnrichment, {
-      today: dateOf('2026-04-01'),
-      planningDeadline: { date: '2026-03-25', daysRemaining: -7 },
-      version: '3.5'
-    })
-    var flag = result.flags.find(function(f) { return f.category === 'LATE_COMMITMENT' })
-    expect(flag).toBeUndefined()
-  })
-
-  it('does not flag LATE_COMMITMENT when before planning deadline', function() {
-    var feature = { status: 'In Progress', completionPct: 80, phase: 'GA', deliveryOwner: 'Jane', assignee: 'Jane', tier: 1, fixVersions: [] }
-    var result = computeFeatureRisk(feature, null, healthyDor, healthyEnrichment, {
-      today: dateOf('2026-04-01'),
-      planningDeadline: { date: '2026-04-15', daysRemaining: 14 },
-      version: '3.5'
-    })
-    var flag = result.flags.find(function(f) { return f.category === 'LATE_COMMITMENT' })
-    expect(flag).toBeUndefined()
   })
 
   // ─── Execution category suppression ───
 
   it('suppresses MILESTONE_MISS when before planning deadline', function() {
     var feature = { status: 'New', completionPct: 0, phase: 'EA1', deliveryOwner: 'Jane', assignee: 'Jane', tier: 1 }
-    var result = computeFeatureRisk(feature, MILESTONES, healthyDor, healthyEnrichment, {
+    var result = computeFeatureRisk(feature, MILESTONES, healthyEnrichment, {
       today: dateOf('2026-05-10'),
       planningDeadline: { date: '2026-06-01', daysRemaining: 22 }
     })
@@ -349,7 +243,7 @@ describe('computeFeatureRisk', function() {
 
   it('suppresses VELOCITY_LAG when before planning deadline', function() {
     var feature = { status: 'In Progress', completionPct: 10, phase: 'GA', deliveryOwner: 'Jane', assignee: 'Jane', tier: 1 }
-    var result = computeFeatureRisk(feature, MILESTONES, healthyDor, healthyEnrichment, {
+    var result = computeFeatureRisk(feature, MILESTONES, healthyEnrichment, {
       today: dateOf('2026-08-01'),
       planningDeadline: { date: '2026-09-01', daysRemaining: 31 }
     })
@@ -359,7 +253,7 @@ describe('computeFeatureRisk', function() {
 
   it('does not suppress execution categories when past planning deadline', function() {
     var feature = { status: 'New', completionPct: 0, phase: 'EA1', deliveryOwner: 'Jane', assignee: 'Jane', tier: 1 }
-    var result = computeFeatureRisk(feature, MILESTONES, healthyDor, healthyEnrichment, {
+    var result = computeFeatureRisk(feature, MILESTONES, healthyEnrichment, {
       today: dateOf('2026-05-10'),
       planningDeadline: { date: '2026-04-01', daysRemaining: -39 }
     })

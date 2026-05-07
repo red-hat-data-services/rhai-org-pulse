@@ -132,3 +132,21 @@ export async function classifyIssue(issueKey, dryRun = true) {
     body: JSON.stringify({ issueKey, dryRun })
   })
 }
+
+/**
+ * Get classification configuration
+ */
+export async function getClassificationConfig() {
+  return apiRequest(`${BASE}/classification/config`)
+}
+
+/**
+ * Save classification configuration
+ */
+export async function saveClassificationConfig(config) {
+  return apiRequest(`${BASE}/classification/config`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(config)
+  })
+}

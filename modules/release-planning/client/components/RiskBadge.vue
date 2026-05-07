@@ -27,26 +27,12 @@ const levelLabel = computed(function() {
   return 'Green'
 })
 
-const tooltipText = computed(function() {
-  var lines = []
-  if (props.override) {
-    lines.push('Manual override: ' + props.override.riskOverride)
-    if (props.override.reason) lines.push('Reason: ' + props.override.reason)
-  }
-  if (props.flags && props.flags.length > 0) {
-    for (var i = 0; i < props.flags.length; i++) {
-      lines.push(props.flags[i].category + ': ' + props.flags[i].message)
-    }
-  }
-  return lines.join('\n')
-})
 </script>
 
 <template>
   <span
     class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-medium relative"
     :class="badgeClasses"
-    :title="tooltipText"
   >
     {{ levelLabel }}
     <sup
@@ -56,7 +42,6 @@ const tooltipText = computed(function() {
     <span
       v-if="override"
       class="ml-0.5 text-[9px] opacity-70"
-      title="Manually overridden"
     >M</span>
   </span>
 </template>

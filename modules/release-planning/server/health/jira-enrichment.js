@@ -203,6 +203,7 @@ async function runPass1(jiraRequest, fetchAllJqlResults, featureKeys, opts) {
           hasDescription: hasDescriptionContent(fields.description),
           storyPoints: fields.customfield_10028 || null,
           dependencyLinks: parseIssueLinks(fields.issuelinks),
+          labels: Array.isArray(fields.labels) ? fields.labels : [],
           refinementHistory: null,
           rice: null,
           tshirtSize: parseTshirtSize(fields.description)
@@ -217,6 +218,7 @@ async function runPass1(jiraRequest, fetchAllJqlResults, featureKeys, opts) {
             hasDescription: false,
             storyPoints: null,
             dependencyLinks: [],
+            labels: [],
             refinementHistory: null,
             rice: null,
             tshirtSize: null,

@@ -262,7 +262,8 @@ import {
   Info,
   KeyRound,
   ClipboardList,
-  History
+  History,
+  Hospital
 } from 'lucide-vue-next'
 import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 
@@ -302,7 +303,9 @@ const ICON_MAP = {
   'network': Network,
   'clipboard-list': ClipboardList,
   ClipboardList,
-  History
+  History,
+  Hospital,
+  'hospital': Hospital
 }
 
 const props = defineProps({

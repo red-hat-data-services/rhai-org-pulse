@@ -166,16 +166,16 @@ If >20% of issues remain unclassified:
 
 ## Expanding to Other Projects
 
-To enable classification for RHOIENG, INFERENG, RHAIENG:
+To enable classification for additional Jira projects:
 
-1. **Update backend configuration:**
-   - Edit `modules/allocation-tracker/server/classification/index.js`
-   - Add projects to `CONFIG.projects` array
-   - Redeploy Org Pulse
+1. **Update classification config via Settings UI:**
+   - Go to Allocation Tracker Settings > Classification tab
+   - Add the project key to the "Jira Projects" field
+   - Save Configuration
 
-2. **Clone automation rule:**
+2. **Add Jira automation rule for the new project:**
    - Duplicate existing rule
-   - Change project filter from AIPCC to target project
+   - Change project filter to include the new project
    - Update rule name
 
 3. **Test on small batch:**

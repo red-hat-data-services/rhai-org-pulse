@@ -63,6 +63,26 @@ export function useFilters(features, rfes, bigRocks) {
     return rfes.value.filter(matchesFilters)
   })
 
+  const filteredBigRocks = computed(() => {
+    if (!bigRocks.value) return []
+    if (!selectedPillar.value && !searchQuery.value) return bigRocks.value
+    return bigRocks.value.filter(function(rock) {
+      if (selectedPillar.value && rock.pillar !== selectedPillar.value) return false
+      if (searchQuery.value) {
+        const q = searchQuery.value.toLowerCase()
+        const matchesSearch =
+          (rock.name && rock.name.toLowerCase().includes(q)) ||
+          (rock.fullName && rock.fullName.toLowerCase().includes(q)) ||
+          (rock.owner && rock.owner.toLowerCase().includes(q)) ||
+          (rock.architect && rock.architect.toLowerCase().includes(q)) ||
+          (rock.pillar && rock.pillar.toLowerCase().includes(q)) ||
+          (rock.notes && rock.notes.toLowerCase().includes(q))
+        if (!matchesSearch) return false
+      }
+      return true
+    })
+  })
+
   const hasActiveFilters = computed(() => {
     return !!(selectedPillar.value || selectedRock.value || selectedStatus.value ||
       selectedPriority.value || selectedTeams.value.length > 0 || searchQuery.value)
@@ -86,6 +106,7 @@ export function useFilters(features, rfes, bigRocks) {
     searchQuery,
     filteredFeatures,
     filteredRfes,
+    filteredBigRocks,
     hasActiveFilters,
     clearFilters
   }

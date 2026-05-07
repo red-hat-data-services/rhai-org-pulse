@@ -1,8 +1,9 @@
 <script setup>
 import { computed } from 'vue'
 import RiceScoreDisplay from './RiceScoreDisplay.vue'
-import DorChecklist from './DorChecklist.vue'
+import PlanningGateStatus from './PlanningGateStatus.vue'
 import StatusBadge from './StatusBadge.vue'
+import RiskPopover from './RiskPopover.vue'
 
 const props = defineProps({
   feature: { type: Object, required: true },
@@ -13,16 +14,26 @@ const props = defineProps({
   showChanges: { type: Boolean, default: true }
 })
 
-const emit = defineEmits(['toggle', 'toggleDorItem', 'updateNotes', 'setOverride', 'removeOverride'])
+const emit = defineEmits(['toggle', 'setOverride', 'removeOverride'])
 
-var dorItems = computed(function() {
-  if (!props.feature.dor || !props.feature.dor.items) return []
-  return props.feature.dor.items
+var PLANNING_STATUS_LABELS = {
+  'not-ready': 'Not Ready',
+  'in-planning': 'In Planning',
+  'ready-for-execution': 'Ready'
+}
+
+var PLANNING_STATUS_CLASSES = {
+  'not-ready': 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400',
+  'in-planning': 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-400',
+  'ready-for-execution': 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400'
+}
+
+var planningLabel = computed(function() {
+  return PLANNING_STATUS_LABELS[props.feature.planningStatus] || '-'
 })
 
-var dorNotes = computed(function() {
-  if (!props.feature.dor) return ''
-  return props.feature.dor.notes || ''
+var planningBadgeClass = computed(function() {
+  return PLANNING_STATUS_CLASSES[props.feature.planningStatus] || ''
 })
 
 var riskFlags = computed(function() {
@@ -45,34 +56,6 @@ var effectiveRisk = computed(function() {
   return riskLevel.value
 })
 
-var dorPct = computed(function() {
-  if (!props.feature.dor) return 0
-  return props.feature.dor.completionPct || 0
-})
-
-var dorPctClass = computed(function() {
-  if (dorPct.value >= 80) return 'text-green-600 dark:text-green-400'
-  if (dorPct.value >= 50) return 'text-yellow-600 dark:text-yellow-400'
-  return 'text-red-600 dark:text-red-400'
-})
-
-var healthTooltip = computed(function() {
-  var lines = []
-  lines.push('Risk: ' + effectiveRisk.value.charAt(0).toUpperCase() + effectiveRisk.value.slice(1))
-  var dor = props.feature.dor
-  lines.push('DoR: ' + dorPct.value + '% (' + (dor ? dor.checkedCount : 0) + '/' + (dor ? dor.totalCount : 0) + ')')
-  if (riskFlags.value.length > 0) {
-    lines.push(riskFlags.value.length + ' risk flag(s):')
-    for (var i = 0; i < riskFlags.value.length; i++) {
-      lines.push('  - ' + riskFlags.value[i].category + ': ' + riskFlags.value[i].message)
-    }
-  }
-  if (riskOverride.value) {
-    lines.push('Override: ' + riskOverride.value.riskOverride + ' (' + riskOverride.value.reason + ')')
-  }
-  return lines.join('\n')
-})
-
 var priorityScoreClass = computed(function() {
   var score = props.feature.priorityScore
   if (score >= 70) return 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400'
@@ -88,14 +71,6 @@ var featureUrl = computed(function() {
 
 function handleToggle() {
   emit('toggle', props.feature.key)
-}
-
-function handleDorToggle(itemId, checked) {
-  emit('toggleDorItem', props.feature.key, itemId, checked)
-}
-
-function handleNotesUpdate(notes) {
-  emit('updateNotes', props.feature.key, notes)
 }
 
 var flagSeverityClass = {
@@ -154,23 +129,36 @@ var flagSeverityClass = {
     <td class="px-3 py-2 border border-gray-300 dark:border-gray-600">
       <StatusBadge :status="feature.status" />
     </td>
-    <!-- Health (combined Risk + DoR) -->
+    <!-- Health (Risk + Planning Status) -->
     <td class="px-3 py-2 border border-gray-300 dark:border-gray-600">
-      <div class="flex items-center gap-1.5" :title="healthTooltip">
+      <div class="flex items-center gap-1.5">
+        <RiskPopover
+          :level="riskLevel"
+          :flags="riskFlags"
+          :flagCount="riskFlags.length"
+          :override="riskOverride"
+          :dor="feature.dor"
+          :dod="feature.dod"
+          :planningStatus="feature.planningStatus"
+          variant="full"
+        >
+          <span
+            class="w-2.5 h-2.5 rounded-full flex-shrink-0"
+            :class="{
+              'cursor-help': riskFlags.length > 0 || riskOverride,
+              'bg-green-500': effectiveRisk === 'green',
+              'bg-yellow-500': effectiveRisk === 'yellow',
+              'bg-red-500': effectiveRisk === 'red'
+            }"
+            role="img"
+            :aria-label="'Risk level: ' + effectiveRisk"
+          ></span>
+        </RiskPopover>
         <span
-          class="w-2.5 h-2.5 rounded-full flex-shrink-0"
-          role="img"
-          :aria-label="'Risk level: ' + effectiveRisk"
-          :class="{
-            'bg-green-500': effectiveRisk === 'green',
-            'bg-yellow-500': effectiveRisk === 'yellow',
-            'bg-red-500': effectiveRisk === 'red'
-          }"
-        ></span>
-        <span
-          class="text-xs font-medium"
-          :class="dorPctClass"
-        >{{ dorPct }}%</span>
+          v-if="feature.planningStatus"
+          class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold"
+          :class="planningBadgeClass"
+        >{{ planningLabel }}</span>
       </div>
     </td>
     <!-- Priority -->
@@ -211,15 +199,12 @@ var flagSeverityClass = {
     <td colspan="11" class="border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 p-0">
       <div class="p-4 space-y-4">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <!-- DoR Checklist -->
+          <!-- Planning Gate Status -->
           <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3">
-            <DorChecklist
-              :items="dorItems"
-              :notes="dorNotes"
-              :featureKey="feature.key"
-              :canEdit="canEdit"
-              @toggleItem="handleDorToggle"
-              @updateNotes="handleNotesUpdate"
+            <PlanningGateStatus
+              :dor="feature.dor"
+              :dod="feature.dod"
+              :planningStatus="feature.planningStatus"
             />
           </div>
 

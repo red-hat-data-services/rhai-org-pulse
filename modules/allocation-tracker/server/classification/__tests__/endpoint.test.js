@@ -3,7 +3,7 @@
  * Tests the webhook endpoint that receives Jira issue keys
  */
 
-const { classifyAndWrite, shouldClassify, CONFIG } = require('../index');
+const { classifyAndWrite, shouldClassify, DEFAULT_CONFIG } = require('../index');
 
 describe('classification endpoint logic', () => {
   describe('shouldClassify', () => {
@@ -17,10 +17,25 @@ describe('classification endpoint logic', () => {
 
     it('should return false for non-configured project', () => {
       const issue = {
-        project: 'RHOAIENG',
+        project: 'OTHER',
         issueType: 'Story'
       };
       expect(shouldClassify(issue)).toBe(false);
+    });
+
+    it('should respect custom config projects', () => {
+      const issue = {
+        project: 'CUSTOM',
+        issueType: 'Story'
+      };
+      const customConfig = {
+        enabled: true,
+        projects: ['CUSTOM'],
+        confidenceThreshold: 0.85,
+        issueTypes: ['Story', 'Bug']
+      };
+      expect(shouldClassify(issue, customConfig)).toBe(true);
+      expect(shouldClassify(issue)).toBe(false); // Without custom config should fail
     });
 
     it('should return false for non-configured issue type', () => {
@@ -124,14 +139,36 @@ describe('classification endpoint logic', () => {
       expect(result.classification.confidence).toBe(0.85);
       expect(result.classification.method).toBe('keyword');
     });
+
+    it('should use custom config when provided', async () => {
+      const issue = {
+        key: 'CUSTOM-123',
+        issueType: 'Bug',
+        summary: 'Fix login issue',
+        project: 'CUSTOM'
+      };
+
+      const customConfig = {
+        enabled: true,
+        projects: ['CUSTOM'],
+        confidenceThreshold: 0.85,
+        issueTypes: ['Bug']
+      };
+
+      const result = await classifyAndWrite(issue, { dryRun: true, config: customConfig });
+
+      expect(result.classified).toBe(true);
+      expect(result.classification.category).toBe('Tech Debt & Quality');
+      expect(result.classification.confidence).toBe(0.95);
+    });
   });
 
-  describe('CONFIG', () => {
+  describe('DEFAULT_CONFIG', () => {
     it('should have correct default configuration', () => {
-      expect(CONFIG.enabled).toBe(true);
-      expect(CONFIG.projects).toContain('AIPCC');
-      expect(CONFIG.confidenceThreshold).toBe(0.85);
-      expect(CONFIG.issueTypes).toEqual(['Story', 'Bug', 'Spike', 'Task', 'Epic', 'Vulnerability', 'Weakness']);
+      expect(DEFAULT_CONFIG.enabled).toBe(true);
+      expect(DEFAULT_CONFIG.projects).toContain('AIPCC');
+      expect(DEFAULT_CONFIG.confidenceThreshold).toBe(0.85);
+      expect(DEFAULT_CONFIG.issueTypes).toEqual(['Story', 'Bug', 'Spike', 'Task', 'Epic', 'Vulnerability', 'Weakness']);
     });
   });
 });

@@ -18,7 +18,7 @@ const { loadIndex, loadFeatureDetail } = require('../cache-reader')
 const { getConfig } = require('../config')
 const { JIRA_BROWSE_URL, CLOSED_STATUSES, PLANNING_DEADLINE_OFFSET_DAYS, VALID_PHASES } = require('../constants')
 const { enrichFeatures } = require('./jira-enrichment')
-const { evaluateDor } = require('./dor-checker')
+const { computeDoR, computeDoD, derivePlanningStatus, applyBlockerEscalation, parseStratCreatorStatus } = require('./planning-gates')
 const { computeFeatureRisk } = require('./risk-engine')
 const { buildRiceResult } = require('./rice-scorer')
 const { computePriorityScores } = require('./priority-scorer')
@@ -627,8 +627,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
     warnings.push('Jira enrichment failed: ' + err.message)
   }
 
-  // Step 4: Load manual DoR state and overrides
-  var dorState = readFromStorage(DATA_PREFIX + '/dor-state-' + version + '.json') || { features: {} }
+  // Step 4: Load overrides
   var overrides = readFromStorage(DATA_PREFIX + '/health-overrides-' + version + '.json') || { overrides: {} }
 
   // Step 5: Build per-feature health assessments
@@ -636,23 +635,26 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
   var milestoneInfo = computeMilestoneInfo(milestones, today)
   var healthFeatures = []
   var riskCounts = { green: 0, yellow: 0, red: 0 }
-  var totalDorChecked = 0
-  var totalDorItems = 0
   var totalRiceScore = 0
   var riceCount = 0
   var blockedCount = 0
-  var unestimatedCount = 0
+  var byPlanningStatus = { 'not-ready': 0, 'in-planning': 0, 'ready-for-execution': 0 }
+  var cardCounts = {
+    total: 0, dorPassed: 0, dodPassed: 0, stratSignedOff: 0,
+    riceComplete: 0, ownerAssigned: 0, versionSet: 0, unblocked: 0, escalatedBlockers: 0
+  }
+  var stratCreatorCoverage = { signedOff: 0, rubricPass: 0, needsAttention: 0, notAssessed: 0 }
+  var dorOpts = { enableStratCreator: !!healthConfig.enableStratCreator, enableRice: !!healthConfig.enableRice }
 
   for (var i = 0; i < features.length; i++) {
     var feature = features[i]
     var key = feature.key
     var enrichment = enrichResult.enrichments.get(key) || null
-    var manualChecks = (dorState.features && dorState.features[key] && dorState.features[key].manualChecks) || null
-
-    // Evaluate DoR
-    var dorStatus = evaluateDor(feature, enrichment, manualChecks)
-    totalDorChecked += dorStatus.checkedCount
-    totalDorItems += dorStatus.totalCount
+    // Evaluate planning gates
+    var dorResult = computeDoR(feature, enrichment, dorOpts)
+    var dodResult = computeDoD(feature, enrichment)
+    var planningStatus = derivePlanningStatus(dorResult, dodResult)
+    byPlanningStatus[planningStatus] = (byPlanningStatus[planningStatus] || 0) + 1
 
     // Derive phase for risk engine
     var featurePhase = getFeaturePhase(feature)
@@ -661,12 +663,12 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
     var featureForRisk = Object.assign({}, feature, { phase: featurePhase })
 
     // Compute risk
-    var riskResult = computeFeatureRisk(featureForRisk, milestones, dorStatus, enrichment, {
+    var riskResult = computeFeatureRisk(featureForRisk, milestones, enrichment, {
       riskThresholds: healthConfig.riskThresholds,
       phaseCompletionExpectations: healthConfig.phaseCompletionExpectations,
       today: today,
       planningDeadline: planningDeadline,
-      version: version
+      planningStatus: planningStatus
     })
 
     // Apply manual override if present
@@ -681,7 +683,6 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
     // Count specific risk types
     for (var fi = 0; fi < riskResult.flags.length; fi++) {
       if (riskResult.flags[fi].category === 'BLOCKED') blockedCount++
-      if (riskResult.flags[fi].category === 'UNESTIMATED') unestimatedCount++
     }
 
     // RICE score
@@ -723,13 +724,44 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
         flags: riskResult.flags,
         override: override
       },
-      dor: dorStatus,
+      dor: dorResult,
+      dod: dodResult,
+      planningStatus: planningStatus,
       rice: riceResult,
+      issueType: feature.issueType || '',
+      versionStatus: (feature.fixVersions && feature.fixVersions.length > 0) ? 'committed'
+        : (feature.targetVersions && feature.targetVersions.length > 0) ? 'targeted' : 'none',
       storyPoints: enrichment ? enrichment.storyPoints || null : null,
       tshirtSize: enrichment ? enrichment.tshirtSize || null : null,
       versionHistory: enrichment && enrichment.refinementHistory ? enrichment.refinementHistory : [],
       jiraUrl: JIRA_BROWSE_URL + '/' + key
     })
+
+    // Accumulate card counts
+    cardCounts.total++
+    if (dorResult.passed) cardCounts.dorPassed++
+    if (dodResult.passed) cardCounts.dodPassed++
+
+    // strat-creator coverage
+    var featureLabels = (feature.labels && feature.labels.length > 0) ? feature.labels : (enrichment ? enrichment.labels : null) || []
+    var stratStatus = parseStratCreatorStatus(featureLabels)
+    if (stratStatus === 'human-sign-off') { stratCreatorCoverage.signedOff++; cardCounts.stratSignedOff++ }
+    else if (stratStatus === 'rubric-pass') stratCreatorCoverage.rubricPass++
+    else if (stratStatus === 'needs-attention') stratCreatorCoverage.needsAttention++
+    else stratCreatorCoverage.notAssessed++
+
+    // Warning-level card counts from DoR warnings
+    for (var wi = 0; wi < dorResult.warnings.length; wi++) {
+      var w = dorResult.warnings[wi]
+      if (w.id === 'DoR-W1' && w.passed) cardCounts.ownerAssigned++
+      if (w.id === 'DoR-W2' && w.passed) cardCounts.versionSet++
+      if (w.id === 'DoR-W3' && w.passed) cardCounts.unblocked++
+    }
+
+    // RICE complete from DoR blockers
+    for (var bi = 0; bi < dorResult.blockers.length; bi++) {
+      if (dorResult.blockers[bi].id === 'DoR-B2' && dorResult.blockers[bi].passed) cardCounts.riceComplete++
+    }
   }
 
   // Step 6b: Compute composite priority scores
@@ -741,11 +773,21 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
     healthFeatures[pi].priorityBreakdown = pResult ? pResult.breakdown : null
   }
 
+  // Step 6a: Blocker escalation pass
+  var escalatedCount = applyBlockerEscalation(healthFeatures)
+  cardCounts.escalatedBlockers = escalatedCount
+
+  // Degradation logging
+  if (healthConfig.enableStratCreator && stratCreatorCoverage.signedOff === 0 && stratCreatorCoverage.rubricPass === 0 && stratCreatorCoverage.needsAttention === 0) {
+    console.warn('[health] enableStratCreator=true but no strat-creator labels found on any features')
+    warnings.push('strat-creator enabled but no strat-creator labels found on any features')
+  }
+
   // Step 6: Build summary
   var averageRice = riceCount > 0 ? Math.round(totalRiceScore / riceCount) : null
-  var dorCompletionRate = totalDorItems > 0 ? Math.round((totalDorChecked / totalDorItems) * 100) : 0
 
   var cache = {
+    healthCacheVersion: 2,
     cachedAt: today.toISOString(),
     version: version,
     warnings: warnings,
@@ -766,10 +808,11 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
     summary: {
       totalFeatures: features.length,
       byRisk: riskCounts,
-      dorCompletionRate: dorCompletionRate,
+      byPlanningStatus: byPlanningStatus,
+      cardCounts: cardCounts,
+      stratCreatorCoverage: stratCreatorCoverage,
       averageRiceScore: averageRice,
       blockedCount: blockedCount,
-      unestimatedCount: unestimatedCount,
       currentPhase: milestoneInfo.currentPhase,
       daysToNextMilestone: milestoneInfo.daysToNextMilestone,
       nextMilestone: milestoneInfo.nextMilestone,
@@ -800,16 +843,21 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
  */
 function buildEmptyCache(version, warnings) {
   return {
+    healthCacheVersion: 2,
     cachedAt: new Date().toISOString(),
     version: version,
     milestones: null,
     summary: {
       totalFeatures: 0,
       byRisk: { green: 0, yellow: 0, red: 0 },
-      dorCompletionRate: 0,
+      byPlanningStatus: { 'not-ready': 0, 'in-planning': 0, 'ready-for-execution': 0 },
+      cardCounts: {
+        total: 0, dorPassed: 0, dodPassed: 0, stratSignedOff: 0,
+        riceComplete: 0, ownerAssigned: 0, versionSet: 0, unblocked: 0, escalatedBlockers: 0
+      },
+      stratCreatorCoverage: { signedOff: 0, rubricPass: 0, needsAttention: 0, notAssessed: 0 },
       averageRiceScore: null,
       blockedCount: 0,
-      unestimatedCount: 0,
       currentPhase: 'Unknown',
       daysToNextMilestone: null,
       nextMilestone: null

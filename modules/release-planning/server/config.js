@@ -19,15 +19,14 @@ const DEFAULT_CONFIG = {
   },
   healthConfig: {
     enableRice: false,
+    enableStratCreator: false,
     enableJiraEnrichment: true,
     enrichmentBatchSize: 40,
     enrichmentThrottleMs: 1000,
     healthRefreshTimeoutMs: 480000,
     riskThresholds: {
       velocityGreenMin: 80,
-      velocityYellowMin: 50,
-      dorGreenMin: 80,
-      dorYellowMin: 50
+      velocityYellowMin: 50
     },
     phaseCompletionExpectations: null
   }

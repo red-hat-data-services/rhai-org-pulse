@@ -1,7 +1,8 @@
 <script setup>
-import { ref, onMounted, onBeforeUnmount, inject, computed } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount, inject, computed } from 'vue'
 import { useFeatureTraffic, useVersions } from '../composables/useFeatureTraffic'
 import StatusBadge from '../components/StatusBadge.vue'
+import SignoffBadge from '../components/SignoffBadge.vue'
 
 const nav = inject('moduleNav')
 const { features, fetchedAt, loading, error, loadFeatures } = useFeatureTraffic()
@@ -50,8 +51,6 @@ function handleOutsideClick(e) {
     signalDropdownOpen.value = false
   }
 }
-onMounted(() => document.addEventListener('click', handleOutsideClick))
-onBeforeUnmount(() => document.removeEventListener('click', handleOutsideClick))
 
 const filteredFeatures = computed(() => {
   let list = features.value
@@ -82,17 +81,19 @@ const summaryStats = computed(() => {
     : 0
 
   return {
-    total, done, inProgress, todo, blockers, totalEpics, totalIssues, avgCompletion,
-    green: all.filter(f => f.health === 'GREEN').length,
-    yellow: all.filter(f => f.health === 'YELLOW').length,
-    red: all.filter(f => f.health === 'RED').length
+    total,
+    done,
+    inProgress,
+    todo,
+    blockers,
+    totalEpics,
+    totalIssues,
+    avgCompletion
   }
 })
 
-// Donut chart arc helper
 function donutArc(cx, cy, r, startAngle, endAngle) {
   if (endAngle - startAngle >= 2 * Math.PI) {
-    // Full circle — use two arcs
     return [
       `M ${cx + r} ${cy}`,
       `A ${r} ${r} 0 1 1 ${cx - r} ${cy}`,
@@ -225,6 +226,60 @@ const signalFilterOptions = [
   { value: 'complete', label: 'Complete' }
 ]
 
+const OVERVIEW_FILTER_STORAGE_KEY = 'feature-traffic:overview-filters'
+
+const allowedSignalFilterIds = new Set(
+  signalFilterOptions.map(o => o.value).filter(Boolean)
+)
+
+function saveOverviewFilters() {
+  try {
+    sessionStorage.setItem(
+      OVERVIEW_FILTER_STORAGE_KEY,
+      JSON.stringify({
+        selectedVersions: selectedVersions.value,
+        selectedSignals: selectedSignals.value,
+        searchQuery: searchQuery.value,
+        viewMode: viewMode.value
+      })
+    )
+  } catch {
+    /* quota / private mode */
+  }
+}
+
+function restoreOverviewFilters() {
+  try {
+    const raw = sessionStorage.getItem(OVERVIEW_FILTER_STORAGE_KEY)
+    if (!raw) return
+    const o = JSON.parse(raw)
+    if (!o || typeof o !== 'object') return
+
+    if (Array.isArray(o.selectedVersions)) {
+      selectedVersions.value = o.selectedVersions.filter(v => typeof v === 'string')
+    }
+    if (Array.isArray(o.selectedSignals)) {
+      selectedSignals.value = o.selectedSignals.filter(
+        id => typeof id === 'string' && allowedSignalFilterIds.has(id)
+      )
+    }
+    if (typeof o.searchQuery === 'string') {
+      searchQuery.value = o.searchQuery.slice(0, 2000)
+    }
+    if (o.viewMode === 'list' || o.viewMode === 'signals') {
+      viewMode.value = o.viewMode
+    }
+  } catch {
+    /* ignore corrupt JSON */
+  }
+}
+
+watch(
+  [selectedVersions, selectedSignals, searchQuery, viewMode],
+  saveOverviewFilters,
+  { deep: true }
+)
+
 const visibleSignalGroups = computed(() => {
   if (selectedSignals.value.length === 0) return signalGroups.value
   return signalGroups.value.filter(g => selectedSignals.value.includes(g.id))
@@ -251,9 +306,14 @@ function progressBarColor(pct) {
 }
 
 onMounted(() => {
+  document.addEventListener('click', handleOutsideClick)
+  restoreOverviewFilters()
   loadFeatures()
   loadVersions()
+  saveOverviewFilters()
 })
+
+onBeforeUnmount(() => document.removeEventListener('click', handleOutsideClick))
 </script>
 
 <template>
@@ -266,6 +326,9 @@ onMounted(() => {
           RHAISTRAT feature delivery pipeline health
           <span v-if="fetchedAt" class="ml-2">
             &middot; Data from {{ formatDate(fetchedAt) }}
+          </span>
+          <span v-if="features.length" class="ml-2">
+            &middot; {{ filteredFeatures.length }} feature<span v-if="filteredFeatures.length !== 1">s</span><template v-if="filteredFeatures.length !== features.length"> (filtered)</template>
           </span>
         </p>
       </div>
@@ -288,38 +351,35 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Progress Summary -->
+    <!-- Progress summary (reflects current filters) -->
     <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
       <div class="flex flex-col md:flex-row items-start md:items-center gap-6">
-        <!-- Donut chart -->
         <div class="flex-shrink-0">
           <svg width="120" height="120" viewBox="0 0 120 120">
-            <!-- Background ring -->
             <circle cx="60" cy="60" r="45" fill="none" stroke-width="14" class="stroke-gray-200 dark:stroke-gray-700" />
-            <!-- Done arc (green) -->
             <path
               v-if="summaryStats.done > 0"
               :d="donutArc(60, 60, 45, -Math.PI / 2, -Math.PI / 2 + (summaryStats.done / Math.max(summaryStats.total, 1)) * 2 * Math.PI)"
-              fill="none" stroke-width="14" stroke-linecap="round"
+              fill="none"
+              stroke-width="14"
+              stroke-linecap="round"
               class="stroke-green-500"
             />
-            <!-- In Progress arc (blue) -->
             <path
               v-if="summaryStats.inProgress > 0"
               :d="donutArc(60, 60, 45,
                 -Math.PI / 2 + (summaryStats.done / Math.max(summaryStats.total, 1)) * 2 * Math.PI,
                 -Math.PI / 2 + ((summaryStats.done + summaryStats.inProgress) / Math.max(summaryStats.total, 1)) * 2 * Math.PI)"
-              fill="none" stroke-width="14" stroke-linecap="round"
+              fill="none"
+              stroke-width="14"
+              stroke-linecap="round"
               class="stroke-blue-500"
             />
-            <!-- Backlog arc (gray) — implicit from background -->
-            <!-- Center text -->
             <text x="60" y="55" text-anchor="middle" class="fill-gray-900 dark:fill-gray-100 text-xl font-bold" font-size="22" font-weight="bold">{{ summaryStats.avgCompletion }}%</text>
             <text x="60" y="72" text-anchor="middle" class="fill-gray-500 dark:fill-gray-400" font-size="10">complete</text>
           </svg>
         </div>
 
-        <!-- Stat cards -->
         <div class="flex-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 w-full">
           <div class="text-center p-3 rounded-lg bg-gray-50 dark:bg-gray-900/50">
             <div class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ summaryStats.total }}</div>
@@ -570,6 +630,17 @@ onMounted(() => {
                     <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 15.75h.007v.008H12v-.008z"/></svg>
                     Stale
                   </span>
+
+                  <SignoffBadge
+                    :status="f.signoffStatus"
+                    :template-out-of-date="f.signoffTemplateOutOfDate === true"
+                    :checklist-total="f.signoffChecklistItemCount"
+                    :checklist-done="f.signoffChecklistDoneCount"
+                    :missing-count="f.signoffMissingCount"
+                    :rollup-in-progress="f.signoffRollupInProgress"
+                    :rollup-to-do="f.signoffRollupToDo"
+                    :rollup-other="f.signoffRollupOther"
+                  />
                 </div>
               </div>
             </div>
@@ -596,6 +667,12 @@ onMounted(() => {
                   <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium">Epics</th>
                   <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium">Issues</th>
                   <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium">Blockers</th>
+                  <th
+                    class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium"
+                    title="Signoff checklist: % complete = done / matched items. Open work = active (in progress + other) + to do. Hover for counts. See feature detail for full checklist."
+                  >
+                    Signoff
+                  </th>
                   <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400 font-medium">Version</th>
                 </tr>
               </thead>
@@ -630,6 +707,18 @@ onMounted(() => {
                     <span v-if="f.blockerCount > 0" class="text-red-600 dark:text-red-400 font-medium">{{ f.blockerCount }}</span>
                     <span v-else class="text-gray-400 dark:text-gray-600">0</span>
                   </td>
+                  <td class="px-3 py-2 whitespace-nowrap">
+                    <SignoffBadge
+                      :status="f.signoffStatus"
+                      :template-out-of-date="f.signoffTemplateOutOfDate === true"
+                      :checklist-total="f.signoffChecklistItemCount"
+                      :checklist-done="f.signoffChecklistDoneCount"
+                      :missing-count="f.signoffMissingCount"
+                      :rollup-in-progress="f.signoffRollupInProgress"
+                      :rollup-to-do="f.signoffRollupToDo"
+                      :rollup-other="f.signoffRollupOther"
+                    />
+                  </td>
                   <td class="px-3 py-2">
                     <span
                       v-for="v in (f.fixVersions || []).slice(0, 2)"
@@ -639,7 +728,7 @@ onMounted(() => {
                   </td>
                 </tr>
                 <tr v-if="filteredFeatures.length === 0">
-                  <td colspan="9" class="px-3 py-8 text-center text-gray-500">
+                  <td colspan="10" class="px-3 py-8 text-center text-gray-500">
                     No features found matching the current filters.
                   </td>
                 </tr>
