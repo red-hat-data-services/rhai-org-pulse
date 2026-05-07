@@ -743,7 +743,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
     if (dodResult.passed) cardCounts.dodPassed++
 
     // strat-creator coverage
-    var featureLabels = feature.labels || (enrichment ? enrichment.labels : null) || []
+    var featureLabels = (feature.labels && feature.labels.length > 0) ? feature.labels : (enrichment ? enrichment.labels : null) || []
     var stratStatus = parseStratCreatorStatus(featureLabels)
     if (stratStatus === 'human-sign-off') { stratCreatorCoverage.signedOff++; cardCounts.stratSignedOff++ }
     else if (stratStatus === 'rubric-pass') stratCreatorCoverage.rubricPass++
