@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import RiskBadge from '../../client/components/RiskBadge.vue'
 import HealthSummaryCards from '../../client/components/HealthSummaryCards.vue'
-import DorChecklist from '../../client/components/DorChecklist.vue'
 import RiceScoreDisplay from '../../client/components/RiceScoreDisplay.vue'
 import HealthFilterBar from '../../client/components/HealthFilterBar.vue'
 import MilestoneTimeline from '../../client/components/MilestoneTimeline.vue'
@@ -65,8 +64,8 @@ describe('HealthSummaryCards', function() {
     total: 15,
     riceComplete: 12,
     ownerAssigned: 10,
-    scopeEstimated: 8,
-    dorComplete: 6
+    dodComplete: 8,
+    readyForExecution: 6
   }
 
   it('renders nothing when cardCounts is null', function() {
@@ -78,8 +77,8 @@ describe('HealthSummaryCards', function() {
     var wrapper = mount(HealthSummaryCards, { props: { cardCounts: cardCounts } })
     expect(wrapper.text()).toContain('RICE Score Present')
     expect(wrapper.text()).toContain('Owner Assigned')
-    expect(wrapper.text()).toContain('Scope Estimated')
-    expect(wrapper.text()).toContain('DoR Complete')
+    expect(wrapper.text()).toContain('DoD Complete')
+    expect(wrapper.text()).toContain('Ready for Execution')
   })
 
   it('shows count fractions for each card', function() {
@@ -124,58 +123,10 @@ describe('HealthSummaryCards', function() {
   })
 
   it('handles zero total gracefully', function() {
-    var zeroCounts = { total: 0, riceComplete: 0, ownerAssigned: 0, scopeEstimated: 0, dorComplete: 0 }
+    var zeroCounts = { total: 0, riceComplete: 0, ownerAssigned: 0, dodComplete: 0, readyForExecution: 0 }
     var wrapper = mount(HealthSummaryCards, { props: { cardCounts: zeroCounts } })
     expect(wrapper.text()).toContain('0')
     expect(wrapper.text()).toContain('/ 0')
-  })
-})
-
-// ─── DorChecklist ───
-
-describe('DorChecklist', function() {
-  var items = [
-    { id: 'F-1', label: 'Description exists', type: 'automated', checked: true, source: 'jira' },
-    { id: 'F-2', label: 'Target version set', type: 'automated', checked: false, source: 'jira' },
-    { id: 'F-3', label: 'Stakeholders identified', type: 'manual', checked: false, source: 'manual' }
-  ]
-
-  it('renders all items', function() {
-    var wrapper = mount(DorChecklist, { props: { items: items, canEdit: false } })
-    expect(wrapper.text()).toContain('Description exists')
-    expect(wrapper.text()).toContain('Target version set')
-    expect(wrapper.text()).toContain('Stakeholders identified')
-  })
-
-  it('displays checked count in header', function() {
-    var wrapper = mount(DorChecklist, { props: { items: items, canEdit: false } })
-    expect(wrapper.text()).toContain('1/3')
-  })
-
-  it('shows lock icon for automated items', function() {
-    var wrapper = mount(DorChecklist, { props: { items: items, canEdit: true } })
-    var automatedRows = wrapper.findAll('[data-automated]').length
-    || wrapper.findAll('svg').length
-    expect(automatedRows).toBeGreaterThan(0)
-  })
-
-  it('emits toggleItem when manual item row is clicked and canEdit is true', async function() {
-    var wrapper = mount(DorChecklist, { props: { items: items, canEdit: true, featureKey: 'T-1' } })
-    var checkboxes = wrapper.findAll('input[type="checkbox"]')
-    if (checkboxes.length > 0) {
-      await checkboxes[0].trigger('click')
-      expect(wrapper.emitted('toggleItem')).toBeDefined()
-    }
-  })
-
-  it('shows textarea when canEdit is true', function() {
-    var wrapper = mount(DorChecklist, { props: { items: items, canEdit: true, notes: '' } })
-    expect(wrapper.find('textarea').exists()).toBe(true)
-  })
-
-  it('shows read-only notes when canEdit is false and notes exist', function() {
-    var wrapper = mount(DorChecklist, { props: { items: items, canEdit: false, notes: 'Some notes here' } })
-    expect(wrapper.text()).toContain('Some notes here')
   })
 })
 
@@ -356,14 +307,18 @@ describe('FeatureHealthTable', function() {
     {
       key: 'T-1', summary: 'Feature 1', status: 'In Progress',
       risk: { level: 'green', flags: [], riskScore: 0 },
-      dor: { checkedCount: 10, totalCount: 13, completionPct: 77, items: [] },
+      dor: { gate: 'dor', passed: true, blockers: [], warnings: [] },
+      dod: { gate: 'dod', passed: true, checks: [] },
+      planningStatus: 'ready-for-execution',
       rice: null, components: 'Model Serving', phase: 'GA', bigRock: 'MaaS',
       deliveryOwner: 'Alice', priorityScore: 65, priorityBreakdown: { rice: 50, bigRock: 100, priority: 60, complexity: 50 }
     },
     {
       key: 'T-2', summary: 'Feature 2', status: 'New',
       risk: { level: 'red', flags: [{ category: 'MILESTONE_MISS', severity: 'high', message: 'Past deadline' }], riskScore: 1 },
-      dor: { checkedCount: 3, totalCount: 13, completionPct: 23, items: [] },
+      dor: { gate: 'dor', passed: true, blockers: [], warnings: [] },
+      dod: { gate: 'dod', passed: false, checks: [{ id: 'DoD-1', label: 'Owner Assigned', passed: false }] },
+      planningStatus: 'in-planning',
       rice: { score: 250, complete: true }, components: 'Pipelines', phase: 'TP', bigRock: null,
       deliveryOwner: 'Bob', priorityScore: 42, priorityBreakdown: { rice: 40, bigRock: 60, priority: 40, complexity: 30 }
     }

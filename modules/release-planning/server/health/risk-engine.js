@@ -1,21 +1,10 @@
 /**
  * Risk assessment engine for release health.
  *
- * Hybrid model combining execution and planning risk checks:
- *
- * Execution-phase (suppressed pre-planning-deadline):
+ * Three execution-phase checks (suppressed pre-planning-deadline):
  *   1. MILESTONE_MISS -- feature behind expected phase progress
  *   2. VELOCITY_LAG -- completion % below threshold for current phase
- *
- * Always active:
- *   3. DOR_INCOMPLETE -- DoR criteria below threshold
- *   4. BLOCKED -- unresolved blocking dependencies
- *   5. UNESTIMATED -- no story point estimate
- *
- * Planning-phase:
- *   6. MISSING_OWNER -- no delivery owner assigned
- *   7. NO_BIG_ROCK -- not associated with any Big Rock (tier 3)
- *   8. LATE_COMMITMENT -- past planning deadline with no committed fix version
+ *   3. BLOCKED -- unresolved blocking dependencies
  */
 
 const {
@@ -117,18 +106,16 @@ function expectedCompletionForPhase(currentMilestone, featurePhase, customExpect
  *
  * @param {object} feature - Feature data with status, completionPct, etc.
  * @param {object|null} milestones - Product Pages milestone dates
- * @param {object} dorStatus - DoR evaluation result from evaluateDor()
  * @param {object|null} enrichment - Jira enrichment data
- * @param {object} opts - Options: { riskThresholds, phaseCompletionExpectations, today, planningDeadline, phase, version }
+ * @param {object} opts - Options: { riskThresholds, phaseCompletionExpectations, today, planningDeadline, planningStatus }
  * @returns {{ risk: string, flags: Array<object>, riskScore: number }}
  */
-function computeFeatureRisk(feature, milestones, dorStatus, enrichment, opts) {
+function computeFeatureRisk(feature, milestones, enrichment, opts) {
   var options = opts || {}
   var thresholds = options.riskThresholds || {}
   var today = options.today || new Date()
   var customExpectations = options.phaseCompletionExpectations || null
   var planningDeadline = options.planningDeadline || null
-  var version = options.version || ''
   var flags = []
 
   var suppressExecution = planningDeadline && planningDeadline.daysRemaining > 0
@@ -162,28 +149,7 @@ function computeFeatureRisk(feature, milestones, dorStatus, enrichment, opts) {
     }
   }
 
-  // 3. DoR Readiness
-  if (dorStatus && dorStatus.totalCount > 0) {
-    var dorPct = dorStatus.completionPct
-    var dorGreenMin = thresholds.dorGreenMin || 80
-    var dorYellowMin = thresholds.dorYellowMin || 50
-
-    if (dorPct < dorYellowMin) {
-      flags.push({
-        category: RISK_CATEGORIES.DOR_INCOMPLETE,
-        severity: 'high',
-        message: 'Only ' + dorPct + '% of DoR criteria met'
-      })
-    } else if (dorPct < dorGreenMin) {
-      flags.push({
-        category: RISK_CATEGORIES.DOR_INCOMPLETE,
-        severity: 'medium',
-        message: dorPct + '% of DoR criteria met (target: ' + dorGreenMin + '%)'
-      })
-    }
-  }
-
-  // 4. Dependency Risk
+  // 3. Dependency Risk
   var safeEnrichment = enrichment || {}
   var dependencyLinks = safeEnrichment.dependencyLinks || []
   var blocking = dependencyLinks.filter(function(d) {
@@ -200,57 +166,15 @@ function computeFeatureRisk(feature, milestones, dorStatus, enrichment, opts) {
     })
   }
 
-  // 5. Scope Risk
-  if (!safeEnrichment.storyPoints) {
-    flags.push({
-      category: RISK_CATEGORIES.UNESTIMATED,
-      severity: 'medium',
-      message: 'No story point estimate'
-    })
-  }
-
-  // 6. Missing Owner (planning)
-  if (!feature.deliveryOwner && !feature.assignee) {
-    flags.push({
-      category: RISK_CATEGORIES.MISSING_OWNER,
-      severity: 'medium',
-      message: 'No delivery owner assigned'
-    })
-  }
-
-  // 7. No Big Rock (planning)
-  if (feature.tier === 3) {
-    flags.push({
-      category: RISK_CATEGORIES.NO_BIG_ROCK,
-      severity: 'low',
-      message: 'Not associated with any Big Rock'
-    })
-  }
-
-  // 8. Late Commitment (planning, post-deadline only)
-  if (planningDeadline && planningDeadline.daysRemaining < 0 && version) {
-    var fixVersions = feature.fixVersions || []
-    var hasCommittedVersion = false
-    for (var fvi = 0; fvi < fixVersions.length; fvi++) {
-      if (fixVersions[fvi].indexOf(version) !== -1) {
-        hasCommittedVersion = true
-        break
-      }
-    }
-    if (!hasCommittedVersion) {
-      flags.push({
-        category: RISK_CATEGORIES.LATE_COMMITMENT,
-        severity: 'high',
-        message: 'No committed fix version ' + Math.abs(planningDeadline.daysRemaining) + ' days after planning deadline'
-      })
-    }
-  }
-
   // Composite risk level: high → red, medium → yellow, low alone → green
   var risk = 'green'
   if (flags.some(function(f) { return f.severity === 'high' })) {
     risk = 'red'
   } else if (flags.some(function(f) { return f.severity === 'medium' })) {
+    risk = 'yellow'
+  }
+
+  if (options.planningStatus === 'not-ready' && risk === 'green') {
     risk = 'yellow'
   }
 

@@ -73,11 +73,9 @@ function makeFeature(overrides) {
       flags: [],
       override: null
     },
-    dor: {
-      checkedCount: 12,
-      totalCount: 13,
-      completionPct: 92
-    },
+    dor: { gate: 'dor', passed: true, blockers: [], warnings: [] },
+    dod: { gate: 'dod', passed: true, checks: [] },
+    planningStatus: 'ready-for-execution',
     rice: { score: 675 }
   }, overrides)
 }
@@ -94,15 +92,13 @@ function makeRedFeature() {
       score: 3,
       flags: [
         { category: 'BLOCKED', severity: 'high', message: '2 active blockers on this feature' },
-        { category: 'UNESTIMATED', severity: 'medium', message: 'No story points or t-shirt size assigned' }
+        { category: 'MILESTONE_MISS', severity: 'medium', message: 'Behind EA1 code freeze' }
       ],
       override: null
     },
-    dor: {
-      checkedCount: 4,
-      totalCount: 13,
-      completionPct: 31
-    },
+    dor: { gate: 'dor', passed: true, blockers: [], warnings: [] },
+    dod: { gate: 'dod', passed: false, checks: [{ id: 'DoD-3', label: 'Blockers Resolved', passed: false }] },
+    planningStatus: 'in-planning',
     rice: null
   })
 }
@@ -115,15 +111,13 @@ function makeOverriddenFeature() {
       level: 'red',
       score: 2,
       flags: [
-        { category: 'DOR_INCOMPLETE', severity: 'high', message: 'DoR at 38%' }
+        { category: 'VELOCITY_LAG', severity: 'high', message: '10% complete, expected 50%' }
       ],
       override: { riskOverride: 'yellow', reason: 'Team confirmed design is complete', updatedBy: 'admin@redhat.com', updatedAt: '2026-04-24T09:15:00.000Z' }
     },
-    dor: {
-      checkedCount: 5,
-      totalCount: 13,
-      completionPct: 38
-    },
+    dor: { gate: 'dor', passed: true, blockers: [], warnings: [] },
+    dod: { gate: 'dod', passed: false, checks: [{ id: 'DoD-2', label: 'Fix Version Set', passed: false }] },
+    planningStatus: 'in-planning',
     rice: { score: 270 }
   })
 }
@@ -204,10 +198,10 @@ describe('computePhaseSummary', function() {
     expect(summary.byRisk.green).toBe(1)
     expect(summary.byRisk.yellow).toBe(1) // overridden from red to yellow
     expect(summary.byRisk.red).toBe(1)
-    expect(summary.dorCompletionRate).toBe(54) // Math.round((92 + 31 + 38) / 3)
+    expect(summary.byPlanningStatus['ready-for-execution']).toBe(1)
+    expect(summary.byPlanningStatus['in-planning']).toBe(2)
     expect(summary.averageRiceScore).toBe(473) // Math.round((675 + 270) / 2) -- rice null skipped
     expect(summary.blockedCount).toBe(1) // red feature has blockerCount: 2
-    expect(summary.unestimatedCount).toBe(1) // only red feature has UNESTIMATED flag
   })
 
   it('returns zeros for empty features array', function() {
@@ -216,10 +210,11 @@ describe('computePhaseSummary', function() {
     expect(summary.byRisk.green).toBe(0)
     expect(summary.byRisk.yellow).toBe(0)
     expect(summary.byRisk.red).toBe(0)
-    expect(summary.dorCompletionRate).toBe(0)
+    expect(summary.byPlanningStatus['not-ready']).toBe(0)
+    expect(summary.byPlanningStatus['in-planning']).toBe(0)
+    expect(summary.byPlanningStatus['ready-for-execution']).toBe(0)
     expect(summary.averageRiceScore).toBe(0)
     expect(summary.blockedCount).toBe(0)
-    expect(summary.unestimatedCount).toBe(0)
   })
 
   it('handles feature with rice null', function() {
@@ -232,13 +227,12 @@ describe('computePhaseSummary', function() {
     var features = [makeFeature({ risk: null })]
     var summary = computePhaseSummary(features)
     expect(summary.byRisk.green).toBe(1) // defaults to green
-    expect(summary.unestimatedCount).toBe(0)
   })
 
-  it('handles feature with dor null', function() {
-    var features = [makeFeature({ dor: null })]
+  it('handles feature with planningStatus undefined', function() {
+    var features = [makeFeature({ planningStatus: undefined })]
     var summary = computePhaseSummary(features)
-    expect(summary.dorCompletionRate).toBe(0)
+    expect(summary.byPlanningStatus['not-ready']).toBe(1) // defaults to not-ready
   })
 })
 
@@ -394,7 +388,7 @@ describe('exportHealthMarkdown', function() {
     expect(capturedContent).toContain('### Risk Flag Details')
     expect(capturedContent).toContain('#### RHOAIENG-1003 (Red)')
     expect(capturedContent).toContain('- **BLOCKED**: 2 active blockers on this feature')
-    expect(capturedContent).toContain('- **UNESTIMATED**: No story points or t-shirt size assigned')
+    expect(capturedContent).toContain('- **MILESTONE_MISS**: Behind EA1 code freeze')
   })
 
   it('handles rice null in feature table', function() {

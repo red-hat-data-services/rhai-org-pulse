@@ -64,7 +64,7 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
       var level = effectiveLevel(h)
       var existing = map[f.rfe]
       if (!existing || isWorse(level, effectiveLevel(existing))) {
-        map[f.rfe] = { risk: { ...h.risk, level: level }, dor: h.dor || null }
+        map[f.rfe] = { risk: { ...h.risk, level: level }, dor: h.dor || null, dod: h.dod || null, planningStatus: h.planningStatus || '' }
       }
     }
     return map

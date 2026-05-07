@@ -18,7 +18,7 @@ const { loadIndex, loadFeatureDetail } = require('../cache-reader')
 const { getConfig } = require('../config')
 const { JIRA_BROWSE_URL, CLOSED_STATUSES, PLANNING_DEADLINE_OFFSET_DAYS, VALID_PHASES } = require('../constants')
 const { enrichFeatures } = require('./jira-enrichment')
-const { evaluateDor } = require('./dor-checker')
+const { computeDoR, computeDoD, derivePlanningStatus } = require('./planning-gates')
 const { computeFeatureRisk } = require('./risk-engine')
 const { buildRiceResult } = require('./rice-scorer')
 const { computePriorityScores } = require('./priority-scorer')
@@ -627,8 +627,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
     warnings.push('Jira enrichment failed: ' + err.message)
   }
 
-  // Step 4: Load manual DoR state and overrides
-  var dorState = readFromStorage(DATA_PREFIX + '/dor-state-' + version + '.json') || { features: {} }
+  // Step 4: Load overrides
   var overrides = readFromStorage(DATA_PREFIX + '/health-overrides-' + version + '.json') || { overrides: {} }
 
   // Step 5: Build per-feature health assessments
@@ -636,23 +635,20 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
   var milestoneInfo = computeMilestoneInfo(milestones, today)
   var healthFeatures = []
   var riskCounts = { green: 0, yellow: 0, red: 0 }
-  var totalDorChecked = 0
-  var totalDorItems = 0
   var totalRiceScore = 0
   var riceCount = 0
   var blockedCount = 0
-  var unestimatedCount = 0
+  var byPlanningStatus = { 'not-ready': 0, 'in-planning': 0, 'ready-for-execution': 0 }
 
   for (var i = 0; i < features.length; i++) {
     var feature = features[i]
     var key = feature.key
     var enrichment = enrichResult.enrichments.get(key) || null
-    var manualChecks = (dorState.features && dorState.features[key] && dorState.features[key].manualChecks) || null
-
-    // Evaluate DoR
-    var dorStatus = evaluateDor(feature, enrichment, manualChecks)
-    totalDorChecked += dorStatus.checkedCount
-    totalDorItems += dorStatus.totalCount
+    // Evaluate planning gates
+    var dorResult = computeDoR(feature, enrichment)
+    var dodResult = computeDoD(feature, enrichment)
+    var planningStatus = derivePlanningStatus(dorResult, dodResult)
+    byPlanningStatus[planningStatus] = (byPlanningStatus[planningStatus] || 0) + 1
 
     // Derive phase for risk engine
     var featurePhase = getFeaturePhase(feature)
@@ -661,12 +657,12 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
     var featureForRisk = Object.assign({}, feature, { phase: featurePhase })
 
     // Compute risk
-    var riskResult = computeFeatureRisk(featureForRisk, milestones, dorStatus, enrichment, {
+    var riskResult = computeFeatureRisk(featureForRisk, milestones, enrichment, {
       riskThresholds: healthConfig.riskThresholds,
       phaseCompletionExpectations: healthConfig.phaseCompletionExpectations,
       today: today,
       planningDeadline: planningDeadline,
-      version: version
+      planningStatus: planningStatus
     })
 
     // Apply manual override if present
@@ -681,7 +677,6 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
     // Count specific risk types
     for (var fi = 0; fi < riskResult.flags.length; fi++) {
       if (riskResult.flags[fi].category === 'BLOCKED') blockedCount++
-      if (riskResult.flags[fi].category === 'UNESTIMATED') unestimatedCount++
     }
 
     // RICE score
@@ -723,7 +718,9 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
         flags: riskResult.flags,
         override: override
       },
-      dor: dorStatus,
+      dor: dorResult,
+      dod: dodResult,
+      planningStatus: planningStatus,
       rice: riceResult,
       storyPoints: enrichment ? enrichment.storyPoints || null : null,
       tshirtSize: enrichment ? enrichment.tshirtSize || null : null,
@@ -743,7 +740,6 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
 
   // Step 6: Build summary
   var averageRice = riceCount > 0 ? Math.round(totalRiceScore / riceCount) : null
-  var dorCompletionRate = totalDorItems > 0 ? Math.round((totalDorChecked / totalDorItems) * 100) : 0
 
   var cache = {
     cachedAt: today.toISOString(),
@@ -766,10 +762,9 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
     summary: {
       totalFeatures: features.length,
       byRisk: riskCounts,
-      dorCompletionRate: dorCompletionRate,
+      byPlanningStatus: byPlanningStatus,
       averageRiceScore: averageRice,
       blockedCount: blockedCount,
-      unestimatedCount: unestimatedCount,
       currentPhase: milestoneInfo.currentPhase,
       daysToNextMilestone: milestoneInfo.daysToNextMilestone,
       nextMilestone: milestoneInfo.nextMilestone,
@@ -806,10 +801,9 @@ function buildEmptyCache(version, warnings) {
     summary: {
       totalFeatures: 0,
       byRisk: { green: 0, yellow: 0, red: 0 },
-      dorCompletionRate: 0,
+      byPlanningStatus: { 'not-ready': 0, 'in-planning': 0, 'ready-for-execution': 0 },
       averageRiceScore: null,
       blockedCount: 0,
-      unestimatedCount: 0,
       currentPhase: 'Unknown',
       daysToNextMilestone: null,
       nextMilestone: null

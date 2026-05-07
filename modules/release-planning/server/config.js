@@ -25,9 +25,7 @@ const DEFAULT_CONFIG = {
     healthRefreshTimeoutMs: 480000,
     riskThresholds: {
       velocityGreenMin: 80,
-      velocityYellowMin: 50,
-      dorGreenMin: 80,
-      dorYellowMin: 50
+      velocityYellowMin: 50
     },
     phaseCompletionExpectations: null
   }

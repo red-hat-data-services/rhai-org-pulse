@@ -7,7 +7,7 @@ const props = defineProps({
 })
 
 var cards = computed(function() {
-  var c = props.cardCounts || { total: 0, riceComplete: 0, ownerAssigned: 0, scopeEstimated: 0, dorComplete: 0 }
+  var c = props.cardCounts || { total: 0, riceComplete: 0, ownerAssigned: 0, dodComplete: 0, readyForExecution: 0 }
   return [
     {
       label: 'RICE Score Present',
@@ -22,14 +22,14 @@ var cards = computed(function() {
       color: 'blue'
     },
     {
-      label: 'Scope Estimated',
-      count: c.scopeEstimated,
+      label: 'DoD Complete',
+      count: c.dodComplete,
       total: c.total,
       color: 'amber'
     },
     {
-      label: 'DoR Complete',
-      count: c.dorComplete,
+      label: 'Ready for Execution',
+      count: c.readyForExecution,
       total: c.total,
       color: 'green'
     }

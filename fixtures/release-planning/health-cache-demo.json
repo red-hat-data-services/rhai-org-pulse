@@ -12,15 +12,25 @@
   "phase": "all",
   "summary": {
     "totalFeatures": 12,
-    "byRisk": { "green": 3, "yellow": 4, "red": 5 },
-    "dorCompletionRate": 62,
+    "byRisk": {
+      "green": 3,
+      "yellow": 4,
+      "red": 5
+    },
     "averageRiceScore": 310,
     "blockedCount": 1,
-    "unestimatedCount": 2,
     "currentPhase": "Pre-EA1",
     "daysToNextMilestone": 5,
     "nextMilestone": "EA1 Code Freeze",
-    "planningDeadline": { "date": "2026-04-24", "daysRemaining": -2 }
+    "planningDeadline": {
+      "date": "2026-04-24",
+      "daysRemaining": -2
+    },
+    "byPlanningStatus": {
+      "not-ready": 0,
+      "in-planning": 7,
+      "ready-for-execution": 5
+    }
   },
   "features": [
     {
@@ -33,7 +43,9 @@
       "tier": 1,
       "pm": "Sarah Chen",
       "deliveryOwner": "David Kim",
-      "components": ["Model Serving"],
+      "components": [
+        "Model Serving"
+      ],
       "completionPct": 75,
       "epicCount": 4,
       "issueCount": 28,
@@ -46,27 +58,58 @@
         "override": null
       },
       "dor": {
-        "checkedCount": 12,
-        "totalCount": 13,
-        "completionPct": 92,
-        "items": [
-          { "id": "F-1", "label": "Summary and description", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-2", "label": "Target version set", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-3", "label": "Stakeholders identified", "type": "manual", "checked": true, "source": "manual" },
-          { "id": "F-4", "label": "PM assigned", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-5", "label": "Delivery owner assigned", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-6", "label": "Component assigned", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-7", "label": "Story points estimated", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-8", "label": "No unresolved blockers", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-9", "label": "Acceptance criteria defined", "type": "manual", "checked": true, "source": "manual" },
-          { "id": "F-10", "label": "Release type set", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-11", "label": "Test plan exists", "type": "manual", "checked": true, "source": "manual" },
-          { "id": "F-12", "label": "Documentation plan exists", "type": "manual", "checked": true, "source": "manual" },
-          { "id": "F-13", "label": "Security review completed", "type": "manual", "checked": false, "source": "manual" }
+        "gate": "dor",
+        "passed": true,
+        "blockers": [
+          {
+            "id": "DoR-B1",
+            "label": "Strategy Human Sign-off",
+            "passed": true,
+            "detail": "strat-creator-disabled"
+          },
+          {
+            "id": "DoR-B2",
+            "label": "RICE Score Present",
+            "passed": true,
+            "detail": "rice-disabled"
+          }
+        ],
+        "warnings": []
+      },
+      "rice": {
+        "reach": 2000,
+        "impact": 3,
+        "confidence": 90,
+        "effort": 8,
+        "score": 675,
+        "complete": true
+      },
+      "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1001",
+      "dod": {
+        "gate": "dod",
+        "passed": true,
+        "checks": [
+          {
+            "id": "DoD-1",
+            "label": "Owner Assigned",
+            "passed": true,
+            "detail": "David Kim"
+          },
+          {
+            "id": "DoD-2",
+            "label": "Fix Version Set",
+            "passed": true,
+            "detail": null
+          },
+          {
+            "id": "DoD-3",
+            "label": "Blockers Resolved",
+            "passed": true,
+            "detail": null
+          }
         ]
       },
-      "rice": { "reach": 2000, "impact": 3, "confidence": 90, "effort": 8, "score": 675, "complete": true },
-      "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1001"
+      "planningStatus": "ready-for-execution"
     },
     {
       "key": "RHOAIENG-1002",
@@ -78,7 +121,9 @@
       "tier": 1,
       "pm": "Maria Lopez",
       "deliveryOwner": "James Park",
-      "components": ["Workbenches"],
+      "components": [
+        "Workbenches"
+      ],
       "completionPct": 80,
       "epicCount": 3,
       "issueCount": 22,
@@ -91,27 +136,58 @@
         "override": null
       },
       "dor": {
-        "checkedCount": 11,
-        "totalCount": 13,
-        "completionPct": 85,
-        "items": [
-          { "id": "F-1", "label": "Summary and description", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-2", "label": "Target version set", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-3", "label": "Stakeholders identified", "type": "manual", "checked": true, "source": "manual" },
-          { "id": "F-4", "label": "PM assigned", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-5", "label": "Delivery owner assigned", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-6", "label": "Component assigned", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-7", "label": "Story points estimated", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-8", "label": "No unresolved blockers", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-9", "label": "Acceptance criteria defined", "type": "manual", "checked": true, "source": "manual" },
-          { "id": "F-10", "label": "Release type set", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-11", "label": "Test plan exists", "type": "manual", "checked": true, "source": "manual" },
-          { "id": "F-12", "label": "Documentation plan exists", "type": "manual", "checked": false, "source": "manual" },
-          { "id": "F-13", "label": "Security review completed", "type": "manual", "checked": false, "source": "manual" }
+        "gate": "dor",
+        "passed": true,
+        "blockers": [
+          {
+            "id": "DoR-B1",
+            "label": "Strategy Human Sign-off",
+            "passed": true,
+            "detail": "strat-creator-disabled"
+          },
+          {
+            "id": "DoR-B2",
+            "label": "RICE Score Present",
+            "passed": true,
+            "detail": "rice-disabled"
+          }
+        ],
+        "warnings": []
+      },
+      "rice": {
+        "reach": 1500,
+        "impact": 2,
+        "confidence": 85,
+        "effort": 5,
+        "score": 510,
+        "complete": true
+      },
+      "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1002",
+      "dod": {
+        "gate": "dod",
+        "passed": true,
+        "checks": [
+          {
+            "id": "DoD-1",
+            "label": "Owner Assigned",
+            "passed": true,
+            "detail": "James Park"
+          },
+          {
+            "id": "DoD-2",
+            "label": "Fix Version Set",
+            "passed": true,
+            "detail": null
+          },
+          {
+            "id": "DoD-3",
+            "label": "Blockers Resolved",
+            "passed": true,
+            "detail": null
+          }
         ]
       },
-      "rice": { "reach": 1500, "impact": 2, "confidence": 85, "effort": 5, "score": 510, "complete": true },
-      "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1002"
+      "planningStatus": "ready-for-execution"
     },
     {
       "key": "RHOAIENG-1003",
@@ -123,7 +199,9 @@
       "tier": 1,
       "pm": "Alex Nguyen",
       "deliveryOwner": "Priya Sharma",
-      "components": ["Model Serving"],
+      "components": [
+        "Model Serving"
+      ],
       "completionPct": 55,
       "epicCount": 5,
       "issueCount": 35,
@@ -133,33 +211,65 @@
         "level": "yellow",
         "score": 2,
         "flags": [
-          { "category": "DOR_INCOMPLETE", "severity": "medium", "message": "DoR completion at 54% (below 80% threshold)" },
-          { "category": "UNESTIMATED", "severity": "medium", "message": "No story point estimate" }
+          {
+            "category": "DOR_INCOMPLETE",
+            "severity": "medium",
+            "message": "DoR completion at 54% (below 80% threshold)"
+          },
+          {
+            "category": "UNESTIMATED",
+            "severity": "medium",
+            "message": "No story point estimate"
+          }
         ],
         "override": null
       },
       "dor": {
-        "checkedCount": 7,
-        "totalCount": 13,
-        "completionPct": 54,
-        "items": [
-          { "id": "F-1", "label": "Summary and description", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-2", "label": "Target version set", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-3", "label": "Stakeholders identified", "type": "manual", "checked": false, "source": "manual" },
-          { "id": "F-4", "label": "PM assigned", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-5", "label": "Delivery owner assigned", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-6", "label": "Component assigned", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-7", "label": "Story points estimated", "type": "automated", "checked": false, "source": "jira" },
-          { "id": "F-8", "label": "No unresolved blockers", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-9", "label": "Acceptance criteria defined", "type": "manual", "checked": false, "source": "manual" },
-          { "id": "F-10", "label": "Release type set", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-11", "label": "Test plan exists", "type": "manual", "checked": false, "source": "manual" },
-          { "id": "F-12", "label": "Documentation plan exists", "type": "manual", "checked": false, "source": "manual" },
-          { "id": "F-13", "label": "Security review completed", "type": "manual", "checked": false, "source": "manual" }
-        ]
+        "gate": "dor",
+        "passed": true,
+        "blockers": [
+          {
+            "id": "DoR-B1",
+            "label": "Strategy Human Sign-off",
+            "passed": true,
+            "detail": "strat-creator-disabled"
+          },
+          {
+            "id": "DoR-B2",
+            "label": "RICE Score Present",
+            "passed": true,
+            "detail": "rice-disabled"
+          }
+        ],
+        "warnings": []
       },
       "rice": null,
-      "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1003"
+      "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1003",
+      "dod": {
+        "gate": "dod",
+        "passed": true,
+        "checks": [
+          {
+            "id": "DoD-1",
+            "label": "Owner Assigned",
+            "passed": true,
+            "detail": "Priya Sharma"
+          },
+          {
+            "id": "DoD-2",
+            "label": "Fix Version Set",
+            "passed": true,
+            "detail": null
+          },
+          {
+            "id": "DoD-3",
+            "label": "Blockers Resolved",
+            "passed": true,
+            "detail": null
+          }
+        ]
+      },
+      "planningStatus": "ready-for-execution"
     },
     {
       "key": "RHOAIENG-1004",
@@ -171,7 +281,9 @@
       "tier": 2,
       "pm": "Tom Wilson",
       "deliveryOwner": "Rachel Green",
-      "components": ["Dashboard"],
+      "components": [
+        "Dashboard"
+      ],
       "completionPct": 40,
       "epicCount": 2,
       "issueCount": 14,
@@ -181,32 +293,67 @@
         "level": "yellow",
         "score": 1,
         "flags": [
-          { "category": "DOR_INCOMPLETE", "severity": "medium", "message": "DoR completion at 62% (below 80% threshold)" }
+          {
+            "category": "DOR_INCOMPLETE",
+            "severity": "medium",
+            "message": "DoR completion at 62% (below 80% threshold)"
+          }
         ],
         "override": null
       },
       "dor": {
-        "checkedCount": 8,
-        "totalCount": 13,
-        "completionPct": 62,
-        "items": [
-          { "id": "F-1", "label": "Summary and description", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-2", "label": "Target version set", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-3", "label": "Stakeholders identified", "type": "manual", "checked": true, "source": "manual" },
-          { "id": "F-4", "label": "PM assigned", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-5", "label": "Delivery owner assigned", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-6", "label": "Component assigned", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-7", "label": "Story points estimated", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-8", "label": "No unresolved blockers", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-9", "label": "Acceptance criteria defined", "type": "manual", "checked": false, "source": "manual" },
-          { "id": "F-10", "label": "Release type set", "type": "automated", "checked": false, "source": "jira" },
-          { "id": "F-11", "label": "Test plan exists", "type": "manual", "checked": false, "source": "manual" },
-          { "id": "F-12", "label": "Documentation plan exists", "type": "manual", "checked": false, "source": "manual" },
-          { "id": "F-13", "label": "Security review completed", "type": "manual", "checked": false, "source": "manual" }
+        "gate": "dor",
+        "passed": true,
+        "blockers": [
+          {
+            "id": "DoR-B1",
+            "label": "Strategy Human Sign-off",
+            "passed": true,
+            "detail": "strat-creator-disabled"
+          },
+          {
+            "id": "DoR-B2",
+            "label": "RICE Score Present",
+            "passed": true,
+            "detail": "rice-disabled"
+          }
+        ],
+        "warnings": []
+      },
+      "rice": {
+        "reach": 800,
+        "impact": 2,
+        "confidence": 70,
+        "effort": 3,
+        "score": 373,
+        "complete": true
+      },
+      "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1004",
+      "dod": {
+        "gate": "dod",
+        "passed": true,
+        "checks": [
+          {
+            "id": "DoD-1",
+            "label": "Owner Assigned",
+            "passed": true,
+            "detail": "Rachel Green"
+          },
+          {
+            "id": "DoD-2",
+            "label": "Fix Version Set",
+            "passed": true,
+            "detail": null
+          },
+          {
+            "id": "DoD-3",
+            "label": "Blockers Resolved",
+            "passed": true,
+            "detail": null
+          }
         ]
       },
-      "rice": { "reach": 800, "impact": 2, "confidence": 70, "effort": 3, "score": 373, "complete": true },
-      "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1004"
+      "planningStatus": "ready-for-execution"
     },
     {
       "key": "RHOAIENG-1005",
@@ -218,7 +365,9 @@
       "tier": 1,
       "pm": "Linda Zhang",
       "deliveryOwner": "",
-      "components": ["Agents"],
+      "components": [
+        "Agents"
+      ],
       "completionPct": 20,
       "epicCount": 1,
       "issueCount": 6,
@@ -228,34 +377,70 @@
         "level": "yellow",
         "score": 3,
         "flags": [
-          { "category": "UNESTIMATED", "severity": "medium", "message": "No story point estimate" },
-          { "category": "DOR_INCOMPLETE", "severity": "medium", "message": "DoR completion at 46% (below 80% threshold)" },
-          { "category": "MISSING_OWNER", "severity": "medium", "message": "No delivery owner assigned" }
+          {
+            "category": "UNESTIMATED",
+            "severity": "medium",
+            "message": "No story point estimate"
+          },
+          {
+            "category": "DOR_INCOMPLETE",
+            "severity": "medium",
+            "message": "DoR completion at 46% (below 80% threshold)"
+          },
+          {
+            "category": "MISSING_OWNER",
+            "severity": "medium",
+            "message": "No delivery owner assigned"
+          }
         ],
         "override": null
       },
       "dor": {
-        "checkedCount": 6,
-        "totalCount": 13,
-        "completionPct": 46,
-        "items": [
-          { "id": "F-1", "label": "Summary and description", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-2", "label": "Target version set", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-3", "label": "Stakeholders identified", "type": "manual", "checked": false, "source": "manual" },
-          { "id": "F-4", "label": "PM assigned", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-5", "label": "Delivery owner assigned", "type": "automated", "checked": false, "source": "jira" },
-          { "id": "F-6", "label": "Component assigned", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-7", "label": "Story points estimated", "type": "automated", "checked": false, "source": "jira" },
-          { "id": "F-8", "label": "No unresolved blockers", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-9", "label": "Acceptance criteria defined", "type": "manual", "checked": false, "source": "manual" },
-          { "id": "F-10", "label": "Release type set", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-11", "label": "Test plan exists", "type": "manual", "checked": false, "source": "manual" },
-          { "id": "F-12", "label": "Documentation plan exists", "type": "manual", "checked": false, "source": "manual" },
-          { "id": "F-13", "label": "Security review completed", "type": "manual", "checked": false, "source": "manual" }
-        ]
+        "gate": "dor",
+        "passed": true,
+        "blockers": [
+          {
+            "id": "DoR-B1",
+            "label": "Strategy Human Sign-off",
+            "passed": true,
+            "detail": "strat-creator-disabled"
+          },
+          {
+            "id": "DoR-B2",
+            "label": "RICE Score Present",
+            "passed": true,
+            "detail": "rice-disabled"
+          }
+        ],
+        "warnings": []
       },
       "rice": null,
-      "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1005"
+      "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1005",
+      "dod": {
+        "gate": "dod",
+        "passed": false,
+        "checks": [
+          {
+            "id": "DoD-1",
+            "label": "Owner Assigned",
+            "passed": false,
+            "detail": null
+          },
+          {
+            "id": "DoD-2",
+            "label": "Fix Version Set",
+            "passed": true,
+            "detail": null
+          },
+          {
+            "id": "DoD-3",
+            "label": "Blockers Resolved",
+            "passed": true,
+            "detail": null
+          }
+        ]
+      },
+      "planningStatus": "in-planning"
     },
     {
       "key": "RHOAIENG-1006",
@@ -267,7 +452,9 @@
       "tier": 1,
       "pm": "Tom Wilson",
       "deliveryOwner": "Chris Evans",
-      "components": ["Operator"],
+      "components": [
+        "Operator"
+      ],
       "completionPct": 0,
       "epicCount": 0,
       "issueCount": 2,
@@ -277,34 +464,77 @@
         "level": "red",
         "score": 3,
         "flags": [
-          { "category": "DOR_INCOMPLETE", "severity": "high", "message": "DoR completion at 31% (below 50% threshold)" },
-          { "category": "UNESTIMATED", "severity": "medium", "message": "No story point estimate" },
-          { "category": "BLOCKED", "severity": "high", "message": "Blocked by RHOAIENG-998 (In Progress)" }
+          {
+            "category": "DOR_INCOMPLETE",
+            "severity": "high",
+            "message": "DoR completion at 31% (below 50% threshold)"
+          },
+          {
+            "category": "UNESTIMATED",
+            "severity": "medium",
+            "message": "No story point estimate"
+          },
+          {
+            "category": "BLOCKED",
+            "severity": "high",
+            "message": "Blocked by RHOAIENG-998 (In Progress)"
+          }
         ],
         "override": null
       },
       "dor": {
-        "checkedCount": 4,
-        "totalCount": 13,
-        "completionPct": 31,
-        "items": [
-          { "id": "F-1", "label": "Summary and description", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-2", "label": "Target version set", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-3", "label": "Stakeholders identified", "type": "manual", "checked": false, "source": "manual" },
-          { "id": "F-4", "label": "PM assigned", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-5", "label": "Delivery owner assigned", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-6", "label": "Component assigned", "type": "automated", "checked": false, "source": "jira" },
-          { "id": "F-7", "label": "Story points estimated", "type": "automated", "checked": false, "source": "jira" },
-          { "id": "F-8", "label": "No unresolved blockers", "type": "automated", "checked": false, "source": "jira" },
-          { "id": "F-9", "label": "Acceptance criteria defined", "type": "manual", "checked": false, "source": "manual" },
-          { "id": "F-10", "label": "Release type set", "type": "automated", "checked": false, "source": "jira" },
-          { "id": "F-11", "label": "Test plan exists", "type": "manual", "checked": false, "source": "manual" },
-          { "id": "F-12", "label": "Documentation plan exists", "type": "manual", "checked": false, "source": "manual" },
-          { "id": "F-13", "label": "Security review completed", "type": "manual", "checked": false, "source": "manual" }
+        "gate": "dor",
+        "passed": true,
+        "blockers": [
+          {
+            "id": "DoR-B1",
+            "label": "Strategy Human Sign-off",
+            "passed": true,
+            "detail": "strat-creator-disabled"
+          },
+          {
+            "id": "DoR-B2",
+            "label": "RICE Score Present",
+            "passed": true,
+            "detail": "rice-disabled"
+          }
+        ],
+        "warnings": []
+      },
+      "rice": {
+        "reach": 3000,
+        "impact": 3,
+        "confidence": 60,
+        "effort": 12,
+        "score": 450,
+        "complete": true
+      },
+      "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1006",
+      "dod": {
+        "gate": "dod",
+        "passed": false,
+        "checks": [
+          {
+            "id": "DoD-1",
+            "label": "Owner Assigned",
+            "passed": true,
+            "detail": "Chris Evans"
+          },
+          {
+            "id": "DoD-2",
+            "label": "Fix Version Set",
+            "passed": true,
+            "detail": null
+          },
+          {
+            "id": "DoD-3",
+            "label": "Blockers Resolved",
+            "passed": false,
+            "detail": null
+          }
         ]
       },
-      "rice": { "reach": 3000, "impact": 3, "confidence": 60, "effort": 12, "score": 450, "complete": true },
-      "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1006"
+      "planningStatus": "in-planning"
     },
     {
       "key": "RHOAIENG-1007",
@@ -326,35 +556,75 @@
         "level": "red",
         "score": 4,
         "flags": [
-          { "category": "DOR_INCOMPLETE", "severity": "high", "message": "DoR completion at 15% (below 50% threshold)" },
-          { "category": "UNESTIMATED", "severity": "medium", "message": "No story point estimate" },
-          { "category": "MISSING_OWNER", "severity": "medium", "message": "No delivery owner assigned" },
-          { "category": "VELOCITY_LAG", "severity": "medium", "message": "Completion at 0% vs expected 30% for TP at Pre-EA1" }
+          {
+            "category": "DOR_INCOMPLETE",
+            "severity": "high",
+            "message": "DoR completion at 15% (below 50% threshold)"
+          },
+          {
+            "category": "UNESTIMATED",
+            "severity": "medium",
+            "message": "No story point estimate"
+          },
+          {
+            "category": "MISSING_OWNER",
+            "severity": "medium",
+            "message": "No delivery owner assigned"
+          },
+          {
+            "category": "VELOCITY_LAG",
+            "severity": "medium",
+            "message": "Completion at 0% vs expected 30% for TP at Pre-EA1"
+          }
         ],
         "override": null
       },
       "dor": {
-        "checkedCount": 2,
-        "totalCount": 13,
-        "completionPct": 15,
-        "items": [
-          { "id": "F-1", "label": "Summary and description", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-2", "label": "Target version set", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-3", "label": "Stakeholders identified", "type": "manual", "checked": false, "source": "manual" },
-          { "id": "F-4", "label": "PM assigned", "type": "automated", "checked": false, "source": "jira" },
-          { "id": "F-5", "label": "Delivery owner assigned", "type": "automated", "checked": false, "source": "jira" },
-          { "id": "F-6", "label": "Component assigned", "type": "automated", "checked": false, "source": "jira" },
-          { "id": "F-7", "label": "Story points estimated", "type": "automated", "checked": false, "source": "jira" },
-          { "id": "F-8", "label": "No unresolved blockers", "type": "automated", "checked": false, "source": "jira" },
-          { "id": "F-9", "label": "Acceptance criteria defined", "type": "manual", "checked": false, "source": "manual" },
-          { "id": "F-10", "label": "Release type set", "type": "automated", "checked": false, "source": "jira" },
-          { "id": "F-11", "label": "Test plan exists", "type": "manual", "checked": false, "source": "manual" },
-          { "id": "F-12", "label": "Documentation plan exists", "type": "manual", "checked": false, "source": "manual" },
-          { "id": "F-13", "label": "Security review completed", "type": "manual", "checked": false, "source": "manual" }
-        ]
+        "gate": "dor",
+        "passed": true,
+        "blockers": [
+          {
+            "id": "DoR-B1",
+            "label": "Strategy Human Sign-off",
+            "passed": true,
+            "detail": "strat-creator-disabled"
+          },
+          {
+            "id": "DoR-B2",
+            "label": "RICE Score Present",
+            "passed": true,
+            "detail": "rice-disabled"
+          }
+        ],
+        "warnings": []
       },
       "rice": null,
-      "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1007"
+      "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1007",
+      "dod": {
+        "gate": "dod",
+        "passed": false,
+        "checks": [
+          {
+            "id": "DoD-1",
+            "label": "Owner Assigned",
+            "passed": false,
+            "detail": null
+          },
+          {
+            "id": "DoD-2",
+            "label": "Fix Version Set",
+            "passed": true,
+            "detail": null
+          },
+          {
+            "id": "DoD-3",
+            "label": "Blockers Resolved",
+            "passed": true,
+            "detail": null
+          }
+        ]
+      },
+      "planningStatus": "in-planning"
     },
     {
       "key": "RHOAIENG-1008",
@@ -366,7 +636,10 @@
       "tier": 1,
       "pm": "Sarah Chen",
       "deliveryOwner": "Priya Sharma",
-      "components": ["Model Serving", "Dashboard"],
+      "components": [
+        "Model Serving",
+        "Dashboard"
+      ],
       "completionPct": 15,
       "epicCount": 3,
       "issueCount": 18,
@@ -376,33 +649,77 @@
         "level": "red",
         "score": 2,
         "flags": [
-          { "category": "DOR_INCOMPLETE", "severity": "high", "message": "DoR completion at 38% (below 50% threshold)" },
-          { "category": "VELOCITY_LAG", "severity": "high", "message": "Completion at 15% vs expected 70% for GA at Pre-EA1" }
+          {
+            "category": "DOR_INCOMPLETE",
+            "severity": "high",
+            "message": "DoR completion at 38% (below 50% threshold)"
+          },
+          {
+            "category": "VELOCITY_LAG",
+            "severity": "high",
+            "message": "Completion at 15% vs expected 70% for GA at Pre-EA1"
+          }
         ],
-        "override": { "riskOverride": "yellow", "reason": "Team confirmed design is complete, implementation sprint starting next week", "updatedBy": "sarah@redhat.com", "updatedAt": "2026-04-24T09:15:00.000Z" }
+        "override": {
+          "riskOverride": "yellow",
+          "reason": "Team confirmed design is complete, implementation sprint starting next week",
+          "updatedBy": "sarah@redhat.com",
+          "updatedAt": "2026-04-24T09:15:00.000Z"
+        }
       },
       "dor": {
-        "checkedCount": 5,
-        "totalCount": 13,
-        "completionPct": 38,
-        "items": [
-          { "id": "F-1", "label": "Summary and description", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-2", "label": "Target version set", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-3", "label": "Stakeholders identified", "type": "manual", "checked": true, "source": "manual" },
-          { "id": "F-4", "label": "PM assigned", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-5", "label": "Delivery owner assigned", "type": "automated", "checked": true, "source": "jira" },
-          { "id": "F-6", "label": "Component assigned", "type": "automated", "checked": false, "source": "jira" },
-          { "id": "F-7", "label": "Story points estimated", "type": "automated", "checked": false, "source": "jira" },
-          { "id": "F-8", "label": "No unresolved blockers", "type": "automated", "checked": false, "source": "jira" },
-          { "id": "F-9", "label": "Acceptance criteria defined", "type": "manual", "checked": false, "source": "manual" },
-          { "id": "F-10", "label": "Release type set", "type": "automated", "checked": false, "source": "jira" },
-          { "id": "F-11", "label": "Test plan exists", "type": "manual", "checked": false, "source": "manual" },
-          { "id": "F-12", "label": "Documentation plan exists", "type": "manual", "checked": false, "source": "manual" },
-          { "id": "F-13", "label": "Security review completed", "type": "manual", "checked": false, "source": "manual" }
+        "gate": "dor",
+        "passed": true,
+        "blockers": [
+          {
+            "id": "DoR-B1",
+            "label": "Strategy Human Sign-off",
+            "passed": true,
+            "detail": "strat-creator-disabled"
+          },
+          {
+            "id": "DoR-B2",
+            "label": "RICE Score Present",
+            "passed": true,
+            "detail": "rice-disabled"
+          }
+        ],
+        "warnings": []
+      },
+      "rice": {
+        "reach": 1200,
+        "impact": 3,
+        "confidence": 75,
+        "effort": 10,
+        "score": 270,
+        "complete": true
+      },
+      "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1008",
+      "dod": {
+        "gate": "dod",
+        "passed": true,
+        "checks": [
+          {
+            "id": "DoD-1",
+            "label": "Owner Assigned",
+            "passed": true,
+            "detail": "Priya Sharma"
+          },
+          {
+            "id": "DoD-2",
+            "label": "Fix Version Set",
+            "passed": true,
+            "detail": null
+          },
+          {
+            "id": "DoD-3",
+            "label": "Blockers Resolved",
+            "passed": true,
+            "detail": null
+          }
         ]
       },
-      "rice": { "reach": 1200, "impact": 3, "confidence": 75, "effort": 10, "score": 270, "complete": true },
-      "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1008"
+      "planningStatus": "ready-for-execution"
     },
     {
       "key": "RHAISTRAT-2001",
@@ -414,7 +731,9 @@
       "tier": 1,
       "pm": "Jane Doe",
       "deliveryOwner": "John Smith",
-      "components": ["Serving"],
+      "components": [
+        "Serving"
+      ],
       "completionPct": 60,
       "epicCount": 2,
       "issueCount": 12,
@@ -424,19 +743,65 @@
         "level": "yellow",
         "score": 2,
         "flags": [
-          { "category": "DOR_INCOMPLETE", "severity": "medium", "message": "DoR completion at 55% (below 80% threshold)" },
-          { "category": "UNESTIMATED", "severity": "medium", "message": "No story point estimate" }
+          {
+            "category": "DOR_INCOMPLETE",
+            "severity": "medium",
+            "message": "DoR completion at 55% (below 80% threshold)"
+          },
+          {
+            "category": "UNESTIMATED",
+            "severity": "medium",
+            "message": "No story point estimate"
+          }
         ],
         "override": null
       },
       "dor": {
-        "checkedCount": 7,
-        "totalCount": 13,
-        "completionPct": 55,
-        "items": []
+        "gate": "dor",
+        "passed": true,
+        "blockers": [
+          {
+            "id": "DoR-B1",
+            "label": "Strategy Human Sign-off",
+            "passed": true,
+            "detail": "strat-creator-disabled"
+          },
+          {
+            "id": "DoR-B2",
+            "label": "RICE Score Present",
+            "passed": true,
+            "detail": "rice-disabled"
+          }
+        ],
+        "warnings": []
       },
       "rice": null,
-      "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2001"
+      "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2001",
+      "dod": {
+        "gate": "dod",
+        "passed": false,
+        "checks": [
+          {
+            "id": "DoD-1",
+            "label": "Owner Assigned",
+            "passed": true,
+            "detail": "John Smith"
+          },
+          {
+            "id": "DoD-2",
+            "label": "Fix Version Set",
+            "passed": false,
+            "detail": null
+          },
+          {
+            "id": "DoD-3",
+            "label": "Blockers Resolved",
+            "passed": true,
+            "detail": null
+          }
+        ]
+      },
+      "planningStatus": "in-planning"
     },
     {
       "key": "RHAISTRAT-2006",
@@ -448,7 +813,9 @@
       "tier": 1,
       "pm": "Sarah Lee",
       "deliveryOwner": "Dave Evans",
-      "components": ["GenAI Studio"],
+      "components": [
+        "GenAI Studio"
+      ],
       "completionPct": 70,
       "epicCount": 3,
       "issueCount": 18,
@@ -461,13 +828,58 @@
         "override": null
       },
       "dor": {
-        "checkedCount": 11,
-        "totalCount": 13,
-        "completionPct": 85,
-        "items": []
+        "gate": "dor",
+        "passed": true,
+        "blockers": [
+          {
+            "id": "DoR-B1",
+            "label": "Strategy Human Sign-off",
+            "passed": true,
+            "detail": "strat-creator-disabled"
+          },
+          {
+            "id": "DoR-B2",
+            "label": "RICE Score Present",
+            "passed": true,
+            "detail": "rice-disabled"
+          }
+        ],
+        "warnings": []
       },
-      "rice": { "reach": 1800, "impact": 3, "confidence": 90, "effort": 6, "score": 810, "complete": true },
-      "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2006"
+      "rice": {
+        "reach": 1800,
+        "impact": 3,
+        "confidence": 90,
+        "effort": 6,
+        "score": 810,
+        "complete": true
+      },
+      "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2006",
+      "dod": {
+        "gate": "dod",
+        "passed": false,
+        "checks": [
+          {
+            "id": "DoD-1",
+            "label": "Owner Assigned",
+            "passed": true,
+            "detail": "Dave Evans"
+          },
+          {
+            "id": "DoD-2",
+            "label": "Fix Version Set",
+            "passed": false,
+            "detail": null
+          },
+          {
+            "id": "DoD-3",
+            "label": "Blockers Resolved",
+            "passed": true,
+            "detail": null
+          }
+        ]
+      },
+      "planningStatus": "in-planning"
     },
     {
       "key": "RHAISTRAT-2013",
@@ -479,7 +891,9 @@
       "tier": 1,
       "pm": "Nancy Kim",
       "deliveryOwner": "Iris Lee",
-      "components": ["Evaluation"],
+      "components": [
+        "Evaluation"
+      ],
       "completionPct": 35,
       "epicCount": 2,
       "issueCount": 10,
@@ -489,20 +903,70 @@
         "level": "red",
         "score": 3,
         "flags": [
-          { "category": "VELOCITY_LAG", "severity": "high", "message": "Completion at 35% vs expected 80% for EA1 at Pre-EA1" },
-          { "category": "DOR_INCOMPLETE", "severity": "high", "message": "DoR completion at 38% (below 50% threshold)" },
-          { "category": "MISSING_OWNER", "severity": "medium", "message": "No delivery owner assigned" }
+          {
+            "category": "VELOCITY_LAG",
+            "severity": "high",
+            "message": "Completion at 35% vs expected 80% for EA1 at Pre-EA1"
+          },
+          {
+            "category": "DOR_INCOMPLETE",
+            "severity": "high",
+            "message": "DoR completion at 38% (below 50% threshold)"
+          },
+          {
+            "category": "MISSING_OWNER",
+            "severity": "medium",
+            "message": "No delivery owner assigned"
+          }
         ],
         "override": null
       },
       "dor": {
-        "checkedCount": 5,
-        "totalCount": 13,
-        "completionPct": 38,
-        "items": []
+        "gate": "dor",
+        "passed": true,
+        "blockers": [
+          {
+            "id": "DoR-B1",
+            "label": "Strategy Human Sign-off",
+            "passed": true,
+            "detail": "strat-creator-disabled"
+          },
+          {
+            "id": "DoR-B2",
+            "label": "RICE Score Present",
+            "passed": true,
+            "detail": "rice-disabled"
+          }
+        ],
+        "warnings": []
       },
       "rice": null,
-      "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2013"
+      "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2013",
+      "dod": {
+        "gate": "dod",
+        "passed": false,
+        "checks": [
+          {
+            "id": "DoD-1",
+            "label": "Owner Assigned",
+            "passed": true,
+            "detail": "Iris Lee"
+          },
+          {
+            "id": "DoD-2",
+            "label": "Fix Version Set",
+            "passed": false,
+            "detail": null
+          },
+          {
+            "id": "DoD-3",
+            "label": "Blockers Resolved",
+            "passed": true,
+            "detail": null
+          }
+        ]
+      },
+      "planningStatus": "in-planning"
     },
     {
       "key": "RHAISTRAT-2016",
@@ -514,7 +978,10 @@
       "tier": 1,
       "pm": "Oscar Park",
       "deliveryOwner": "Karen Quinn",
-      "components": ["Platform", "Registry"],
+      "components": [
+        "Platform",
+        "Registry"
+      ],
       "completionPct": 50,
       "epicCount": 3,
       "issueCount": 20,
@@ -524,19 +991,72 @@
         "level": "red",
         "score": 2,
         "flags": [
-          { "category": "BLOCKED", "severity": "high", "message": "Blocked by dependency on auth service" },
-          { "category": "DOR_INCOMPLETE", "severity": "medium", "message": "DoR completion at 46% (below 80% threshold)" }
+          {
+            "category": "BLOCKED",
+            "severity": "high",
+            "message": "Blocked by dependency on auth service"
+          },
+          {
+            "category": "DOR_INCOMPLETE",
+            "severity": "medium",
+            "message": "DoR completion at 46% (below 80% threshold)"
+          }
         ],
         "override": null
       },
       "dor": {
-        "checkedCount": 6,
-        "totalCount": 13,
-        "completionPct": 46,
-        "items": []
+        "gate": "dor",
+        "passed": true,
+        "blockers": [
+          {
+            "id": "DoR-B1",
+            "label": "Strategy Human Sign-off",
+            "passed": true,
+            "detail": "strat-creator-disabled"
+          },
+          {
+            "id": "DoR-B2",
+            "label": "RICE Score Present",
+            "passed": true,
+            "detail": "rice-disabled"
+          }
+        ],
+        "warnings": []
       },
-      "rice": { "reach": 2500, "impact": 3, "confidence": 70, "effort": 8, "score": 656, "complete": true },
-      "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2016"
+      "rice": {
+        "reach": 2500,
+        "impact": 3,
+        "confidence": 70,
+        "effort": 8,
+        "score": 656,
+        "complete": true
+      },
+      "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2016",
+      "dod": {
+        "gate": "dod",
+        "passed": false,
+        "checks": [
+          {
+            "id": "DoD-1",
+            "label": "Owner Assigned",
+            "passed": true,
+            "detail": "Karen Quinn"
+          },
+          {
+            "id": "DoD-2",
+            "label": "Fix Version Set",
+            "passed": false,
+            "detail": null
+          },
+          {
+            "id": "DoD-3",
+            "label": "Blockers Resolved",
+            "passed": false,
+            "detail": null
+          }
+        ]
+      },
+      "planningStatus": "in-planning"
     }
   ],
   "enrichmentStatus": {

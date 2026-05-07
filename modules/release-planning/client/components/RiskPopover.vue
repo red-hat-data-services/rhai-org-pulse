@@ -9,7 +9,19 @@ const props = defineProps({
   flagCount: { type: Number, default: 0 },
   override: { type: Object, default: null },
   dor: { type: Object, default: null },
+  dod: { type: Object, default: null },
+  planningStatus: { type: String, default: '' },
   variant: { type: String, default: 'full' }
+})
+
+var PLANNING_LABELS = {
+  'not-ready': 'Not Ready',
+  'in-planning': 'In Planning',
+  'ready-for-execution': 'Ready'
+}
+
+var planningStatusLabel = computed(function() {
+  return PLANNING_LABELS[props.planningStatus] || props.planningStatus || ''
 })
 
 var hasContent = computed(function() {
@@ -124,12 +136,15 @@ function formatDate(iso) {
         </div>
       </div>
 
-      <!-- DoR summary (full variant) -->
+      <!-- Planning status footer (full variant) -->
       <div
-        v-if="variant === 'full' && dor"
+        v-if="variant === 'full' && planningStatus"
         class="px-3 py-2 border-t border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400"
       >
-        DoR: {{ dor.completionPct }}% ({{ dor.checkedCount }}/{{ dor.totalCount }} items)
+        Planning: {{ planningStatusLabel }}
+        <span v-if="dod && !dod.passed" class="ml-1">
+          ({{ dod.checks.filter(c => !c.passed).length }} DoD check{{ dod.checks.filter(c => !c.passed).length !== 1 ? 's' : '' }} remaining)
+        </span>
       </div>
     </div>
   </span>

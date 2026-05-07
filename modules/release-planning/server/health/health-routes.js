@@ -10,10 +10,9 @@
  */
 
 const { getConfig } = require('../config')
-const { CACHE_MAX_AGE_MS, MANUAL_DOR_IDS, DOR_ITEM_IDS, VALID_PHASES } = require('../constants')
+const { CACHE_MAX_AGE_MS, VALID_PHASES } = require('../constants')
 const { runHealthPipeline, loadMilestones, backfillFreezeDatesFromSmartsheet, deriveFreezeDates } = require('./health-pipeline')
 const smartsheetClient = require('../../../../shared/server/smartsheet')
-const { DOR_ITEMS } = require('./dor-checker')
 const { logAudit } = require('../audit-log')
 const { jiraRequest, fetchAllJqlResults } = require('../../../../shared/server/jira')
 
@@ -21,7 +20,6 @@ var DATA_PREFIX = 'release-planning'
 var VERSION_RE = /^[a-zA-Z0-9._-]{1,50}$/
 var FEATURE_KEY_RE = /^[A-Z]+-\d+$/
 var VALID_RISK_LEVELS = ['green', 'yellow', 'red']
-var MAX_NOTES_LENGTH = 2000
 var MAX_REASON_LENGTH = 500
 
 var DEMO_MODE = process.env.DEMO_MODE === 'true'
@@ -274,149 +272,6 @@ function healthRoutes(router, context) {
     }
 
     sendJsonWithETag(req, res, feature)
-  })
-
-  // ─── PUT /releases/:version/health/dor/:featureKey ───
-
-  router.put('/releases/:version/health/dor/:featureKey', requirePM, function(req, res) {
-    var version = req.params.version
-    var featureKey = req.params.featureKey
-    if (!isValidVersion(version)) {
-      return res.status(400).json({ error: 'Invalid version format' })
-    }
-    if (!FEATURE_KEY_RE.test(featureKey)) {
-      return res.status(400).json({ error: 'Invalid feature key format. Expected pattern like PROJ-123.' })
-    }
-
-    var items = req.body && req.body.items
-    var notes = req.body && req.body.notes
-
-    // Validate items
-    if (!items || typeof items !== 'object' || Array.isArray(items)) {
-      return res.status(400).json({ error: 'items must be an object mapping DoR item IDs to booleans' })
-    }
-
-    var itemKeys = Object.keys(items)
-    for (var i = 0; i < itemKeys.length; i++) {
-      var itemId = itemKeys[i]
-
-      // Validate item ID exists
-      if (DOR_ITEM_IDS.indexOf(itemId) === -1) {
-        return res.status(400).json({ error: 'Unknown DoR item ID: ' + itemId })
-      }
-
-      // Only manual items can be toggled
-      if (MANUAL_DOR_IDS.indexOf(itemId) === -1) {
-        return res.status(400).json({ error: 'DoR item ' + itemId + ' is automated and cannot be toggled manually' })
-      }
-
-      // Values must be booleans
-      if (typeof items[itemId] !== 'boolean') {
-        return res.status(400).json({ error: 'DoR item values must be booleans. Got ' + typeof items[itemId] + ' for ' + itemId })
-      }
-    }
-
-    // Validate notes
-    if (notes !== undefined && notes !== null) {
-      if (typeof notes !== 'string') {
-        return res.status(400).json({ error: 'notes must be a string' })
-      }
-      if (notes.length > MAX_NOTES_LENGTH) {
-        return res.status(400).json({ error: 'notes must be at most ' + MAX_NOTES_LENGTH + ' characters' })
-      }
-    }
-
-    // Read existing DoR state
-    var dorState = readFromStorage(DATA_PREFIX + '/dor-state-' + version + '.json') || {
-      version: version,
-      updatedAt: null,
-      features: {}
-    }
-
-    if (!dorState.features) dorState.features = {}
-    if (!dorState.features[featureKey]) {
-      dorState.features[featureKey] = { manualChecks: {}, notes: '' }
-    }
-    if (!dorState.features[featureKey].manualChecks) {
-      dorState.features[featureKey].manualChecks = {}
-    }
-
-    var now = new Date().toISOString()
-    var userEmail = req.userEmail || 'unknown'
-
-    // Apply updates
-    for (var j = 0; j < itemKeys.length; j++) {
-      var id = itemKeys[j]
-      dorState.features[featureKey].manualChecks[id] = {
-        checked: items[id],
-        updatedBy: userEmail,
-        updatedAt: now
-      }
-    }
-
-    if (notes !== undefined && notes !== null) {
-      dorState.features[featureKey].notes = notes
-    }
-
-    dorState.updatedAt = now
-
-    // Write updated state
-    writeToStorage(DATA_PREFIX + '/dor-state-' + version + '.json', dorState)
-
-    // Count manual checks for response
-    var manualChecks = dorState.features[featureKey].manualChecks
-    var checkedCount = 0
-    var totalCount = DOR_ITEMS.length
-    // Count automated checks from cache (if available)
-    var cached = readFromStorage(DATA_PREFIX + '/health-cache-' + version + '.json')
-    var cachedFeature = null
-    if (cached && cached.features) {
-      for (var ci = 0; ci < cached.features.length; ci++) {
-        if (cached.features[ci].key === featureKey) {
-          cachedFeature = cached.features[ci]
-          break
-        }
-      }
-    }
-
-    if (cachedFeature && cachedFeature.dor && cachedFeature.dor.items) {
-      // Use cached automated check results and updated manual checks
-      for (var k = 0; k < cachedFeature.dor.items.length; k++) {
-        var dorItem = cachedFeature.dor.items[k]
-        if (dorItem.type === 'automated') {
-          if (dorItem.checked) checkedCount++
-        } else {
-          // Manual -- use the updated state
-          var entry = manualChecks[dorItem.id]
-          if (entry && entry.checked) checkedCount++
-        }
-      }
-    } else {
-      // No cached data -- just count manual checks
-      var allManualIds = MANUAL_DOR_IDS
-      for (var m = 0; m < allManualIds.length; m++) {
-        var mc = manualChecks[allManualIds[m]]
-        if (mc && mc.checked) checkedCount++
-      }
-    }
-
-    var completionPct = totalCount > 0 ? Math.round((checkedCount / totalCount) * 100) : 0
-
-    // Audit log
-    logAudit(readFromStorage, writeToStorage, {
-      version: version,
-      action: 'update_dor',
-      user: userEmail,
-      summary: 'Updated DoR checklist for ' + featureKey,
-      details: { featureKey: featureKey, items: items }
-    })
-
-    res.json({
-      featureKey: featureKey,
-      dor: { checkedCount: checkedCount, totalCount: totalCount, completionPct: completionPct },
-      updatedAt: now,
-      updatedBy: userEmail
-    })
   })
 
   // ─── PUT /releases/:version/health/override/:featureKey ───

@@ -1,7 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useReleaseHealth } from '../composables/useReleaseHealth'
-import { useDorChecklist } from '../composables/useDorChecklist'
 import { useReleases } from '../composables/useReleasePlanning'
 import { useAuth, formatDate } from '@shared/client'
 import { passesPhaseFilter } from '../utils/phase-filter'
@@ -18,7 +17,6 @@ var {
   createSnapshot
 } = useReleaseHealth()
 
-var { toggleItem, updateNotes, cancelAll: cancelDorPending } = useDorChecklist()
 var { releases, loadReleases } = useReleases()
 var { isAdmin } = useAuth()
 
@@ -264,41 +262,6 @@ function handleRefresh() {
   }
 }
 
-// ─── DoR interactions ───
-
-function handleDorToggle(featureKey, itemId, checked) {
-  // Optimistic UI update
-  if (healthData.value && healthData.value.features) {
-    for (var i = 0; i < healthData.value.features.length; i++) {
-      if (healthData.value.features[i].key === featureKey && healthData.value.features[i].dor) {
-        var items = healthData.value.features[i].dor.items
-        for (var j = 0; j < items.length; j++) {
-          if (items[j].id === itemId) {
-            items[j].checked = checked
-            break
-          }
-        }
-        // Recount
-        var checkedCount = 0
-        for (var k = 0; k < items.length; k++) {
-          if (items[k].checked) checkedCount++
-        }
-        healthData.value.features[i].dor.checkedCount = checkedCount
-        healthData.value.features[i].dor.completionPct = items.length > 0
-          ? Math.round((checkedCount / items.length) * 100) : 0
-        break
-      }
-    }
-  }
-
-  // Debounced save
-  toggleItem(selectedVersion.value, featureKey, itemId, checked)
-}
-
-function handleNotesUpdate(featureKey, notes) {
-  updateNotes(selectedVersion.value, featureKey, notes)
-}
-
 function handleRemoveOverride(featureKey) {
   removeRiskOverrideApi(selectedVersion.value, featureKey).then(function() {
     loadHealth(selectedVersion.value)
@@ -327,7 +290,6 @@ onMounted(async function() {
 
 onUnmounted(function() {
   stopRefreshPolling()
-  cancelDorPending()
 })
 </script>
 
@@ -498,8 +460,6 @@ onUnmounted(function() {
         :addedKeys="addedFeatureKeys"
         :removedFeatures="removedFeatures"
         :showChanges="showChanges"
-        @toggleDorItem="handleDorToggle"
-        @updateNotes="handleNotesUpdate"
         @removeOverride="handleRemoveOverride"
       />
     </template>

@@ -59,7 +59,7 @@ const groupedFeatures = computed(() => {
             <th scope="col" class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Feature</th>
             <th scope="col" class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Status</th>
             <th v-if="hasHealth" scope="col" class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Risk</th>
-            <th v-if="hasHealth" scope="col" class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">DoR</th>
+            <th v-if="hasHealth" scope="col" class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Planning</th>
             <th scope="col" class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Priority</th>
             <th scope="col" class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Phase</th>
             <th scope="col" class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Title</th>
@@ -100,6 +100,8 @@ const groupedFeatures = computed(() => {
                   :flagCount="healthByKey[item.data.issueKey].risk ? healthByKey[item.data.issueKey].risk.flags.length : 0"
                   :override="healthByKey[item.data.issueKey].risk ? healthByKey[item.data.issueKey].risk.override : null"
                   :dor="healthByKey[item.data.issueKey].dor || null"
+                  :dod="healthByKey[item.data.issueKey].dod || null"
+                  :planningStatus="healthByKey[item.data.issueKey].planningStatus || ''"
                   variant="full"
                 >
                   <RiskBadge
@@ -113,10 +115,14 @@ const groupedFeatures = computed(() => {
               </td>
               <td v-if="hasHealth" class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-xs text-center">
                 <span
-                  v-if="healthByKey[item.data.issueKey] && healthByKey[item.data.issueKey].dor"
-                  class="font-medium"
-                  :class="healthByKey[item.data.issueKey].dor.completionPct >= 80 ? 'text-green-600 dark:text-green-400' : healthByKey[item.data.issueKey].dor.completionPct >= 50 ? 'text-yellow-600 dark:text-yellow-400' : 'text-red-600 dark:text-red-400'"
-                >{{ healthByKey[item.data.issueKey].dor.completionPct }}%</span>
+                  v-if="healthByKey[item.data.issueKey] && healthByKey[item.data.issueKey].planningStatus"
+                  class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold"
+                  :class="{
+                    'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400': healthByKey[item.data.issueKey].planningStatus === 'not-ready',
+                    'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-400': healthByKey[item.data.issueKey].planningStatus === 'in-planning',
+                    'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400': healthByKey[item.data.issueKey].planningStatus === 'ready-for-execution'
+                  }"
+                >{{ { 'not-ready': 'Not Ready', 'in-planning': 'In Planning', 'ready-for-execution': 'Ready' }[healthByKey[item.data.issueKey].planningStatus] || '-' }}</span>
                 <span v-else class="text-gray-400 dark:text-gray-600">-</span>
               </td>
               <td class="px-3 py-2 border border-gray-300 dark:border-gray-600">

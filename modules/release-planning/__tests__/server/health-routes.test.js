@@ -12,7 +12,7 @@ vi.mock('../../server/health/health-pipeline', () => ({
     version: '3.5',
     cachedAt: new Date().toISOString(),
     features: [],
-    summary: { totalFeatures: 0, byRisk: { green: 0, yellow: 0, red: 0 }, dorCompletionRate: 0, averageRiceScore: null },
+    summary: { totalFeatures: 0, byRisk: { green: 0, yellow: 0, red: 0 }, byPlanningStatus: { 'not-ready': 0, 'in-planning': 0, 'ready-for-execution': 0 }, averageRiceScore: null },
     milestones: null,
     enrichmentStatus: { jiraQueriesRun: 0, featuresEnriched: 0, warnings: [] }
   }),
@@ -132,10 +132,10 @@ function freshCache(version, overrides) {
     version: version,
     cachedAt: new Date().toISOString(),
     milestones: null,
-    summary: { totalFeatures: 2, byRisk: { green: 1, yellow: 1, red: 0 }, dorCompletionRate: 50, averageRiceScore: null },
+    summary: { totalFeatures: 2, byRisk: { green: 1, yellow: 1, red: 0 }, byPlanningStatus: { 'not-ready': 0, 'in-planning': 1, 'ready-for-execution': 1 }, averageRiceScore: null },
     features: [
-      { key: 'T-1', summary: 'Feature 1', risk: { level: 'green', flags: [] }, dor: { checkedCount: 10, totalCount: 13, completionPct: 77, items: [] } },
-      { key: 'T-2', summary: 'Feature 2', risk: { level: 'yellow', flags: [{ category: 'UNESTIMATED' }] }, dor: { checkedCount: 5, totalCount: 13, completionPct: 38, items: [] } }
+      { key: 'T-1', summary: 'Feature 1', risk: { level: 'green', flags: [] }, dor: { gate: 'dor', passed: true, blockers: [], warnings: [] }, dod: { gate: 'dod', passed: true, checks: [] }, planningStatus: 'ready-for-execution' },
+      { key: 'T-2', summary: 'Feature 2', risk: { level: 'yellow', flags: [{ category: 'BLOCKED' }] }, dor: { gate: 'dor', passed: true, blockers: [], warnings: [] }, dod: { gate: 'dod', passed: false, checks: [] }, planningStatus: 'in-planning' }
     ],
     enrichmentStatus: { jiraQueriesRun: 1, featuresEnriched: 2, warnings: [] }
   }, overrides)
@@ -171,7 +171,6 @@ describe('health routes', function() {
         'GET /releases/:version/health',
         'GET /releases/:version/health/summary',
         'GET /releases/:version/health/feature/:key',
-        'PUT /releases/:version/health/dor/:featureKey',
         'PUT /releases/:version/health/override/:featureKey',
         'DELETE /releases/:version/health/override/:featureKey',
         'GET /releases/:version/health/snapshot/:phase',
@@ -378,91 +377,6 @@ describe('health routes', function() {
       expect(res._status).toBe(200)
       expect(res._json.key).toBe('T-1')
       expect(res._json.summary).toBe('Feature 1')
-    })
-  })
-
-  // ─── PUT /releases/:version/health/dor/:featureKey ───
-
-  describe('PUT /releases/:version/health/dor/:featureKey', function() {
-    it('returns 400 for invalid version', function() {
-      var res = callRoute(router._routes, 'PUT', '/releases/:version/health/dor/:featureKey',
-        makeReq({ params: { version: '!bad', featureKey: 'T-1' }, body: { items: {} } }))
-      expect(res._status).toBe(400)
-    })
-
-    it('returns 400 for invalid feature key', function() {
-      var res = callRoute(router._routes, 'PUT', '/releases/:version/health/dor/:featureKey',
-        makeReq({ params: { version: '3.5', featureKey: 'bad' }, body: { items: {} } }))
-      expect(res._status).toBe(400)
-    })
-
-    it('returns 400 when items is missing', function() {
-      var res = callRoute(router._routes, 'PUT', '/releases/:version/health/dor/:featureKey',
-        makeReq({ params: { version: '3.5', featureKey: 'T-1' }, body: {} }))
-      expect(res._status).toBe(400)
-      expect(res._json.error).toContain('items must be an object')
-    })
-
-    it('returns 400 when items is an array', function() {
-      var res = callRoute(router._routes, 'PUT', '/releases/:version/health/dor/:featureKey',
-        makeReq({ params: { version: '3.5', featureKey: 'T-1' }, body: { items: [] } }))
-      expect(res._status).toBe(400)
-    })
-
-    it('returns 400 for unknown DoR item ID', function() {
-      var res = callRoute(router._routes, 'PUT', '/releases/:version/health/dor/:featureKey',
-        makeReq({ params: { version: '3.5', featureKey: 'T-1' }, body: { items: { 'F-999': true } } }))
-      expect(res._status).toBe(400)
-      expect(res._json.error).toContain('Unknown DoR item ID')
-    })
-
-    it('returns 400 for automated DoR item', function() {
-      var res = callRoute(router._routes, 'PUT', '/releases/:version/health/dor/:featureKey',
-        makeReq({ params: { version: '3.5', featureKey: 'T-1' }, body: { items: { 'F-1': true } } }))
-      expect(res._status).toBe(400)
-      expect(res._json.error).toContain('automated')
-    })
-
-    it('returns 400 for non-boolean item value', function() {
-      var res = callRoute(router._routes, 'PUT', '/releases/:version/health/dor/:featureKey',
-        makeReq({ params: { version: '3.5', featureKey: 'T-1' }, body: { items: { 'F-3': 'yes' } } }))
-      expect(res._status).toBe(400)
-      expect(res._json.error).toContain('booleans')
-    })
-
-    it('returns 400 for notes exceeding max length', function() {
-      var longNotes = 'x'.repeat(2001)
-      var res = callRoute(router._routes, 'PUT', '/releases/:version/health/dor/:featureKey',
-        makeReq({ params: { version: '3.5', featureKey: 'T-1' }, body: { items: { 'F-3': true }, notes: longNotes } }))
-      expect(res._status).toBe(400)
-      expect(res._json.error).toContain('2000')
-    })
-
-    it('writes DoR state and returns completion info on success', function() {
-      var res = callRoute(router._routes, 'PUT', '/releases/:version/health/dor/:featureKey',
-        makeReq({ params: { version: '3.5', featureKey: 'T-1' }, body: { items: { 'F-3': true, 'F-9': false }, notes: 'Test note' } }))
-      expect(res._status).toBe(200)
-      expect(res._json.featureKey).toBe('T-1')
-      expect(res._json.dor).toBeDefined()
-      expect(res._json.dor.totalCount).toBe(13)
-      expect(res._json.updatedBy).toBe('admin@test.com')
-
-      var dorState = storage._store['release-planning/dor-state-3.5.json']
-      expect(dorState).toBeDefined()
-      expect(dorState.features['T-1'].manualChecks['F-3'].checked).toBe(true)
-      expect(dorState.features['T-1'].manualChecks['F-9'].checked).toBe(false)
-      expect(dorState.features['T-1'].notes).toBe('Test note')
-    })
-
-    it('writes audit log entry', function() {
-      callRoute(router._routes, 'PUT', '/releases/:version/health/dor/:featureKey',
-        makeReq({ params: { version: '3.5', featureKey: 'T-1' }, body: { items: { 'F-3': true } } }))
-      var auditLog = storage._store['release-planning/audit-log.json']
-      expect(auditLog).toBeDefined()
-      expect(auditLog.entries).toBeDefined()
-      var entry = auditLog.entries[auditLog.entries.length - 1]
-      expect(entry.action).toBe('update_dor')
-      expect(entry.summary).toContain('T-1')
     })
   })
 

@@ -18,7 +18,9 @@ function makeHealthFeature(key, level, flags, override) {
       score: flags ? flags.length : 0,
       flags: flags || []
     },
-    dor: { completionPct: 50 }
+    dor: { gate: 'dor', passed: true, blockers: [], warnings: [] },
+    dod: { gate: 'dod', passed: level === 'green', checks: [] },
+    planningStatus: level === 'green' ? 'ready-for-execution' : 'in-planning'
   }
   if (override) {
     result.risk.override = override
@@ -134,7 +136,7 @@ describe('useHealthAggregation', function() {
       var hd = ref(makeHealthData([
         makeHealthFeature('FEAT-1', 'green', []),
         makeHealthFeature('FEAT-2', 'yellow', [{ category: 'EA1_MISS' }]),
-        makeHealthFeature('FEAT-3', 'red', [{ category: 'BLOCKED' }, { category: 'UNESTIMATED' }])
+        makeHealthFeature('FEAT-3', 'red', [{ category: 'BLOCKED' }, { category: 'MILESTONE_MISS' }])
       ]))
       var features = ref([
         makeFeature('FEAT-1', null, 'Rock A'),

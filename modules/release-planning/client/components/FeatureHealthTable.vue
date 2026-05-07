@@ -11,7 +11,7 @@ const props = defineProps({
   showChanges: { type: Boolean, default: true }
 })
 
-const emit = defineEmits(['toggleDorItem', 'updateNotes', 'setOverride', 'removeOverride'])
+const emit = defineEmits(['setOverride', 'removeOverride'])
 
 var PAGE_SIZE = 50
 var expandedRows = ref({})
@@ -59,8 +59,9 @@ var sortedFeatures = computed(function() {
       va = a.status || ''
       vb = b.status || ''
     } else if (key === 'health') {
-      va = RISK_ORDER[getRiskLevel(a)] * 1000 + (1000 - (a.dor ? a.dor.completionPct : 0))
-      vb = RISK_ORDER[getRiskLevel(b)] * 1000 + (1000 - (b.dor ? b.dor.completionPct : 0))
+      var PLAN_ORDER = { 'not-ready': 0, 'in-planning': 1, 'ready-for-execution': 2 }
+      va = RISK_ORDER[getRiskLevel(a)] * 1000 + (PLAN_ORDER[a.planningStatus] || 1)
+      vb = RISK_ORDER[getRiskLevel(b)] * 1000 + (PLAN_ORDER[b.planningStatus] || 1)
     } else if (key === 'priority') {
       va = a.priorityScore != null ? a.priorityScore : -1
       vb = b.priorityScore != null ? b.priorityScore : -1
@@ -127,14 +128,6 @@ function toggleRow(featureKey) {
   expandedRows.value = updated
 }
 
-function handleDorToggle(featureKey, itemId, checked) {
-  emit('toggleDorItem', featureKey, itemId, checked)
-}
-
-function handleNotesUpdate(featureKey, notes) {
-  emit('updateNotes', featureKey, notes)
-}
-
 function handleRemoveOverride(featureKey) {
   emit('removeOverride', featureKey)
 }
@@ -180,8 +173,6 @@ function sortIndicator(key) {
               :isAdded="addedKeys.has(feature.key)"
               :showChanges="showChanges"
               @toggle="toggleRow"
-              @toggleDorItem="handleDorToggle"
-              @updateNotes="handleNotesUpdate"
               @removeOverride="handleRemoveOverride"
             />
           </template>

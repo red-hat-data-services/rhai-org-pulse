@@ -55,39 +55,33 @@ function triggerDownload(blob, filename) {
 function computePhaseSummary(features) {
   var totalFeatures = features.length
   var byRisk = { green: 0, yellow: 0, red: 0 }
-  var dorSum = 0
   var riceSum = 0
   var riceCount = 0
   var blockedCount = 0
-  var unestimatedCount = 0
+  var byPlanningStatus = { 'not-ready': 0, 'in-planning': 0, 'ready-for-execution': 0 }
 
   for (var i = 0; i < features.length; i++) {
     var f = features[i]
     var risk = riskLabel(f)
     if (byRisk[risk] !== undefined) byRisk[risk]++
-    else byRisk[risk]++   // unexpected value -- still count
+    else byRisk[risk]++
 
-    dorSum += (f.dor && f.dor.completionPct) ? f.dor.completionPct : 0
     if (f.rice && f.rice.score != null) {
       riceSum += f.rice.score
       riceCount++
     }
     if (f.blockerCount > 0) blockedCount++
 
-    // Feature is unestimated if it has the UNESTIMATED risk flag
-    var flags = (f.risk && f.risk.flags) ? f.risk.flags : []
-    for (var j = 0; j < flags.length; j++) {
-      if (flags[j].category === 'UNESTIMATED') { unestimatedCount++; break }
-    }
+    var ps = f.planningStatus || 'not-ready'
+    if (byPlanningStatus[ps] !== undefined) byPlanningStatus[ps]++
   }
 
   return {
     totalFeatures: totalFeatures,
     byRisk: byRisk,
-    dorCompletionRate: totalFeatures > 0 ? Math.round(dorSum / totalFeatures) : 0,
+    byPlanningStatus: byPlanningStatus,
     averageRiceScore: riceCount > 0 ? Math.round(riceSum / riceCount) : 0,
-    blockedCount: blockedCount,
-    unestimatedCount: unestimatedCount
+    blockedCount: blockedCount
   }
 }
 
@@ -117,10 +111,11 @@ export function exportHealthMarkdown({ version, phase, features, milestones, cac
   lines.push('| Red Risk | ' + phaseSummary.byRisk.red + ' |')
   lines.push('| Yellow Risk | ' + phaseSummary.byRisk.yellow + ' |')
   lines.push('| Green Risk | ' + phaseSummary.byRisk.green + ' |')
-  lines.push('| Avg DoR Completion | ' + phaseSummary.dorCompletionRate + '% |')
+  lines.push('| Ready for Execution | ' + phaseSummary.byPlanningStatus['ready-for-execution'] + ' |')
+  lines.push('| In Planning | ' + phaseSummary.byPlanningStatus['in-planning'] + ' |')
+  lines.push('| Not Ready | ' + phaseSummary.byPlanningStatus['not-ready'] + ' |')
   lines.push('| Avg RICE Score | ' + phaseSummary.averageRiceScore + ' |')
   lines.push('| Blocked Features | ' + phaseSummary.blockedCount + ' |')
-  lines.push('| Unestimated Features | ' + phaseSummary.unestimatedCount + ' |')
   lines.push('')
 
   // Milestones (conditional)
@@ -144,8 +139,8 @@ export function exportHealthMarkdown({ version, phase, features, milestones, cac
   // Features table
   lines.push('## Features')
   lines.push('')
-  lines.push('| Feature | Summary | Status | Risk | DoR % | Priority | RICE | Component | PM | Owner | Fix Version |')
-  lines.push('|---------|---------|--------|------|-------|----------|------|-----------|-----|-------|-------------|')
+  lines.push('| Feature | Summary | Status | Risk | Planning | Priority | RICE | Component | PM | Owner | Fix Version |')
+  lines.push('|---------|---------|--------|------|----------|----------|------|-----------|-----|-------|-------------|')
   for (var i = 0; i < features.length; i++) {
     var f = features[i]
     lines.push('| ' + [
@@ -153,7 +148,7 @@ export function exportHealthMarkdown({ version, phase, features, milestones, cac
       escapeCell(f.summary || '-'),
       escapeCell(f.status || '-'),
       escapeCell(riskLabel(f).charAt(0).toUpperCase() + riskLabel(f).slice(1)),
-      (f.dor ? f.dor.completionPct : 0) + '%',
+      escapeCell({ 'not-ready': 'Not Ready', 'in-planning': 'In Planning', 'ready-for-execution': 'Ready' }[f.planningStatus] || '-'),
       f.priorityScore != null ? f.priorityScore : '-',
       f.rice != null ? f.rice.score : '-',
       escapeCell(normalizeComponents(f.components) || '-'),
@@ -203,7 +198,7 @@ export function exportHealthCsv({ version, phase, features }) {
 
   // Header row
   rows.push([
-    'Feature', 'Summary', 'Status', 'Risk', 'DoR %', 'Priority Score',
+    'Feature', 'Summary', 'Status', 'Risk', 'Planning Status', 'Priority Score',
     'RICE Score', 'Big Rock', 'Component', 'PM', 'Delivery Owner',
     'Fix Version', 'Target Release', 'Completion %', 'Blockers', 'Risk Flags'
   ])
@@ -213,12 +208,12 @@ export function exportHealthCsv({ version, phase, features }) {
     'SUMMARY: ' + version + ' ' + phase,
     'Total: ' + phaseSummary.totalFeatures + ' features',
     'Red: ' + phaseSummary.byRisk.red + ' / Yellow: ' + phaseSummary.byRisk.yellow + ' / Green: ' + phaseSummary.byRisk.green,
-    'Avg DoR: ' + phaseSummary.dorCompletionRate + '%',
+    'Ready: ' + phaseSummary.byPlanningStatus['ready-for-execution'] + ' / Planning: ' + phaseSummary.byPlanningStatus['in-planning'] + ' / Not Ready: ' + phaseSummary.byPlanningStatus['not-ready'],
     '',
     'Avg RICE: ' + phaseSummary.averageRiceScore,
     '',
     'Blocked: ' + phaseSummary.blockedCount,
-    'Unestimated: ' + phaseSummary.unestimatedCount,
+    '',
     '',
     '',
     '',
@@ -236,7 +231,7 @@ export function exportHealthCsv({ version, phase, features }) {
       f.summary || '',
       f.status || '',
       riskLabel(f),
-      f.dor ? f.dor.completionPct : 0,
+      f.planningStatus || '',
       f.priorityScore != null ? f.priorityScore : '',
       f.rice != null ? f.rice.score : '',
       f.bigRock || '',
