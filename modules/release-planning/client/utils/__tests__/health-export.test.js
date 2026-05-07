@@ -250,8 +250,7 @@ describe('exportHealthCsv', function() {
     exportHealthCsv({
       version: '3.5',
       phase: 'GA',
-      features: features,
-      cachedAt: '2026-04-25T14:30:00.000Z'
+      features: features
     })
 
     expect(capturedContent).toBeTruthy()
@@ -282,8 +281,7 @@ describe('exportHealthCsv', function() {
     exportHealthCsv({
       version: '3.5',
       phase: 'GA',
-      features: features,
-      cachedAt: '2026-04-25T14:30:00.000Z'
+      features: features
     })
 
     var lines = capturedContent.trim().split('\n')
@@ -298,8 +296,7 @@ describe('exportHealthCsv', function() {
     exportHealthCsv({
       version: '3.5',
       phase: 'EA1',
-      features: [makeFeature()],
-      cachedAt: '2026-04-25T14:30:00.000Z'
+      features: [makeFeature()]
     })
 
     expect(capturedFilename).toMatch(/^release-health-3\.5-ea1-\d{4}-\d{2}-\d{2}\.csv$/)
@@ -309,8 +306,7 @@ describe('exportHealthCsv', function() {
     exportHealthCsv({
       version: '3.5',
       phase: 'GA',
-      features: [],
-      cachedAt: '2026-04-25T14:30:00.000Z'
+      features: []
     })
 
     var lines = capturedContent.trim().split('\n')

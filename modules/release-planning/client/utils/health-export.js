@@ -197,8 +197,7 @@ export function exportHealthMarkdown({ version, phase, features, milestones, cac
   triggerDownload(blob, buildFilename(version, phase, 'md'))
 }
 
-// eslint-disable-next-line no-unused-vars
-export function exportHealthCsv({ version, phase, features, cachedAt }) {
+export function exportHealthCsv({ version, phase, features }) {
   var phaseSummary = computePhaseSummary(features)
   var rows = []
 
