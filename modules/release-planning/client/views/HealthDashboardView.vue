@@ -9,6 +9,7 @@ import MilestoneTimeline from '../components/MilestoneTimeline.vue'
 import HealthFilterBar from '../components/HealthFilterBar.vue'
 import FeatureHealthTable from '../components/FeatureHealthTable.vue'
 import RiceFieldConfig from '../components/RiceFieldConfig.vue'
+import HealthSummaryCards from '../components/HealthSummaryCards.vue'
 
 var {
   healthData, healthLoading, healthError, healthRefreshing, healthCacheStale,
@@ -32,6 +33,8 @@ var showRiceConfig = ref(false)
 var bigRockFilter = ref('')
 var selectedComponents = ref([])
 var searchQuery = ref('')
+var planningStatusFilter = ref('')
+var riskLevelFilter = ref('')
 
 // Refresh polling
 var refreshPollTimer = null
@@ -71,6 +74,14 @@ var jiraBaseUrl = computed(function() {
 
 var enrichmentStatus = computed(function() {
   return healthData.value ? healthData.value.enrichmentStatus : null
+})
+
+var summaryCardCounts = computed(function() {
+  return healthData.value && healthData.value.summary ? healthData.value.summary.cardCounts : null
+})
+
+var planningDeadline = computed(function() {
+  return healthData.value && healthData.value.summary ? healthData.value.summary.planningDeadline : null
 })
 
 // ─── Phase tabs ───
@@ -210,18 +221,29 @@ var filteredFeatures = computed(function() {
       if (searchFields.indexOf(q) === -1) return false
     }
 
+    // Planning status filter
+    if (planningStatusFilter.value && f.planningStatus !== planningStatusFilter.value) return false
+
+    // Risk level filter
+    if (riskLevelFilter.value) {
+      var effectiveLevel = f.risk && f.risk.override ? (f.risk.override.riskOverride || f.risk.level) : (f.risk ? f.risk.level : 'green')
+      if (effectiveLevel !== riskLevelFilter.value) return false
+    }
+
     return true
   })
 })
 
 var hasActiveFilters = computed(function() {
-  return !!(bigRockFilter.value || selectedComponents.value.length > 0 || searchQuery.value)
+  return !!(bigRockFilter.value || selectedComponents.value.length > 0 || searchQuery.value || planningStatusFilter.value || riskLevelFilter.value)
 })
 
 function clearFilters() {
   bigRockFilter.value = ''
   selectedComponents.value = []
   searchQuery.value = ''
+  planningStatusFilter.value = ''
+  riskLevelFilter.value = ''
 }
 
 // ─── Data refresh ───
@@ -376,6 +398,9 @@ onUnmounted(function() {
       <!-- Milestone Timeline -->
       <MilestoneTimeline :milestones="milestones" :planningFreezes="planningFreezes" />
 
+      <!-- Summary Cards -->
+      <HealthSummaryCards :cardCounts="summaryCardCounts" :planningDeadline="planningDeadline" />
+
       <!-- Phase Tabs -->
       <div>
         <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
@@ -446,6 +471,8 @@ onUnmounted(function() {
         v-model:bigRockFilter="bigRockFilter"
         v-model:selectedComponents="selectedComponents"
         v-model:searchQuery="searchQuery"
+        v-model:planningStatusFilter="planningStatusFilter"
+        v-model:riskLevelFilter="riskLevelFilter"
         :bigRocks="bigRockOptions"
         :components="componentOptions"
         :hasActiveFilters="hasActiveFilters"

@@ -1,38 +1,30 @@
 <script setup>
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 
 const props = defineProps({
   cardCounts: { type: Object, default: null },
   planningDeadline: { type: Object, default: null }
 })
 
-var cards = computed(function() {
-  var c = props.cardCounts || { total: 0, riceComplete: 0, ownerAssigned: 0, dodComplete: 0, readyForExecution: 0 }
+var showDetails = ref(false)
+
+var primaryCards = computed(function() {
+  var c = props.cardCounts || { total: 0, dorPassed: 0, dodPassed: 0, stratSignedOff: 0, riceComplete: 0 }
   return [
-    {
-      label: 'RICE Score Present',
-      count: c.riceComplete,
-      total: c.total,
-      color: 'indigo'
-    },
-    {
-      label: 'Owner Assigned',
-      count: c.ownerAssigned,
-      total: c.total,
-      color: 'blue'
-    },
-    {
-      label: 'DoD Complete',
-      count: c.dodComplete,
-      total: c.total,
-      color: 'amber'
-    },
-    {
-      label: 'Ready for Execution',
-      count: c.readyForExecution,
-      total: c.total,
-      color: 'green'
-    }
+    { label: 'DoR Passed', count: c.dorPassed, total: c.total, color: 'indigo' },
+    { label: 'DoD Passed', count: c.dodPassed, total: c.total, color: 'amber' },
+    { label: 'Strategy Signed Off', count: c.stratSignedOff, total: c.total, color: 'blue' },
+    { label: 'RICE Complete', count: c.riceComplete, total: c.total, color: 'green' }
+  ]
+})
+
+var detailCards = computed(function() {
+  var c = props.cardCounts || { total: 0, ownerAssigned: 0, versionSet: 0, unblocked: 0, escalatedBlockers: 0 }
+  return [
+    { label: 'Owner Assigned', count: c.ownerAssigned, total: c.total, color: 'blue' },
+    { label: 'Version Set', count: c.versionSet, total: c.total, color: 'indigo' },
+    { label: 'Unblocked', count: c.unblocked, total: c.total, color: 'green' },
+    { label: 'Escalated Blockers', count: c.escalatedBlockers, total: c.total, color: 'red', invert: true }
   ]
 })
 
@@ -73,6 +65,14 @@ var colorClasses = {
     subtext: 'text-green-600/70 dark:text-green-400/70',
     barBg: 'bg-green-200 dark:bg-green-500/20',
     bar: 'bg-green-500 dark:bg-green-400'
+  },
+  red: {
+    bg: 'bg-red-50 dark:bg-red-500/10',
+    border: 'border-red-200 dark:border-red-500/30',
+    text: 'text-red-700 dark:text-red-400',
+    subtext: 'text-red-600/70 dark:text-red-400/70',
+    barBg: 'bg-red-200 dark:bg-red-500/20',
+    bar: 'bg-red-500 dark:bg-red-400'
   }
 }
 
@@ -87,10 +87,10 @@ var deadlineColorClass = computed(function() {
 
 <template>
   <div v-if="cardCounts" class="space-y-3">
-    <!-- Readiness cards -->
+    <!-- Primary cards (Row 1) -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <div
-        v-for="card in cards"
+        v-for="card in primaryCards"
         :key="card.label"
         class="p-4 rounded-lg border"
         :class="[colorClasses[card.color].bg, colorClasses[card.color].border]"
@@ -102,6 +102,45 @@ var deadlineColorClass = computed(function() {
         </div>
         <div class="text-xs mt-0.5" :class="colorClasses[card.color].subtext">{{ pct(card.count, card.total) }}%</div>
         <div class="mt-2 w-full rounded-full h-1.5" :class="colorClasses[card.color].barBg">
+          <div
+            class="h-1.5 rounded-full transition-all"
+            :class="colorClasses[card.color].bar"
+            :style="{ width: Math.min(pct(card.count, card.total), 100) + '%' }"
+          ></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detail toggle -->
+    <button
+      @click="showDetails = !showDetails"
+      class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1"
+    >
+      <svg
+        class="w-3.5 h-3.5 transition-transform"
+        :class="showDetails ? 'rotate-90' : ''"
+        fill="none" stroke="currentColor" viewBox="0 0 24 24"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+      </svg>
+      {{ showDetails ? 'Hide' : 'Show' }} details
+    </button>
+
+    <!-- Detail cards (Row 2) -->
+    <div v-if="showDetails" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div
+        v-for="card in detailCards"
+        :key="card.label"
+        class="p-4 rounded-lg border"
+        :class="[colorClasses[card.color].bg, colorClasses[card.color].border]"
+      >
+        <div class="text-sm font-semibold" :class="colorClasses[card.color].text">{{ card.label }}</div>
+        <div class="mt-2">
+          <span class="text-2xl font-bold" :class="colorClasses[card.color].text">{{ card.count }}</span>
+          <span v-if="!card.invert" class="text-sm ml-0.5" :class="colorClasses[card.color].subtext">/ {{ card.total }}</span>
+        </div>
+        <div v-if="!card.invert" class="text-xs mt-0.5" :class="colorClasses[card.color].subtext">{{ pct(card.count, card.total) }}%</div>
+        <div v-if="!card.invert" class="mt-2 w-full rounded-full h-1.5" :class="colorClasses[card.color].barBg">
           <div
             class="h-1.5 rounded-full transition-all"
             :class="colorClasses[card.color].bar"

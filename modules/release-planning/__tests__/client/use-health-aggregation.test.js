@@ -147,8 +147,12 @@ describe('useHealthAggregation', function() {
       var result = useHealthAggregation(hd, features, ref([]), ref([]))
       expect(result.rockHealth.value['Rock A'].worstLevel).toBe('yellow')
       expect(result.rockHealth.value['Rock A'].featureCount).toBe(2)
+      expect(result.rockHealth.value['Rock A'].dorPassedCount).toBe(2)
+      expect(result.rockHealth.value['Rock A'].dodPassedCount).toBe(1)
       expect(result.rockHealth.value['Rock B'].worstLevel).toBe('red')
       expect(result.rockHealth.value['Rock B'].featureCount).toBe(1)
+      expect(result.rockHealth.value['Rock B'].dorPassedCount).toBe(1)
+      expect(result.rockHealth.value['Rock B'].dodPassedCount).toBe(0)
     })
 
     it('respects risk overrides for rock health', function() {

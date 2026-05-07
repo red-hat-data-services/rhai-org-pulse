@@ -5,6 +5,8 @@ var props = defineProps({
   bigRockFilter: { type: String, default: '' },
   selectedComponents: { type: Array, default: () => [] },
   searchQuery: { type: String, default: '' },
+  planningStatusFilter: { type: String, default: '' },
+  riskLevelFilter: { type: String, default: '' },
   bigRocks: { type: Array, default: () => [] },
   components: { type: Array, default: () => [] },
   hasActiveFilters: { type: Boolean, default: false }
@@ -14,6 +16,8 @@ var emit = defineEmits([
   'update:bigRockFilter',
   'update:selectedComponents',
   'update:searchQuery',
+  'update:planningStatusFilter',
+  'update:riskLevelFilter',
   'clearFilters'
 ])
 
@@ -79,6 +83,30 @@ onUnmounted(function() {
     >
       <option value="">All Big Rocks</option>
       <option v-for="rock in bigRocks" :key="rock" :value="rock">{{ rock }}</option>
+    </select>
+
+    <select
+      :value="planningStatusFilter"
+      @change="$emit('update:planningStatusFilter', $event.target.value)"
+      :class="selectClass"
+      aria-label="Filter by planning status"
+    >
+      <option value="">All Statuses</option>
+      <option value="not-ready">Not Ready</option>
+      <option value="in-planning">In Planning</option>
+      <option value="ready-for-execution">Ready for Execution</option>
+    </select>
+
+    <select
+      :value="riskLevelFilter"
+      @change="$emit('update:riskLevelFilter', $event.target.value)"
+      :class="selectClass"
+      aria-label="Filter by risk level"
+    >
+      <option value="">All Risk Levels</option>
+      <option value="green">Green</option>
+      <option value="yellow">Yellow</option>
+      <option value="red">Red</option>
     </select>
 
     <!-- Component multi-select with chips -->

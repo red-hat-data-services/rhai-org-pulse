@@ -37,10 +37,10 @@
       "dodPassed": 5,
       "stratSignedOff": 7,
       "riceComplete": 12,
-      "ownerAssigned": 0,
-      "versionSet": 0,
-      "unblocked": 0,
-      "escalatedBlockers": 0
+      "ownerAssigned": 11,
+      "versionSet": 10,
+      "unblocked": 10,
+      "escalatedBlockers": 1
     },
     "stratCreatorCoverage": {
       "signedOff": 7,
@@ -91,7 +91,26 @@
             "detail": "rice-disabled"
           }
         ],
-        "warnings": []
+        "warnings": [
+          {
+            "id": "DoR-W1",
+            "label": "Owner Assigned",
+            "passed": true,
+            "detail": "David Kim"
+          },
+          {
+            "id": "DoR-W2",
+            "label": "Version Set",
+            "passed": true,
+            "detail": "committed"
+          },
+          {
+            "id": "DoR-W3",
+            "label": "Blockers Resolved",
+            "passed": true,
+            "detail": null
+          }
+        ]
       },
       "rice": {
         "reach": 2000,
@@ -128,7 +147,7 @@
       },
       "planningStatus": "ready-for-execution",
       "issueType": "Feature",
-      "versionStatus": "none"
+      "versionStatus": "committed"
     },
     {
       "key": "RHOAIENG-1002",
@@ -171,7 +190,26 @@
             "detail": "rice-disabled"
           }
         ],
-        "warnings": []
+        "warnings": [
+          {
+            "id": "DoR-W1",
+            "label": "Owner Assigned",
+            "passed": true,
+            "detail": "James Park"
+          },
+          {
+            "id": "DoR-W2",
+            "label": "Version Set",
+            "passed": true,
+            "detail": "targeted"
+          },
+          {
+            "id": "DoR-W3",
+            "label": "Blockers Resolved",
+            "passed": true,
+            "detail": null
+          }
+        ]
       },
       "rice": {
         "reach": 1500,
@@ -208,7 +246,7 @@
       },
       "planningStatus": "ready-for-execution",
       "issueType": "Feature",
-      "versionStatus": "none"
+      "versionStatus": "targeted"
     },
     {
       "key": "RHOAIENG-1003",
@@ -262,7 +300,26 @@
             "detail": "rice-disabled"
           }
         ],
-        "warnings": []
+        "warnings": [
+          {
+            "id": "DoR-W1",
+            "label": "Owner Assigned",
+            "passed": true,
+            "detail": "Priya Sharma"
+          },
+          {
+            "id": "DoR-W2",
+            "label": "Version Set",
+            "passed": true,
+            "detail": "committed"
+          },
+          {
+            "id": "DoR-W3",
+            "label": "Blockers Resolved",
+            "passed": true,
+            "detail": null
+          }
+        ]
       },
       "rice": null,
       "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1003",
@@ -292,7 +349,7 @@
       },
       "planningStatus": "ready-for-execution",
       "issueType": "Feature",
-      "versionStatus": "none"
+      "versionStatus": "committed"
     },
     {
       "key": "RHOAIENG-1004",
@@ -341,7 +398,26 @@
             "detail": "rice-disabled"
           }
         ],
-        "warnings": []
+        "warnings": [
+          {
+            "id": "DoR-W1",
+            "label": "Owner Assigned",
+            "passed": true,
+            "detail": "Rachel Green"
+          },
+          {
+            "id": "DoR-W2",
+            "label": "Version Set",
+            "passed": true,
+            "detail": "targeted"
+          },
+          {
+            "id": "DoR-W3",
+            "label": "Blockers Resolved",
+            "passed": false,
+            "detail": "RHOAIENG-1001"
+          }
+        ]
       },
       "rice": {
         "reach": 800,
@@ -378,7 +454,7 @@
       },
       "planningStatus": "ready-for-execution",
       "issueType": "Feature",
-      "versionStatus": "none"
+      "versionStatus": "targeted"
     },
     {
       "key": "RHOAIENG-1005",
@@ -437,7 +513,26 @@
             "detail": "rice-disabled"
           }
         ],
-        "warnings": []
+        "warnings": [
+          {
+            "id": "DoR-W1",
+            "label": "Owner Assigned",
+            "passed": true,
+            "detail": "Linda Zhang"
+          },
+          {
+            "id": "DoR-W2",
+            "label": "Version Set",
+            "passed": true,
+            "detail": "committed"
+          },
+          {
+            "id": "DoR-W3",
+            "label": "Blockers Resolved",
+            "passed": true,
+            "detail": null
+          }
+        ]
       },
       "rice": null,
       "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1005",
@@ -467,7 +562,7 @@
       },
       "planningStatus": "in-planning",
       "issueType": "Feature",
-      "versionStatus": "none"
+      "versionStatus": "committed"
     },
     {
       "key": "RHOAIENG-1006",
@@ -526,7 +621,26 @@
             "detail": "rice-disabled"
           }
         ],
-        "warnings": []
+        "warnings": [
+          {
+            "id": "DoR-W1",
+            "label": "Owner Assigned",
+            "passed": true,
+            "detail": "Chris Evans"
+          },
+          {
+            "id": "DoR-W2",
+            "label": "Version Set",
+            "passed": false,
+            "detail": "No fixVersion or targetVersion"
+          },
+          {
+            "id": "DoR-W3",
+            "label": "Blockers Resolved",
+            "passed": true,
+            "detail": null
+          }
+        ]
       },
       "rice": {
         "reach": 3000,
@@ -625,7 +739,26 @@
             "detail": "rice-disabled"
           }
         ],
-        "warnings": []
+        "warnings": [
+          {
+            "id": "DoR-W1",
+            "label": "Owner Assigned",
+            "passed": false,
+            "detail": null
+          },
+          {
+            "id": "DoR-W2",
+            "label": "Version Set",
+            "passed": true,
+            "detail": "targeted"
+          },
+          {
+            "id": "DoR-W3",
+            "label": "Blockers Resolved",
+            "passed": true,
+            "detail": null
+          }
+        ]
       },
       "rice": null,
       "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1007",
@@ -655,7 +788,7 @@
       },
       "planningStatus": "in-planning",
       "issueType": "Feature",
-      "versionStatus": "none"
+      "versionStatus": "targeted"
     },
     {
       "key": "RHOAIENG-1008",
@@ -715,7 +848,27 @@
             "detail": "rice-disabled"
           }
         ],
-        "warnings": []
+        "warnings": [
+          {
+            "id": "DoR-W1",
+            "label": "Owner Assigned",
+            "passed": true,
+            "detail": "Priya Sharma"
+          },
+          {
+            "id": "DoR-W2",
+            "label": "Version Set",
+            "passed": true,
+            "detail": "committed"
+          },
+          {
+            "id": "DoR-W3",
+            "label": "Blockers Resolved",
+            "passed": false,
+            "detail": "RHOAIENG-1002",
+            "escalated": true
+          }
+        ]
       },
       "rice": {
         "reach": 1200,
@@ -752,7 +905,7 @@
       },
       "planningStatus": "ready-for-execution",
       "issueType": "Feature",
-      "versionStatus": "none"
+      "versionStatus": "committed"
     },
     {
       "key": "RHAISTRAT-2001",
@@ -806,7 +959,26 @@
             "detail": "rice-disabled"
           }
         ],
-        "warnings": []
+        "warnings": [
+          {
+            "id": "DoR-W1",
+            "label": "Owner Assigned",
+            "passed": true,
+            "detail": "John Smith"
+          },
+          {
+            "id": "DoR-W2",
+            "label": "Version Set",
+            "passed": true,
+            "detail": "committed"
+          },
+          {
+            "id": "DoR-W3",
+            "label": "Blockers Resolved",
+            "passed": true,
+            "detail": null
+          }
+        ]
       },
       "rice": null,
       "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2001",
@@ -836,7 +1008,7 @@
       },
       "planningStatus": "in-planning",
       "issueType": "Feature",
-      "versionStatus": "none"
+      "versionStatus": "committed"
     },
     {
       "key": "RHAISTRAT-2006",
@@ -879,7 +1051,26 @@
             "detail": "rice-disabled"
           }
         ],
-        "warnings": []
+        "warnings": [
+          {
+            "id": "DoR-W1",
+            "label": "Owner Assigned",
+            "passed": true,
+            "detail": "Dave Evans"
+          },
+          {
+            "id": "DoR-W2",
+            "label": "Version Set",
+            "passed": true,
+            "detail": "targeted"
+          },
+          {
+            "id": "DoR-W3",
+            "label": "Blockers Resolved",
+            "passed": true,
+            "detail": null
+          }
+        ]
       },
       "rice": {
         "reach": 1800,
@@ -916,7 +1107,7 @@
       },
       "planningStatus": "in-planning",
       "issueType": "Initiative",
-      "versionStatus": "none"
+      "versionStatus": "targeted"
     },
     {
       "key": "RHAISTRAT-2013",
@@ -975,7 +1166,26 @@
             "detail": "rice-disabled"
           }
         ],
-        "warnings": []
+        "warnings": [
+          {
+            "id": "DoR-W1",
+            "label": "Owner Assigned",
+            "passed": true,
+            "detail": "Iris Lee"
+          },
+          {
+            "id": "DoR-W2",
+            "label": "Version Set",
+            "passed": false,
+            "detail": "No fixVersion or targetVersion"
+          },
+          {
+            "id": "DoR-W3",
+            "label": "Blockers Resolved",
+            "passed": true,
+            "detail": null
+          }
+        ]
       },
       "rice": null,
       "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2013",
@@ -1060,7 +1270,26 @@
             "detail": "rice-disabled"
           }
         ],
-        "warnings": []
+        "warnings": [
+          {
+            "id": "DoR-W1",
+            "label": "Owner Assigned",
+            "passed": true,
+            "detail": "Karen Quinn"
+          },
+          {
+            "id": "DoR-W2",
+            "label": "Version Set",
+            "passed": true,
+            "detail": "committed"
+          },
+          {
+            "id": "DoR-W3",
+            "label": "Blockers Resolved",
+            "passed": true,
+            "detail": null
+          }
+        ]
       },
       "rice": {
         "reach": 2500,
@@ -1097,7 +1326,7 @@
       },
       "planningStatus": "in-planning",
       "issueType": "Feature",
-      "versionStatus": "none"
+      "versionStatus": "committed"
     }
   ],
   "enrichmentStatus": {

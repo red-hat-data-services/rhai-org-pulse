@@ -62,10 +62,14 @@ describe('RiskBadge', function() {
 describe('HealthSummaryCards', function() {
   var cardCounts = {
     total: 15,
-    riceComplete: 12,
-    ownerAssigned: 10,
-    dodComplete: 8,
-    readyForExecution: 6
+    dorPassed: 12,
+    dodPassed: 8,
+    stratSignedOff: 10,
+    riceComplete: 13,
+    ownerAssigned: 11,
+    versionSet: 14,
+    unblocked: 12,
+    escalatedBlockers: 2
   }
 
   it('renders nothing when cardCounts is null', function() {
@@ -73,29 +77,46 @@ describe('HealthSummaryCards', function() {
     expect(wrapper.text()).toBe('')
   })
 
-  it('renders 4 readiness cards', function() {
+  it('renders 4 primary cards with three-gate labels', function() {
     var wrapper = mount(HealthSummaryCards, { props: { cardCounts: cardCounts } })
-    expect(wrapper.text()).toContain('RICE Score Present')
-    expect(wrapper.text()).toContain('Owner Assigned')
-    expect(wrapper.text()).toContain('DoD Complete')
-    expect(wrapper.text()).toContain('Ready for Execution')
+    expect(wrapper.text()).toContain('DoR Passed')
+    expect(wrapper.text()).toContain('DoD Passed')
+    expect(wrapper.text()).toContain('Strategy Signed Off')
+    expect(wrapper.text()).toContain('RICE Complete')
   })
 
-  it('shows count fractions for each card', function() {
+  it('shows count fractions for primary cards', function() {
     var wrapper = mount(HealthSummaryCards, { props: { cardCounts: cardCounts } })
     expect(wrapper.text()).toContain('12')
-    expect(wrapper.text()).toContain('10')
     expect(wrapper.text()).toContain('8')
-    expect(wrapper.text()).toContain('6')
+    expect(wrapper.text()).toContain('10')
+    expect(wrapper.text()).toContain('13')
     expect(wrapper.text()).toContain('/ 15')
   })
 
-  it('shows percentage for each card', function() {
+  it('shows percentage for primary cards', function() {
     var wrapper = mount(HealthSummaryCards, { props: { cardCounts: cardCounts } })
     expect(wrapper.text()).toContain('80%')  // 12/15
-    expect(wrapper.text()).toContain('67%')  // 10/15
     expect(wrapper.text()).toContain('53%')  // 8/15
-    expect(wrapper.text()).toContain('40%')  // 6/15
+    expect(wrapper.text()).toContain('67%')  // 10/15
+    expect(wrapper.text()).toContain('87%')  // 13/15
+  })
+
+  it('hides detail cards by default', function() {
+    var wrapper = mount(HealthSummaryCards, { props: { cardCounts: cardCounts } })
+    expect(wrapper.text()).not.toContain('Version Set')
+    expect(wrapper.text()).toContain('Show details')
+  })
+
+  it('shows detail cards when toggle clicked', async function() {
+    var wrapper = mount(HealthSummaryCards, { props: { cardCounts: cardCounts } })
+    var toggle = wrapper.findAll('button').filter(function(b) { return b.text().includes('details') })
+    await toggle[0].trigger('click')
+    expect(wrapper.text()).toContain('Owner Assigned')
+    expect(wrapper.text()).toContain('Version Set')
+    expect(wrapper.text()).toContain('Unblocked')
+    expect(wrapper.text()).toContain('Escalated Blockers')
+    expect(wrapper.text()).toContain('Hide details')
   })
 
   it('renders planning deadline when provided', function() {
@@ -115,15 +136,8 @@ describe('HealthSummaryCards', function() {
     expect(wrapper.text()).not.toContain('Planning Deadline')
   })
 
-  it('does not emit filterByRisk events', function() {
-    var wrapper = mount(HealthSummaryCards, { props: { cardCounts: cardCounts } })
-    var buttons = wrapper.findAll('button')
-    // Cards are divs, not buttons -- no click interaction
-    expect(buttons.length).toBe(0)
-  })
-
   it('handles zero total gracefully', function() {
-    var zeroCounts = { total: 0, riceComplete: 0, ownerAssigned: 0, dodComplete: 0, readyForExecution: 0 }
+    var zeroCounts = { total: 0, dorPassed: 0, dodPassed: 0, stratSignedOff: 0, riceComplete: 0, ownerAssigned: 0, versionSet: 0, unblocked: 0, escalatedBlockers: 0 }
     var wrapper = mount(HealthSummaryCards, { props: { cardCounts: zeroCounts } })
     expect(wrapper.text()).toContain('0')
     expect(wrapper.text()).toContain('/ 0')
@@ -260,6 +274,46 @@ describe('HealthFilterBar', function() {
     await wrapper.find('input[type="text"]').setValue('test query')
     expect(wrapper.emitted('update:searchQuery')).toBeDefined()
     expect(wrapper.emitted('update:searchQuery')[0][0]).toBe('test query')
+  })
+
+  it('renders planning status filter dropdown', function() {
+    var wrapper = mount(HealthFilterBar)
+    var selects = wrapper.findAll('select')
+    var planningSelect = selects.filter(function(s) { return s.attributes('aria-label') === 'Filter by planning status' })
+    expect(planningSelect.length).toBe(1)
+    expect(planningSelect[0].text()).toContain('All Statuses')
+    expect(planningSelect[0].text()).toContain('Not Ready')
+    expect(planningSelect[0].text()).toContain('In Planning')
+    expect(planningSelect[0].text()).toContain('Ready for Execution')
+  })
+
+  it('emits update:planningStatusFilter on change', async function() {
+    var wrapper = mount(HealthFilterBar)
+    var selects = wrapper.findAll('select')
+    var planningSelect = selects.filter(function(s) { return s.attributes('aria-label') === 'Filter by planning status' })
+    await planningSelect[0].setValue('not-ready')
+    expect(wrapper.emitted('update:planningStatusFilter')).toBeDefined()
+    expect(wrapper.emitted('update:planningStatusFilter')[0][0]).toBe('not-ready')
+  })
+
+  it('renders risk level filter dropdown', function() {
+    var wrapper = mount(HealthFilterBar)
+    var selects = wrapper.findAll('select')
+    var riskSelect = selects.filter(function(s) { return s.attributes('aria-label') === 'Filter by risk level' })
+    expect(riskSelect.length).toBe(1)
+    expect(riskSelect[0].text()).toContain('All Risk Levels')
+    expect(riskSelect[0].text()).toContain('Green')
+    expect(riskSelect[0].text()).toContain('Yellow')
+    expect(riskSelect[0].text()).toContain('Red')
+  })
+
+  it('emits update:riskLevelFilter on change', async function() {
+    var wrapper = mount(HealthFilterBar)
+    var selects = wrapper.findAll('select')
+    var riskSelect = selects.filter(function(s) { return s.attributes('aria-label') === 'Filter by risk level' })
+    await riskSelect[0].setValue('red')
+    expect(wrapper.emitted('update:riskLevelFilter')).toBeDefined()
+    expect(wrapper.emitted('update:riskLevelFilter')[0][0]).toBe('red')
   })
 })
 

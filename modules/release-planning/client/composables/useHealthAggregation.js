@@ -85,10 +85,12 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
       if (!h || !h.risk) continue
 
       if (!result[rockName]) {
-        result[rockName] = { worstLevel: 'green', totalFlags: 0, featureCount: 0 }
+        result[rockName] = { worstLevel: 'green', totalFlags: 0, featureCount: 0, dorPassedCount: 0, dodPassedCount: 0 }
       }
       result[rockName].featureCount++
       result[rockName].totalFlags += (h.risk.score || 0)
+      if (h.dor && h.dor.passed) result[rockName].dorPassedCount++
+      if (h.dod && h.dod.passed) result[rockName].dodPassedCount++
       var level = effectiveLevel(h)
       if (isWorse(level, result[rockName].worstLevel)) {
         result[rockName].worstLevel = level
