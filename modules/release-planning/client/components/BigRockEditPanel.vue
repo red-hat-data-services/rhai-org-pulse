@@ -25,15 +25,12 @@ function addOutcomeKey() {
 
 function parseAndAddKeys(text) {
   var keys = text.split(/[,\n\r]+/)
-  var added = 0
   for (var i = 0; i < keys.length; i++) {
     var key = keys[i].trim().toUpperCase()
     if (!key) continue
     if (formData.value.outcomeKeys.includes(key)) continue
     formData.value.outcomeKeys.push(key)
-    added++
   }
-  return added
 }
 
 function handlePaste(event) {
