@@ -69,8 +69,8 @@ export function useFilters(features, rfes, bigRocks) {
     return bigRocks.value.filter(function(rock) {
       if (selectedPillar.value && rock.pillar !== selectedPillar.value) return false
       if (searchQuery.value) {
-        var q = searchQuery.value.toLowerCase()
-        var matchesSearch =
+        const q = searchQuery.value.toLowerCase()
+        const matchesSearch =
           (rock.name && rock.name.toLowerCase().includes(q)) ||
           (rock.fullName && rock.fullName.toLowerCase().includes(q)) ||
           (rock.owner && rock.owner.toLowerCase().includes(q)) ||

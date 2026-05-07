@@ -1,5 +1,5 @@
 import { computed } from 'vue'
-import { RISK_SEVERITY, isWorse } from '../utils/risk-levels'
+import { isWorse } from '../utils/risk-levels'
 
 /**
  * Composable that aggregates health data across features, RFEs, and big rocks.
@@ -90,7 +90,7 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
       result[rockName].featureCount++
       result[rockName].totalFlags += (h.risk.score || 0)
       var level = effectiveLevel(h)
-      if ((RISK_SEVERITY[level] != null ? RISK_SEVERITY[level] : 2) < (RISK_SEVERITY[result[rockName].worstLevel] != null ? RISK_SEVERITY[result[rockName].worstLevel] : 2)) {
+      if (isWorse(level, result[rockName].worstLevel)) {
         result[rockName].worstLevel = level
       }
     }
