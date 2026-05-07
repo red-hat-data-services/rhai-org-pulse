@@ -467,6 +467,7 @@ onMounted(async function() {
           :canEdit="canEdit"
           :rockHealth="rockHealth"
           :rockFeatures="rockFeatures"
+          :loading="loading"
           @editRock="handleEditRock"
           @addRock="handleAddRock"
           @deleteRock="handleDeleteRock"

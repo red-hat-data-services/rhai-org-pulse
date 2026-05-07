@@ -382,6 +382,249 @@ describe('BigRockEditPanel', function() {
     })
   })
 
+  describe('unsaved-changes confirmation', function() {
+    it('shows discard prompt when cancelling with dirty edits', async function() {
+      editor.openForEdit(sampleRock)
+      var wrapper = mountPanel()
+
+      // Make a change to trigger dirty state
+      var ownerInput = wrapper.find('#rock-owner')
+      await ownerInput.setValue('changed@redhat.com')
+      await nextTick()
+
+      // Click Cancel
+      var cancelBtn = wrapper.findAll('button').find(function(b) { return b.text() === 'Cancel' })
+      await cancelBtn.trigger('click')
+      await nextTick()
+
+      // Should show discard prompt instead of emitting cancel
+      expect(wrapper.emitted('cancel')).toBeFalsy()
+      expect(wrapper.find('[role="alertdialog"]').exists()).toBe(true)
+      expect(wrapper.text()).toContain('You have unsaved changes. Discard?')
+      wrapper.unmount()
+    })
+
+    it('shows discard prompt when clicking close button with dirty edits', async function() {
+      editor.openForEdit(sampleRock)
+      var wrapper = mountPanel()
+
+      var ownerInput = wrapper.find('#rock-owner')
+      await ownerInput.setValue('changed@redhat.com')
+      await nextTick()
+
+      var closeBtn = wrapper.find('[aria-label="Close panel"]')
+      await closeBtn.trigger('click')
+      await nextTick()
+
+      expect(wrapper.emitted('cancel')).toBeFalsy()
+      expect(wrapper.find('[role="alertdialog"]').exists()).toBe(true)
+      wrapper.unmount()
+    })
+
+    it('shows discard prompt when clicking backdrop with dirty edits', async function() {
+      editor.openForEdit(sampleRock)
+      var wrapper = mountPanel()
+
+      var ownerInput = wrapper.find('#rock-owner')
+      await ownerInput.setValue('changed@redhat.com')
+      await nextTick()
+
+      var backdrop = wrapper.find('.fixed.inset-0.bg-black\\/30')
+      await backdrop.trigger('click')
+      await nextTick()
+
+      expect(wrapper.emitted('cancel')).toBeFalsy()
+      expect(wrapper.find('[role="alertdialog"]').exists()).toBe(true)
+      wrapper.unmount()
+    })
+
+    it('emits cancel when Discard is clicked in the prompt', async function() {
+      editor.openForEdit(sampleRock)
+      var wrapper = mountPanel()
+
+      var ownerInput = wrapper.find('#rock-owner')
+      await ownerInput.setValue('changed@redhat.com')
+      await nextTick()
+
+      // Trigger the discard prompt
+      var cancelBtn = wrapper.findAll('button').find(function(b) { return b.text() === 'Cancel' })
+      await cancelBtn.trigger('click')
+      await nextTick()
+
+      // Click Discard
+      var discardBtn = wrapper.findAll('button').find(function(b) { return b.text() === 'Discard' })
+      await discardBtn.trigger('click')
+      await nextTick()
+
+      expect(wrapper.emitted('cancel')).toBeTruthy()
+      expect(wrapper.find('[role="alertdialog"]').exists()).toBe(false)
+      wrapper.unmount()
+    })
+
+    it('hides prompt when Keep Editing is clicked', async function() {
+      editor.openForEdit(sampleRock)
+      var wrapper = mountPanel()
+
+      var ownerInput = wrapper.find('#rock-owner')
+      await ownerInput.setValue('changed@redhat.com')
+      await nextTick()
+
+      // Trigger the discard prompt
+      var cancelBtn = wrapper.findAll('button').find(function(b) { return b.text() === 'Cancel' })
+      await cancelBtn.trigger('click')
+      await nextTick()
+
+      // Click Keep Editing
+      var keepBtn = wrapper.findAll('button').find(function(b) { return b.text() === 'Keep Editing' })
+      await keepBtn.trigger('click')
+      await nextTick()
+
+      expect(wrapper.emitted('cancel')).toBeFalsy()
+      expect(wrapper.find('[role="alertdialog"]').exists()).toBe(false)
+      // Panel should still be open
+      expect(wrapper.find('[role="dialog"]').exists()).toBe(true)
+      wrapper.unmount()
+    })
+
+    it('emits cancel directly when form is not dirty', async function() {
+      editor.openForEdit(sampleRock)
+      var wrapper = mountPanel()
+
+      // No changes made -- form is clean
+      var cancelBtn = wrapper.findAll('button').find(function(b) { return b.text() === 'Cancel' })
+      await cancelBtn.trigger('click')
+
+      // Should emit cancel without showing prompt
+      expect(wrapper.emitted('cancel')).toBeTruthy()
+      expect(wrapper.find('[role="alertdialog"]').exists()).toBe(false)
+      wrapper.unmount()
+    })
+
+    it('does not show prompt when saving is in progress', async function() {
+      editor.openForEdit(sampleRock)
+      var wrapper = mountPanel()
+
+      var ownerInput = wrapper.find('#rock-owner')
+      await ownerInput.setValue('changed@redhat.com')
+      await nextTick()
+
+      // Set saving state
+      editor.setSaving(true)
+      await nextTick()
+
+      // Cancel button is disabled when saving, so no prompt should appear
+      expect(wrapper.find('[role="alertdialog"]').exists()).toBe(false)
+      wrapper.unmount()
+    })
+
+    it('shows discard prompt for new rock with content', async function() {
+      editor.openForNew()
+      var wrapper = mountPanel()
+
+      var nameInput = wrapper.find('#rock-name')
+      await nameInput.setValue('New Rock')
+      await nextTick()
+
+      var cancelBtn = wrapper.findAll('button').find(function(b) { return b.text() === 'Cancel' })
+      await cancelBtn.trigger('click')
+      await nextTick()
+
+      expect(wrapper.emitted('cancel')).toBeFalsy()
+      expect(wrapper.find('[role="alertdialog"]').exists()).toBe(true)
+      wrapper.unmount()
+    })
+  })
+
+  describe('paste-to-add outcome keys', function() {
+    beforeEach(function() {
+      editor.openForNew()
+    })
+
+    it('adds multiple comma-separated keys on paste', async function() {
+      var wrapper = mountPanel()
+      var input = wrapper.find('#rock-outcome-key')
+
+      // Simulate paste event with comma-separated keys
+      var pasteEvent = new Event('paste', { bubbles: true, cancelable: true })
+      pasteEvent.clipboardData = { getData: function() { return 'KEY-1, KEY-2, KEY-3' } }
+      input.element.dispatchEvent(pasteEvent)
+      await nextTick()
+
+      expect(editor.formData.value.outcomeKeys).toEqual(['KEY-1', 'KEY-2', 'KEY-3'])
+      wrapper.unmount()
+    })
+
+    it('adds multiple newline-separated keys on paste', async function() {
+      var wrapper = mountPanel()
+      var input = wrapper.find('#rock-outcome-key')
+
+      var pasteEvent = new Event('paste', { bubbles: true, cancelable: true })
+      pasteEvent.clipboardData = { getData: function() { return 'KEY-1\nKEY-2\nKEY-3' } }
+      input.element.dispatchEvent(pasteEvent)
+      await nextTick()
+
+      expect(editor.formData.value.outcomeKeys).toEqual(['KEY-1', 'KEY-2', 'KEY-3'])
+      wrapper.unmount()
+    })
+
+    it('skips duplicates when pasting', async function() {
+      editor.formData.value.outcomeKeys = ['KEY-1']
+      await nextTick()
+
+      var wrapper = mountPanel()
+      var input = wrapper.find('#rock-outcome-key')
+
+      var pasteEvent = new Event('paste', { bubbles: true, cancelable: true })
+      pasteEvent.clipboardData = { getData: function() { return 'KEY-1, KEY-2' } }
+      input.element.dispatchEvent(pasteEvent)
+      await nextTick()
+
+      expect(editor.formData.value.outcomeKeys).toEqual(['KEY-1', 'KEY-2'])
+      wrapper.unmount()
+    })
+
+    it('trims whitespace and uppercases pasted keys', async function() {
+      var wrapper = mountPanel()
+      var input = wrapper.find('#rock-outcome-key')
+
+      var pasteEvent = new Event('paste', { bubbles: true, cancelable: true })
+      pasteEvent.clipboardData = { getData: function() { return '  key-a , key-b  ' } }
+      input.element.dispatchEvent(pasteEvent)
+      await nextTick()
+
+      expect(editor.formData.value.outcomeKeys).toEqual(['KEY-A', 'KEY-B'])
+      wrapper.unmount()
+    })
+
+    it('skips empty segments in pasted text', async function() {
+      var wrapper = mountPanel()
+      var input = wrapper.find('#rock-outcome-key')
+
+      var pasteEvent = new Event('paste', { bubbles: true, cancelable: true })
+      pasteEvent.clipboardData = { getData: function() { return 'KEY-1,,, KEY-2' } }
+      input.element.dispatchEvent(pasteEvent)
+      await nextTick()
+
+      expect(editor.formData.value.outcomeKeys).toEqual(['KEY-1', 'KEY-2'])
+      wrapper.unmount()
+    })
+
+    it('does not intercept single-key paste (no separator)', async function() {
+      var wrapper = mountPanel()
+      var input = wrapper.find('#rock-outcome-key')
+
+      // Paste with no comma/newline -- should NOT be intercepted
+      var pasteEvent = new Event('paste', { bubbles: true, cancelable: true })
+      pasteEvent.clipboardData = { getData: function() { return 'SINGLE-KEY' } }
+      input.element.dispatchEvent(pasteEvent)
+      await nextTick()
+
+      // Should not have been added directly (browser default paste behavior)
+      expect(editor.formData.value.outcomeKeys).toEqual([])
+      wrapper.unmount()
+    })
+  })
+
   describe('accessibility', function() {
     beforeEach(function() {
       editor.openForEdit(sampleRock)

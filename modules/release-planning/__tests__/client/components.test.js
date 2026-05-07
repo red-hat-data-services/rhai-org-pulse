@@ -191,6 +191,33 @@ describe('BigRocksTable', () => {
       expect(th.attributes('scope')).toBe('col')
     }
   })
+
+  it('shows skeleton rows when loading is true', () => {
+    const wrapper = mount(BigRocksTable, {
+      props: { bigRocks: [], canEdit: false, loading: true }
+    })
+    // Should show skeleton rows, not the empty state
+    expect(wrapper.text()).not.toContain('No Big Rocks configured')
+    const skeletonRows = wrapper.findAll('.animate-pulse')
+    expect(skeletonRows.length).toBe(3)
+  })
+
+  it('hides skeleton and shows data when loading is false', () => {
+    const wrapper = mount(BigRocksTable, {
+      props: { bigRocks, canEdit: false, loading: false }
+    })
+    expect(wrapper.findAll('.animate-pulse').length).toBe(0)
+    expect(wrapper.text()).toContain('Rock A')
+    expect(wrapper.text()).toContain('Rock B')
+  })
+
+  it('shows empty state when loading is false and no rocks', () => {
+    const wrapper = mount(BigRocksTable, {
+      props: { bigRocks: [], canEdit: false, loading: false }
+    })
+    expect(wrapper.text()).toContain('No Big Rocks configured')
+    expect(wrapper.findAll('.animate-pulse').length).toBe(0)
+  })
 })
 
 describe('FilterBar', () => {

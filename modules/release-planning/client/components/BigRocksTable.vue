@@ -8,7 +8,8 @@ const props = defineProps({
   jiraBaseUrl: { type: String, default: '' },
   canEdit: { type: Boolean, default: false },
   rockHealth: { type: Object, default: () => ({}) },
-  rockFeatures: { type: Object, default: () => ({}) }
+  rockFeatures: { type: Object, default: () => ({}) },
+  loading: { type: Boolean, default: false }
 })
 
 const hasHealth = computed(function() {
@@ -109,14 +110,32 @@ function onDragEnd() {
           </template>
         </draggable>
         <tbody v-else>
-          <tr
-            v-for="rock in bigRocks"
-            :key="rock.name"
-            class="hover:bg-gray-50 dark:hover:bg-gray-700/50"
-          >
-            <BigRockRow :rock="rock" :jiraBaseUrl="jiraBaseUrl" :health="rockHealth[rock.name]" :hasHealth="hasHealth" :rockFeatures="rockFeatures[rock.name] || []" />
-          </tr>
-          <tr v-if="!bigRocks || bigRocks.length === 0">
+          <!-- Skeleton loading rows -->
+          <template v-if="loading">
+            <tr v-for="n in 3" :key="'skeleton-' + n">
+              <td :colspan="hasHealth ? 10 : 9" class="px-3 py-4 border border-gray-300 dark:border-gray-600">
+                <div class="animate-pulse flex items-center gap-4">
+                  <div class="h-4 w-8 bg-gray-200 dark:bg-gray-700 rounded" />
+                  <div class="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded" />
+                  <div class="h-4 flex-1 bg-gray-200 dark:bg-gray-700 rounded" />
+                  <div class="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded" />
+                  <div class="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
+                </div>
+              </td>
+            </tr>
+          </template>
+          <!-- Data rows -->
+          <template v-else-if="bigRocks && bigRocks.length > 0">
+            <tr
+              v-for="rock in bigRocks"
+              :key="rock.name"
+              class="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+            >
+              <BigRockRow :rock="rock" :jiraBaseUrl="jiraBaseUrl" :health="rockHealth[rock.name]" :hasHealth="hasHealth" :rockFeatures="rockFeatures[rock.name] || []" />
+            </tr>
+          </template>
+          <!-- Empty state -->
+          <tr v-else>
             <td :colspan="hasHealth ? 10 : 9" class="px-3 py-8 text-center text-gray-500 border border-gray-300 dark:border-gray-600">
               No Big Rocks configured.
             </td>
