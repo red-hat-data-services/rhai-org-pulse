@@ -219,6 +219,33 @@ describe('runPass1', function() {
     expect(result.get('TEST-1').storyPoints).toBe(5)
   })
 
+  it('stores labels from Jira response', async function() {
+    var mockFetch = vi.fn().mockResolvedValue([{
+      key: 'TEST-L',
+      fields: {
+        description: null,
+        customfield_10028: null,
+        issuelinks: [],
+        labels: ['strat-creator-human-sign-off', 'priority-1']
+      }
+    }])
+    var result = await runPass1(vi.fn(), mockFetch, ['TEST-L'], { batchSize: 40, throttleMs: 0 })
+    expect(result.get('TEST-L').labels).toEqual(['strat-creator-human-sign-off', 'priority-1'])
+  })
+
+  it('stores empty array when labels field is missing', async function() {
+    var mockFetch = vi.fn().mockResolvedValue([{
+      key: 'TEST-NL',
+      fields: {
+        description: null,
+        customfield_10028: null,
+        issuelinks: []
+      }
+    }])
+    var result = await runPass1(vi.fn(), mockFetch, ['TEST-NL'], { batchSize: 40, throttleMs: 0 })
+    expect(result.get('TEST-NL').labels).toEqual([])
+  })
+
   it('populates tshirtSize from description in Pass 1', async function() {
     var mockFetch = vi.fn().mockResolvedValue([{
       key: 'TEST-2',

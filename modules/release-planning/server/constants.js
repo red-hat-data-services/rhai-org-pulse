@@ -71,10 +71,18 @@ const DEFAULT_PHASE_COMPLETION_EXPECTATIONS = {
   ga_target:  { EA1: 100, EA2: 100, GA: 100, TP: 100, DP: 100 }
 }
 
+// ─── strat-creator Labels ───
+
+const STRAT_CREATOR_LABELS = {
+  HUMAN_SIGN_OFF: 'strat-creator-human-sign-off',
+  RUBRIC_PASS: 'strat-creator-rubric-pass',
+  NEEDS_ATTENTION: 'strat-creator-needs-attention'
+}
+
 // ─── Health Enrichment Fields ───
 
 // Lightweight fields fetched in Pass 1 for ALL features
-const ENRICHMENT_FIELDS = 'description,customfield_10028,issuelinks'
+const ENRICHMENT_FIELDS = 'description,customfield_10028,issuelinks,labels'
 
 // Minimal fields fetched in Pass 2 (changelog comes via expand param)
 const CHANGELOG_FIELDS = 'summary'
@@ -96,6 +104,7 @@ module.exports = {
   PLANNING_DEADLINE_OFFSET_DAYS,
   EARLY_STATUSES,
   DEFAULT_PHASE_COMPLETION_EXPECTATIONS,
+  STRAT_CREATOR_LABELS,
   ENRICHMENT_FIELDS,
   CHANGELOG_FIELDS
 }

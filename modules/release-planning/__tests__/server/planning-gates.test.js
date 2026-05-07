@@ -4,6 +4,8 @@ const {
   computeDoD,
   computeDoR,
   derivePlanningStatus,
+  parseStratCreatorStatus,
+  applyBlockerEscalation,
   PLANNING_STATUS_ORDER
 } = require('../../server/health/planning-gates')
 
@@ -14,13 +16,16 @@ function makeFeature(overrides) {
     assignee: null,
     fixVersions: ['2.18'],
     targetVersions: ['2.18'],
+    labels: [],
     status: 'In Progress'
   }, overrides)
 }
 
 function makeEnrichment(overrides) {
   return Object.assign({
-    dependencyLinks: []
+    dependencyLinks: [],
+    labels: [],
+    rice: null
   }, overrides)
 }
 
@@ -139,7 +144,61 @@ describe('computeDoD', function() {
   })
 })
 
-// ─── computeDoR (stub) ───
+// ─── parseStratCreatorStatus ───
+
+describe('parseStratCreatorStatus', function() {
+  it('returns human-sign-off when label present', function() {
+    expect(parseStratCreatorStatus(['strat-creator-human-sign-off'])).toBe('human-sign-off')
+  })
+
+  it('returns rubric-pass when label present', function() {
+    expect(parseStratCreatorStatus(['strat-creator-rubric-pass'])).toBe('rubric-pass')
+  })
+
+  it('returns needs-attention when label present', function() {
+    expect(parseStratCreatorStatus(['strat-creator-needs-attention'])).toBe('needs-attention')
+  })
+
+  it('returns not-assessed when no strat-creator labels', function() {
+    expect(parseStratCreatorStatus(['some-other-label'])).toBe('not-assessed')
+  })
+
+  it('returns not-assessed for empty array', function() {
+    expect(parseStratCreatorStatus([])).toBe('not-assessed')
+  })
+
+  it('returns not-assessed for null', function() {
+    expect(parseStratCreatorStatus(null)).toBe('not-assessed')
+  })
+
+  it('returns not-assessed for undefined', function() {
+    expect(parseStratCreatorStatus(undefined)).toBe('not-assessed')
+  })
+
+  it('prioritizes human-sign-off over rubric-pass', function() {
+    expect(parseStratCreatorStatus([
+      'strat-creator-rubric-pass',
+      'strat-creator-human-sign-off'
+    ])).toBe('human-sign-off')
+  })
+
+  it('prioritizes rubric-pass over needs-attention', function() {
+    expect(parseStratCreatorStatus([
+      'strat-creator-needs-attention',
+      'strat-creator-rubric-pass'
+    ])).toBe('rubric-pass')
+  })
+
+  it('handles mixed labels with non-strat labels', function() {
+    expect(parseStratCreatorStatus([
+      'priority-1',
+      'strat-creator-rubric-pass',
+      '3.5-candidate'
+    ])).toBe('rubric-pass')
+  })
+})
+
+// ─── computeDoR ───
 
 describe('computeDoR', function() {
   it('returns gate: dor', function() {
@@ -147,17 +206,156 @@ describe('computeDoR', function() {
     expect(result.gate).toBe('dor')
   })
 
-  it('always passes (stub)', function() {
-    var result = computeDoR(makeFeature({ deliveryOwner: null, assignee: null, fixVersions: [], targetVersions: [] }), null)
-    expect(result.passed).toBe(true)
+  // ─── Feature flag: both disabled (default) ───
+
+  describe('both flags disabled (default)', function() {
+    it('blockers auto-pass', function() {
+      var result = computeDoR(makeFeature({ labels: [] }), makeEnrichment())
+      expect(result.passed).toBe(true)
+      expect(result.blockers[0]).toEqual({ id: 'DoR-B1', label: 'Strategy Human Sign-off', passed: true, detail: 'strat-creator-disabled' })
+      expect(result.blockers[1]).toEqual({ id: 'DoR-B2', label: 'RICE Score Present', passed: true, detail: 'rice-disabled' })
+    })
+
+    it('overall DoR passes even with no owner/version', function() {
+      var result = computeDoR(
+        makeFeature({ deliveryOwner: null, assignee: null, fixVersions: [], targetVersions: [] }),
+        null
+      )
+      expect(result.passed).toBe(true)
+    })
   })
 
-  it('has two blockers that always pass', function() {
-    var result = computeDoR(makeFeature(), makeEnrichment())
-    expect(result.blockers).toHaveLength(2)
-    expect(result.blockers[0]).toEqual({ id: 'DoR-B1', label: 'Strategy Human Sign-off', passed: true, detail: 'strat-creator-disabled' })
-    expect(result.blockers[1]).toEqual({ id: 'DoR-B2', label: 'RICE Score Present', passed: true, detail: 'rice-disabled' })
+  // ─── Feature flag: enableStratCreator = true ───
+
+  describe('enableStratCreator = true', function() {
+    var opts = { enableStratCreator: true, enableRice: false }
+
+    it('B1 passes with human-sign-off label on feature', function() {
+      var result = computeDoR(
+        makeFeature({ labels: ['strat-creator-human-sign-off'] }),
+        makeEnrichment(),
+        opts
+      )
+      expect(result.passed).toBe(true)
+      expect(result.blockers[0].passed).toBe(true)
+      expect(result.blockers[0].detail).toBe('human-sign-off')
+    })
+
+    it('B1 fails without human-sign-off label', function() {
+      var result = computeDoR(
+        makeFeature({ labels: ['strat-creator-rubric-pass'] }),
+        makeEnrichment(),
+        opts
+      )
+      expect(result.passed).toBe(false)
+      expect(result.blockers[0].passed).toBe(false)
+      expect(result.blockers[0].detail).toBe('rubric-pass')
+    })
+
+    it('B1 fails with no labels', function() {
+      var result = computeDoR(makeFeature({ labels: [] }), makeEnrichment(), opts)
+      expect(result.passed).toBe(false)
+      expect(result.blockers[0].detail).toBe('not-assessed')
+    })
+
+    it('B1 reads labels from enrichment when feature has none', function() {
+      var result = computeDoR(
+        makeFeature({ labels: [] }),
+        makeEnrichment({ labels: ['strat-creator-human-sign-off'] }),
+        opts
+      )
+      expect(result.blockers[0].passed).toBe(true)
+    })
+
+    it('B1 prefers feature labels over enrichment labels', function() {
+      var result = computeDoR(
+        makeFeature({ labels: ['strat-creator-rubric-pass'] }),
+        makeEnrichment({ labels: ['strat-creator-human-sign-off'] }),
+        opts
+      )
+      expect(result.blockers[0].detail).toBe('rubric-pass')
+    })
   })
+
+  // ─── Feature flag: enableRice = true ───
+
+  describe('enableRice = true', function() {
+    var opts = { enableStratCreator: false, enableRice: true }
+
+    it('B2 passes with complete RICE', function() {
+      var result = computeDoR(
+        makeFeature(),
+        makeEnrichment({ rice: { reach: 10, impact: 5, confidence: 0.8, effort: 3 } }),
+        opts
+      )
+      expect(result.blockers[1].passed).toBe(true)
+      expect(result.blockers[1].detail).toBe('complete')
+    })
+
+    it('B2 fails with null RICE', function() {
+      var result = computeDoR(makeFeature(), makeEnrichment({ rice: null }), opts)
+      expect(result.blockers[1].passed).toBe(false)
+      expect(result.blockers[1].detail).toBe('missing')
+    })
+
+    it('B2 fails with partial RICE (missing effort)', function() {
+      var result = computeDoR(
+        makeFeature(),
+        makeEnrichment({ rice: { reach: 10, impact: 5, confidence: 0.8, effort: null } }),
+        opts
+      )
+      expect(result.blockers[1].passed).toBe(false)
+      expect(result.blockers[1].detail).toBe('missing')
+    })
+
+    it('B2 passes with RICE values that are zero', function() {
+      var result = computeDoR(
+        makeFeature(),
+        makeEnrichment({ rice: { reach: 0, impact: 0, confidence: 0, effort: 0 } }),
+        opts
+      )
+      expect(result.blockers[1].passed).toBe(true)
+    })
+  })
+
+  // ─── Feature flags: both enabled ───
+
+  describe('both flags enabled', function() {
+    var opts = { enableStratCreator: true, enableRice: true }
+
+    it('passes when both are satisfied', function() {
+      var result = computeDoR(
+        makeFeature({ labels: ['strat-creator-human-sign-off'] }),
+        makeEnrichment({ rice: { reach: 10, impact: 5, confidence: 0.8, effort: 3 } }),
+        opts
+      )
+      expect(result.passed).toBe(true)
+    })
+
+    it('fails when only B1 is satisfied', function() {
+      var result = computeDoR(
+        makeFeature({ labels: ['strat-creator-human-sign-off'] }),
+        makeEnrichment({ rice: null }),
+        opts
+      )
+      expect(result.passed).toBe(false)
+      expect(result.blockers[0].passed).toBe(true)
+      expect(result.blockers[1].passed).toBe(false)
+    })
+
+    it('fails when only B2 is satisfied', function() {
+      var result = computeDoR(
+        makeFeature({ labels: [] }),
+        makeEnrichment({ rice: { reach: 10, impact: 5, confidence: 0.8, effort: 3 } }),
+        opts
+      )
+      expect(result.passed).toBe(false)
+      expect(result.blockers[0].passed).toBe(false)
+      expect(result.blockers[1].passed).toBe(true)
+    })
+  })
+
+  // ─── Warnings ───
 
   it('has three warnings that evaluate conditions', function() {
     var result = computeDoR(makeFeature(), makeEnrichment())
@@ -213,6 +411,91 @@ describe('computeDoR', function() {
     var w3 = result.warnings.find(function(w) { return w.id === 'DoR-W3' })
     expect(w3.passed).toBe(true)
     expect(w3.detail).toBeNull()
+  })
+
+  it('warnings do not affect overall DoR passed status', function() {
+    var result = computeDoR(
+      makeFeature({ deliveryOwner: null, assignee: null, fixVersions: [], targetVersions: [] }),
+      makeEnrichment({ dependencyLinks: [blockerLink('X-1')] })
+    )
+    expect(result.passed).toBe(true)
+    expect(result.warnings[0].passed).toBe(false)
+    expect(result.warnings[1].passed).toBe(false)
+    expect(result.warnings[2].passed).toBe(false)
+  })
+
+  it('handles null enrichment', function() {
+    var result = computeDoR(makeFeature(), null)
+    expect(result.passed).toBe(true)
+    expect(result.warnings[2].passed).toBe(true)
+  })
+})
+
+// ─── applyBlockerEscalation ───
+
+describe('applyBlockerEscalation', function() {
+  function makeHealthFeature(key, dorPassed, w3Detail) {
+    return {
+      key: key,
+      dor: {
+        gate: 'dor',
+        passed: dorPassed,
+        blockers: [],
+        warnings: [
+          { id: 'DoR-W1', label: 'Owner Assigned', passed: true, detail: 'someone' },
+          { id: 'DoR-W2', label: 'Version Set', passed: true, detail: '2.18' },
+          { id: 'DoR-W3', label: 'Blockers Resolved', passed: !w3Detail, detail: w3Detail }
+        ]
+      }
+    }
+  }
+
+  it('marks W3 as escalated when blocker feature also fails DoR', function() {
+    var features = [
+      makeHealthFeature('A-1', false, null),
+      makeHealthFeature('B-1', true, 'A-1')
+    ]
+    var count = applyBlockerEscalation(features)
+    expect(count).toBe(1)
+    expect(features[1].dor.warnings[2].escalated).toBe(true)
+  })
+
+  it('does not mark escalated when blocker passes DoR', function() {
+    var features = [
+      makeHealthFeature('A-1', true, null),
+      makeHealthFeature('B-1', true, 'A-1')
+    ]
+    var count = applyBlockerEscalation(features)
+    expect(count).toBe(0)
+    expect(features[1].dor.warnings[2].escalated).toBeUndefined()
+  })
+
+  it('returns 0 when no DoR failures', function() {
+    var features = [
+      makeHealthFeature('A-1', true, null),
+      makeHealthFeature('B-1', true, null)
+    ]
+    expect(applyBlockerEscalation(features)).toBe(0)
+  })
+
+  it('handles multiple blocker keys in W3 detail', function() {
+    var features = [
+      makeHealthFeature('A-1', false, null),
+      makeHealthFeature('A-2', true, null),
+      makeHealthFeature('B-1', true, 'A-1, A-2')
+    ]
+    var count = applyBlockerEscalation(features)
+    expect(count).toBe(1)
+    expect(features[2].dor.warnings[2].escalated).toBe(true)
+  })
+
+  it('handles empty feature list', function() {
+    expect(applyBlockerEscalation([])).toBe(0)
+  })
+
+  it('handles features with no dor', function() {
+    var features = [{ key: 'X-1' }]
+    expect(applyBlockerEscalation(features)).toBe(0)
   })
 })
 

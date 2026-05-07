@@ -746,16 +746,18 @@ describe('health routes', function() {
       expect(res._status).toBe(200)
       expect(res._json.customFieldIds).toBeDefined()
       expect(res._json.enableRice).toBe(false)
+      expect(res._json.enableStratCreator).toBe(false)
     })
 
     it('returns saved config', function() {
       storage._store['release-planning/config.json'] = {
         customFieldIds: { riceReach: 'cf_100' },
-        healthConfig: { enableRice: true }
+        healthConfig: { enableRice: true, enableStratCreator: true }
       }
       var res = callRoute(router._routes, 'GET', '/releases/health-admin/config', makeReq())
       expect(res._status).toBe(200)
       expect(res._json.enableRice).toBe(true)
+      expect(res._json.enableStratCreator).toBe(true)
     })
   })
 
@@ -794,6 +796,23 @@ describe('health routes', function() {
       var config = storage._store['release-planning/config.json']
       expect(config.customFieldIds.riceReach).toBe('cf_100')
       expect(config.healthConfig.enableRice).toBe(true)
+    })
+
+    it('saves enableStratCreator flag', function() {
+      var res = callRoute(router._routes, 'PUT', '/releases/health-admin/config',
+        makeReq({ body: { enableStratCreator: true } }))
+      expect(res._status).toBe(200)
+      expect(res._json.enableStratCreator).toBe(true)
+
+      var config = storage._store['release-planning/config.json']
+      expect(config.healthConfig.enableStratCreator).toBe(true)
+    })
+
+    it('returns enableStratCreator in response', function() {
+      var res = callRoute(router._routes, 'PUT', '/releases/health-admin/config',
+        makeReq({ body: { enableRice: true, enableStratCreator: true } }))
+      expect(res._json.enableRice).toBe(true)
+      expect(res._json.enableStratCreator).toBe(true)
     })
   })
 

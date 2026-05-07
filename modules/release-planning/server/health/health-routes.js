@@ -712,8 +712,23 @@ function healthRoutes(router, context) {
       })
     }
 
+    if (req.body.enableStratCreator !== undefined) {
+      var prev = config.healthConfig ? !!config.healthConfig.enableStratCreator : false
+      config.healthConfig = Object.assign({}, config.healthConfig, {
+        enableStratCreator: !!req.body.enableStratCreator
+      })
+      if (prev !== !!req.body.enableStratCreator) {
+        console.log('[health] enableStratCreator toggled: ' + prev + ' → ' + !!req.body.enableStratCreator)
+      }
+    }
+
     writeToStorage('release-planning/config.json', config)
-    res.json({ saved: true, customFieldIds: config.customFieldIds, enableRice: config.healthConfig ? config.healthConfig.enableRice : false })
+    res.json({
+      saved: true,
+      customFieldIds: config.customFieldIds,
+      enableRice: config.healthConfig ? !!config.healthConfig.enableRice : false,
+      enableStratCreator: config.healthConfig ? !!config.healthConfig.enableStratCreator : false
+    })
   })
 
   // ─── RICE admin: test configured field IDs ───
@@ -763,7 +778,8 @@ function healthRoutes(router, context) {
     var config = getConfig(readFromStorage)
     res.json({
       customFieldIds: config.customFieldIds || {},
-      enableRice: config.healthConfig ? !!config.healthConfig.enableRice : false
+      enableRice: config.healthConfig ? !!config.healthConfig.enableRice : false,
+      enableStratCreator: config.healthConfig ? !!config.healthConfig.enableStratCreator : false
     })
   })
 

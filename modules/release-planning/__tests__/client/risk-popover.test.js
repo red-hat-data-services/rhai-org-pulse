@@ -136,6 +136,63 @@ describe('RiskPopover', function() {
     wrapper.unmount()
   })
 
+  it('shows DoR blocked message when DoR fails', async function() {
+    var dor = { gate: 'dor', passed: false, blockers: [
+      { id: 'DoR-B1', label: 'Strategy Human Sign-off', passed: false, detail: 'not-assessed' },
+      { id: 'DoR-B2', label: 'RICE Score Present', passed: true, detail: 'complete' }
+    ], warnings: [] }
+    var flags = [{ category: 'MILESTONE_MISS', severity: 'medium', message: 'Behind deadline' }]
+    var wrapper = mount(RiskPopover, {
+      props: { level: 'yellow', flags: flags, flagCount: 1, dor: dor, planningStatus: 'not-ready', variant: 'full' },
+      slots: { default: '<span>dot</span>' },
+      attachTo: document.body
+    })
+    await wrapper.find('[role="button"]').trigger('click')
+    await nextTick()
+    expect(wrapper.text()).toContain('DoR blocked: Strategy Human Sign-off')
+    wrapper.unmount()
+  })
+
+  it('shows DoR warning count when warnings fail', async function() {
+    var dor = { gate: 'dor', passed: true, blockers: [
+      { id: 'DoR-B1', label: 'Strategy Human Sign-off', passed: true, detail: 'strat-creator-disabled' },
+      { id: 'DoR-B2', label: 'RICE Score Present', passed: true, detail: 'rice-disabled' }
+    ], warnings: [
+      { id: 'DoR-W1', label: 'Owner Assigned', passed: false, detail: null },
+      { id: 'DoR-W2', label: 'Version Set', passed: false, detail: 'No fixVersion or targetVersion' },
+      { id: 'DoR-W3', label: 'Blockers Resolved', passed: true, detail: null }
+    ] }
+    var flags = [{ category: 'MILESTONE_MISS', severity: 'medium', message: 'Behind deadline' }]
+    var wrapper = mount(RiskPopover, {
+      props: { level: 'yellow', flags: flags, flagCount: 1, dor: dor, planningStatus: 'ready-for-execution', variant: 'full' },
+      slots: { default: '<span>dot</span>' },
+      attachTo: document.body
+    })
+    await wrapper.find('[role="button"]').trigger('click')
+    await nextTick()
+    expect(wrapper.text()).toContain('2 DoR warnings')
+    wrapper.unmount()
+  })
+
+  it('does not show DoR info when DoR passes with no warnings', async function() {
+    var dor = { gate: 'dor', passed: true, blockers: [
+      { id: 'DoR-B1', label: 'Strategy Human Sign-off', passed: true, detail: 'strat-creator-disabled' }
+    ], warnings: [
+      { id: 'DoR-W1', label: 'Owner Assigned', passed: true, detail: 'jdoe@redhat.com' }
+    ] }
+    var flags = [{ category: 'MILESTONE_MISS', severity: 'medium', message: 'Behind deadline' }]
+    var wrapper = mount(RiskPopover, {
+      props: { level: 'yellow', flags: flags, flagCount: 1, dor: dor, planningStatus: 'ready-for-execution', variant: 'full' },
+      slots: { default: '<span>dot</span>' },
+      attachTo: document.body
+    })
+    await wrapper.find('[role="button"]').trigger('click')
+    await nextTick()
+    expect(wrapper.text()).not.toContain('DoR blocked')
+    expect(wrapper.text()).not.toContain('DoR warning')
+    wrapper.unmount()
+  })
+
   it('does not show planning status in compact variant', async function() {
     var flags = [{ category: 'MILESTONE_MISS', severity: 'medium', message: 'Behind deadline' }]
     var wrapper = mount(RiskPopover, {

@@ -30,6 +30,23 @@
       "not-ready": 0,
       "in-planning": 7,
       "ready-for-execution": 5
+    },
+    "cardCounts": {
+      "total": 12,
+      "dorPassed": 12,
+      "dodPassed": 5,
+      "stratSignedOff": 7,
+      "riceComplete": 12,
+      "ownerAssigned": 0,
+      "versionSet": 0,
+      "unblocked": 0,
+      "escalatedBlockers": 0
+    },
+    "stratCreatorCoverage": {
+      "signedOff": 7,
+      "rubricPass": 2,
+      "needsAttention": 1,
+      "notAssessed": 2
     }
   },
   "features": [
@@ -109,7 +126,9 @@
           }
         ]
       },
-      "planningStatus": "ready-for-execution"
+      "planningStatus": "ready-for-execution",
+      "issueType": "Feature",
+      "versionStatus": "none"
     },
     {
       "key": "RHOAIENG-1002",
@@ -187,7 +206,9 @@
           }
         ]
       },
-      "planningStatus": "ready-for-execution"
+      "planningStatus": "ready-for-execution",
+      "issueType": "Feature",
+      "versionStatus": "none"
     },
     {
       "key": "RHOAIENG-1003",
@@ -269,7 +290,9 @@
           }
         ]
       },
-      "planningStatus": "ready-for-execution"
+      "planningStatus": "ready-for-execution",
+      "issueType": "Feature",
+      "versionStatus": "none"
     },
     {
       "key": "RHOAIENG-1004",
@@ -353,7 +376,9 @@
           }
         ]
       },
-      "planningStatus": "ready-for-execution"
+      "planningStatus": "ready-for-execution",
+      "issueType": "Feature",
+      "versionStatus": "none"
     },
     {
       "key": "RHOAIENG-1005",
@@ -440,7 +465,9 @@
           }
         ]
       },
-      "planningStatus": "in-planning"
+      "planningStatus": "in-planning",
+      "issueType": "Feature",
+      "versionStatus": "none"
     },
     {
       "key": "RHOAIENG-1006",
@@ -534,7 +561,9 @@
           }
         ]
       },
-      "planningStatus": "in-planning"
+      "planningStatus": "in-planning",
+      "issueType": "Feature",
+      "versionStatus": "none"
     },
     {
       "key": "RHOAIENG-1007",
@@ -624,7 +653,9 @@
           }
         ]
       },
-      "planningStatus": "in-planning"
+      "planningStatus": "in-planning",
+      "issueType": "Feature",
+      "versionStatus": "none"
     },
     {
       "key": "RHOAIENG-1008",
@@ -719,7 +750,9 @@
           }
         ]
       },
-      "planningStatus": "ready-for-execution"
+      "planningStatus": "ready-for-execution",
+      "issueType": "Feature",
+      "versionStatus": "none"
     },
     {
       "key": "RHAISTRAT-2001",
@@ -801,7 +834,9 @@
           }
         ]
       },
-      "planningStatus": "in-planning"
+      "planningStatus": "in-planning",
+      "issueType": "Feature",
+      "versionStatus": "none"
     },
     {
       "key": "RHAISTRAT-2006",
@@ -879,7 +914,9 @@
           }
         ]
       },
-      "planningStatus": "in-planning"
+      "planningStatus": "in-planning",
+      "issueType": "Initiative",
+      "versionStatus": "none"
     },
     {
       "key": "RHAISTRAT-2013",
@@ -966,7 +1003,9 @@
           }
         ]
       },
-      "planningStatus": "in-planning"
+      "planningStatus": "in-planning",
+      "issueType": "Feature",
+      "versionStatus": "none"
     },
     {
       "key": "RHAISTRAT-2016",
@@ -1056,7 +1095,9 @@
           }
         ]
       },
-      "planningStatus": "in-planning"
+      "planningStatus": "in-planning",
+      "issueType": "Feature",
+      "versionStatus": "none"
     }
   ],
   "enrichmentStatus": {
@@ -1065,5 +1106,6 @@
     "featuresSkipped": 0,
     "riceAvailable": true,
     "warnings": []
-  }
+  },
+  "healthCacheVersion": 2
 }
