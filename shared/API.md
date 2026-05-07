@@ -25,6 +25,12 @@ Core team owns `shared/` via CODEOWNERS. Changes require core team review.
 | `useAllowlist()` | Allowlist management (admin only) |
 | `useModuleLink()` | Cross-module hash navigation (`linkTo`, `navigateTo`) |
 
+### Utilities
+
+| Export | Description |
+|--------|-------------|
+| `formatDate(iso, options?)` | Format an ISO date string for display. Options: `{ fallback: 'Never', includeTime: true }`. Returns `fallback` when `iso` is falsy; uses `toLocaleString()` when `includeTime` is true, `toLocaleDateString()` when false. |
+
 ### Services
 
 | Export | Description |

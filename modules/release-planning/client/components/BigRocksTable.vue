@@ -2,6 +2,7 @@
 import { ref, watch, computed } from 'vue'
 import draggable from 'vuedraggable'
 import BigRockRow from './BigRockRow.vue'
+import { RISK_SEVERITY } from '../utils/risk-levels'
 
 const props = defineProps({
   bigRocks: { type: Array, default: () => [] },
@@ -10,8 +11,6 @@ const props = defineProps({
   healthByKey: { type: Object, default: () => ({}) },
   features: { type: Array, default: () => [] }
 })
-
-const RISK_SEVERITY = { red: 0, yellow: 1, green: 2 }
 
 const hasHealth = computed(function() {
   return Object.keys(props.healthByKey).length > 0

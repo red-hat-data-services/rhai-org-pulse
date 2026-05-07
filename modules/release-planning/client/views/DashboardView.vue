@@ -4,6 +4,9 @@ import { useReleasePlanning, useReleases } from '../composables/useReleasePlanni
 import { useReleaseHealth } from '../composables/useReleaseHealth'
 import { useBigRockEditor } from '../composables/useBigRockEditor'
 import { useFilters } from '../composables/useFilters'
+import { isWorse } from '../utils/risk-levels'
+import { exportMarkdown as exportMd, exportCsv as exportCsvFile } from '../utils/outcomes-export'
+import { formatDate } from '@shared/client'
 import SummaryCards from '../components/SummaryCards.vue'
 import BigRocksTable from '../components/BigRocksTable.vue'
 import BigRockEditPanel from '../components/BigRockEditPanel.vue'
@@ -97,12 +100,6 @@ const healthSummary = computed(function() {
   return healthData.value ? healthData.value.summary : null
 })
 
-var RISK_SEVERITY = { red: 0, yellow: 1, green: 2 }
-
-function isWorse(levelA, levelB) {
-  return (RISK_SEVERITY[levelA] != null ? RISK_SEVERITY[levelA] : 2) < (RISK_SEVERITY[levelB] != null ? RISK_SEVERITY[levelB] : 2)
-}
-
 const rfeKeyToHealth = computed(function() {
   if (!features.value || Object.keys(healthByKey.value).length === 0) return {}
   var map = {}
@@ -154,18 +151,6 @@ function tabCount(tabId) {
   return 0
 }
 
-function escapeCell(val) {
-  return String(val).replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\n/g, ' ')
-}
-
-function escapeCsv(val) {
-  const s = String(val)
-  if (s.indexOf(',') !== -1 || s.indexOf('"') !== -1 || s.indexOf('\n') !== -1 || s.indexOf('\r') !== -1) {
-    return '"' + s.replace(/"/g, '""') + '"'
-  }
-  return s
-}
-
 const exportMenuOpen = ref(false)
 
 function closeExportMenu() {
@@ -176,153 +161,24 @@ function toggleExportMenu() {
   exportMenuOpen.value = !exportMenuOpen.value
 }
 
-function exportMarkdown() {
-  const lines = []
-  let filename
-
-  if (activeTab.value === 'big-rocks') {
-    lines.push('# Big Rocks - ' + selectedVersion.value)
-    lines.push('')
-    lines.push('| **Priority** | **Pillar** | **Big Rock** | **Owner** | **Engineering Lead** | **Features** | **RFEs** | **Notes** |')
-    lines.push('|:--------:|--------|----------|-------|-----------|:--------:|:----:|-------|')
-    for (const rock of bigRocks.value) {
-      lines.push('| ' + [
-        rock.priority,
-        escapeCell(rock.pillar || '-'),
-        escapeCell(rock.name),
-        escapeCell(rock.owner || '-'),
-        escapeCell(rock.architect || '-'),
-        rock.featureCount,
-        rock.rfeCount,
-        escapeCell(rock.notes || '-')
-      ].join(' | ') + ' |')
-    }
-    filename = 'big-rocks-' + selectedVersion.value + '.md'
-  } else if (activeTab.value === 'features') {
-    lines.push('# Features - ' + selectedVersion.value)
-    lines.push('')
-    lines.push('| **Big Rock** | **Feature** | **Status** | **Priority** | **Phase** | **Title** | **Components** | **Target Release** | **PM** | **Delivery Owner** | **RFE** | **Fix Version** |')
-    lines.push('|----------|---------|--------|----------|-------|-------|------------|----------------|-----|----------------|-----|-------------|')
-    for (const f of filteredFeatures.value) {
-      lines.push('| ' + [
-        escapeCell(f.bigRock || '-'),
-        f.issueKey,
-        escapeCell(f.status || '-'),
-        escapeCell(f.priority || '-'),
-        escapeCell(f.phase || '-'),
-        escapeCell(f.summary || '-'),
-        escapeCell(f.components || '-'),
-        escapeCell(f.targetRelease || '-'),
-        escapeCell(f.pm || '-'),
-        escapeCell(f.deliveryOwner || '-'),
-        f.rfe || '-',
-        escapeCell(f.fixVersion || '-')
-      ].join(' | ') + ' |')
-    }
-    filename = 'features-' + selectedVersion.value + '.md'
-  } else {
-    lines.push('# RFEs - ' + selectedVersion.value)
-    lines.push('')
-    lines.push('| **Big Rock** | **RFE** | **Status** | **Priority** | **Title** | **Components** | **PM** | **Labels** |')
-    lines.push('|----------|-----|--------|----------|-------|------------|-----|--------|')
-    for (const r of filteredRfes.value) {
-      lines.push('| ' + [
-        escapeCell(r.bigRock || '-'),
-        r.issueKey,
-        escapeCell(r.status || '-'),
-        escapeCell(r.priority || '-'),
-        escapeCell(r.summary || '-'),
-        escapeCell(r.components || '-'),
-        escapeCell(r.pm || '-'),
-        escapeCell(r.labels || '-')
-      ].join(' | ') + ' |')
-    }
-    filename = 'rfes-' + selectedVersion.value + '.md'
+function getExportData() {
+  return {
+    activeTab: activeTab.value,
+    selectedVersion: selectedVersion.value,
+    bigRocks: bigRocks.value,
+    filteredFeatures: filteredFeatures.value,
+    filteredRfes: filteredRfes.value
   }
-
-  const blob = new Blob([lines.join('\n') + '\n'], { type: 'text/markdown' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
 }
 
 function exportCsv() {
   closeExportMenu()
-  const rows = []
-  let filename
-
-  if (activeTab.value === 'big-rocks') {
-    rows.push(['Priority', 'Pillar', 'Big Rock', 'Owner', 'Engineering Lead', 'Features', 'RFEs', 'Notes'])
-    for (const rock of bigRocks.value) {
-      rows.push([
-        rock.priority,
-        rock.pillar || '',
-        rock.name,
-        rock.owner || '',
-        rock.architect || '',
-        rock.featureCount,
-        rock.rfeCount,
-        rock.notes || ''
-      ])
-    }
-    filename = 'big-rocks-' + selectedVersion.value + '.csv'
-  } else if (activeTab.value === 'features') {
-    rows.push(['Big Rock', 'Feature', 'Status', 'Priority', 'Phase', 'Title', 'Components', 'Target Release', 'PM', 'Delivery Owner', 'RFE', 'Fix Version'])
-    for (const f of filteredFeatures.value) {
-      rows.push([
-        f.bigRock || '',
-        f.issueKey,
-        f.status || '',
-        f.priority || '',
-        f.phase || '',
-        f.summary || '',
-        f.components || '',
-        f.targetRelease || '',
-        f.pm || '',
-        f.deliveryOwner || '',
-        f.rfe || '',
-        f.fixVersion || ''
-      ])
-    }
-    filename = 'features-' + selectedVersion.value + '.csv'
-  } else {
-    rows.push(['Big Rock', 'RFE', 'Status', 'Priority', 'Title', 'Components', 'PM', 'Labels'])
-    for (const r of filteredRfes.value) {
-      rows.push([
-        r.bigRock || '',
-        r.issueKey,
-        r.status || '',
-        r.priority || '',
-        r.summary || '',
-        r.components || '',
-        r.pm || '',
-        r.labels || ''
-      ])
-    }
-    filename = 'rfes-' + selectedVersion.value + '.csv'
-  }
-
-  const csv = rows.map(function(row) { return row.map(escapeCsv).join(',') }).join('\n')
-  const blob = new Blob([csv + '\n'], { type: 'text/csv' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
+  exportCsvFile(getExportData())
 }
 
 function handleExportMarkdown() {
   closeExportMenu()
-  exportMarkdown()
-}
-
-function formatDate(iso) {
-  if (!iso) return 'Never'
-  return new Date(iso).toLocaleString()
+  exportMd(getExportData())
 }
 
 // ─── Edit handlers ───

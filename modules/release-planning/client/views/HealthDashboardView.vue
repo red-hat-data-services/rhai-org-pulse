@@ -3,7 +3,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useReleaseHealth } from '../composables/useReleaseHealth'
 import { useDorChecklist } from '../composables/useDorChecklist'
 import { useReleases } from '../composables/useReleasePlanning'
-import { useAuth } from '@shared/client'
+import { useAuth, formatDate } from '@shared/client'
 import { passesPhaseFilter } from '../utils/phase-filter'
 import ReleaseSelector from '../components/ReleaseSelector.vue'
 import MilestoneTimeline from '../components/MilestoneTimeline.vue'
@@ -305,13 +305,6 @@ function handleRemoveOverride(featureKey) {
   }).catch(function(err) {
     healthError.value = err.message || 'Failed to remove override'
   })
-}
-
-// ─── Format helpers ───
-
-function formatDate(iso) {
-  if (!iso) return 'Never'
-  return new Date(iso).toLocaleString()
 }
 
 // ─── Lifecycle ───

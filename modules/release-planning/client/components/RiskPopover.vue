@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { usePopover } from '../composables/usePopover'
+import { formatDate as sharedFormatDate } from '@shared/client'
 
 const props = defineProps({
   level: { type: String, default: 'green' },
@@ -50,8 +51,7 @@ var severityClasses = {
 }
 
 function formatDate(iso) {
-  if (!iso) return ''
-  return new Date(iso).toLocaleDateString()
+  return sharedFormatDate(iso, { fallback: '', includeTime: false })
 }
 </script>
 
