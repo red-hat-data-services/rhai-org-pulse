@@ -118,7 +118,15 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
         key: f.issueKey,
         level: level,
         flagCount: flags.length,
-        flagCategories: flags.map(function(fl) { return fl.category })
+        flagCategories: flags.map(function(fl) { return fl.category }),
+        summary: h ? (h.summary || '') : '',
+        dorPassed: h && h.dor ? h.dor.passed : null,
+        dodPassed: h && h.dod ? h.dod.passed : null,
+        planningStatus: h ? (h.planningStatus || '') : '',
+        deliveryOwner: h ? (h.deliveryOwner || '') : '',
+        jiraUrl: h ? (h.jiraUrl || '') : '',
+        override: h && h.risk ? (h.risk.override || null) : null,
+        status: h ? (h.status || '') : ''
       })
     }
     return result

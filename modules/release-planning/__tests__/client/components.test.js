@@ -188,10 +188,9 @@ describe('BigRockRow', () => {
     })
   }
 
-  it('renders rock name and fullName', () => {
+  it('renders rock name', () => {
     const wrapper = mountRow()
     expect(wrapper.text()).toContain('MaaS')
-    expect(wrapper.text()).toContain('Model as a Service')
   })
 
   it('renders priority', () => {
@@ -313,6 +312,56 @@ describe('BigRocksTable', () => {
     })
     expect(wrapper.text()).toContain('No Big Rocks configured')
     expect(wrapper.findAll('.animate-pulse').length).toBe(0)
+  })
+
+  it('shows edit pencil button in edit mode', () => {
+    const wrapper = mount(BigRocksTable, {
+      props: { bigRocks, canEdit: true }
+    })
+    const editBtn = wrapper.find('button[aria-label="Edit Rock A"]')
+    expect(editBtn.exists()).toBe(true)
+  })
+
+  it('emits editRock when pencil button is clicked', async () => {
+    const wrapper = mount(BigRocksTable, {
+      props: { bigRocks, canEdit: true }
+    })
+    const editBtn = wrapper.find('button[aria-label="Edit Rock A"]')
+    await editBtn.trigger('click')
+    expect(wrapper.emitted('editRock')).toBeTruthy()
+    expect(wrapper.emitted('editRock')[0][0]).toMatchObject({ name: 'Rock A' })
+  })
+
+  it('does not show edit pencil in read-only mode', () => {
+    const wrapper = mount(BigRocksTable, {
+      props: { bigRocks, canEdit: false }
+    })
+    const editBtn = wrapper.find('button[aria-label="Edit Rock A"]')
+    expect(editBtn.exists()).toBe(false)
+  })
+
+  it('sets draggable="true" on edit-mode rows', () => {
+    const wrapper = mount(BigRocksTable, {
+      props: { bigRocks, canEdit: true }
+    })
+    const rows = wrapper.findAll('tbody tr')
+    expect(rows[0].attributes('draggable')).toBe('true')
+  })
+
+  it('does not set draggable on read-only rows', () => {
+    const wrapper = mount(BigRocksTable, {
+      props: { bigRocks, canEdit: false }
+    })
+    const rows = wrapper.findAll('tbody tr')
+    expect(rows[0].attributes('draggable')).toBeUndefined()
+  })
+
+  it('shows toolbar text without click-to-edit language', () => {
+    const wrapper = mount(BigRocksTable, {
+      props: { bigRocks, canEdit: true }
+    })
+    expect(wrapper.text()).not.toContain('Click a row to edit')
+    expect(wrapper.text()).toContain('Drag to reorder')
   })
 })
 

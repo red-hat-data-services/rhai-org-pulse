@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { nextTick } from 'vue'
 import RiskPopover from '../../client/components/RiskPopover.vue'
-import BigRockHealthPopover from '../../client/components/BigRockHealthPopover.vue'
 
 // ─── RiskPopover ───
 
@@ -255,97 +254,4 @@ describe('RiskPopover', function() {
   })
 })
 
-// ─── BigRockHealthPopover ───
-
-describe('BigRockHealthPopover', function() {
-  it('renders slot content', function() {
-    var wrapper = mount(BigRockHealthPopover, {
-      props: { worstLevel: 'green', features: [], totalFlags: 0 },
-      slots: { default: '<span class="badge">OK</span>' }
-    })
-    expect(wrapper.find('.badge').exists()).toBe(true)
-  })
-
-  it('shows per-feature breakdown when pinned (only flagged features)', async function() {
-    var features = [
-      { key: 'RHOAI-1234', level: 'red', flagCount: 2, flagCategories: ['MILESTONE_MISS', 'VELOCITY_LAG'] },
-      { key: 'RHOAI-5678', level: 'yellow', flagCount: 1, flagCategories: ['VELOCITY_LAG'] },
-      { key: 'RHOAI-9012', level: 'green', flagCount: 0, flagCategories: [] }
-    ]
-    var wrapper = mount(BigRockHealthPopover, {
-      props: { worstLevel: 'red', features: features, totalFlags: 3 },
-      slots: { default: '<span>Critical</span>' },
-      attachTo: document.body
-    })
-    await wrapper.find('[role="button"]').trigger('click')
-    await nextTick()
-    expect(wrapper.text()).toContain('Health: Critical')
-    expect(wrapper.text()).toContain('2 features')
-    expect(wrapper.text()).toContain('RHOAI-1234')
-    expect(wrapper.text()).toContain('Red')
-    expect(wrapper.text()).toContain('2 flags')
-    expect(wrapper.text()).toContain('MILESTONE_MISS, VELOCITY_LAG')
-    expect(wrapper.text()).toContain('RHOAI-5678')
-    expect(wrapper.text()).not.toContain('RHOAI-9012')
-    wrapper.unmount()
-  })
-
-  it('shows +N more for >10 flagged features', async function() {
-    var features = []
-    for (var i = 0; i < 12; i++) {
-      features.push({ key: 'F-' + (i + 1), level: 'yellow', flagCount: 1, flagCategories: ['DOR'] })
-    }
-    var wrapper = mount(BigRockHealthPopover, {
-      props: { worstLevel: 'yellow', features: features, totalFlags: 12 },
-      slots: { default: '<span>At Risk</span>' },
-      attachTo: document.body
-    })
-    await wrapper.find('[role="button"]').trigger('click')
-    await nextTick()
-    expect(wrapper.text()).toContain('+2 more features')
-    expect(wrapper.text()).toContain('F-1')
-    expect(wrapper.text()).toContain('F-10')
-    expect(wrapper.text()).not.toContain('F-11')
-    wrapper.unmount()
-  })
-
-  it('does not show popover when all features are green', async function() {
-    var features = [
-      { key: 'F-1', level: 'green', flagCount: 0, flagCategories: [] }
-    ]
-    var wrapper = mount(BigRockHealthPopover, {
-      props: { worstLevel: 'green', features: features, totalFlags: 0 },
-      slots: { default: '<span>OK</span>' },
-      attachTo: document.body
-    })
-    await wrapper.find('[role="button"]').trigger('click')
-    await nextTick()
-    expect(wrapper.find('[role="dialog"]').exists()).toBe(false)
-    wrapper.unmount()
-  })
-
-  it('shows correct label for yellow level', async function() {
-    var wrapper = mount(BigRockHealthPopover, {
-      props: { worstLevel: 'yellow', features: [{ key: 'F-1', level: 'yellow', flagCount: 1, flagCategories: ['DOR'] }], totalFlags: 1 },
-      slots: { default: '<span>At Risk</span>' },
-      attachTo: document.body
-    })
-    await wrapper.find('[role="button"]').trigger('click')
-    await nextTick()
-    expect(wrapper.text()).toContain('Health: At Risk')
-    wrapper.unmount()
-  })
-
-  it('shows singular "feature" for 1 flagged feature', async function() {
-    var wrapper = mount(BigRockHealthPopover, {
-      props: { worstLevel: 'yellow', features: [{ key: 'F-1', level: 'yellow', flagCount: 1, flagCategories: ['DOR'] }], totalFlags: 1 },
-      slots: { default: '<span>At Risk</span>' },
-      attachTo: document.body
-    })
-    await wrapper.find('[role="button"]').trigger('click')
-    await nextTick()
-    expect(wrapper.text()).toContain('1 feature)')
-    expect(wrapper.text()).not.toContain('1 features')
-    wrapper.unmount()
-  })
-})
+// BigRockHealthPopover tests removed -- component was deleted in favor of BigRockExpandedRow

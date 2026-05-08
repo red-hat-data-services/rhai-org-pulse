@@ -92,15 +92,18 @@ function handleRetry() {
     />
   </Transition>
 
-  <!-- Panel -->
-  <Transition name="slide">
+  <!-- Dialog -->
+  <Transition name="dialog">
     <div
       v-if="isOpen"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4"
+    >
+    <div
       ref="panelRef"
       role="dialog"
       aria-modal="true"
       aria-labelledby="edit-panel-title"
-      class="fixed top-0 right-0 h-full w-full max-w-lg bg-white dark:bg-gray-800 shadow-xl z-50 flex flex-col border-l border-gray-200 dark:border-gray-700"
+      class="w-full max-w-lg max-h-[90vh] bg-white dark:bg-gray-800 shadow-xl rounded-lg flex flex-col border border-gray-200 dark:border-gray-700"
       @keydown="handleKeydown"
     >
       <!-- Header -->
@@ -110,7 +113,7 @@ function handleRetry() {
         </h2>
         <button
           @click="attemptCancel"
-          aria-label="Close panel"
+          aria-label="Close dialog"
           class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -279,6 +282,7 @@ function handleRetry() {
         </button>
       </div>
     </div>
+    </div>
   </Transition>
 
   <!-- Discard changes confirmation -->
@@ -316,13 +320,14 @@ function handleRetry() {
 </template>
 
 <style scoped>
-.slide-enter-active,
-.slide-leave-active {
-  transition: transform 0.3s ease;
+.dialog-enter-active,
+.dialog-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
-.slide-enter-from,
-.slide-leave-to {
-  transform: translateX(100%);
+.dialog-enter-from,
+.dialog-leave-to {
+  opacity: 0;
+  transform: scale(0.95);
 }
 
 .fade-enter-active,
