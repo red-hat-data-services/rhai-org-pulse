@@ -30,7 +30,7 @@ const {
 
 const { releases, loadReleases } = useReleases()
 
-const { healthData, loadHealth } = useReleaseHealth()
+const { healthData, healthLoading, loadHealth } = useReleaseHealth()
 
 const {
   formData, editingRock, isNewRock,
@@ -468,6 +468,7 @@ onMounted(async function() {
           :rockHealth="rockHealth"
           :rockFeatures="rockFeatures"
           :loading="loading"
+          :healthLoading="healthLoading"
           @editRock="handleEditRock"
           @addRock="handleAddRock"
           @deleteRock="handleDeleteRock"
