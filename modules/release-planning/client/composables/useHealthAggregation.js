@@ -124,11 +124,34 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
     return result
   })
 
+  /**
+   * Tier 1 health summary: counts green/yellow/red for Tier 1 features only.
+   * Filters healthData.features directly by tier === 1 and uses effectiveLevel()
+   * to respect risk overrides.
+   */
+  var tier1HealthSummary = computed(function() {
+    if (!healthData.value || !healthData.value.features) {
+      return null
+    }
+    var counts = { green: 0, yellow: 0, red: 0 }
+    var healthFeatures = healthData.value.features
+    for (var i = 0; i < healthFeatures.length; i++) {
+      var h = healthFeatures[i]
+      if (h.tier !== 1) continue
+      var level = effectiveLevel(h)
+      if (level && counts[level] !== undefined) {
+        counts[level]++
+      }
+    }
+    return { byRisk: counts }
+  })
+
   return {
     healthByKey: healthByKey,
     rfeKeyToHealth: rfeKeyToHealth,
     rockHealth: rockHealth,
     rockFeatures: rockFeatures,
-    healthSummary: healthSummary
+    healthSummary: healthSummary,
+    tier1HealthSummary: tier1HealthSummary
   }
 }

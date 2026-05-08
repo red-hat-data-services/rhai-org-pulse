@@ -5,6 +5,7 @@ import { useReleaseHealth } from '../composables/useReleaseHealth'
 import { useBigRockEditor } from '../composables/useBigRockEditor'
 import { useFilters } from '../composables/useFilters'
 import { useHealthAggregation } from '../composables/useHealthAggregation'
+import { useReleaseDistribution } from '../composables/useReleaseDistribution'
 import { useRefreshPolling } from '../composables/useRefreshPolling'
 import { useClickOutside } from '../composables/useClickOutside'
 import { exportMarkdown as exportMd, exportCsv as exportCsvFile } from '../utils/outcomes-export'
@@ -71,8 +72,10 @@ const {
   rfeKeyToHealth,
   rockHealth,
   rockFeatures,
-  healthSummary
+  tier1HealthSummary
 } = useHealthAggregation(healthData, features, rfes, bigRocks)
+
+const { releaseDistribution } = useReleaseDistribution(features)
 const warning = computed(() => candidates.value ? candidates.value.warning : null)
 const pipelineWarnings = computed(() => candidates.value ? candidates.value.pipelineWarnings || [] : [])
 const canEdit = computed(() => !demoMode.value && permissions.value && permissions.value.canEdit)
@@ -375,7 +378,7 @@ onMounted(async function() {
 
     <template v-if="candidates">
       <!-- Summary -->
-      <SummaryCards :summary="summary" :healthSummary="healthSummary" />
+      <SummaryCards :summary="summary" :tier1HealthSummary="tier1HealthSummary" :releaseDistribution="releaseDistribution" />
 
       <!-- Recent Activity -->
       <RecentActivity :version="selectedVersion" />

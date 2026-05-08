@@ -6,8 +6,8 @@ function makeHealthData(features) {
   return { features: features, summary: { total: features.length } }
 }
 
-function makeFeature(key, rfe, bigRock) {
-  return { issueKey: key, rfe: rfe || null, bigRock: bigRock || null }
+function makeFeature(key, rfe, bigRock, tier) {
+  return { issueKey: key, rfe: rfe || null, bigRock: bigRock || null, tier: tier || null }
 }
 
 function makeHealthFeature(key, level, flags, override) {
@@ -265,6 +265,41 @@ describe('useHealthAggregation', function() {
         makeFeature('FEAT-2', null, 'Rock A')
       ]
       expect(result.rockHealth.value['Rock A'].featureCount).toBe(2)
+    })
+  })
+
+  describe('tier1HealthSummary', function() {
+    it('counts only Tier 1 health features', function() {
+      var hd = ref(makeHealthData([
+        makeHealthFeature('FEAT-1', 'green', []),
+        makeHealthFeature('FEAT-2', 'yellow', [{ category: 'EA1_MISS' }]),
+        makeHealthFeature('FEAT-3', 'red', [{ category: 'BLOCKED' }])
+      ]))
+      // Stamp tier on the health features directly
+      hd.value.features[0].tier = 1
+      hd.value.features[1].tier = 1
+      hd.value.features[2].tier = 2  // Not Tier 1
+      var features = ref([])
+
+      var result = useHealthAggregation(hd, features, ref([]), ref([]))
+      expect(result.tier1HealthSummary.value.byRisk).toEqual({ green: 1, yellow: 1, red: 0 })
+    })
+
+    it('respects risk overrides', function() {
+      var hd = ref(makeHealthData([
+        makeHealthFeature('FEAT-1', 'red', [{ category: 'BLOCKED' }], { riskOverride: 'green', reason: 'PM override' })
+      ]))
+      hd.value.features[0].tier = 1
+      var features = ref([])
+
+      var result = useHealthAggregation(hd, features, ref([]), ref([]))
+      // Override changes red -> green
+      expect(result.tier1HealthSummary.value.byRisk).toEqual({ green: 1, yellow: 0, red: 0 })
+    })
+
+    it('returns null when no health data', function() {
+      var result = useHealthAggregation(ref(null), ref([]), ref([]), ref([]))
+      expect(result.tier1HealthSummary.value).toBe(null)
     })
   })
 })

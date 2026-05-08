@@ -52,12 +52,20 @@ describe('getFeaturePhase', function() {
     expect(getFeaturePhase({ fixVersions: ['rhoai-3.5 GA'] })).toBe('GA')
   })
 
-  it('infers TP from fixVersions containing EA1', function() {
-    expect(getFeaturePhase({ fixVersions: ['rhoai-3.5-EA1'] })).toBe('TP')
+  it('infers EA1 from fixVersions containing EA1', function() {
+    expect(getFeaturePhase({ fixVersions: ['rhoai-3.5-EA1'] })).toBe('EA1')
   })
 
-  it('infers DP from fixVersions containing EA2', function() {
-    expect(getFeaturePhase({ fixVersions: ['rhoai-3.5-EA2'] })).toBe('DP')
+  it('infers EA2 from fixVersions containing EA2', function() {
+    expect(getFeaturePhase({ fixVersions: ['rhoai-3.5-EA2'] })).toBe('EA2')
+  })
+
+  it('maps DP1 fixVersion to DP', function() {
+    expect(getFeaturePhase({ fixVersions: ['rhoai-3.5-DP1'] })).toBe('DP')
+  })
+
+  it('maps DP2 fixVersion to DP', function() {
+    expect(getFeaturePhase({ fixVersions: ['rhoai-3.5-DP2'] })).toBe('DP')
   })
 
   it('returns empty string when no releaseType or matching fixVersions', function() {

@@ -216,8 +216,11 @@ function getFeaturePhase(feature) {
   }
   for (var j = 0; j < fixVersions.length; j++) {
     var v2 = fixVersions[j].toUpperCase().replace(/[^A-Z0-9]/g, '')
-    if (v2.indexOf('EA2') !== -1 || v2.indexOf('DP2') !== -1) return 'DP'
-    if (v2.indexOf('EA1') !== -1 || v2.indexOf('DP1') !== -1 || v2.indexOf('TP') !== -1) return 'TP'
+    if (v2.indexOf('EA2') !== -1) return 'EA2'
+    if (v2.indexOf('EA1') !== -1) return 'EA1'
+    if (v2.indexOf('DP2') !== -1) return 'DP'
+    if (v2.indexOf('DP1') !== -1) return 'DP'
+    if (v2.indexOf('TP') !== -1) return 'TP'
   }
   return ''
 }
