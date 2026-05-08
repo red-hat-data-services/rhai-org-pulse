@@ -380,9 +380,6 @@ onMounted(async function() {
       <!-- Summary -->
       <SummaryCards :summary="summary" :tier1HealthSummary="tier1HealthSummary" :releaseDistribution="releaseDistribution" />
 
-      <!-- Recent Activity -->
-      <RecentActivity :version="selectedVersion" />
-
       <!-- Tabs -->
       <div>
         <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
@@ -410,7 +407,7 @@ onMounted(async function() {
               >{{ tabCount(tab.id) }}</span>
             </button>
           </div>
-          <div class="relative pb-2" @click.stop @keydown.escape="closeExportMenu">
+          <div class="relative pb-2 pl-3 ml-3 border-l border-gray-200 dark:border-gray-700" @click.stop @keydown.escape="closeExportMenu">
             <button
               @click="toggleExportMenu"
               :aria-expanded="exportMenuOpen"
@@ -495,6 +492,9 @@ onMounted(async function() {
           :rfeKeyToHealth="rfeKeyToHealth"
         />
       </div>
+
+      <!-- Recent Activity -->
+      <RecentActivity :version="selectedVersion" />
     </template>
 
     <!-- No releases configured -->

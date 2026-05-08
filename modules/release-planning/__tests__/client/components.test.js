@@ -114,8 +114,9 @@ describe('SummaryCards', () => {
     const wrapper = mount(SummaryCards, {
       props: { summary, tier1HealthSummary: null, releaseDistribution: null }
     })
-    expect(wrapper.text()).toContain('Health data loading...')
-    // No aria-label dots container rendered
+    expect(wrapper.find('[aria-label="Loading health data"]').exists()).toBe(true)
+    expect(wrapper.findAll('.animate-pulse').length).toBeGreaterThanOrEqual(3)
+    // No health bars rendered
     expect(wrapper.find('[aria-label*="on track"]').exists()).toBe(false)
   })
 

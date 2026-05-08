@@ -63,7 +63,7 @@ var totalFeatures = computed(function() {
 </script>
 
 <template>
-  <div v-if="summary" class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl">
+  <div v-if="summary" class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
     <!-- Card 1: Feature Summary -->
     <div class="p-4 rounded-lg bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/30">
       <div class="text-sm font-semibold text-green-700 dark:text-green-400">Feature Summary</div>
@@ -132,8 +132,12 @@ var totalFeatures = computed(function() {
           <span class="w-8 text-right font-semibold text-red-700 dark:text-red-400">{{ tier1HealthSummary.byRisk.red || 0 }}</span>
         </div>
       </div>
-      <div v-else class="mt-3 pt-2 border-t border-amber-200/50 dark:border-amber-500/20 text-xs text-amber-600/50 dark:text-amber-400/50 italic">
-        Health data loading...
+      <div v-else class="space-y-1.5 mt-3 pt-2 border-t border-amber-200/50 dark:border-amber-500/20" aria-label="Loading health data">
+        <div v-for="n in 3" :key="n" class="flex items-center gap-2">
+          <div class="w-16 h-3 rounded bg-amber-200/50 dark:bg-amber-500/10 animate-pulse"></div>
+          <div class="flex-1 h-2 rounded-full bg-amber-200/50 dark:bg-amber-500/10 animate-pulse"></div>
+          <div class="w-8 h-3 rounded bg-amber-200/50 dark:bg-amber-500/10 animate-pulse"></div>
+        </div>
       </div>
     </div>
 
