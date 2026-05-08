@@ -67,12 +67,11 @@ function onDragEnd() {
             <th scope="col" class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Pillar</th>
             <th scope="col" class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Big Rock</th>
             <th scope="col" class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Outcome(s)</th>
+            <th v-if="hasHealth" scope="col" class="px-3 py-2 text-center text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Health</th>
             <th scope="col" class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Owner</th>
             <th scope="col" class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Engineering Lead</th>
             <th scope="col" class="px-3 py-2 text-center text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Features</th>
             <th scope="col" class="px-3 py-2 text-center text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">RFEs</th>
-            <th v-if="hasHealth" scope="col" class="px-3 py-2 text-center text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Health</th>
-            <th scope="col" class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Notes</th>
             <th v-if="canEdit" scope="col" class="px-2 py-2 w-8 border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80"><span class="sr-only">Actions</span></th>
           </tr>
         </thead>
@@ -113,7 +112,7 @@ function onDragEnd() {
           <!-- Skeleton loading rows -->
           <template v-if="loading">
             <tr v-for="n in 3" :key="'skeleton-' + n">
-              <td :colspan="hasHealth ? 10 : 9" class="px-3 py-4 border border-gray-300 dark:border-gray-600">
+              <td :colspan="hasHealth ? 9 : 8" class="px-3 py-4 border border-gray-300 dark:border-gray-600">
                 <div class="animate-pulse flex items-center gap-4">
                   <div class="h-4 w-8 bg-gray-200 dark:bg-gray-700 rounded" />
                   <div class="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded" />
@@ -136,7 +135,7 @@ function onDragEnd() {
           </template>
           <!-- Empty state -->
           <tr v-else>
-            <td :colspan="hasHealth ? 10 : 9" class="px-3 py-8 text-center text-gray-500 border border-gray-300 dark:border-gray-600">
+            <td :colspan="hasHealth ? 9 : 8" class="px-3 py-8 text-center text-gray-500 border border-gray-300 dark:border-gray-600">
               No Big Rocks configured.
             </td>
           </tr>

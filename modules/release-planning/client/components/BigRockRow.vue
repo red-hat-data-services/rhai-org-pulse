@@ -45,14 +45,6 @@ const healthBadgeClass = computed(function() {
     </div>
     <span v-if="!rock.outcomeKeys || rock.outcomeKeys.length === 0" class="text-xs text-gray-400 dark:text-gray-500 italic">TBD</span>
   </td>
-  <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600">{{ rock.owner || '-' }}</td>
-  <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600">{{ rock.architect || '-' }}</td>
-  <td class="px-3 py-2 text-center border border-gray-300 dark:border-gray-600">
-    <span class="font-semibold text-gray-700 dark:text-gray-300">{{ rock.featureCount }}</span>
-  </td>
-  <td class="px-3 py-2 text-center border border-gray-300 dark:border-gray-600">
-    <span class="font-semibold text-gray-700 dark:text-gray-300">{{ rock.rfeCount }}</span>
-  </td>
   <td v-if="hasHealth" class="px-3 py-2 text-center border border-gray-300 dark:border-gray-600">
     <BigRockHealthPopover
       v-if="health"
@@ -67,5 +59,12 @@ const healthBadgeClass = computed(function() {
     </BigRockHealthPopover>
     <span v-else class="text-gray-400 dark:text-gray-600 text-xs">-</span>
   </td>
-  <td class="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 max-w-xs truncate border border-gray-300 dark:border-gray-600">{{ rock.notes }}</td>
+  <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600">{{ rock.owner || '-' }}</td>
+  <td class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600">{{ rock.architect || '-' }}</td>
+  <td class="px-3 py-2 text-center border border-gray-300 dark:border-gray-600">
+    <span class="font-semibold text-gray-700 dark:text-gray-300">{{ rock.featureCount }}</span>
+  </td>
+  <td class="px-3 py-2 text-center border border-gray-300 dark:border-gray-600">
+    <span class="font-semibold text-gray-700 dark:text-gray-300">{{ rock.rfeCount }}</span>
+  </td>
 </template>
