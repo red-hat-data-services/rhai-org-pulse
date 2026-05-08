@@ -44,14 +44,12 @@ export function useReleaseDistribution(features) {
     for (var j = 0; j < keys.length; j++) {
       var k = keys[j]
       var count = buckets[k]
-      if (count > 0) {
-        result.push({
-          label: k === 'None' ? '--' : k,
-          count: count,
-          pct: Math.round((count / total) * 100),
-          barColor: BAR_COLORS[k]
-        })
-      }
+      result.push({
+        label: k === 'None' ? '--' : k,
+        count: count,
+        pct: Math.round((count / total) * 100),
+        barColor: BAR_COLORS[k]
+      })
     }
     return result
   })
