@@ -2,16 +2,20 @@ const VALID_COMPLETION_STATUSES = ['completed', 'in-progress'];
 const VALID_PRODUCT_CONTEXTS = ['RHOAI', 'ODH'];
 const VALID_KEY_PREFIXES = ['RHOAIENG-', 'RHODS-'];
 
+// Pipeline step keys in execution order (per onboarding skill doc)
 const ONBOARDING_STEP_KEYS = [
-  'yamlValidated',
-  'quayRepoCreated',
-  'konfluxOnboarded',
-  'pushPipelineConfigured',
-  'operatorIntegrated',
-  'bundleConfigured',
-  'deliveryRepoProvisioned',
-  'productListingUpdated',
-  'renovateSetup'
+  'yamlValidated',           // Step 1  — Both
+  'quayRepoCreated',         // Step 2  — Both
+  'deliveryRepoProvisioned', // Step 3  — RHOAI only
+  'konfluxOnboarded',        // Step 4  — Both (KRD)
+  'pushPipelineConfigured',  // Step 5  — Both (rkc/tekton push)
+  'pullPipelineConfigured',  // Step 5b — RHOAI only
+  'odhKonfluxOnboarded',     // Step 6  — ODH + cross-product RHOAI components
+  'operatorIntegrated',      // Step 7  — If operator
+  'bundleConfigured',        // Step 8  — Both
+  'productListingUpdated',   // Step 9  — RHOAI only
+  'autoMergeSetup',          // Step 10 — RHOAI only
+  'renovateSetup'            // Step 11 — RHOAI only
 ];
 
 /**

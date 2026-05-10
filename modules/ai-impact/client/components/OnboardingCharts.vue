@@ -131,50 +131,82 @@ const timelineChartOptions = computed(() => ({
   }
 }))
 
-// ── Chart 4: Step completion rate (horizontal bar) ──
-const STEP_LABELS = {
-  yamlValidated: 'YAML Validated',
-  quayRepoCreated: 'Quay Repo Created',
-  konfluxOnboarded: 'Konflux Onboarded',
-  pushPipelineConfigured: 'Push Pipeline',
-  operatorIntegrated: 'Operator Integrated',
-  bundleConfigured: 'Bundle Configured',
-  deliveryRepoProvisioned: 'Delivery Repo',
-  productListingUpdated: 'Product Listing',
-  renovateSetup: 'Renovate Setup'
-}
+// ── Chart 4: Components by Feature (top 10 by most recent onboarding date) ──
+const TOP_FEATURE_LIMIT = 10
 
-const stepChartData = computed(() => {
-  const total = componentList.value.length
-  if (!total) return { labels: [], datasets: [] }
+const featureChartData = computed(() => {
+  // Build feature → { components, latestCreated } map
+  const featureMap = {}
 
-  const steps = Object.keys(STEP_LABELS)
-  const pcts = steps.map(step => {
-    const count = componentList.value.filter(c => c.onboardingSteps && c.onboardingSteps[step]).length
-    return Math.round((count / total) * 100)
-  })
+  for (const comp of componentList.value) {
+    for (const feat of (comp.linkedFeatures || [])) {
+      if (!featureMap[feat]) {
+        featureMap[feat] = { completed: 0, inProgress: 0, latestCreated: '' }
+      }
+      if (comp.completionStatus === 'completed') {
+        featureMap[feat].completed++
+      } else {
+        featureMap[feat].inProgress++
+      }
+      if ((comp.created || '') > featureMap[feat].latestCreated) {
+        featureMap[feat].latestCreated = comp.created || ''
+      }
+    }
+  }
+
+  if (!Object.keys(featureMap).length) return { labels: [], datasets: [] }
+
+  // Sort by most recent onboarding date, take top N
+  const sorted = Object.entries(featureMap)
+    .sort(([, a], [, b]) => b.latestCreated.localeCompare(a.latestCreated))
+    .slice(0, TOP_FEATURE_LIMIT)
+    .reverse() // bottom → top for horizontal bar
 
   return {
-    labels: steps.map(s => STEP_LABELS[s]),
-    datasets: [{
-      label: '% Components',
-      data: pcts,
-      backgroundColor: pcts.map(p => p === 100 ? '#10b981' : p >= 60 ? '#3b82f6' : '#f59e0b'),
-      borderWidth: 0
-    }]
+    labels: sorted.map(([key]) => key),
+    datasets: [
+      {
+        label: 'Completed',
+        data: sorted.map(([, v]) => v.completed),
+        backgroundColor: '#10b981'
+      },
+      {
+        label: 'In Progress',
+        data: sorted.map(([, v]) => v.inProgress),
+        backgroundColor: '#f59e0b'
+      }
+    ]
   }
 })
 
-const stepChartOptions = computed(() => ({
+const featureChartOptions = computed(() => ({
   indexAxis: 'y',
   responsive: true,
   maintainAspectRatio: false,
-  plugins: { legend: { display: false } },
+  plugins: {
+    legend: { position: 'bottom', labels: { color: textColor.value, font: { size: 11 }, padding: 10 } },
+    tooltip: {
+      callbacks: {
+        label: ctx => `${ctx.dataset.label}: ${ctx.parsed.x} component${ctx.parsed.x !== 1 ? 's' : ''}`
+      }
+    }
+  },
   scales: {
-    x: { min: 0, max: 100, ticks: { color: textColor.value, font: { size: 10 }, callback: v => v + '%' }, grid: { color: gridColor.value } },
-    y: { ticks: { color: textColor.value, font: { size: 10 } }, grid: { color: gridColor.value } }
+    x: {
+      stacked: true,
+      beginAtZero: true,
+      ticks: { precision: 0, color: textColor.value, font: { size: 10 } },
+      grid: { color: gridColor.value }
+    },
+    y: {
+      stacked: true,
+      ticks: { color: textColor.value, font: { size: 11 } },
+      grid: { color: gridColor.value }
+    }
   }
 }))
+
+const hasFeatureData = computed(() => componentList.value.some(c => c.linkedFeatures?.length > 0))
 </script>
 
 <template>
@@ -225,12 +257,15 @@ const stepChartOptions = computed(() => ({
           </div>
         </div>
 
-        <!-- Step Completion Rate -->
+        <!-- Components by Feature -->
         <div class="min-w-[300px] flex-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <h3 class="text-sm font-medium dark:text-gray-300 mb-1">Step Completion Rate</h3>
-          <p class="text-xs text-gray-400 dark:text-gray-500 mb-3">% of all components that have completed each step</p>
-          <div class="h-[220px]">
-            <Bar :data="stepChartData" :options="stepChartOptions" />
+          <h3 class="text-sm font-medium dark:text-gray-300 mb-1">Components by Feature</h3>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mb-3">Top {{ TOP_FEATURE_LIMIT }} features by most recent onboarding activity</p>
+          <div v-if="hasFeatureData" class="h-[220px]">
+            <Bar :data="featureChartData" :options="featureChartOptions" />
+          </div>
+          <div v-else class="h-[220px] flex items-center justify-center text-xs text-gray-400 dark:text-gray-500">
+            No feature links found
           </div>
         </div>
       </div>

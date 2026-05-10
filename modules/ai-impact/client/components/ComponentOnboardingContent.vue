@@ -8,48 +8,17 @@ const props = defineProps({
   loading: { type: Boolean, default: true },
   error: { type: String, default: null },
   data: { type: Object, default: null },
-  search: { type: String, default: '' },
-  completionFilter: { type: String, default: 'all' },
-  productFilter: { type: String, default: 'all' },
   detailCache: { type: Object, default: () => ({}) }
 })
 
-const emit = defineEmits([
-  'update:search',
-  'update:completionFilter',
-  'update:productFilter',
-  'loadDetail',
-  'retry'
-])
+const emit = defineEmits(['loadDetail', 'retry'])
 
 const chartsExpanded = ref(true)
 
-const allComponents = computed(() => {
-  if (!props.data?.components) return {}
-  return props.data.components
-})
-
-const filteredComponents = computed(() => {
-  const entries = Object.entries(allComponents.value)
-  return Object.fromEntries(
-    entries.filter(([, c]) => {
-      if (props.completionFilter !== 'all' && c.completionStatus !== props.completionFilter) return false
-      if (props.productFilter !== 'all' && c.productContext !== props.productFilter) return false
-      if (props.search) {
-        const q = props.search.toLowerCase()
-        return (
-          c.key.toLowerCase().includes(q) ||
-          (c.componentName || '').toLowerCase().includes(q) ||
-          c.summary.toLowerCase().includes(q)
-        )
-      }
-      return true
-    })
-  )
-})
+const allComponents = computed(() => props.data?.components ?? {})
 
 const metrics = computed(() => {
-  const list = Object.values(filteredComponents.value)
+  const list = Object.values(allComponents.value)
   const completed = list.filter(c => c.completionStatus === 'completed')
   const inProgress = list.filter(c => c.completionStatus === 'in-progress')
   const total = list.length
@@ -77,51 +46,11 @@ const metrics = computed(() => {
 <template>
   <div class="flex-1 flex flex-col overflow-hidden">
     <!-- Header -->
-    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex flex-wrap items-center gap-4 bg-white dark:bg-gray-900">
-      <div>
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Component Onboarding</h2>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-          Automated onboarding of components into ODH &amp; RHOAI via Konflux
-        </p>
-      </div>
-
-      <div class="flex items-center gap-3 ml-auto flex-wrap">
-        <!-- Search -->
-        <div class="relative">
-          <svg class="absolute left-2.5 top-2 h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input
-            type="text"
-            placeholder="Search components…"
-            class="pl-8 pr-3 py-1.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 w-48"
-            :value="search"
-            @input="emit('update:search', $event.target.value)"
-          />
-        </div>
-
-        <!-- Completion filter -->
-        <select
-          class="text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          :value="completionFilter"
-          @change="emit('update:completionFilter', $event.target.value)"
-        >
-          <option value="all">All statuses</option>
-          <option value="completed">Completed</option>
-          <option value="in-progress">In Progress</option>
-        </select>
-
-        <!-- Product filter -->
-        <select
-          class="text-sm border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          :value="productFilter"
-          @change="emit('update:productFilter', $event.target.value)"
-        >
-          <option value="all">All products</option>
-          <option value="RHOAI">RHOAI</option>
-          <option value="ODH">ODH</option>
-        </select>
-      </div>
+    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Component Onboarding</h2>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+        Automated onboarding of components into ODH &amp; RHOAI via Konflux
+      </p>
     </div>
 
     <!-- Loading -->
@@ -150,12 +79,12 @@ const metrics = computed(() => {
     <div v-else class="flex-1 flex flex-col overflow-hidden">
       <OnboardingMetricsRow :metrics="metrics" />
       <OnboardingCharts
-        :components="filteredComponents"
+        :components="allComponents"
         :expanded="chartsExpanded"
         @toggle="chartsExpanded = !chartsExpanded"
       />
       <ComponentOnboardingTable
-        :components="filteredComponents"
+        :components="allComponents"
         :detail-cache="detailCache"
         @load-detail="emit('loadDetail', $event)"
       />
