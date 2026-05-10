@@ -1,0 +1,21 @@
+variables:
+  ORG_PULSE_BACKEND_URL: ""   # Set in GitLab CI/CD Variables (Settings > CI/CD > Variables)
+  ORG_PULSE_API_TOKEN: ""     # Bearer token (tt_...), set as Masked variable
+  JIRA_EMAIL: ""              # Red Hat email for Jira API auth
+  JIRA_TOKEN: ""              # Jira Cloud API token, set as Masked variable
+
+stages:
+  - fetch-and-push
+
+component-onboarding-sync:
+  stage: fetch-and-push
+  image: python:3.11-slim
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "schedule"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+  script:
+    - pip install -r pipeline/component-onboarding/requirements.txt -q
+    - python pipeline/component-onboarding/fetch_and_push.py
+  retry:
+    max: 2
+    when: script_failure

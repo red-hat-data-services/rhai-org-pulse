@@ -11,5 +11,5 @@ export const routes = {
   'test-plan-review': defineAsyncComponent(() => import('./views/TestPlanView.vue')),
   'security': ComingSoonView,
   'documentation': defineAsyncComponent(() => import('./views/DocumentationView.vue')),
-  'build-release': ComingSoonView,
+  'build-release': defineAsyncComponent(() => import('./views/BuildReleaseView.vue')),
 }

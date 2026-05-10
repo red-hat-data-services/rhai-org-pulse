@@ -8,8 +8,10 @@ This document covers the full technical architecture of the **RFE Review** secti
 
 1. [Data Tier](#1-data-tier)
 2. [Backend Tier](#2-backend-tier)
-3. [UI Tier](#3-ui-tier)
-4. [End-to-End Data Flow](#4-end-to-end-data-flow)
+3. [Live Data Write Paths](#3-live-data-write-paths)
+4. [Authentication & Authorization](#4-authentication--authorization)
+5. [UI Tier](#5-ui-tier)
+6. [End-to-End Data Flow](#6-end-to-end-data-flow)
 
 ---
 
@@ -352,9 +354,352 @@ Refreshing pulls live data from Jira and re-writes the caches. It runs **asynchr
 
 ---
 
-## 3. UI Tier
+## 3. Live Data Write Paths
 
-### 3.1 Module Registration
+There are four distinct paths that write to `data/ai-impact/`. Each is triggered differently, uses different write mechanics, and guards its inputs differently.
+
+---
+
+### 3.1 Overview
+
+| File | Writer | Trigger | Write method |
+|---|---|---|---|
+| `assessments.json` | External AI pipeline | `POST /assessments/bulk` or `PUT /assessments/:key` | `writeAssessmentsAtomic()` |
+| `features.json` | External AI pipeline | `POST /features/bulk` or `PUT /features/:key` | `writeFeaturesAtomic()` |
+| `rfe-data.json` | Backend Jira fetcher | `POST /refresh` (admin UI or CronJob) | `writeToStorage()` |
+| `autofix-data.json` | Backend Jira fetcher | `POST /refresh` (admin UI or CronJob) | `writeToStorage()` |
+| `config.json` | Admin via Settings UI | `POST /config` | `writeToStorage()` |
+
+---
+
+### 3.2 Atomic Write Mechanics
+
+Assessments and features use a **temp-file-then-rename** strategy (`writeAssessmentsAtomic` / `writeFeaturesAtomic` in `server/assessments/storage.js` and `server/features/storage.js`):
+
+```js
+const tmpPath = filePath + '.tmp.' + process.pid;
+fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), 'utf-8');
+fs.renameSync(tmpPath, filePath);
+```
+
+- `writeFileSync` writes to a temp file with the process PID in the name (prevents collisions between concurrent processes).
+- `renameSync` is atomic on POSIX filesystems — a reader can never see a partial file.
+- The `data/ai-impact/` directory is created automatically if it doesn't exist yet.
+
+RFE/autofix cache and config use the shared `writeToStorage()` helper (non-atomic `writeFileSync` directly to the target path) — acceptable because these are full-replacement refreshes where a brief mid-write window is tolerable.
+
+---
+
+### 3.3 Path A — Assessment Bulk Upsert
+
+**Endpoint:** `POST /api/modules/ai-impact/assessments/bulk`
+**Source:** `modules/ai-impact/server/assessments/routes.js`
+
+**Request shape:**
+```json
+{ "assessments": [ { "id": "RHAIRFE-1001", "scores": {...}, "total": 6, "passFail": "PASS", "assessedAt": "<ISO 8601>", ... } ] }
+```
+
+**Step-by-step execution:**
+
+```
+1. Guard checks
+   ├─ DEMO_MODE=true → return 200 { status: 'skipped' }  (no write)
+   ├─ body.assessments not an array → 400
+   └─ assessments.length > 5000 → 400
+
+2. Read current state
+   └─ readAssessments(readFromStorage)
+        ├─ Reads ai-impact/assessments.json from disk
+        └─ If missing/malformed → returns { lastSyncedAt: null, totalAssessed: 0, assessments: {} }
+
+3. Per-entry loop
+   └─ For each entry in assessments[]:
+        ├─ Missing entry.id → push to errors[], skip
+        ├─ validateAssessment(entry)
+        │    ├─ Each score (what/why/how/task/size) must be integer 0–2
+        │    ├─ total must equal sum of scores and be in range 0–10
+        │    ├─ passFail must be "PASS" or "FAIL"
+        │    ├─ assessedAt must be valid ISO 8601
+        │    └─ On failure → push { id, errors } to errors[], skip
+        └─ upsertAssessment(data, entry.id, validatedData)  ← mutates data in place
+
+4. Update metadata
+   ├─ data.lastSyncedAt = new Date().toISOString()
+   └─ data.totalAssessed = Object.keys(data.assessments).length
+
+5. Atomic write
+   └─ writeAssessmentsAtomic(data)
+        ├─ Write to data/ai-impact/assessments.json.tmp.<pid>
+        └─ Rename to data/ai-impact/assessments.json
+
+6. Return { created, updated, unchanged, errors }
+```
+
+**Single upsert** (`PUT /assessments/:key`) follows the same flow for one entry, using `req.params.key` as the RFE key.
+
+---
+
+### 3.4 Upsert Decision Tree (Assessments & Features)
+
+Both `upsertAssessment` and `upsertFeature` follow identical logic. The idempotency key is `assessedAt` for assessments and `reviewedAt` for features.
+
+```
+upsertAssessment(data, rfeKey, incoming)
+│
+├─ No existing entry for rfeKey?
+│    └─ Create: data.assessments[rfeKey] = { latest: incoming, history: [] }
+│       → return "created"
+│
+├─ existing.latest.assessedAt === incoming.assessedAt?
+│    └─ Exact duplicate → return "unchanged"  (no write)
+│
+├─ incoming is NEWER than existing.latest?
+│    ├─ Rotate: history = [trim(existing.latest), ...existing.history]
+│    ├─ Cap:    history = history.slice(0, 20)
+│    ├─ Replace: existing.latest = incoming
+│    └─ return "updated"
+│
+└─ incoming is OLDER than existing.latest
+     ├─ Already in history (assessedAt match)? → return "unchanged"
+     ├─ History is full (≥20) AND incoming ≤ oldest entry?
+     │    └─ Smart eviction: discard → return "unchanged"
+     └─ Insert at correct position (newest-first), cap at 20
+        → return "updated"
+```
+
+**History trim** — when rotating `latest` into `history`, or inserting an older entry, only a slim snapshot is kept (prevents unbounded file growth):
+
+| Full field | Kept in history? |
+|---|---|
+| `scores` | Yes |
+| `total` | Yes |
+| `passFail` | Yes |
+| `assessedAt` / `reviewedAt` | Yes |
+| `antiPatterns`, `criterionNotes` | No (assessments) |
+| `verdict`, `feedback` | No (assessments) |
+| `recommendation`, `needsAttention`, `humanReviewStatus` | Yes (features) |
+| `title`, `sourceRfe`, `priority`, `labels`, `runId` | No (features) |
+
+---
+
+### 3.5 Path B — Feature Bulk Upsert
+
+**Endpoint:** `POST /api/modules/ai-impact/features/bulk`
+**Source:** `modules/ai-impact/server/features/routes.js`
+
+Identical structure to assessment bulk upsert with two differences:
+
+- **Key field**: accepts either `entry.key` or `entry.strat_id` (legacy snake_case); `validateFeature()` normalises all snake_case fields to camelCase before upsert.
+- **Idempotency key**: `reviewedAt` (synthesized from `runTimestamp` if absent during validation).
+
+```
+1. Guard: DEMO_MODE, array check, cap check (same as assessments)
+2. readFeatures(readFromStorage)
+3. Per-entry: validateFeature(entry) → upsertFeature(data, result.data.key, result.data)
+4. data.lastSyncedAt, data.totalFeatures updated
+5. writeFeaturesAtomic(data)
+6. Return { created, updated, unchanged, errors }
+```
+
+---
+
+### 3.6 Path C — Jira Refresh (rfe-data.json + autofix-data.json)
+
+**Endpoint:** `POST /api/modules/ai-impact/refresh`
+**Source:** `modules/ai-impact/server/index.js`
+
+The refresh is **non-blocking** — the endpoint returns immediately and the job runs in the background. The client polls `GET /refresh/status` to track progress.
+
+```
+POST /refresh
+  │
+  ├─ DEMO_MODE=true → 400 (no write)
+  ├─ Already running → 409
+  └─ Set refreshState = { running: true, startedAt: now }
+     Return 202 immediately
+
+Background async job:
+  │
+  ├─ 1. getConfig(readFromStorage) — load jiraProject, labels, excludedStatuses, etc.
+  │
+  ├─ 2. fetchRFEData(jiraRequest, config)         [server/jira/rfe-fetcher.js]
+  │       ├─ Build JQL (all config values pre-validated against /["'();\\]/)
+  │       │    "project = RHAIRFE AND status NOT IN (...) AND created >= -Xm AND labels != testLabel"
+  │       ├─ fetchAllJqlResults() — cursor-paginated via nextPageToken
+  │       ├─ Per issue: classifyAIInvolvement(labels) → "created"|"revised"|"both"|"none"
+  │       └─ Extract label timestamps from issue changelog
+  │
+  ├─ 3. resolveLinkedFeatures(jiraRequest, issues, config)  [server/jira/link-resolver.js]
+  │       ├─ Collect all RHAISTRAT keys from issuelinks (Cloners link type)
+  │       ├─ Batch JQL: "key IN (RHAISTRAT-x, RHAISTRAT-y, ...)"  max 50 keys per request
+  │       ├─ Map summary, status, fixVersions onto each RFE's linkedFeature field
+  │       └─ Delete _rawIssueLinks from each issue
+  │
+  ├─ 4. writeToStorage('ai-impact/rfe-data.json', { fetchedAt, issues: withLinks })
+  │
+  ├─ 5. fetchAutofixData(jiraRequest, config)     [server/jira/autofix-fetcher.js]
+  │       ├─ JQL: "project IN (AIPCC, RHOAIENG) [AND created >= autofixCreatedAfter]"
+  │       └─ Per issue: classifyPipelineState(labels)
+  │
+  ├─ 6. writeToStorage('ai-impact/autofix-data.json', { fetchedAt, issues: autofixIssues })
+  │
+  └─ 7. refreshState = { running: false, lastResult: { rfeCount, autofixCount, completedAt } }
+         (or { error } on failure)
+```
+
+**Triggers:**
+- Admin clicks "Refresh" in `AIImpactSettings.vue` → `POST /refresh` + polls `/refresh/status`
+- OpenShift **CronJob** (`deploy/openshift/overlays/prod/cronjob-sync-refresh.yaml`) runs daily at **06:00 UTC** as Step 3 in the full sync sequence, using `X-Proxy-Secret` for auth
+
+---
+
+### 3.7 Path D — Config Write
+
+**Endpoint:** `POST /api/modules/ai-impact/config`
+**Source:** `modules/ai-impact/server/config.js`
+
+```
+POST /config  (requireAdmin)
+  │
+  ├─ saveConfig(writeToStorage, req.body)
+  │    ├─ Validate jiraProject, linkedProject, createdLabel, revisedLabel,
+  │    │  testExclusionLabel, linkTypeName: each must pass /["'();\\]/  (JQL injection guard)
+  │    ├─ Validate excludedStatuses: array of JQL-safe strings
+  │    ├─ Validate lookbackMonths: integer 1–120
+  │    ├─ Validate trendThresholdPp: number 0–50
+  │    ├─ Validate autofixProjects: array of JQL-safe strings
+  │    └─ Validate autofixCreatedAfter: JQL-safe string or null
+  └─ writeToStorage('ai-impact/config.json', validatedConfig)
+```
+
+Config is always merged with hardcoded defaults before being returned by `getConfig()`, so missing keys never cause `undefined` reads elsewhere.
+
+---
+
+### 3.8 Cache Clear
+
+**Endpoint:** `DELETE /api/modules/ai-impact/cache`
+
+```js
+writeToStorage('ai-impact/rfe-data.json',    null);
+writeToStorage('ai-impact/autofix-data.json', null);
+```
+
+Sets both cache files to `null` (effectively empty). The next `GET /rfe-data` or `GET /autofix-data` will return empty data until a refresh is triggered. Assessments and features are **not** touched.
+
+---
+
+## 4. Authentication & Authorization
+
+All routes share the same two-layer auth stack defined in `shared/server/auth.js` and wired in `server/dev-server.js`. Every request passes through both layers before reaching a route handler.
+
+```
+Request
+  │
+  ├─ Layer 1: proxySecretGuard   (dev-server.js:74)
+  │     Validates X-Proxy-Secret header OR a Bearer tt_ token inline.
+  │     Rejects 401 immediately if neither matches (when PROXY_AUTH_SECRET is set).
+  │
+  ├─ Layer 2: authMiddleware     (dev-server.js:173)
+  │     Resolves identity → sets req.userEmail + req.isAdmin.
+  │
+  └─ Layer 3: requireAdmin       (on individual admin routes)
+        Returns 403 if req.isAdmin is false.
+```
+
+---
+
+### 4.1 Layer 1 — `proxySecretGuard`
+
+Only active when the `PROXY_AUTH_SECRET` environment variable is set (production). Allows the request through if **either** condition is met:
+
+- `X-Proxy-Secret` header matches the secret — used by the internal OpenShift CronJob `curl` calls.
+- `Authorization: Bearer tt_<token>` is present and the token passes inline validation — used by the external AI pipeline.
+
+If neither matches → **401**, the request never reaches `authMiddleware`. In local dev (no `PROXY_AUTH_SECRET`) this layer is a no-op.
+
+---
+
+### 4.2 Layer 2 — `authMiddleware` (identity resolution)
+
+Determines who is making the request. Evaluated in priority order:
+
+| Condition | Identity source | `req.authMethod` |
+|---|---|---|
+| `Authorization: Bearer tt_...` header | API token store (`server/api-tokens.js`) | `"token"` |
+| `X-Forwarded-Email` header present | OpenShift OAuth proxy (production) | `"proxy"` |
+| Neither | First email in `ADMIN_EMAILS` env var, or `local-dev@redhat.com` | `"local-dev"` |
+
+**API token path:**
+- The raw `tt_` token is looked up in the token store.
+- The token record's `ownerEmail` is used to resolve `req.userEmail`.
+- `req.isAdmin` is set by checking `ownerEmail` against `data/allowlist.json`.
+- `lastUsedAt` is updated fire-and-forget (throttled).
+- **Invalid token → hard 401, never falls through** — prevents a bad token from accidentally inheriting local-dev admin access.
+
+**Proxy / local-dev path:**
+- `X-Forwarded-Email` is set by the OpenShift OAuth proxy in production.
+- In local dev the fallback email is used, and if `data/allowlist.json` is empty the first user is auto-added as admin (first-boot convenience).
+
+---
+
+### 4.3 Layer 3 — `requireAdmin` (route-level authorization)
+
+Applied directly on every write and admin route:
+
+```js
+// assessments/routes.js
+router.post('/assessments/bulk', requireAdmin, ...)
+router.put('/assessments/:key',  requireAdmin, ...)
+router.delete('/assessments',    requireAdmin, ...)
+router.get('/assessments/status', requireAdmin, ...)
+
+// features/routes.js  (same pattern)
+router.post('/features/bulk',    requireAdmin, ...)
+router.put('/features/:key',     requireAdmin, ...)
+router.delete('/features',       requireAdmin, ...)
+router.get('/features/status',   requireAdmin, ...)
+```
+
+`requireAdmin` checks `req.isAdmin`. If false → **403 Admin access required.**
+
+Read-only routes (`GET /assessments`, `GET /assessments/:key`, `GET /features`, `GET /features/:key`, `GET /rfe-data`) have no `requireAdmin` — any authenticated session can read.
+
+---
+
+### 4.4 How the External AI Pipeline Authenticates
+
+The pipeline (outside this repo) pushes assessment and feature data via the bulk upsert endpoints. Setup:
+
+1. A human admin creates an API token via `POST /api/tokens` while logged in as an allowlisted user.
+2. The raw `tt_...` token is returned **once** and stored in the pipeline's secret store.
+3. Every bulk push sends it as a Bearer header, plus `X-Proxy-Secret` in production:
+
+```
+POST /api/modules/ai-impact/assessments/bulk
+Authorization: Bearer tt_<token>
+X-Proxy-Secret: <secret>          ← required in production
+Content-Type: application/json
+```
+
+`proxySecretGuard` accepts the request (valid token inline), `authMiddleware` resolves the owner email, `isAdmin` is confirmed, and `requireAdmin` passes.
+
+---
+
+### 4.5 Auth Behaviour by Environment
+
+| Environment | `proxySecretGuard` | Identity source | Admin check |
+|---|---|---|---|
+| **Production** | Active — requires `X-Proxy-Secret` or valid `tt_` token | OAuth proxy (`X-Forwarded-Email`) or API token | `data/allowlist.json` |
+| **Local dev** | Disabled (no `PROXY_AUTH_SECRET`) | `ADMIN_EMAILS` env var fallback | `data/allowlist.json` (auto-seeded on first boot) |
+| **Demo mode** | Disabled | `ADMIN_EMAILS` fallback | Same, but refresh/write endpoints return 400 |
+
+---
+
+## 5. UI Tier
+
+### 5.1 Module Registration
 
 **`modules/ai-impact/module.json`** registers the module. The `navItems` array drives the left sidebar:
 
@@ -385,7 +730,7 @@ Hash routing: `#/ai-impact/rfe-review?select=RHAIRFE-1042`
 
 ---
 
-### 3.2 Composables (Data Layer)
+### 5.2 Composables (Data Layer)
 
 Composables are the bridge between API responses and Vue components. They live in `modules/ai-impact/client/composables/`.
 
@@ -411,7 +756,7 @@ Composables are the bridge between API responses and Vue components. They live i
 
 ---
 
-### 3.3 RFEReviewView (`views/RFEReviewView.vue`)
+### 5.3 RFEReviewView (`views/RFEReviewView.vue`)
 
 The top-level view for the RFE Review tab. It:
 
@@ -424,7 +769,7 @@ The top-level view for the RFE Review tab. It:
 
 ---
 
-### 3.4 Key Components
+### 5.4 Key Components
 
 #### `PhaseContent.vue`
 Main layout wrapper for the RFE Review tab.
@@ -485,7 +830,7 @@ Admin panel registered via `settingsComponent` in `module.json`. Provides:
 
 ---
 
-### 3.5 Cross-Navigation Pattern
+### 5.5 Cross-Navigation Pattern
 
 RFE Review and Feature Review are linked: a linked feature shown in the RFE detail modal has a button that takes the user to the Feature Review tab with that feature pre-selected, and vice versa.
 
@@ -511,7 +856,7 @@ Two watchers handle the race condition: params may arrive before or after data l
 
 ---
 
-## 4. End-to-End Data Flow
+## 6. End-to-End Data Flow
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -634,3 +979,6 @@ Two watchers handle the race condition: params may arrive before or after data l
 | **Lazy detail loading + Map cache** | Full assessment/feature detail is large; only fetched on demand, then cached to avoid repeat requests |
 | **Two watchers for cross-navigation** | Params and data may arrive in either order; both watchers handle the race so selection always triggers |
 | **Teleported modal** | Renders at `<body>` level to avoid z-index and overflow clipping issues from ancestor containers |
+| **Two-layer auth (guard + middleware)** | `proxySecretGuard` rejects unauthenticated requests at the perimeter; `authMiddleware` resolves identity; `requireAdmin` gates each sensitive route — concerns are separated and each layer has a single responsibility |
+| **Hard 401 on invalid `tt_` token** | Prevents a malformed or expired token from falling through to the local-dev identity fallback, which would grant unintended admin access |
+| **API tokens as pipeline credentials** | Allows the external AI pipeline to push data without sharing a user's OAuth session; tokens are scoped to an owner email and checked against the same allowlist as human admins |

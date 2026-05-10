@@ -1,0 +1,332 @@
+{
+  "fetchedAt": "2026-05-10T06:00:00Z",
+  "totalComponents": 10,
+  "components": {
+    "RHOAIENG-38001": {
+      "latest": {
+        "key": "RHOAIENG-38001",
+        "summary": "Onboard model-serving component for RHOAI 2.19",
+        "status": "Resolved",
+        "completionStatus": "completed",
+        "productContext": "RHOAI",
+        "componentName": "model-serving",
+        "repoUrl": "https://github.com/opendatahub-io/model-serving",
+        "branch": "main",
+        "dockerfilePath": "Dockerfile",
+        "isOperator": false,
+        "linkedFeatures": ["RHAISTRAT-1201", "RHAISTRAT-1202"],
+        "labels": ["component-onboarding", "quay-mr-raised", "konflux-mr-raised", "push-pipeline-mr-raised", "operator-integration-mr-raised", "bundle-config-mr-raised", "delivery-repo-mr-raised", "product-listing-mr-raised", "renovate-setup-mr-raised"],
+        "created": "2025-11-10T09:00:00Z",
+        "resolved": "2025-11-28T14:30:00Z",
+        "onboardingSteps": {
+          "yamlValidated": true,
+          "quayRepoCreated": true,
+          "konfluxOnboarded": true,
+          "pushPipelineConfigured": true,
+          "operatorIntegrated": true,
+          "bundleConfigured": true,
+          "deliveryRepoProvisioned": true,
+          "productListingUpdated": true,
+          "renovateSetup": true
+        },
+        "syncedAt": "2026-05-10T06:00:00Z"
+      },
+      "history": []
+    },
+    "RHOAIENG-38042": {
+      "latest": {
+        "key": "RHOAIENG-38042",
+        "summary": "Onboard kserve runtime component",
+        "status": "Resolved",
+        "completionStatus": "completed",
+        "productContext": "RHOAI",
+        "componentName": "kserve-runtime",
+        "repoUrl": "https://github.com/opendatahub-io/kserve",
+        "branch": "main",
+        "dockerfilePath": "Dockerfile.rhoai",
+        "isOperator": false,
+        "linkedFeatures": ["RHAISTRAT-1201"],
+        "labels": ["component-onboarding", "quay-mr-raised", "konflux-mr-raised", "push-pipeline-mr-raised", "operator-integration-mr-raised", "bundle-config-mr-raised", "delivery-repo-mr-raised", "product-listing-mr-raised", "renovate-setup-mr-raised"],
+        "created": "2025-12-01T10:00:00Z",
+        "resolved": "2025-12-19T16:00:00Z",
+        "onboardingSteps": {
+          "yamlValidated": true,
+          "quayRepoCreated": true,
+          "konfluxOnboarded": true,
+          "pushPipelineConfigured": true,
+          "operatorIntegrated": true,
+          "bundleConfigured": true,
+          "deliveryRepoProvisioned": true,
+          "productListingUpdated": true,
+          "renovateSetup": true
+        },
+        "syncedAt": "2026-05-10T06:00:00Z"
+      },
+      "history": []
+    },
+    "RHOAIENG-38110": {
+      "latest": {
+        "key": "RHOAIENG-38110",
+        "summary": "Onboard ODH notebook controller",
+        "status": "Resolved",
+        "completionStatus": "completed",
+        "productContext": "ODH",
+        "componentName": "odh-notebook-controller",
+        "repoUrl": "https://github.com/opendatahub-io/kubeflow",
+        "branch": "v1.7-branch",
+        "dockerfilePath": "components/notebook-controller/Dockerfile",
+        "isOperator": true,
+        "linkedFeatures": ["RHAISTRAT-1215"],
+        "labels": ["component-onboarding", "quay-mr-raised", "konflux-mr-raised", "push-pipeline-mr-raised", "operator-integration-mr-raised", "bundle-config-mr-raised"],
+        "created": "2025-12-15T08:00:00Z",
+        "resolved": "2026-01-10T11:00:00Z",
+        "onboardingSteps": {
+          "yamlValidated": true,
+          "quayRepoCreated": true,
+          "konfluxOnboarded": true,
+          "pushPipelineConfigured": true,
+          "operatorIntegrated": true,
+          "bundleConfigured": true,
+          "deliveryRepoProvisioned": false,
+          "productListingUpdated": false,
+          "renovateSetup": false
+        },
+        "syncedAt": "2026-05-10T06:00:00Z"
+      },
+      "history": []
+    },
+    "RHOAIENG-38205": {
+      "latest": {
+        "key": "RHOAIENG-38205",
+        "summary": "Onboard data science pipelines component",
+        "status": "Resolved",
+        "completionStatus": "completed",
+        "productContext": "RHOAI",
+        "componentName": "data-science-pipelines",
+        "repoUrl": "https://github.com/opendatahub-io/data-science-pipelines",
+        "branch": "main",
+        "dockerfilePath": "Dockerfile",
+        "isOperator": false,
+        "linkedFeatures": ["RHAISTRAT-1202"],
+        "labels": ["component-onboarding", "quay-mr-raised", "konflux-mr-raised", "push-pipeline-mr-raised", "operator-integration-mr-raised", "bundle-config-mr-raised", "delivery-repo-mr-raised", "product-listing-mr-raised", "renovate-setup-mr-raised"],
+        "created": "2026-01-08T09:00:00Z",
+        "resolved": "2026-01-27T15:00:00Z",
+        "onboardingSteps": {
+          "yamlValidated": true,
+          "quayRepoCreated": true,
+          "konfluxOnboarded": true,
+          "pushPipelineConfigured": true,
+          "operatorIntegrated": true,
+          "bundleConfigured": true,
+          "deliveryRepoProvisioned": true,
+          "productListingUpdated": true,
+          "renovateSetup": true
+        },
+        "syncedAt": "2026-05-10T06:00:00Z"
+      },
+      "history": []
+    },
+    "RHOAIENG-38301": {
+      "latest": {
+        "key": "RHOAIENG-38301",
+        "summary": "Onboard trustyai component for ODH",
+        "status": "Resolved",
+        "completionStatus": "completed",
+        "productContext": "ODH",
+        "componentName": "trustyai",
+        "repoUrl": "https://github.com/trustyai-explainability/trustyai-explainability",
+        "branch": "main",
+        "dockerfilePath": "Dockerfile",
+        "isOperator": false,
+        "linkedFeatures": ["RHAISTRAT-1215"],
+        "labels": ["component-onboarding", "quay-mr-raised", "konflux-mr-raised", "push-pipeline-mr-raised", "operator-integration-mr-raised", "bundle-config-mr-raised", "delivery-repo-mr-raised", "product-listing-mr-raised", "renovate-setup-mr-raised"],
+        "created": "2026-02-03T10:00:00Z",
+        "resolved": "2026-02-20T13:00:00Z",
+        "onboardingSteps": {
+          "yamlValidated": true,
+          "quayRepoCreated": true,
+          "konfluxOnboarded": true,
+          "pushPipelineConfigured": true,
+          "operatorIntegrated": true,
+          "bundleConfigured": true,
+          "deliveryRepoProvisioned": true,
+          "productListingUpdated": true,
+          "renovateSetup": true
+        },
+        "syncedAt": "2026-05-10T06:00:00Z"
+      },
+      "history": []
+    },
+    "RHOAIENG-38444": {
+      "latest": {
+        "key": "RHOAIENG-38444",
+        "summary": "Onboard codeflare operator for RHOAI",
+        "status": "Resolved",
+        "completionStatus": "completed",
+        "productContext": "RHOAI",
+        "componentName": "codeflare-operator",
+        "repoUrl": "https://github.com/project-codeflare/codeflare-operator",
+        "branch": "main",
+        "dockerfilePath": "Dockerfile",
+        "isOperator": true,
+        "linkedFeatures": ["RHAISTRAT-1201"],
+        "labels": ["component-onboarding", "quay-mr-raised", "konflux-mr-raised", "push-pipeline-mr-raised", "operator-integration-mr-raised", "bundle-config-mr-raised", "delivery-repo-mr-raised", "product-listing-mr-raised", "renovate-setup-mr-raised"],
+        "created": "2026-02-14T08:30:00Z",
+        "resolved": "2026-03-05T10:00:00Z",
+        "onboardingSteps": {
+          "yamlValidated": true,
+          "quayRepoCreated": true,
+          "konfluxOnboarded": true,
+          "pushPipelineConfigured": true,
+          "operatorIntegrated": true,
+          "bundleConfigured": true,
+          "deliveryRepoProvisioned": true,
+          "productListingUpdated": true,
+          "renovateSetup": true
+        },
+        "syncedAt": "2026-05-10T06:00:00Z"
+      },
+      "history": []
+    },
+    "RHOAIENG-38512": {
+      "latest": {
+        "key": "RHOAIENG-38512",
+        "summary": "Onboard ray operator for ODH",
+        "status": "In Progress",
+        "completionStatus": "in-progress",
+        "productContext": "ODH",
+        "componentName": "ray-operator",
+        "repoUrl": "https://github.com/ray-project/kuberay",
+        "branch": "master",
+        "dockerfilePath": "ray-operator/Dockerfile",
+        "isOperator": true,
+        "linkedFeatures": ["RHAISTRAT-1215"],
+        "labels": ["component-onboarding", "quay-mr-raised", "konflux-mr-raised", "push-pipeline-mr-raised", "operator-integration-mr-raised"],
+        "created": "2026-03-10T09:00:00Z",
+        "resolved": null,
+        "onboardingSteps": {
+          "yamlValidated": true,
+          "quayRepoCreated": true,
+          "konfluxOnboarded": true,
+          "pushPipelineConfigured": true,
+          "operatorIntegrated": true,
+          "bundleConfigured": false,
+          "deliveryRepoProvisioned": false,
+          "productListingUpdated": false,
+          "renovateSetup": false
+        },
+        "syncedAt": "2026-05-10T06:00:00Z"
+      },
+      "history": [
+        {
+          "completionStatus": "in-progress",
+          "onboardingSteps": {
+            "yamlValidated": true,
+            "quayRepoCreated": true,
+            "konfluxOnboarded": true,
+            "pushPipelineConfigured": false,
+            "operatorIntegrated": false,
+            "bundleConfigured": false,
+            "deliveryRepoProvisioned": false,
+            "productListingUpdated": false,
+            "renovateSetup": false
+          },
+          "syncedAt": "2026-04-10T06:00:00Z"
+        }
+      ]
+    },
+    "RHOAIENG-38601": {
+      "latest": {
+        "key": "RHOAIENG-38601",
+        "summary": "Onboard vllm serving runtime for RHOAI",
+        "status": "In Progress",
+        "completionStatus": "in-progress",
+        "productContext": "RHOAI",
+        "componentName": "vllm-runtime",
+        "repoUrl": "https://github.com/vllm-project/vllm",
+        "branch": "main",
+        "dockerfilePath": "Dockerfile.rhoai",
+        "isOperator": false,
+        "linkedFeatures": ["RHAISTRAT-1202"],
+        "labels": ["component-onboarding", "quay-mr-raised", "konflux-mr-raised"],
+        "created": "2026-03-25T11:00:00Z",
+        "resolved": null,
+        "onboardingSteps": {
+          "yamlValidated": true,
+          "quayRepoCreated": true,
+          "konfluxOnboarded": true,
+          "pushPipelineConfigured": false,
+          "operatorIntegrated": false,
+          "bundleConfigured": false,
+          "deliveryRepoProvisioned": false,
+          "productListingUpdated": false,
+          "renovateSetup": false
+        },
+        "syncedAt": "2026-05-10T06:00:00Z"
+      },
+      "history": []
+    },
+    "RHOAIENG-38720": {
+      "latest": {
+        "key": "RHOAIENG-38720",
+        "summary": "Onboard model registry component for ODH",
+        "status": "In Progress",
+        "completionStatus": "in-progress",
+        "productContext": "ODH",
+        "componentName": "model-registry",
+        "repoUrl": "https://github.com/opendatahub-io/model-registry",
+        "branch": "main",
+        "dockerfilePath": "Dockerfile",
+        "isOperator": false,
+        "linkedFeatures": ["RHAISTRAT-1215"],
+        "labels": ["component-onboarding", "quay-mr-raised"],
+        "created": "2026-04-14T08:00:00Z",
+        "resolved": null,
+        "onboardingSteps": {
+          "yamlValidated": true,
+          "quayRepoCreated": true,
+          "konfluxOnboarded": false,
+          "pushPipelineConfigured": false,
+          "operatorIntegrated": false,
+          "bundleConfigured": false,
+          "deliveryRepoProvisioned": false,
+          "productListingUpdated": false,
+          "renovateSetup": false
+        },
+        "syncedAt": "2026-05-10T06:00:00Z"
+      },
+      "history": []
+    },
+    "RHOAIENG-38830": {
+      "latest": {
+        "key": "RHOAIENG-38830",
+        "summary": "Onboard lm-eval-harness component for RHOAI",
+        "status": "In Progress",
+        "completionStatus": "in-progress",
+        "productContext": "RHOAI",
+        "componentName": "lm-eval-harness",
+        "repoUrl": "https://github.com/EleutherAI/lm-evaluation-harness",
+        "branch": "main",
+        "dockerfilePath": "Dockerfile",
+        "isOperator": false,
+        "linkedFeatures": ["RHAISTRAT-1201"],
+        "labels": ["component-onboarding"],
+        "created": "2026-04-28T13:00:00Z",
+        "resolved": null,
+        "onboardingSteps": {
+          "yamlValidated": true,
+          "quayRepoCreated": false,
+          "konfluxOnboarded": false,
+          "pushPipelineConfigured": false,
+          "operatorIntegrated": false,
+          "bundleConfigured": false,
+          "deliveryRepoProvisioned": false,
+          "productListingUpdated": false,
+          "renovateSetup": false
+        },
+        "syncedAt": "2026-05-10T06:00:00Z"
+      },
+      "history": []
+    }
+  }
+}

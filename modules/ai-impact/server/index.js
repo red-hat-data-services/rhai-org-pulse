@@ -27,6 +27,10 @@ module.exports = function registerRoutes(router, context) {
   const registerTestPlanRoutes = require('./test-plans/routes');
   registerTestPlanRoutes(router, context);
 
+  // Component onboarding routes (Build & Release)
+  const registerComponentOnboardingRoutes = require('./component-onboarding/routes');
+  registerComponentOnboardingRoutes(router, context);
+
   // ─── Refresh state (in-memory) ───
 
   const refreshState = {
@@ -287,6 +291,7 @@ module.exports = function registerRoutes(router, context) {
       const rfeData = readFromStorage('ai-impact/rfe-data.json');
       const autofixData = readFromStorage('ai-impact/autofix-data.json');
       const docData = readFromStorage('ai-impact/doc-data.json');
+      const coData = readFromStorage('ai-impact/component-onboarding-data.json');
       return {
         refreshState,
         rfe: {
@@ -303,6 +308,11 @@ module.exports = function registerRoutes(router, context) {
           dataExists: !!docData,
           issueCount: docData?.issues?.length || 0,
           fetchedAt: docData?.fetchedAt || null
+        },
+        componentOnboarding: {
+          dataExists: !!coData,
+          componentCount: coData?.totalComponents || 0,
+          fetchedAt: coData?.fetchedAt || null
         }
       };
     });
