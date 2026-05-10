@@ -106,6 +106,9 @@ const STEP_KEYS = [
 const RHOAI_TEMPLATE = 'RHOAIENG-17225';
 const ODH_TEMPLATE   = 'RHOAIENG-35683';
 
+// Label whose first appearance in changelog marks the start of the onboarding clock
+const VALIDATION_LABEL = 'validation-successful';
+
 // ── HTTP helper ───────────────────────────────────────────────────────────────
 
 function jiraGet(urlPath) {
@@ -233,6 +236,27 @@ function deriveCompletionStatus(jiraStatus, labels) {
   return 'in-progress';
 }
 
+/**
+ * Find the earliest date when `validation-successful` was added as a label.
+ * Uses the changelog histories array from expand=changelog.
+ */
+function extractValidationDate(changelog) {
+  if (!changelog?.histories) return null;
+  let earliest = null;
+  for (const history of changelog.histories) {
+    for (const item of history.items) {
+      if (item.field !== 'labels') continue;
+      const after  = (item.toString  || '').split(/\s+/).filter(Boolean);
+      const before = (item.fromString || '').split(/\s+/).filter(Boolean);
+      if (after.includes(VALIDATION_LABEL) && !before.includes(VALIDATION_LABEL)) {
+        const d = history.created;
+        if (!earliest || d < earliest) earliest = d;
+      }
+    }
+  }
+  return earliest;
+}
+
 function extractLinkedFeatures(issuelinks) {
   const features = [];
   for (const link of issuelinks) {
@@ -246,35 +270,37 @@ function extractLinkedFeatures(issuelinks) {
 }
 
 function processIssue(issue) {
-  const labels        = issue.fields.labels || [];
-  const issuelinks    = issue.fields.issuelinks || [];
-  const jiraStatus    = issue.fields.status?.name || 'Unknown';
+  const labels         = issue.fields.labels || [];
+  const issuelinks     = issue.fields.issuelinks || [];
+  const jiraStatus     = issue.fields.status?.name || 'Unknown';
   const resolutionDate = issue.fields.resolutiondate || null;
 
-  const productContext    = deriveProductContext(issue);
-  const componentName     = deriveComponentName(issue);
-  const onboardingSteps   = deriveOnboardingSteps(labels);
-  const completionStatus  = deriveCompletionStatus(jiraStatus, labels);
-  const linkedFeatures    = extractLinkedFeatures(issuelinks);
+  const productContext   = deriveProductContext(issue);
+  const componentName    = deriveComponentName(issue);
+  const onboardingSteps  = deriveOnboardingSteps(labels);
+  const completionStatus = deriveCompletionStatus(jiraStatus, labels);
+  const linkedFeatures   = extractLinkedFeatures(issuelinks);
+  const validationDate   = extractValidationDate(issue.changelog);
 
   return {
-    key:              issue.key,
-    summary:          issue.fields.summary,
-    status:           jiraStatus,
+    key:            issue.key,
+    summary:        issue.fields.summary,
+    status:         jiraStatus,
     completionStatus,
     productContext,
     componentName,
-    repoUrl:          '',
-    branch:           '',
-    dockerfilePath:   '',
-    contextPath:      '',
-    isOperator:       false,
+    repoUrl:        '',
+    branch:         '',
+    dockerfilePath: '',
+    contextPath:    '',
+    isOperator:     false,
     linkedFeatures,
     labels,
-    created:          issue.fields.created,
-    resolved:         resolutionDate,
+    created:        issue.fields.created,
+    resolved:       resolutionDate,
+    validationDate,
     onboardingSteps,
-    syncedAt:         new Date().toISOString()
+    syncedAt:       new Date().toISOString()
   };
 }
 
@@ -283,15 +309,15 @@ function processIssue(issue) {
 async function main() {
   console.log(`Connecting to ${JIRA_HOST} as ${JIRA_EMAIL}…\n`);
 
-  const jql = `project in (RHOAIENG, RHODS) AND labels = "component-onboarding" ORDER BY created DESC`;
+  const jql    = `project = RHOAIENG AND labels = "component-onboarding" ORDER BY created DESC`;
   const fields = 'summary,status,labels,created,resolutiondate,issuelinks';
 
   console.log(`JQL: ${jql}`);
-  console.log('Fetching…\n');
+  console.log('Fetching (with changelog for validation date)…\n');
 
   let rawIssues;
   try {
-    rawIssues = await fetchAllJql(jql, fields);
+    rawIssues = await fetchAllJql(jql, fields, 'changelog');
   } catch (err) {
     console.error('Jira fetch failed:', err.message);
     process.exit(1);

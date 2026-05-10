@@ -51,7 +51,7 @@ defineProps({
 
       <!-- RHOAI / ODH split -->
       <div class="space-y-1">
-        <p class="text-sm text-gray-500 dark:text-gray-400">By Product</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400">By Product Context</p>
         <div class="flex items-center gap-3">
           <div class="text-center">
             <span class="text-2xl font-bold text-red-600 dark:text-red-400">{{ metrics.rhoaiCount }}</span>

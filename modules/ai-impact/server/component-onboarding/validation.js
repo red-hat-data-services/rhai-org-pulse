@@ -1,6 +1,6 @@
 const VALID_COMPLETION_STATUSES = ['completed', 'in-progress'];
 const VALID_PRODUCT_CONTEXTS = ['RHOAI', 'ODH'];
-const VALID_KEY_PREFIXES = ['RHOAIENG-', 'RHODS-'];
+const VALID_KEY_PREFIXES = ['RHOAIENG-'];
 
 // Pipeline step keys in execution order (per onboarding skill doc)
 const ONBOARDING_STEP_KEYS = [
@@ -121,10 +121,17 @@ function validateComponentOnboarding(body) {
     errors.push('created must be a valid ISO 8601 date string');
   }
 
-  // resolved: optional ISO 8601
+  // resolved: optional ISO 8601 or null
   if (body.resolved !== undefined && body.resolved !== null) {
     if (typeof body.resolved !== 'string' || isNaN(Date.parse(body.resolved))) {
       errors.push('resolved must be a valid ISO 8601 date string or null');
+    }
+  }
+
+  // validationDate: optional ISO 8601 or null — when validation-successful label was first added
+  if (body.validationDate !== undefined && body.validationDate !== null) {
+    if (typeof body.validationDate !== 'string' || isNaN(Date.parse(body.validationDate))) {
+      errors.push('validationDate must be a valid ISO 8601 date string or null');
     }
   }
 
@@ -150,7 +157,8 @@ function validateComponentOnboarding(body) {
       labels: body.labels || [],
       onboardingSteps: body.onboardingSteps || {},
       created: body.created || null,
-      resolved: body.resolved || null
+      resolved: body.resolved || null,
+      validationDate: body.validationDate || null
     }
   };
 }

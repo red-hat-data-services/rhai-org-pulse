@@ -1,61 +1,7 @@
 {
-  "fetchedAt": "2026-05-10T08:56:04.708Z",
-  "totalComponents": 15,
+  "fetchedAt": "2026-05-10T10:01:22.027Z",
+  "totalComponents": 10,
   "components": {
-    "RHODS-14241": {
-      "latest": {
-        "key": "RHODS-14241",
-        "summary": "RHOAI Konflux CI Build Onboarding odh-ai-seventh-demo",
-        "status": "New",
-        "completionStatus": "completed",
-        "productContext": "RHOAI",
-        "componentName": "odh-ai-seventh-demo",
-        "repoUrl": "",
-        "branch": "",
-        "dockerfilePath": "",
-        "contextPath": "",
-        "isOperator": false,
-        "linkedFeatures": [],
-        "labels": [
-          "auto-merge-setup-done",
-          "bundle-changes-done",
-          "component-onboarding",
-          "component-onboarding-completed",
-          "delivery-repo-created",
-          "delivery-repo-mr-raised",
-          "krd-mr-merged",
-          "okc-pr-merged",
-          "onboarding-in-review",
-          "operator-pr-merged",
-          "product-listing-created",
-          "quay-mr-merged",
-          "renovate-changes-done",
-          "renovate-sync-done",
-          "rkc-pr-raised",
-          "rkc-pull-changes-done",
-          "validation-failed",
-          "yaml-attached"
-        ],
-        "created": "2026-05-09T16:19:00.590+0000",
-        "resolved": null,
-        "onboardingSteps": {
-          "yamlValidated": true,
-          "quayRepoCreated": true,
-          "deliveryRepoProvisioned": true,
-          "konfluxOnboarded": true,
-          "pushPipelineConfigured": true,
-          "pullPipelineConfigured": true,
-          "odhKonfluxOnboarded": true,
-          "operatorIntegrated": true,
-          "bundleConfigured": true,
-          "productListingUpdated": true,
-          "autoMergeSetup": true,
-          "renovateSetup": true
-        },
-        "syncedAt": "2026-05-10T08:56:04.707Z"
-      },
-      "history": []
-    },
     "RHOAIENG-61528": {
       "latest": {
         "key": "RHOAIENG-61528",
@@ -78,6 +24,7 @@
           "component-onboarding-completed",
           "krd-mr-merged",
           "okc-pr-merged",
+          "onboarder-workflow-triggered",
           "onboarding-in-review",
           "quay-mr-merged",
           "tekton-pr-merged",
@@ -86,6 +33,7 @@
         ],
         "created": "2026-05-08T08:23:15.259+0000",
         "resolved": "2026-05-08T13:38:23.996+0000",
+        "validationDate": "2026-05-08T08:31:46.851+0000",
         "onboardingSteps": {
           "yamlValidated": true,
           "quayRepoCreated": true,
@@ -100,7 +48,7 @@
           "autoMergeSetup": false,
           "renovateSetup": false
         },
-        "syncedAt": "2026-05-10T08:56:04.708Z"
+        "syncedAt": "2026-05-10T10:01:22.025Z"
       },
       "history": []
     },
@@ -125,6 +73,7 @@
           "component-onboarding",
           "krd-mr-merged",
           "okc-pr-merged",
+          "onboarder-workflow-triggered",
           "onboarding-in-review",
           "operator-pr-raised",
           "quay-mr-merged",
@@ -134,6 +83,7 @@
         ],
         "created": "2026-05-07T15:57:16.922+0000",
         "resolved": null,
+        "validationDate": "2026-05-07T16:03:15.521+0000",
         "onboardingSteps": {
           "yamlValidated": true,
           "quayRepoCreated": true,
@@ -148,7 +98,7 @@
           "autoMergeSetup": false,
           "renovateSetup": false
         },
-        "syncedAt": "2026-05-10T08:56:04.708Z"
+        "syncedAt": "2026-05-10T10:01:22.026Z"
       },
       "history": []
     },
@@ -188,6 +138,7 @@
         ],
         "created": "2026-05-07T09:33:45.020+0000",
         "resolved": "2026-05-07T14:01:37.788+0000",
+        "validationDate": "2026-05-07T09:40:24.114+0000",
         "onboardingSteps": {
           "yamlValidated": true,
           "quayRepoCreated": true,
@@ -202,7 +153,7 @@
           "autoMergeSetup": true,
           "renovateSetup": true
         },
-        "syncedAt": "2026-05-10T08:56:04.708Z"
+        "syncedAt": "2026-05-10T10:01:22.026Z"
       },
       "history": []
     },
@@ -242,6 +193,7 @@
         ],
         "created": "2026-05-05T07:30:11.874+0000",
         "resolved": "2026-05-08T08:33:25.153+0000",
+        "validationDate": "2026-05-07T16:02:32.238+0000",
         "onboardingSteps": {
           "yamlValidated": true,
           "quayRepoCreated": true,
@@ -256,137 +208,7 @@
           "autoMergeSetup": true,
           "renovateSetup": true
         },
-        "syncedAt": "2026-05-10T08:56:04.708Z"
-      },
-      "history": []
-    },
-    "RHOAIENG-60524": {
-      "latest": {
-        "key": "RHOAIENG-60524",
-        "summary": "ODH Konflux CI Build Onboarding odh-model-controller",
-        "status": "New",
-        "completionStatus": "in-progress",
-        "productContext": "ODH",
-        "componentName": "odh-model-controller",
-        "repoUrl": "",
-        "branch": "",
-        "dockerfilePath": "",
-        "contextPath": "",
-        "isOperator": false,
-        "linkedFeatures": [],
-        "labels": [
-          "component-onboarding",
-          "yaml-attached"
-        ],
-        "created": "2026-04-30T10:56:55.332+0000",
-        "resolved": null,
-        "onboardingSteps": {
-          "yamlValidated": true,
-          "quayRepoCreated": false,
-          "deliveryRepoProvisioned": false,
-          "konfluxOnboarded": false,
-          "pushPipelineConfigured": false,
-          "pullPipelineConfigured": false,
-          "odhKonfluxOnboarded": false,
-          "operatorIntegrated": false,
-          "bundleConfigured": false,
-          "productListingUpdated": false,
-          "autoMergeSetup": false,
-          "renovateSetup": false
-        },
-        "syncedAt": "2026-05-10T08:56:04.708Z"
-      },
-      "history": []
-    },
-    "RHOAIENG-60486": {
-      "latest": {
-        "key": "RHOAIENG-60486",
-        "summary": "Test jira creation",
-        "status": "New",
-        "completionStatus": "in-progress",
-        "productContext": "RHOAI",
-        "componentName": "",
-        "repoUrl": "",
-        "branch": "",
-        "dockerfilePath": "",
-        "contextPath": "",
-        "isOperator": false,
-        "linkedFeatures": [],
-        "labels": [
-          "component-onboarding",
-          "validation-failed",
-          "yaml-attached"
-        ],
-        "created": "2026-04-30T08:29:32.471+0000",
-        "resolved": null,
-        "onboardingSteps": {
-          "yamlValidated": true,
-          "quayRepoCreated": false,
-          "deliveryRepoProvisioned": false,
-          "konfluxOnboarded": false,
-          "pushPipelineConfigured": false,
-          "pullPipelineConfigured": false,
-          "odhKonfluxOnboarded": false,
-          "operatorIntegrated": false,
-          "bundleConfigured": false,
-          "productListingUpdated": false,
-          "autoMergeSetup": false,
-          "renovateSetup": false
-        },
-        "syncedAt": "2026-05-10T08:56:04.708Z"
-      },
-      "history": []
-    },
-    "RHODS-14227": {
-      "latest": {
-        "key": "RHODS-14227",
-        "summary": "RHOAI Konflux CI Build Onboarding odh-ai-sixth-demo",
-        "status": "Resolved",
-        "completionStatus": "completed",
-        "productContext": "RHOAI",
-        "componentName": "odh-ai-sixth-demo",
-        "repoUrl": "",
-        "branch": "",
-        "dockerfilePath": "",
-        "contextPath": "",
-        "isOperator": false,
-        "linkedFeatures": [],
-        "labels": [
-          "auto-merge-setup-done",
-          "bundle-changes-done",
-          "component-onboarding",
-          "component-onboarding-completed",
-          "delivery-repo-created",
-          "krd-mr-merged",
-          "okc-pr-merged",
-          "onboarding-in-review",
-          "operator-pr-merged",
-          "product-listing-created",
-          "quay-mr-merged",
-          "renovate-changes-done",
-          "renovate-sync-done",
-          "rkc-pr-raised",
-          "rkc-pull-changes-done",
-          "validation-successful",
-          "yaml-attached"
-        ],
-        "created": "2026-04-22T17:12:59.241+0000",
-        "resolved": "2026-05-02T17:29:09.642+0000",
-        "onboardingSteps": {
-          "yamlValidated": true,
-          "quayRepoCreated": true,
-          "deliveryRepoProvisioned": true,
-          "konfluxOnboarded": true,
-          "pushPipelineConfigured": true,
-          "pullPipelineConfigured": true,
-          "odhKonfluxOnboarded": true,
-          "operatorIntegrated": true,
-          "bundleConfigured": true,
-          "productListingUpdated": true,
-          "autoMergeSetup": true,
-          "renovateSetup": true
-        },
-        "syncedAt": "2026-05-10T08:56:04.708Z"
+        "syncedAt": "2026-05-10T10:01:22.026Z"
       },
       "history": []
     },
@@ -416,6 +238,7 @@
         ],
         "created": "2026-04-15T07:56:35.024+0000",
         "resolved": "2026-04-17T19:05:34.267+0000",
+        "validationDate": "2026-04-16T11:36:58.161+0000",
         "onboardingSteps": {
           "yamlValidated": true,
           "quayRepoCreated": true,
@@ -430,58 +253,7 @@
           "autoMergeSetup": false,
           "renovateSetup": false
         },
-        "syncedAt": "2026-05-10T08:56:04.708Z"
-      },
-      "history": []
-    },
-    "RHODS-14226": {
-      "latest": {
-        "key": "RHODS-14226",
-        "summary": "ODH Konflux CI Build Onboarding odh-ai-fourth-demo",
-        "status": "Resolved",
-        "completionStatus": "completed",
-        "productContext": "ODH",
-        "componentName": "odh-ai-fourth-demo",
-        "repoUrl": "",
-        "branch": "",
-        "dockerfilePath": "",
-        "contextPath": "",
-        "isOperator": false,
-        "linkedFeatures": [],
-        "labels": [
-          "component-onboarding",
-          "component-onboarding-completed",
-          "konflux-mr-merged",
-          "konflux-mr-raised",
-          "obc-changes-done",
-          "okc-pr-merged",
-          "okc-pr-raised",
-          "onboarding-in-review",
-          "operator-pr-merged",
-          "operator-pr-raised",
-          "quay-mr-merged",
-          "quay-mr-raised",
-          "tekton-pr-raised",
-          "validation-successful",
-          "yaml-attached"
-        ],
-        "created": "2026-04-11T02:15:34.336+0000",
-        "resolved": "2026-05-01T18:50:55.916+0000",
-        "onboardingSteps": {
-          "yamlValidated": true,
-          "quayRepoCreated": true,
-          "deliveryRepoProvisioned": false,
-          "konfluxOnboarded": true,
-          "pushPipelineConfigured": true,
-          "pullPipelineConfigured": false,
-          "odhKonfluxOnboarded": true,
-          "operatorIntegrated": true,
-          "bundleConfigured": true,
-          "productListingUpdated": false,
-          "autoMergeSetup": false,
-          "renovateSetup": false
-        },
-        "syncedAt": "2026-05-10T08:56:04.708Z"
+        "syncedAt": "2026-05-10T10:01:22.026Z"
       },
       "history": []
     },
@@ -503,30 +275,37 @@
         ],
         "labels": [
           "component-onboarding",
+          "component-onboarding-completed",
           "devops-onboarding",
+          "krd-mr-merged",
           "obc-changes-done",
+          "okc-pr-merged",
+          "onboarder-workflow-triggered",
           "onboarding-in-review",
+          "quay-mr-merged",
+          "tekton-pr-merged",
           "tekton-pr-raised",
           "validation-successful",
           "yaml-attached"
         ],
         "created": "2026-04-08T13:52:19.197+0000",
         "resolved": "2026-04-17T13:02:06.529+0000",
+        "validationDate": "2026-04-15T13:56:33.349+0000",
         "onboardingSteps": {
           "yamlValidated": true,
-          "quayRepoCreated": false,
+          "quayRepoCreated": true,
           "deliveryRepoProvisioned": false,
-          "konfluxOnboarded": false,
+          "konfluxOnboarded": true,
           "pushPipelineConfigured": true,
           "pullPipelineConfigured": false,
-          "odhKonfluxOnboarded": false,
+          "odhKonfluxOnboarded": true,
           "operatorIntegrated": false,
           "bundleConfigured": true,
           "productListingUpdated": false,
           "autoMergeSetup": false,
           "renovateSetup": false
         },
-        "syncedAt": "2026-05-10T08:56:04.708Z"
+        "syncedAt": "2026-05-10T10:01:22.026Z"
       },
       "history": []
     },
@@ -549,27 +328,32 @@
         "labels": [
           "component-onboarding",
           "devops-onboarding",
+          "krd-mr-merged",
           "obc-changes-done",
+          "okc-pr-merged",
+          "onboarding-in-review",
+          "quay-mr-merged",
           "validation-successful",
           "yaml-attached"
         ],
         "created": "2026-04-08T13:49:35.948+0000",
         "resolved": "2026-04-28T17:38:44.187+0000",
+        "validationDate": "2026-04-16T07:44:49.270+0000",
         "onboardingSteps": {
           "yamlValidated": true,
-          "quayRepoCreated": false,
+          "quayRepoCreated": true,
           "deliveryRepoProvisioned": false,
-          "konfluxOnboarded": false,
+          "konfluxOnboarded": true,
           "pushPipelineConfigured": false,
           "pullPipelineConfigured": false,
-          "odhKonfluxOnboarded": false,
+          "odhKonfluxOnboarded": true,
           "operatorIntegrated": false,
           "bundleConfigured": true,
           "productListingUpdated": false,
           "autoMergeSetup": false,
           "renovateSetup": false
         },
-        "syncedAt": "2026-05-10T08:56:04.708Z"
+        "syncedAt": "2026-05-10T10:01:22.027Z"
       },
       "history": []
     },
@@ -609,6 +393,7 @@
         ],
         "created": "2026-04-05T18:10:15.237+0000",
         "resolved": "2026-05-07T09:43:11.060+0000",
+        "validationDate": "2026-05-06T10:08:06.164+0000",
         "onboardingSteps": {
           "yamlValidated": true,
           "quayRepoCreated": true,
@@ -623,7 +408,7 @@
           "autoMergeSetup": true,
           "renovateSetup": true
         },
-        "syncedAt": "2026-05-10T08:56:04.708Z"
+        "syncedAt": "2026-05-10T10:01:22.027Z"
       },
       "history": []
     },
@@ -660,6 +445,7 @@
         ],
         "created": "2026-04-01T18:40:29.682+0000",
         "resolved": "2026-04-29T08:51:42.526+0000",
+        "validationDate": "2026-04-23T08:33:15.876+0000",
         "onboardingSteps": {
           "yamlValidated": true,
           "quayRepoCreated": true,
@@ -674,7 +460,7 @@
           "autoMergeSetup": true,
           "renovateSetup": true
         },
-        "syncedAt": "2026-05-10T08:56:04.708Z"
+        "syncedAt": "2026-05-10T10:01:22.027Z"
       },
       "history": []
     },
@@ -696,30 +482,37 @@
         ],
         "labels": [
           "component-onboarding",
+          "component-onboarding-completed",
           "devops-onboarding",
+          "krd-mr-merged",
           "obc-changes-done",
+          "okc-pr-merged",
+          "onboarder-workflow-triggered",
           "onboarding-in-review",
+          "quay-mr-merged",
+          "tekton-pr-merged",
           "tekton-pr-raised",
           "validation-successful",
           "yaml-attached"
         ],
         "created": "2026-03-25T18:33:11.346+0000",
         "resolved": "2026-04-17T13:00:48.435+0000",
+        "validationDate": "2026-04-15T07:28:42.231+0000",
         "onboardingSteps": {
           "yamlValidated": true,
-          "quayRepoCreated": false,
+          "quayRepoCreated": true,
           "deliveryRepoProvisioned": false,
-          "konfluxOnboarded": false,
+          "konfluxOnboarded": true,
           "pushPipelineConfigured": true,
           "pullPipelineConfigured": false,
-          "odhKonfluxOnboarded": false,
+          "odhKonfluxOnboarded": true,
           "operatorIntegrated": false,
           "bundleConfigured": true,
           "productListingUpdated": false,
           "autoMergeSetup": false,
           "renovateSetup": false
         },
-        "syncedAt": "2026-05-10T08:56:04.708Z"
+        "syncedAt": "2026-05-10T10:01:22.027Z"
       },
       "history": []
     }

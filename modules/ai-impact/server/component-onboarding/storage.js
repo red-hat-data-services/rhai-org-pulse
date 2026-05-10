@@ -93,6 +93,7 @@ function getLatestProjection(data) {
       onboardingSteps: entry.latest.onboardingSteps,
       created: entry.latest.created,
       resolved: entry.latest.resolved,
+      validationDate: entry.latest.validationDate || null,
       syncedAt: entry.latest.syncedAt
     };
   }

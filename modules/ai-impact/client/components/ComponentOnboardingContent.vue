@@ -23,12 +23,14 @@ const metrics = computed(() => {
   const inProgress = list.filter(c => c.completionStatus === 'in-progress')
   const total = list.length
 
-  const avgDays = completed.length
+  // Use validationDate→resolved for the onboarding clock; fall back to created if absent
+  const measurable = completed.filter(c => c.resolved && (c.validationDate || c.created))
+  const avgDays = measurable.length
     ? Math.round(
-        completed
-          .filter(c => c.created && c.resolved)
-          .reduce((sum, c) => sum + (new Date(c.resolved) - new Date(c.created)) / 86400000, 0) /
-        (completed.filter(c => c.created && c.resolved).length || 1)
+        measurable.reduce((sum, c) => {
+          const start = c.validationDate || c.created
+          return sum + (new Date(c.resolved) - new Date(start)) / 86400000
+        }, 0) / measurable.length
       )
     : 0
 

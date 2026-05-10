@@ -42,6 +42,14 @@ function daysBetween(start, end) {
   return Math.round((new Date(end) - new Date(start)) / 86400000)
 }
 
+// Days from validation to close (the onboarding clock).
+// Falls back to created if validationDate is absent.
+function onboardingDays(c) {
+  const start = c.validationDate || c.created
+  const end   = c.completionStatus === 'completed' ? c.resolved : new Date().toISOString()
+  return daysBetween(start, end)
+}
+
 const componentList = computed(() => {
   const q = search.value.toLowerCase()
 
@@ -74,12 +82,8 @@ const componentList = computed(() => {
           return dir * (aSteps - bSteps)
         }
         case 'days': {
-          const aDays = a.completionStatus === 'completed'
-            ? (daysBetween(a.created, a.resolved) ?? 0)
-            : (daysBetween(a.created, new Date().toISOString()) ?? 0)
-          const bDays = b.completionStatus === 'completed'
-            ? (daysBetween(b.created, b.resolved) ?? 0)
-            : (daysBetween(b.created, new Date().toISOString()) ?? 0)
+          const aDays = onboardingDays(a) ?? 0
+          const bDays = onboardingDays(b) ?? 0
           return dir * (aDays - bDays)
         }
         case 'created':
@@ -297,12 +301,12 @@ function stepsDone(component) {
               </span>
             </td>
             <td class="px-4 py-3 text-xs text-gray-500 dark:text-gray-400">{{ formatDate(component.created) }}</td>
-            <td class="px-4 py-3 text-xs">
+            <td class="px-4 py-3 text-xs" :title="component.validationDate ? 'From validation to close' : 'From creation to close (no validation date)'">
               <span v-if="component.completionStatus === 'completed'" class="font-medium text-gray-700 dark:text-gray-300">
-                {{ daysBetween(component.created, component.resolved) ?? '—' }}d
+                {{ onboardingDays(component) ?? '—' }}d
               </span>
               <span v-else class="text-gray-400 dark:text-gray-500">
-                {{ daysBetween(component.created, new Date().toISOString()) ?? '—' }}d+
+                {{ onboardingDays(component) ?? '—' }}d+
               </span>
             </td>
           </tr>
