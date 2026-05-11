@@ -1,0 +1,23 @@
+{
+  "name": "Product Builds",
+  "slug": "product-builds",
+  "description": "Product drops, artifacts, and release statistics from CI/CD dashboard",
+  "icon": "Factory",
+  "order": 20,
+  "defaultEnabled": true,
+  "requires": [],
+  "client": {
+    "entry": "./client/index.js",
+    "navItems": [
+      { "id": "rhaiis", "label": "RHAIIS", "icon": "PackageOpen", "default": true },
+      { "id": "rhel-ai", "label": "RHEL AI", "icon": "PackageOpen" },
+      { "id": "base-images", "label": "Base Images", "icon": "PackageOpen" },
+      { "id": "builder-images", "label": "Builder Images", "icon": "PackageOpen" },
+      { "id": "wheel-collections", "label": "Wheel Collections", "icon": "PackageOpen" }
+    ],
+    "settingsComponent": "./client/components/ProductBuildsSettings.vue"
+  },
+  "server": {
+    "entry": "./server/index.js"
+  }
+}
