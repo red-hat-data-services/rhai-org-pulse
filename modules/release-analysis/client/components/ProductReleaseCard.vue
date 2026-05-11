@@ -43,8 +43,9 @@
         </span>
         <span
           v-if="predictedDate"
-          class="inline-flex items-center gap-1 text-xs text-teal-600 dark:text-teal-400"
-          title="95% confidence predicted completion date (Monte Carlo)"
+          class="inline-flex items-center gap-1 text-xs font-medium"
+          :class="isReleasePredictedLate ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'"
+          title="Predicted completion based on slowest component's velocity and workload"
         >
           Predicted {{ predictedDate }}
         </span>
@@ -268,6 +269,7 @@
             :deadline-label="mcInputs.activeTarget === 'codeFreeze' ? 'Code Freeze' : 'GA'"
             :code-freeze-date="mcInputs.codeFreezeDate"
             :release-date="mcInputs.releaseDate"
+            :component-forecasts="mcComponentForecasts"
           />
         </div>
       </details>
@@ -280,7 +282,6 @@ import { computed, ref } from 'vue'
 import MonteCarloChart from './MonteCarloChart.vue'
 import ComponentDetailRow from './ComponentDetailRow.vue'
 import { extractProduct } from '../composables/useReleaseFilter'
-import { gammaSample } from '../utils/monteCarlo'
 
 const FORECAST_WINDOW = 14
 const STRATEGIC_TYPES = new Set(['feature', 'initiative', 'spike'])
@@ -377,6 +378,17 @@ function computeForecast(remaining, componentNames) {
   }
 }
 
+function computePredictedDate(releaseRemaining, otherWorkload, velocity) {
+  if (releaseRemaining === 0) return null
+  if (!velocity || velocity <= 0) return null
+  const totalWorkload = releaseRemaining + otherWorkload
+  const windowsNeeded = totalWorkload / velocity
+  const daysNeeded = Math.ceil(windowsNeeded * FORECAST_WINDOW)
+  const predicted = new Date()
+  predicted.setDate(predicted.getDate() + daysNeeded)
+  return predicted.toISOString().slice(0, 10)
+}
+
 const projectFilteredIssues = computed(() => {
   const all = releaseIssues.value
   if (!props.selectedProjects.size) return all
@@ -455,6 +467,9 @@ const componentList = computed(() => {
       const currentReleaseOpen = c.issues_to_do + c.issues_doing
       const globalOtherWorkload = Math.max(0, globalTotalOpen - currentReleaseOpen)
 
+      const forecast = computeForecast(remaining, [c.name])
+      const predictedDate = computePredictedDate(remaining, globalOtherWorkload, forecast.velocity)
+
       return {
         name: c.name,
         projects: [...c.projects].sort(),
@@ -464,7 +479,8 @@ const componentList = computed(() => {
         currentReleaseLoad,
         globalTotalOpen,
         globalOtherWorkload,
-        forecast: computeForecast(remaining, [c.name]),
+        forecast,
+        predictedDate,
         strategicItems,
         otherItems,
         otherCounts: countByBucket(otherItems)
@@ -482,8 +498,16 @@ const componentList = computed(() => {
     })
 })
 
-const atRiskComponents = computed(() => componentList.value.filter(c => c.forecast.paceStatus === 'At Risk'))
-const nonRiskComponents = computed(() => componentList.value.filter(c => c.forecast.paceStatus !== 'At Risk'))
+function isComponentAtRisk(comp) {
+  const gaDate = props.release?.dueDate
+  if (comp.predictedDate && gaDate) {
+    return comp.predictedDate > gaDate
+  }
+  return comp.forecast.paceStatus === 'At Risk'
+}
+
+const atRiskComponents = computed(() => componentList.value.filter(isComponentAtRisk))
+const nonRiskComponents = computed(() => componentList.value.filter(c => !isComponentAtRisk(c)))
 
 const releaseForecast = computed(() => {
   const allNames = componentList.value.map(c => c.name)
@@ -496,7 +520,7 @@ const releaseForecast = computed(() => {
   }
   const forecast = computeForecast(totalRemaining, allNames)
 
-  const atRisk = componentList.value.filter(c => c.forecast.paceStatus === 'At Risk')
+  const atRisk = componentList.value.filter(isComponentAtRisk)
   if (atRisk.length > 0 && forecast.paceStatus !== 'At Risk') {
     forecast.paceStatus = 'At Risk'
     forecast.level = 'Low'
@@ -521,30 +545,35 @@ const issueSum = computed(() => {
 
 const releaseHasNoIssues = computed(() => issueSum.value === 0)
 
-// ── Lightweight Monte Carlo for header predicted date ──
-
-const MC_ITERATIONS = 1000
-const MC_MAX_DAYS = 730
+const mcComponentForecasts = computed(() => {
+  return componentList.value
+    .filter(c => c.forecast.remaining > 0 && c.forecast.velocity > 0)
+    .map(c => ({
+      name: c.name,
+      totalWorkload: c.forecast.remaining + c.globalOtherWorkload,
+      velocity: c.forecast.velocity
+    }))
+})
 
 const predictedDate = computed(() => {
-  const mc = props.mcInputs
-  if (!mc || mc.notDoneCount <= 0 || mc.totalVelocity <= 0) return null
+  const dates = componentList.value
+    .map(c => c.predictedDate)
+    .filter(Boolean)
+  if (!dates.length) return null
+  const maxDate = dates.reduce((a, b) => a > b ? a : b)
+  const d = new Date(maxDate + 'T00:00:00')
+  return d.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })
+})
 
-  const scale = 14 / mc.totalVelocity
-  const n = mc.notDoneCount
-  const completionDays = new Array(MC_ITERATIONS)
-  for (let i = 0; i < MC_ITERATIONS; i++) {
-    completionDays[i] = Math.min(Math.ceil(gammaSample(n, scale)), MC_MAX_DAYS)
-  }
-  completionDays.sort((a, b) => a - b)
-
-  const p95Days = completionDays[Math.ceil(MC_ITERATIONS * 0.95) - 1]
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const p95Date = new Date(today)
-  p95Date.setDate(p95Date.getDate() + p95Days)
-
-  return p95Date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' })
+const isReleasePredictedLate = computed(() => {
+  const gaDate = props.release?.dueDate
+  if (!gaDate) return false
+  const dates = componentList.value
+    .map(c => c.predictedDate)
+    .filter(Boolean)
+  if (!dates.length) return false
+  const maxDate = dates.reduce((a, b) => a > b ? a : b)
+  return maxDate > gaDate
 })
 
 const releaseRiskTitle = computed(() => {
