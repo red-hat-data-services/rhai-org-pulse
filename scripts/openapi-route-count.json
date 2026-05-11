@@ -1,4 +1,4 @@
 {
   "server/dev-server.js": 27,
-  "modules/team-tracker/server/index.js": 38
+  "modules/team-tracker/server/**/*.js": 102
 }

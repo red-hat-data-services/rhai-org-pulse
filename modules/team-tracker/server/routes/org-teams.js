@@ -211,6 +211,22 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
 
   // ─── GET /org-teams ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/org-teams:
+   *   get:
+   *     tags: ['OR: Teams']
+   *     summary: List org-roster teams with member counts, boards, and components
+   *     parameters:
+   *       - in: query
+   *         name: org
+   *         schema:
+   *           type: string
+   *         description: Filter by org name
+   *     responses:
+   *       200:
+   *         description: List of enriched teams with unassigned people
+   */
   router.get('/org-teams', function(req, res) {
     try {
       const { teams, unassigned, totalPeople, fetchedAt } = buildEnrichedTeams(req.query.org);
@@ -229,6 +245,25 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
 
   // ─── GET /org-teams/:teamKey ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/org-teams/{teamKey}:
+   *   get:
+   *     tags: ['OR: Teams']
+   *     summary: Get single org-roster team detail
+   *     parameters:
+   *       - in: path
+   *         name: teamKey
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Composite key (org::teamName)
+   *     responses:
+   *       200:
+   *         description: Team detail with RFE issues
+   *       404:
+   *         description: Team not found
+   */
   router.get('/org-teams/:teamKey', function(req, res) {
     try {
       const teamKey = decodeURIComponent(req.params.teamKey);
@@ -252,6 +287,23 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
 
   // ─── GET /org-teams/:teamKey/members ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/org-teams/{teamKey}/members:
+   *   get:
+   *     tags: ['OR: Teams']
+   *     summary: Get members of an org-roster team
+   *     parameters:
+   *       - in: path
+   *         name: teamKey
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Composite key (org::teamName)
+   *     responses:
+   *       200:
+   *         description: List of team members
+   */
   router.get('/org-teams/:teamKey/members', function(req, res) {
     try {
       const teamKey = decodeURIComponent(req.params.teamKey);
@@ -277,6 +329,16 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
 
   // ─── GET /org-list ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/org-list:
+   *   get:
+   *     tags: ['OR: Teams']
+   *     summary: List all orgs with team counts and headcounts
+   *     responses:
+   *       200:
+   *         description: List of orgs
+   */
   router.get('/org-list', function(req, res) {
     try {
       // Derive orgs and team counts from people data (source of truth)
@@ -312,6 +374,25 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
 
   // ─── GET /org-summary/:orgName ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/org-summary/{orgName}:
+   *   get:
+   *     tags: ['OR: Teams']
+   *     summary: Get org-level summary with role breakdown and RFE counts
+   *     parameters:
+   *       - in: path
+   *         name: orgName
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Org name (or _all for all orgs)
+   *     responses:
+   *       200:
+   *         description: Org summary with teams, roles, and RFE data
+   *       404:
+   *         description: No data for this org
+   */
   router.get('/org-summary/:orgName', function(req, res) {
     try {
       const orgName = decodeURIComponent(req.params.orgName);
@@ -367,6 +448,17 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
 
   // ─── Components & RFE ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/components:
+   *   get:
+   *     tags: ['OR: Teams']
+   *     summary: (Deprecated) Get component-to-team mapping
+   *     responses:
+   *       200:
+   *         description: Component map
+   *     deprecated: true
+   */
   router.get('/components', function(req, res) {
     try {
       const { teams } = buildEnrichedTeams();
@@ -386,6 +478,22 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/rfe-backlog:
+   *   get:
+   *     tags: ['OR: RFE']
+   *     summary: Get RFE backlog data by component and team
+   *     parameters:
+   *       - in: query
+   *         name: org
+   *         schema:
+   *           type: string
+   *         description: Filter by org name
+   *     responses:
+   *       200:
+   *         description: RFE backlog grouped by component and team
+   */
   router.get('/rfe-backlog', function(req, res) {
     try {
       const data = readFromStorage('org-roster/rfe-backlog.json');
@@ -408,6 +516,16 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/rfe-config:
+   *   get:
+   *     tags: ['OR: RFE']
+   *     summary: Get RFE configuration (Jira project, issue type, component mapping)
+   *     responses:
+   *       200:
+   *         description: RFE configuration
+   */
   router.get('/rfe-config', function(req, res) {
     try {
       const config = getOrgConfig();
@@ -424,11 +542,35 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
 
   // ─── Org Config ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/org-config:
+   *   get:
+   *     tags: ['OR: Config']
+   *     summary: Get org-roster configuration (admin)
+   *     responses:
+   *       200:
+   *         description: Org configuration object
+   *       403:
+   *         description: Admin access required
+   */
   router.get('/org-config', requireAdmin, function(req, res) {
     try { res.json(getOrgConfig()); }
     catch { res.status(500).json({ error: 'Failed to load configuration' }); }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/org-config:
+   *   post:
+   *     tags: ['OR: Config']
+   *     summary: Save org-roster configuration (admin)
+   *     responses:
+   *       200:
+   *         description: Updated configuration
+   *       403:
+   *         description: Admin access required
+   */
   router.post('/org-config', requireAdmin, function(req, res) {
     try {
       const body = req.body;
@@ -454,6 +596,18 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
 
   // ─── Sheet Orgs & Configured Orgs (for org name mapping UI) ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/sheet-orgs:
+   *   get:
+   *     tags: ['OR: Config']
+   *     summary: Get org names from Google Sheet or roster config (admin)
+   *     responses:
+   *       200:
+   *         description: List of org names from sheet
+   *       403:
+   *         description: Admin access required
+   */
   router.get('/sheet-orgs', requireAdmin, async function(req, res) {
     try {
       const config = getOrgConfig();
@@ -479,6 +633,16 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/configured-orgs:
+   *   get:
+   *     tags: ['OR: Config']
+   *     summary: Get configured org display names
+   *     responses:
+   *       200:
+   *         description: List of configured org names
+   */
   router.get('/configured-orgs', function(req, res) {
     try {
       const displayNames = buildOrgKeyToDisplayName();
@@ -492,6 +656,16 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
 
   // ─── Sheets Sync ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/org-sync/status:
+   *   get:
+   *     tags: ['OR: Sync']
+   *     summary: Get org sync status
+   *     responses:
+   *       200:
+   *         description: Sync status with last sync time and current state
+   */
   router.get('/org-sync/status', function(req, res) {
     try {
       const data = readFromStorage('org-roster/sync-status.json');
@@ -535,6 +709,20 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
   // Export triggerOrgSync for unified endpoint
   _triggerOrgSync = triggerOrgSync;
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/org-sync/trigger:
+   *   post:
+   *     tags: ['OR: Sync']
+   *     summary: Trigger manual org sync (admin)
+   *     responses:
+   *       200:
+   *         description: Sync started
+   *       403:
+   *         description: Admin access required
+   *       409:
+   *         description: Sync already in progress
+   */
   router.post('/org-sync/trigger', requireAdmin, async function(req, res) {
     if (orgSyncInProgress) return res.status(409).json({ error: 'Sync already in progress' });
 

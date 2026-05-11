@@ -736,6 +736,22 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Team CRUD ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/teams:
+   *   get:
+   *     tags: ['TT: Structure']
+   *     summary: List all teams
+   *     parameters:
+   *       - in: query
+   *         name: orgKey
+   *         schema:
+   *           type: string
+   *         description: Filter teams by org key
+   *     responses:
+   *       200:
+   *         description: List of teams
+   */
   router.get('/structure/teams', function(req, res) {
     const data = teamStore.readTeams(storage);
     let teams = Object.values(data.teams);
@@ -745,6 +761,16 @@ module.exports = function registerRoutes(router, context) {
     res.json({ teams });
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/teams:
+   *   post:
+   *     tags: ['TT: Structure']
+   *     summary: Create a new team
+   *     responses:
+   *       201:
+   *         description: Created team
+   */
   router.post('/structure/teams', requireTeamAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
@@ -756,6 +782,23 @@ module.exports = function registerRoutes(router, context) {
     res.status(201).json(team);
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/teams/{teamId}:
+   *   patch:
+   *     tags: ['TT: Structure']
+   *     summary: Rename a team
+   *     parameters:
+   *       - in: path
+   *         name: teamId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The team ID
+   *     responses:
+   *       200:
+   *         description: Updated team
+   */
   router.patch('/structure/teams/:teamId', requireTeamAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
@@ -767,6 +810,23 @@ module.exports = function registerRoutes(router, context) {
     res.json(team);
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/teams/{teamId}:
+   *   delete:
+   *     tags: ['TT: Structure']
+   *     summary: Delete a team
+   *     parameters:
+   *       - in: path
+   *         name: teamId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The team ID
+   *     responses:
+   *       200:
+   *         description: Deletion result
+   */
   router.delete('/structure/teams/:teamId', requireTeamAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
@@ -778,6 +838,23 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Team Member Assignment ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/teams/{teamId}/members:
+   *   post:
+   *     tags: ['TT: Structure']
+   *     summary: Assign a person to a team
+   *     parameters:
+   *       - in: path
+   *         name: teamId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The team ID
+   *     responses:
+   *       200:
+   *         description: Assignment result
+   */
   router.post('/structure/teams/:teamId/members',
     requireManagerOrAdmin(req => req.body.uid),
     function(req, res) {
@@ -792,6 +869,23 @@ module.exports = function registerRoutes(router, context) {
     }
   );
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/teams/{teamId}/members/bulk:
+   *   post:
+   *     tags: ['TT: Structure']
+   *     summary: Bulk assign people to a team
+   *     parameters:
+   *       - in: path
+   *         name: teamId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The team ID
+   *     responses:
+   *       200:
+   *         description: Bulk assignment result
+   */
   router.post('/structure/teams/:teamId/members/bulk', function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
@@ -814,6 +908,29 @@ module.exports = function registerRoutes(router, context) {
     res.json(result);
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/teams/{teamId}/members/{uid}:
+   *   delete:
+   *     tags: ['TT: Structure']
+   *     summary: Unassign a person from a team
+   *     parameters:
+   *       - in: path
+   *         name: teamId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The team ID
+   *       - in: path
+   *         name: uid
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The person's UID
+   *     responses:
+   *       200:
+   *         description: Unassignment result
+   */
   router.delete('/structure/teams/:teamId/members/:uid',
     requireManagerOrAdmin(req => req.params.uid),
     function(req, res) {
@@ -828,6 +945,23 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Unassigned People ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/unassigned:
+   *   get:
+   *     tags: ['TT: Structure']
+   *     summary: List unassigned people
+   *     parameters:
+   *       - in: query
+   *         name: scope
+   *         schema:
+   *           type: string
+   *           enum: [all, direct, org]
+   *         description: Scope filter (default all)
+   *     responses:
+   *       200:
+   *         description: List of unassigned people
+   */
   router.get('/structure/unassigned', function(req, res) {
     const VALID_SCOPES = ['all', 'direct', 'org'];
     const scope = req.query.scope || 'all';
@@ -841,6 +975,16 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Field Definitions ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/field-definitions:
+   *   get:
+   *     tags: ['TT: Structure']
+   *     summary: List all field definitions (person and team)
+   *     responses:
+   *       200:
+   *         description: Person and team field definitions
+   */
   router.get('/structure/field-definitions', function(req, res) {
     const defs = fieldStore.readFieldDefinitions(storage);
     // Filter out soft-deleted fields for non-admin/team-admin users
@@ -865,6 +1009,16 @@ module.exports = function registerRoutes(router, context) {
 
   const VALID_FIELD_TYPES = ['free-text', 'constrained', 'person-reference-linked'];
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/field-definitions/person:
+   *   post:
+   *     tags: ['TT: Structure']
+   *     summary: Create a person-level field definition
+   *     responses:
+   *       201:
+   *         description: Created field definition
+   */
   router.post('/structure/field-definitions/person', requireTeamAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
@@ -882,6 +1036,23 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/field-definitions/person/{fieldId}:
+   *   patch:
+   *     tags: ['TT: Structure']
+   *     summary: Edit a person-level field definition
+   *     parameters:
+   *       - in: path
+   *         name: fieldId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The field definition ID
+   *     responses:
+   *       200:
+   *         description: Updated field definition
+   */
   router.patch('/structure/field-definitions/person/:fieldId', requireTeamAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
@@ -894,6 +1065,23 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/field-definitions/person/{fieldId}:
+   *   delete:
+   *     tags: ['TT: Structure']
+   *     summary: Soft-delete a person-level field definition
+   *     parameters:
+   *       - in: path
+   *         name: fieldId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The field definition ID
+   *     responses:
+   *       200:
+   *         description: Deleted field definition
+   */
   router.delete('/structure/field-definitions/person/:fieldId', requireTeamAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
@@ -902,6 +1090,16 @@ module.exports = function registerRoutes(router, context) {
     res.json(result);
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/field-definitions/person/reorder:
+   *   post:
+   *     tags: ['TT: Structure']
+   *     summary: Reorder person-level field definitions
+   *     responses:
+   *       200:
+   *         description: Reorder confirmation
+   */
   router.post('/structure/field-definitions/person/reorder', requireTeamAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
@@ -913,6 +1111,16 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Team Field Definitions ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/field-definitions/team:
+   *   post:
+   *     tags: ['TT: Structure']
+   *     summary: Create a team-level field definition
+   *     responses:
+   *       201:
+   *         description: Created field definition
+   */
   router.post('/structure/field-definitions/team', requireTeamAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
@@ -930,6 +1138,23 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/field-definitions/team/{fieldId}:
+   *   patch:
+   *     tags: ['TT: Structure']
+   *     summary: Edit a team-level field definition
+   *     parameters:
+   *       - in: path
+   *         name: fieldId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The field definition ID
+   *     responses:
+   *       200:
+   *         description: Updated field definition
+   */
   router.patch('/structure/field-definitions/team/:fieldId', requireTeamAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
@@ -942,6 +1167,23 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/field-definitions/team/{fieldId}:
+   *   delete:
+   *     tags: ['TT: Structure']
+   *     summary: Soft-delete a team-level field definition
+   *     parameters:
+   *       - in: path
+   *         name: fieldId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The field definition ID
+   *     responses:
+   *       200:
+   *         description: Deleted field definition
+   */
   router.delete('/structure/field-definitions/team/:fieldId', requireTeamAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
@@ -950,6 +1192,16 @@ module.exports = function registerRoutes(router, context) {
     res.json(result);
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/field-definitions/team/reorder:
+   *   post:
+   *     tags: ['TT: Structure']
+   *     summary: Reorder team-level field definitions
+   *     responses:
+   *       200:
+   *         description: Reorder confirmation
+   */
   router.post('/structure/field-definitions/team/reorder', requireTeamAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
@@ -980,6 +1232,16 @@ module.exports = function registerRoutes(router, context) {
     return null;
   }
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/field-options:
+   *   get:
+   *     tags: ['TT: Structure']
+   *     summary: List all field option sets
+   *     responses:
+   *       200:
+   *         description: List of field option sets
+   */
   router.get('/field-options', function(req, res) {
     try {
       const options = fieldOptionsStore.listFieldOptions(storage);
@@ -989,6 +1251,23 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/field-options/{name}:
+   *   get:
+   *     tags: ['TT: Structure']
+   *     summary: Get a single field option set by name
+   *     parameters:
+   *       - in: path
+   *         name: name
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The option set name
+   *     responses:
+   *       200:
+   *         description: Field option set with values
+   */
   router.get('/field-options/:name', function(req, res) {
     const safeName = sanitizeOptionsName(req.params.name);
     if (!safeName) return res.status(400).json({ error: 'Invalid option set name' });
@@ -1001,6 +1280,23 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/field-options/{name}:
+   *   put:
+   *     tags: ['TT: Structure']
+   *     summary: Replace a field option set's values
+   *     parameters:
+   *       - in: path
+   *         name: name
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The option set name
+   *     responses:
+   *       200:
+   *         description: Updated field option set
+   */
   router.put('/field-options/:name', requireAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
@@ -1019,6 +1315,23 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/field-options/{name}/values:
+   *   post:
+   *     tags: ['TT: Structure']
+   *     summary: Add values to a field option set
+   *     parameters:
+   *       - in: path
+   *         name: name
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The option set name
+   *     responses:
+   *       200:
+   *         description: Updated field option set
+   */
   router.post('/field-options/:name/values', requireTeamAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
@@ -1042,6 +1355,23 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/field-options/{name}/values:
+   *   delete:
+   *     tags: ['TT: Structure']
+   *     summary: Remove values from a field option set
+   *     parameters:
+   *       - in: path
+   *         name: name
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The option set name
+   *     responses:
+   *       200:
+   *         description: Updated field option set
+   */
   router.delete('/field-options/:name/values', requireAdmin, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
@@ -1062,6 +1392,23 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Person Field Values ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/person/{uid}/fields:
+   *   patch:
+   *     tags: ['TT: Structure']
+   *     summary: Update a person's field values
+   *     parameters:
+   *       - in: path
+   *         name: uid
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The person's UID
+   *     responses:
+   *       200:
+   *         description: Updated field values
+   */
   router.patch('/structure/person/:uid/fields',
     requireManagerOrAdmin(req => req.params.uid),
     function(req, res) {
@@ -1088,6 +1435,23 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Team Field Values ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/teams/{teamId}/fields:
+   *   patch:
+   *     tags: ['TT: Structure']
+   *     summary: Update a team's field values
+   *     parameters:
+   *       - in: path
+   *         name: teamId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The team ID
+   *     responses:
+   *       200:
+   *         description: Updated team metadata
+   */
   router.patch('/structure/teams/:teamId/fields', requireTeamPurview, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
@@ -1113,6 +1477,23 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Team Boards ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/teams/{teamId}/boards:
+   *   patch:
+   *     tags: ['TT: Structure']
+   *     summary: Update a team's boards
+   *     parameters:
+   *       - in: path
+   *         name: teamId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The team ID
+   *     responses:
+   *       200:
+   *         description: Updated boards list
+   */
   router.patch('/structure/teams/:teamId/boards', requireTeamPurview, function(req, res) {
     const guard = demoWriteGuard(res);
     if (guard) return;
@@ -1145,6 +1526,52 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Audit Log ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/audit-log:
+   *   get:
+   *     tags: ['TT: Admin']
+   *     summary: Query the audit log
+   *     parameters:
+   *       - in: query
+   *         name: from
+   *         schema:
+   *           type: string
+   *         description: Start date filter
+   *       - in: query
+   *         name: to
+   *         schema:
+   *           type: string
+   *         description: End date filter
+   *       - in: query
+   *         name: action
+   *         schema:
+   *           type: string
+   *         description: Filter by action type
+   *       - in: query
+   *         name: actor
+   *         schema:
+   *           type: string
+   *         description: Filter by actor
+   *       - in: query
+   *         name: entityId
+   *         schema:
+   *           type: string
+   *         description: Filter by entity ID
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: integer
+   *         description: Max entries to return (1-200)
+   *       - in: query
+   *         name: offset
+   *         schema:
+   *           type: integer
+   *         description: Pagination offset
+   *     responses:
+   *       200:
+   *         description: Audit log entries
+   */
   router.get('/structure/audit-log', function(req, res) {
     // Only admin and managers can view audit log
     if (req.permissionTier === 'user') {
@@ -1183,6 +1610,16 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Migration ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/migrate/preview:
+   *   get:
+   *     tags: ['TT: Admin']
+   *     summary: Preview Sheets-to-in-app migration
+   *     responses:
+   *       200:
+   *         description: Migration preview data
+   */
   router.get('/structure/migrate/preview', requireAdmin, async function(req, res) {
     try {
       const config = rosterSyncConfig.loadConfig(storage);
@@ -1195,6 +1632,16 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/migrate:
+   *   post:
+   *     tags: ['TT: Admin']
+   *     summary: Trigger Sheets-to-in-app migration
+   *     responses:
+   *       200:
+   *         description: Migration result
+   */
   router.post('/structure/migrate', requireAdmin, async function(req, res) {
     try {
       const guard = demoWriteGuard(res);
@@ -1219,6 +1666,23 @@ module.exports = function registerRoutes(router, context) {
 
   const fieldOptionsMigration = require('./migration/field-options-migration');
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/migrate/field-to-options/preview:
+   *   get:
+   *     tags: ['TT: Admin']
+   *     summary: Preview a field-to-field-options migration
+   *     parameters:
+   *       - in: query
+   *         name: fieldId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The source field ID to migrate
+   *     responses:
+   *       200:
+   *         description: Migration preview with extracted values
+   */
   router.get('/structure/migrate/field-to-options/preview', requireTeamAdmin, function(req, res) {
     try {
       const { fieldId } = req.query;
@@ -1234,6 +1698,16 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/migrate/field-to-options:
+   *   post:
+   *     tags: ['TT: Admin']
+   *     summary: Execute a field-to-field-options migration
+   *     responses:
+   *       200:
+   *         description: Migration result
+   */
   router.post('/structure/migrate/field-to-options', requireTeamAdmin, function(req, res) {
     try {
       const guard = demoWriteGuard(res);
@@ -3535,6 +4009,18 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Unified Sync ───
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/admin/roster-sync/unified:
+   *   post:
+   *     tags: ['TT: Admin']
+   *     summary: Trigger unified roster + metadata sync
+   *     responses:
+   *       200:
+   *         description: Sync started
+   *       409:
+   *         description: Sync already in progress
+   */
   router.post('/admin/roster-sync/unified', requireAdmin, function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Sync disabled in demo mode' });
