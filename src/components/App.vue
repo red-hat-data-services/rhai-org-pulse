@@ -503,6 +503,15 @@ export default {
       }
       // Fetch messages independently -- non-blocking, never delays initial render
       this.fetchMessages()
+
+      // Check tracking opt-out status (non-blocking)
+      this._trackingDisabled = import.meta.env.VITE_DEMO_MODE === 'true';
+      if (!this._trackingDisabled && this.enabledBuiltInSlugs?.includes('health-metrics')) {
+        fetch('/api/modules/health-metrics/tracking/status')
+          .then(r => r.json())
+          .then(data => { if (data.optedOut) this._trackingDisabled = true; })
+          .catch(() => {});
+      }
     },
 
     parseHash(hash) {
@@ -623,6 +632,20 @@ export default {
         const viewId = parts[1] || this.getDefaultViewId(manifest)
         this.activeViewId = viewId
         await this.loadModuleView(manifest.slug, viewId)
+
+        // Usage tracking beacon — fire-and-forget
+        if (!this._trackingDisabled && this.enabledBuiltInSlugs?.includes('health-metrics')) {
+          const page = `${manifest.slug}::${viewId}`;
+          if (this._lastTrackedPage !== page || Date.now() - (this._lastTrackTime || 0) > 2000) {
+            this._lastTrackedPage = page;
+            this._lastTrackTime = Date.now();
+            fetch('/api/modules/health-metrics/track', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ page })
+            }).catch(() => {});
+          }
+        }
         return
       }
 
