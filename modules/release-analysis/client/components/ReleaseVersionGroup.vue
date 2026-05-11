@@ -206,8 +206,8 @@ function buildComponentForecasts(releases) {
   const componentMap = {}
 
   for (const r of releases) {
-    if (!r.issues) continue
-    for (const issue of r.issues) {
+    const issues = Array.isArray(r.issues) && r.issues.length ? r.issues : (Array.isArray(r.features) ? r.features : [])
+    for (const issue of issues) {
       if (issue.statusBucket === 'done') continue
       const names = issue.components?.length ? issue.components : ['(No component)']
       for (const name of names) {

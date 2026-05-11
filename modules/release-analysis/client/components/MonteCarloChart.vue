@@ -41,7 +41,7 @@
         </div>
 
         <p class="text-[10px] text-gray-400 dark:text-gray-500 text-center">
-          {{ ITERATIONS.toLocaleString() }} simulations per release, worst-case per iteration<template v-if="props.componentForecasts.length"> · {{ props.componentForecasts.length }} component(s) simulated</template><template v-else> · Throughput: {{ props.velocity }} issues / 14d</template> · {{ props.notDoneCount }} remaining issues<template v-if="props.componentForecasts.length">. Risk-adjusted velocity: {{ props.componentForecasts.length }} red (-40%).</template>
+          {{ ITERATIONS.toLocaleString() }} simulations, per-component critical path<template v-if="props.componentForecasts.length"> · {{ props.componentForecasts.length }} component(s) simulated</template><template v-else> · Throughput: {{ props.velocity }} issues / 14d</template> · {{ props.notDoneCount }} remaining issues
         </p>
       </template>
     </template>
