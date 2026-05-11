@@ -507,7 +507,7 @@ module.exports = function registerRoutes(router, context) {
     const fieldDefs = readFromStorage('team-data/field-definitions.json');
     if (!fieldDefs) return res.json({ person: [], team: [] });
     // Return only person-level fields for user-type selection
-    const personFields = (fieldDefs.person || []).filter(f => !f.deleted);
+    const personFields = (fieldDefs.personFields || []).filter(f => !f.deleted);
     res.json({ person: personFields });
   });
 };
