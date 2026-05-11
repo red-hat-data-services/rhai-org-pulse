@@ -35,7 +35,8 @@ vi.mock('../../../../shared/server/roster-sync', () => ({
 // Mock auth middleware - requireAdmin should just pass through in tests
 vi.mock('../../../../shared/server/auth', () => ({
   requireAuth: (req, res, next) => next(),
-  requireAdmin: (req, res, next) => next()
+  requireAdmin: (req, res, next) => next(),
+  requireTeamAdmin: (req, res, next) => next()
 }))
 
 // Mock Jira and other dependencies
@@ -68,6 +69,7 @@ function createTestApp() {
   const context = {
     storage: { readFromStorage, writeToStorage },
     requireAdmin: (req, res, next) => next(), // Pass-through for tests
+    requireTeamAdmin: (req, res, next) => next(),
     registerDiagnostics: vi.fn()
   }
 

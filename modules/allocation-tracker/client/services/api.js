@@ -143,3 +143,21 @@ export async function bulkClassifyIssues(jql, dryRun = true, limit = 100) {
     body: JSON.stringify({ jql, dryRun, limit })
   })
 }
+
+/**
+ * Get classification configuration
+ */
+export async function getClassificationConfig() {
+  return apiRequest(`${BASE}/classification/config`)
+}
+
+/**
+ * Save classification configuration
+ */
+export async function saveClassificationConfig(config) {
+  return apiRequest(`${BASE}/classification/config`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(config)
+  })
+}

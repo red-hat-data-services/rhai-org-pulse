@@ -1,5 +1,6 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed } from 'vue'
+import { useClickOutside } from '../composables/useClickOutside'
 
 const props = defineProps({
   filterOptions: { type: Object, default: () => ({}) },
@@ -45,18 +46,8 @@ function toggleTeam(team) {
   emit('update:selectedTeams', current)
 }
 
-function handleClickOutside(event) {
-  if (teamsDropdownRef.value && !teamsDropdownRef.value.contains(event.target)) {
-    teamsOpen.value = false
-  }
-}
-
-onMounted(function() {
-  document.addEventListener('click', handleClickOutside)
-})
-
-onUnmounted(function() {
-  document.removeEventListener('click', handleClickOutside)
+useClickOutside(teamsDropdownRef, function() {
+  teamsOpen.value = false
 })
 </script>
 

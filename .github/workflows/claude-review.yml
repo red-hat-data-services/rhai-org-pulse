@@ -220,7 +220,7 @@ jobs:
 
   # Read-only review for fork PRs — never executes fork code
   claude-review-fork:
-    name: Claude Review (Fork)
+    name: Claude Review
     timeout-minutes: 20
     if: |
       github.event_name == 'pull_request_target' &&

@@ -1,6 +1,9 @@
 <script setup>
 import { ref, computed, onMounted, inject } from 'vue'
 import { apiRequest } from '@shared/client/services/api.js'
+import { useFieldDefinitions } from '@shared/client/composables/useFieldDefinitions'
+import { useFieldFilters } from '../composables/useFieldFilters'
+import FieldFilterPanel from '../components/FieldFilterPanel.vue'
 
 const nav = inject('moduleNav')
 
@@ -12,9 +15,31 @@ const loading = ref(true)
 const search = ref('')
 const selectedOrgs = ref([])
 const selectedGeos = ref([])
+const selectedOrgType = ref('all')
 const sortField = ref('name')
 const sortAsc = ref(true)
 
+const { definitions, fetchDefinitions } = useFieldDefinitions()
+
+const personFieldDefs = computed(() =>
+  (definitions.value.personFields || []).filter(f => f.visible && !f.deleted && f.type === 'constrained')
+)
+
+// Full unfiltered active people list (for absolute filter counts)
+const activePeople = computed(() => people.value.filter(p => p.status === 'active'))
+
+const {
+  activeFilters: fieldActiveFilters,
+  setFilter: setFieldFilter,
+  clearFilter: clearFieldFilter,
+  clearAll: clearAllFieldFilters,
+  filtered: fieldFiltered,
+  filterCounts: fieldFilterCounts
+} = useFieldFilters(
+  activePeople,
+  personFieldDefs,
+  (person) => person._appFields || {}
+)
 
 async function loadData() {
   loading.value = true
@@ -22,7 +47,8 @@ async function loadData() {
     const [peopleRes, statsRes, syncRes] = await Promise.all([
       apiRequest('/modules/team-tracker/registry/people'),
       apiRequest('/modules/team-tracker/registry/stats'),
-      apiRequest('/modules/team-tracker/ipa/sync/status')
+      apiRequest('/modules/team-tracker/ipa/sync/status'),
+      fetchDefinitions()
     ])
     people.value = peopleRes.people || []
     stats.value = statsRes
@@ -69,7 +95,15 @@ const filteredStats = computed(() => {
 })
 
 const filtered = computed(() => {
-  let list = people.value.filter(p => p.status === 'active')
+  // Start with field-filtered set (from full active list with absolute counts)
+  const fieldFilteredUids = new Set(fieldFiltered.value.map(p => p.uid))
+  let list = people.value.filter(p => p.status === 'active' && fieldFilteredUids.has(p.uid))
+
+  // orgType filter
+  if (selectedOrgType.value !== 'all') {
+    const targetType = selectedOrgType.value
+    list = list.filter(p => (p.orgType || 'engineering') === targetType)
+  }
 
   if (selectedOrgs.value.length > 0) {
     const orgSet = new Set(selectedOrgs.value)
@@ -99,8 +133,8 @@ const filtered = computed(() => {
       bv = b.orgDisplayName || ''
     }
     if (sortField.value === 'teams') {
-      av = (a.teams || []).join(', ')
-      bv = (b.teams || []).join(', ')
+      av = personTeamDisplay(a)
+      bv = personTeamDisplay(b)
     }
     const cmp = String(av).localeCompare(String(bv))
     return sortAsc.value ? cmp : -cmp
@@ -108,6 +142,13 @@ const filtered = computed(() => {
 
   return list
 })
+
+function personTeamDisplay(p) {
+  if ((p.orgType || 'engineering') === 'auxiliary') {
+    return (p.associatedTeamNames || []).join(', ')
+  }
+  return (p.teams || []).join(', ')
+}
 
 function toggleSort(field) {
   if (sortField.value === field) {
@@ -129,12 +170,13 @@ function openPerson(uid) {
 
 
 function exportCsv() {
-  const rows = [['Org', 'Name', 'UID', 'Email', 'Title', 'Geo', 'Location', 'Team(s)', 'GitHub', 'GitLab']]
+  const rows = [['Org', 'Name', 'UID', 'Email', 'Title', 'Geo', 'Location', 'Team(s)', 'GitHub', 'GitLab', 'Type']]
   for (const p of filtered.value) {
     rows.push([
       p.orgDisplayName || '', p.name, p.uid, p.email, p.title, p.geo || '',
-      p.location || '', (p.teams || []).join(', '),
-      p.github ? p.github.username : '', p.gitlab ? p.gitlab.username : ''
+      p.location || '', personTeamDisplay(p),
+      p.github ? p.github.username : '', p.gitlab ? p.gitlab.username : '',
+      p.orgType || 'engineering'
     ])
   }
   const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\n')
@@ -156,7 +198,12 @@ onMounted(loadData)
     <div v-if="!loading && people.length > 0" class="grid grid-cols-3 gap-4 mb-6">
       <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
         <div class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ filteredStats.total }}</div>
-        <div class="text-xs text-gray-500 dark:text-gray-400">People</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400">
+          People
+          <template v-if="stats?.byOrgType">
+            <span class="text-gray-400 dark:text-gray-500 ml-1">({{ stats.byOrgType.engineering }} eng, {{ stats.byOrgType.auxiliary }} non-eng)</span>
+          </template>
+        </div>
       </div>
       <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
         <div class="text-2xl font-bold text-green-600">{{ filteredStats.github }} <span class="text-sm font-normal text-gray-400">/ {{ filteredStats.total }}</span></div>
@@ -189,6 +236,22 @@ onMounted(loadData)
       </div>
 
       <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 flex flex-wrap items-start gap-6">
+        <!-- Type filter -->
+        <div>
+          <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Type</label>
+          <div class="flex gap-1">
+            <button
+              v-for="opt in [{ value: 'all', label: 'All' }, { value: 'engineering', label: 'Engineering' }, { value: 'auxiliary', label: 'Non-Engineering' }]"
+              :key="opt.value"
+              @click="selectedOrgType = opt.value"
+              class="px-2.5 py-1 text-xs rounded-md border transition-colors"
+              :class="selectedOrgType === opt.value
+                ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-300 dark:border-primary-700 text-primary-700 dark:text-primary-300 font-medium'
+                : 'border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'"
+            >{{ opt.label }}</button>
+          </div>
+        </div>
+
         <!-- Orgs -->
         <div v-if="orgs.length > 0">
           <label class="block text-xs font-medium text-gray-500 dark:text-gray-400 uppercase mb-1">Orgs</label>
@@ -229,6 +292,17 @@ onMounted(loadData)
           </div>
         </div>
 
+        <!-- Custom field filters -->
+        <FieldFilterPanel
+          v-if="personFieldDefs.length > 0"
+          :field-definitions="personFieldDefs"
+          :active-filters="fieldActiveFilters"
+          :filter-counts="fieldFilterCounts"
+          @update:filter="({ fieldId, values }) => setFieldFilter(fieldId, values)"
+          @clear:filter="clearFieldFilter"
+          @clear:all="clearAllFieldFilters"
+        />
+
         <span class="text-sm text-gray-500 dark:text-gray-400 self-center ml-auto">{{ filtered.length }} results</span>
       </div>
 
@@ -254,12 +328,18 @@ onMounted(loadData)
               >
                 <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ p.orgDisplayName }}</td>
                 <td class="px-4 py-3">
-                  <div class="text-sm font-medium text-primary-600 dark:text-primary-400 hover:underline">{{ p.name }}</div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm font-medium text-primary-600 dark:text-primary-400 hover:underline">{{ p.name }}</span>
+                    <span
+                      v-if="(p.orgType || 'engineering') === 'auxiliary'"
+                      class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300"
+                    >Non-Eng</span>
+                  </div>
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 hidden md:table-cell">{{ p.title }}</td>
                 <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 hidden lg:table-cell">{{ p.geo }}</td>
                 <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 hidden lg:table-cell">{{ p.location }}</td>
-                <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 hidden md:table-cell">{{ (p.teams || []).join(', ') || '—' }}</td>
+                <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 hidden md:table-cell">{{ personTeamDisplay(p) || '\u2014' }}</td>
               </tr>
             </tbody>
           </table>

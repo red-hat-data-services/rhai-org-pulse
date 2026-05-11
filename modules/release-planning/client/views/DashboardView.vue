@@ -1,9 +1,15 @@
 <script setup>
-import { ref, computed, inject, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, inject, onMounted, watch } from 'vue'
 import { useReleasePlanning, useReleases } from '../composables/useReleasePlanning'
 import { useReleaseHealth } from '../composables/useReleaseHealth'
 import { useBigRockEditor } from '../composables/useBigRockEditor'
 import { useFilters } from '../composables/useFilters'
+import { useHealthAggregation } from '../composables/useHealthAggregation'
+import { useReleaseDistribution } from '../composables/useReleaseDistribution'
+import { useRefreshPolling } from '../composables/useRefreshPolling'
+import { useClickOutside } from '../composables/useClickOutside'
+import { exportMarkdown as exportMd, exportCsv as exportCsvFile } from '../utils/outcomes-export'
+import { formatDate } from '@shared/client'
 import SummaryCards from '../components/SummaryCards.vue'
 import BigRocksTable from '../components/BigRocksTable.vue'
 import BigRockEditPanel from '../components/BigRockEditPanel.vue'
@@ -46,32 +52,10 @@ const newReleaseDialogOpen = ref(false)
 // Seed state
 const seeding = ref(false)
 
-// Refresh polling
-let refreshPollTimer = null
-
-function startRefreshPolling() {
-  stopRefreshPolling()
-  refreshPollTimer = setInterval(async function() {
-    const status = await checkRefreshStatus()
-    if (!status.running) {
-      stopRefreshPolling()
-      if (selectedVersion.value) {
-        loadCandidates(selectedVersion.value)
-      }
-    }
-  }, 3000)
-}
-
-function stopRefreshPolling() {
-  if (refreshPollTimer) {
-    clearInterval(refreshPollTimer)
-    refreshPollTimer = null
-  }
-}
-
-watch(refreshing, function(isRefreshing) {
-  if (isRefreshing) {
-    startRefreshPolling()
+// Refresh polling -- composable handles watch + cleanup
+useRefreshPolling(refreshing, checkRefreshStatus, function() {
+  if (selectedVersion.value) {
+    loadCandidates(selectedVersion.value)
   }
 })
 
@@ -83,19 +67,15 @@ const filterOptions = computed(() => candidates.value ? candidates.value.filterO
 const jiraBaseUrl = computed(() => candidates.value ? candidates.value.jiraBaseUrl || '' : '')
 const demoMode = computed(() => candidates.value ? candidates.value.demoMode : false)
 
-const healthByKey = computed(function() {
-  if (!healthData.value || !healthData.value.features) return {}
-  var map = {}
-  for (var i = 0; i < healthData.value.features.length; i++) {
-    var f = healthData.value.features[i]
-    map[f.key] = f
-  }
-  return map
-})
+const {
+  healthByKey,
+  rfeKeyToHealth,
+  rockHealth,
+  rockFeatures,
+  tier1HealthSummary
+} = useHealthAggregation(healthData, features, rfes, bigRocks)
 
-const healthSummary = computed(function() {
-  return healthData.value ? healthData.value.summary : null
-})
+const { releaseDistribution } = useReleaseDistribution(features)
 const warning = computed(() => candidates.value ? candidates.value.warning : null)
 const pipelineWarnings = computed(() => candidates.value ? candidates.value.pipelineWarnings || [] : [])
 const canEdit = computed(() => !demoMode.value && permissions.value && permissions.value.canEdit)
@@ -109,6 +89,7 @@ const {
   searchQuery,
   filteredFeatures,
   filteredRfes,
+  filteredBigRocks,
   hasActiveFilters,
   clearFilters
 } = useFilters(features, rfes, bigRocks)
@@ -123,25 +104,13 @@ const tabs = [
 
 const featureCount = computed(() => filteredFeatures.value.length)
 const rfeCount = computed(() => filteredRfes.value.length)
-const bigRockCount = computed(() => bigRocks.value.length)
+const bigRockCount = computed(() => filteredBigRocks.value.length)
 
 function tabCount(tabId) {
   if (tabId === 'features') return featureCount.value
   if (tabId === 'rfes') return rfeCount.value
   if (tabId === 'big-rocks') return bigRockCount.value
   return 0
-}
-
-function escapeCell(val) {
-  return String(val).replace(/\\/g, '\\\\').replace(/\|/g, '\\|').replace(/\n/g, ' ')
-}
-
-function escapeCsv(val) {
-  const s = String(val)
-  if (s.indexOf(',') !== -1 || s.indexOf('"') !== -1 || s.indexOf('\n') !== -1 || s.indexOf('\r') !== -1) {
-    return '"' + s.replace(/"/g, '""') + '"'
-  }
-  return s
 }
 
 const exportMenuOpen = ref(false)
@@ -154,153 +123,24 @@ function toggleExportMenu() {
   exportMenuOpen.value = !exportMenuOpen.value
 }
 
-function exportMarkdown() {
-  const lines = []
-  let filename
-
-  if (activeTab.value === 'big-rocks') {
-    lines.push('# Big Rocks - ' + selectedVersion.value)
-    lines.push('')
-    lines.push('| **Priority** | **Pillar** | **Big Rock** | **Owner** | **Engineering Lead** | **Features** | **RFEs** | **Notes** |')
-    lines.push('|:--------:|--------|----------|-------|-----------|:--------:|:----:|-------|')
-    for (const rock of bigRocks.value) {
-      lines.push('| ' + [
-        rock.priority,
-        escapeCell(rock.pillar || '-'),
-        escapeCell(rock.name),
-        escapeCell(rock.owner || '-'),
-        escapeCell(rock.architect || '-'),
-        rock.featureCount,
-        rock.rfeCount,
-        escapeCell(rock.notes || '-')
-      ].join(' | ') + ' |')
-    }
-    filename = 'big-rocks-' + selectedVersion.value + '.md'
-  } else if (activeTab.value === 'features') {
-    lines.push('# Features - ' + selectedVersion.value)
-    lines.push('')
-    lines.push('| **Big Rock** | **Feature** | **Status** | **Priority** | **Phase** | **Title** | **Components** | **Target Release** | **PM** | **Delivery Owner** | **RFE** | **Fix Version** |')
-    lines.push('|----------|---------|--------|----------|-------|-------|------------|----------------|-----|----------------|-----|-------------|')
-    for (const f of filteredFeatures.value) {
-      lines.push('| ' + [
-        escapeCell(f.bigRock || '-'),
-        f.issueKey,
-        escapeCell(f.status || '-'),
-        escapeCell(f.priority || '-'),
-        escapeCell(f.phase || '-'),
-        escapeCell(f.summary || '-'),
-        escapeCell(f.components || '-'),
-        escapeCell(f.targetRelease || '-'),
-        escapeCell(f.pm || '-'),
-        escapeCell(f.deliveryOwner || '-'),
-        f.rfe || '-',
-        escapeCell(f.fixVersion || '-')
-      ].join(' | ') + ' |')
-    }
-    filename = 'features-' + selectedVersion.value + '.md'
-  } else {
-    lines.push('# RFEs - ' + selectedVersion.value)
-    lines.push('')
-    lines.push('| **Big Rock** | **RFE** | **Status** | **Priority** | **Title** | **Components** | **PM** | **Labels** |')
-    lines.push('|----------|-----|--------|----------|-------|------------|-----|--------|')
-    for (const r of filteredRfes.value) {
-      lines.push('| ' + [
-        escapeCell(r.bigRock || '-'),
-        r.issueKey,
-        escapeCell(r.status || '-'),
-        escapeCell(r.priority || '-'),
-        escapeCell(r.summary || '-'),
-        escapeCell(r.components || '-'),
-        escapeCell(r.pm || '-'),
-        escapeCell(r.labels || '-')
-      ].join(' | ') + ' |')
-    }
-    filename = 'rfes-' + selectedVersion.value + '.md'
+function getExportData() {
+  return {
+    activeTab: activeTab.value,
+    selectedVersion: selectedVersion.value,
+    bigRocks: filteredBigRocks.value,
+    filteredFeatures: filteredFeatures.value,
+    filteredRfes: filteredRfes.value
   }
-
-  const blob = new Blob([lines.join('\n') + '\n'], { type: 'text/markdown' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
 }
 
 function exportCsv() {
   closeExportMenu()
-  const rows = []
-  let filename
-
-  if (activeTab.value === 'big-rocks') {
-    rows.push(['Priority', 'Pillar', 'Big Rock', 'Owner', 'Engineering Lead', 'Features', 'RFEs', 'Notes'])
-    for (const rock of bigRocks.value) {
-      rows.push([
-        rock.priority,
-        rock.pillar || '',
-        rock.name,
-        rock.owner || '',
-        rock.architect || '',
-        rock.featureCount,
-        rock.rfeCount,
-        rock.notes || ''
-      ])
-    }
-    filename = 'big-rocks-' + selectedVersion.value + '.csv'
-  } else if (activeTab.value === 'features') {
-    rows.push(['Big Rock', 'Feature', 'Status', 'Priority', 'Phase', 'Title', 'Components', 'Target Release', 'PM', 'Delivery Owner', 'RFE', 'Fix Version'])
-    for (const f of filteredFeatures.value) {
-      rows.push([
-        f.bigRock || '',
-        f.issueKey,
-        f.status || '',
-        f.priority || '',
-        f.phase || '',
-        f.summary || '',
-        f.components || '',
-        f.targetRelease || '',
-        f.pm || '',
-        f.deliveryOwner || '',
-        f.rfe || '',
-        f.fixVersion || ''
-      ])
-    }
-    filename = 'features-' + selectedVersion.value + '.csv'
-  } else {
-    rows.push(['Big Rock', 'RFE', 'Status', 'Priority', 'Title', 'Components', 'PM', 'Labels'])
-    for (const r of filteredRfes.value) {
-      rows.push([
-        r.bigRock || '',
-        r.issueKey,
-        r.status || '',
-        r.priority || '',
-        r.summary || '',
-        r.components || '',
-        r.pm || '',
-        r.labels || ''
-      ])
-    }
-    filename = 'rfes-' + selectedVersion.value + '.csv'
-  }
-
-  const csv = rows.map(function(row) { return row.map(escapeCsv).join(',') }).join('\n')
-  const blob = new Blob([csv + '\n'], { type: 'text/csv' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
+  exportCsvFile(getExportData())
 }
 
 function handleExportMarkdown() {
   closeExportMenu()
-  exportMarkdown()
-}
-
-function formatDate(iso) {
-  if (!iso) return 'Never'
-  return new Date(iso).toLocaleString()
+  exportMd(getExportData())
 }
 
 // ─── Edit handlers ───
@@ -451,12 +291,12 @@ watch(activeTab, function() {
   error.value = null
 })
 
-function handleClickOutside() {
+// Close export menu on outside click (composable handles mount/unmount)
+useClickOutside(null, function() {
   exportMenuOpen.value = false
-}
+})
 
 onMounted(async function() {
-  document.addEventListener('click', handleClickOutside)
   loadPermissions()
   await loadReleases()
   if (releases.value.length > 0) {
@@ -470,11 +310,6 @@ onMounted(async function() {
     }
   }
 })
-
-onUnmounted(function() {
-  document.removeEventListener('click', handleClickOutside)
-  stopRefreshPolling()
-})
 </script>
 
 <template>
@@ -482,7 +317,7 @@ onUnmounted(function() {
     <!-- Header -->
     <div class="flex items-center justify-between flex-wrap gap-4">
       <div>
-        <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">Big Rocks Planning Dashboard</h1>
+        <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">Outcomes Dashboard</h1>
         <p v-if="candidates && candidates.lastRefreshed" class="text-sm text-gray-500 dark:text-gray-400 mt-1">
           Data from {{ formatDate(candidates.lastRefreshed) }}
         </p>
@@ -536,17 +371,14 @@ onUnmounted(function() {
       {{ error }}
     </div>
 
-    <!-- Loading -->
-    <div v-if="loading" class="text-center py-12 text-gray-500">
+    <!-- Initial loading (no data yet) -->
+    <div v-if="loading && !candidates" class="text-center py-12 text-gray-500">
       Loading release planning data...
     </div>
 
-    <template v-else-if="candidates">
+    <template v-if="candidates">
       <!-- Summary -->
-      <SummaryCards :summary="summary" :healthSummary="healthSummary" />
-
-      <!-- Recent Activity -->
-      <RecentActivity :version="selectedVersion" />
+      <SummaryCards :summary="summary" :tier1HealthSummary="tier1HealthSummary" :releaseDistribution="releaseDistribution" />
 
       <!-- Tabs -->
       <div>
@@ -575,7 +407,7 @@ onUnmounted(function() {
               >{{ tabCount(tab.id) }}</span>
             </button>
           </div>
-          <div class="relative pb-2" @click.stop @keydown.escape="closeExportMenu">
+          <div class="relative pb-2 pl-3 ml-3 border-l border-gray-200 dark:border-gray-700" @click.stop @keydown.escape="closeExportMenu">
             <button
               @click="toggleExportMenu"
               :aria-expanded="exportMenuOpen"
@@ -630,11 +462,12 @@ onUnmounted(function() {
       <!-- Tab content -->
       <div v-if="activeTab === 'big-rocks'" id="panel-big-rocks" role="tabpanel" aria-labelledby="tab-big-rocks">
         <BigRocksTable
-          :bigRocks="bigRocks"
+          :bigRocks="filteredBigRocks"
           :jiraBaseUrl="jiraBaseUrl"
           :canEdit="canEdit"
-          :healthByKey="healthByKey"
-          :features="features"
+          :rockHealth="rockHealth"
+          :rockFeatures="rockFeatures"
+          :loading="loading"
           @editRock="handleEditRock"
           @addRock="handleAddRock"
           @deleteRock="handleDeleteRock"
@@ -656,8 +489,12 @@ onUnmounted(function() {
           :bigRocks="bigRocks"
           :jiraBaseUrl="jiraBaseUrl"
           :summary="summary"
+          :rfeKeyToHealth="rfeKeyToHealth"
         />
       </div>
+
+      <!-- Recent Activity -->
+      <RecentActivity :version="selectedVersion" />
     </template>
 
     <!-- No releases configured -->

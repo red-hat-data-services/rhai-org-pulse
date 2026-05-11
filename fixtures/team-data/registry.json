@@ -30,7 +30,14 @@
       "inactiveSince": null,
       "_teamGrouping": "Platform",
       "jiraTeam": "Platform",
-      "specialty": "backend"
+      "specialty": "backend",
+      "teamIds": ["team_a1b2c3"],
+      "_appFields": {
+        "field_x1y2z3": "backend",
+        "field_d4e5f6": "Platform Core",
+        "field_mv0001": ["Python", "Go"],
+        "field_rq0001": "Backend"
+      }
     },
     "bsmith": {
       "uid": "bsmith",
@@ -53,7 +60,13 @@
       "inactiveSince": null,
       "_teamGrouping": "Platform",
       "jiraTeam": "Platform",
-      "specialty": "backend"
+      "specialty": "backend",
+      "teamIds": ["team_a1b2c3"],
+      "_appFields": {
+        "field_x1y2z3": "backend",
+        "field_mv0001": ["Go", "Rust"],
+        "field_rq0001": "Backend"
+      }
     },
     "cwilliams": {
       "uid": "cwilliams",
@@ -66,7 +79,7 @@
       "location": null,
       "officeLocation": null,
       "costCenter": null,
-      "managerUid": "achen",
+      "managerUid": "bsmith",
       "orgRoot": "achen",
       "github": { "username": "carolw", "source": "ldap" },
       "gitlab": { "username": "carolw", "source": "ldap" },
@@ -76,7 +89,13 @@
       "inactiveSince": null,
       "_teamGrouping": "Platform",
       "jiraTeam": "Platform",
-      "specialty": "fullstack"
+      "specialty": "fullstack",
+      "teamIds": ["team_a1b2c3"],
+      "_appFields": {
+        "field_x1y2z3": "fullstack",
+        "field_mv0001": ["JavaScript", "Python"],
+        "field_rq0001": "Full Stack"
+      }
     },
     "dlee": {
       "uid": "dlee",
@@ -99,7 +118,13 @@
       "inactiveSince": null,
       "_teamGrouping": "Infrastructure",
       "jiraTeam": "Infrastructure",
-      "specialty": "backend"
+      "specialty": "backend",
+      "teamIds": ["team_d4e5f6"],
+      "_appFields": {
+        "field_x1y2z3": "backend",
+        "field_mv0001": ["Python", "Java"],
+        "field_rq0001": "Backend"
+      }
     },
     "egarcia": {
       "uid": "egarcia",
@@ -122,7 +147,13 @@
       "inactiveSince": null,
       "_teamGrouping": "Infrastructure",
       "jiraTeam": "Infrastructure",
-      "specialty": "devops"
+      "specialty": "devops",
+      "teamIds": ["team_d4e5f6"],
+      "_appFields": {
+        "field_x1y2z3": "devops",
+        "field_mv0001": ["Go", "Python"],
+        "field_rq0001": "DevOps"
+      }
     },
     "fjohnson": {
       "uid": "fjohnson",
@@ -145,7 +176,11 @@
       "inactiveSince": null,
       "_teamGrouping": "ML Platform",
       "jiraTeam": "ML Platform",
-      "specialty": "ml"
+      "specialty": "ml",
+      "teamIds": ["team_j1k2l3"],
+      "_appFields": {
+        "field_x1y2z3": "ml"
+      }
     },
     "gkim": {
       "uid": "gkim",
@@ -168,7 +203,11 @@
       "inactiveSince": null,
       "_teamGrouping": "ML Platform",
       "jiraTeam": "ML Platform",
-      "specialty": "ml"
+      "specialty": "ml",
+      "teamIds": ["team_j1k2l3"],
+      "_appFields": {
+        "field_x1y2z3": "ml"
+      }
     },
     "hwilson": {
       "uid": "hwilson",
@@ -191,7 +230,11 @@
       "inactiveSince": null,
       "_teamGrouping": "ML Platform",
       "jiraTeam": "ML Platform",
-      "specialty": "ml"
+      "specialty": "ml",
+      "teamIds": ["team_j1k2l3"],
+      "_appFields": {
+        "field_x1y2z3": "ml"
+      }
     },
     "imartinez": {
       "uid": "imartinez",
@@ -214,7 +257,11 @@
       "inactiveSince": null,
       "_teamGrouping": "Data Pipeline",
       "jiraTeam": "Data Pipeline",
-      "specialty": "data"
+      "specialty": "data",
+      "teamIds": ["team_m4n5o6"],
+      "_appFields": {
+        "field_x1y2z3": "data"
+      }
     },
     "jbrown": {
       "uid": "jbrown",
@@ -237,7 +284,74 @@
       "inactiveSince": null,
       "_teamGrouping": "Data Pipeline",
       "jiraTeam": "Data Pipeline",
-      "specialty": "backend"
+      "specialty": "backend",
+      "teamIds": ["team_m4n5o6"],
+      "_appFields": {
+        "field_x1y2z3": "backend"
+      }
+    },
+    "pmanager": {
+      "uid": "pmanager",
+      "name": "Pat Manager",
+      "email": "pmanager@example.com",
+      "title": "Senior Product Manager",
+      "city": "Boston",
+      "country": "US",
+      "geo": "NA",
+      "location": "Remote",
+      "officeLocation": null,
+      "costCenter": null,
+      "managerUid": "pmleader",
+      "orgRoot": "_auxiliary",
+      "orgType": "auxiliary",
+      "github": null,
+      "gitlab": null,
+      "status": "active",
+      "firstSeenAt": "2026-01-01T00:00:00.000Z",
+      "lastSeenAt": "2026-01-15T00:00:00.000Z",
+      "inactiveSince": null
+    },
+    "sdesigner": {
+      "uid": "sdesigner",
+      "name": "Sam Designer",
+      "email": "sdesigner@example.com",
+      "title": "Senior UX Designer",
+      "city": "San Francisco",
+      "country": "US",
+      "geo": "NA",
+      "location": "Remote",
+      "officeLocation": null,
+      "costCenter": null,
+      "managerUid": "pmleader",
+      "orgRoot": "_auxiliary",
+      "orgType": "auxiliary",
+      "github": null,
+      "gitlab": null,
+      "status": "active",
+      "firstSeenAt": "2026-01-01T00:00:00.000Z",
+      "lastSeenAt": "2026-01-15T00:00:00.000Z",
+      "inactiveSince": null
+    },
+    "pmleader": {
+      "uid": "pmleader",
+      "name": "Dana PMLeader",
+      "email": "pmleader@example.com",
+      "title": "Director of Product Management",
+      "city": "New York",
+      "country": "US",
+      "geo": "NA",
+      "location": "Remote",
+      "officeLocation": null,
+      "costCenter": null,
+      "managerUid": "demovp",
+      "orgRoot": "_auxiliary",
+      "orgType": "auxiliary",
+      "github": null,
+      "gitlab": null,
+      "status": "active",
+      "firstSeenAt": "2026-01-01T00:00:00.000Z",
+      "lastSeenAt": "2026-01-15T00:00:00.000Z",
+      "inactiveSince": null
     }
   }
 }

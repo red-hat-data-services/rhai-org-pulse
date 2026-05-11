@@ -5,5 +5,6 @@
   ],
   "excludedTitles": [],
   "gracePeriodDays": 30,
-  "autoSync": { "enabled": false, "intervalHours": 24 }
+  "autoSync": { "enabled": false, "intervalHours": 24 },
+  "teamDataSource": "in-app"
 }

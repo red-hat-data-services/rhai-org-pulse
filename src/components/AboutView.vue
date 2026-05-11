@@ -137,7 +137,10 @@
       <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">AI SDLC Materials</h2>
 
       <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">RFE Builder</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          RFE Builder
+          <a href="https://app.slack.com/client/E030G10V24F/C0AMPLH0Y9G" target="_blank" rel="noopener" class="ml-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">#wg-rhai-rfe-builder</a>
+        </h3>
         <div class="flex flex-wrap gap-4">
           <a
             v-for="link in rfeLinks"
@@ -155,7 +158,31 @@
       </div>
 
       <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">AI Quality</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          STRAT Builder
+          <a href="https://app.slack.com/client/E030G10V24F/C0APA0E2J3Z" target="_blank" rel="noopener" class="ml-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">#wg-rhai-strat-refine-review</a>
+        </h3>
+        <div class="flex flex-wrap gap-4">
+          <a
+            v-for="link in stratBuilderLinks"
+            :key="link.label"
+            :href="link.url"
+            target="_blank"
+            rel="noopener"
+            class="flex items-center gap-2.5 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
+          >
+            <component :is="link.icon" :size="18" :stroke-width="1.7" class="flex-shrink-0 text-gray-500 dark:text-gray-400" />
+            <span>{{ link.label }}</span>
+            <ExternalLink :size="14" class="flex-shrink-0 text-gray-400 dark:text-gray-500" />
+          </a>
+        </div>
+      </div>
+
+      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          AI Quality
+          <a href="https://app.slack.com/client/E030G10V24F/C0ANMTUF5FW" target="_blank" rel="noopener" class="ml-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">#wg-rhai-quality-eng-builder</a>
+        </h3>
         <div class="flex flex-wrap gap-4">
           <a
             v-for="link in aiQualityLinks"
@@ -176,7 +203,10 @@
       <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 mt-8 mb-3">AI Workflows Enablement</h2>
 
       <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Jira Autofix</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          Jira Autofix
+          <a href="https://app.slack.com/client/E030G10V24F/C0ASJ32PJ0N" target="_blank" rel="noopener" class="ml-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">#wg-rhai-ai-first-code-autofix</a>
+        </h3>
         <div class="flex flex-wrap gap-4">
           <a
             v-for="link in jiraAutofixLinks"
@@ -197,7 +227,10 @@
       <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 mt-8 mb-3">Other Enablement</h2>
 
       <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Agent Eval Harness</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+          Agent Eval Harness
+          <a href="https://app.slack.com/client/E030G10V24F/C0B01HA68KC" target="_blank" rel="noopener" class="ml-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">#wg-agent-eval-harness</a>
+        </h3>
         <div class="flex flex-wrap gap-4">
           <a
             v-for="link in agentEvalHarnessLinks"
@@ -470,6 +503,12 @@ const rfeLinks = [
   { label: 'Enablement Slides', icon: Presentation, url: 'https://docs.google.com/presentation/d/1O-F8naJxAfYtcXjTJHySYjeLtrKfb1OHhtyhoItya0s/edit?usp=sharing' },
   { label: 'Enablement Notes', icon: StickyNote, url: 'https://docs.google.com/document/d/1pTpIvKkYns2aG5g0ueOxy6P8j1m_yNnD13XBB35NgWQ/edit?usp=sharing' },
   { label: 'Demo', icon: Play, url: 'https://drive.google.com/file/d/1ANaZOeUorSMqlFm3WzfK1xRPvld2TGM-/view' }
+]
+
+const stratBuilderLinks = [
+  { label: 'Enablement Recording', icon: Video, url: 'https://drive.google.com/file/d/1dXtifXiAsbnZtfiU9-vKUCEvfLX5ANvg/view' },
+  { label: 'Enablement Slides', icon: Presentation, url: 'https://docs.google.com/presentation/d/1oBIyJo30MSuig9Q1Qokq-6yclm_OL9htbWV91_YWMFs/edit?slide=id.g3dc5b8ade0b_0_14#slide=id.g3dc5b8ade0b_0_14' },
+  { label: 'Enablement Notes', icon: StickyNote, url: 'https://docs.google.com/document/d/1n-UEt0RloVmEDmjO4E3EoEQPLJTNVwPvao4Uvf3XD4U/edit?tab=t.uwq8408i1mre' }
 ]
 
 const aiQualityLinks = [

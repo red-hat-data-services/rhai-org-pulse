@@ -16,7 +16,7 @@ npm run dev:full       # Starts Vite (5173) + Express (3001)
 |----------|-------------|
 | `JIRA_EMAIL` | Your @redhat.com email |
 | `JIRA_TOKEN` | Jira Cloud API token from https://id.atlassian.com/manage-profile/security/api-tokens |
-| `ADMIN_EMAILS` | Comma-separated admin emails (seeds the allowlist) |
+| `ADMIN_EMAILS` | Comma-separated admin emails (seeds the role store) |
 
 ### Optional Environment Variables
 
@@ -63,6 +63,8 @@ npm run dev:full       # Starts Vite (5173) + Express (3001)
 - **Trends**: Built dynamically from person metric files by bucketing resolved issues by month, with org/team breakdowns.
 - **Site config**: `data/site-config.json` stores platform-level settings (title prefix). Editable by admins via Settings > General.
 - **Composite keys**: Teams are identified by `orgKey::teamName` (e.g., `shgriffi::Model Serving`).
+- **Field options**: `data/team-data/field-options/<name>.json` stores named sets of allowed values for constrained fields. Field definitions reference an option set via the `optionsRef` property (e.g., `optionsRef: "components"`). When `optionsRef` is set, `allowedValues` is `null` in storage and resolved at runtime. Currently only the "components" option set exists.
+- **Messages**: `data/messages.json` stores admin-created announcements. Merged with computed provider messages at `GET /api/messages`.
 - **Data file formats**: See `docs/DATA-FORMATS.md` for the JSON schema of every data file. Demo fixtures in `fixtures/` must always match production format.
 
 ### Roster Sync (`shared/server/roster-sync/`)
@@ -170,11 +172,11 @@ Secrets (created manually on cluster, not in git):
 Standard `--platform linux/amd64` builds fail: npm times out under QEMU, esbuild crashes. Workaround: build/install natively, then copy into amd64 base images. See `deploy/OPENSHIFT.md` step 3 for details. This works because the backend has no native Node addons (all pure JS).
 
 ### Dev vs prod
-- **Dev overlay** clears `ADMIN_EMAILS` via `configMapGenerator` merge behavior. When empty, the first authenticated user is auto-added to the allowlist.
-- **Prod overlay** keeps `ADMIN_EMAILS` to pre-seed the allowlist with known admins.
+- **Dev overlay** clears `ADMIN_EMAILS` via `configMapGenerator` merge behavior. When empty, the first authenticated user is auto-added to the role store.
+- **Prod overlay** keeps `ADMIN_EMAILS` to pre-seed the role store with known admins.
 
 ### Auth flow (production)
-OpenShift OAuth proxy (sidecar on frontend pod) authenticates users and sets `X-Forwarded-Email` / `X-Forwarded-User` headers. The backend reads `X-Forwarded-Email` and checks it against `data/allowlist.json`. If the allowlist is empty, the first request auto-adds the user.
+OpenShift OAuth proxy (sidecar on frontend pod) authenticates users and sets `X-Forwarded-Email` / `X-Forwarded-User` headers. The backend reads `X-Forwarded-Email` and checks it against `data/roles.json` via role-store. If the role store is empty, the first request auto-adds the user.
 
 ## Project Structure
 
@@ -257,9 +259,10 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 
 **GET:**
 - `/api/healthz` — health check (no auth)
-- `/api/whoami` — current user info (supports both proxy and token auth)
+- `/api/whoami` — current user info (supports both proxy and token auth). Response includes `permissionTier`, `isTeamAdmin`, and `roles`. When `X-Impersonate-Uid` header is active, response adds `impersonating: true`, `realAdmin` (admin's email), and overrides `displayName`.
 - `/api/site-config` — site configuration (titlePrefix)
-- `/api/tokens` — list current user's API tokens
+- `/api/messages` — app-wide messages (computed from module providers + stored admin announcements)
+- `/api/tokens` — list current user's API tokens (blocked during impersonation)
 - `/api/admin/tokens` — list all API tokens (admin)
 - `/api/roster` — org/team structure with members
 - `/api/team/:teamKey/metrics` — team member metrics (teamKey = `orgKey::teamName`)
@@ -269,6 +272,8 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/gitlab/contributions` — GitLab contribution data
 - `/api/trends` — monthly Jira + GitHub + GitLab trend data
 - `/api/allowlist` — authorized email list
+- `/api/roles/me` — current user's roles (authenticated)
+- `/api/roles` — list all role assignments (admin)
 - `/api/admin/roster-sync/config` — roster sync configuration
 - `/api/admin/roster-sync/status` — sync status (running/last result, includes `phase`, `phaseLabel`, `metadataSync`, `stale` fields)
 - `/api/modules/team-tracker/sheets/discover` — discover sheet names in a Google Spreadsheet (admin, requires `spreadsheetId` query param)
@@ -284,14 +289,30 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/modules/ai-impact/features` — list all features (slim projection)
 - `/api/modules/ai-impact/features/:key` — single feature + history
 - `/api/modules/ai-impact/features/status` — feature data status (admin)
+- `/api/modules/team-tracker/org-teams` — org-roster teams with member counts, boards, components. Returns `structureId` and `metadata` on teams that match structure teams. Optional `org` query param.
+- `/api/modules/team-tracker/org-teams/:teamKey` — single org-roster team detail (teamKey = `org::teamName`)
+- `/api/modules/team-tracker/org-teams/:teamKey/members` — members of an org-roster team
+- `/api/modules/team-tracker/permissions/me` — current user's permission tier and managed UIDs
+- `/api/modules/team-tracker/manager/dashboard` — manager dashboard data: purview teams, direct reports, field definitions (authenticated, requires manager tier or above). Returns `reason` field for empty states (`no-registry-identity`, `no-direct-reports`). Returns 403 for non-managers.
+- `/api/modules/team-tracker/structure/teams` — list all teams (optional `orgKey` filter)
+- `/api/modules/team-tracker/structure/unassigned` — list unassigned people (query: `scope=direct|org|all`)
+- `/api/modules/team-tracker/structure/field-definitions` — list all field definitions (person + team). Field definitions with `optionsRef` have their `allowedValues` resolved from the referenced field option set (with `_resolvedFromOptions: true` flag).
+- `/api/modules/team-tracker/structure/audit-log` — query audit log (query: `from`, `to`, `action`, `actor`, `entityId`, `limit`, `offset`)
+- `/api/modules/team-tracker/registry/people/search/ldap` — search LDAP for people by name/uid/email (authenticated, rate-limited 5 req/10s per user). Query params: `q` (search term), `limit` (max results, default 10, max 50). Returns `503` with `code: "LDAP_UNAVAILABLE"` if LDAP not configured or in demo mode. Returns `429` if rate limited.
+- `/api/modules/team-tracker/field-options` — list all field option sets (authenticated). Returns `{ options: [{ name, label, count }] }`.
+- `/api/modules/team-tracker/field-options/:name` — get single field option set by name (authenticated). Returns full values list.
+- `/api/modules/team-tracker/components` — **(deprecated)** backward-compat adapter returning `{ components: { name: [teams] } }` from team metadata. Use team metadata components field instead.
+- `/api/modules/team-tracker/structure/migrate/field-to-options/preview` — preview a field-to-options migration (team-admin). Query: `fieldId`. Returns extracted values, scope, field info.
 
 **PUT:**
+- `/api/modules/team-tracker/field-options/:name` — replace a field option set's values (admin). Body: `{ values: [...], label? }`
 - `/api/modules/ai-impact/assessments/:key` — upsert single assessment (admin)
 - `/api/modules/ai-impact/features/:key` — upsert single feature (admin)
 
 **POST:**
 - `/api/tokens` — create a new API token (returns raw token once)
 - `/api/site-config` — update site configuration (admin)
+- `/api/admin/messages` — create a stored announcement `{ type, text, link? }` (admin)
 
 - `/api/roster/refresh` — refresh all person metrics from Jira
 - `/api/team/:teamKey/refresh` — refresh metrics for one team
@@ -307,18 +328,45 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/admin/roster-sync/trigger` — trigger manual roster sync
 - `/api/admin/roster-sync/unified` — trigger unified roster + metadata sync (admin)
 - `/api/allowlist` — update authorized email list
+- `/api/roles/assign` — assign role `{ email, role }` (admin)
+- `/api/roles/revoke` — revoke role `{ email, role }` (admin)
 - `/api/modules/team-tracker/snapshots/generate` — generate snapshots for all teams (admin)
 - `/api/modules/feature-traffic/refresh` — trigger manual data refresh from GitLab CI (admin)
 - `/api/modules/feature-traffic/config` — save fetch configuration (admin)
 - `/api/modules/ai-impact/assessments/bulk` — bulk upsert assessments (admin)
 - `/api/modules/ai-impact/features/bulk` — bulk upsert features (admin)
+- `/api/modules/team-tracker/structure/teams` — create a new team `{ name, orgKey }` (admin/team-admin)
+- `/api/modules/team-tracker/structure/teams/:teamId/members` — assign person `{ uid }` (manager/admin)
+- `/api/modules/team-tracker/structure/teams/:teamId/members/bulk` — bulk assign `{ uids: [...] }` (manager/admin, all-or-nothing)
+- `/api/modules/team-tracker/structure/field-definitions/person` — create person-level field (admin/team-admin)
+- `/api/modules/team-tracker/structure/field-definitions/person/reorder` — reorder person fields (admin/team-admin)
+- `/api/modules/team-tracker/structure/field-definitions/team` — create team-level field (admin/team-admin)
+- `/api/modules/team-tracker/structure/field-definitions/team/reorder` — reorder team fields (admin/team-admin)
+- `/api/modules/team-tracker/structure/migrate` — trigger Sheets-to-in-app migration (admin)
+- `/api/modules/team-tracker/structure/migrate/field-to-options` — generic field-to-field-options migration (team-admin). Body: `{ sourceFieldId, optionSetName, optionSetLabel, createCounterpart?, counterpartLabel?, seedFromMembers? }`
+- `/api/modules/team-tracker/field-options/:name/values` — add values to a field option set (team-admin). Body: `{ values: [...] }`
+- `/api/modules/team-tracker/registry/people/ldap-import` — create auxiliary registry entry from LDAP lookup (team-admin/admin, audit-logged). Body: `{ uid: "someuid" }`. Returns `503` if LDAP unavailable.
+
+**PATCH:**
+- `/api/modules/team-tracker/structure/teams/:teamId` — rename a team (admin/team-admin)
+- `/api/modules/team-tracker/structure/field-definitions/person/:fieldId` — edit person field definition (admin/team-admin)
+- `/api/modules/team-tracker/structure/field-definitions/team/:fieldId` — edit team field definition (admin/team-admin)
+- `/api/modules/team-tracker/structure/person/:uid/fields` — update person field values (manager/admin)
+- `/api/modules/team-tracker/structure/teams/:teamId/fields` — update team field values (admin/team-admin). Returns flat metadata object `{ fieldId: value, ... }` with optional `_warnings` array, not the full team object.
+- `/api/modules/team-tracker/structure/teams/:teamId/boards` — update team boards `{ boards: [{url, name?}] }` (admin/team-admin). Returns `{ boards: [...] }`
 
 **DELETE:**
 - `/api/tokens/:id` — revoke own API token
 - `/api/admin/tokens/:id` — revoke any API token (admin)
+- `/api/admin/messages/:id` — remove a stored announcement (admin)
 - `/api/modules/team-tracker/snapshots` — delete all stored snapshots (admin)
 - `/api/modules/ai-impact/assessments` — clear all assessment data (admin)
 - `/api/modules/ai-impact/features` — clear all feature data (admin)
+- `/api/modules/team-tracker/structure/teams/:teamId` — delete a team (admin/team-admin)
+- `/api/modules/team-tracker/structure/teams/:teamId/members/:uid` — unassign person (manager/admin)
+- `/api/modules/team-tracker/structure/field-definitions/person/:fieldId` — soft-delete person field (admin/team-admin)
+- `/api/modules/team-tracker/structure/field-definitions/team/:fieldId` — soft-delete team field (admin/team-admin)
+- `/api/modules/team-tracker/field-options/:name/values` — remove values from a field option set (admin). Body: `{ values: [...] }`
 
 **GET (snapshots):**
 - `/api/modules/team-tracker/snapshots/:teamKey` — all snapshots for a team

@@ -5,14 +5,15 @@ import { useFocusTrap } from '../composables/useFocusTrap'
 
 const emit = defineEmits(['save', 'cancel'])
 
-const { isOpen, formData, saving, saveError, fieldErrors, isNewRock } = useBigRockEditor()
+const { isOpen, formData, saving, saveError, fieldErrors, isNewRock, isDirty } = useBigRockEditor()
 
 const outcomeKeyInput = ref('')
 const panelRef = ref(null)
-const { handleKeydown } = useFocusTrap(panelRef, isOpen, function() { emit('cancel') })
+const showDiscardPrompt = ref(false)
+const { handleKeydown } = useFocusTrap(panelRef, isOpen, function() { attemptCancel() })
 
 function addOutcomeKey() {
-  const key = outcomeKeyInput.value.trim().toUpperCase()
+  var key = outcomeKeyInput.value.trim().toUpperCase()
   if (!key) return
   if (formData.value.outcomeKeys.includes(key)) {
     outcomeKeyInput.value = ''
@@ -20,6 +21,27 @@ function addOutcomeKey() {
   }
   formData.value.outcomeKeys.push(key)
   outcomeKeyInput.value = ''
+}
+
+function parseAndAddKeys(text) {
+  var keys = text.split(/[,\n\r]+/)
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i].trim().toUpperCase()
+    if (!key) continue
+    if (formData.value.outcomeKeys.includes(key)) continue
+    formData.value.outcomeKeys.push(key)
+  }
+}
+
+function handlePaste(event) {
+  var pasted = (event.clipboardData || window.clipboardData).getData('text')
+  if (!pasted) return
+  // Only intercept if the pasted text contains separators (comma or newline)
+  if (/[,\n\r]/.test(pasted)) {
+    event.preventDefault()
+    parseAndAddKeys(pasted)
+    outcomeKeyInput.value = ''
+  }
 }
 
 function removeOutcomeKey(index) {
@@ -37,8 +59,22 @@ function handleSave() {
   emit('save')
 }
 
-function handleCancel() {
+function attemptCancel() {
+  if (saving.value) return
+  if (isDirty.value) {
+    showDiscardPrompt.value = true
+    return
+  }
   emit('cancel')
+}
+
+function confirmDiscard() {
+  showDiscardPrompt.value = false
+  emit('cancel')
+}
+
+function keepEditing() {
+  showDiscardPrompt.value = false
 }
 
 function handleRetry() {
@@ -52,7 +88,7 @@ function handleRetry() {
     <div
       v-if="isOpen"
       class="fixed inset-0 bg-black/30 z-40"
-      @click="handleCancel"
+      @click="attemptCancel"
     />
   </Transition>
 
@@ -73,7 +109,7 @@ function handleRetry() {
           {{ isNewRock ? 'Add Big Rock' : 'Edit Big Rock' }}
         </h2>
         <button
-          @click="handleCancel"
+          @click="attemptCancel"
           aria-label="Close panel"
           class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded"
         >
@@ -187,6 +223,7 @@ function handleRetry() {
               v-model="outcomeKeyInput"
               type="text"
               @keydown="handleOutcomeKeydown"
+              @paste="handlePaste"
               class="flex-1 px-3 py-2 border rounded-md text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               :class="fieldErrors.outcomeKeys ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'"
               placeholder="e.g., RHAISTRAT-1513 (press Enter)"
@@ -222,7 +259,7 @@ function handleRetry() {
       <!-- Footer -->
       <div class="flex items-center justify-end gap-3 px-5 py-4 border-t border-gray-200 dark:border-gray-700">
         <button
-          @click="handleCancel"
+          @click="attemptCancel"
           :disabled="saving"
           class="px-4 py-2 text-sm font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
         >
@@ -240,6 +277,39 @@ function handleRetry() {
           </svg>
           {{ saving ? 'Saving...' : 'Save' }}
         </button>
+      </div>
+    </div>
+  </Transition>
+
+  <!-- Discard changes confirmation -->
+  <Transition name="fade">
+    <div
+      v-if="showDiscardPrompt"
+      class="fixed inset-0 bg-black/40 z-[60] flex items-center justify-center"
+      @click.self="keepEditing"
+    >
+      <div
+        role="alertdialog"
+        aria-labelledby="discard-title"
+        aria-describedby="discard-desc"
+        class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-5 max-w-sm mx-4 border border-gray-200 dark:border-gray-700"
+      >
+        <h3 id="discard-title" class="text-sm font-semibold text-gray-900 dark:text-gray-100">Unsaved changes</h3>
+        <p id="discard-desc" class="mt-1 text-sm text-gray-600 dark:text-gray-400">You have unsaved changes. Discard?</p>
+        <div class="mt-4 flex justify-end gap-3">
+          <button
+            @click="keepEditing"
+            class="px-3 py-1.5 text-sm font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+          >
+            Keep Editing
+          </button>
+          <button
+            @click="confirmDiscard"
+            class="px-3 py-1.5 text-sm font-medium rounded-md bg-red-600 text-white hover:bg-red-700"
+          >
+            Discard
+          </button>
+        </div>
       </div>
     </div>
   </Transition>

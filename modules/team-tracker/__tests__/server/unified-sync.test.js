@@ -55,7 +55,8 @@ vi.mock('../../../../shared/server/roster', () => ({
 
 vi.mock('../../../../shared/server/auth', () => ({
   requireAuth: (req, res, next) => next(),
-  requireAdmin: (req, res, next) => next()
+  requireAdmin: (req, res, next) => next(),
+  requireTeamAdmin: (req, res, next) => next()
 }))
 
 vi.mock('../../../../shared/server/jira', () => ({
@@ -101,7 +102,8 @@ function createApp() {
   const registerRoutes = require('../../server/index.js')
   registerRoutes(router, {
     storage: storageMock,
-    requireAdmin: (req, res, next) => next()
+    requireAdmin: (req, res, next) => next(),
+    requireTeamAdmin: (req, res, next) => next()
   })
 
   app.use('/api/modules/team-tracker', router)
@@ -158,7 +160,8 @@ describe('Unified Sync Endpoint', () => {
       const registerRoutes2 = mod.default || mod
       registerRoutes2(router2, {
         storage: storageMock,
-        requireAdmin: (req, res, next) => next()
+        requireAdmin: (req, res, next) => next(),
+    requireTeamAdmin: (req, res, next) => next()
       })
       app2.use('/api/modules/team-tracker', router2)
 

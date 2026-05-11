@@ -4,6 +4,7 @@ import { useFeatureDetail } from '../composables/useFeatureTraffic'
 import StatusBadge from '../components/StatusBadge.vue'
 import TrafficMap from '../components/TrafficMap.vue'
 import EpicBreakdown from '../components/EpicBreakdown.vue'
+import SignoffSection from '../components/SignoffSection.vue'
 
 const nav = inject('moduleNav')
 const { feature, loading, error, loadFeature } = useFeatureDetail()
@@ -105,6 +106,8 @@ function goBack() {
 }
 
 const trafficSignals = computed(() => feature.value?.trafficSignals || null)
+
+const signoffValidation = computed(() => feature.value?.signoffValidation ?? null)
 
 function formatSignalTime(iso) {
   if (!iso) return ''
@@ -289,6 +292,9 @@ onMounted(() => {
           <div class="text-xs text-blue-700 dark:text-blue-400 font-medium mb-1">Status Notes</div>
           <div class="text-sm text-gray-700 dark:text-gray-300" v-html="renderStatusNotes(feature.statusNotes)"></div>
         </div>
+
+        <!-- Release signoff: summary row in header; full panel expands on click -->
+        <SignoffSection v-if="signoffValidation" collapsible :validation="signoffValidation" />
       </div>
 
       <!-- Progress Summary -->

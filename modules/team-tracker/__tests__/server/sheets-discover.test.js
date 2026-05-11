@@ -21,7 +21,8 @@ vi.mock('../../../../shared/server/roster-sync', () => ({
 
 vi.mock('../../../../shared/server/auth', () => ({
   requireAuth: (req, res, next) => next(),
-  requireAdmin: (req, res, next) => next()
+  requireAdmin: (req, res, next) => next(),
+  requireTeamAdmin: (req, res, next) => next()
 }))
 
 vi.mock('../../server/jira/jira-client', () => ({
@@ -51,6 +52,7 @@ function createTestApp() {
   const context = {
     storage: { readFromStorage, writeToStorage },
     requireAdmin: (req, res, next) => next(),
+    requireTeamAdmin: (req, res, next) => next(),
     registerDiagnostics: vi.fn()
   }
   registerRoutes(router, context)

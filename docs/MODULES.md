@@ -298,6 +298,69 @@ module.exports = function registerRoutes(router, context) {
 
 See [Must-Gather Documentation](MUST-GATHER.md) for the full bundle format.
 
+## Message Provider Hook
+
+Modules can register message providers to surface contextual alerts to users across every page of the application. Messages appear as a stack of sticky banners below the top bar header. This is optional — modules that don't register a provider simply produce no messages.
+
+### Registering a Message Provider
+
+Call `context.registerMessageProvider(id, fn)` inside your `registerRoutes` function. The provider function receives the current user context and returns an array of messages:
+
+```javascript
+module.exports = function registerRoutes(router, context) {
+  const { storage } = context
+
+  // ... route definitions ...
+
+  // Register message provider (optional)
+  if (context.registerMessageProvider) {
+    context.registerMessageProvider('my-module:my-alert', async function(user) {
+      // user = { email, uid, isAdmin, isTeamAdmin, permissionTier }
+
+      // Return empty array if nothing to alert on
+      if (!someCondition) return []
+
+      return [{
+        id: 'my-module:my-alert',
+        type: 'warning',          // 'warning' | 'info' | 'error'
+        text: 'Something needs attention.',
+        link: {                    // optional
+          label: 'Review',
+          href: '#/my-module/detail'
+        }
+      }]
+    })
+  }
+}
+```
+
+### Message Shape
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | Yes | Globally unique. Convention: `<module-slug>:<message-name>` |
+| `type` | string | Yes | `'warning'`, `'info'`, or `'error'` — determines banner color |
+| `text` | string | Yes | Plain text (no HTML or markdown) |
+| `link` | object or null | No | Optional CTA with `label` (string) and `href` (string) |
+
+### Guidelines
+
+- **Guard the call**: Always check `if (context.registerMessageProvider)` for backward compatibility
+- **Synchronous registration**: Providers must be registered synchronously during `require(entryPath)` — the same constraint as `registerDiagnostics`. Deferred registration (e.g., in `setTimeout`) will fail because the context is cleaned up after module loading
+- **Per-request execution**: Provider functions are called on every `GET /api/messages` request with the current user context. Keep them fast
+- **Timeout**: Each provider has a 5-second timeout. Providers that exceed this are skipped with a warning
+- **Error isolation**: If a provider throws or times out, other providers still run and the endpoint still returns results
+- **Early bailout**: Check `user.permissionTier` or `user.uid` early to skip expensive work for users who won't see the message
+- **Return an array**: Providers can return zero or more messages. Return `[]` when there is nothing to alert on
+
+### How It Works
+
+- `context.registerMessageProvider` is set per-module during router creation in `module-loader.js`
+- All registered providers are called sequentially by the message registry on `GET /api/messages`
+- Provider results are merged with admin-stored messages from `data/messages.json`
+- The client fetches messages once on app load (non-blocking) and renders them as sticky banners inside the header
+- Users can dismiss messages per session (sessionStorage)
+
 ## PR Checklist
 
 - [ ] `module.json` has all required fields

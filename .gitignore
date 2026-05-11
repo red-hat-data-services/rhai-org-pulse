@@ -22,6 +22,7 @@ Thumbs.db
 
 # Local dev data
 data/
+data-backup.tar.gz
 
 # Google Sheets service account key
 secrets/

@@ -32,6 +32,7 @@ function mergePerson(existing, fresh, orgRootUid, now) {
         costCenter: fresh.costCenter,
         managerUid: fresh.managerUid,
         orgRoot: orgRootUid,
+        orgType: 'engineering',
         github: fresh.githubUsername
           ? { username: fresh.githubUsername, source: 'ldap' }
           : null,
@@ -113,6 +114,8 @@ function computeCoverage(people) {
   for (var i = 0; i < uids.length; i++) {
     var p = people[uids[i]];
     if (p.status !== 'active') continue;
+    // Exclude auxiliary people from coverage stats
+    if ((p.orgType || 'engineering') === 'auxiliary') continue;
     active++;
     if (p.github && p.github.username) {
       githubCount++;
@@ -154,6 +157,12 @@ function processLifecycle(existingPeople, freshPeopleMap, merged, changelog, gra
     if (freshPeopleMap[euid]) continue;
 
     var ep = existingPeople[euid];
+    // Skip auxiliary entries -- they are not part of org-root traversal
+    // and have their own lifecycle (refreshed during Phase 5b)
+    if ((ep.orgType || 'engineering') === 'auxiliary') {
+      merged[euid] = ep;
+      continue;
+    }
     if (ep.status === 'active') {
       ep.status = 'inactive';
       ep.inactiveSince = now;

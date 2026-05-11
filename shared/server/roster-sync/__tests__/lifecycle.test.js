@@ -57,6 +57,27 @@ describe('computeCoverage', () => {
     expect(result.gitlab.hasId).toBe(1)
     expect(result.gitlab.bySource.manual).toBe(1)
   })
+
+  it('excludes auxiliary people from coverage stats', () => {
+    const people = {
+      u1: { status: 'active', orgType: 'engineering', github: { username: 'gh1', source: 'ldap' }, gitlab: null },
+      aux1: { status: 'active', orgType: 'auxiliary', github: null, gitlab: null },
+      aux2: { status: 'active', orgType: 'auxiliary', github: null, gitlab: null }
+    }
+    const result = computeCoverage(people)
+    // Only u1 should be counted (total=1), aux1 and aux2 excluded
+    expect(result.github.total).toBe(1)
+    expect(result.github.hasId).toBe(1)
+  })
+
+  it('treats missing orgType as engineering', () => {
+    const people = {
+      u1: { status: 'active', github: null, gitlab: null }
+      // no orgType field -- should be treated as engineering
+    }
+    const result = computeCoverage(people)
+    expect(result.github.total).toBe(1)
+  })
 })
 
 describe('processLifecycle', () => {
@@ -80,5 +101,60 @@ describe('processLifecycle', () => {
     const changelog = { joined: [], left: [], reactivated: [], changed: [] }
     processLifecycle(existing, fresh, merged, changelog, 30, now)
     expect(merged.u1).toBeUndefined()
+  })
+
+  it('skips auxiliary entries -- not marked inactive', () => {
+    const existing = {
+      aux1: { uid: 'aux1', status: 'active', orgType: 'auxiliary', inactiveSince: null }
+    }
+    const fresh = {} // aux1 not in fresh (not from org-root traversal)
+    const merged = {}
+    const changelog = { joined: [], left: [], reactivated: [], changed: [] }
+    processLifecycle(existing, fresh, merged, changelog, 30, now)
+    expect(merged.aux1).toBeDefined()
+    expect(merged.aux1.status).toBe('active')
+    expect(changelog.left).not.toContain('aux1')
+  })
+
+  it('preserves auxiliary entries in merged output', () => {
+    const existing = {
+      aux1: { uid: 'aux1', status: 'active', orgType: 'auxiliary', inactiveSince: null, name: 'Aux Person' }
+    }
+    const fresh = {}
+    const merged = {}
+    const changelog = { joined: [], left: [], reactivated: [], changed: [] }
+    processLifecycle(existing, fresh, merged, changelog, 30, now)
+    expect(merged.aux1.name).toBe('Aux Person')
+    expect(merged.aux1.orgType).toBe('auxiliary')
+  })
+
+  it('does not purge auxiliary entries even past grace period', () => {
+    const longAgo = '2020-01-01T00:00:00.000Z'
+    const existing = {
+      aux1: { uid: 'aux1', status: 'active', orgType: 'auxiliary', inactiveSince: longAgo }
+    }
+    const fresh = {}
+    const merged = {}
+    const changelog = { joined: [], left: [], reactivated: [], changed: [] }
+    processLifecycle(existing, fresh, merged, changelog, 30, now)
+    expect(merged.aux1).toBeDefined()
+  })
+})
+
+describe('mergePerson orgType', () => {
+  const now = '2026-04-16T00:00:00.000Z'
+
+  it('includes orgType in new person fixed fields', () => {
+    const fresh = { uid: 'newp', name: 'New Person', email: 'new@test.com', title: 'SRE', city: '', country: '', geo: '', location: '', officeLocation: '', costCenter: '', managerUid: null, githubUsername: null, gitlabUsername: null }
+    const result = mergePerson(null, fresh, 'orgRoot1', now)
+    expect(result.person.orgType).toBe('engineering')
+  })
+
+  it('preserves existing orgType on merge', () => {
+    const existing = { uid: 'aux1', name: 'Aux', email: '', title: '', city: '', country: '', geo: '', location: '', officeLocation: '', costCenter: '', managerUid: null, orgRoot: '_auxiliary', orgType: 'auxiliary', github: null, gitlab: null, status: 'active', firstSeenAt: now, lastSeenAt: now, inactiveSince: null }
+    const fresh = { uid: 'aux1', name: 'Aux', email: '', title: '', city: '', country: '', geo: '', location: '', officeLocation: '', costCenter: '', managerUid: null, githubUsername: null, gitlabUsername: null }
+    const result = mergePerson(existing, fresh, '_auxiliary', now)
+    // orgType is not in TRACKED_FIELDS, so existing value should persist
+    expect(result.person.orgType).toBe('auxiliary')
   })
 })
