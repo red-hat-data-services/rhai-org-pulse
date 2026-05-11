@@ -15,8 +15,8 @@ const MOCK_DATA = {
     totalIssues: 10
   },
   trendData: [
-    { date: '2026-04-11', triaged: 3, autofixed: 2, merged: 1, total: 3 },
-    { date: '2026-04-18', triaged: 7, autofixed: 4, merged: 1, total: 7 }
+    { date: '2026-04-11', triaged: 3, autofixed: 2, merged: 1, total: 3, review: 1, ciFailing: 0, blocked: 0, maxRetries: 0, missingInfo: 1, stale: 0 },
+    { date: '2026-04-18', triaged: 7, autofixed: 4, merged: 1, total: 7, review: 1, ciFailing: 1, blocked: 0, maxRetries: 0, missingInfo: 1, stale: 1 }
   ],
   componentBreakdown: [
     { component: 'Model Server', triaged: 5, autofixed: 3, done: 1 },

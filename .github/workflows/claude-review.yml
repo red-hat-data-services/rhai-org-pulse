@@ -266,6 +266,25 @@ jobs:
         run: |
           echo "Fork PR #${PR_NUM} detected (branch: ${HEAD_REF})"
 
+          # Check if PR modifies workflow files
+          CHANGED_FILES=$(gh api repos/${{ github.repository }}/pulls/${PR_NUM}/files \
+            --paginate --jq '.[].filename')
+
+          MODIFIES_WORKFLOWS=false
+          while IFS= read -r file; do
+            if [[ "$file" == .github/workflows/* ]]; then
+              MODIFIES_WORKFLOWS=true
+              break
+            fi
+          done <<< "$CHANGED_FILES"
+
+          if [ "$MODIFIES_WORKFLOWS" = "true" ]; then
+            echo "::warning::PR modifies workflow files - skipping temp branch push due to GitHub security restrictions"
+            echo "::notice::Review will proceed using gh pr diff only (some Read/Grep/Glob tools may not work on PR code)"
+            echo "modifies_workflows=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           # The claude-code-action runs `git fetch origin <branchName>` internally,
           # which fails for fork PRs because the branch only exists on the fork.
           # Workaround: push the PR head commit to origin under a namespaced ref
@@ -332,7 +351,7 @@ jobs:
           DISABLE_PROMPT_CACHING: "1"
 
       - name: Cleanup fork PR branch
-        if: always() && steps.fork-setup.outputs.fork_branch
+        if: always() && steps.fork-setup.outputs.fork_branch && steps.fork-setup.outputs.modifies_workflows != 'true'
         run: |
           echo "Cleaning up temporary branch: ${{ steps.fork-setup.outputs.fork_branch }}"
           git push origin --delete "${{ steps.fork-setup.outputs.fork_branch }}" || true

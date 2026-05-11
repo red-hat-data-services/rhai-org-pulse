@@ -140,12 +140,28 @@ function buildTrendData(issues, timeWindow) {
 
     const merged = weekIssues.filter(i => i.pipelineState === 'autofix-merged').length;
 
+    // Autofix states where human action can help
+    const review = weekIssues.filter(i => i.pipelineState === 'autofix-review').length;
+    const ciFailing = weekIssues.filter(i => i.pipelineState === 'autofix-ci-failing').length;
+    const blocked = weekIssues.filter(i => i.pipelineState === 'autofix-blocked').length;
+    const maxRetries = weekIssues.filter(i => i.pipelineState === 'autofix-max-retries').length;
+
+    // Triage states where human action can help
+    const missingInfo = weekIssues.filter(i => i.pipelineState === 'triage-missing-info').length;
+    const stale = weekIssues.filter(i => i.pipelineState === 'triage-stale').length;
+
     points.push({
       date: weekEnd.toISOString().slice(0, 10),
       triaged,
       autofixed,
       merged,
-      total: weekIssues.length
+      total: weekIssues.length,
+      review,
+      ciFailing,
+      blocked,
+      maxRetries,
+      missingInfo,
+      stale
     });
   }
 

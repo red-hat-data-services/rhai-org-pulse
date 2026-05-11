@@ -41,7 +41,7 @@
         </div>
 
         <p class="text-[10px] text-gray-400 dark:text-gray-500 text-center">
-          {{ ITERATIONS.toLocaleString() }} Monte Carlo simulations · Throughput: {{ props.velocity }} issues / 14d · Remaining: {{ props.notDoneCount }} issues
+          {{ ITERATIONS.toLocaleString() }} simulations, per-component critical path<template v-if="props.componentForecasts.length"> · {{ props.componentForecasts.length }} component(s) simulated</template><template v-else> · Throughput: {{ props.velocity }} issues / 14d</template> · {{ props.notDoneCount }} remaining issues
         </p>
       </template>
     </template>
@@ -73,7 +73,8 @@ const props = defineProps({
   dueDate: { type: String, required: true },
   deadlineLabel: { type: String, default: 'Due Date' },
   codeFreezeDate: { type: String, default: null },
-  releaseDate: { type: String, default: null }
+  releaseDate: { type: String, default: null },
+  componentForecasts: { type: Array, default: () => [] }
 })
 
 // ── Date helpers ──
@@ -128,13 +129,27 @@ let pendingIdleId = null
 function runSimulation() {
   if (!canSimulate.value) { sim.value = null; return }
 
-  const scale = 14 / props.velocity
-  const n = props.notDoneCount
-
+  const components = props.componentForecasts
   const completionDays = new Array(ITERATIONS)
-  for (let i = 0; i < ITERATIONS; i++) {
-    completionDays[i] = Math.min(Math.ceil(gammaSample(n, scale)), MAX_DAYS)
+
+  if (components && components.length > 0) {
+    for (let i = 0; i < ITERATIONS; i++) {
+      let maxDays = 0
+      for (const comp of components) {
+        const scale = 14 / comp.velocity
+        const days = Math.min(Math.ceil(gammaSample(comp.totalWorkload, scale)), MAX_DAYS)
+        if (days > maxDays) maxDays = days
+      }
+      completionDays[i] = maxDays
+    }
+  } else {
+    const scale = 14 / props.velocity
+    const n = props.notDoneCount
+    for (let i = 0; i < ITERATIONS; i++) {
+      completionDays[i] = Math.min(Math.ceil(gammaSample(n, scale)), MAX_DAYS)
+    }
   }
+
   completionDays.sort((a, b) => a - b)
 
   const t = getToday()
@@ -168,7 +183,7 @@ const cancelIdle = typeof cancelIdleCallback === 'function'
   : (id) => clearTimeout(id)
 
 watch(
-  () => [props.notDoneCount, props.velocity, props.dueDate],
+  () => [props.notDoneCount, props.velocity, props.dueDate, props.componentForecasts],
   () => {
     if (pendingIdleId != null) cancelIdle(pendingIdleId)
     pendingIdleId = scheduleIdle(() => { pendingIdleId = null; runSimulation() })

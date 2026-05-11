@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed } from 'vue'
-import { Line } from 'vue-chartjs'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { Line, Bar } from 'vue-chartjs'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -16,6 +16,20 @@ import {
 import LoadingOverlay from '@shared/client/components/LoadingOverlay.vue'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, BarController, Filler, Tooltip, Legend)
+
+const isDark = ref(false)
+let darkObserver = null
+onMounted(() => {
+  isDark.value = document.documentElement.classList.contains('dark')
+  darkObserver = new MutationObserver(() => {
+    isDark.value = document.documentElement.classList.contains('dark')
+  })
+  darkObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+})
+onBeforeUnmount(() => { if (darkObserver) darkObserver.disconnect() })
+
+const textColor = computed(() => isDark.value ? 'rgba(209, 213, 219, 1)' : 'rgba(107, 114, 128, 1)')
+const gridColor = computed(() => isDark.value ? 'rgba(75, 85, 99, 0.5)' : 'rgba(229, 231, 235, 1)')
 
 const props = defineProps({
   loading: { type: Boolean, default: false },
@@ -139,7 +153,16 @@ const trendData = computed(() => {
     const triaged = weekIssues.filter(i => i.pipelineState.startsWith('triage-') || i.pipelineState.startsWith('autofix-')).length
     const autofixed = weekIssues.filter(i => i.pipelineState.startsWith('autofix-')).length
     const merged = weekIssues.filter(i => i.pipelineState === 'autofix-merged').length
-    points.push({ date: weekEnd.toISOString().slice(0, 10), triaged, autofixed, merged, total: weekIssues.length })
+    const review = weekIssues.filter(i => i.pipelineState === 'autofix-review').length
+    const ciFailing = weekIssues.filter(i => i.pipelineState === 'autofix-ci-failing').length
+    const blocked = weekIssues.filter(i => i.pipelineState === 'autofix-blocked').length
+    const maxRetries = weekIssues.filter(i => i.pipelineState === 'autofix-max-retries').length
+    const missingInfo = weekIssues.filter(i => i.pipelineState === 'triage-missing-info').length
+    const stale = weekIssues.filter(i => i.pipelineState === 'triage-stale').length
+    points.push({
+      date: weekEnd.toISOString().slice(0, 10), triaged, autofixed, merged, total: weekIssues.length,
+      review, ciFailing, blocked, maxRetries, missingInfo, stale
+    })
   }
   return points
 })
@@ -199,8 +222,15 @@ const trendStatus = computed(() => {
   return { label: 'Stable', icon: 'stable' }
 })
 
-// Combo chart: eligibility rate (line) + completed count (bars)
-const comboChartData = computed(() => ({
+const totalFixesLanded = computed(() => {
+  return trendData.value.reduce((s, p) => s + p.merged, 0)
+})
+
+const hasTrendActivity = computed(() => {
+  return trendData.value.some(p => p.triaged > 0)
+})
+
+const funnelChartData = computed(() => ({
   labels: trendData.value.map(p => p.date),
   datasets: [
     {
@@ -208,6 +238,18 @@ const comboChartData = computed(() => ({
       data: trendData.value.map(p => p.autofixed),
       borderColor: '#10b981',
       backgroundColor: 'rgba(16, 185, 129, 0.1)',
+      fill: true,
+      tension: 0.3,
+      type: 'line',
+      yAxisID: 'y',
+      pointRadius: 3,
+      borderWidth: 2
+    },
+    {
+      label: 'Under Review',
+      data: trendData.value.map(p => p.review || 0),
+      borderColor: '#3b82f6',
+      backgroundColor: 'rgba(59, 130, 246, 0.1)',
       fill: true,
       tension: 0.3,
       type: 'line',
@@ -225,25 +267,59 @@ const comboChartData = computed(() => ({
   ]
 }))
 
-const comboChartOptions = {
+const funnelChartOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
-    legend: { display: true, position: 'top', labels: { font: { size: 11 } } }
+    legend: { display: true, position: 'top', labels: { font: { size: 11 }, color: textColor.value } }
   },
   scales: {
-    x: { ticks: { font: { size: 10 }, maxRotation: 0 } },
-    y: { beginAtZero: true, ticks: { font: { size: 10 }, precision: 0 }, title: { display: true, text: 'Issues (count)', font: { size: 11 } } }
+    x: { ticks: { font: { size: 10 }, color: textColor.value, maxRotation: 0 }, grid: { color: gridColor.value } },
+    y: { beginAtZero: true, ticks: { font: { size: 10 }, color: textColor.value, precision: 0 }, title: { display: true, text: 'Issues (count)', font: { size: 11 }, color: textColor.value }, grid: { color: gridColor.value } }
   }
-}
+}))
 
-const totalFixesLanded = computed(() => {
-  return trendData.value.reduce((s, p) => s + p.merged, 0)
-})
+const waitingChartData = computed(() => ({
+  labels: trendData.value.map(p => p.date),
+  datasets: [
+    { label: 'Under Review', data: trendData.value.map(p => p.review || 0), backgroundColor: 'rgba(59, 130, 246, 0.6)' },
+    { label: 'CI Failing', data: trendData.value.map(p => p.ciFailing || 0), backgroundColor: 'rgba(249, 115, 22, 0.6)' },
+    { label: 'Blocked', data: trendData.value.map(p => p.blocked || 0), backgroundColor: 'rgba(234, 179, 8, 0.6)' },
+    { label: 'Max Retries', data: trendData.value.map(p => p.maxRetries || 0), backgroundColor: 'rgba(239, 68, 68, 0.6)' }
+  ]
+}))
 
-const hasTrendActivity = computed(() => {
-  return trendData.value.some(p => p.triaged > 0)
-})
+const waitingChartOptions = computed(() => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: true, position: 'top', labels: { font: { size: 10 }, color: textColor.value } }
+  },
+  scales: {
+    x: { stacked: true, ticks: { font: { size: 10 }, color: textColor.value, maxRotation: 0 }, grid: { color: gridColor.value } },
+    y: { stacked: true, beginAtZero: true, ticks: { font: { size: 10 }, color: textColor.value, precision: 0 }, title: { display: true, text: 'Issues waiting', font: { size: 11 }, color: textColor.value }, grid: { color: gridColor.value } }
+  }
+}))
+
+const triageWaitingData = computed(() => ({
+  labels: trendData.value.map(p => p.date),
+  datasets: [
+    { label: 'Missing Info', data: trendData.value.map(p => p.missingInfo || 0), backgroundColor: 'rgba(245, 158, 11, 0.6)' },
+    { label: 'Stale', data: trendData.value.map(p => p.stale || 0), backgroundColor: 'rgba(156, 163, 175, 0.6)' }
+  ]
+}))
+
+const triageWaitingOptions = computed(() => ({
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: { display: true, position: 'top', labels: { font: { size: 10 }, color: textColor.value } }
+  },
+  scales: {
+    x: { stacked: true, ticks: { font: { size: 10 }, color: textColor.value, maxRotation: 0 }, grid: { color: gridColor.value } },
+    y: { stacked: true, beginAtZero: true, ticks: { font: { size: 10 }, color: textColor.value, precision: 0 }, title: { display: true, text: 'Issues waiting', font: { size: 11 }, color: textColor.value }, grid: { color: gridColor.value } }
+  }
+}))
 
 function stateLabel(state) {
   const opt = STATE_OPTIONS.find(o => o.value === state)
@@ -475,13 +551,13 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
             <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase tracking-wide">In Review</div>
           </div>
           <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center"
-            :title="`Issues requiring human intervention. Includes tickets with incomplete information (missing info: ${metrics.triageVerdicts.missingInfo || 0}) and autofix attempts that hit a blocker (blocked: ${metrics.autofixStates.blocked || 0}).`"
+            :title="`Issues where human action can help. Missing Info: ${metrics.triageVerdicts.missingInfo || 0}, Stale: ${metrics.triageVerdicts.stale || 0}, CI Failing: ${metrics.autofixStates.ciFailing || 0}, Blocked: ${metrics.autofixStates.blocked || 0}, Max Retries: ${metrics.autofixStates.maxRetries || 0}.`"
           >
             <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-              {{ (metrics.autofixStates.blocked || 0) + (metrics.triageVerdicts.missingInfo || 0) }}
+              {{ (metrics.triageVerdicts.missingInfo || 0) + (metrics.triageVerdicts.stale || 0) + (metrics.autofixStates.ciFailing || 0) + (metrics.autofixStates.blocked || 0) + (metrics.autofixStates.maxRetries || 0) }}
             </div>
             <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase tracking-wide">Needs Attention</div>
-            <div class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">{{ metrics.triageVerdicts.missingInfo || 0 }} missing info · {{ metrics.autofixStates.blocked || 0 }} AI blocked</div>
+            <div class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">{{ (metrics.triageVerdicts.missingInfo || 0) + (metrics.triageVerdicts.stale || 0) }} triage · {{ (metrics.autofixStates.ciFailing || 0) + (metrics.autofixStates.blocked || 0) + (metrics.autofixStates.maxRetries || 0) }} autofix</div>
           </div>
           <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center"
             title="Trend compares autofix completion rate between the first and second half of the selected time window."
@@ -500,8 +576,8 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
           </div>
         </div>
 
-        <!-- Status Snapshot + Adoption Trend (3-column) -->
-        <div class="px-6 pb-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Status Snapshot -->
+        <div class="px-6 pb-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
           <!-- Triage Outcomes -->
           <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
             <div class="flex items-center justify-between mb-4">
@@ -616,8 +692,52 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
             </div>
           </div>
 
-          <!-- Adoption Over Time -->
-          <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5" v-if="trendData.length > 0">
+        </div>
+
+        <!-- Pipeline Trends -->
+        <div class="px-6 pb-6 grid grid-cols-1 lg:grid-cols-3 gap-6" v-if="trendData.length > 0 && hasTrendActivity">
+          <!-- Waiting on Humans: Triage -->
+          <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Waiting on Humans: Triage</h3>
+                <div class="relative group">
+                  <svg class="h-3.5 w-3.5 text-gray-400 dark:text-gray-500 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div class="absolute left-0 top-6 z-10 hidden group-hover:block w-64 p-2 text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/50">
+                    Triage issues where a human can help. Missing Info: reporter hasn't provided details the bot needs. Stale: no response for 14+ days.
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="h-[180px]">
+              <Bar :data="triageWaitingData" :options="triageWaitingOptions" />
+            </div>
+          </div>
+
+          <!-- Waiting on Humans: Autofix -->
+          <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-2">
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Waiting on Humans: Autofix</h3>
+                <div class="relative group">
+                  <svg class="h-3.5 w-3.5 text-gray-400 dark:text-gray-500 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <div class="absolute right-0 top-6 z-10 hidden group-hover:block w-72 p-2 text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/50">
+                    Autofix issues where a human can help. Under Review: MR waiting for code review. CI Failing: MR exists but CI is red. Blocked: AI got stuck. Max Retries: AI exhausted its attempts.
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="h-[180px]">
+              <Bar :data="waitingChartData" :options="waitingChartOptions" />
+            </div>
+          </div>
+
+          <!-- Adoption Over Time (funnel) -->
+          <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
             <div class="flex items-center justify-between mb-3">
               <div class="flex items-center gap-2">
                 <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Adoption Over Time</h3>
@@ -626,7 +746,7 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <div class="absolute right-0 top-6 z-10 hidden group-hover:block w-64 p-2 text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/50">
-                    Line shows the number of bugs that qualified for autofix each week. Bars show completed autofixes. The gap shows work still in progress.
+                    Green line: issues that qualified for autofix. Blue line: AI created an MR waiting for human code review. Bars: fixes that humans approved and merged. The gap between lines shows conversion at each stage.
                   </div>
                 </div>
               </div>
@@ -635,11 +755,8 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
                 <span class="text-[10px] text-gray-400 dark:text-gray-500 ml-0.5">landed</span>
               </div>
             </div>
-            <div class="h-[180px]" v-if="hasTrendActivity">
-              <Line :data="comboChartData" :options="comboChartOptions" />
-            </div>
-            <div v-else class="h-[180px] flex items-center justify-center">
-              <p class="text-sm text-gray-400 dark:text-gray-500">No activity in this time period</p>
+            <div class="h-[180px]">
+              <Line :data="funnelChartData" :options="funnelChartOptions" />
             </div>
           </div>
         </div>
