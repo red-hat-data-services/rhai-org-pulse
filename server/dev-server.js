@@ -922,6 +922,40 @@ app.get('/api/modules', function(req, res) {
 
 const diagnosticsRegistry = {};
 const messageRegistry = require('../shared/server/message-registry');
+
+// Register backup staleness message provider (admin-only warning when latest backup > 48h old)
+const BACKUP_STALE_HOURS = 48;
+messageRegistry.registerProvider('backup-staleness', async function(userContext) {
+  if (!userContext.isAdmin) return [];
+  if (!process.env.AWS_BACKUP_BUCKET) return [];
+  try {
+    const backups = await backup.listBackups();
+    if (backups.length === 0) {
+      return [{
+        id: 'backup:no-backups',
+        type: 'warning',
+        text: 'No data backups found. Trigger a backup from About > Backups to protect against data loss.',
+        link: { label: 'Go to Backups', href: '#/about?tab=backups' }
+      }];
+    }
+    const latest = backups[0];
+    const ageMs = Date.now() - new Date(latest.lastModified).getTime();
+    const ageHours = ageMs / (1000 * 60 * 60);
+    if (ageHours > BACKUP_STALE_HOURS) {
+      const ageDays = Math.floor(ageHours / 24);
+      const ageLabel = ageDays >= 1 ? `${ageDays} day${ageDays === 1 ? '' : 's'}` : `${Math.floor(ageHours)} hours`;
+      return [{
+        id: 'backup:stale',
+        type: 'warning',
+        text: `Data backup is overdue — last backup was ${ageLabel} ago.`,
+        link: { label: 'Go to Backups', href: '#/about?tab=backups' }
+      }];
+    }
+    return [];
+  } catch {
+    return [];
+  }
+});
 const moduleContext = { storage: storageModule, requireAuth: authMiddleware, requireAdmin, requireTeamAdmin, roleStore, registerDiagnostics: null };
 
 const persistedState = loadModuleState(storageModule);
