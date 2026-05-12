@@ -328,11 +328,24 @@ function createHealthMetricsRouter(context) {
 
     // Merge aggregates into summary
     let totalViews = 0;
+    let totalUniqueUsers = 0;
     const pageStats = {};
     const userTypeTotals = {};
     const dailyData = {};
 
     for (const agg of aggregates) {
+      // Use top-level uniqueUsers when available (new format),
+      // fall back to max per-page uniqueUsers (lower bound for old aggregates)
+      if (agg.uniqueUsers != null) {
+        totalUniqueUsers += agg.uniqueUsers;
+      } else {
+        let maxPerPage = 0;
+        for (const data of Object.values(agg.pages || {})) {
+          if (data.uniqueUsers > maxPerPage) maxPerPage = data.uniqueUsers;
+        }
+        totalUniqueUsers += maxPerPage;
+      }
+
       for (const [pageId, data] of Object.entries(agg.pages || {})) {
         totalViews += data.views;
         if (!pageStats[pageId]) {
@@ -366,6 +379,7 @@ function createHealthMetricsRouter(context) {
 
     res.json({
       totalViews,
+      uniqueUsers: totalUniqueUsers,
       activePages: Object.keys(pageStats).length,
       topPages,
       userTypes: userTypeTotals,

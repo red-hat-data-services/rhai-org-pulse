@@ -19,6 +19,7 @@ vi.mock('../../components/health-metrics/useMetricsDashboard.js', () => ({
     error: ref(null),
     fetchDashboard: vi.fn(),
     totalViews: ref(1500),
+    uniqueUsers: ref(42),
     activePages: ref(8),
     topPages: ref([
       { pageId: 'team-tracker::home', views: 523, uniqueUsers: 34, byUserType: {}, byPermissionTier: {} },
@@ -53,6 +54,8 @@ describe('SiteUsageTab', () => {
   });
 
   it('displays summary cards', () => {
+    expect(wrapper.text()).toContain('Unique Users');
+    expect(wrapper.text()).toContain('42');
     expect(wrapper.text()).toContain('Total Views');
     expect(wrapper.text()).toContain('1,500');
     expect(wrapper.text()).toContain('Active Pages');

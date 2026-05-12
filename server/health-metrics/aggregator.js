@@ -1,5 +1,6 @@
 function aggregateEvents(events, month) {
   const pages = {};
+  const allEmails = new Set();
 
   for (const event of events) {
     const pageId = event.page;
@@ -15,6 +16,7 @@ function aggregateEvents(events, month) {
     const p = pages[pageId];
     p.views++;
     p._emails.add(event.email);
+    allEmails.add(event.email);
 
     const ut = event.userType || 'unknown';
     p.byUserType[ut] = (p.byUserType[ut] || 0) + 1;
@@ -31,6 +33,7 @@ function aggregateEvents(events, month) {
   return {
     month,
     generatedAt: new Date().toISOString(),
+    uniqueUsers: allEmails.size,
     pages,
   };
 }

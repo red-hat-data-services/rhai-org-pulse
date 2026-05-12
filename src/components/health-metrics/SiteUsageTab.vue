@@ -18,7 +18,11 @@
     </div>
 
     <!-- Summary cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
+        <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Unique Users</div>
+        <div class="text-3xl font-bold text-gray-900 dark:text-white mt-1">{{ uniqueUsers.toLocaleString() }}</div>
+      </div>
       <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
         <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Views</div>
         <div class="text-3xl font-bold text-gray-900 dark:text-white mt-1">{{ totalViews.toLocaleString() }}</div>
@@ -101,6 +105,7 @@ const {
   error,
   fetchDashboard,
   totalViews,
+  uniqueUsers,
   activePages,
   topPages,
   userTypes,

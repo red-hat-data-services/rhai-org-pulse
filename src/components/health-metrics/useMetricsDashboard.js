@@ -64,6 +64,7 @@ export function useMetricsDashboard() {
   }
 
   const totalViews = computed(() => dashboardData.value?.totalViews || 0)
+  const uniqueUsers = computed(() => dashboardData.value?.uniqueUsers || 0)
   const activePages = computed(() => dashboardData.value?.activePages || 0)
   const topPages = computed(() => dashboardData.value?.topPages || [])
   const userTypes = computed(() => dashboardData.value?.userTypes || {})
@@ -80,6 +81,7 @@ export function useMetricsDashboard() {
     fetchPageDetail,
     fetchUserTypes,
     totalViews,
+    uniqueUsers,
     activePages,
     topPages,
     userTypes,
