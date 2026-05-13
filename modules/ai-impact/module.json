@@ -14,7 +14,8 @@
       { "id": "security", "label": "Security Review", "icon": "Shield", "disabled": true },
       { "id": "documentation", "label": "Documentation", "icon": "FileText", "disabled": true },
       { "id": "build-release", "label": "Build & Release", "icon": "Layers", "disabled": true },
-      { "id": "autofix", "label": "Jira AutoFix", "icon": "Wand2", "separatorBefore": true }
+      { "id": "autofix", "label": "Jira AutoFix", "icon": "Wand2", "separatorBefore": true },
+      { "id": "ai-factory-guide", "label": "AI Factory Guide", "icon": "BookOpen", "separatorBefore": true }
     ],
     "settingsComponent": "./client/components/AIImpactSettings.vue"
   },

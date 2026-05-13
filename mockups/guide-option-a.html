@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Option A — Horizontal Pipeline</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: Inter, system-ui, sans-serif; background: #111827; color: #e5e7eb; }
+  .stage-box { transition: all 0.3s ease; cursor: pointer; }
+  .stage-box:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(59,130,246,0.2); }
+  .connector { height: 2px; background: linear-gradient(90deg, #3b82f6, #6366f1); min-width: 32px; flex-shrink: 0; }
+  .fade-in { animation: fadeIn 0.35s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+  .sub-connector { width: 2px; background: linear-gradient(180deg, #6366f1, #8b5cf6); min-height: 24px; }
+  .breadcrumb-btn { cursor: pointer; }
+  .breadcrumb-btn:hover { text-decoration: underline; }
+</style>
+</head>
+<body class="min-h-screen p-6">
+
+<!-- Header -->
+<div class="max-w-7xl mx-auto mb-2">
+  <div class="flex items-center gap-2 text-xs text-gray-500 mb-4">
+    <span class="px-2 py-0.5 bg-gray-800 rounded text-gray-400">AI Impact</span>
+    <span>›</span>
+    <span class="text-gray-300">AI Factory Guide</span>
+  </div>
+  <h1 class="text-2xl font-bold text-white mb-1">AI Factory Guide</h1>
+  <p class="text-gray-400 text-sm">Understand the end-to-end AI-augmented delivery pipeline. Click any stage to explore its details.</p>
+</div>
+
+<!-- Breadcrumb (shown when zoomed in) -->
+<div id="breadcrumb" class="max-w-7xl mx-auto mb-4 hidden">
+  <button onclick="zoomOut()" class="breadcrumb-btn flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    <span id="breadcrumb-text">Back to Pipeline Overview</span>
+  </button>
+</div>
+
+<!-- Top-level pipeline view -->
+<div id="overview" class="max-w-7xl mx-auto">
+  <!-- Quick links bar -->
+  <div class="flex gap-3 mb-8 flex-wrap">
+    <a href="#" class="flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-750 rounded-lg text-sm text-gray-300 hover:text-white transition-colors border border-gray-700">
+      <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+      Documentation
+    </a>
+    <a href="#" class="flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-750 rounded-lg text-sm text-gray-300 hover:text-white transition-colors border border-gray-700">
+      <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+      AI Skills &amp; Automation
+    </a>
+    <a href="#" class="flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-750 rounded-lg text-sm text-gray-300 hover:text-white transition-colors border border-gray-700">
+      <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      Quick Start
+    </a>
+  </div>
+
+  <!-- Pipeline flow (horizontal) -->
+  <div class="bg-gray-800/50 rounded-xl p-8 border border-gray-700">
+    <div class="flex items-center justify-center gap-0 overflow-x-auto pb-4">
+
+      <!-- Stage 1: RFE Review -->
+      <div class="stage-box flex-shrink-0 w-40" onclick="zoomIn('rfe-review')">
+        <div class="bg-gradient-to-b from-blue-600/20 to-blue-600/5 border border-blue-500/40 rounded-xl p-4 text-center">
+          <div class="w-10 h-10 mx-auto mb-2 rounded-lg bg-blue-500/20 flex items-center justify-center">
+            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+          </div>
+          <div class="text-sm font-semibold text-white">RFE Review</div>
+          <div class="text-xs text-gray-400 mt-1">Intake &amp; triage</div>
+          <div class="mt-2 px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full inline-block">Active</div>
+        </div>
+      </div>
+
+      <div class="connector self-center"></div>
+
+      <!-- Stage 2: Feature Review -->
+      <div class="stage-box flex-shrink-0 w-40" onclick="zoomIn('feature-review')">
+        <div class="bg-gradient-to-b from-indigo-600/20 to-indigo-600/5 border border-indigo-500/40 rounded-xl p-4 text-center">
+          <div class="w-10 h-10 mx-auto mb-2 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+            <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/></svg>
+          </div>
+          <div class="text-sm font-semibold text-white">Feature Review</div>
+          <div class="text-xs text-gray-400 mt-1">Scoring &amp; planning</div>
+          <div class="mt-2 px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full inline-block">Active</div>
+        </div>
+      </div>
+
+      <div class="connector self-center"></div>
+
+      <!-- Stage 3: Implementation -->
+      <div class="stage-box flex-shrink-0 w-40" onclick="zoomIn('implementation')">
+        <div class="bg-gradient-to-b from-purple-600/20 to-purple-600/5 border border-purple-500/40 rounded-xl p-4 text-center">
+          <div class="w-10 h-10 mx-auto mb-2 rounded-lg bg-purple-500/20 flex items-center justify-center">
+            <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+          </div>
+          <div class="text-sm font-semibold text-white">Implementation</div>
+          <div class="text-xs text-gray-400 mt-1">Code &amp; autofix</div>
+          <div class="mt-2 px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full inline-block">Coming Soon</div>
+        </div>
+      </div>
+
+      <div class="connector self-center"></div>
+
+      <!-- Stage 4: QE/Validation -->
+      <div class="stage-box flex-shrink-0 w-40" onclick="zoomIn('qe-validation')">
+        <div class="bg-gradient-to-b from-cyan-600/20 to-cyan-600/5 border border-cyan-500/40 rounded-xl p-4 text-center">
+          <div class="w-10 h-10 mx-auto mb-2 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+            <svg class="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <div class="text-sm font-semibold text-white">QE / Validation</div>
+          <div class="text-xs text-gray-400 mt-1">Testing &amp; QA</div>
+          <div class="mt-2 px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full inline-block">Coming Soon</div>
+        </div>
+      </div>
+
+      <div class="connector self-center"></div>
+
+      <!-- Stage 5: Security -->
+      <div class="stage-box flex-shrink-0 w-40" onclick="zoomIn('security')">
+        <div class="bg-gradient-to-b from-amber-600/20 to-amber-600/5 border border-amber-500/40 rounded-xl p-4 text-center">
+          <div class="w-10 h-10 mx-auto mb-2 rounded-lg bg-amber-500/20 flex items-center justify-center">
+            <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          </div>
+          <div class="text-sm font-semibold text-white">Security</div>
+          <div class="text-xs text-gray-400 mt-1">Review &amp; scan</div>
+          <div class="mt-2 px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full inline-block">Coming Soon</div>
+        </div>
+      </div>
+
+      <div class="connector self-center"></div>
+
+      <!-- Stage 6: Documentation -->
+      <div class="stage-box flex-shrink-0 w-40" onclick="zoomIn('documentation')">
+        <div class="bg-gradient-to-b from-teal-600/20 to-teal-600/5 border border-teal-500/40 rounded-xl p-4 text-center">
+          <div class="w-10 h-10 mx-auto mb-2 rounded-lg bg-teal-500/20 flex items-center justify-center">
+            <svg class="w-5 h-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          </div>
+          <div class="text-sm font-semibold text-white">Docs</div>
+          <div class="text-xs text-gray-400 mt-1">Release notes</div>
+          <div class="mt-2 px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full inline-block">Coming Soon</div>
+        </div>
+      </div>
+
+      <div class="connector self-center"></div>
+
+      <!-- Stage 7: Build & Release -->
+      <div class="stage-box flex-shrink-0 w-40" onclick="zoomIn('build-release')">
+        <div class="bg-gradient-to-b from-rose-600/20 to-rose-600/5 border border-rose-500/40 rounded-xl p-4 text-center">
+          <div class="w-10 h-10 mx-auto mb-2 rounded-lg bg-rose-500/20 flex items-center justify-center">
+            <svg class="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+          </div>
+          <div class="text-sm font-semibold text-white">Build &amp; Release</div>
+          <div class="text-xs text-gray-400 mt-1">Ship &amp; deploy</div>
+          <div class="mt-2 px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full inline-block">Coming Soon</div>
+        </div>
+      </div>
+
+    </div>
+
+    <p class="text-center text-xs text-gray-500 mt-4">Click a stage to explore its sub-steps, AI automation, and documentation</p>
+  </div>
+</div>
+
+<!-- Zoomed-in detail view -->
+<div id="detail" class="max-w-7xl mx-auto hidden fade-in">
+  <div id="detail-content" class="bg-gray-800/50 rounded-xl p-8 border border-gray-700">
+    <!-- Populated by JS -->
+  </div>
+</div>
+
+<div class="max-w-7xl mx-auto mt-4 text-center text-xs text-gray-600">Option A — Horizontal Pipeline Flow</div>
+
+<script>
+const stageDetails = {
+  'rfe-review': {
+    title: 'RFE Review',
+    color: 'blue',
+    description: 'Requirements Flow Enhancement requests are triaged, assessed for AI applicability, and scored.',
+    steps: [
+      { name: 'RFE Ingestion', desc: 'New RFEs pulled from Jira automatically', icon: '📥', ai: true },
+      { name: 'AI Assessment', desc: 'LLM evaluates AI applicability (create, refine, both, none)', icon: '🤖', ai: true },
+      { name: 'Scoring', desc: 'Multi-criteria scoring (complexity, data availability, risk)', icon: '📊', ai: true },
+      { name: 'Human Review', desc: 'Engineering lead validates AI recommendations', icon: '👤', ai: false },
+      { name: 'Routing', desc: 'Approved RFEs linked to Features for next stage', icon: '🔀', ai: false },
+    ],
+    links: [
+      { label: 'RFE Assessment Guide', url: '#' },
+      { label: 'Scoring Criteria Docs', url: '#' },
+      { label: 'Jira RFE Board', url: '#' },
+    ]
+  },
+  'feature-review': {
+    title: 'Feature Review',
+    color: 'indigo',
+    description: 'Features are reviewed, scored against strategic priorities, and planned for implementation.',
+    steps: [
+      { name: 'Feature Creation', desc: 'Auto-created from approved RFEs or manually added', icon: '📋', ai: true },
+      { name: 'AI Review', desc: 'LLM generates strategic recommendation and scoring', icon: '🤖', ai: true },
+      { name: 'Priority Scoring', desc: '8-point scoring: impact, effort, alignment, risk', icon: '📈', ai: true },
+      { name: 'Team Assignment', desc: 'Feature assigned to team based on domain mapping', icon: '👥', ai: false },
+      { name: 'Sprint Planning', desc: 'Features slotted into delivery sprints', icon: '📅', ai: false },
+    ],
+    links: [
+      { label: 'Feature Scoring Guide', url: '#' },
+      { label: 'Strategy Alignment Docs', url: '#' },
+    ]
+  },
+  'implementation': {
+    title: 'Implementation',
+    color: 'purple',
+    description: 'Code is written, reviewed, and integrated — with AI-assisted autofix for common issues.',
+    steps: [
+      { name: 'Branch & Develop', desc: 'Feature branches created from Jira tickets', icon: '🔨', ai: false },
+      { name: 'AI Autofix', desc: 'Automated Jira field corrections and label management', icon: '🔧', ai: true },
+      { name: 'Code Review', desc: 'PR review with AI-assisted analysis', icon: '🔍', ai: true },
+      { name: 'CI/CD Pipeline', desc: 'Automated testing and build verification', icon: '⚙️', ai: false },
+      { name: 'Merge & Integration', desc: 'Feature merged into release branch', icon: '✅', ai: false },
+    ],
+    links: [
+      { label: 'Jira AutoFix Docs', url: '#' },
+      { label: 'CI Pipeline Guide', url: '#' },
+    ]
+  },
+  'qe-validation': {
+    title: 'QE / Validation',
+    color: 'cyan',
+    description: 'Quality engineering validates features through automated and manual testing.',
+    steps: [
+      { name: 'Test Planning', desc: 'Test cases generated from feature specs', icon: '📝', ai: true },
+      { name: 'Automated Testing', desc: 'CI-driven test suites run against builds', icon: '🧪', ai: false },
+      { name: 'Regression Check', desc: 'AI-assisted regression analysis', icon: '🔄', ai: true },
+      { name: 'Sign-off', desc: 'QE team approves for release', icon: '✅', ai: false },
+    ],
+    links: [
+      { label: 'QE Process Guide', url: '#' },
+    ]
+  },
+  'security': {
+    title: 'Security Review',
+    color: 'amber',
+    description: 'Security scanning and compliance verification before release.',
+    steps: [
+      { name: 'CVE Scanning', desc: 'Automated vulnerability scanning of images', icon: '🔒', ai: false },
+      { name: 'Compliance Check', desc: 'Conforma exception review and approval', icon: '📋', ai: false },
+      { name: 'SBOM Validation', desc: 'Software bill of materials verification', icon: '📦', ai: false },
+      { name: 'Sign-off', desc: 'Security team approval', icon: '✅', ai: false },
+    ],
+    links: [
+      { label: 'Conforma Dashboard', url: '#' },
+      { label: 'Security Policy', url: '#' },
+    ]
+  },
+  'documentation': {
+    title: 'Documentation',
+    color: 'teal',
+    description: 'Release notes, user guides, and API documentation updated for the release.',
+    steps: [
+      { name: 'Release Notes Draft', desc: 'AI-generated initial release notes', icon: '📝', ai: true },
+      { name: 'Doc Review', desc: 'Technical writers review and refine', icon: '🔍', ai: false },
+      { name: 'Publish', desc: 'Docs deployed to production', icon: '🚀', ai: false },
+    ],
+    links: [
+      { label: 'Docs Style Guide', url: '#' },
+    ]
+  },
+  'build-release': {
+    title: 'Build & Release',
+    color: 'rose',
+    description: 'Final build, Conforma gate checks, and release to production.',
+    steps: [
+      { name: 'Release Build', desc: 'Container images built and signed', icon: '🏗️', ai: false },
+      { name: 'Conforma Gate', desc: 'Policy exceptions verified before release', icon: '🚦', ai: false },
+      { name: 'Staging Deploy', desc: 'Deployed to staging for final validation', icon: '🎯', ai: false },
+      { name: 'GA Release', desc: 'Production release and announcement', icon: '🚀', ai: false },
+    ],
+    links: [
+      { label: 'Release Checklist', url: '#' },
+      { label: 'Conforma Exceptions', url: '#' },
+    ]
+  },
+}
+
+function zoomIn(stageId) {
+  const stage = stageDetails[stageId]
+  if (!stage) return
+
+  document.getElementById('overview').classList.add('hidden')
+  document.getElementById('breadcrumb').classList.remove('hidden')
+  const detail = document.getElementById('detail')
+  detail.classList.remove('hidden')
+  detail.classList.add('fade-in')
+
+  const c = stage.color
+  const stepsHtml = stage.steps.map((step, i) => `
+    <div class="flex flex-col items-center">
+      <div class="bg-${c}-500/10 border border-${c}-500/30 rounded-xl p-4 w-44 text-center relative">
+        <div class="text-2xl mb-2">${step.icon}</div>
+        <div class="text-sm font-semibold text-white">${step.name}</div>
+        <div class="text-xs text-gray-400 mt-1">${step.desc}</div>
+        ${step.ai ? `<div class="absolute -top-2 -right-2 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center" title="AI-assisted"><svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg></div>` : ''}
+      </div>
+    </div>
+    ${i < stage.steps.length - 1 ? '<div class="connector self-center"></div>' : ''}
+  `).join('')
+
+  const linksHtml = stage.links.map(l => `
+    <a href="${l.url}" class="flex items-center gap-2 px-3 py-2 bg-gray-700/50 hover:bg-gray-700 rounded-lg text-sm text-gray-300 hover:text-white transition-colors">
+      <svg class="w-4 h-4 text-${c}-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+      ${l.label}
+    </a>
+  `).join('')
+
+  document.getElementById('detail-content').innerHTML = `
+    <div class="mb-6">
+      <h2 class="text-xl font-bold text-white mb-2">${stage.title}</h2>
+      <p class="text-gray-400 text-sm">${stage.description}</p>
+    </div>
+    <div class="flex items-center justify-center gap-0 overflow-x-auto pb-6 mb-6">
+      ${stepsHtml}
+    </div>
+    <div>
+      <h3 class="text-sm font-medium text-gray-300 mb-3">Related Documentation</h3>
+      <div class="flex gap-3 flex-wrap">${linksHtml}</div>
+    </div>
+  `
+}
+
+function zoomOut() {
+  document.getElementById('detail').classList.add('hidden')
+  document.getElementById('breadcrumb').classList.add('hidden')
+  document.getElementById('overview').classList.remove('hidden')
+}
+</script>
+</body>
+</html>

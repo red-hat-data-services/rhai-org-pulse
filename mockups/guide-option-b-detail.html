@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Option B — Vertical Swim Lane</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: Inter, system-ui, sans-serif; background: #111827; color: #e5e7eb; }
+  .stage-card { transition: all 0.3s ease; cursor: pointer; }
+  .stage-card:hover { border-color: rgba(99,102,241,0.6); box-shadow: 0 4px 20px rgba(99,102,241,0.15); }
+  .fade-in { animation: fadeIn 0.35s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .v-connector { width: 2px; height: 28px; margin: 0 auto; }
+  .step-line { height: 2px; flex: 1; }
+</style>
+</head>
+<body class="min-h-screen p-6">
+
+<!-- Header -->
+<div class="max-w-3xl mx-auto mb-2">
+  <div class="flex items-center gap-2 text-xs text-gray-500 mb-4">
+    <span class="px-2 py-0.5 bg-gray-800 rounded text-gray-400">AI Impact</span>
+    <span>›</span>
+    <span class="text-gray-300">AI Factory Guide</span>
+  </div>
+  <h1 class="text-2xl font-bold text-white mb-1">AI Factory Guide</h1>
+  <p class="text-gray-400 text-sm mb-6">Understand the end-to-end AI-augmented delivery pipeline. Click any stage to explore its details.</p>
+
+  <!-- Quick links -->
+  <div class="flex gap-3 mb-8 flex-wrap">
+    <a href="#" class="flex items-center gap-2 px-3 py-2 bg-gray-800 rounded-lg text-sm text-gray-300 hover:text-white transition-colors border border-gray-700 hover:border-gray-600">
+      <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+      Documentation
+    </a>
+    <a href="#" class="flex items-center gap-2 px-3 py-2 bg-gray-800 rounded-lg text-sm text-gray-300 hover:text-white transition-colors border border-gray-700 hover:border-gray-600">
+      <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+      AI Skills &amp; Automation
+    </a>
+    <a href="#" class="flex items-center gap-2 px-3 py-2 bg-gray-800 rounded-lg text-sm text-gray-300 hover:text-white transition-colors border border-gray-700 hover:border-gray-600">
+      <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      Quick Start
+    </a>
+  </div>
+</div>
+
+<!-- Breadcrumb -->
+<div id="breadcrumb" class="max-w-3xl mx-auto mb-4 hidden">
+  <button onclick="zoomOut()" class="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 cursor-pointer">
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    Back to Pipeline Overview
+  </button>
+</div>
+
+<!-- Overview: Vertical pipeline -->
+<div id="overview" class="max-w-3xl mx-auto">
+  <div class="relative">
+    <!-- Vertical spine -->
+    <div class="absolute left-8 top-0 bottom-0 w-0.5 bg-gradient-to-b from-blue-500 via-purple-500 via-cyan-500 via-amber-500 to-rose-500 opacity-30"></div>
+
+    <!-- Stage cards -->
+    <div id="stage-1" class="stage-card relative flex items-start gap-6 pl-4" onclick="zoomIn('rfe-review')">
+      <div class="w-9 h-9 rounded-full bg-blue-500/20 border-2 border-blue-500 flex items-center justify-center flex-shrink-0 z-10">
+        <span class="text-blue-400 text-sm font-bold">1</span>
+      </div>
+      <div class="flex-1 bg-gray-800/60 border border-gray-700 rounded-xl p-5 mb-2">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-base font-semibold text-white">RFE Review</h3>
+          <span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">Active</span>
+        </div>
+        <p class="text-sm text-gray-400 mb-3">Incoming requirements are ingested from Jira, assessed for AI applicability, and scored.</p>
+        <div class="flex gap-2">
+          <span class="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-xs rounded border border-blue-500/20">AI Assessment</span>
+          <span class="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-xs rounded border border-blue-500/20">Auto-Scoring</span>
+          <span class="px-2 py-0.5 bg-gray-700 text-gray-400 text-xs rounded">Human Review</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="v-connector bg-gradient-to-b from-blue-500 to-indigo-500 opacity-40 ml-8"></div>
+
+    <div id="stage-2" class="stage-card relative flex items-start gap-6 pl-4" onclick="zoomIn('feature-review')">
+      <div class="w-9 h-9 rounded-full bg-indigo-500/20 border-2 border-indigo-500 flex items-center justify-center flex-shrink-0 z-10">
+        <span class="text-indigo-400 text-sm font-bold">2</span>
+      </div>
+      <div class="flex-1 bg-gray-800/60 border border-gray-700 rounded-xl p-5 mb-2">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-base font-semibold text-white">Feature Review</h3>
+          <span class="px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded-full">Active</span>
+        </div>
+        <p class="text-sm text-gray-400 mb-3">Features scored against strategic priorities, reviewed by AI, and planned for sprints.</p>
+        <div class="flex gap-2">
+          <span class="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-xs rounded border border-blue-500/20">AI Scoring</span>
+          <span class="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-xs rounded border border-blue-500/20">Auto-Create</span>
+          <span class="px-2 py-0.5 bg-gray-700 text-gray-400 text-xs rounded">Team Assignment</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="v-connector bg-gradient-to-b from-indigo-500 to-purple-500 opacity-40 ml-8"></div>
+
+    <div id="stage-3" class="stage-card relative flex items-start gap-6 pl-4" onclick="zoomIn('implementation')">
+      <div class="w-9 h-9 rounded-full bg-purple-500/20 border-2 border-purple-500 flex items-center justify-center flex-shrink-0 z-10">
+        <span class="text-purple-400 text-sm font-bold">3</span>
+      </div>
+      <div class="flex-1 bg-gray-800/60 border border-gray-700 rounded-xl p-5 mb-2">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-base font-semibold text-white">Implementation</h3>
+          <span class="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">Coming Soon</span>
+        </div>
+        <p class="text-sm text-gray-400 mb-3">Code development with AI-assisted autofix, PR review, and CI/CD integration.</p>
+        <div class="flex gap-2">
+          <span class="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-xs rounded border border-blue-500/20">Jira AutoFix</span>
+          <span class="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-xs rounded border border-blue-500/20">AI Code Review</span>
+          <span class="px-2 py-0.5 bg-gray-700 text-gray-400 text-xs rounded">CI/CD</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="v-connector bg-gradient-to-b from-purple-500 to-cyan-500 opacity-40 ml-8"></div>
+
+    <div id="stage-4" class="stage-card relative flex items-start gap-6 pl-4" onclick="zoomIn('qe-validation')">
+      <div class="w-9 h-9 rounded-full bg-cyan-500/20 border-2 border-cyan-500 flex items-center justify-center flex-shrink-0 z-10">
+        <span class="text-cyan-400 text-sm font-bold">4</span>
+      </div>
+      <div class="flex-1 bg-gray-800/60 border border-gray-700 rounded-xl p-5 mb-2">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-base font-semibold text-white">QE / Validation</h3>
+          <span class="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">Coming Soon</span>
+        </div>
+        <p class="text-sm text-gray-400 mb-3">Quality engineering validates features through automated and manual testing.</p>
+        <div class="flex gap-2">
+          <span class="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-xs rounded border border-blue-500/20">AI Test Gen</span>
+          <span class="px-2 py-0.5 bg-gray-700 text-gray-400 text-xs rounded">Manual QE</span>
+          <span class="px-2 py-0.5 bg-gray-700 text-gray-400 text-xs rounded">Regression</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="v-connector bg-gradient-to-b from-cyan-500 to-amber-500 opacity-40 ml-8"></div>
+
+    <div id="stage-5" class="stage-card relative flex items-start gap-6 pl-4" onclick="zoomIn('security')">
+      <div class="w-9 h-9 rounded-full bg-amber-500/20 border-2 border-amber-500 flex items-center justify-center flex-shrink-0 z-10">
+        <span class="text-amber-400 text-sm font-bold">5</span>
+      </div>
+      <div class="flex-1 bg-gray-800/60 border border-gray-700 rounded-xl p-5 mb-2">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-base font-semibold text-white">Security Review</h3>
+          <span class="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">Coming Soon</span>
+        </div>
+        <p class="text-sm text-gray-400 mb-3">Security scanning, Conforma compliance, and SBOM validation.</p>
+        <div class="flex gap-2">
+          <span class="px-2 py-0.5 bg-gray-700 text-gray-400 text-xs rounded">CVE Scan</span>
+          <span class="px-2 py-0.5 bg-gray-700 text-gray-400 text-xs rounded">Conforma</span>
+          <span class="px-2 py-0.5 bg-gray-700 text-gray-400 text-xs rounded">SBOM</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="v-connector bg-gradient-to-b from-amber-500 to-teal-500 opacity-40 ml-8"></div>
+
+    <div id="stage-6" class="stage-card relative flex items-start gap-6 pl-4" onclick="zoomIn('documentation')">
+      <div class="w-9 h-9 rounded-full bg-teal-500/20 border-2 border-teal-500 flex items-center justify-center flex-shrink-0 z-10">
+        <span class="text-teal-400 text-sm font-bold">6</span>
+      </div>
+      <div class="flex-1 bg-gray-800/60 border border-gray-700 rounded-xl p-5 mb-2">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-base font-semibold text-white">Documentation</h3>
+          <span class="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">Coming Soon</span>
+        </div>
+        <p class="text-sm text-gray-400 mb-3">Release notes, user guides, and API documentation.</p>
+        <div class="flex gap-2">
+          <span class="px-2 py-0.5 bg-blue-500/10 text-blue-400 text-xs rounded border border-blue-500/20">AI Drafting</span>
+          <span class="px-2 py-0.5 bg-gray-700 text-gray-400 text-xs rounded">Tech Writing</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="v-connector bg-gradient-to-b from-teal-500 to-rose-500 opacity-40 ml-8"></div>
+
+    <div id="stage-7" class="stage-card relative flex items-start gap-6 pl-4" onclick="zoomIn('build-release')">
+      <div class="w-9 h-9 rounded-full bg-rose-500/20 border-2 border-rose-500 flex items-center justify-center flex-shrink-0 z-10">
+        <span class="text-rose-400 text-sm font-bold">7</span>
+      </div>
+      <div class="flex-1 bg-gray-800/60 border border-gray-700 rounded-xl p-5 mb-2">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-base font-semibold text-white">Build &amp; Release</h3>
+          <span class="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">Coming Soon</span>
+        </div>
+        <p class="text-sm text-gray-400 mb-3">Final build, Conforma gates, staging deploy, and GA release.</p>
+        <div class="flex gap-2">
+          <span class="px-2 py-0.5 bg-gray-700 text-gray-400 text-xs rounded">Container Build</span>
+          <span class="px-2 py-0.5 bg-gray-700 text-gray-400 text-xs rounded">Conforma Gate</span>
+          <span class="px-2 py-0.5 bg-gray-700 text-gray-400 text-xs rounded">GA Ship</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Zoomed-in detail view -->
+<div id="detail" class="max-w-3xl mx-auto hidden fade-in">
+  <div id="detail-content"></div>
+</div>
+
+<div class="max-w-3xl mx-auto mt-6 text-center text-xs text-gray-600">Option B — Vertical Swim Lane</div>
+
+<script>
+const stageDetails = {
+  'rfe-review': {
+    title: 'RFE Review', color: 'blue', num: 1,
+    description: 'Requirements Flow Enhancement requests are triaged, assessed for AI applicability, and scored.',
+    steps: [
+      { name: 'RFE Ingestion', desc: 'New RFEs pulled from Jira automatically', ai: true },
+      { name: 'AI Assessment', desc: 'LLM evaluates AI applicability', ai: true },
+      { name: 'Multi-Criteria Scoring', desc: 'Complexity, data availability, risk', ai: true },
+      { name: 'Human Review', desc: 'Engineering lead validates recommendations', ai: false },
+      { name: 'Route to Features', desc: 'Approved RFEs linked to Feature tracker', ai: false },
+    ],
+    links: [
+      { label: 'RFE Assessment Guide', url: '#' },
+      { label: 'Scoring Criteria', url: '#' },
+      { label: 'Jira RFE Board', url: '#' },
+    ]
+  },
+  'feature-review': {
+    title: 'Feature Review', color: 'indigo', num: 2,
+    description: 'Features scored against strategic priorities, reviewed by AI, and planned for implementation.',
+    steps: [
+      { name: 'Feature Creation', desc: 'Auto-created from approved RFEs', ai: true },
+      { name: 'AI Strategic Review', desc: 'LLM generates recommendation + score', ai: true },
+      { name: 'Priority Ranking', desc: '8-point scoring system', ai: true },
+      { name: 'Team Assignment', desc: 'Domain-based team mapping', ai: false },
+      { name: 'Sprint Slotting', desc: 'Features planned into delivery sprints', ai: false },
+    ],
+    links: [
+      { label: 'Feature Scoring Guide', url: '#' },
+      { label: 'Strategy Alignment', url: '#' },
+    ]
+  },
+  'implementation': {
+    title: 'Implementation', color: 'purple', num: 3,
+    description: 'Code written, reviewed, and integrated with AI-assisted autofix.',
+    steps: [
+      { name: 'Branch & Develop', desc: 'Feature branches from Jira tickets', ai: false },
+      { name: 'AI Autofix', desc: 'Jira field corrections and labels', ai: true },
+      { name: 'Code Review', desc: 'AI-assisted PR analysis', ai: true },
+      { name: 'CI/CD Pipeline', desc: 'Automated test and build', ai: false },
+      { name: 'Merge', desc: 'Feature merged to release branch', ai: false },
+    ],
+    links: [
+      { label: 'Jira AutoFix Docs', url: '#' },
+      { label: 'CI Pipeline Guide', url: '#' },
+    ]
+  },
+  'qe-validation': {
+    title: 'QE / Validation', color: 'cyan', num: 4,
+    description: 'Quality engineering validates features through automated and manual testing.',
+    steps: [
+      { name: 'Test Planning', desc: 'Test cases from feature specs', ai: true },
+      { name: 'Automated Testing', desc: 'CI-driven test suites', ai: false },
+      { name: 'Regression Analysis', desc: 'AI-assisted regression check', ai: true },
+      { name: 'QE Sign-off', desc: 'Team approves for release', ai: false },
+    ],
+    links: [{ label: 'QE Process Guide', url: '#' }]
+  },
+  'security': {
+    title: 'Security Review', color: 'amber', num: 5,
+    description: 'Security scanning and compliance verification.',
+    steps: [
+      { name: 'CVE Scanning', desc: 'Vulnerability scanning of images', ai: false },
+      { name: 'Compliance', desc: 'Conforma exception review', ai: false },
+      { name: 'SBOM Validation', desc: 'Bill of materials check', ai: false },
+      { name: 'Security Sign-off', desc: 'Security team approval', ai: false },
+    ],
+    links: [{ label: 'Conforma Dashboard', url: '#' }, { label: 'Security Policy', url: '#' }]
+  },
+  'documentation': {
+    title: 'Documentation', color: 'teal', num: 6,
+    description: 'Release notes, user guides, and API docs.',
+    steps: [
+      { name: 'AI Drafting', desc: 'AI-generated initial release notes', ai: true },
+      { name: 'Tech Writer Review', desc: 'Human review and refinement', ai: false },
+      { name: 'Publish', desc: 'Docs deployed', ai: false },
+    ],
+    links: [{ label: 'Docs Style Guide', url: '#' }]
+  },
+  'build-release': {
+    title: 'Build & Release', color: 'rose', num: 7,
+    description: 'Final build, Conforma gates, and production release.',
+    steps: [
+      { name: 'Container Build', desc: 'Images built and signed', ai: false },
+      { name: 'Conforma Gate', desc: 'Policy exceptions verified', ai: false },
+      { name: 'Staging', desc: 'Final validation in staging', ai: false },
+      { name: 'GA Release', desc: 'Production release', ai: false },
+    ],
+    links: [{ label: 'Release Checklist', url: '#' }, { label: 'Conforma Exceptions', url: '#' }]
+  },
+}
+
+function zoomIn(stageId) {
+  const stage = stageDetails[stageId]
+  if (!stage) return
+
+  document.getElementById('overview').classList.add('hidden')
+  document.getElementById('breadcrumb').classList.remove('hidden')
+  const detail = document.getElementById('detail')
+  detail.classList.remove('hidden')
+
+  const c = stage.color
+
+  const stepsHtml = stage.steps.map((step, i) => `
+    <div class="flex items-start gap-4 relative">
+      <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10
+        ${step.ai ? 'bg-blue-500/20 border-2 border-blue-500' : 'bg-gray-700 border-2 border-gray-600'}">
+        ${step.ai
+          ? '<svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>'
+          : '<svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>'
+        }
+      </div>
+      <div class="flex-1 pb-6">
+        <div class="text-sm font-semibold text-white">${step.name}</div>
+        <div class="text-xs text-gray-400 mt-0.5">${step.desc}</div>
+        ${step.ai ? '<span class="inline-block mt-1 px-1.5 py-0.5 text-[10px] bg-blue-500/10 text-blue-400 rounded border border-blue-500/20">AI-assisted</span>' : ''}
+      </div>
+    </div>
+    ${i < stage.steps.length - 1 ? '<div class="absolute left-[19px] top-8 bottom-0 w-0.5 bg-gray-700" style="height:calc(100% - 2rem)"></div>' : ''}
+  `).join('')
+
+  const linksHtml = stage.links.map(l => `
+    <a href="${l.url}" class="flex items-center gap-2 px-3 py-2 bg-gray-700/50 hover:bg-gray-700 rounded-lg text-sm text-gray-300 hover:text-white transition-colors">
+      <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+      ${l.label}
+    </a>
+  `).join('')
+
+  document.getElementById('detail-content').innerHTML = `
+    <div class="bg-gray-800/60 border border-gray-700 rounded-xl p-6">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-9 h-9 rounded-full bg-${c}-500/20 border-2 border-${c}-500 flex items-center justify-center">
+          <span class="text-${c}-400 text-sm font-bold">${stage.num}</span>
+        </div>
+        <div>
+          <h2 class="text-lg font-bold text-white">${stage.title}</h2>
+          <p class="text-sm text-gray-400">${stage.description}</p>
+        </div>
+      </div>
+
+      <div class="relative ml-1 mt-6 mb-6">
+        <div class="absolute left-[15px] top-0 bottom-0 w-0.5 bg-gray-700"></div>
+        ${stepsHtml}
+      </div>
+
+      <div class="border-t border-gray-700 pt-4">
+        <h3 class="text-sm font-medium text-gray-300 mb-3">Related Documentation</h3>
+        <div class="flex gap-3 flex-wrap">${linksHtml}</div>
+      </div>
+    </div>
+  `
+}
+
+function zoomOut() {
+  document.getElementById('detail').classList.add('hidden')
+  document.getElementById('breadcrumb').classList.add('hidden')
+  document.getElementById('overview').classList.remove('hidden')
+}
+</script>
+</body>
+</html>
+<script>window.addEventListener('load', () => zoomIn('rfe-review'))</script>
