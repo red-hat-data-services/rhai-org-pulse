@@ -28,6 +28,10 @@ async function proxyGet(baseUrl, upstreamPath, query, res) {
     });
 
     const body = await upstream.json();
+    const totalCount = upstream.headers.get('X-Total-Count');
+    const totalPages = upstream.headers.get('X-Total-Pages');
+    if (totalCount) res.set('X-Total-Count', totalCount);
+    if (totalPages) res.set('X-Total-Pages', totalPages);
     res.status(upstream.status).json(body);
   } catch (err) {
     if (err.name === 'TimeoutError') {

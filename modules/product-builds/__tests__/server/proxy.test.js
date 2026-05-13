@@ -54,7 +54,8 @@ describe('proxyGet', () => {
   })
 
   it('proxies successful upstream response', async () => {
-    const upstream = { ok: true, status: 200, json: () => Promise.resolve([{ key: 'rhaiis' }]) }
+    const headers = new Map()
+    const upstream = { ok: true, status: 200, headers, json: () => Promise.resolve([{ key: 'rhaiis' }]) }
     globalThis.fetch = vi.fn().mockResolvedValue(upstream)
 
     const res = makeRes()
@@ -65,8 +66,33 @@ describe('proxyGet', () => {
     expect(res._json).toEqual([{ key: 'rhaiis' }])
   })
 
+  it('forwards pagination headers from upstream', async () => {
+    const headers = new Map([['X-Total-Count', '42'], ['X-Total-Pages', '3']])
+    const upstream = { ok: true, status: 200, headers, json: () => Promise.resolve([]) }
+    globalThis.fetch = vi.fn().mockResolvedValue(upstream)
+
+    const res = makeRes()
+    await proxyGet('https://api.example.com', '/drops', { product_key: 'rhaiis' }, res)
+
+    expect(res._headers['X-Total-Count']).toBe('42')
+    expect(res._headers['X-Total-Pages']).toBe('3')
+  })
+
+  it('handles missing pagination headers gracefully', async () => {
+    const headers = new Map()
+    const upstream = { ok: true, status: 200, headers, json: () => Promise.resolve([]) }
+    globalThis.fetch = vi.fn().mockResolvedValue(upstream)
+
+    const res = makeRes()
+    await proxyGet('https://api.example.com', '/drops', {}, res)
+
+    expect(res._headers['X-Total-Count']).toBeUndefined()
+    expect(res._headers['X-Total-Pages']).toBeUndefined()
+  })
+
   it('passes upstream error status through', async () => {
-    const upstream = { ok: false, status: 404, json: () => Promise.resolve({ detail: 'not found' }) }
+    const headers = new Map()
+    const upstream = { ok: false, status: 404, headers, json: () => Promise.resolve({ detail: 'not found' }) }
     globalThis.fetch = vi.fn().mockResolvedValue(upstream)
 
     const res = makeRes()
