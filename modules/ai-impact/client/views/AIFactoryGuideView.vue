@@ -16,7 +16,7 @@ const phaseInfo = {
     color: 'blue',
   },
   'feature-review': {
-    desc: 'Strategy documents are auto-generated from approved RFEs, refined by AI, and reviewed by staff engineers.',
+    desc: 'Features are auto-generated from approved RFEs, refined by AI, and reviewed by staff engineers.',
     color: 'indigo',
   },
   'implementation': {
@@ -138,7 +138,7 @@ const featureLabels = [
 
 const featureToolLinks = [
   { label: 'architecture-context repo', icon: Archive, url: 'https://github.com/opendatahub-io/architecture-context' },
-  { label: 'Skills Registry', icon: Archive, url: 'https://github.com/opendatahub-io/skills-registry' },
+  { label: 'Skills Registry', icon: BookOpen, url: 'https://github.com/opendatahub-io/skills-registry' },
 ]
 
 const featureCommunityLinks = [
