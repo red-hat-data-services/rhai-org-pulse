@@ -262,6 +262,7 @@ import {
   Info,
   KeyRound,
   ClipboardList,
+  BookOpen,
   History,
   Hospital,
   LayoutDashboard
@@ -303,6 +304,7 @@ const ICON_MAP = {
   'activity': Activity,
   'network': Network,
   'clipboard-list': ClipboardList,
+  BookOpen,
   ClipboardList,
   History,
   Hospital,
