@@ -1,5 +1,12 @@
 <script setup>
 import { ref, watch } from 'vue'
+import { Video, Presentation, StickyNote, Play, ExternalLink } from 'lucide-vue-next'
+import { getAIImpactEnablementCategories } from '@shared/client/enablement-links.js'
+
+const iconMap = { Video, Presentation, StickyNote, Play }
+function resolveIcon(name) { return iconMap[name] || Video }
+
+const enablementCategories = getAIImpactEnablementCategories()
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -72,6 +79,15 @@ function handleClose() {
                 : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
             >
               Feature Review
+            </button>
+            <button
+              @click="activeTab = 'enablement'"
+              class="px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors"
+              :class="activeTab === 'enablement'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+            >
+              Enablement
             </button>
           </div>
 
@@ -268,6 +284,51 @@ function handleClose() {
                 </div>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
                   Install: <code class="px-1 py-0.5 rounded bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200">/plugin install rfe-creator@opendatahub-skills</code>
+                </p>
+              </div>
+            </div>
+
+            <!-- Enablement Tab -->
+            <div v-if="activeTab === 'enablement'" class="space-y-5">
+              <div>
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Enablement Resources</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300">
+                  Recordings, slides, and notes from AI SDLC tool enablement sessions. These cover the tools powering the AI Impact module's RFE scoring, feature review, and quality workflows.
+                </p>
+              </div>
+
+              <div v-for="cat in enablementCategories" :key="cat.id" class="space-y-3">
+                <div class="flex items-center gap-2">
+                  <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ cat.title }}</h4>
+                  <a
+                    v-if="cat.slackChannel"
+                    :href="cat.slackChannel.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline"
+                  >
+                    {{ cat.slackChannel.name }}
+                  </a>
+                </div>
+                <div class="flex flex-wrap gap-3">
+                  <a
+                    v-for="link in cat.links"
+                    :key="link.url"
+                    :href="link.url"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
+                  >
+                    <component :is="resolveIcon(link.icon)" :size="16" :stroke-width="1.7" class="flex-shrink-0 text-gray-500 dark:text-gray-400" />
+                    <span>{{ link.label }}</span>
+                    <ExternalLink :size="12" class="flex-shrink-0 text-gray-400 dark:text-gray-500" />
+                  </a>
+                </div>
+              </div>
+
+              <div class="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 px-4 py-3">
+                <p class="text-sm text-blue-800 dark:text-blue-200">
+                  <strong>Looking for more?</strong> The full set of enablement materials (including Jira Autofix, Agent Eval Harness, and more) is available in the global <strong>About → Docs</strong> tab.
                 </p>
               </div>
             </div>
