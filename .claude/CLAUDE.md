@@ -31,13 +31,13 @@ npm run dev:full       # Starts Vite (5173) + Express (3001)
 | `GITHUB_TOKEN` | Classic PAT with `read:user` scope (for contribution stats). Fine-grained tokens don't work with GraphQL API. |
 | `GITLAB_TOKEN` | GitLab PAT with `read_api` scope (for contribution stats). |
 | `GITLAB_BASE_URL` | GitLab instance URL (default: `https://gitlab.com`) |
-| `IPA_BIND_DN` | LDAP bind DN for IPA roster sync (service account). |
-| `IPA_BIND_PASSWORD` | LDAP bind password for IPA roster sync. |
-| `GOOGLE_SERVICE_ACCOUNT_KEY_FILE` | Path to Google SA JSON key (default: `/etc/secrets/google-sa-key.json`). |
-| `PRODUCT_PAGES_CLIENT_ID` | OAuth client ID for Product Pages (production). |
-| `PRODUCT_PAGES_CLIENT_SECRET` | OAuth client secret for Product Pages (production). |
-| `PRODUCT_PAGES_TOKEN` | Personal bearer token for Product Pages (local dev fallback). |
-| `FEATURE_TRAFFIC_GITLAB_TOKEN` | GitLab PAT for feature-traffic pipeline CI artifact fetching. |
+| `IPA_BIND_DN` | LDAP bind DN for IPA roster sync (service account). Required for roster sync. |
+| `IPA_BIND_PASSWORD` | LDAP bind password for IPA roster sync. Required for roster sync. |
+| `GOOGLE_SERVICE_ACCOUNT_KEY_FILE` | Path to Google SA JSON key (default: `/etc/secrets/google-sa-key.json`). For local dev: `./secrets/google-sa-key.json` |
+| `PRODUCT_PAGES_CLIENT_ID` | OAuth client ID for Product Pages (production). Mutually exclusive with `PRODUCT_PAGES_TOKEN`. |
+| `PRODUCT_PAGES_CLIENT_SECRET` | OAuth client secret for Product Pages (production). Used with `PRODUCT_PAGES_CLIENT_ID`. |
+| `PRODUCT_PAGES_TOKEN` | Personal bearer token for Product Pages (local dev fallback). Used when OAuth env vars are not set. |
+| `FEATURE_TRAFFIC_GITLAB_TOKEN` | GitLab PAT with `read_api` scope for feature-traffic pipeline. Overrides `GITLAB_TOKEN` for CI artifact fetching. |
 | `DEMO_MODE` / `VITE_DEMO_MODE` | Set both to `true` for fixture data (no credentials needed). |
 
 ## Key Concepts
@@ -90,6 +90,33 @@ npm run dev:full       # Starts Vite (5173) + Express (3001)
 - Frontend: localStorage stale-while-revalidate (prefix `tt_cache:`).
 - API functions accept `onData` callback: called with cached data immediately, then fresh data.
 
+## Project Structure
+
+```
+src/
+  components/       # App shell (App.vue, AppSidebar, LandingPage, SettingsView)
+  composables/      # Shell-only composables (useModules, useModuleAdmin)
+  module-loader.js  # Frontend module auto-discovery via import.meta.glob
+  __tests__/        # Frontend tests
+
+shared/
+  client/
+    composables/    # Shared composables (useRoster, useAuth, useGithubStats, etc.)
+    services/       # API client with caching (api.js)
+    components/     # Shared UI (Toast, LoadingOverlay, RefreshModal)
+    index.js        # Barrel export
+  server/
+    storage.js      # Filesystem storage abstraction
+    demo-storage.js # Fixture-backed storage for demo mode
+    auth.js         # Auth middleware (requireAuth, requireAdmin)
+    roster-sync/    # Roster sync engine (LDAP + Google Sheets), config, constants
+    index.js        # Barrel export
+```
+
+## Local Kind Cluster
+
+For testing the containerized deployment locally, see `deploy/KIND.md`. The `deploy/openshift/overlays/local/` overlay strips OpenShift-specific resources (OAuth proxy, Route, ServiceAccount) and uses locally-built images with `imagePullPolicy: Never`. Cluster name is `team-tracker` (not the default `kind`). If using Podman: `export KIND_EXPERIMENTAL_PROVIDER=podman`.
+
 ## Deployment
 
 Deployed to OpenShift via ArgoCD. Full guide: `deploy/OPENSHIFT.md`.
@@ -105,10 +132,29 @@ Overlays: `dev/` (team-tracker ns), `preprod/` (ambient-code--team-tracker ns), 
 ### CI/CD
 - **`ci.yml`** — PRs + main: lint, test, build, kustomize validate. Required check: "Test & Build".
 - **`build-images.yml`** — main pushes: detect changed components, build/push to Quay (`:<sha>` + `:latest`), create PR to update prod image tags, auto-merge.
-- ConfigMap changes auto-trigger rollouts via kustomize content-hash suffixes.
+- ConfigMap changes auto-trigger rollouts via kustomize `configMapGenerator` — ConfigMap names include a content hash suffix (e.g., `team-tracker-config-5h2f9k`), so any data change produces a new name and triggers a pod rollout automatically.
+
+**Branch protection** uses a GitHub repository ruleset on `main`:
+- Requires PRs (no direct pushes)
+- Requires "Test & Build" status check
+- Admin role has bypass (used by `GH_PAT` secret for CI auto-merge PRs)
+
+**Repo secrets:**
+- `QUAY_USERNAME` / `QUAY_PASSWORD` — Quay.io registry credentials for image push
+- `GH_PAT` — Personal access token with admin bypass, used by CI to create and auto-merge image tag update PRs
+- `GCP_SA_KEY` — GCP service account JSON key for Vertex AI auth (Claude code review)
+
+**Daily CronJob** (`deploy/openshift/overlays/prod/cronjob-sync-refresh.yaml`): Runs at 6:00 AM UTC, triggers roster sync then full metrics refresh via the backend API.
+
+### Building images on ARM Macs
+Standard `--platform linux/amd64` builds fail: npm times out under QEMU, esbuild crashes. Workaround: build/install natively, then copy into amd64 base images. See `deploy/OPENSHIFT.md` step 3 for details. This works because the backend has no native Node addons (all pure JS).
+
+### Dev vs prod
+- **Dev overlay** clears `ADMIN_EMAILS` via `configMapGenerator` merge behavior. When empty, the first authenticated user is auto-added to the role store.
+- **Prod overlay** keeps `ADMIN_EMAILS` to pre-seed the role store with known admins.
 
 ### Auth Flow (production)
-OAuth proxy sets `X-Forwarded-Email`/`X-Forwarded-User`. Backend checks against `data/roles.json`. Empty role store → first user auto-added.
+OAuth proxy (sidecar on frontend pod) authenticates users and sets `X-Forwarded-Email` / `X-Forwarded-User` headers. Backend reads `X-Forwarded-Email` and checks against `data/roles.json` via role-store. Empty role store → first user auto-added.
 
 ## API Routes
 
@@ -148,6 +194,9 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/modules/team-tracker/field-options/:name` — single option set
 - `/api/modules/team-tracker/snapshots/:teamKey` — team snapshots
 - `/api/modules/team-tracker/snapshots/:teamKey/:personName` — person snapshots
+- `/api/modules/team-tracker/components` — component list (deprecated alias)
+- `/api/modules/team-tracker/structure/migrate/preview` — migration preview (admin)
+- `/api/modules/team-tracker/structure/migrate/field-to-options/preview` — field-to-options migration preview (team-admin)
 - `/api/modules/release-analysis/product-pages/products` — Product Pages products (admin)
 - `/api/modules/release-analysis/conforma/releases` — conforma releases
 - `/api/modules/release-analysis/conforma/releases/:version` — release detail
