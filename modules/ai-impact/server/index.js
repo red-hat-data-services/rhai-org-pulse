@@ -22,6 +22,10 @@ module.exports = function registerRoutes(router, context) {
   const registerFeatureRoutes = require('./features/routes');
   registerFeatureRoutes(router, context);
 
+  // Test plan quality routes
+  const registerTestPlanRoutes = require('./test-plans/routes');
+  registerTestPlanRoutes(router, context);
+
   // ─── Refresh state (in-memory) ───
 
   const refreshState = {

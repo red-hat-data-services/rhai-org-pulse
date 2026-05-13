@@ -11,7 +11,7 @@
       { "id": "rfe-review", "label": "RFE Review", "icon": "ClipboardList", "separatorBefore": true },
       { "id": "feature-review", "label": "Feature Review", "icon": "Target" },
       { "id": "implementation", "label": "Implementation", "icon": "GitBranch", "disabled": true },
-      { "id": "qe-validation", "label": "QE / Validation", "icon": "Activity", "disabled": true },
+      { "id": "test-plan-review", "label": "Test Plan Review", "icon": "ClipboardCheck" },
       { "id": "security", "label": "Security Review", "icon": "Shield", "disabled": true },
       { "id": "documentation", "label": "Documentation", "icon": "FileText" },
       { "id": "build-release", "label": "Build & Release", "icon": "Layers", "disabled": true },

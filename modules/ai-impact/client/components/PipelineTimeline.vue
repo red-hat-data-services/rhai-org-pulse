@@ -2,16 +2,61 @@
 const props = defineProps({
   rfe: { type: Object, default: null },
   feature: { type: Object, default: null },
+  testPlan: { type: Object, default: null },
   phases: { type: Array, required: true },
   jiraHost: { type: String, default: null }
 })
 
-const emit = defineEmits(['navigateToRFE', 'navigateToFeature'])
+const emit = defineEmits(['navigateToRFE', 'navigateToFeature', 'navigateToTestPlan'])
 
 function getPhaseSignal(phaseId) {
+  if (props.testPlan && !props.rfe && !props.feature) {
+    return getTestPlanContextSignal(phaseId)
+  }
+  if (phaseId === 'test-plan-review' && props.testPlan) {
+    return getTestPlanPhaseSignal()
+  }
   if (props.feature) return getFeaturePhaseSignal(phaseId)
   if (props.rfe) return getRFEPhaseSignal(phaseId)
   return { completed: false, aiUsed: null, detail: 'No signals yet' }
+}
+
+function getTestPlanPhaseSignal() {
+  const tp = props.testPlan
+  const aiUsed = (tp.labels || []).some(l => l === 'test-plan-auto-created')
+  const approved = tp.humanReviewStatus === 'approved'
+  return {
+    completed: approved,
+    current: !approved && tp.verdict !== undefined,
+    aiUsed,
+    detail: `${tp.verdict} — ${tp.score}/10`,
+    linkedKey: tp.sourceKey || tp.key
+  }
+}
+
+function getTestPlanContextSignal(phaseId) {
+  const tp = props.testPlan
+  switch (phaseId) {
+    case 'rfe-review':
+      return {
+        completed: true,
+        current: false,
+        aiUsed: true,
+        detail: 'RFE reviewed'
+      }
+    case 'feature-review':
+      return {
+        completed: true,
+        current: false,
+        aiUsed: true,
+        detail: tp.sourceKey,
+        linkedKey: tp.sourceKey
+      }
+    case 'test-plan-review':
+      return getTestPlanPhaseSignal()
+    default:
+      return { completed: false, current: false, aiUsed: null, detail: 'No signals yet' }
+  }
 }
 
 function getRFEPhaseSignal(phaseId) {
@@ -185,6 +230,15 @@ function getFeaturePhaseSignal(phaseId) {
                 <span v-if="getPhaseSignal(phase.id).fixVersions?.length > 0" class="ml-1">
                   ({{ getPhaseSignal(phase.id).fixVersions.join(', ') }})
                 </span>
+              </template>
+              <!-- Test plan link (test-plan-review phase) -->
+              <template v-else-if="phase.id === 'test-plan-review' && getPhaseSignal(phase.id).linkedKey && testPlan">
+                <button
+                  class="text-blue-600 dark:text-blue-400 hover:underline"
+                  @click="emit('navigateToTestPlan', getPhaseSignal(phase.id).linkedKey)"
+                >
+                  {{ getPhaseSignal(phase.id).detail }}
+                </button>
               </template>
               <template v-else-if="phase.status === 'coming-soon' && phase.id !== 'feature-review' && phase.id !== 'build-release'">
                 <span class="text-gray-300 dark:text-gray-600">No signals yet</span>

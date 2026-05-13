@@ -1,0 +1,214 @@
+{
+  "lastSyncedAt": "2026-05-10T18:00:00Z",
+  "lastJiraSyncAt": "2026-05-10T18:05:00Z",
+  "totalTestPlans": 7,
+  "testPlans": {
+    "RHAISTRAT-1168": {
+      "latest": {
+        "key": "RHAISTRAT-1168",
+        "feature": "GPU-as-a-Service Observability Dashboard",
+        "sourceKey": "RHAISTRAT-1168",
+        "score": 9,
+        "verdict": "Ready",
+        "scores": { "specificity": 2, "grounding": 2, "scope_fidelity": 2, "actionability": 2, "consistency": 1 },
+        "autoRevised": true,
+        "beforeScore": 6,
+        "beforeScores": { "specificity": 1, "grounding": 1, "scope_fidelity": 2, "actionability": 1, "consistency": 1 },
+        "criterionNotes": {
+          "specificity": "Test steps reference specific API endpoints and expected response codes.",
+          "grounding": "All endpoints traced back to source strategy.",
+          "scope_fidelity": "Scope exactly mirrors strategy boundaries.",
+          "actionability": "QE can start testing immediately with provided data.",
+          "consistency": "Minor gap between Section 4 and 10.2 priorities."
+        },
+        "feedback": "Strong test plan. Fix Section 2.3 priority definitions to match Section 4.",
+        "error": null,
+        "components": ["dashboard", "model-serving"],
+        "testCaseCount": 24,
+        "jiraTitle": "GPU-as-a-Service Observability Dashboard",
+        "jiraStatus": "In Progress",
+        "jiraPriority": "Critical",
+        "labels": ["test-plan-auto-created", "test-plan-auto-revised", "test-plan-rubric-pass", "test-plan-human-sign-off"],
+        "humanReviewStatus": "approved",
+        "approvedBy": "Alice Nguyen",
+        "approvedAt": "2026-05-10T14:30:00Z",
+        "reviewedAt": "2026-05-10T12:00:00Z"
+      },
+      "history": [
+        {
+          "scores": { "specificity": 1, "grounding": 1, "scope_fidelity": 2, "actionability": 1, "consistency": 1 },
+          "score": 6,
+          "verdict": "Revise",
+          "autoRevised": false,
+          "reviewedAt": "2026-05-03T12:00:00Z"
+        }
+      ]
+    },
+    "RHAISTRAT-1169": {
+      "latest": {
+        "key": "RHAISTRAT-1169",
+        "feature": "Model Serving Autoscaling for High-Throughput Inference",
+        "sourceKey": "RHAISTRAT-1169",
+        "score": 5,
+        "verdict": "Revise",
+        "scores": { "specificity": 1, "grounding": 1, "scope_fidelity": 2, "actionability": 0, "consistency": 1 },
+        "autoRevised": false,
+        "beforeScore": null,
+        "beforeScores": null,
+        "criterionNotes": {},
+        "feedback": "Actionability is the main gap — test data requirements are too vague for QE to start.",
+        "error": null,
+        "components": ["model-serving", "kserve"],
+        "testCaseCount": 8,
+        "jiraTitle": "Model Serving Autoscaling for High-Throughput Inference",
+        "jiraStatus": "Refined",
+        "jiraPriority": "Major",
+        "labels": ["test-plan-auto-created", "test-plan-rubric-fail"],
+        "humanReviewStatus": "needs-review",
+        "reviewedAt": "2026-05-09T14:00:00Z"
+      },
+      "history": []
+    },
+    "RHAISTRAT-1170": {
+      "latest": {
+        "key": "RHAISTRAT-1170",
+        "feature": "Training Operator GPU Scheduling Improvements",
+        "sourceKey": "RHAISTRAT-1170",
+        "score": 3,
+        "verdict": "Rework",
+        "scores": { "specificity": 0, "grounding": 1, "scope_fidelity": 1, "actionability": 0, "consistency": 1 },
+        "autoRevised": false,
+        "beforeScore": null,
+        "beforeScores": null,
+        "criterionNotes": {},
+        "feedback": "Test plan is too generic — reads like a template, not a feature-specific plan.",
+        "error": null,
+        "components": ["training-operator"],
+        "testCaseCount": 4,
+        "jiraTitle": "Training Operator GPU Scheduling Improvements",
+        "jiraStatus": "New",
+        "jiraPriority": "Normal",
+        "labels": ["test-plan-auto-created", "test-plan-rubric-fail"],
+        "humanReviewStatus": "needs-review",
+        "reviewedAt": "2026-05-08T10:00:00Z"
+      },
+      "history": []
+    },
+    "RHAISTRAT-1171": {
+      "latest": {
+        "key": "RHAISTRAT-1171",
+        "feature": "Model Registry RBAC and Multi-Tenancy",
+        "sourceKey": "RHAISTRAT-1171",
+        "score": 10,
+        "verdict": "Ready",
+        "scores": { "specificity": 2, "grounding": 2, "scope_fidelity": 2, "actionability": 2, "consistency": 2 },
+        "autoRevised": false,
+        "beforeScore": null,
+        "beforeScores": null,
+        "criterionNotes": {
+          "specificity": "Every test case specifies exact RBAC roles and expected access outcomes.",
+          "grounding": "All endpoints from the strategy are covered with cross-reference table.",
+          "scope_fidelity": "In-scope and out-of-scope perfectly match strategy.",
+          "actionability": "Test data, users, and cluster config fully specified.",
+          "consistency": "All sections align — priorities, endpoints, coverage matrix."
+        },
+        "feedback": "Exemplary test plan. Ready for test case generation.",
+        "error": null,
+        "components": ["model-registry"],
+        "testCaseCount": 18,
+        "jiraTitle": "Model Registry RBAC and Multi-Tenancy Support",
+        "jiraStatus": "In Progress",
+        "jiraPriority": "Critical",
+        "labels": ["test-plan-auto-created", "test-plan-rubric-pass", "test-plan-human-sign-off"],
+        "humanReviewStatus": "approved",
+        "approvedBy": "Bob Chen",
+        "approvedAt": "2026-05-10T16:45:00Z",
+        "reviewedAt": "2026-05-10T16:00:00Z"
+      },
+      "history": []
+    },
+    "RHAISTRAT-1172": {
+      "latest": {
+        "key": "RHAISTRAT-1172",
+        "feature": "Notebook Image Lifecycle Management",
+        "sourceKey": "RHAISTRAT-1172",
+        "score": 8,
+        "verdict": "Ready",
+        "scores": { "specificity": 2, "grounding": 2, "scope_fidelity": 2, "actionability": 1, "consistency": 1 },
+        "autoRevised": false,
+        "beforeScore": null,
+        "beforeScores": null,
+        "criterionNotes": {},
+        "feedback": "Good plan overall. Minor consistency issue in priority assignments.",
+        "error": null,
+        "components": ["notebooks", "dashboard"],
+        "testCaseCount": 15,
+        "jiraTitle": "Notebook Image Lifecycle Management",
+        "jiraStatus": "Refined",
+        "jiraPriority": "Major",
+        "labels": ["test-plan-auto-created", "test-plan-rubric-pass"],
+        "humanReviewStatus": "awaiting-review",
+        "reviewedAt": "2026-05-10T17:00:00Z"
+      },
+      "history": []
+    },
+    "RHOAIENG-48676": {
+      "latest": {
+        "key": "RHOAIENG-48676",
+        "feature": "Pipeline Step Retry and Error Recovery",
+        "sourceKey": "RHOAIENG-48676",
+        "score": 7,
+        "verdict": "Revise",
+        "scores": { "specificity": 2, "grounding": 1, "scope_fidelity": 2, "actionability": 1, "consistency": 1 },
+        "autoRevised": true,
+        "beforeScore": 4,
+        "beforeScores": { "specificity": 1, "grounding": 0, "scope_fidelity": 2, "actionability": 0, "consistency": 1 },
+        "criterionNotes": {},
+        "feedback": "Grounding improved after auto-revision but still references undocumented retry API.",
+        "error": null,
+        "components": ["data-science-pipelines"],
+        "testCaseCount": 11,
+        "jiraTitle": "Pipeline Step Retry and Error Recovery",
+        "jiraStatus": "In Progress",
+        "jiraPriority": "Major",
+        "labels": ["test-plan-auto-created", "test-plan-auto-revised", "test-plan-rubric-fail"],
+        "humanReviewStatus": "needs-review",
+        "reviewedAt": "2026-05-10T15:00:00Z"
+      },
+      "history": [
+        {
+          "scores": { "specificity": 1, "grounding": 0, "scope_fidelity": 2, "actionability": 0, "consistency": 1 },
+          "score": 4,
+          "verdict": "Rework",
+          "autoRevised": false,
+          "reviewedAt": "2026-05-07T10:00:00Z"
+        }
+      ]
+    },
+    "RHAISTRAT-1175": {
+      "latest": {
+        "key": "RHAISTRAT-1175",
+        "feature": "Distributed Training with Ray on OpenShift",
+        "sourceKey": "RHAISTRAT-1175",
+        "score": 6,
+        "verdict": "Revise",
+        "scores": { "specificity": 1, "grounding": 2, "scope_fidelity": 1, "actionability": 1, "consistency": 1 },
+        "autoRevised": false,
+        "beforeScore": null,
+        "beforeScores": null,
+        "criterionNotes": {},
+        "feedback": "",
+        "error": "Review timed out during auto-revision cycle 2. Partial scores retained.",
+        "components": ["ray", "training-operator"],
+        "testCaseCount": 9,
+        "jiraTitle": "Distributed Training with Ray on OpenShift AI",
+        "jiraStatus": "Closed",
+        "jiraPriority": "Minor",
+        "labels": ["test-plan-auto-created"],
+        "humanReviewStatus": "awaiting-review",
+        "reviewedAt": "2026-05-09T08:00:00Z"
+      },
+      "history": []
+    }
+  }
+}

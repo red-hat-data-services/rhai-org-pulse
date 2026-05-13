@@ -19,6 +19,10 @@ const featureStatus = ref(null)
 const featureStatusLoading = ref(false)
 const clearingFeatures = ref(false)
 const clearFeaturesResult = ref(null)
+const testPlanStatus = ref(null)
+const testPlanStatusLoading = ref(false)
+const clearingTestPlans = ref(false)
+const clearTestPlansResult = ref(null)
 const syncStatus = ref(null)
 const syncTriggering = ref(false)
 
@@ -206,12 +210,39 @@ async function clearFeatures() {
   }
 }
 
+async function loadTestPlanStatus() {
+  testPlanStatusLoading.value = true
+  try {
+    testPlanStatus.value = await apiRequest('/modules/ai-impact/test-plans/status')
+  } catch {
+    testPlanStatus.value = null
+  } finally {
+    testPlanStatusLoading.value = false
+  }
+}
+
+async function clearTestPlans() {
+  clearingTestPlans.value = true
+  clearTestPlansResult.value = null
+  try {
+    await apiRequest('/modules/ai-impact/test-plans', { method: 'DELETE' })
+    clearTestPlansResult.value = { status: 'success', message: 'Test plan data cleared' }
+    loadTestPlanStatus()
+    setTimeout(() => { clearTestPlansResult.value = null }, 3000)
+  } catch (e) {
+    clearTestPlansResult.value = { status: 'error', message: e.message }
+  } finally {
+    clearingTestPlans.value = false
+  }
+}
+
 onMounted(() => {
   loadConfig()
   checkRefreshStatus()
   checkSyncStatus()
   loadAssessmentStatus()
   loadFeatureStatus()
+  loadTestPlanStatus()
 })
 
 // Format excludedStatuses for display
@@ -527,6 +558,43 @@ function getAutofixProjectsDisplay() {
         </div>
       </template>
       <div v-else class="text-sm text-gray-500 dark:text-gray-400">No feature data available</div>
+    </div>
+
+    <!-- Test Plan Data -->
+    <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+      <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Test Plan Reviews</h4>
+      <div v-if="testPlanStatusLoading" class="text-sm text-gray-500 dark:text-gray-400">Loading test plan status...</div>
+      <template v-else-if="testPlanStatus">
+        <div class="grid grid-cols-3 gap-4 mb-3">
+          <div class="bg-gray-50 dark:bg-gray-700 rounded-md p-3">
+            <p class="text-xs text-gray-500 dark:text-gray-400">Total Test Plans</p>
+            <p class="text-lg font-semibold dark:text-gray-200">{{ testPlanStatus.totalTestPlans }}</p>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700 rounded-md p-3">
+            <p class="text-xs text-gray-500 dark:text-gray-400">History Entries</p>
+            <p class="text-lg font-semibold dark:text-gray-200">{{ testPlanStatus.totalHistoryEntries }}</p>
+          </div>
+          <div class="bg-gray-50 dark:bg-gray-700 rounded-md p-3">
+            <p class="text-xs text-gray-500 dark:text-gray-400">Last Synced</p>
+            <p class="text-sm font-medium dark:text-gray-200">
+              {{ testPlanStatus.lastSyncedAt ? new Date(testPlanStatus.lastSyncedAt).toLocaleString() : 'Never' }}
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <button
+            @click="clearTestPlans"
+            :disabled="clearingTestPlans || testPlanStatus.totalTestPlans === 0"
+            class="px-4 py-2 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-300 rounded-md text-sm hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
+          >
+            {{ clearingTestPlans ? 'Clearing...' : 'Clear Test Plan Data' }}
+          </button>
+          <span v-if="clearTestPlansResult" class="text-sm" :class="clearTestPlansResult.status === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+            {{ clearTestPlansResult.message }}
+          </span>
+        </div>
+      </template>
+      <div v-else class="text-sm text-gray-500 dark:text-gray-400">No test plan data available</div>
     </div>
   </div>
 </template>

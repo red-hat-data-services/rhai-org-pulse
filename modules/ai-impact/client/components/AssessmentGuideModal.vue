@@ -81,6 +81,15 @@ function handleClose() {
               Feature Review
             </button>
             <button
+              @click="activeTab = 'testplans'"
+              class="px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors"
+              :class="activeTab === 'testplans'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
+            >
+              Test Plan Review
+            </button>
+            <button
               @click="activeTab = 'enablement'"
               class="px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors"
               :class="activeTab === 'enablement'
@@ -284,6 +293,105 @@ function handleClose() {
                 </div>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
                   Install: <code class="px-1 py-0.5 rounded bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200">/plugin install rfe-creator@opendatahub-skills</code>
+                </p>
+              </div>
+            </div>
+
+            <!-- Test Plan Review Tab -->
+            <div v-if="activeTab === 'testplans'" class="space-y-5">
+              <div>
+                <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">How Test Plan Review Works</h3>
+                <p class="text-sm text-gray-600 dark:text-gray-300">
+                  When a feature strategy is approved, the <a href="https://github.com/opendatahub-io/odh-test-gen" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline">test-plan-create</a> skill generates a structured test plan, then scores it with an AI reviewer. Test plans that pass can proceed directly to test case generation.
+                </p>
+              </div>
+
+              <!-- Flow diagram -->
+              <div class="flex items-center gap-2 text-xs flex-wrap">
+                <span class="px-2.5 py-1.5 rounded-md bg-purple-100 dark:bg-purple-800/60 text-purple-700 dark:text-purple-200 font-medium">Strategy Input</span>
+                <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                <span class="px-2.5 py-1.5 rounded-md bg-purple-100 dark:bg-purple-800/60 text-purple-700 dark:text-purple-200 font-medium">AI Analysis</span>
+                <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                <span class="px-2.5 py-1.5 rounded-md bg-purple-100 dark:bg-purple-800/60 text-purple-700 dark:text-purple-200 font-medium">Quality Review</span>
+                <svg class="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                <span class="px-2.5 py-1.5 rounded-md bg-green-100 dark:bg-green-800/60 text-green-700 dark:text-green-200 font-medium">Test Cases</span>
+              </div>
+
+              <!-- Scoring -->
+              <div>
+                <h4 class="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">Scoring Criteria</h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  Each test plan is scored 0–2 on five criteria, for a total of 0–10. All five must score 2 to pass.
+                </p>
+                <div class="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                  <table class="w-full text-sm">
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                      <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td class="px-4 py-2.5 font-semibold text-gray-900 dark:text-gray-100 w-28">Specificity (0–2)</td>
+                        <td class="px-4 py-2.5 text-gray-600 dark:text-gray-300">Is the plan concrete and feature-specific, not generic boilerplate?</td>
+                      </tr>
+                      <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td class="px-4 py-2.5 font-semibold text-gray-900 dark:text-gray-100">Grounding (0–2)</td>
+                        <td class="px-4 py-2.5 text-gray-600 dark:text-gray-300">Are all findings traceable to source documents?</td>
+                      </tr>
+                      <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td class="px-4 py-2.5 font-semibold text-gray-900 dark:text-gray-100">Scope Fidelity (0–2)</td>
+                        <td class="px-4 py-2.5 text-gray-600 dark:text-gray-300">Does the test scope align with the strategy's boundaries?</td>
+                      </tr>
+                      <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td class="px-4 py-2.5 font-semibold text-gray-900 dark:text-gray-100">Actionability (0–2)</td>
+                        <td class="px-4 py-2.5 text-gray-600 dark:text-gray-300">Can QE start testing immediately from this plan?</td>
+                      </tr>
+                      <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <td class="px-4 py-2.5 font-semibold text-gray-900 dark:text-gray-100">Consistency (0–2)</td>
+                        <td class="px-4 py-2.5 text-gray-600 dark:text-gray-300">Do all sections align internally (priorities, endpoints, coverage)?</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Verdicts -->
+              <div>
+                <h4 class="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">Verdict Outcomes</h4>
+                <div class="space-y-2 text-sm">
+                  <div class="flex items-center gap-2">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200">Ready</span>
+                    <span class="text-gray-600 dark:text-gray-300">All criteria score 2 — proceed to test case generation</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">Revise</span>
+                    <span class="text-gray-600 dark:text-gray-300">Some criteria need improvement — auto-revision may fix</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200">Rework</span>
+                    <span class="text-gray-600 dark:text-gray-300">Significant gaps — provide additional source documents</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- CLI reference -->
+              <div class="rounded-lg bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-700 px-4 py-3">
+                <h4 class="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-2">CLI Tools</h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                  Test plans are generated by the <span class="font-mono text-xs bg-gray-200 dark:bg-gray-600 px-1 py-0.5 rounded">odh-test-gen</span> plugin (source: <a href="https://github.com/opendatahub-io/odh-test-gen" target="_blank" rel="noopener noreferrer" class="font-mono text-xs text-blue-600 dark:text-blue-400 hover:underline">opendatahub-io/odh-test-gen</a>).
+                </p>
+                <div class="space-y-1.5 text-xs font-mono">
+                  <div class="flex items-start gap-2">
+                    <code class="px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 whitespace-nowrap">/test-plan-create</code>
+                    <span class="text-gray-500 dark:text-gray-400 font-sans pt-0.5">Generate a test plan from a Jira strategy</span>
+                  </div>
+                  <div class="flex items-start gap-2">
+                    <code class="px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 whitespace-nowrap">/test-plan-create-cases</code>
+                    <span class="text-gray-500 dark:text-gray-400 font-sans pt-0.5">Generate individual test case files from a plan</span>
+                  </div>
+                  <div class="flex items-start gap-2">
+                    <code class="px-2 py-1 rounded bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200 whitespace-nowrap">/test-plan-case-implement</code>
+                    <span class="text-gray-500 dark:text-gray-400 font-sans pt-0.5">Generate executable pytest code from test cases</span>
+                  </div>
+                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  Install: <code class="px-1 py-0.5 rounded bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200">/install-plugin opendatahub-io/odh-test-gen</code>
                 </p>
               </div>
             </div>
