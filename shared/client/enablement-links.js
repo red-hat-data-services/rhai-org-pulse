@@ -67,6 +67,12 @@ export const enablementCategories = [
   },
 ]
 
+export const enablementSections = [
+  { id: 'ai-sdlc', label: 'AI SDLC Materials' },
+  { id: 'ai-workflows', label: 'AI Workflows Enablement' },
+  { id: 'other', label: 'Other Enablement' },
+]
+
 export function getAIImpactEnablementCategories() {
   return enablementCategories.filter(c =>
     ['rfe-builder', 'strat-builder', 'ai-quality'].includes(c.id)
