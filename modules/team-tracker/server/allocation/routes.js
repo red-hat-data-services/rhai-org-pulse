@@ -354,4 +354,245 @@ module.exports = function registerAllocationRoutes(router, context) {
     }
   });
 
+  // ─── Classification Pipeline Routes ───
+
+  const {
+    triggerPipeline,
+    getPipelineStatus,
+    downloadArtifact,
+    upsertSchedule,
+    getSchedule
+  } = require('./classification-pipeline');
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/allocation/classification/config:
+   *   get:
+   *     tags: ['Allocation']
+   *     summary: Get classification configuration
+   *     security: [{ admin: [] }]
+   */
+  router.get('/allocation/classification/config', requireAdmin, function(_req, res) {
+    try {
+      const config = allocRead('classification-config.json') || {
+        enabled: false,
+        frequency: 'every-6-hours',
+        lookbackHours: 12
+      };
+      res.json(config);
+    } catch (error) {
+      console.error('[classification] Get config error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/allocation/classification/config:
+   *   post:
+   *     tags: ['Allocation']
+   *     summary: Update classification configuration and schedule
+   *     security: [{ admin: [] }]
+   */
+  router.post('/allocation/classification/config', requireAdmin, async function(req, res) {
+    if (DEMO_MODE) {
+      return res.json({ status: 'skipped', message: 'Classification config disabled in demo mode' });
+    }
+
+    try {
+      const { enabled, frequency, lookbackHours } = req.body;
+
+      // Validate frequency
+      const validFrequencies = ['hourly', 'every-6-hours', 'every-12-hours', 'daily'];
+      if (!validFrequencies.includes(frequency)) {
+        return res.status(400).json({ error: 'Invalid frequency' });
+      }
+
+      // Validate lookbackHours
+      if (typeof lookbackHours !== 'number' || lookbackHours < 1 || lookbackHours > 168) {
+        return res.status(400).json({ error: 'Lookback hours must be between 1 and 168' });
+      }
+
+      // Save config
+      const config = { enabled, frequency, lookbackHours };
+      allocWrite('classification-config.json', config);
+
+      // Update GitLab schedule
+      try {
+        const schedule = await upsertSchedule({
+          frequency,
+          lookbackHours,
+          enabled
+        });
+
+        res.json({
+          status: 'success',
+          config,
+          schedule
+        });
+      } catch (scheduleError) {
+        console.error('[classification] Schedule update error:', scheduleError);
+        // Config saved but schedule failed - return partial success
+        res.json({
+          status: 'partial',
+          config,
+          error: scheduleError.message
+        });
+      }
+    } catch (error) {
+      console.error('[classification] Save config error:', error);
+      res.status(500).json({ error: error.message || 'Internal server error' });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/allocation/classification/test:
+   *   post:
+   *     tags: ['Allocation']
+   *     summary: Test classification on a single issue
+   *     security: [{ admin: [] }]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               issueKey:
+   *                 type: string
+   *               dryRun:
+   *                 type: boolean
+   */
+  router.post('/allocation/classification/test', requireAdmin, async function(req, res) {
+    if (DEMO_MODE) {
+      return res.json({ status: 'skipped', message: 'Classification disabled in demo mode' });
+    }
+
+    try {
+      const { issueKey, dryRun = true } = req.body;
+
+      if (!issueKey) {
+        return res.status(400).json({ error: 'issueKey is required' });
+      }
+
+      const jql = `key = ${issueKey}`;
+
+      const pipeline = await triggerPipeline({
+        jql,
+        dryRun,
+        limit: 1
+      });
+
+      res.json({
+        status: 'triggered',
+        pipeline
+      });
+    } catch (error) {
+      console.error('[classification] Test trigger error:', error);
+      res.status(500).json({ error: error.message || 'Internal server error' });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/allocation/classification/bulk:
+   *   post:
+   *     tags: ['Allocation']
+   *     summary: Trigger bulk classification
+   *     security: [{ admin: [] }]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               jql:
+   *                 type: string
+   *               dryRun:
+   *                 type: boolean
+   *               limit:
+   *                 type: number
+   */
+  router.post('/allocation/classification/bulk', requireAdmin, async function(req, res) {
+    if (DEMO_MODE) {
+      return res.json({ status: 'skipped', message: 'Classification disabled in demo mode' });
+    }
+
+    try {
+      const { jql, dryRun = true, limit = 1000 } = req.body;
+
+      if (!jql) {
+        return res.status(400).json({ error: 'jql is required' });
+      }
+
+      const pipeline = await triggerPipeline({
+        jql,
+        dryRun,
+        limit
+      });
+
+      res.json({
+        status: 'triggered',
+        pipeline
+      });
+    } catch (error) {
+      console.error('[classification] Bulk trigger error:', error);
+      res.status(500).json({ error: error.message || 'Internal server error' });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/allocation/classification/pipeline/:pipelineId:
+   *   get:
+   *     tags: ['Allocation']
+   *     summary: Get pipeline status and results
+   *     security: [{ admin: [] }]
+   */
+  router.get('/allocation/classification/pipeline/:pipelineId', requireAdmin, async function(req, res) {
+    try {
+      const { pipelineId } = req.params;
+
+      const status = await getPipelineStatus(pipelineId);
+
+      let results = null;
+      if (status.status === 'success') {
+        try {
+          results = await downloadArtifact(pipelineId);
+        } catch (artifactError) {
+          console.warn('[classification] Artifact download failed:', artifactError);
+        }
+      }
+
+      res.json({
+        status: status.status,
+        pipeline: status,
+        results
+      });
+    } catch (error) {
+      console.error('[classification] Get pipeline error:', error);
+      res.status(500).json({ error: error.message || 'Internal server error' });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/allocation/classification/schedule:
+   *   get:
+   *     tags: ['Allocation']
+   *     summary: Get current schedule info
+   *     security: [{ admin: [] }]
+   */
+  router.get('/allocation/classification/schedule', requireAdmin, async function(_req, res) {
+    try {
+      const schedule = await getSchedule();
+      res.json({ schedule });
+    } catch (error) {
+      console.error('[classification] Get schedule error:', error);
+      res.status(500).json({ error: error.message || 'Internal server error' });
+    }
+  });
+
 };
