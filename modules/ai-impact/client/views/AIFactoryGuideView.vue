@@ -135,7 +135,8 @@ function labelColorClasses(color) {
         <div class="mb-8">
           <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">AI Factory Guide</h1>
           <p class="text-sm text-gray-500 dark:text-gray-400 max-w-2xl">
-            Understand the end-to-end AI-augmented delivery pipeline. Click any stage to explore its details.
+            Understand the end-to-end AI-augmented delivery pipeline.
+            <span class="text-blue-600 dark:text-blue-400">Click any stage below to explore its details.</span>
           </p>
         </div>
 
@@ -160,28 +161,35 @@ function labelColorClasses(color) {
 
               <!-- Card -->
               <div
-                class="flex-1 rounded-xl p-5 mb-1 border transition-all duration-200"
+                class="flex-1 rounded-xl p-5 mb-1 border transition-all duration-200 flex items-start gap-3"
                 :class="phase.status === 'active'
                   ? 'bg-white dark:bg-gray-800/60 border-gray-200 dark:border-gray-700 group-hover:border-blue-300 dark:group-hover:border-blue-600/60 group-hover:shadow-md dark:group-hover:shadow-blue-500/5'
                   : 'bg-gray-50 dark:bg-gray-800/30 border-gray-100 dark:border-gray-700/50 group-hover:border-gray-200 dark:group-hover:border-gray-600'"
               >
-                <div class="flex items-center justify-between mb-1.5">
-                  <h3
-                    class="text-base font-semibold"
-                    :class="phase.status === 'active' ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'"
-                  >{{ phase.name }}</h3>
-                  <span
-                    class="px-2 py-0.5 text-xs rounded-full font-medium"
-                    :class="phase.status === 'active'
-                      ? 'bg-green-500/10 dark:bg-green-500/20 text-green-600 dark:text-green-400'
-                      : 'bg-gray-100 dark:bg-gray-500/20 text-gray-400 dark:text-gray-500'"
-                  >{{ phase.status === 'active' ? 'Active' : 'Coming Soon' }}</span>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between mb-1.5">
+                    <h3
+                      class="text-base font-semibold"
+                      :class="phase.status === 'active' ? 'text-gray-900 dark:text-white' : 'text-gray-400 dark:text-gray-500'"
+                    >{{ phase.name }}</h3>
+                    <span
+                      class="px-2 py-0.5 text-xs rounded-full font-medium"
+                      :class="phase.status === 'active'
+                        ? 'bg-green-500/10 dark:bg-green-500/20 text-green-600 dark:text-green-400'
+                        : 'bg-gray-100 dark:bg-gray-500/20 text-gray-400 dark:text-gray-500'"
+                    >{{ phase.status === 'active' ? 'Active' : 'Coming Soon' }}</span>
+                  </div>
+                  <p
+                    v-if="phaseInfo[phase.id]"
+                    class="text-sm"
+                    :class="phase.status === 'active' ? 'text-gray-500 dark:text-gray-400' : 'text-gray-400 dark:text-gray-500'"
+                  >{{ phaseInfo[phase.id].desc }}</p>
                 </div>
-                <p
-                  v-if="phaseInfo[phase.id]"
-                  class="text-sm"
-                  :class="phase.status === 'active' ? 'text-gray-500 dark:text-gray-400' : 'text-gray-400 dark:text-gray-500'"
-                >{{ phaseInfo[phase.id].desc }}</p>
+                <ChevronRight
+                  :size="18"
+                  class="flex-shrink-0 mt-0.5 transition-transform duration-200 group-hover:translate-x-0.5"
+                  :class="phase.status === 'active' ? 'text-gray-400 dark:text-gray-500' : 'text-gray-300 dark:text-gray-600'"
+                />
               </div>
             </button>
 

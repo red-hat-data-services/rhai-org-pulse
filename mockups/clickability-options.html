@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clickability Options</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #111827; color: #e5e7eb; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+  .container { display: flex; gap: 40px; padding: 32px; max-width: 1400px; margin: 0 auto; }
+  .column { flex: 1; min-width: 0; }
+
+  .option-label {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #9ca3af;
+    background: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 6px;
+    padding: 4px 10px;
+    margin-bottom: 16px;
+  }
+
+  h1 { font-size: 22px; font-weight: 700; color: #f3f4f6; margin-bottom: 4px; }
+  .subtitle { font-size: 13px; color: #9ca3af; margin-bottom: 24px; max-width: 480px; }
+  .subtitle-hint { color: #60a5fa; }
+
+  .pipeline { position: relative; }
+  .spine {
+    position: absolute;
+    left: 19px; top: 0; bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, #3b82f6, #8b5cf6, #06b6d4, #f59e0b, #f43f5e);
+    opacity: 0.3;
+  }
+
+  .stage { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 6px; cursor: pointer; }
+  .stage:last-child { margin-bottom: 0; }
+
+  .circle {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 14px; font-weight: 700;
+    z-index: 1;
+    border: 2px solid;
+  }
+
+  .card {
+    flex: 1;
+    border-radius: 12px;
+    padding: 16px 20px;
+    border: 1px solid #374151;
+    background: rgba(31, 41, 55, 0.6);
+    transition: all 0.2s;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .card:hover { border-color: #3b82f680; box-shadow: 0 4px 12px rgba(59,130,246,0.08); }
+
+  .card-content { flex: 1; }
+
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .card-title { font-size: 15px; font-weight: 600; color: #fff; }
+  .card-title.dim { color: #6b7280; }
+
+  .badge {
+    font-size: 11px; font-weight: 500;
+    padding: 2px 8px; border-radius: 9999px;
+  }
+  .badge-active { background: rgba(34,197,94,0.15); color: #4ade80; }
+  .badge-coming { background: rgba(107,114,128,0.2); color: #6b7280; }
+
+  .card-desc { font-size: 13px; color: #9ca3af; line-height: 1.4; }
+  .card-desc.dim { color: #6b7280; }
+
+  /* Option A: Chevron */
+  .chevron {
+    flex-shrink: 0;
+    width: 20px; height: 20px;
+    color: #6b7280;
+    margin-top: 2px;
+    transition: transform 0.2s, color 0.2s;
+  }
+  .stage:hover .chevron { transform: translateX(3px); color: #9ca3af; }
+
+  /* Connector between cards */
+  .connector {
+    width: 2px; height: 16px;
+    margin-left: 19px;
+    opacity: 0.4;
+  }
+
+  /* Colors */
+  .c-blue { border-color: #3b82f6; background: rgba(59,130,246,0.15); color: #60a5fa; }
+  .c-indigo { border-color: #6366f1; background: rgba(99,102,241,0.15); color: #818cf8; }
+  .c-purple { border-color: #a855f7; background: rgba(168,85,247,0.15); color: #c084fc; }
+  .c-cyan { border-color: #06b6d4; background: rgba(6,182,212,0.15); color: #22d3ee; }
+  .c-amber { border-color: #f59e0b; background: rgba(245,158,11,0.15); color: #fbbf24; }
+  .c-teal { border-color: #14b8a6; background: rgba(20,184,166,0.15); color: #2dd4bf; }
+  .c-rose { border-color: #f43f5e; background: rgba(244,63,94,0.15); color: #fb7185; }
+
+  .conn-1 { background: linear-gradient(to bottom, #3b82f6, #6366f1); }
+  .conn-2 { background: linear-gradient(to bottom, #6366f1, #a855f7); }
+  .conn-3 { background: linear-gradient(to bottom, #a855f7, #06b6d4); }
+  .conn-4 { background: linear-gradient(to bottom, #06b6d4, #f59e0b); }
+  .conn-5 { background: linear-gradient(to bottom, #f59e0b, #14b8a6); }
+  .conn-6 { background: linear-gradient(to bottom, #14b8a6, #f43f5e); }
+
+  .divider {
+    width: 1px;
+    background: #374151;
+    margin: 0 8px;
+    align-self: stretch;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- OPTION C: Header hint only -->
+  <div class="column">
+    <div class="option-label">Option C — Header Hint</div>
+    <h1>AI Factory Guide</h1>
+    <p class="subtitle">Understand the end-to-end AI-augmented delivery pipeline. <span class="subtitle-hint">Click any stage below to explore its details.</span></p>
+
+    <div class="pipeline">
+      <div class="spine"></div>
+
+      <div class="stage">
+        <div class="circle c-blue">1</div>
+        <div class="card">
+          <div class="card-content">
+            <div class="card-header">
+              <span class="card-title">RFE Review</span>
+              <span class="badge badge-active">Active</span>
+            </div>
+            <div class="card-desc">Incoming requirements are ingested from Jira, assessed for quality, and scored against the rubric.</div>
+          </div>
+        </div>
+      </div>
+      <div class="connector conn-1"></div>
+
+      <div class="stage">
+        <div class="circle c-indigo">2</div>
+        <div class="card">
+          <div class="card-content">
+            <div class="card-header">
+              <span class="card-title">Feature Review</span>
+              <span class="badge badge-active">Active</span>
+            </div>
+            <div class="card-desc">Strategy documents are auto-generated from approved RFEs, refined by AI, and reviewed by staff engineers.</div>
+          </div>
+        </div>
+      </div>
+      <div class="connector conn-2"></div>
+
+      <div class="stage">
+        <div class="circle c-purple">3</div>
+        <div class="card">
+          <div class="card-content">
+            <div class="card-header">
+              <span class="card-title dim">Implementation</span>
+              <span class="badge badge-coming">Coming Soon</span>
+            </div>
+            <div class="card-desc dim">Engineering teams implement approved features across sprints with AI-assisted code generation.</div>
+          </div>
+        </div>
+      </div>
+      <div class="connector conn-3"></div>
+
+      <div class="stage">
+        <div class="circle c-cyan">4</div>
+        <div class="card">
+          <div class="card-content">
+            <div class="card-header">
+              <span class="card-title dim">QE & Validation</span>
+              <span class="badge badge-coming">Coming Soon</span>
+            </div>
+            <div class="card-desc dim">Automated and manual testing validates feature quality before release.</div>
+          </div>
+        </div>
+      </div>
+      <div class="connector conn-4"></div>
+
+      <div class="stage">
+        <div class="circle c-amber">5</div>
+        <div class="card">
+          <div class="card-content">
+            <div class="card-header">
+              <span class="card-title dim">Security</span>
+              <span class="badge badge-coming">Coming Soon</span>
+            </div>
+            <div class="card-desc dim">Security review and compliance checks before features ship.</div>
+          </div>
+        </div>
+      </div>
+      <div class="connector conn-5"></div>
+
+      <div class="stage">
+        <div class="circle c-teal">6</div>
+        <div class="card">
+          <div class="card-content">
+            <div class="card-header">
+              <span class="card-title dim">Documentation</span>
+              <span class="badge badge-coming">Coming Soon</span>
+            </div>
+            <div class="card-desc dim">User-facing documentation is generated and reviewed for each feature.</div>
+          </div>
+        </div>
+      </div>
+      <div class="connector conn-6"></div>
+
+      <div class="stage">
+        <div class="circle c-rose">7</div>
+        <div class="card">
+          <div class="card-content">
+            <div class="card-header">
+              <span class="card-title dim">Build & Release</span>
+              <span class="badge badge-coming">Coming Soon</span>
+            </div>
+            <div class="card-desc dim">Final build, integration testing, and release to production.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- OPTION A: Chevron on each card -->
+  <div class="column">
+    <div class="option-label">Option A — Chevron Arrow</div>
+    <h1>AI Factory Guide</h1>
+    <p class="subtitle">Understand the end-to-end AI-augmented delivery pipeline.</p>
+
+    <div class="pipeline">
+      <div class="spine"></div>
+
+      <div class="stage">
+        <div class="circle c-blue">1</div>
+        <div class="card">
+          <div class="card-content">
+            <div class="card-header">
+              <span class="card-title">RFE Review</span>
+              <span class="badge badge-active">Active</span>
+            </div>
+            <div class="card-desc">Incoming requirements are ingested from Jira, assessed for quality, and scored against the rubric.</div>
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>
+      <div class="connector conn-1"></div>
+
+      <div class="stage">
+        <div class="circle c-indigo">2</div>
+        <div class="card">
+          <div class="card-content">
+            <div class="card-header">
+              <span class="card-title">Feature Review</span>
+              <span class="badge badge-active">Active</span>
+            </div>
+            <div class="card-desc">Strategy documents are auto-generated from approved RFEs, refined by AI, and reviewed by staff engineers.</div>
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>
+      <div class="connector conn-2"></div>
+
+      <div class="stage">
+        <div class="circle c-purple">3</div>
+        <div class="card">
+          <div class="card-content">
+            <div class="card-header">
+              <span class="card-title dim">Implementation</span>
+              <span class="badge badge-coming">Coming Soon</span>
+            </div>
+            <div class="card-desc dim">Engineering teams implement approved features across sprints with AI-assisted code generation.</div>
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>
+      <div class="connector conn-3"></div>
+
+      <div class="stage">
+        <div class="circle c-cyan">4</div>
+        <div class="card">
+          <div class="card-content">
+            <div class="card-header">
+              <span class="card-title dim">QE & Validation</span>
+              <span class="badge badge-coming">Coming Soon</span>
+            </div>
+            <div class="card-desc dim">Automated and manual testing validates feature quality before release.</div>
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>
+      <div class="connector conn-4"></div>
+
+      <div class="stage">
+        <div class="circle c-amber">5</div>
+        <div class="card">
+          <div class="card-content">
+            <div class="card-header">
+              <span class="card-title dim">Security</span>
+              <span class="badge badge-coming">Coming Soon</span>
+            </div>
+            <div class="card-desc dim">Security review and compliance checks before features ship.</div>
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>
+      <div class="connector conn-5"></div>
+
+      <div class="stage">
+        <div class="circle c-teal">6</div>
+        <div class="card">
+          <div class="card-content">
+            <div class="card-header">
+              <span class="card-title dim">Documentation</span>
+              <span class="badge badge-coming">Coming Soon</span>
+            </div>
+            <div class="card-desc dim">User-facing documentation is generated and reviewed for each feature.</div>
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>
+      <div class="connector conn-6"></div>
+
+      <div class="stage">
+        <div class="circle c-rose">7</div>
+        <div class="card">
+          <div class="card-content">
+            <div class="card-header">
+              <span class="card-title dim">Build & Release</span>
+              <span class="badge badge-coming">Coming Soon</span>
+            </div>
+            <div class="card-desc dim">Final build, integration testing, and release to production.</div>
+          </div>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
