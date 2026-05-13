@@ -13,72 +13,42 @@ const phaseInfo = {
   'rfe-review': {
     desc: 'Incoming requirements are ingested from Jira, assessed for quality, and scored against the rubric.',
     color: 'blue',
-    tags: [
-      { label: 'AI Assessment', ai: true },
-      { label: 'Auto-Scoring', ai: true },
-      { label: 'Human Review', ai: false },
-    ],
   },
   'feature-review': {
     desc: 'Strategy documents are auto-generated from approved RFEs, refined by AI, and reviewed by staff engineers.',
     color: 'indigo',
-    tags: [
-      { label: 'AI Scoring', ai: true },
-      { label: 'Auto-Create', ai: true },
-      { label: 'Human Sign-off', ai: false },
-    ],
   },
   'implementation': {
     desc: 'Engineering teams implement approved features across sprints with AI-assisted code generation.',
     color: 'purple',
-    tags: [
-      { label: 'Code Generation', ai: true },
-      { label: 'Sprint Planning', ai: false },
-    ],
   },
   'qe-validation': {
     desc: 'Automated and manual testing validates feature quality before release.',
     color: 'cyan',
-    tags: [
-      { label: 'AI Test Gen', ai: true },
-      { label: 'Manual QE', ai: false },
-    ],
   },
   'security': {
     desc: 'Security review and compliance checks before features ship.',
     color: 'amber',
-    tags: [
-      { label: 'Vulnerability Scan', ai: true },
-      { label: 'Security Review', ai: false },
-    ],
   },
   'documentation': {
     desc: 'User-facing documentation is generated and reviewed for each feature.',
     color: 'teal',
-    tags: [
-      { label: 'AI Drafting', ai: true },
-      { label: 'Tech Writing', ai: false },
-    ],
   },
   'build-release': {
     desc: 'Final build, integration testing, and release to production.',
     color: 'rose',
-    tags: [
-      { label: 'CI/CD', ai: false },
-      { label: 'Release Gate', ai: false },
-    ],
   },
 }
 
 // Color utility for phase accents
 const phaseColorMap = {
-  blue: { circle: 'bg-blue-500/20 border-blue-500', text: 'text-blue-400', tag: 'bg-blue-500/10 text-blue-400 border-blue-500/20', connector: 'from-blue-500 to-indigo-500' },
-  indigo: { circle: 'bg-indigo-500/20 border-indigo-500', text: 'text-indigo-400', tag: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20', connector: 'from-indigo-500 to-purple-500' },
-  purple: { circle: 'bg-purple-500/20 border-purple-500', text: 'text-purple-400', tag: 'bg-purple-500/10 text-purple-400 border-purple-500/20', connector: 'from-purple-500 to-cyan-500' },
-  cyan: { circle: 'bg-cyan-500/20 border-cyan-500', text: 'text-cyan-400', tag: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20', connector: 'from-cyan-500 to-amber-500' },
-  amber: { circle: 'bg-amber-500/20 border-amber-500', text: 'text-amber-400', tag: 'bg-amber-500/10 text-amber-400 border-amber-500/20', connector: 'from-amber-500 to-teal-500' },
-  teal: { circle: 'bg-teal-500/20 border-teal-500', text: 'text-teal-400', tag: 'bg-teal-500/10 text-teal-400 border-teal-500/20', connector: 'from-teal-500 to-rose-500' },
-  rose: { circle: 'bg-rose-500/20 border-rose-500', text: 'text-rose-400', tag: 'bg-rose-500/10 text-rose-400 border-rose-500/20', connector: '' },
+  blue: { circle: 'bg-blue-500/20 border-blue-500', text: 'text-blue-400', connector: 'from-blue-500 to-indigo-500' },
+  indigo: { circle: 'bg-indigo-500/20 border-indigo-500', text: 'text-indigo-400', connector: 'from-indigo-500 to-purple-500' },
+  purple: { circle: 'bg-purple-500/20 border-purple-500', text: 'text-purple-400', connector: 'from-purple-500 to-cyan-500' },
+  cyan: { circle: 'bg-cyan-500/20 border-cyan-500', text: 'text-cyan-400', connector: 'from-cyan-500 to-amber-500' },
+  amber: { circle: 'bg-amber-500/20 border-amber-500', text: 'text-amber-400', connector: 'from-amber-500 to-teal-500' },
+  teal: { circle: 'bg-teal-500/20 border-teal-500', text: 'text-teal-400', connector: 'from-teal-500 to-rose-500' },
+  rose: { circle: 'bg-rose-500/20 border-rose-500', text: 'text-rose-400', connector: '' },
 }
 
 function getPhaseColors(phaseId) {
@@ -209,19 +179,9 @@ function labelColorClasses(color) {
                 </div>
                 <p
                   v-if="phaseInfo[phase.id]"
-                  class="text-sm mb-3"
+                  class="text-sm"
                   :class="phase.status === 'active' ? 'text-gray-500 dark:text-gray-400' : 'text-gray-400 dark:text-gray-500'"
                 >{{ phaseInfo[phase.id].desc }}</p>
-                <div v-if="phaseInfo[phase.id]" class="flex gap-2 flex-wrap">
-                  <span
-                    v-for="tag in phaseInfo[phase.id].tags"
-                    :key="tag.label"
-                    class="px-2 py-0.5 text-xs rounded border"
-                    :class="tag.ai
-                      ? getPhaseColors(phase.id).tag
-                      : 'bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 border-gray-200 dark:border-gray-600'"
-                  >{{ tag.label }}</span>
-                </div>
               </div>
             </button>
 
