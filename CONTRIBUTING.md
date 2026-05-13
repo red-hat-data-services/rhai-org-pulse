@@ -126,14 +126,17 @@ PRs receive an automated Claude code review that can fix minor issues directly.
 The review criteria are defined in
 [`.github/instructions/review.instructions.md`](.github/instructions/review.instructions.md).
 
-### Code style
+### Code style & conventions
+
+See [`AGENTS.md`](AGENTS.md) for the full list of code style conventions and
+hard constraints. Key points:
 
 - `<script setup>` for new Vue components
-- CommonJS (`require`) for server-side code
-- ES modules (`import`) for frontend code
+- CommonJS (`require`) for server-side code, ES modules for frontend
 - No TypeScript — plain JavaScript throughout
 - Tailwind CSS utility classes for styling
-- Extract reusable logic into composables (`src/composables/`)
+- No cross-module imports (use `@shared` or API calls)
+- Extract reusable logic into composables (`shared/client/composables/`)
 
 ### Writing tests
 
