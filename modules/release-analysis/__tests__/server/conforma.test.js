@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
 // ─── Mock storage ─────────────────────────────────────────────────────────────
 
@@ -196,5 +196,39 @@ describe('conforma backend routes', () => {
       const res = await router._dispatch('DELETE', '/conforma')
       expect(res._status).toBe(204)
     })
+  })
+})
+
+describe('conforma backend routes — demo mode', () => {
+  let storage
+  let router
+
+  beforeEach(() => {
+    process.env.DEMO_MODE = 'true'
+    storage = makeStorage()
+    const requireAuth = (_req, _res, next) => next()
+    const requireAdmin = (_req, _res, next) => next()
+    const mock = makeRouter()
+    router = mock.router
+    const registerConformaRoutes = require('../../server/conforma.js')
+    registerConformaRoutes(router, { storage, requireAuth, requireAdmin })
+  })
+
+  afterEach(() => {
+    delete process.env.DEMO_MODE
+  })
+
+  it('POST /conforma/bulk returns skipped status without writing data', async () => {
+    const req = { body: { releases: [SAMPLE_RELEASE], minDate: '2025-05-22' } }
+    const res = await router._dispatch('POST', '/conforma/bulk', req)
+    expect(res._status).toBe(200)
+    expect(res._body.status).toBe('skipped')
+    expect(storage.readFromStorage('release-analysis/conforma.json')).toBeNull()
+  })
+
+  it('DELETE /conforma returns 400 in demo mode', async () => {
+    const res = await router._dispatch('DELETE', '/conforma')
+    expect(res._status).toBe(400)
+    expect(res._body.error).toMatch(/demo mode/i)
   })
 })

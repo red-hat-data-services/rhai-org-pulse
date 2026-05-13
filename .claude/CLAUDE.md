@@ -344,7 +344,7 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/modules/team-tracker/snapshots/generate` — generate snapshots for all teams (admin)
 - `/api/modules/feature-traffic/refresh` — trigger manual data refresh from GitLab CI (admin)
 - `/api/modules/feature-traffic/config` — save fetch configuration (admin)
-- `/api/modules/release-analysis/conforma/bulk` — bulk upsert conforma releases `{ releases: [...], minDate? }` (admin, called by pipeline)
+- `/api/modules/release-analysis/conforma/bulk` — full replace of all conforma releases `{ releases: [...], minDate? }` (admin, called by pipeline; previous data is overwritten entirely)
 - `/api/modules/ai-impact/assessments/bulk` — bulk upsert assessments (admin)
 - `/api/modules/ai-impact/features/bulk` — bulk upsert features (admin)
 - `/api/health-metrics/track` — record a page view event. Body: `{ page }` (authenticated, rate-limited 30/min per user)

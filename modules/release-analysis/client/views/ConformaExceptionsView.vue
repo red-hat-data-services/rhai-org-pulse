@@ -418,7 +418,7 @@ const TABLE_COLUMNS = [
 const state = useConformaExceptions()
 const selectedVersion = ref(null)
 const chartKey = ref(0)
-const todayStr = new Date().toISOString().slice(0, 10)
+const todayStr = new Date().toLocaleDateString('sv-SE') // YYYY-MM-DD in local time
 
 const allReleases = computed(() => {
   const releases = (state.releases || []).filter(r => r.gaDate)
@@ -635,14 +635,14 @@ const categoryChartData = computed(() => {
     else regCounts[cat]++
   }
 
-  const activeCategories = KNOWN_CATEGORIES.filter(c => (fbcCounts[c] || 0) + (regCounts[c] || 0) > 0)
+  const chartCategories = KNOWN_CATEGORIES.filter(c => (fbcCounts[c] || 0) + (regCounts[c] || 0) > 0)
 
   return {
-    labels: activeCategories,
+    labels: chartCategories,
     datasets: [
       {
         label: 'FBC',
-        data: activeCategories.map(c => fbcCounts[c]),
+        data: chartCategories.map(c => fbcCounts[c]),
         backgroundColor: 'rgba(59,130,246,0.75)',
         borderColor: 'rgb(59,130,246)',
         borderWidth: 1,
@@ -650,7 +650,7 @@ const categoryChartData = computed(() => {
       },
       {
         label: 'Components',
-        data: activeCategories.map(c => regCounts[c]),
+        data: chartCategories.map(c => regCounts[c]),
         backgroundColor: 'rgba(16,185,129,0.75)',
         borderColor: 'rgb(16,185,129)',
         borderWidth: 1,
@@ -785,12 +785,10 @@ const trendChartOptions = {
 
 // ─── Scatter (expiry timeline) ───────────────────────────────────────────────
 
-const CATEGORIES_FOR_SCATTER = KNOWN_CATEGORIES  // includes 'fips'
-
 const scatterChartData = computed(() => {
   if (!selectedRelease.value) return { datasets: [] }
   const gaMs = selectedRelease.value.gaDate ? new Date(selectedRelease.value.gaDate).getTime() : 0
-  const catIndex = Object.fromEntries(CATEGORIES_FOR_SCATTER.map((c, i) => [c, i]))
+  const catIndex = Object.fromEntries(KNOWN_CATEGORIES.map((c, i) => [c, i]))
 
   const green = [], orange = [], red = []
   for (const ex of volatileExceptions.value) {
@@ -842,9 +840,9 @@ const scatterChartOptions = computed(() => {
         }
       },
       y: {
-        ticks: { callback: (v) => CATEGORIES_FOR_SCATTER[v] || v, stepSize: 1 },
+        ticks: { callback: (v) => KNOWN_CATEGORIES[v] || v, stepSize: 1 },
         min: -0.5,
-        max: CATEGORIES_FOR_SCATTER.length - 0.5,
+        max: KNOWN_CATEGORIES.length - 0.5,
         grid: { color: 'rgba(156,163,175,0.10)' }
       }
     }

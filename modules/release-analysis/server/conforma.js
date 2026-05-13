@@ -1,7 +1,5 @@
 'use strict'
 
-const DEMO_MODE = process.env.DEMO_MODE === 'true'
-
 const STORAGE_KEY = 'release-analysis/conforma.json'
 const DEFAULT_MIN_DATE = '2024-01-01'
 
@@ -57,7 +55,7 @@ module.exports = function registerConformaRoutes(router, context) {
 
   // POST /conforma/bulk — ingest releases (admin only, called by pipeline)
   router.post('/conforma/bulk', requireAdmin, function (req, res) {
-    if (DEMO_MODE) {
+    if (process.env.DEMO_MODE === 'true') {
       return res.json({ status: 'skipped', message: 'Conforma ingest disabled in demo mode.' })
     }
 
@@ -98,7 +96,7 @@ module.exports = function registerConformaRoutes(router, context) {
 
   // DELETE /conforma — clear all data (admin only)
   router.delete('/conforma', requireAdmin, function (req, res) {
-    if (DEMO_MODE) {
+    if (process.env.DEMO_MODE === 'true') {
       return res.status(400).json({ error: 'Cannot delete in demo mode.' })
     }
     try {
