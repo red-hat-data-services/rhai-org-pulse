@@ -266,6 +266,79 @@
       </div>
     </template>
 
+    <!-- Site Usage tab -->
+    <template v-if="activeTab === 'usage' && canViewMetrics">
+      <SiteUsageTab />
+    </template>
+
+    <!-- Backups tab -->
+    <template v-if="activeTab === 'backups' && isAdmin">
+      <!-- Status card -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Backup Status</h3>
+          <button
+            @click="triggerBackup"
+            :disabled="backupInProgress"
+            class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <DatabaseBackup :size="16" />
+            {{ backupInProgress ? 'Backing up...' : 'Back Up Now' }}
+          </button>
+        </div>
+
+        <div v-if="backupsLoading" class="text-sm text-gray-500 dark:text-gray-400">Loading backup status...</div>
+        <div v-else-if="backupsError" class="text-sm text-red-600 dark:text-red-400">{{ backupsError }}</div>
+        <div v-else-if="backupsList.length === 0" class="text-sm text-gray-500 dark:text-gray-400">
+          No backups found. Trigger a backup to protect against data loss.
+        </div>
+        <div v-else>
+          <div class="flex items-center gap-3">
+            <span class="text-sm text-gray-700 dark:text-gray-300">
+              Last backup: <span class="font-medium">{{ formatBackupDate(backupsList[0].lastModified) }}</span>
+              <span class="text-gray-500 dark:text-gray-400">({{ formatBackupSize(backupsList[0].sizeBytes) }})</span>
+            </span>
+            <span
+              class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold"
+              :class="backupStatusClasses"
+            >
+              <span class="w-1.5 h-1.5 rounded-full" :class="backupDotClass"></span>
+              {{ backupStatusLabel }}
+            </span>
+          </div>
+        </div>
+
+        <p v-if="backupSuccess" class="mt-3 text-sm text-green-600 dark:text-green-400">{{ backupSuccess }}</p>
+      </div>
+
+      <!-- Backup list -->
+      <div v-if="backupsList.length > 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Available Backups</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-gray-200 dark:border-gray-700">
+                <th class="text-left py-2 pr-4 text-gray-500 dark:text-gray-400 font-medium">Date</th>
+                <th class="text-left py-2 pr-4 text-gray-500 dark:text-gray-400 font-medium">Size</th>
+                <th class="text-left py-2 text-gray-500 dark:text-gray-400 font-medium">Key</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="b in backupsList"
+                :key="b.key"
+                class="border-b border-gray-100 dark:border-gray-700/50 last:border-0"
+              >
+                <td class="py-2 pr-4 text-gray-900 dark:text-gray-100">{{ formatBackupDate(b.lastModified) }}</td>
+                <td class="py-2 pr-4 text-gray-600 dark:text-gray-400">{{ formatBackupSize(b.sizeBytes) }}</td>
+                <td class="py-2 text-gray-500 dark:text-gray-400 font-mono text-xs truncate max-w-xs" :title="b.key">{{ b.key }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </template>
+
     <!-- Help & Debug tab -->
     <template v-if="activeTab === 'help'">
       <!-- Build Info -->
@@ -428,11 +501,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import {
   Info,
   BookOpen,
   Wrench,
+  BarChart3 as BarChart3Icon,
   ExternalLink,
   Download as DownloadIcon,
   Copy as CopyIcon,
@@ -447,24 +521,42 @@ import {
   Milestone,
   Bug,
   MessageSquarePlus,
-  FileCode2
+  FileCode2,
+  DatabaseBackup
 } from 'lucide-vue-next'
+import { useAuth } from '@shared/client'
+import SiteUsageTab from './health-metrics/SiteUsageTab.vue'
+
+const { isAdmin: authIsAdmin, roles } = useAuth()
 
 const props = defineProps({
   isAdmin: Boolean,
   initialTab: { type: String, default: null }
 })
 
-const tabs = [
-  { id: 'about', label: 'About', icon: Info },
-  { id: 'docs', label: 'Docs', icon: BookOpen },
-  { id: 'help', label: 'Help & Debug', icon: Wrench }
-]
+const canViewMetrics = computed(() =>
+  props.isAdmin || authIsAdmin.value || roles.value.includes('usage-metrics-viewer')
+)
+
+const tabs = computed(() => {
+  const base = [
+    { id: 'about', label: 'About', icon: Info },
+    { id: 'docs', label: 'Docs', icon: BookOpen },
+  ]
+  if (canViewMetrics.value) {
+    base.push({ id: 'usage', label: 'Site Usage', icon: BarChart3Icon })
+  }
+  if (props.isAdmin || authIsAdmin.value) {
+    base.push({ id: 'backups', label: 'Backups', icon: DatabaseBackup })
+  }
+  base.push({ id: 'help', label: 'Help & Debug', icon: Wrench })
+  return base
+})
 
 const activeTab = ref(props.initialTab || 'about')
 
 watch(() => props.initialTab, (val) => {
-  if (val && tabs.some(t => t.id === val)) {
+  if (val && tabs.value.some(t => t.id === val)) {
     activeTab.value = val
   }
 })
@@ -535,6 +627,97 @@ const rfeBuilderLessonsLearnedLinks = [
   { label: 'Lessons Learned Notes', icon: StickyNote, url: 'https://docs.google.com/document/d/1glUr8WhghdDmri1KKSCJutMjfzxnueoZuYGFjg2OwxI/edit?tab=t.q557l4ag5zjk' }
 ]
 
+// --- Backups state ---
+const backupsList = ref([])
+const backupsLoading = ref(false)
+const backupsError = ref(null)
+const backupInProgress = ref(false)
+const backupSuccess = ref(null)
+
+const isAdmin = computed(() => props.isAdmin || authIsAdmin.value)
+
+async function fetchBackups() {
+  backupsLoading.value = true
+  backupsError.value = null
+  try {
+    const res = await fetch('/api/admin/backup')
+    if (!res.ok) throw new Error('Failed to load backups')
+    const data = await res.json()
+    backupsList.value = data.backups || []
+  } catch (err) {
+    backupsError.value = err.message
+  } finally {
+    backupsLoading.value = false
+  }
+}
+
+async function triggerBackup() {
+  backupInProgress.value = true
+  backupSuccess.value = null
+  backupsError.value = null
+  try {
+    const res = await fetch('/api/admin/backup', { method: 'POST' })
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      throw new Error(body.error || 'Backup failed')
+    }
+    backupSuccess.value = 'Backup completed successfully.'
+    await fetchBackups()
+    setTimeout(() => { backupSuccess.value = null }, 5000)
+  } catch (err) {
+    backupsError.value = err.message
+  } finally {
+    backupInProgress.value = false
+  }
+}
+
+function formatBackupDate(dateStr) {
+  if (!dateStr) return 'Unknown'
+  return new Date(dateStr).toLocaleString()
+}
+
+function formatBackupSize(bytes) {
+  if (!bytes) return 'Unknown'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+}
+
+const backupAgeHours = computed(() => {
+  if (backupsList.value.length === 0) return null
+  const latest = backupsList.value[0]
+  return (Date.now() - new Date(latest.lastModified).getTime()) / (1000 * 60 * 60)
+})
+
+const backupStatusLabel = computed(() => {
+  const h = backupAgeHours.value
+  if (h === null) return ''
+  if (h < 24) return 'Healthy'
+  if (h < 48) return 'Aging'
+  return 'Overdue'
+})
+
+const backupStatusClasses = computed(() => {
+  const h = backupAgeHours.value
+  if (h === null) return ''
+  if (h < 24) return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+  if (h < 48) return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
+  return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+})
+
+const backupDotClass = computed(() => {
+  const h = backupAgeHours.value
+  if (h === null) return ''
+  if (h < 24) return 'bg-green-500'
+  if (h < 48) return 'bg-yellow-500'
+  return 'bg-red-500'
+})
+
+watch(activeTab, (val) => {
+  if (val === 'backups' && isAdmin.value && backupsList.value.length === 0 && !backupsLoading.value) {
+    fetchBackups()
+  }
+})
+
 // --- Help & Debug state ---
 const buildInfo = ref({})
 const redactLevel = ref('minimal')
@@ -552,6 +735,9 @@ onMounted(async function () {
     }
   } catch {
     // Build info will show defaults
+  }
+  if (activeTab.value === 'backups' && isAdmin.value) {
+    fetchBackups()
   }
 })
 

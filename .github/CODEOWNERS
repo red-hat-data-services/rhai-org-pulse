@@ -5,6 +5,9 @@
 /server/modules/                @accorvin
 /shared/                        @accorvin
 /deploy/                        @accorvin
+# Automated image tag updates — no code owner required (allows CI auto-merge)
+/deploy/openshift/overlays/prod/kustomization.yaml
+/deploy/openshift/overlays/preprod/kustomization.yaml
 /.github/                       @accorvin
 /package.json                   @accorvin
 /vite.config.mjs                @accorvin

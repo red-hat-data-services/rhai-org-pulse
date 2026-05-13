@@ -27,6 +27,11 @@ these criteria consistently.
    fetching, missing pagination, expensive operations in hot paths, memory
    leaks (event listeners, timers not cleaned up).
 
+6. **API documentation** — Every new or modified Express route handler must
+   have an `@openapi` JSDoc annotation. The CI `validate:openapi` step
+   enforces a minimum operation count; adding a route without its annotation
+   will cause the build to fail.
+
 ## Review tone
 
 - Be concise. Focus on actionable feedback.

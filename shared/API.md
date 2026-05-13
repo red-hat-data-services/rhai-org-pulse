@@ -72,6 +72,18 @@ Core team owns `shared/` via CODEOWNERS. Changes require core team review.
 | `jira` | `{ JIRA_HOST, getJiraAuth, jiraRequest, fetchAllJqlResults }` — Jira Cloud API helpers: auth (Basic via `JIRA_TOKEN`/`JIRA_EMAIL` env vars), request wrapper with 429 retry, cursor-based JQL pagination via `/rest/api/3/search/jql` |
 | `permissions` | `{ LDAP_FIELDS, buildManagerMap, getManagedUids, getDirectReports, isManager, getPermissionTier, canEditPerson }` — RBAC logic: manager subtree computation, direct reports, permission tier detection, authorization checks |
 
+## Cross-Module Data Access
+
+Modules cannot import code from other modules, but they **may read data files** that another module explicitly exports via the `export.files` array in its `module.json`. These reads go through `readFromStorage()`, which provides path-traversal safety.
+
+For example, the `health-metrics` module reads `team-data/registry.json` and `team-data/field-definitions.json` (exported by `team-tracker`) to resolve user types. The `shared/server/auth.js` middleware also reads `team-data/registry.json` directly, establishing prior precedent.
+
+**Rules:**
+- Only read files listed in the exporting module's `export.files` manifest
+- Use `readFromStorage()` — never construct raw filesystem paths
+- Treat exported data as read-only; do not write to another module's data files
+- If the exporting module changes its data format, coordinate via a shared PR
+
 ## Versioning
 
 This project does not use semver for shared code. Instead:

@@ -292,6 +292,14 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/modules/ai-impact/features` — list all features (slim projection)
 - `/api/modules/ai-impact/features/:key` — single feature + history
 - `/api/modules/ai-impact/features/status` — feature data status (admin)
+- `/api/health-metrics/tracking/status` — returns `{ optedOut: boolean }` for current user (authenticated)
+- `/api/health-metrics/dashboard` — aggregated dashboard data: top pages, user types, trends. Query: `from`, `to` (admin/viewer)
+- `/api/health-metrics/pages` — per-page statistics. Query: `sort` (views/unique), `limit`, `from`, `to` (admin/viewer)
+- `/api/health-metrics/pages/:pageId` — single page detail with daily breakdown (admin/viewer)
+- `/api/health-metrics/user-types` — view counts grouped by user type. Query: `from`, `to` (admin/viewer)
+- `/api/health-metrics/config` — configuration (admin)
+- `/api/health-metrics/viewers` — list authorized viewers (admin)
+- `/api/health-metrics/field-definitions` — person-level field definitions for settings UI (admin)
 - `/api/modules/team-tracker/org-teams` — org-roster teams with member counts, boards, components. Returns `structureId` and `metadata` on teams that match structure teams. Optional `org` query param.
 - `/api/modules/team-tracker/org-teams/:teamKey` — single org-roster team detail (teamKey = `org::teamName`)
 - `/api/modules/team-tracker/org-teams/:teamKey/members` — members of an org-roster team
@@ -339,6 +347,11 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/modules/release-analysis/conforma/bulk` — bulk upsert conforma releases `{ releases: [...], minDate? }` (admin, called by pipeline)
 - `/api/modules/ai-impact/assessments/bulk` — bulk upsert assessments (admin)
 - `/api/modules/ai-impact/features/bulk` — bulk upsert features (admin)
+- `/api/health-metrics/track` — record a page view event. Body: `{ page }` (authenticated, rate-limited 30/min per user)
+- `/api/health-metrics/tracking/opt-out` — opt out of tracking (authenticated)
+- `/api/health-metrics/config` — update configuration `{ userTypeFieldId?, retentionDays? }` (admin)
+- `/api/health-metrics/aggregate` — force re-generation of monthly aggregates (admin)
+- `/api/health-metrics/viewers` — add viewer `{ email }` (admin)
 - `/api/modules/team-tracker/structure/teams` — create a new team `{ name, orgKey }` (admin/team-admin)
 - `/api/modules/team-tracker/structure/teams/:teamId/members` — assign person `{ uid }` (manager/admin)
 - `/api/modules/team-tracker/structure/teams/:teamId/members/bulk` — bulk assign `{ uids: [...] }` (manager/admin, all-or-nothing)
@@ -372,6 +385,9 @@ In production, all routes are authenticated via OpenShift OAuth proxy. The proxy
 - `/api/modules/team-tracker/structure/field-definitions/person/:fieldId` — soft-delete person field (admin/team-admin)
 - `/api/modules/team-tracker/structure/field-definitions/team/:fieldId` — soft-delete team field (admin/team-admin)
 - `/api/modules/team-tracker/field-options/:name/values` — remove values from a field option set (admin). Body: `{ values: [...] }`
+- `/api/health-metrics/tracking/opt-out` — opt back in to tracking (authenticated)
+- `/api/health-metrics/events` — purge all raw event data, aggregates retained (admin)
+- `/api/health-metrics/viewers/:email` — remove a viewer (admin)
 
 **GET (snapshots):**
 - `/api/modules/team-tracker/snapshots/:teamKey` — all snapshots for a team

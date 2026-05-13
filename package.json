@@ -16,6 +16,7 @@
     "prepare": "husky || true"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1045.0",
     "adm-zip": "^0.5.17",
     "chart.js": "^4.4.7",
     "driver.js": "^1.4.0",

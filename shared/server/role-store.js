@@ -7,7 +7,7 @@ const auditLog = require('./audit-log');
 
 const ROLES_FILE = 'roles.json';
 const ALLOWLIST_FILE = 'allowlist.json';
-const VALID_ROLES = ['admin', 'team-admin'];
+const VALID_ROLES = ['admin', 'team-admin', 'usage-metrics-viewer'];
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 
 /** Guard against prototype pollution via user-controlled object keys. */

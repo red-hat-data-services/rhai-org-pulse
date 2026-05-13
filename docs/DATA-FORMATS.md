@@ -886,6 +886,60 @@ Metadata from the most recent fetch attempt.
 
 ---
 
+## Health Metrics — `data/health-metrics/`
+
+### Usage Events — `data/health-metrics/events/YYYY-MM.jsonl`
+
+JSON Lines format (one JSON object per line). Partitioned by month for efficient retention pruning.
+
+```
+{"ts":"2026-05-11T15:30:00.000Z","page":"team-tracker::org-dashboard","email":"user@redhat.com","userType":"Backend","permissionTier":"manager"}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `ts` | ISO string | Timestamp of the page view |
+| `page` | string | `moduleSlug::viewId` composite key |
+| `email` | string | User email (for unique-user counting) |
+| `userType` | string | Value from configured person field at event time, or `"unknown"` |
+| `permissionTier` | string | `admin`, `team-admin`, `manager`, or `user` |
+
+### Monthly Aggregates — `data/health-metrics/aggregates/YYYY-MM.json`
+
+```json
+{
+  "month": "2026-05",
+  "generatedAt": "2026-06-01T06:00:00.000Z",
+  "pages": {
+    "team-tracker::org-dashboard": {
+      "views": 342,
+      "uniqueUsers": 28,
+      "byUserType": { "Backend": 12, "Frontend": 8, "unknown": 3 },
+      "byPermissionTier": { "admin": 3, "manager": 10, "user": 15 }
+    }
+  }
+}
+```
+
+### Configuration — `data/health-metrics/config.json`
+
+```json
+{
+  "userTypeFieldId": "field_rq0001",
+  "retentionDays": 90
+}
+```
+
+### Opt-Out List — `data/health-metrics/opted-out.json`
+
+```json
+{
+  "emails": ["user-who-opted-out@redhat.com"]
+}
+```
+
+---
+
 ## Fixture Rules
 
 The `fixtures/` directory provides read-only demo data used when `DEMO_MODE=true`. These rules prevent data format drift:
