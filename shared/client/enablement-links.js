@@ -1,16 +1,3 @@
-/**
- * Single source of truth for all enablement resource links.
- * Consumed by both the global About > Docs tab and the AI Impact AssessmentGuideModal.
- *
- * Each category has:
- *   - id: unique identifier
- *   - title: display name
- *   - slackChannel: optional { name, url }
- *   - links: array of { label, icon (lucide icon name string), url }
- *
- * Icon mapping is handled by consumers since lucide imports are tree-shaken per component.
- */
-
 export const enablementCategories = [
   {
     id: 'rfe-builder',
@@ -80,24 +67,6 @@ export const enablementCategories = [
   },
 ]
 
-/**
- * Helper to get categories by section
- */
-export function getCategoriesBySection(section) {
-  return enablementCategories.filter(c => c.section === section)
-}
-
-/**
- * Helper to get a specific category by id
- */
-export function getCategoryById(id) {
-  return enablementCategories.find(c => c.id === id)
-}
-
-/**
- * Get all AI Impact-relevant enablement categories
- * (AI SDLC materials that relate to the AI Impact module's tools)
- */
 export function getAIImpactEnablementCategories() {
   return enablementCategories.filter(c =>
     ['rfe-builder', 'strat-builder', 'ai-quality'].includes(c.id)

@@ -591,10 +591,8 @@ const issueTemplates = [
   { label: 'Bug Report', icon: Bug, url: repoBase + '/issues/new?template=bug-report.yml' }
 ]
 
-// Icon mapping for enablement links (lucide icons are tree-shaken per component)
 const iconMap = { Video, Presentation, StickyNote, Play }
 
-// Derive link arrays from shared enablement data, mapping icon strings to components
 function resolveLinks(categoryId) {
   const cat = enablementCategories.find(c => c.id === categoryId)
   if (!cat) return []
