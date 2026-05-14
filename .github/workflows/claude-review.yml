@@ -193,6 +193,10 @@ jobs:
               subjective, comment instead of changing code.
             - Do not modify files outside the scope of the PR unless necessary to
               fix an issue (e.g., a missing import in another file).
+            - You CAN and SHOULD edit `.claude/CLAUDE.md` to keep the API Routes
+              section in sync when a PR adds, removes, or changes API endpoints
+              (AGENTS.md Hard Constraint #7). You have Edit and Write tool access
+              to this file — there are no CI permission restrictions preventing it.
         env:
           ANTHROPIC_VERTEX_PROJECT_ID: "itpc-gcp-ai-eng-claude"
           CLOUD_ML_REGION: "us-east5"
