@@ -113,6 +113,21 @@ Navigation produces URLs like: `#/<module-slug>/<view-id>?key=value`
 
 Example: `#/my-module/detail?id=123`
 
+### Cross-Module Navigation
+
+To navigate to another module's view, use the shared `useModuleLink` composable:
+
+```javascript
+import { useModuleLink } from '@shared/client/composables/useModuleLink.js'
+
+const { navigateTo: crossNavigate } = useModuleLink()
+
+// Navigate to another module's view
+crossNavigate('feature-traffic', 'feature-detail', { key: 'RHAISTRAT-123' })
+```
+
+This produces a hash URL like `#/feature-traffic/feature-detail?key=RHAISTRAT-123` and updates `window.location.hash`. Use intra-module `moduleNav.navigateTo()` for navigation within your own module.
+
 ## Backend Entry (`server/index.js`)
 
 ```javascript
