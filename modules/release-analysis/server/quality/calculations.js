@@ -30,9 +30,9 @@ function computeCumulativeBugData(bugs, versions, storage) {
   }
 
   let maxDays = -1;
-  for (const vBugs of versionBugs.values()) {
-    if (vBugs.length > 0) {
-      maxDays = Math.max(maxDays, vBugs[vBugs.length - 1].daysSinceRelease);
+  for (const entries of versionBugs.values()) {
+    if (entries.length > 0) {
+      maxDays = Math.max(maxDays, entries[entries.length - 1].daysSinceRelease);
     }
   }
 
@@ -46,14 +46,14 @@ function computeCumulativeBugData(bugs, versions, storage) {
   const labels = Array.from({ length: maxDays + 1 }, (_, i) => i);
 
   const datasets = versions.map(version => {
-    const vBugs = versionBugs.get(version) || [];
+    const entries = versionBugs.get(version) || [];
     const data = new Array(maxDays + 1).fill(0);
 
     let cumulativeCount = 0;
     let bugIndex = 0;
 
     for (let day = 0; day <= maxDays; day++) {
-      while (bugIndex < vBugs.length && vBugs[bugIndex].daysSinceRelease === day) {
+      while (bugIndex < entries.length && entries[bugIndex].daysSinceRelease === day) {
         cumulativeCount++;
         bugIndex++;
       }

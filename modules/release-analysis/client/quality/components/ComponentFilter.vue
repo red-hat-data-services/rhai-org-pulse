@@ -4,7 +4,7 @@
     <select
       :value="modelValue"
       @change="emit('update:modelValue', $event.target.value || null)"
-      class="w-full px-3 py-2 border rounded"
+      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
     >
       <option value="">All Components</option>
       <option v-for="comp in components" :key="comp.name" :value="comp.name">
