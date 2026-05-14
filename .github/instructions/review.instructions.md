@@ -32,9 +32,16 @@ These are non-negotiable. Flag any violation as a blocking issue.
 6. **OpenAPI annotations required** — Every new or modified route handler needs
    an `@openapi` JSDoc annotation. CI enforces this.
 
-7. **Documentation in sync** — Data format changes must update
-   `docs/DATA-FORMATS.md` and `fixtures/`. New shared exports must update
-   `shared/API.md`. Module changes must update `docs/MODULES.md`.
+7. **Documentation in sync** — Documentation changes must land in the same PR
+   as the code they describe:
+   - Data format changes → update `docs/DATA-FORMATS.md` and `fixtures/`
+   - New shared exports → update `shared/API.md`
+   - Module system changes → update `docs/MODULES.md`
+   - API route changes → update the API Routes section in `.claude/CLAUDE.md`
+
+   You have full Edit and Write access to all files in the repo, including
+   `.claude/CLAUDE.md`. If a PR adds, modifies, or removes API endpoints,
+   update the API Routes section yourself as part of your autofix.
 
 ## Review checklist
 
@@ -62,6 +69,25 @@ These are non-negotiable. Flag any violation as a blocking issue.
    have an `@openapi` JSDoc annotation. The CI `validate:openapi` step
    enforces a minimum operation count; adding a route without its annotation
    will cause the build to fail.
+
+## Verdict rules
+
+When used in CI, the reviewer writes a verdict file (`echo "PASS" > .claude-review-result`
+or `echo "FAIL" > .claude-review-result`). The verdict is based on the **final
+state of the PR** after any autofixes, not on whether you attempted a fix.
+
+Use **FAIL** if ANY of the following remain unfixed in the final PR state:
+- Security vulnerabilities
+- Bugs that will cause runtime errors
+- Breaking changes
+- Violations of any hard constraint listed above
+
+Use **PASS** only when none of the above remain. Minor suggestions, style nits,
+and issues you successfully fixed via autofix are fine to pass.
+
+Do not rationalize a PASS by claiming you were unable to fix an issue. If a
+blocking issue exists, the verdict is FAIL regardless of the reason it wasn't
+fixed.
 
 ## Review tone
 

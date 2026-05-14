@@ -170,21 +170,8 @@ jobs:
                  your autofix commit. Mention this in your summary so the PR author
                  knows to re-run CI if needed.
 
-            5. **Set review verdict**: After completing your review, write a result file
-               to signal whether the PR should be blocked:
-               ```
-               echo "PASS" > .claude-review-result    # No blocking issues remain
-               echo "FAIL" > .claude-review-result    # Blocking issues remain
-               ```
-               Use **FAIL** if ANY of the following remain unfixed in the final PR state,
-               regardless of whether you attempted a fix or believe you were unable to:
-               - Security vulnerabilities
-               - Bugs that will cause runtime errors
-               - Breaking changes
-               - Violations of any hard constraint defined in AGENTS.md
-
-               Use **PASS** only when none of the above remain. Minor suggestions,
-               style nits, and issues you successfully fixed via autofix are fine to pass.
+            5. **Set review verdict**: Follow the "Verdict rules" section in
+               `.github/instructions/review.instructions.md` to write your result file.
                Always write this file as your very last action.
 
             **Important rules:**
@@ -196,10 +183,7 @@ jobs:
               subjective, comment instead of changing code.
             - Do not modify files outside the scope of the PR unless necessary to
               fix an issue (e.g., a missing import in another file).
-            - You CAN and SHOULD edit `.claude/CLAUDE.md` to keep the API Routes
-              section in sync when a PR adds, removes, or changes API endpoints
-              (AGENTS.md Hard Constraint #7). You have Edit and Write tool access
-              to all files in the repo.
+
         env:
           ANTHROPIC_VERTEX_PROJECT_ID: "itpc-gcp-ai-eng-claude"
           CLOUD_ML_REGION: "us-east5"
