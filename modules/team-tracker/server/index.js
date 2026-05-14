@@ -1403,6 +1403,17 @@ module.exports = function registerRoutes(router, context) {
    *         schema:
    *           type: string
    *         description: The option set name
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               oldValue:
+   *                 type: string
+   *               newValue:
+   *                 type: string
    *     responses:
    *       200:
    *         description: Rename result with count of updated records
