@@ -138,8 +138,9 @@ jobs:
                  post a comment explaining that no PR was found and exit.
                - Run `gh pr checkout <PR_NUMBER>` to switch to the PR branch.
 
-            2. **Review** the PR diff. Read `.github/instructions/review.instructions.md`
-               for the full review checklist. Apply all criteria from that file.
+            2. **Review** the PR diff. Read `AGENTS.md` (hard constraints and
+               conventions) and `.github/instructions/review.instructions.md`
+               (review checklist and verdict rules). Apply all criteria from both.
 
             3. **Fix** any issues you find by editing the files directly:
                - Use Edit/Write tools to modify the source files
