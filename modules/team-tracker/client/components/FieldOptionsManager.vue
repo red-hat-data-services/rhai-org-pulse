@@ -311,25 +311,76 @@
           </button>
         </div>
 
+        <!-- Search -->
+        <div v-if="(detail?.values || []).length > 5" class="relative mb-3">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            v-model="optionSearch"
+            type="text"
+            placeholder="Search options..."
+            class="w-full pl-10 pr-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          />
+        </div>
+
         <!-- Values list -->
         <div v-if="(detail?.values || []).length === 0" class="text-sm text-gray-500 dark:text-gray-400">
           No values in this option set.
         </div>
+        <div v-else-if="filteredValues.length === 0" class="text-sm text-gray-500 dark:text-gray-400">
+          No options match "{{ optionSearch }}"
+        </div>
         <ul v-else class="space-y-1">
           <li
-            v-for="val in detail.values"
+            v-for="val in filteredValues"
             :key="val"
             class="flex items-center justify-between px-3 py-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 group"
           >
-            <span class="text-sm text-gray-900 dark:text-gray-100">{{ val }}</span>
-            <button
-              @click="confirmRemove(val)"
-              class="text-sm text-red-600 hover:text-red-700 dark:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
-              Remove
-            </button>
+            <!-- Rename mode -->
+            <template v-if="renamingValue === val">
+              <div class="flex items-center gap-2 flex-1 mr-2">
+                <input
+                  v-model="renameInput"
+                  type="text"
+                  class="flex-1 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1 text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  @keyup.enter="executeRename"
+                  @keyup.escape="cancelRename"
+                />
+                <button
+                  @click="executeRename"
+                  :disabled="!renameInput.trim() || renameInput.trim() === val || renaming"
+                  class="px-2 py-1 text-xs font-medium text-white bg-primary-600 rounded hover:bg-primary-700 disabled:opacity-50 transition-colors"
+                >{{ renaming ? 'Saving...' : 'Save' }}</button>
+                <button
+                  @click="cancelRename"
+                  class="px-2 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                >Cancel</button>
+              </div>
+            </template>
+            <!-- Display mode -->
+            <template v-else>
+              <span class="text-sm text-gray-900 dark:text-gray-100">{{ val }}</span>
+              <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  @click="startRename(val)"
+                  class="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  Rename
+                </button>
+                <button
+                  @click="confirmRemove(val)"
+                  class="text-sm text-red-600 hover:text-red-700 dark:text-red-400"
+                >
+                  Remove
+                </button>
+              </div>
+            </template>
           </li>
         </ul>
+        <p v-if="renameResult" class="mt-2 text-sm" :class="renameError ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'">
+          {{ renameResult }}
+        </p>
       </template>
     </div>
 
@@ -361,7 +412,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { apiRequest } from '@shared/client/services/api.js'
 
 // ─── List view state ───
@@ -373,6 +424,12 @@ const detailLoading = ref(false)
 const newValue = ref('')
 const removeTarget = ref(null)
 const rfeConfig = ref(null)
+const optionSearch = ref('')
+const renamingValue = ref(null)
+const renameInput = ref('')
+const renaming = ref(false)
+const renameResult = ref(null)
+const renameError = ref(false)
 
 // ─── Field definitions for the create flow ───
 const fieldDefs = ref({ personFields: [], teamFields: [] })
@@ -406,6 +463,15 @@ const seedFromMembers = ref(true)
 const executing = ref(false)
 const createResult = ref(null)
 const createError = ref(false)
+
+const filteredValues = computed(() => {
+  const vals = detail.value?.values || []
+  if (!optionSearch.value.trim()) return vals
+  const q = optionSearch.value.toLowerCase()
+  return vals.filter(v => v.toLowerCase().includes(q))
+})
+
+watch(selectedOption, () => { optionSearch.value = '' })
 
 async function loadOptions() {
   loading.value = true
@@ -493,6 +559,45 @@ async function removeValue() {
     await loadOptions()
   } catch (err) {
     console.error('Failed to remove value:', err)
+  }
+}
+
+// ─── Rename flow ───
+
+function startRename(val) {
+  renamingValue.value = val
+  renameInput.value = val
+  renameResult.value = null
+  renameError.value = false
+}
+
+function cancelRename() {
+  renamingValue.value = null
+  renameInput.value = ''
+}
+
+async function executeRename() {
+  const oldVal = renamingValue.value
+  const newVal = renameInput.value.trim()
+  if (!newVal || newVal === oldVal) return
+  renaming.value = true
+  renameResult.value = null
+  renameError.value = false
+  try {
+    const result = await apiRequest(`/modules/team-tracker/field-options/${selectedOption.value}/values/rename`, {
+      method: 'PATCH',
+      body: JSON.stringify({ oldValue: oldVal, newValue: newVal }),
+      headers: { 'Content-Type': 'application/json' }
+    })
+    renameResult.value = `Renamed "${oldVal}" to "${newVal}" (${result.updated} record${result.updated === 1 ? '' : 's'} updated)`
+    renamingValue.value = null
+    renameInput.value = ''
+    await selectOption(selectedOption.value)
+  } catch (err) {
+    renameError.value = true
+    renameResult.value = `Failed: ${err.message}`
+  } finally {
+    renaming.value = false
   }
 }
 

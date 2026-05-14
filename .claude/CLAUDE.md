@@ -280,6 +280,7 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/modules/team-tracker/structure/person/:uid/fields` — update person fields (manager/admin)
 - `/api/modules/team-tracker/structure/teams/:teamId/fields` — update team fields (admin/team-admin)
 - `/api/modules/team-tracker/structure/teams/:teamId/boards` — update team boards (admin/team-admin)
+- `/api/modules/team-tracker/field-options/:name/values/rename` — rename option value with cascade (admin)
 
 **DELETE:**
 - `/api/tokens/:id` — revoke own token

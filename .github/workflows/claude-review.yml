@@ -121,12 +121,11 @@ jobs:
         if: steps.check-paths.outputs.needs_review == 'true' && steps.fork-guard.outputs.is_fork != 'true'
         id: claude-review
         uses: anthropics/claude-code-action@v1
-        continue-on-error: true
         with:
           use_vertex: "true"
           track_progress: true
           display_report: "true"
-          claude_args: '--model claude-opus-4-6 --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr checkout:*),Bash(git add:*),Bash(git commit:*),Bash(git push origin:*),Bash(git diff:*),Bash(git status:*),Bash(npm test:*),Bash(npm run lint:*),Read,Glob,Grep,Edit,Write"'
+          claude_args: '--model claude-opus-4-6 --json-schema ''{"type":"object","properties":{"verdict":{"enum":["PASS","FAIL"]},"unfixed_blocking_issues":{"type":"array","items":{"type":"object","properties":{"category":{"type":"string"},"description":{"type":"string"}},"required":["category","description"]}}},"required":["verdict","unfixed_blocking_issues"]}'' --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr checkout:*),Bash(git add:*),Bash(git commit:*),Bash(git push origin:*),Bash(git diff:*),Bash(git status:*),Bash(npm test:*),Bash(npm run lint:*),Read,Glob,Grep,Edit,Write"'
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number || github.event.issue.number }}
@@ -172,8 +171,8 @@ jobs:
                  knows to re-run CI if needed.
 
             5. **Set review verdict**: Follow the "Verdict rules" section in
-               `.github/instructions/review.instructions.md` to write your result file.
-               Always write this file as your very last action.
+               `.github/instructions/review.instructions.md` to populate the
+               structured output. This is your very last action.
 
             **Important rules:**
             - Never force push. Only push to the current PR branch via `git push origin HEAD`.
@@ -193,20 +192,21 @@ jobs:
 
       - name: Check review result
         if: steps.check-paths.outputs.needs_review == 'true' && steps.fork-guard.outputs.is_fork != 'true'
+        env:
+          STRUCTURED_OUTPUT: ${{ steps.claude-review.outputs.structured_output }}
         run: |
-          # If the Claude action itself crashed, warn but don't block the PR
-          if [ "${{ steps.claude-review.outcome }}" = "failure" ]; then
-            echo "::warning::Claude review action failed (infrastructure issue) — not blocking PR"
-            exit 0
+          if [ -z "$STRUCTURED_OUTPUT" ] || [ "$STRUCTURED_OUTPUT" = "null" ]; then
+            echo "::error::No structured output from Claude review"
+            exit 1
           fi
 
-          # Check the verdict file Claude was instructed to write
-          if [ -f .claude-review-result ]; then
-            RESULT=$(tr -d '[:space:]' < .claude-review-result)
-            if [ "$RESULT" = "FAIL" ]; then
-              echo "::error::Claude review found critical issues that must be addressed before merging"
-              exit 1
-            fi
+          VERDICT=$(echo "$STRUCTURED_OUTPUT" | jq -r '.verdict')
+          ISSUE_COUNT=$(echo "$STRUCTURED_OUTPUT" | jq '.unfixed_blocking_issues | length')
+
+          if [ "$VERDICT" = "FAIL" ] || [ "$ISSUE_COUNT" -gt 0 ]; then
+            echo "::error::Claude review found blocking issues that must be addressed:"
+            echo "$STRUCTURED_OUTPUT" | jq -r '.unfixed_blocking_issues[] | "  - [\(.category)] \(.description)"'
+            exit 1
           fi
 
           echo "Claude review passed"

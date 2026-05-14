@@ -9,7 +9,13 @@ const DEFAULT_CONFIG = {
   lookbackMonths: 12,
   trendThresholdPp: 2,
   autofixProjects: ['AIPCC', 'RHOAIENG'],
-  autofixCreatedAfter: null
+  autofixCreatedAfter: null,
+  docProject: 'RHAISTRAT',
+  docRequiredStatus: 'Review',
+  docRequiredFieldId: 'customfield_10665',
+  docContributedLabel: 'ai1st-doc-contributed',
+  docInvokedLabel: 'ai1st-doc-invoked',
+  docMrFieldId: 'customfield_10875'
 };
 
 // Characters that could enable JQL injection when interpolated into queries
@@ -47,7 +53,9 @@ function saveConfig(writeToStorage, config) {
 
   // String fields — validate type and JQL safety
   const stringFields = ['jiraProject', 'linkedProject', 'createdLabel',
-    'revisedLabel', 'testExclusionLabel', 'linkTypeName'];
+    'revisedLabel', 'testExclusionLabel', 'linkTypeName',
+    'docProject', 'docRequiredStatus', 'docContributedLabel',
+    'docInvokedLabel', 'docRequiredFieldId', 'docMrFieldId'];
   for (const key of stringFields) {
     if (config[key] !== undefined) {
       validateJqlSafeString(config[key], key);

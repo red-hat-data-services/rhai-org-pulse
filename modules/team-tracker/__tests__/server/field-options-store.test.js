@@ -137,6 +137,151 @@ describe('field-options-store', () => {
     })
   })
 
+  describe('renameValue', () => {
+    it('renames a value in the option set and cascades to person records', () => {
+      const storage = makeStorage({
+        'team-data/field-options/components.json': {
+          name: 'components', label: 'Components', values: ['Alpha', 'Beta', 'Gamma']
+        },
+        'team-data/field-definitions.json': {
+          personFields: [
+            { id: 'field_abc', type: 'constrained', optionsRef: 'components', deleted: false }
+          ],
+          teamFields: []
+        },
+        'team-data/registry.json': {
+          people: {
+            alice: { uid: 'alice', name: 'Alice', _appFields: { field_abc: 'Beta' } },
+            bob: { uid: 'bob', name: 'Bob', _appFields: { field_abc: 'Alpha' } }
+          }
+        },
+        'team-data/teams.json': { teams: {} },
+        'audit-log.json': { entries: [] }
+      })
+      const result = fieldOptionsStore.renameValue(storage, 'components', 'Beta', 'Beta v2', 'admin@test.com')
+      expect(result.updated).toBe(1)
+
+      const opts = storage._data['team-data/field-options/components.json']
+      expect(opts.values).toContain('Beta v2')
+      expect(opts.values).not.toContain('Beta')
+
+      const reg = storage._data['team-data/registry.json']
+      expect(reg.people.alice._appFields.field_abc).toBe('Beta v2')
+      expect(reg.people.bob._appFields.field_abc).toBe('Alpha')
+    })
+
+    it('renames a value in multi-value arrays', () => {
+      const storage = makeStorage({
+        'team-data/field-options/components.json': {
+          name: 'components', label: 'Components', values: ['A', 'B', 'C']
+        },
+        'team-data/field-definitions.json': {
+          personFields: [
+            { id: 'field_mv', type: 'constrained', optionsRef: 'components', deleted: false, multiValue: true }
+          ],
+          teamFields: []
+        },
+        'team-data/registry.json': {
+          people: {
+            alice: { uid: 'alice', name: 'Alice', _appFields: { field_mv: ['A', 'B'] } }
+          }
+        },
+        'team-data/teams.json': { teams: {} },
+        'audit-log.json': { entries: [] }
+      })
+      const result = fieldOptionsStore.renameValue(storage, 'components', 'B', 'B-renamed', 'admin@test.com')
+      expect(result.updated).toBe(1)
+
+      const reg = storage._data['team-data/registry.json']
+      expect(reg.people.alice._appFields.field_mv).toEqual(['A', 'B-renamed'])
+    })
+
+    it('cascades to team metadata', () => {
+      const storage = makeStorage({
+        'team-data/field-options/components.json': {
+          name: 'components', label: 'Components', values: ['X', 'Y']
+        },
+        'team-data/field-definitions.json': {
+          personFields: [],
+          teamFields: [
+            { id: 'field_t1', type: 'constrained', optionsRef: 'components', deleted: false }
+          ]
+        },
+        'team-data/registry.json': { people: {} },
+        'team-data/teams.json': {
+          teams: {
+            team_abc: { id: 'team_abc', name: 'Platform', metadata: { field_t1: 'X' } }
+          }
+        },
+        'audit-log.json': { entries: [] }
+      })
+      const result = fieldOptionsStore.renameValue(storage, 'components', 'X', 'X-new', 'admin@test.com')
+      expect(result.updated).toBe(1)
+
+      const teams = storage._data['team-data/teams.json']
+      expect(teams.teams.team_abc.metadata.field_t1).toBe('X-new')
+    })
+
+    it('throws if old value not found', () => {
+      const storage = makeStorage({
+        'team-data/field-options/components.json': {
+          name: 'components', label: 'Components', values: ['A']
+        },
+        'audit-log.json': { entries: [] }
+      })
+      expect(() => {
+        fieldOptionsStore.renameValue(storage, 'components', 'Z', 'Z-new', 'admin@test.com')
+      }).toThrow('not found')
+    })
+
+    it('throws if new value already exists', () => {
+      const storage = makeStorage({
+        'team-data/field-options/components.json': {
+          name: 'components', label: 'Components', values: ['A', 'B']
+        },
+        'audit-log.json': { entries: [] }
+      })
+      expect(() => {
+        fieldOptionsStore.renameValue(storage, 'components', 'A', 'B', 'admin@test.com')
+      }).toThrow('already exists')
+    })
+
+    it('returns null for non-existent option set', () => {
+      const storage = makeStorage({})
+      const result = fieldOptionsStore.renameValue(storage, 'nonexistent', 'A', 'B', 'admin@test.com')
+      expect(result).toBeNull()
+    })
+
+    it('skips deleted fields when cascading', () => {
+      const storage = makeStorage({
+        'team-data/field-options/components.json': {
+          name: 'components', label: 'Components', values: ['A', 'B']
+        },
+        'team-data/field-definitions.json': {
+          personFields: [
+            { id: 'field_del', type: 'constrained', optionsRef: 'components', deleted: true },
+            { id: 'field_act', type: 'constrained', optionsRef: 'components', deleted: false }
+          ],
+          teamFields: []
+        },
+        'team-data/registry.json': {
+          people: {
+            alice: { uid: 'alice', name: 'Alice', _appFields: { field_del: 'A', field_act: 'A' } }
+          }
+        },
+        'team-data/teams.json': { teams: {} },
+        'audit-log.json': { entries: [] }
+      })
+      const result = fieldOptionsStore.renameValue(storage, 'components', 'A', 'A-renamed', 'admin@test.com')
+      expect(result.updated).toBe(1)
+
+      const reg = storage._data['team-data/registry.json']
+      expect(reg.people.alice._appFields.field_act).toBe('A-renamed')
+      // Deleted field's value is NOT cascaded
+      expect(reg.people.alice._appFields.field_del).toBe('A')
+    })
+  })
+
   describe('multi-option-set isolation', () => {
     it('operations on one set do not affect another', () => {
       const storage = makeStorage({

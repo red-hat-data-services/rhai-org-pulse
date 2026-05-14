@@ -44,22 +44,29 @@ the API Routes section in `.claude/CLAUDE.md` yourself as part of your autofix
 
 ## Verdict rules
 
-When used in CI, the reviewer writes a verdict file (`echo "PASS" > .claude-review-result`
-or `echo "FAIL" > .claude-review-result`). The verdict is based on the **final
+When used in CI, the reviewer populates a structured JSON output with two fields:
+`verdict` (`"PASS"` or `"FAIL"`) and `unfixed_blocking_issues` (an array of
+objects with `category` and `description`). The verdict is based on the **final
 state of the PR** after any autofixes, not on whether you attempted a fix.
 
-Use **FAIL** if ANY of the following remain unfixed in the final PR state:
+Set `verdict` to `"FAIL"` if ANY of the following remain unfixed in the final
+PR state:
 - Security vulnerabilities
 - Bugs that will cause runtime errors
 - Breaking changes
 - Violations of any hard constraint defined in `AGENTS.md`
 
-Use **PASS** only when none of the above remain. Minor suggestions, style nits,
-and issues you successfully fixed via autofix are fine to pass.
+List every unfixed blocking issue in `unfixed_blocking_issues` with a `category`
+(e.g. `"hard-constraint-7"`, `"security"`, `"bug"`, `"breaking-change"`) and a
+`description` of the issue.
+
+Set `verdict` to `"PASS"` with an empty `unfixed_blocking_issues` array only
+when none of the above remain. Minor suggestions, style nits, and issues you
+successfully fixed via autofix are fine to pass.
 
 Do not rationalize a PASS by claiming you were unable to fix an issue. If a
-blocking issue exists, the verdict is FAIL regardless of the reason it wasn't
-fixed.
+blocking issue exists that you cannot fix (e.g. write-protected files), the
+verdict is still FAIL — the PR author must fix it themselves.
 
 ## Review tone
 

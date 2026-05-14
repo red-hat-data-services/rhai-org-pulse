@@ -12,6 +12,7 @@ module.exports = function registerRoutes(router, context) {
   const { getConfig, saveConfig } = require('./config');
   const { computeAllMetrics } = require('./metrics');
   const { fetchAutofixData, computeAutofixMetrics, buildTrendData: buildAutofixTrend } = require('./jira/autofix-fetcher');
+  const { fetchDocData, fetchDocActivityEvents, fetchDocCumulativeStats, fetchDocCompletedData, computeDocMetrics, buildDocTrendData } = require('./jira/doc-fetcher');
 
   // Assessment routes (Phase 1: Storage + Ingest API)
   const registerAssessmentRoutes = require('./assessments/routes');
@@ -96,6 +97,67 @@ module.exports = function registerRoutes(router, context) {
     });
   });
 
+  // ─── Documentation data ───
+
+  function shiftDocDates(data) {
+    if (!data.fetchedAt) return data;
+    const offset = Date.now() - new Date(data.fetchedAt).getTime();
+    if (Math.abs(offset) < 60 * 60 * 1000) return data;
+
+    function shift(iso) {
+      if (!iso) return iso;
+      return new Date(new Date(iso).getTime() + offset).toISOString();
+    }
+
+    return {
+      ...data,
+      fetchedAt: new Date().toISOString(),
+      issues: data.issues.map(i => ({
+        ...i,
+        created: shift(i.created),
+        updated: shift(i.updated),
+        docContributedDate: shift(i.docContributedDate),
+        docInvokedDate: shift(i.docInvokedDate)
+      })),
+      labelEvents: (data.labelEvents || []).map(e => ({
+        ...e,
+        date: shift(e.date)
+      })),
+      activityEvents: (data.activityEvents || []).map(e => ({
+        ...e,
+        date: shift(e.date)
+      }))
+    };
+  }
+
+  router.get('/doc-data', function(req, res) {
+    const rawData = readFromStorage('ai-impact/doc-data.json');
+    if (!rawData || !rawData.issues) {
+      return res.json({
+        fetchedAt: null,
+        jiraHost: JIRA_HOST,
+        metrics: { demandCount: 0, coverageCount: 0, coverageRate: 0, invokedCount: 0, totalLabelEvents: 0 },
+        trendData: [],
+        issues: []
+      });
+    }
+
+    const data = DEMO_MODE ? shiftDocDates(rawData) : rawData;
+    const activity = data.activityEvents || data.labelEvents || [];
+    const metrics = computeDocMetrics(data.issues, activity);
+    const trendData = buildDocTrendData(data.issues, activity);
+
+    res.json({
+      fetchedAt: data.fetchedAt,
+      jiraHost: JIRA_HOST,
+      metrics,
+      trendData,
+      issues: data.issues,
+      completedIssues: data.completedIssues || [],
+      cumulativeStats: data.cumulativeStats || null
+    });
+  });
+
   router.get('/config', requireAdmin, function(req, res) {
     res.json(getConfig(readFromStorage));
   });
@@ -112,6 +174,7 @@ module.exports = function registerRoutes(router, context) {
   router.delete('/cache', requireAdmin, function(req, res) {
     writeToStorage('ai-impact/rfe-data.json', null);
     writeToStorage('ai-impact/autofix-data.json', null);
+    writeToStorage('ai-impact/doc-data.json', null);
     res.json({ status: 'cleared' });
   });
 
@@ -154,9 +217,44 @@ module.exports = function registerRoutes(router, context) {
         console.error('[ai-impact] Autofix data refresh failed:', autofixErr.message);
       }
 
+      // Fetch documentation data
+      let docCount = 0;
+      try {
+        const docResult = await fetchDocData(jiraRequest, config);
+        let completedIssues = [];
+        try {
+          completedIssues = await fetchDocCompletedData(jiraRequest, config);
+        } catch (compErr) {
+          console.error('[ai-impact] Documentation completed data fetch failed:', compErr.message);
+        }
+        let activityEvents = [];
+        try {
+          activityEvents = await fetchDocActivityEvents(jiraRequest, config);
+        } catch (actErr) {
+          console.error('[ai-impact] Documentation activity events fetch failed:', actErr.message);
+        }
+        let cumulativeStats = null;
+        try {
+          cumulativeStats = await fetchDocCumulativeStats(jiraRequest, config);
+        } catch (statsErr) {
+          console.error('[ai-impact] Documentation cumulative stats fetch failed:', statsErr.message);
+        }
+        writeToStorage('ai-impact/doc-data.json', {
+          fetchedAt: new Date().toISOString(),
+          issues: docResult.issues,
+          labelEvents: docResult.labelEvents,
+          activityEvents,
+          completedIssues,
+          cumulativeStats
+        });
+        docCount = docResult.issues.length;
+      } catch (docErr) {
+        console.error('[ai-impact] Documentation data refresh failed:', docErr.message);
+      }
+
       refreshState.lastResult = {
         status: 'success',
-        message: `Fetched ${withLinks.length} RFEs, ${autofixCount} autofix issues`,
+        message: `Fetched ${withLinks.length} RFEs, ${autofixCount} autofix issues, ${docCount} doc issues`,
         completedAt: new Date().toISOString()
       };
     } catch (err) {
@@ -177,6 +275,7 @@ module.exports = function registerRoutes(router, context) {
     context.registerDiagnostics(async function() {
       const rfeData = readFromStorage('ai-impact/rfe-data.json');
       const autofixData = readFromStorage('ai-impact/autofix-data.json');
+      const docData = readFromStorage('ai-impact/doc-data.json');
       return {
         refreshState,
         rfe: {
@@ -188,6 +287,11 @@ module.exports = function registerRoutes(router, context) {
           dataExists: !!autofixData,
           issueCount: autofixData?.issues?.length || 0,
           fetchedAt: autofixData?.fetchedAt || null
+        },
+        documentation: {
+          dataExists: !!docData,
+          issueCount: docData?.issues?.length || 0,
+          fetchedAt: docData?.fetchedAt || null
         }
       };
     });

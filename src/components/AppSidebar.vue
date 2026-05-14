@@ -350,15 +350,25 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', onClickOutside)
 })
 
-// Auto-expand active module section
+// Auto-expand active module section (collapse others for accordion behavior)
 watch(() => props.activeModule, (newVal) => {
   if (newVal && props.builtInManifests.some(m => m.slug === newVal)) {
+    for (const key of Object.keys(expandedSections.value)) {
+      expandedSections.value[key] = false
+    }
     expandedSections.value[newVal] = true
   }
 }, { immediate: true })
 
 function toggleSection(sectionId) {
-  expandedSections.value[sectionId] = !expandedSections.value[sectionId]
+  const wasExpanded = expandedSections.value[sectionId]
+  // Collapse all sections, then toggle the clicked one (accordion behavior)
+  for (const key of Object.keys(expandedSections.value)) {
+    expandedSections.value[key] = false
+  }
+  if (!wasExpanded) {
+    expandedSections.value[sectionId] = true
+  }
 }
 
 function resolveIcon(iconName) {

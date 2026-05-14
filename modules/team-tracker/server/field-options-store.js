@@ -140,12 +140,121 @@ function removeValues(storage, name, valuesToRemove, actorEmail) {
   return { removed, total: options.values.length };
 }
 
+/**
+ * Rename a value in a field option set and cascade the change to all
+ * person/team records that reference it via optionsRef fields.
+ *
+ * @param {object} storage
+ * @param {string} name - The option set name
+ * @param {string} oldValue - The current value text
+ * @param {string} newValue - The new value text
+ * @param {string} actorEmail
+ * @returns {{ updated: number }|null} Count of person+team records updated, or null if set not found
+ */
+function renameValue(storage, name, oldValue, newValue, actorEmail) {
+  const options = readFieldOptions(storage, name);
+  if (!options) return null;
+
+  const idx = options.values.indexOf(oldValue);
+  if (idx === -1) {
+    throw new Error(`Value "${oldValue}" not found in option set "${name}"`);
+  }
+  if (options.values.includes(newValue)) {
+    throw new Error(`Value "${newValue}" already exists in option set "${name}"`);
+  }
+
+  // 1. Update the option set itself
+  options.values[idx] = newValue;
+  options.values.sort();
+  options.updatedAt = new Date().toISOString();
+  options.updatedBy = actorEmail;
+  writeFieldOptions(storage, name, options);
+
+  // 2. Find all field definitions that reference this option set
+  const fieldDefs = storage.readFromStorage('team-data/field-definitions.json') || { personFields: [], teamFields: [] };
+  const personFieldIds = (fieldDefs.personFields || []).filter(f => !f.deleted && f.optionsRef === name).map(f => f.id);
+  const teamFieldIds = (fieldDefs.teamFields || []).filter(f => !f.deleted && f.optionsRef === name).map(f => f.id);
+
+  let updated = 0;
+
+  // 3. Cascade to person records
+  if (personFieldIds.length > 0) {
+    const registry = storage.readFromStorage('team-data/registry.json');
+    if (registry && registry.people) {
+      let registryModified = false;
+      for (const person of Object.values(registry.people)) {
+        if (!person._appFields) continue;
+        for (const fieldId of personFieldIds) {
+          const val = person._appFields[fieldId];
+          if (val === oldValue) {
+            person._appFields[fieldId] = newValue;
+            registryModified = true;
+            updated++;
+          } else if (Array.isArray(val)) {
+            const arrIdx = val.indexOf(oldValue);
+            if (arrIdx !== -1) {
+              val[arrIdx] = newValue;
+              registryModified = true;
+              updated++;
+            }
+          }
+        }
+      }
+      if (registryModified) {
+        storage.writeToStorage('team-data/registry.json', registry);
+      }
+    }
+  }
+
+  // 4. Cascade to team metadata
+  if (teamFieldIds.length > 0) {
+    const teamsData = storage.readFromStorage('team-data/teams.json');
+    if (teamsData && teamsData.teams) {
+      let teamsModified = false;
+      for (const team of Object.values(teamsData.teams)) {
+        if (!team.metadata) continue;
+        for (const fieldId of teamFieldIds) {
+          const val = team.metadata[fieldId];
+          if (val === oldValue) {
+            team.metadata[fieldId] = newValue;
+            teamsModified = true;
+            updated++;
+          } else if (Array.isArray(val)) {
+            const arrIdx = val.indexOf(oldValue);
+            if (arrIdx !== -1) {
+              val[arrIdx] = newValue;
+              teamsModified = true;
+              updated++;
+            }
+          }
+        }
+      }
+      if (teamsModified) {
+        storage.writeToStorage('team-data/teams.json', teamsData);
+      }
+    }
+  }
+
+  appendAuditEntry(storage, {
+    action: 'field-options.rename',
+    actor: actorEmail,
+    entityType: 'field-options',
+    entityId: name,
+    oldValue,
+    newValue,
+    detail: `Renamed "${oldValue}" to "${newValue}" in "${name}" (${updated} records updated)`
+  });
+
+  return { updated };
+}
+
 module.exports = {
   listFieldOptions,
   getValues,
   addValues,
   replaceValues,
   removeValues,
+  renameValue,
   readFieldOptions,
   writeFieldOptions,
   FIELD_OPTIONS_DIR

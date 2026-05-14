@@ -731,6 +731,123 @@ function labelColorClasses(color) {
       </div>
     </div>
 
+    <!-- ─── Documentation Detail ─── -->
+    <div v-else-if="selectedPhase.id === 'documentation'" class="flex-1 overflow-auto p-6 lg:p-8">
+      <div class="max-w-3xl mx-auto">
+        <!-- Back -->
+        <button
+          @click="closeDetail"
+          class="flex items-center gap-2 text-sm text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 mb-4 cursor-pointer"
+        >
+          <ArrowLeft :size="16" />
+          Back to Pipeline Overview
+        </button>
+
+        <!-- Header -->
+        <div class="flex items-start justify-between mb-8">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-teal-500/10 border-2 border-teal-500 flex items-center justify-center">
+              <span class="text-teal-600 dark:text-teal-400 text-sm font-bold">6</span>
+            </div>
+            <div>
+              <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Documentation</h2>
+              <p class="text-sm text-gray-500 dark:text-gray-400">AI-First-driven documentation for dev-complete features. The tool automatically generates documentation MRs for (preferably) RHAISTRAT issues that require product documentation.</p>
+            </div>
+          </div>
+          <button
+            @click="goToPage('documentation')"
+            class="flex items-center gap-1.5 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-colors flex-shrink-0 ml-4"
+          >
+            Go to Documentation
+            <ChevronRight :size="16" />
+          </button>
+        </div>
+
+        <!-- How it works -->
+        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 mb-6">
+          <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">How it works</h3>
+          <div class="relative ml-1">
+            <div class="absolute left-[15px] top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
+            <div class="flex items-start gap-4 relative pb-5">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10 bg-gray-100 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600">
+                <User :size="16" class="text-gray-400 dark:text-gray-500" />
+              </div>
+              <div>
+                <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">Trigger</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Add the <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700/50 text-teal-600 dark:text-teal-400 text-xs rounded font-mono">ai1st-doc-create</code> label to the Jira issue needing documentation (preferably RHAISTRAT)</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">This at the moment for AI-First is the signal that dev work is completed and documentation can begin</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-4 relative pb-5">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10 bg-teal-500/10 border-2 border-teal-500">
+                <Sparkles :size="16" class="text-teal-600 dark:text-teal-400" />
+              </div>
+              <div>
+                <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">AI Documentation Generation</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Pipeline generates documentation and raises an MR against the docs repo. Issue is labeled <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700/50 text-teal-600 dark:text-teal-400 text-xs rounded font-mono">ai1st-doc-invoked</code></div>
+              </div>
+            </div>
+            <div class="flex items-start gap-4 relative pb-5">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10 bg-teal-500/10 border-2 border-teal-500">
+                <Sparkles :size="16" class="text-teal-600 dark:text-teal-400" />
+              </div>
+              <div>
+                <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">MR Contributed</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">When the MR is raised, the issue, its parent RHAISTRAT, and CCS Epic is labeled <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700/50 text-teal-600 dark:text-teal-400 text-xs rounded font-mono">ai1st-doc-contributed</code></div>
+              </div>
+            </div>
+            <div class="flex items-start gap-4 relative">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10 bg-gray-100 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600">
+                <User :size="16" class="text-gray-400 dark:text-gray-500" />
+              </div>
+              <div>
+                <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">Human Review</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">CCS/Docs team, SME (Eng, QE, ...) reviews and merges the contributed MR to the docs repo</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Jira labels reference -->
+        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 mb-6">
+          <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Jira Labels Reference</h3>
+          <div class="space-y-2">
+            <div class="flex items-center gap-3 p-2.5 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+              <code class="text-xs px-2 py-0.5 rounded whitespace-nowrap font-mono bg-green-500/15 text-green-600 dark:text-green-400">ai1st-doc-create</code>
+              <span class="text-xs text-gray-500 dark:text-gray-400">Add this label to trigger AI documentation generation</span>
+            </div>
+            <div class="flex items-center gap-3 p-2.5 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+              <code class="text-xs px-2 py-0.5 rounded whitespace-nowrap font-mono bg-blue-500/15 text-blue-600 dark:text-blue-400">ai1st-doc-invoked</code>
+              <span class="text-xs text-gray-500 dark:text-gray-400">Pipeline was triggered for this issue</span>
+            </div>
+            <div class="flex items-center gap-3 p-2.5 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+              <code class="text-xs px-2 py-0.5 rounded whitespace-nowrap font-mono bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">ai1st-doc-contributed</code>
+              <span class="text-xs text-gray-500 dark:text-gray-400">Documentation MR was raised</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- What you need to do -->
+        <div class="bg-teal-50 dark:bg-teal-500/10 border border-teal-200 dark:border-teal-500/30 rounded-xl p-6 mb-6">
+          <h3 class="text-sm font-semibold text-teal-700 dark:text-teal-400 uppercase tracking-wide mb-3">What you need to do</h3>
+          <ul class="space-y-3">
+            <li class="flex items-start gap-3">
+              <Pencil :size="20" class="text-teal-600 dark:text-teal-400 flex-shrink-0 mt-0.5" />
+              <span class="text-sm text-gray-700 dark:text-gray-300">Add the <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700/50 text-teal-700 dark:text-teal-400 text-xs rounded font-mono">ai1st-doc-create</code> label to (preferably) RHAISTRAT issues that need documentation</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <Eye :size="20" class="text-teal-600 dark:text-teal-400 flex-shrink-0 mt-0.5" />
+              <span class="text-sm text-gray-700 dark:text-gray-300">Monitor the <button @click="goToPage('documentation')" class="text-teal-600 dark:text-teal-400 hover:underline font-medium">Documentation dashboard</button> for coverage rate and contributed MRs</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <User :size="20" class="text-teal-600 dark:text-teal-400 flex-shrink-0 mt-0.5" />
+              <span class="text-sm text-gray-700 dark:text-gray-300">Review and merge the contributed MRs in the docs repo</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
     <!-- ─── Coming Soon Detail ─── -->
     <div v-else class="flex-1 overflow-auto p-6 lg:p-8">
       <div class="max-w-3xl mx-auto">

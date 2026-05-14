@@ -1390,6 +1390,54 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/team-tracker/field-options/{name}/values/rename:
+   *   patch:
+   *     tags: ['TT: Structure']
+   *     summary: Rename a value in a field option set (cascades to all records)
+   *     parameters:
+   *       - in: path
+   *         name: name
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The option set name
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               oldValue:
+   *                 type: string
+   *               newValue:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: Rename result with count of updated records
+   */
+  router.patch('/field-options/:name/values/rename', requireTeamAdmin, function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const safeName = sanitizeOptionsName(req.params.name);
+    if (!safeName) return res.status(400).json({ error: 'Invalid option set name' });
+    const { oldValue, newValue } = req.body;
+    if (!oldValue || typeof oldValue !== 'string') return res.status(400).json({ error: 'oldValue is required and must be a string' });
+    if (!newValue || typeof newValue !== 'string') return res.status(400).json({ error: 'newValue is required and must be a string' });
+    const trimmed = newValue.trim();
+    if (!trimmed) return res.status(400).json({ error: 'newValue cannot be empty' });
+    if (trimmed.length > 200) return res.status(400).json({ error: 'newValue must be 200 characters or fewer' });
+    try {
+      const result = fieldOptionsStore.renameValue(storage, safeName, oldValue.trim(), trimmed, req.auditActor);
+      if (!result) return res.status(404).json({ error: 'Field option set not found' });
+      res.json(result);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
   // ─── Person Field Values ───
 
   /**
