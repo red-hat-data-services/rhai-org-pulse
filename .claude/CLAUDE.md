@@ -192,6 +192,7 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/modules/team-tracker/registry/people/search/ldap` — LDAP search (rate-limited)
 - `/api/modules/team-tracker/field-options` — list field option sets
 - `/api/modules/team-tracker/field-options/:name` — single option set
+- `/api/modules/team-tracker/allocation/classification/config` — classification config for GitLab pipeline (public)
 - `/api/modules/team-tracker/snapshots/:teamKey` — team snapshots
 - `/api/modules/team-tracker/snapshots/:teamKey/:personName` — person snapshots
 - `/api/modules/team-tracker/components` — component list (deprecated alias)
@@ -201,6 +202,9 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/modules/release-analysis/conforma/releases` — conforma releases
 - `/api/modules/release-analysis/conforma/releases/:version` — release detail
 - `/api/modules/release-analysis/conforma/status` — conforma data status
+- `/api/modules/release-analysis/quality/versions` — release versions with bug counts
+- `/api/modules/release-analysis/quality/bugs` — cumulative bug data for selected versions
+- `/api/modules/release-analysis/quality/components` — components with bug counts
 - `/api/modules/feature-traffic/features` — features (filterable)
 - `/api/modules/feature-traffic/features/:key` — feature detail
 - `/api/modules/feature-traffic/versions` — unique fix versions
@@ -261,6 +265,7 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/modules/feature-traffic/refresh` — manual data refresh (admin)
 - `/api/modules/feature-traffic/config` — save fetch config (admin)
 - `/api/modules/release-analysis/conforma/bulk` — full replace conforma data (admin)
+- `/api/modules/release-analysis/quality/refresh` — refresh quality data from Jira (admin)
 - `/api/modules/ai-impact/assessments/bulk` — bulk upsert assessments (admin)
 - `/api/modules/ai-impact/features/bulk` — bulk upsert features (admin)
 - `/api/health-metrics/track` — record page view (rate-limited)
