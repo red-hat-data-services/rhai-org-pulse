@@ -437,9 +437,12 @@ describe('performRefresh', () => {
     const org1Call = writeCalls.find(c => c[0] === 'summaries/org-org1.json');
     expect(org1Call[1].teams).toHaveLength(2);
 
-    // Global summary should include org details
+    // Global summary should include org details and all teams
     const globalCall = writeCalls.find(c => c[0] === 'summaries/global.json');
     expect(globalCall[1].orgs).toHaveLength(2);
+    expect(globalCall[1].teams).toHaveLength(3);
+    expect(globalCall[1].teams[0]).toHaveProperty('orgKey');
+    expect(globalCall[1].teams[0]).toHaveProperty('teamName');
   });
 
   it('skips teams with no allocation boards', async () => {

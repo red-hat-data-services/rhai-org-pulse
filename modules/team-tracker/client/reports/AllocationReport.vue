@@ -36,7 +36,7 @@ function selectOrg(org) {
 }
 
 function openTeam(team) {
-  const orgKey = summary.value?.orgKey || selectedOrg.value
+  const orgKey = team.orgKey || summary.value?.orgKey || selectedOrg.value
   if (orgKey) {
     nav.navigateTo('team-detail', { teamKey: `${orgKey}::${team.teamName}`, tab: 'allocation' })
   }

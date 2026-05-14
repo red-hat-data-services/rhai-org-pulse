@@ -355,6 +355,15 @@ async function performRefresh({ teams, hardRefresh, fetchSprints, fetchSprintIss
   writeStorage('summaries/global.json', {
     lastUpdated: new Date().toISOString(),
     ...globalSummary,
+    teams: teamResults.map(t => ({
+      teamId: t.teamId,
+      teamName: t.teamName,
+      orgKey: t.orgKey,
+      totalPoints: t.totalPoints,
+      totalCount: t.totalCount,
+      boardCount: t.boardCount,
+      percentages: t.percentages
+    })),
     orgs: orgSummaries.map(o => ({
       orgKey: o.orgKey,
       totalPoints: o.totalPoints,
