@@ -2,6 +2,7 @@
 import { ref, computed, watch, onBeforeUnmount, nextTick } from 'vue'
 import PipelineTimeline from './PipelineTimeline.vue'
 import FeedbackText from './FeedbackText.vue'
+import GapAnalysisText from './GapAnalysisText.vue'
 import InfoBubble from './InfoBubble.vue'
 import { getVerdictBgClass, getVerdictLabel, getCriterionLabel, getCriterionScoreClass, getScoreColorClass, CRITERIA } from '../utils/test-plan-helpers.js'
 
@@ -288,8 +289,8 @@ const currentPlan = computed(() => planDetail.value?.latest || props.plan)
 
             <!-- Gap Analysis -->
             <div v-if="currentPlan?.gapAnalysis" class="border-t border-gray-200 dark:border-gray-700 pt-4 mb-4">
-              <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Gap Analysis</h4>
-              <FeedbackText :text="currentPlan.gapAnalysis" />
+              <h4 class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Gap Analysis</h4>
+              <GapAnalysisText :text="currentPlan.gapAnalysis" />
             </div>
 
             <!-- Auto-revised indicator -->
