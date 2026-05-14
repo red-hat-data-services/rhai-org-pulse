@@ -176,9 +176,10 @@ jobs:
                echo "PASS" > .claude-review-result    # No blocking issues remain
                echo "FAIL" > .claude-review-result    # Critical unfixed issues
                ```
-               Use **FAIL** only for issues you could NOT fix that are: security
-               vulnerabilities, clear bugs that will cause runtime errors, or breaking
-               changes. If you found issues but fixed them all, use PASS.
+               Use **FAIL** for issues you could NOT fix that are: security
+               vulnerabilities, clear bugs that will cause runtime errors, breaking
+               changes, or violations of the hard constraints defined in AGENTS.md.
+               If you found issues but fixed them all, use PASS.
                Use **PASS** for: clean code, minor suggestions, style nits, or when
                all issues were fixed by your autofix commit.
                Always write this file as your very last action.
