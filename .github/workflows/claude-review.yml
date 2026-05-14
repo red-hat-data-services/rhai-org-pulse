@@ -174,14 +174,17 @@ jobs:
                to signal whether the PR should be blocked:
                ```
                echo "PASS" > .claude-review-result    # No blocking issues remain
-               echo "FAIL" > .claude-review-result    # Critical unfixed issues
+               echo "FAIL" > .claude-review-result    # Blocking issues remain
                ```
-               Use **FAIL** for issues you could NOT fix that are: security
-               vulnerabilities, clear bugs that will cause runtime errors, breaking
-               changes, or violations of the hard constraints defined in AGENTS.md.
-               If you found issues but fixed them all, use PASS.
-               Use **PASS** for: clean code, minor suggestions, style nits, or when
-               all issues were fixed by your autofix commit.
+               Use **FAIL** if ANY of the following remain unfixed in the final PR state,
+               regardless of whether you attempted a fix or believe you were unable to:
+               - Security vulnerabilities
+               - Bugs that will cause runtime errors
+               - Breaking changes
+               - Violations of any hard constraint defined in AGENTS.md
+
+               Use **PASS** only when none of the above remain. Minor suggestions,
+               style nits, and issues you successfully fixed via autofix are fine to pass.
                Always write this file as your very last action.
 
             **Important rules:**
@@ -193,6 +196,10 @@ jobs:
               subjective, comment instead of changing code.
             - Do not modify files outside the scope of the PR unless necessary to
               fix an issue (e.g., a missing import in another file).
+            - You CAN and SHOULD edit `.claude/CLAUDE.md` to keep the API Routes
+              section in sync when a PR adds, removes, or changes API endpoints
+              (AGENTS.md Hard Constraint #7). You have Edit and Write tool access
+              to all files in the repo.
         env:
           ANTHROPIC_VERTEX_PROJECT_ID: "itpc-gcp-ai-eng-claude"
           CLOUD_ML_REGION: "us-east5"
