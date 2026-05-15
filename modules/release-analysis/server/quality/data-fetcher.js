@@ -47,9 +47,7 @@ async function fetchBugs(project, versions, { jiraFetchAll } = {}) {
   const fetchAll = jiraFetchAll || jira.fetchAllJqlResults;
   const versionReleaseMap = new Map();
   for (const v of versions) {
-    if (v.project === project) {
-      versionReleaseMap.set(v.name, v.releaseDate);
-    }
+    versionReleaseMap.set(v.name, v.releaseDate);
   }
 
   const jql = `
