@@ -128,3 +128,4 @@ async function getComponents(projects, { jiraFetch } = {}) {
 }
 
 module.exports = { fetchVersions, fetchBugs, getComponents };
+
