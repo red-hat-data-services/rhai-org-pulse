@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { buildProjectFilter, projectKeysFingerprint, computeCycleTimeDays, findWorkStartDate, fetchPersonMetrics, mergeResolvedIssues, needsFullRefresh, FIELDS_VERSION } from '../person-metrics'
+import { buildProjectFilter, projectKeysFingerprint, computeCycleTimeDays, findWorkStartDate, fetchPersonMetrics, resolveJiraDisplayName, namesMatch, mergeResolvedIssues, needsFullRefresh, FIELDS_VERSION } from '../person-metrics'
 
 function makeIssue({ created, resolutiondate, histories }) {
   return {
@@ -330,6 +330,141 @@ describe('fetchPersonMetrics', () => {
       accountId: 'acc-mprahl-123',
       displayName: 'Matthew Prahl'
     })
+  })
+})
+
+describe('namesMatch', () => {
+  it('matches when first initial and last name agree', () => {
+    expect(namesMatch('Matt Prahl', 'Matthew Prahl')).toBe(true)
+  })
+
+  it('rejects when first initials differ', () => {
+    expect(namesMatch('Adam Drew', 'Rob Drew')).toBe(false)
+  })
+
+  it('rejects when last names differ', () => {
+    expect(namesMatch('Chris Prahl', 'Christopher Smith')).toBe(false)
+  })
+
+  it('handles multi-word names using last word as last name', () => {
+    expect(namesMatch('David Cohn Lifshitz', 'David Lifshitz')).toBe(true)
+  })
+
+  it('rejects multi-word names with different first initial', () => {
+    expect(namesMatch('David Cohn Lifshitz', 'Artom Lifshitz')).toBe(false)
+  })
+
+  it('is case-insensitive', () => {
+    expect(namesMatch('john smith', 'JOHN SMITH')).toBe(true)
+  })
+
+  it('returns false for empty displayName', () => {
+    expect(namesMatch('Test User', '')).toBe(false)
+  })
+
+  it('returns false for null displayName', () => {
+    expect(namesMatch('Test User', null)).toBe(false)
+  })
+})
+
+describe('resolveJiraDisplayName — name validation', () => {
+  function createMockJiraRequest(handlers = {}) {
+    return vi.fn(async (url) => {
+      if (url.includes('/rest/api/2/user/search')) {
+        if (handlers.userSearch) return handlers.userSearch(url)
+        return []
+      }
+      return []
+    })
+  }
+
+  it('rejects single user-search result when first name does not match', async () => {
+    const nameCache = {}
+    const mockJiraRequest = createMockJiraRequest({
+      userSearch: () => [{ displayName: 'Rob Drew', accountId: 'acc-rob' }]
+    })
+
+    const result = await resolveJiraDisplayName(mockJiraRequest, 'Adam Drew', nameCache)
+
+    expect(result.accountId).toBeNull()
+    expect(nameCache['Adam Drew']).toBeUndefined()
+  })
+
+  it('picks correct person when multiple results share a last name', async () => {
+    const nameCache = {}
+    const mockJiraRequest = createMockJiraRequest({
+      userSearch: () => [
+        { displayName: 'Artom Lifshitz', accountId: 'acc-artom' },
+        { displayName: 'David Cohn Lifshitz', accountId: 'acc-david' }
+      ]
+    })
+
+    const result = await resolveJiraDisplayName(mockJiraRequest, 'David Cohn Lifshitz', nameCache)
+
+    expect(result.accountId).toBe('acc-david')
+    expect(result.displayName).toBe('David Cohn Lifshitz')
+  })
+
+  it('rejects all results when no first initial matches', async () => {
+    const nameCache = {}
+    const mockJiraRequest = createMockJiraRequest({
+      userSearch: () => [
+        { displayName: 'Rob Drew', accountId: 'acc-rob' },
+        { displayName: 'Jane Drew', accountId: 'acc-jane' }
+      ]
+    })
+
+    const result = await resolveJiraDisplayName(mockJiraRequest, 'Adam Drew', nameCache)
+
+    expect(result.accountId).toBeNull()
+  })
+
+  it('rejects email-search single result when name does not match', async () => {
+    const nameCache = {}
+    const mockJiraRequest = createMockJiraRequest({
+      userSearch: (url) => {
+        if (url.includes('adam%40example.com') || url.includes('adam@example.com')) {
+          return [{ displayName: 'Rob Drew', accountId: 'acc-rob' }]
+        }
+        return []
+      }
+    })
+
+    const result = await resolveJiraDisplayName(mockJiraRequest, 'Adam Drew', nameCache, 'adam@example.com')
+
+    expect(result.accountId).toBeNull()
+  })
+
+  it('accepts email-search single result when name matches', async () => {
+    const nameCache = {}
+    const mockJiraRequest = createMockJiraRequest({
+      userSearch: (url) => {
+        if (url.includes('adam%40example.com') || url.includes('adam@example.com')) {
+          return [{ displayName: 'Adam Drew', accountId: 'acc-adam' }]
+        }
+        return []
+      }
+    })
+
+    const result = await resolveJiraDisplayName(mockJiraRequest, 'Adam Drew', nameCache, 'adam@example.com')
+
+    expect(result.accountId).toBe('acc-adam')
+  })
+
+  it('still accepts exact email match regardless of displayName', async () => {
+    const nameCache = {}
+    const mockJiraRequest = createMockJiraRequest({
+      userSearch: (url) => {
+        if (url.includes('adam%40example.com') || url.includes('adam@example.com')) {
+          return [{ displayName: 'A. Drew (Contractor)', accountId: 'acc-adam', emailAddress: 'adam@example.com' }]
+        }
+        return []
+      }
+    })
+
+    const result = await resolveJiraDisplayName(mockJiraRequest, 'Adam Drew', nameCache, 'adam@example.com')
+
+    expect(result.accountId).toBe('acc-adam')
   })
 })
 

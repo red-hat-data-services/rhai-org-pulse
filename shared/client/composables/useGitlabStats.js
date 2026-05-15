@@ -74,12 +74,18 @@ export function useGitlabStats() {
     }))
   }
 
+  async function reloadGitlabStats() {
+    gitlabData.value = null
+    return loadGitlabStats()
+  }
+
   return {
     contributionsMap,
     getContributions,
     getInstanceContributions,
     knownInstances,
     loadGitlabStats,
+    reloadGitlabStats,
     setUserContributions,
     getProfileUrls,
     loading

@@ -119,7 +119,7 @@ async function resolveJiraDisplayName(jiraRequest, rosterName, nameCache, email)
 
   // Try email search first (most reliable)
   if (email) {
-    const resolved = await tryEmailSearch(jiraRequest, email);
+    const resolved = await tryEmailSearch(jiraRequest, email, rosterName);
     if (resolved) {
       resolved.resolvedViaEmail = email;
       nameCache[rosterName] = resolved;
@@ -160,9 +160,26 @@ async function resolveJiraDisplayName(jiraRequest, rosterName, nameCache, email)
 }
 
 /**
+ * Check whether a Jira displayName plausibly belongs to the same person
+ * as the roster name by comparing first initial and last name.
+ */
+function namesMatch(rosterName, jiraDisplayName) {
+  const rosterParts = rosterName.trim().split(/\s+/);
+  const jiraParts = (jiraDisplayName || '').trim().split(/\s+/);
+  if (rosterParts.length === 0 || jiraParts.length === 0) return false;
+
+  const rosterFirstInitial = rosterParts[0][0]?.toLowerCase();
+  const rosterLast = rosterParts[rosterParts.length - 1].toLowerCase();
+  const jiraFirstInitial = jiraParts[0][0]?.toLowerCase();
+  const jiraLast = jiraParts[jiraParts.length - 1].toLowerCase();
+
+  return rosterLast === jiraLast && rosterFirstInitial === jiraFirstInitial;
+}
+
+/**
  * Search for a Jira user by email address. Returns exactly one match or null.
  */
-async function tryEmailSearch(jiraRequest, email) {
+async function tryEmailSearch(jiraRequest, email, rosterName) {
   try {
     const users = await jiraRequest(`/rest/api/2/user/search?query=${encodeURIComponent(email)}`);
     if (!Array.isArray(users) || users.length === 0) return null;
@@ -171,8 +188,8 @@ async function tryEmailSearch(jiraRequest, email) {
     const match = users.find(u => u.emailAddress?.toLowerCase() === email.toLowerCase());
     if (match) return { accountId: match.accountId, displayName: match.displayName };
 
-    // If only one result, trust it
-    if (users.length === 1) {
+    // If only one result, validate against roster name before trusting
+    if (users.length === 1 && namesMatch(rosterName, users[0].displayName)) {
       return { accountId: users[0].accountId, displayName: users[0].displayName };
     }
 
@@ -187,17 +204,14 @@ async function tryUserSearch(jiraRequest, query, rosterName) {
     const users = await jiraRequest(`/rest/api/2/user/search?query=${encodeURIComponent(query)}`);
     if (!Array.isArray(users) || users.length === 0) return null;
 
-    // Extract last name from roster name for matching
-    const parts = rosterName.trim().split(/\s+/);
-    const lastName = parts[parts.length - 1];
-
     if (users.length === 1) {
-      return { accountId: users[0].accountId, displayName: users[0].displayName };
+      if (namesMatch(rosterName, users[0].displayName)) {
+        return { accountId: users[0].accountId, displayName: users[0].displayName };
+      }
+      return null;
     }
-    // Multiple results — match on last name
-    const match = users.find(u =>
-      u.displayName?.toLowerCase().endsWith(lastName.toLowerCase())
-    );
+    // Multiple results — match on first initial + last name
+    const match = users.find(u => namesMatch(rosterName, u.displayName));
     if (match) return { accountId: match.accountId, displayName: match.displayName };
     return null;
   } catch {
@@ -486,6 +500,7 @@ module.exports = {
   computeCycleTimeDays,
   findWorkStartDate,
   resolveJiraDisplayName,
+  namesMatch,
   mergeResolvedIssues,
   needsFullRefresh,
   FIELDS_VERSION

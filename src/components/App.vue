@@ -207,6 +207,7 @@ import AppMessages from '@shared/client/components/AppMessages.vue'
 import { computed, ref, readonly, provide, onUnmounted, watch } from 'vue'
 import { useAuth } from '@shared/client/composables/useAuth'
 import { useImpersonation } from '@shared/client/composables/useImpersonation'
+import { onRecovery, offRecovery } from '@shared/client/composables/useBackendHealth'
 import { useMessages } from '@shared/client/composables/useMessages'
 import { usePermissions } from '@shared/client/composables/usePermissions'
 import { useRoster } from '@shared/client/composables/useRoster'
@@ -243,10 +244,10 @@ export default {
     const { user: authUser, isAdmin: authIsAdmin, isTeamAdmin: authIsTeamAdmin, refresh: refreshAuth } = useAuth()
     const { isImpersonating, impersonatingUid: impersonatingUidRef, impersonatingName: impersonatingNameRef, stopImpersonating } = useImpersonation()
     const { isManager: authIsManager, refresh: refreshPermissions } = usePermissions()
-    const { loadRoster, teams, selectedOrgKey, selectOrg, rosterData } = useRoster()
-    const { loadGithubStats } = useGithubStats()
-    const { loadGitlabStats } = useGitlabStats()
-    const { modulesData, loadModules, enabledBuiltInSlugs, loadEnabledBuiltInSlugs } = useModules()
+    const { loadRoster, reloadRoster, teams, selectedOrgKey, selectOrg, rosterData } = useRoster()
+    const { loadGithubStats, reloadGithubStats } = useGithubStats()
+    const { loadGitlabStats, reloadGitlabStats } = useGitlabStats()
+    const { modulesData, loadModules, reloadModules, enabledBuiltInSlugs, loadEnabledBuiltInSlugs } = useModules()
     const { mode: themeMode, cycle: cycleTheme } = useTheme()
     const { messages: appMessages, fetchMessages, dismiss: dismissMessage } = useMessages()
     const titlePrefix = ref('')
@@ -254,6 +255,20 @@ export default {
     watch(titlePrefix, (prefix) => {
       document.title = prefix ? `${prefix} Org Pulse` : 'Org Pulse'
     })
+
+    function handleBackendRecovery() {
+      reloadRoster()
+      reloadGithubStats()
+      reloadGitlabStats()
+      reloadModules()
+      refreshAuth()
+      refreshPermissions()
+      fetchMessages()
+      fetchLastRefreshed()
+      fetchSiteConfig()
+    }
+    onRecovery(handleBackendRecovery)
+    onUnmounted(() => offRecovery(handleBackendRecovery))
 
     const lastRefreshedAt = ref(null)
     const tick = ref(0)

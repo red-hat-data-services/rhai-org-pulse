@@ -36,10 +36,16 @@ export function useGithubStats() {
     githubData.value.users[username] = data
   }
 
+  async function reloadGithubStats() {
+    githubData.value = null
+    return loadGithubStats()
+  }
+
   return {
     contributionsMap,
     getContributions,
     loadGithubStats,
+    reloadGithubStats,
     setUserContributions,
     loading
   }

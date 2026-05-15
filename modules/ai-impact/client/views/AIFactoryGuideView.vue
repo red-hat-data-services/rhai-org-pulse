@@ -188,7 +188,7 @@ function labelColorClasses(color) {
             >
               <!-- Circle on spine -->
               <div
-                class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 z-10 border-2"
+                class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 z-[1] border-2"
                 :class="getPhaseColors(phase.id).circle"
               >
                 <span class="text-sm font-bold" :class="getPhaseColors(phase.id).text">{{ phase.order }}</span>
@@ -279,7 +279,7 @@ function labelColorClasses(color) {
             <div class="absolute left-[15px] top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
             <div v-for="(step, i) in rfeSteps" :key="step.name" class="flex items-start gap-4 relative" :class="i < rfeSteps.length - 1 ? 'pb-5' : ''">
               <div
-                class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10"
+                class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-[1]"
                 :class="step.ai
                   ? 'bg-blue-500/10 border-2 border-blue-500'
                   : 'bg-gray-100 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600'"
@@ -475,7 +475,7 @@ function labelColorClasses(color) {
             <div class="absolute left-[15px] top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
             <div v-for="(step, i) in featureSteps" :key="step.name" class="flex items-start gap-4 relative" :class="i < featureSteps.length - 1 ? 'pb-5' : ''">
               <div
-                class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10"
+                class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-[1]"
                 :class="step.ai
                   ? 'bg-indigo-500/10 border-2 border-indigo-500'
                   : 'bg-gray-100 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600'"
@@ -769,7 +769,7 @@ function labelColorClasses(color) {
           <div class="relative ml-1">
             <div class="absolute left-[15px] top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
             <div class="flex items-start gap-4 relative pb-5">
-              <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10 bg-gray-100 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-[1] bg-gray-100 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600">
                 <User :size="16" class="text-gray-400 dark:text-gray-500" />
               </div>
               <div>
@@ -779,7 +779,7 @@ function labelColorClasses(color) {
               </div>
             </div>
             <div class="flex items-start gap-4 relative pb-5">
-              <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10 bg-teal-500/10 border-2 border-teal-500">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-[1] bg-teal-500/10 border-2 border-teal-500">
                 <Sparkles :size="16" class="text-teal-600 dark:text-teal-400" />
               </div>
               <div>
@@ -788,7 +788,7 @@ function labelColorClasses(color) {
               </div>
             </div>
             <div class="flex items-start gap-4 relative pb-5">
-              <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10 bg-teal-500/10 border-2 border-teal-500">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-[1] bg-teal-500/10 border-2 border-teal-500">
                 <Sparkles :size="16" class="text-teal-600 dark:text-teal-400" />
               </div>
               <div>
@@ -797,7 +797,7 @@ function labelColorClasses(color) {
               </div>
             </div>
             <div class="flex items-start gap-4 relative">
-              <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-10 bg-gray-100 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-[1] bg-gray-100 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600">
                 <User :size="16" class="text-gray-400 dark:text-gray-500" />
               </div>
               <div>
