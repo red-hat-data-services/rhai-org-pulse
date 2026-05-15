@@ -11,6 +11,7 @@ configMapGenerator:
 - behavior: merge
   literals:
   - API_PUBLIC_URL=https://api-team-tracker.apps.int.spoke.prod.us-west-2.aws.paas.redhat.com
+  - AUTH_EMAIL_DOMAIN=cluster.local
   name: team-tracker-config
 
 patches:
