@@ -43,7 +43,7 @@ describe('SiteSettings', () => {
     await wrapper.find('button').trigger('click')
     await flushPromises()
 
-    expect(mockSaveSiteConfig).toHaveBeenCalledWith({ titlePrefix: 'New Prefix' })
+    expect(mockSaveSiteConfig).toHaveBeenCalledWith({ titlePrefix: 'New Prefix', authEmailDomain: '' })
     expect(wrapper.emitted('toast')).toBeTruthy()
     expect(wrapper.emitted('toast')[0][0]).toEqual({
       message: 'Site configuration saved',

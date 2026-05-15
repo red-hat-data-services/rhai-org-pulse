@@ -334,18 +334,26 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, h } from 'vue'
 import { Plus, Info, ChevronUp, ChevronDown, Copy, X, CheckCircle, Shield, AlertTriangle } from 'lucide-vue-next'
 import { useApiTokens } from '../composables/useApiTokens'
 
+const badgeClass = 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium'
 const ScopeBadge = {
   props: { scopes: { default: null } },
-  template: `
-    <span v-if="scopes === null" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">Full access</span>
-    <span v-else-if="scopes.length === 1 && scopes[0] === '*'" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">Full access</span>
-    <span v-else-if="scopes.length === 0" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">No scopes</span>
-    <span v-else class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">{{ scopes.length }} scope{{ scopes.length === 1 ? '' : 's' }}</span>
-  `
+  setup(props) {
+    return () => {
+      const s = props.scopes
+      if (s === null || (Array.isArray(s) && s.length === 1 && s[0] === '*')) {
+        return h('span', { class: `${badgeClass} bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300` }, 'Full access')
+      }
+      if (Array.isArray(s) && s.length === 0) {
+        return h('span', { class: `${badgeClass} bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300` }, 'No scopes')
+      }
+      const count = Array.isArray(s) ? s.length : 0
+      return h('span', { class: `${badgeClass} bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300` }, `${count} scope${count === 1 ? '' : 's'}`)
+    }
+  }
 }
 
 const props = defineProps({

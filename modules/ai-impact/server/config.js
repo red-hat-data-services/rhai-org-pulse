@@ -11,7 +11,7 @@ const DEFAULT_CONFIG = {
   autofixProjects: ['AIPCC', 'RHOAIENG'],
   autofixCreatedAfter: null,
   docProject: 'RHAISTRAT',
-  docRequiredStatus: 'Review',
+  docRequiredStatuses: ['Review', 'Release Pending'],
   docRequiredFieldId: 'customfield_10665',
   docContributedLabel: 'ai1st-doc-contributed',
   docInvokedLabel: 'ai1st-doc-invoked',
@@ -54,7 +54,7 @@ function saveConfig(writeToStorage, config) {
   // String fields — validate type and JQL safety
   const stringFields = ['jiraProject', 'linkedProject', 'createdLabel',
     'revisedLabel', 'testExclusionLabel', 'linkTypeName',
-    'docProject', 'docRequiredStatus', 'docContributedLabel',
+    'docProject', 'docContributedLabel',
     'docInvokedLabel', 'docRequiredFieldId', 'docMrFieldId'];
   for (const key of stringFields) {
     if (config[key] !== undefined) {
@@ -82,6 +82,20 @@ function saveConfig(writeToStorage, config) {
       validateJqlSafeString(s, 'excludedStatuses entry');
     }
     merged.excludedStatuses = config.excludedStatuses;
+  }
+
+  // docRequiredStatuses — must be array of JQL-safe strings
+  if (config.docRequiredStatuses !== undefined) {
+    if (!Array.isArray(config.docRequiredStatuses)) {
+      throw new Error('docRequiredStatuses must be an array');
+    }
+    if (config.docRequiredStatuses.length === 0) {
+      throw new Error('docRequiredStatuses must not be empty');
+    }
+    for (const s of config.docRequiredStatuses) {
+      validateJqlSafeString(s, 'docRequiredStatuses entry');
+    }
+    merged.docRequiredStatuses = config.docRequiredStatuses;
   }
 
   // lookbackMonths — must be a positive integer

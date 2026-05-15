@@ -140,13 +140,15 @@ Platform-level configuration for the site. Created when an admin saves settings 
 
 ```json
 {
-  "titlePrefix": "AI Engineering"
+  "titlePrefix": "AI Engineering",
+  "authEmailDomain": "cluster.local"
 }
 ```
 
 **Notes:**
 - `titlePrefix` is a string (max 100 characters). When non-empty, it's shown as a subtitle in the sidebar and prepended to the page title.
-- If this file doesn't exist, `titlePrefix` defaults to `""` (empty string).
+- `authEmailDomain` is a string (max 253 characters, valid RFC 1123 domain). When set, role assignments normalize emails to this domain so that LDAP-provided emails (e.g. `user@redhat.com`) match OAuth proxy emails (e.g. `user@cluster.local`). Can also be set via the `AUTH_EMAIL_DOMAIN` env var, which takes precedence.
+- If this file doesn't exist, both fields default to `""` (empty string).
 
 ## Messages — `data/messages.json`
 

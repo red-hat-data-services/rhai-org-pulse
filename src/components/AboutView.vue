@@ -472,6 +472,13 @@ watch(() => props.initialTab, (val) => {
   }
 })
 
+watch(activeTab, (tab) => {
+  const hash = tab === 'about' ? '#/about' : `#/about?tab=${tab}`
+  if (window.location.hash !== hash) {
+    window.history.replaceState(null, '', hash)
+  }
+})
+
 const valueProps = [
   { title: 'Delivery Velocity', desc: 'Track issue throughput and story points across teams', icon: TrendingUp },
   { title: 'Trends Over Time', desc: 'Spot patterns in monthly resolution and contribution data', icon: BarChart3 },

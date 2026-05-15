@@ -38,6 +38,7 @@ npm run dev:full       # Starts Vite (5173) + Express (3001)
 | `PRODUCT_PAGES_CLIENT_SECRET` | OAuth client secret for Product Pages (production). Used with `PRODUCT_PAGES_CLIENT_ID`. |
 | `PRODUCT_PAGES_TOKEN` | Personal bearer token for Product Pages (local dev fallback). Used when OAuth env vars are not set. |
 | `FEATURE_TRAFFIC_GITLAB_TOKEN` | GitLab PAT with `read_api` scope for feature-traffic pipeline. Overrides `GITLAB_TOKEN` for CI artifact fetching. |
+| `AUTH_EMAIL_DOMAIN` | Override email domain for role matching (e.g. `cluster.local`). When set, role assignments normalize emails to this domain. Env var takes precedence over `authEmailDomain` in site-config.json. |
 | `DEMO_MODE` / `VITE_DEMO_MODE` | Set both to `true` for fixture data (no credentials needed). |
 
 ## Key Concepts
@@ -49,7 +50,7 @@ npm run dev:full       # Starts Vite (5173) + Express (3001)
 - **GitLab contributions**: `data/gitlab-contributions.json` + `data/gitlab-history.json`. Multi-instance support via `gitlabInstances` config.
 - **Snapshots**: `data/snapshots/{sanitized-teamKey}/{YYYY-MM-DD}.json` (teamKey sanitized: `::` → `--`).
 - **Trends**: Built dynamically from person metric files by bucketing resolved issues by month.
-- **Site config**: `data/site-config.json` — platform-level settings (title prefix).
+- **Site config**: `data/site-config.json` — platform-level settings (title prefix, auth email domain).
 - **Composite keys**: Teams = `orgKey::teamName` (e.g., `shgriffi::Model Serving`).
 - **Field options**: `data/team-data/field-options/<name>.json` — named allowed-value sets, referenced by `optionsRef`.
 - **Messages**: `data/messages.json` — admin announcements, merged with computed provider messages.
@@ -145,6 +146,60 @@ Overlays: `dev/` (team-tracker ns), `preprod/` (ambient-code--team-tracker ns), 
 - `GCP_SA_KEY` — GCP service account JSON key for Vertex AI auth (Claude code review)
 
 **Daily CronJob** (`deploy/openshift/overlays/prod/cronjob-sync-refresh.yaml`): Runs at 6:00 AM UTC, triggers roster sync then full metrics refresh via the backend API.
+
+### Testing
+
+**Unit tests** use Vitest with jsdom and @vue/test-utils. Run via `npm test`.
+
+**Smoke tests** use Playwright to verify the production container images. Located in `tests/smoke/app-loads.spec.js`. These run automatically in CI after images are built and can also be run locally:
+
+```bash
+make build-frontend-image  # Build frontend container
+make build-backend-image   # Build backend container
+make smoke-test            # Run Playwright smoke tests (uses demo mode)
+```
+
+Smoke tests verify:
+- Application loads without JavaScript errors (console errors, unhandled exceptions)
+- Core UI structure renders (sidebar, main content, page title)
+- Data/API integration works (no stuck loading spinners, no error states)
+- Client-side routing functions (hash-based navigation)
+- Basic accessibility (semantic landmarks present)
+
+Playwright runs in a container (`mcr.microsoft.com/playwright:v1.60.0`), so no local browser installation needed. Works on any OS (RHEL/Podman, macOS/Docker, Ubuntu). The Makefile auto-detects the container runtime (prefers Podman on RHEL).
+
+**IMPORTANT:** The Playwright version must match between `package.json` (`@playwright/test`) and `Makefile` (`PLAYWRIGHT_IMAGE`). When updating Playwright, change both files to the same version to prevent browser binary mismatches.
+
+CI workflow (`build-images.yml`):
+1. Builds frontend and backend images via `make build-frontend-image` and `make build-backend-image`
+2. Runs `make smoke-test FRONTEND_IMAGE=<image>:<sha> BACKEND_IMAGE=<image>:<sha>` against the built images
+3. Uploads images to Quay if tests pass
+
+**Integration tests** use Playwright to verify module-specific functionality against production containers in demo mode. Located in `tests/integration/<module>.spec.js`:
+
+```bash
+make test-module MODULE=ai-impact
+```
+
+Integration tests verify:
+- Modules are visible and clickable in sidebar
+- Module views load correctly
+- Module content renders (buttons, inputs, tables, cards)
+- API endpoints return data
+- Disabled menu items are non-clickable
+
+Tests run in same Playwright container as smoke tests. Uses tag-based filtering (`@module-name`) for selective execution.
+
+CI workflow (`integration-tests.yml`):
+- Triggers on changes to `modules/**` or `tests/integration/**`
+- Uses `dorny/paths-filter` to detect which modules changed
+- Runs tests only for changed modules via generic `test-module` Makefile target
+- Reusable composite action at `.github/actions/test-org-pulse-module/`
+
+To add integration tests for a new module:
+1. Create `tests/integration/<module>.spec.js` with `@<module-name>` tag
+2. Add filter in `integration-tests.yml` `detect-changes` job
+3. Add job output and test job (copy pattern from `test-ai-impact`)
 
 ### Building images on ARM Macs
 Standard `--platform linux/amd64` builds fail: npm times out under QEMU, esbuild crashes. Workaround: build/install natively, then copy into amd64 base images. See `deploy/OPENSHIFT.md` step 3 for details. This works because the backend has no native Node addons (all pure JS).

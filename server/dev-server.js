@@ -24,6 +24,7 @@ const storageModule = DEMO_MODE ? require('../shared/server/demo-storage') : req
 const { readFromStorage, writeToStorage } = storageModule;
 const { createAuthMiddleware, proxySecretGuard, blockDuringImpersonation } = require('../shared/server/auth');
 const { createRoleStore } = require('../shared/server/role-store');
+const auditLog = require('../shared/server/audit-log');
 const apiTokens = require('./api-tokens');
 
 const modulesConfig = require('./modules/config');
@@ -104,7 +105,17 @@ if (DEMO_MODE) {
 
 // ─── Auth (from shared package) ───
 
-const roleStore = createRoleStore(readFromStorage, writeToStorage);
+const roleStore = createRoleStore(readFromStorage, writeToStorage, {
+  getAuthDomain: () => {
+    // Env var takes precedence (solves bootstrap: can be set in ConfigMap
+    // before first deployment, so migration runs on first startup)
+    if (process.env.AUTH_EMAIL_DOMAIN) {
+      return process.env.AUTH_EMAIL_DOMAIN.trim().toLowerCase();
+    }
+    const config = readFromStorage('site-config.json');
+    return config?.authEmailDomain || null;
+  }
+});
 const { authMiddleware, requireAdmin, requireTeamAdmin, requireScope, seedRoles } = createAuthMiddleware(readFromStorage, writeToStorage, {
   tokenValidator: apiTokens,
   roleStore
@@ -248,6 +259,20 @@ app.get('/api/whoami', function(req, res) {
   res.json(response);
 });
 
+// ─── Helpers ───
+
+/** Validate a domain name per RFC 1123: labels separated by dots, each 1-63 chars, alphanumeric + hyphen. */
+function isValidDomain(domain) {
+  if (!domain || typeof domain !== 'string') return false;
+  if (domain.length > 253) return false;
+  if (domain.includes('@') || /\s/.test(domain)) return false;
+  const labels = domain.split('.');
+  if (labels.length < 1) return false;
+  return labels.every(label =>
+    label.length >= 1 && label.length <= 63 && /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(label)
+  );
+}
+
 // ─── Routes: Site Config ───
 
 /**
@@ -266,11 +291,17 @@ app.get('/api/whoami', function(req, res) {
  *               properties:
  *                 titlePrefix:
  *                   type: string
+ *                 authEmailDomain:
+ *                   type: string
+ *                   description: Auth email domain for role matching (e.g. cluster.local)
  */
 app.get('/api/site-config', function(req, res) {
   try {
-    const config = readFromStorage('site-config.json') || { titlePrefix: '' };
-    res.json({ titlePrefix: config.titlePrefix || '' });
+    const config = readFromStorage('site-config.json') || {};
+    res.json({
+      titlePrefix: config.titlePrefix || '',
+      authEmailDomain: config.authEmailDomain || ''
+    });
   } catch (error) {
     console.error('Get site-config error:', error);
     res.status(500).json({ error: error.message });
@@ -293,6 +324,10 @@ app.get('/api/site-config', function(req, res) {
  *               titlePrefix:
  *                 type: string
  *                 maxLength: 100
+ *               authEmailDomain:
+ *                 type: string
+ *                 maxLength: 253
+ *                 description: Auth email domain for role matching (e.g. cluster.local)
  *     responses:
  *       200:
  *         description: Updated site configuration
@@ -302,12 +337,49 @@ app.post('/api/site-config', requireAdmin, requireScope('admin:manage'), functio
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Configuration changes disabled in demo mode' });
     }
-    const { titlePrefix } = req.body;
-    if (typeof titlePrefix !== 'string' || titlePrefix.length > 100) {
-      return res.status(400).json({ error: 'titlePrefix must be a string of 100 characters or fewer' });
+    const existing = readFromStorage('site-config.json') || {};
+    const updates = {};
+
+    // titlePrefix
+    if (req.body.titlePrefix !== undefined) {
+      if (typeof req.body.titlePrefix !== 'string' || req.body.titlePrefix.length > 100) {
+        return res.status(400).json({ error: 'titlePrefix must be a string of 100 characters or fewer' });
+      }
+      updates.titlePrefix = req.body.titlePrefix;
     }
-    const config = { titlePrefix };
+
+    // authEmailDomain
+    if (req.body.authEmailDomain !== undefined) {
+      const domain = req.body.authEmailDomain.trim().toLowerCase();
+      if (domain && !isValidDomain(domain)) {
+        return res.status(400).json({ error: 'authEmailDomain must be a valid domain name (no @ or whitespace, max 253 chars)' });
+      }
+      updates.authEmailDomain = domain;
+    }
+
+    const config = { ...existing, ...updates };
     writeToStorage('site-config.json', config);
+
+    // Trigger role migration when authEmailDomain changes
+    if (updates.authEmailDomain !== undefined && updates.authEmailDomain !== existing.authEmailDomain) {
+      auditLog.appendAuditEntry({ readFromStorage, writeToStorage }, {
+        action: 'config.authEmailDomain.change',
+        actor: req.userEmail || 'unknown',
+        entityType: 'config',
+        entityId: 'site-config',
+        field: 'authEmailDomain',
+        oldValue: existing.authEmailDomain || '',
+        newValue: updates.authEmailDomain,
+        detail: `Auth email domain changed from "${existing.authEmailDomain || ''}" to "${updates.authEmailDomain}"`
+      });
+
+      roleStore.invalidateCache();
+      const count = roleStore.migrateEmailDomains();
+      if (count > 0) {
+        console.log(`site-config: authEmailDomain changed, migrated ${count} role(s)`);
+      }
+    }
+
     res.json(config);
   } catch (error) {
     console.error('Save site-config error:', error);
@@ -1620,6 +1692,26 @@ app.get('/api/admin/modules/sync/status', requireAdmin, requireScope('admin:mana
 
 const { handleExport } = require('./export');
 
+// Rate limiter for expensive export endpoints (per-user, 5 requests per 10 minutes)
+const EXPORT_RATE_MAX = 5;
+const EXPORT_RATE_WINDOW_MS = 10 * 60_000;
+const exportRateCounts = new Map();
+
+function exportRateLimit(req, res, next) {
+  const email = req.userEmail;
+  const now = Date.now();
+  const entry = exportRateCounts.get(email);
+  if (!entry || now - entry.windowStart >= EXPORT_RATE_WINDOW_MS) {
+    exportRateCounts.set(email, { windowStart: now, count: 1 });
+    return next();
+  }
+  entry.count++;
+  if (entry.count > EXPORT_RATE_MAX) {
+    return res.status(429).json({ error: 'Rate limit exceeded. Try again later.' });
+  }
+  return next();
+}
+
 /**
  * @openapi
  * /api/export/test-data:
@@ -1634,10 +1726,12 @@ const { handleExport } = require('./export');
  *             schema:
  *               type: string
  *               format: binary
+ *       429:
+ *         description: Rate limit exceeded
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-app.get('/api/export/test-data', requireAdmin, requireScope('admin:manage'), function(req, res) {
+app.get('/api/export/test-data', requireAdmin, requireScope('admin:manage'), exportRateLimit, function(req, res) {
   handleExport(req, res, storageModule, builtInModules);
 });
 
@@ -1668,10 +1762,12 @@ const mustGather = require('./must-gather');
  *               type: object
  *       403:
  *         $ref: '#/components/responses/Forbidden'
+ *       429:
+ *         description: Rate limit exceeded
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-app.get('/api/must-gather', requireAdmin, requireScope('admin:manage'), async function(req, res) {
+app.get('/api/must-gather', requireAdmin, requireScope('admin:manage'), exportRateLimit, async function(req, res) {
   try {
     const redact = req.query.redact === 'aggressive' ? 'aggressive' : 'minimal';
     const bundle = await mustGather.collect({
@@ -1960,7 +2056,16 @@ app.options('/api/{*path}', function(req, res) { res.status(200).end(); });
 
 // ─── Start ───
 
+// Warn if AUTH_EMAIL_DOMAIN is set but invalid
+if (process.env.AUTH_EMAIL_DOMAIN) {
+  const envDomain = process.env.AUTH_EMAIL_DOMAIN.trim().toLowerCase();
+  if (!isValidDomain(envDomain)) {
+    console.warn(`WARNING: AUTH_EMAIL_DOMAIN="${process.env.AUTH_EMAIL_DOMAIN}" is not a valid domain name. Role email normalization may not work correctly.`);
+  }
+}
+
 seedRoles();
+roleStore.migrateEmailDomains();
 modulesConfig.seedIfMissing(storageModule);
 
 // Start daily module sync

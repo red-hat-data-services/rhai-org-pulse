@@ -10,6 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:smoke": "playwright test tests/smoke",
+    "test:integration": "playwright test tests/integration",
     "lint": "eslint .",
     "validate:modules": "node scripts/validate-modules.js",
     "validate:openapi": "node scripts/validate-openapi.js",
@@ -35,6 +37,7 @@
   "devDependencies": {
     "@apidevtools/swagger-parser": "^12.1.0",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "1.60.0",
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/test-utils": "^2.4.6",
     "autoprefixer": "^10.4.20",

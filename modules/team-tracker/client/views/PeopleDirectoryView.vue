@@ -126,15 +126,20 @@ const filtered = computed(() => {
   }
 
   list = [...list].sort((a, b) => {
-    let av = a[sortField.value] || ''
-    let bv = b[sortField.value] || ''
-    if (sortField.value === 'orgDisplayName') {
+    let av, bv
+    if (sortField.value.startsWith('_field_')) {
+      const fieldId = sortField.value.slice(7)
+      av = personFieldValue(a, fieldId)
+      bv = personFieldValue(b, fieldId)
+    } else if (sortField.value === 'orgDisplayName') {
       av = a.orgDisplayName || ''
       bv = b.orgDisplayName || ''
-    }
-    if (sortField.value === 'teams') {
+    } else if (sortField.value === 'teams') {
       av = personTeamDisplay(a)
       bv = personTeamDisplay(b)
+    } else {
+      av = a[sortField.value] || ''
+      bv = b[sortField.value] || ''
     }
     const cmp = String(av).localeCompare(String(bv))
     return sortAsc.value ? cmp : -cmp
@@ -142,6 +147,12 @@ const filtered = computed(() => {
 
   return list
 })
+
+function personFieldValue(p, fieldId) {
+  const val = (p._appFields || {})[fieldId]
+  if (Array.isArray(val)) return val.join(', ')
+  return val || ''
+}
 
 function personTeamDisplay(p) {
   if ((p.orgType || 'engineering') === 'auxiliary') {
@@ -170,13 +181,15 @@ function openPerson(uid) {
 
 
 function exportCsv() {
-  const rows = [['Org', 'Name', 'UID', 'Email', 'Title', 'Geo', 'Location', 'Team(s)', 'GitHub', 'GitLab', 'Type']]
+  const fieldLabels = personFieldDefs.value.map(fd => fd.label)
+  const rows = [['Org', 'Name', 'UID', 'Email', 'Title', 'Geo', 'Location', 'Team(s)', 'GitHub', 'GitLab', 'Type', ...fieldLabels]]
   for (const p of filtered.value) {
+    const fieldValues = personFieldDefs.value.map(fd => personFieldValue(p, fd.id))
     rows.push([
       p.orgDisplayName || '', p.name, p.uid, p.email, p.title, p.geo || '',
       p.location || '', personTeamDisplay(p),
       p.github ? p.github.username : '', p.gitlab ? p.gitlab.username : '',
-      p.orgType || 'engineering'
+      p.orgType || 'engineering', ...fieldValues
     ])
   }
   const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\n')
@@ -317,6 +330,12 @@ onMounted(loadData)
                 <th @click="toggleSort('geo')" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 hidden lg:table-cell">Geo{{ sortIcon('geo') }}</th>
                 <th @click="toggleSort('location')" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 hidden lg:table-cell">Location{{ sortIcon('location') }}</th>
                 <th @click="toggleSort('teams')" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 hidden md:table-cell">Team(s){{ sortIcon('teams') }}</th>
+                <th
+                  v-for="fd in personFieldDefs"
+                  :key="fd.id"
+                  @click="toggleSort('_field_' + fd.id)"
+                  class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase cursor-pointer hover:text-gray-700 dark:hover:text-gray-200 hidden lg:table-cell"
+                >{{ fd.label }}{{ sortIcon('_field_' + fd.id) }}</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -340,6 +359,11 @@ onMounted(loadData)
                 <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 hidden lg:table-cell">{{ p.geo }}</td>
                 <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 hidden lg:table-cell">{{ p.location }}</td>
                 <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 hidden md:table-cell">{{ personTeamDisplay(p) || '\u2014' }}</td>
+                <td
+                  v-for="fd in personFieldDefs"
+                  :key="fd.id"
+                  class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 hidden lg:table-cell"
+                >{{ personFieldValue(p, fd.id) }}</td>
               </tr>
             </tbody>
           </table>

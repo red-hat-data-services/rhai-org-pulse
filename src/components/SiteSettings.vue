@@ -19,6 +19,25 @@
             class="w-full max-w-md px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
           />
         </div>
+        <div>
+          <label for="authEmailDomain" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Auth Email Domain
+          </label>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
+            If your OAuth proxy rewrites user emails to a different domain
+            (e.g. cluster.local), set that domain here so role assignments
+            match correctly. Can also be set via AUTH_EMAIL_DOMAIN env var
+            (env var takes precedence).
+          </p>
+          <input
+            id="authEmailDomain"
+            v-model="authEmailDomain"
+            type="text"
+            maxlength="253"
+            placeholder="e.g. cluster.local"
+            class="w-full max-w-md px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          />
+        </div>
         <button
           @click="save"
           :disabled="saving"
@@ -38,12 +57,14 @@ import { getSiteConfig, saveSiteConfig } from '@shared/client/services/api'
 const emit = defineEmits(['toast', 'config-updated'])
 
 const titlePrefix = ref('')
+const authEmailDomain = ref('')
 const saving = ref(false)
 
 onMounted(async () => {
   try {
     const config = await getSiteConfig()
     titlePrefix.value = config.titlePrefix || ''
+    authEmailDomain.value = config.authEmailDomain || ''
   } catch {
     // ignore — defaults to empty
   }
@@ -52,7 +73,10 @@ onMounted(async () => {
 async function save() {
   saving.value = true
   try {
-    await saveSiteConfig({ titlePrefix: titlePrefix.value })
+    await saveSiteConfig({
+      titlePrefix: titlePrefix.value,
+      authEmailDomain: authEmailDomain.value
+    })
     emit('config-updated', { titlePrefix: titlePrefix.value })
     emit('toast', { message: 'Site configuration saved', type: 'success' })
   } catch (err) {
