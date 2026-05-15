@@ -1185,7 +1185,7 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Versions sorted by bug count
    */
-  router.get('/quality/versions', requireAuth, function(req, res) {
+  router.get('/quality/versions', requireAuth, requireScope('release-analysis:read'), function(req, res) {
     try {
       const versions = readFromStorage('release-analysis/quality/versions.json') || []
       const componentFilter = req.query.component || null
@@ -1232,7 +1232,7 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Chart data with labels and datasets
    */
-  router.get('/quality/bugs', requireAuth, function(req, res) {
+  router.get('/quality/bugs', requireAuth, requireScope('release-analysis:read'), function(req, res) {
     try {
       const versions = (req.query.versions || '').split(',').filter(Boolean)
       const component = req.query.component || null
@@ -1272,7 +1272,7 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Components sorted by bug count
    */
-  router.get('/quality/components', requireAuth, function(req, res) {
+  router.get('/quality/components', requireAuth, requireScope('release-analysis:read'), function(req, res) {
     try {
       const allBugs = loadAllBugs()
 
@@ -1306,7 +1306,7 @@ module.exports = function registerRoutes(router, context) {
    *       403:
    *         description: Admin required
    */
-  router.post('/quality/refresh', requireAdmin, async function(req, res) {
+  router.post('/quality/refresh', requireAdmin, requireScope('release-analysis:write'), async function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Refresh disabled in demo mode' })
     }
