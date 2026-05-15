@@ -43,7 +43,7 @@ Core team owns `shared/` via CODEOWNERS. Changes require core team review.
 | `apiRequest(url, options)` | Fetch wrapper with error handling |
 | `cachedRequest(key, fetcher, onData)` | Stale-while-revalidate caching via localStorage |
 | `clearApiCache()` | Clear all cached API data |
-| `getSiteConfig()` | Fetch site configuration (`{ titlePrefix }`) — no cache |
+| `getSiteConfig()` | Fetch site configuration (`{ titlePrefix, authEmailDomain }`) — no cache |
 | `saveSiteConfig(config)` | Save site configuration (admin only) |
 
 ### Components
@@ -64,7 +64,8 @@ Core team owns `shared/` via CODEOWNERS. Changes require core team review.
 | `storage` | `{ readFromStorage, writeToStorage, listStorageFiles, deleteStorageDirectory }` — filesystem-backed JSON storage |
 | `demoStorage` | `{ readFromStorage, writeToStorage, listStorageFiles, deleteStorageDirectory }` — fixture-backed read-only storage for demo mode |
 | `createAuthMiddleware(readFromStorage, writeToStorage, options)` | Factory returning `{ authMiddleware, requireAdmin, requireTeamAdmin, requireScope, isAdmin, seedRoles }`. `requireScope(scopeName)` returns Express middleware that enforces the given scope for token-authenticated requests (browser/proxy auth is unrestricted). Options: `{ tokenValidator, roleStore }` |
-| `createRoleStore(readFromStorage, writeToStorage)` | Factory returning role CRUD: `{ getRoles, hasRole, assignRole, revokeRole, listAssignments, getAdminEmails, migrateFromAllowlist }` |
+| `createRoleStore(readFromStorage, writeToStorage, options?)` | Factory returning role CRUD: `{ getRoles, hasRole, assignRole, revokeRole, listAssignments, getAdminEmails, migrateFromAllowlist, migrateEmailDomains, invalidateCache }`. Options: `{ getAuthDomain }` — function returning the auth email domain string (or null). When set, all email arguments are normalized to this domain before storage/lookup. |
+| `normalizeEmail(email, authDomain)` | Normalize an email's domain to the given auth domain. Returns the email with its domain replaced, or the original if no authDomain. Exported for testing. |
 | `blockDuringImpersonation` | Express middleware that returns 403 during impersonation. Exported from auth.js. |
 | `googleSheets` | `{ getAuth, discoverSheetNames, fetchRawSheet }` — Google Sheets auth and raw data fetching |
 | `roster` | `{ readRosterFull, getAllPeople, getPeopleByOrg, getOrgKeys, getTeamRollup, getOrgDisplayNames }` — shared roster data access |

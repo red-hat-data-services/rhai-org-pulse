@@ -38,6 +38,7 @@ npm run dev:full       # Starts Vite (5173) + Express (3001)
 | `PRODUCT_PAGES_CLIENT_SECRET` | OAuth client secret for Product Pages (production). Used with `PRODUCT_PAGES_CLIENT_ID`. |
 | `PRODUCT_PAGES_TOKEN` | Personal bearer token for Product Pages (local dev fallback). Used when OAuth env vars are not set. |
 | `FEATURE_TRAFFIC_GITLAB_TOKEN` | GitLab PAT with `read_api` scope for feature-traffic pipeline. Overrides `GITLAB_TOKEN` for CI artifact fetching. |
+| `AUTH_EMAIL_DOMAIN` | Override email domain for role matching (e.g. `cluster.local`). When set, role assignments normalize emails to this domain. Env var takes precedence over `authEmailDomain` in site-config.json. |
 | `DEMO_MODE` / `VITE_DEMO_MODE` | Set both to `true` for fixture data (no credentials needed). |
 
 ## Key Concepts
@@ -49,7 +50,7 @@ npm run dev:full       # Starts Vite (5173) + Express (3001)
 - **GitLab contributions**: `data/gitlab-contributions.json` + `data/gitlab-history.json`. Multi-instance support via `gitlabInstances` config.
 - **Snapshots**: `data/snapshots/{sanitized-teamKey}/{YYYY-MM-DD}.json` (teamKey sanitized: `::` → `--`).
 - **Trends**: Built dynamically from person metric files by bucketing resolved issues by month.
-- **Site config**: `data/site-config.json` — platform-level settings (title prefix).
+- **Site config**: `data/site-config.json` — platform-level settings (title prefix, auth email domain).
 - **Composite keys**: Teams = `orgKey::teamName` (e.g., `shgriffi::Model Serving`).
 - **Field options**: `data/team-data/field-options/<name>.json` — named allowed-value sets, referenced by `optionsRef`.
 - **Messages**: `data/messages.json` — admin announcements, merged with computed provider messages.

@@ -15,7 +15,43 @@ function isSafeKey(key) {
   return typeof key === 'string' && !['__proto__', 'constructor', 'prototype'].includes(key);
 }
 
-function createRoleStore(readFromStorage, writeToStorage) {
+/**
+ * Normalize an email to the configured auth domain.
+ * If authDomain is set, replaces the domain portion of the email.
+ * Exported for testing.
+ */
+function normalizeEmail(email, authDomain) {
+  if (!email || !authDomain) return email ? email.trim().toLowerCase() : email;
+  const normalized = email.trim().toLowerCase();
+  const atIdx = normalized.indexOf('@');
+  if (atIdx < 0) return normalized;
+  return normalized.substring(0, atIdx + 1) + authDomain;
+}
+
+function createRoleStore(readFromStorage, writeToStorage, options = {}) {
+  const getAuthDomain = typeof options.getAuthDomain === 'function'
+    ? options.getAuthDomain
+    : () => null;
+
+  // Cache for getAuthDomain result (30s TTL)
+  let _cachedDomain = undefined;
+  let _cachedAt = 0;
+  const CACHE_TTL_MS = 30_000;
+
+  function getCachedAuthDomain() {
+    const now = Date.now();
+    if (_cachedDomain === undefined || now - _cachedAt > CACHE_TTL_MS) {
+      _cachedDomain = getAuthDomain() || null;
+      _cachedAt = now;
+    }
+    return _cachedDomain;
+  }
+
+  function invalidateCache() {
+    _cachedDomain = undefined;
+    _cachedAt = 0;
+  }
+
   function readRoles() {
     return readFromStorage(ROLES_FILE) || { version: 1, assignments: {} };
   }
@@ -26,7 +62,8 @@ function createRoleStore(readFromStorage, writeToStorage) {
 
   function getRoles(email) {
     if (!email) return [];
-    const key = email.toLowerCase();
+    const authDomain = getCachedAuthDomain();
+    const key = normalizeEmail(email, authDomain);
     if (!isSafeKey(key)) return [];
     const data = readRoles();
     const entry = data.assignments[key];
@@ -45,7 +82,8 @@ function createRoleStore(readFromStorage, writeToStorage) {
       return { demo: true, message: 'Demo mode -- changes are not saved' };
     }
 
-    const normalized = email.trim().toLowerCase();
+    const authDomain = getCachedAuthDomain();
+    const normalized = normalizeEmail(email, authDomain);
     if (!isSafeKey(normalized)) throw new Error('Invalid email');
     const data = readRoles();
 
@@ -85,7 +123,8 @@ function createRoleStore(readFromStorage, writeToStorage) {
       return { demo: true, message: 'Demo mode -- changes are not saved' };
     }
 
-    const normalized = email.trim().toLowerCase();
+    const authDomain = getCachedAuthDomain();
+    const normalized = normalizeEmail(email, authDomain);
     if (!isSafeKey(normalized)) throw new Error('Invalid email');
     const data = readRoles();
     const entry = data.assignments[normalized];
@@ -146,20 +185,12 @@ function createRoleStore(readFromStorage, writeToStorage) {
       return false; // Nothing to migrate
     }
 
-    const now = new Date().toISOString();
     for (const email of allowlist.emails) {
-      const normalized = email.trim().toLowerCase();
-      if (!isSafeKey(normalized)) continue;
-      rolesData.assignments[normalized] = {
-        roles: ['admin'],
-        assignedBy: 'migration',
-        assignedAt: now
-      };
+      assignRole(email, 'admin', 'migration');
     }
 
-    writeRoles(rolesData);
-
     // Mark allowlist as migrated
+    const now = new Date().toISOString();
     writeToStorage(ALLOWLIST_FILE, {
       _migrated: 'roles.json',
       _migratedAt: now,
@@ -170,6 +201,55 @@ function createRoleStore(readFromStorage, writeToStorage) {
     return true;
   }
 
+  function migrateEmailDomains() {
+    const authDomain = getAuthDomain();
+    if (!authDomain) return 0;
+
+    const data = readRoles();
+    const oldKeys = Object.keys(data.assignments);
+    const needsMigration = oldKeys.some(email => normalizeEmail(email, authDomain) !== email);
+
+    if (!needsMigration) return 0;
+
+    // Backup before migration
+    const backupKey = `roles-backup-${Date.now()}.json`;
+    writeToStorage(backupKey, JSON.parse(JSON.stringify(data)));
+    console.log(`Roles: backup saved to ${backupKey}`);
+
+    let migrated = 0;
+
+    for (const oldEmail of oldKeys) {
+      const newEmail = normalizeEmail(oldEmail, authDomain);
+      if (newEmail === oldEmail) continue;
+
+      const oldEntry = data.assignments[oldEmail];
+      const existingEntry = data.assignments[newEmail];
+
+      if (existingEntry) {
+        // Merge roles from both entries
+        const mergedRoles = [...new Set([...existingEntry.roles, ...oldEntry.roles])];
+        existingEntry.roles = mergedRoles;
+        // Keep the newer assignedAt
+        if (oldEntry.assignedAt > existingEntry.assignedAt) {
+          existingEntry.assignedBy = oldEntry.assignedBy;
+          existingEntry.assignedAt = oldEntry.assignedAt;
+        }
+      } else {
+        data.assignments[newEmail] = oldEntry;
+      }
+
+      delete data.assignments[oldEmail];
+      migrated++;
+    }
+
+    if (migrated > 0) {
+      writeRoles(data);
+      console.log(`Roles: migrated ${migrated} email(s) to @${authDomain} (backup: ${backupKey})`);
+    }
+
+    return migrated;
+  }
+
   return {
     getRoles,
     hasRole,
@@ -177,8 +257,10 @@ function createRoleStore(readFromStorage, writeToStorage) {
     revokeRole,
     listAssignments,
     getAdminEmails,
-    migrateFromAllowlist
+    migrateFromAllowlist,
+    migrateEmailDomains,
+    invalidateCache
   };
 }
 
-module.exports = { createRoleStore, VALID_ROLES };
+module.exports = { createRoleStore, normalizeEmail, VALID_ROLES };

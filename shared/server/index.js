@@ -6,7 +6,7 @@ const roster = require('./roster')
 const rosterSync = require('./roster-sync')
 const jira = require('./jira')
 const permissions = require('./permissions')
-const { createRoleStore } = require('./role-store')
+const { createRoleStore, normalizeEmail } = require('./role-store')
 
 module.exports = {
   storage,
@@ -14,6 +14,7 @@ module.exports = {
   createAuthMiddleware,
   proxySecretGuard,
   createRoleStore,
+  normalizeEmail,
   googleSheets,
   roster,
   rosterSync,
