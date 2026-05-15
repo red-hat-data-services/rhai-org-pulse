@@ -2,8 +2,11 @@ import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import AutofixContent from '../../client/components/AutofixContent.vue'
 
+// Use relative dates so time-window filtering never ages out of the 30-day window
+const daysAgo = (n) => new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString()
+
 const MOCK_DATA = {
-  fetchedAt: '2026-04-18T12:00:00Z',
+  fetchedAt: daysAgo(0),
   jiraHost: 'https://redhat.atlassian.net',
   metrics: {
     triageTotal: 10,
@@ -15,8 +18,8 @@ const MOCK_DATA = {
     totalIssues: 10
   },
   trendData: [
-    { date: '2026-04-11', triaged: 3, autofixed: 2, merged: 1, total: 3, review: 1, ciFailing: 0, blocked: 0, maxRetries: 0, missingInfo: 1, stale: 0 },
-    { date: '2026-04-18', triaged: 7, autofixed: 4, merged: 1, total: 7, review: 1, ciFailing: 1, blocked: 0, maxRetries: 0, missingInfo: 1, stale: 1 }
+    { date: daysAgo(7).slice(0, 10), triaged: 3, autofixed: 2, merged: 1, total: 3, review: 1, ciFailing: 0, blocked: 0, maxRetries: 0, missingInfo: 1, stale: 0 },
+    { date: daysAgo(0).slice(0, 10), triaged: 7, autofixed: 4, merged: 1, total: 7, review: 1, ciFailing: 1, blocked: 0, maxRetries: 0, missingInfo: 1, stale: 1 }
   ],
   componentBreakdown: [
     { component: 'Model Server', triaged: 5, autofixed: 3, done: 1 },
@@ -28,8 +31,8 @@ const MOCK_DATA = {
       summary: 'Fix null pointer',
       status: 'In Progress',
       priority: 'Major',
-      created: '2026-04-16T10:00:00Z',
-      updated: '2026-04-17T10:00:00Z',
+      created: daysAgo(2),
+      updated: daysAgo(1),
       labels: ['jira-autofix-review'],
       components: ['Model Server'],
       assignee: 'Jane Doe',
@@ -40,8 +43,8 @@ const MOCK_DATA = {
       summary: 'Handle timeout',
       status: 'New',
       priority: 'Normal',
-      created: '2026-04-15T10:00:00Z',
-      updated: '2026-04-15T10:00:00Z',
+      created: daysAgo(3),
+      updated: daysAgo(3),
       labels: ['jira-triage-not-fixable'],
       components: ['Notebooks'],
       assignee: null,

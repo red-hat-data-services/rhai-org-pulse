@@ -300,13 +300,13 @@ function mrLabel(url) {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <div class="absolute left-0 top-6 z-10 hidden group-hover:block w-64 p-3 text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/50">
-                    RHAISTRAT issues in Review with "Product Documentation Required" = Yes. This demand signal is independent of the AI-First tool. Use trend to inspect rising/stable/decreasing for doc demand.
+                    RHAISTRAT issues in Review or Release Pending with "Product Documentation Required" = Yes. This demand signal is independent of the AI-First tool. Use trend to inspect rising/stable/decreasing for doc demand.
                   </div>
                 </div>
               </div>
               <span class="text-lg font-bold text-gray-900 dark:text-gray-100">{{ metrics?.demandCount || 0 }}</span>
             </div>
-            <div class="text-[10px] text-gray-400 dark:text-gray-500 mb-3">issues requiring docs</div>
+            <div class="text-[10px] text-gray-400 dark:text-gray-500 mb-3">demand for docs</div>
             <div class="h-[160px]">
               <Line :data="demandChartData" :options="demandChartOptions" />
             </div>
@@ -328,7 +328,7 @@ function mrLabel(url) {
               </div>
               <span class="text-lg font-bold" :class="(metrics?.coverageRate || 0) > 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-gray-100'">{{ metrics?.coverageRate || 0 }}%</span>
             </div>
-            <div class="text-[10px] text-gray-400 dark:text-gray-500 mb-3">{{ metrics?.coverageCount || 0 }} of {{ metrics?.demandCount || 0 }} with doc MR</div>
+            <div class="text-[10px] text-gray-400 dark:text-gray-500 mb-3">{{ metrics?.coverageCount || 0 }} of {{ metrics?.demandCount || 0 }} features with AI-First doc MR</div>
             <div class="h-[160px]">
               <Line :data="coverageChartData" :options="coverageChartOptions" />
             </div>

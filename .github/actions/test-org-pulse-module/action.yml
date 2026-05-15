@@ -1,0 +1,29 @@
+name: Test Org Pulse Module
+description: Runs integration tests for a specific Org Pulse module
+
+inputs:
+  module:
+    description: 'Module name (e.g., ai-impact)'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Build backend image
+      shell: bash
+      run: make build-backend-image
+      env:
+        CONTAINER_RUNTIME: docker
+
+    - name: Build frontend image
+      shell: bash
+      run: make build-frontend-image
+      env:
+        CONTAINER_RUNTIME: docker
+
+    - name: Run integration tests
+      shell: bash
+      run: make test-module MODULE=$MODULE
+      env:
+        CONTAINER_RUNTIME: docker
+        MODULE: ${{ inputs.module }}

@@ -257,15 +257,18 @@ async function resolveMRLinks(jiraRequest, issues, config) {
 async function fetchDocData(jiraRequest, config) {
   const {
     docProject,
-    docRequiredStatus,
+    docRequiredStatuses,
     docContributedLabel,
     docInvokedLabel
   } = config;
 
   validateJqlSafeString(docProject, 'docProject');
-  validateJqlSafeString(docRequiredStatus, 'docRequiredStatus');
+  for (const s of docRequiredStatuses) {
+    validateJqlSafeString(s, 'docRequiredStatuses entry');
+  }
 
-  const jql = `project = "${docProject}" AND status = "${docRequiredStatus}" AND "Product Documentation Required" = "Yes" ORDER BY created DESC`;
+  const statusClause = docRequiredStatuses.map(s => `"${s}"`).join(', ');
+  const jql = `project = "${docProject}" AND status IN (${statusClause}) AND "Product Documentation Required" = "Yes" ORDER BY created DESC`;
   const fields = 'summary,status,created,updated,labels';
 
   const rawIssues = await fetchAllJqlResults(jiraRequest, jql, fields, { expand: 'changelog' });

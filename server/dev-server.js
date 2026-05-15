@@ -1620,6 +1620,26 @@ app.get('/api/admin/modules/sync/status', requireAdmin, requireScope('admin:mana
 
 const { handleExport } = require('./export');
 
+// Rate limiter for expensive export endpoints (per-user, 5 requests per 10 minutes)
+const EXPORT_RATE_MAX = 5;
+const EXPORT_RATE_WINDOW_MS = 10 * 60_000;
+const exportRateCounts = new Map();
+
+function exportRateLimit(req, res, next) {
+  const email = req.userEmail;
+  const now = Date.now();
+  const entry = exportRateCounts.get(email);
+  if (!entry || now - entry.windowStart >= EXPORT_RATE_WINDOW_MS) {
+    exportRateCounts.set(email, { windowStart: now, count: 1 });
+    return next();
+  }
+  entry.count++;
+  if (entry.count > EXPORT_RATE_MAX) {
+    return res.status(429).json({ error: 'Rate limit exceeded. Try again later.' });
+  }
+  return next();
+}
+
 /**
  * @openapi
  * /api/export/test-data:
@@ -1634,10 +1654,12 @@ const { handleExport } = require('./export');
  *             schema:
  *               type: string
  *               format: binary
+ *       429:
+ *         description: Rate limit exceeded
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-app.get('/api/export/test-data', requireAdmin, requireScope('admin:manage'), function(req, res) {
+app.get('/api/export/test-data', requireAdmin, requireScope('admin:manage'), exportRateLimit, function(req, res) {
   handleExport(req, res, storageModule, builtInModules);
 });
 
@@ -1668,10 +1690,12 @@ const mustGather = require('./must-gather');
  *               type: object
  *       403:
  *         $ref: '#/components/responses/Forbidden'
+ *       429:
+ *         description: Rate limit exceeded
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-app.get('/api/must-gather', requireAdmin, requireScope('admin:manage'), async function(req, res) {
+app.get('/api/must-gather', requireAdmin, requireScope('admin:manage'), exportRateLimit, async function(req, res) {
   try {
     const redact = req.query.redact === 'aggressive' ? 'aggressive' : 'minimal';
     const bundle = await mustGather.collect({

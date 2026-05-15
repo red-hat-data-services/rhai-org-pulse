@@ -85,9 +85,10 @@ Documentation changes must land in the same PR as the code they describe:
 
 ## Testing
 
-- Vitest + @vue/test-utils for frontend tests
-- Vitest for backend unit tests
-- Module manifest validation: `npm run validate:modules`
+- **Unit tests**: Vitest + @vue/test-utils for frontend, Vitest for backend
+- **Smoke tests**: Playwright against production containers (verify app loads)
+- **Integration tests**: Playwright module-specific tests (`make test-module MODULE=<name>`)
+- **Validation**: `npm run validate:modules` for module manifests
 - Run `npm test` before committing
 
 ## Code Review
@@ -100,13 +101,17 @@ checklist, which explicitly enforces the hard constraints above.
 ## Commands
 
 ```bash
-npm run dev:full      # Start Vite (5173) + Express (3001)
-npm run dev           # Vite only
-npm run dev:server    # Express only (needs .env)
-npm test              # Run all tests
-npm run test:watch    # Watch mode
-npm run lint          # Lint check
-npm run validate:modules  # Validate module manifests
+npm run dev:full              # Start Vite (5173) + Express (3001)
+npm run dev                   # Vite only
+npm run dev:server            # Express only (needs .env)
+npm test                      # Run all tests
+npm run test:watch            # Watch mode
+npm run lint                  # Lint check
+npm run validate:modules      # Validate module manifests
+
+# Container-based tests (requires Docker/Podman)
+make smoke-test               # Run smoke tests against containers
+make test-module MODULE=<name>  # Run integration tests for a module
 ```
 
 ## Agent Instruction Files
