@@ -2,12 +2,10 @@
  * Compute cumulative bug count per version vs days since release
  * @param {Array} bugs - Filtered bug objects
  * @param {string[]} versions - Selected version names
- * @param {Object} storage - Storage object to read version release dates
+ * @param {Map} versionReleaseMap - Map of version name to release date string
  * @returns {Object} - { labels: [0, 1, 2, ...], datasets: [{ label, data }, ...] }
  */
-function computeCumulativeBugData(bugs, versions, storage) {
-  const allVersions = storage.readFromStorage('release-analysis/quality/versions.json') || [];
-  const versionReleaseMap = new Map(allVersions.map(v => [v.name, v.releaseDate]));
+function computeCumulativeBugData(bugs, versions, versionReleaseMap) {
 
   const versionBugs = new Map();
 

@@ -1254,7 +1254,10 @@ module.exports = function registerRoutes(router, context) {
         )
       }
 
-      const chartData = computeCumulativeBugData(filteredBugs, versions, storage)
+      const allVersions = readFromStorage('release-analysis/quality/versions.json') || []
+      const versionReleaseMap = new Map(allVersions.map(v => [v.name, v.releaseDate]))
+
+      const chartData = computeCumulativeBugData(filteredBugs, versions, versionReleaseMap)
       res.json(chartData)
     } catch (error) {
       console.error('[release-analysis/quality] Read bugs error:', error)
