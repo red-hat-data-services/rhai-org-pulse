@@ -106,8 +106,8 @@ function handleBlur() {
 }
 
 function getBugCountClass(count) {
-  if (count === 0) return 'text-gray-400';
-  if (count >= 10) return 'text-red-600';
-  return 'text-orange-500';
+  if (count === 0) return 'text-gray-400 dark:text-gray-500';
+  if (count >= 10) return 'text-red-600 dark:text-red-400';
+  return 'text-orange-500 dark:text-orange-400';
 }
 </script>
