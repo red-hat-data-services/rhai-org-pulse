@@ -785,20 +785,6 @@ Blocker/Critical/Major bugs with affected versions, per project. Only bugs creat
 
 ---
 
-## Release Analysis — Quality Components (`data/release-analysis/quality/components.json`)
-
-All unique component names from the tracked projects, sorted alphabetically.
-
-```json
-[
-  "Dashboard",
-  "Data Science Pipelines",
-  "Model Serving"
-]
-```
-
----
-
 ## API Tokens — `data/api-tokens.json`
 
 Stores hashed API tokens for bearer-token authentication. Created on first token creation.
