@@ -267,9 +267,12 @@ import {
   ClipboardList,
   BookOpen,
   Database,
+  GitCompareArrows,
+  HeartPulse,
   History,
   Hospital,
   LayoutDashboard,
+  Microscope,
   Rocket
 } from 'lucide-vue-next'
 import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
@@ -318,7 +321,10 @@ const ICON_MAP = {
   History,
   Hospital,
   'hospital': Hospital,
+  GitCompareArrows,
+  HeartPulse,
   LayoutDashboard,
+  Microscope,
   Rocket,
   'rocket': Rocket
 }

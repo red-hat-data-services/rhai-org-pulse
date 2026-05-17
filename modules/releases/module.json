@@ -13,6 +13,7 @@
       { "id": "execute", "label": "Execute", "icon": "GitBranch" },
       { "id": "deliver", "label": "Deliver", "icon": "Rocket" },
       { "id": "reports", "label": "Reports", "icon": "BarChart3" },
+      { "id": "tv-fv-delta", "label": "TV/FV Delta", "icon": "GitCompareArrows" },
       { "id": "audit", "label": "Audit", "icon": "History", "requireRole": "release-manager" }
     ],
     "settingsComponent": "./client/components/ReleasesSettings.vue",
