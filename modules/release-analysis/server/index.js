@@ -1156,7 +1156,7 @@ module.exports = function registerRoutes(router, context) {
 
   // --- Quality (Post-Release Defects) routes ---
 
-  const { fetchVersions: fetchQualityVersions, fetchBugs, getComponents: getQualityComponents } = require('./quality/data-fetcher.js')
+  const { fetchVersions: fetchQualityVersions, fetchBugs } = require('./quality/data-fetcher.js')
   const { computeCumulativeBugData } = require('./quality/calculations.js')
 
   const QUALITY_PROJECTS = ['RHOAIENG', 'AIPCC', 'RHAIENG', 'INFERENG']
@@ -1321,9 +1321,6 @@ module.exports = function registerRoutes(router, context) {
         const bugs = await fetchBugs(project, versions)
         writeToStorage(`release-analysis/quality/bugs-${project}.json`, bugs)
       }
-
-      const components = await getQualityComponents(QUALITY_PROJECTS)
-      writeToStorage('release-analysis/quality/components.json', components)
 
       res.json({ success: true, fetchedAt: new Date().toISOString() })
     } catch (error) {

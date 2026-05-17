@@ -61,7 +61,7 @@
             <tr v-for="(dataset, i) in chartData.datasets" :key="i" class="border-b dark:border-gray-700">
               <td class="py-2">{{ dataset.label }}</td>
               <td class="text-right">{{ dataset.data.length > 0 ? dataset.data[dataset.data.length - 1] : 0 }}</td>
-              <td class="text-right">{{ chartData.labels.length > 0 ? chartData.labels.length - 1 : 0 }}</td>
+              <td class="text-right">{{ getMaxDaysForVersion(dataset.data) }}</td>
             </tr>
           </tbody>
         </table>
@@ -174,5 +174,17 @@ async function handleRefresh() {
   } finally {
     refreshing.value = false;
   }
+}
+
+function getMaxDaysForVersion(data) {
+  if (data.length === 0) return 0;
+  const finalCount = data[data.length - 1];
+  // Find the last index where count reached its final value
+  for (let i = data.length - 1; i >= 0; i--) {
+    if (data[i] < finalCount) {
+      return i + 1; // Return the day index where it reached final count
+    }
+  }
+  return 0; // All zeros or count reached on day 0
 }
 </script>
