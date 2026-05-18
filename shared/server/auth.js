@@ -105,7 +105,8 @@ function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
       }
     }
     req.isTeamAdmin = roleStore ? roleStore.hasRole(req.userEmail, 'team-admin') : false;
-    req.permissionTier = getPermissionTier(req.userUid, registry, req.isAdmin, req.isTeamAdmin);
+    req.isReleaseManager = roleStore ? roleStore.hasRole(req.userEmail, 'release-manager') : false;
+    req.permissionTier = getPermissionTier(req.userUid, registry, req.isAdmin, req.isTeamAdmin, req.isReleaseManager);
   }
 
   function applyImpersonation(req, res) {
@@ -137,7 +138,8 @@ function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
     req.userUid = impersonateUid;
     req.isAdmin = isAdmin(req.userEmail);
     req.isTeamAdmin = roleStore ? roleStore.hasRole(req.userEmail, 'team-admin') : false;
-    req.permissionTier = getPermissionTier(req.userUid, registry, req.isAdmin, req.isTeamAdmin);
+    req.isReleaseManager = roleStore ? roleStore.hasRole(req.userEmail, 'release-manager') : false;
+    req.permissionTier = getPermissionTier(req.userUid, registry, req.isAdmin, req.isTeamAdmin, req.isReleaseManager);
     req.isImpersonating = true;
     req.impersonatedDisplayName = target.name || null;
 
@@ -218,6 +220,13 @@ function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
     next()
   }
 
+  function requireReleaseManager(req, res, next) {
+    if (!req.isAdmin && !req.isReleaseManager) {
+      return res.status(403).json({ error: 'Release manager access required.' });
+    }
+    next();
+  }
+
   function requireScope(scope) {
     return function(req, res, next) {
       // Only enforce scopes for token auth
@@ -241,7 +250,7 @@ function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
     };
   }
 
-  return { authMiddleware, requireAdmin, requireTeamAdmin, requireScope, isAdmin, seedRoles }
+  return { authMiddleware, requireAdmin, requireTeamAdmin, requireReleaseManager, requireScope, isAdmin, seedRoles }
 }
 
 let _emptySecretWarned = false;

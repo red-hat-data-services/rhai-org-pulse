@@ -6,8 +6,8 @@ Replace the current `PRODUCT_PAGES_TOKEN` bearer token auth with OAuth2 client c
 
 ## Current State
 
-- `fetchOpenReleases()` in `modules/release-analysis/server/index.js` fetches from a user-supplied URL (`productPagesReleasesUrl` config field) with an optional `PRODUCT_PAGES_TOKEN` bearer token.
-- Config fields live in `modules/release-analysis/server/config.js` with env var overrides.
+- `fetchOpenReleases()` in `modules/releases/server/delivery/index.js` fetches from a user-supplied URL (`productPagesReleasesUrl` config field) with an optional `PRODUCT_PAGES_TOKEN` bearer token.
+- Config fields live in `modules/releases/server/delivery/config.js` with env var overrides.
 - Settings UI (`client/components/ReleaseAnalysisSettings.vue`) has a raw "Releases URL" text input and a note about the env var.
 
 ## Product Pages API Findings
@@ -77,7 +77,7 @@ If neither is configured, Product Pages fetching is skipped (existing fallback-t
 
 ## Implementation Plan
 
-### 1. New file: `modules/release-analysis/server/product-pages.js`
+### 1. New file: `modules/releases/server/delivery/product-pages.js`
 
 OAuth token management and Product Pages API client, extracted from `fetchOpenReleases()`.
 
@@ -106,7 +106,7 @@ Alternative approach considered: a single request with `phase__in=200,350,400` r
 
 **`fetchAllProducts()`**: Fetches `/api/v7/products/`, returns `[{ shortname, name }]` for UI autocomplete. Cache for 1 hour in memory (product list changes infrequently).
 
-### 2. Config changes: `modules/release-analysis/server/config.js`
+### 2. Config changes: `modules/releases/server/delivery/config.js`
 
 Add new config fields to `DEFAULT_CONFIG`:
 
@@ -168,7 +168,7 @@ if (config.productPagesTokenUrl !== undefined) {
 
 `productPagesBaseUrl` and `productPagesTokenUrl` are editable via the Settings UI (under an "Advanced / URLs" collapsible section) to support teams with non-standard SSO or Product Pages instances. The defaults will work for the standard Red Hat setup.
 
-### 3. Update `fetchOpenReleases()` in `modules/release-analysis/server/index.js`
+### 3. Update `fetchOpenReleases()` in `modules/releases/server/delivery/index.js`
 
 Replace the inline fetch logic with a call to the new `product-pages.js` module:
 
@@ -179,7 +179,7 @@ async function fetchOpenReleases(storage, config) {
   // New path: product shortnames configured
   if (config.productPagesProductShortnames?.length) {
     const releases = await fetchProductsByShortname(config.productPagesProductShortnames, config)
-    storage.writeToStorage('release-analysis/product-pages-releases-cache.json', {
+    storage.writeToStorage('releases/delivery/product-pages-releases-cache.json', {
       source: 'api',
       fetchedAt: new Date().toISOString(),
       releases
@@ -202,7 +202,7 @@ async function fetchOpenReleases(storage, config) {
 Add to the module's router in `server/index.js`:
 
 ```
-GET /api/modules/release-analysis/product-pages/products
+GET /api/modules/releases/delivery/product-pages/products
 ```
 
 Returns the list of products from Product Pages (cached 1 hour in memory). Requires admin auth. Used by the Settings UI for the product shortname selector. When no auth is configured (no OAuth credentials and no personal token), returns `{ products: [], authStatus: 'none' }` so the UI can show an empty product list with a message like "Configure Product Pages credentials to browse available products. You can still type shortnames manually."
@@ -257,9 +257,9 @@ Note: `PRODUCT_PAGES_TOKEN` is a local-dev-only env var (set via `.env`). It is 
 
 ### 7. Documentation updates
 
-- Update `CLAUDE.md`: Add `PRODUCT_PAGES_CLIENT_ID`, `PRODUCT_PAGES_CLIENT_SECRET`, and `PRODUCT_PAGES_TOKEN` to the Optional Environment Variables table. Note the dual-mode auth (OAuth vs personal token). Add `GET /api/modules/release-analysis/product-pages/products` to the API Routes section.
+- Update `CLAUDE.md`: Add `PRODUCT_PAGES_CLIENT_ID`, `PRODUCT_PAGES_CLIENT_SECRET`, and `PRODUCT_PAGES_TOKEN` to the Optional Environment Variables table. Note the dual-mode auth (OAuth vs personal token). Add `GET /api/modules/releases/delivery/product-pages/products` to the API Routes section.
 - Update `deploy/OPENSHIFT.md`: Add the new secret fields.
-- Update `docs/DATA-FORMATS.md`: Document new config fields in the `release-analysis/config.json` schema:
+- Update `docs/DATA-FORMATS.md`: Document new config fields in the `releases/delivery/config.json` schema:
   - `productPagesProductShortnames: string[]` — Product Pages product shortnames to track
   - `productPagesBaseUrl: string` — Product Pages base URL (default: `https://productpages.redhat.com`)
   - `productPagesTokenUrl: string` — SSO token endpoint URL (default: `https://auth.redhat.com/auth/realms/EmployeeIDP/protocol/openid-connect/token`)
@@ -290,10 +290,10 @@ The `fetchAllProducts()` function (for the settings UI autocomplete) should also
 
 | File | Change |
 |------|--------|
-| `modules/release-analysis/server/product-pages.js` | **NEW** — OAuth token manager + Product Pages API client |
-| `modules/release-analysis/server/index.js` | Refactor `fetchOpenReleases()` to use new module; add `/product-pages/products` route |
-| `modules/release-analysis/server/config.js` | Add `productPagesProductShortnames`, `productPagesBaseUrl`, `productPagesTokenUrl` fields + env var overrides + validation |
-| `modules/release-analysis/client/components/ReleaseAnalysisSettings.vue` | Product selector UI, auth status badge, deprecate raw URL field |
+| `modules/releases/server/delivery/product-pages.js` | **NEW** — OAuth token manager + Product Pages API client |
+| `modules/releases/server/delivery/index.js` | Refactor `fetchOpenReleases()` to use new module; add `/product-pages/products` route |
+| `modules/releases/server/delivery/config.js` | Add `productPagesProductShortnames`, `productPagesBaseUrl`, `productPagesTokenUrl` fields + env var overrides + validation |
+| `modules/releases/client/deliver/components/ReleaseAnalysisSettings.vue` | Product selector UI, auth status badge, deprecate raw URL field |
 | `deploy/openshift/base/backend-deployment.yaml` | Mount new env vars from secret (`optional: true`) |
 | `.env.example` | Add commented-out Product Pages env vars |
 | `CLAUDE.md` | Document new env vars |

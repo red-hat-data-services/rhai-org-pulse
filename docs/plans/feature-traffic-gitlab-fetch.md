@@ -25,19 +25,19 @@ Replace the git-static dependency with a backend service that directly fetches a
                         ▼
 ┌──────────────────────────────────────────────────────┐
 │  feature-traffic module server                       │
-│  modules/feature-traffic/server/                     │
+│  modules/releases/server/execution/                     │
 │                                                      │
 │  gitlab-fetch.js ─── fetches & extracts artifacts    │
 │  scheduler.js   ─── twice-daily + manual trigger     │
 │  index.js       ─── API routes (unchanged contract)  │
 │                                                      │
-│  Reads config from: data/feature-traffic/config.json │
-│  Writes data to:    data/feature-traffic/            │
+│  Reads config from: data/releases/execution/config.json │
+│  Writes data to:    data/releases/execution/            │
 └───────────────────────┬──────────────────────────────┘
                         │ storage.readFromStorage()
                         ▼
 ┌──────────────────────────────────────────────────────┐
-│  data/feature-traffic/                               │
+│  data/releases/execution/                               │
 │    index.json                                        │
 │    features/RHAISTRAT-1.json                         │
 │    features/RHAISTRAT-2.json                         │
@@ -51,21 +51,21 @@ Replace the git-static dependency with a backend service that directly fetches a
 1. **Scheduler** triggers fetch on a configurable interval (default: every 12 hours, relative to process start — not at specific clock times) or manual via API/Settings UI. The daily cronjob at 06:00 UTC provides a consistent anchor point regardless of when the process started.
 2. **gitlab-fetch.js** calls the GitLab Jobs API to download the latest successful artifact archive from the configured branch
 3. The zip is extracted in-memory using `adm-zip`. Each entry is JSON-parsed; non-JSON entries and parse failures are skipped with warnings.
-4. All parsed files are staged in-memory first. If critical files (at minimum `index.json`) are present, feature files are written to `data/feature-traffic/` first, then `index.json` last (atomic write ordering).
-5. A `data/feature-traffic/last-fetch.json` metadata file is written with timestamp, status, and pipeline info
-6. **Existing API routes** in `index.js` are updated to read from `data/feature-traffic/` instead of `data/modules/feature-traffic-data/latest/`
+4. All parsed files are staged in-memory first. If critical files (at minimum `index.json`) are present, feature files are written to `data/releases/execution/` first, then `index.json` last (atomic write ordering).
+5. A `data/releases/execution/last-fetch.json` metadata file is written with timestamp, status, and pipeline info
+6. **Existing API routes** in `index.js` are updated to read from `data/releases/execution/` instead of `data/modules/feature-traffic-data/latest/`
 7. **Frontend** is unchanged — same API contract, same composables, same views
 
 ## Files to Create/Modify
 
 | File | Action | Description |
 |------|--------|-------------|
-| `modules/feature-traffic/server/gitlab-fetch.js` | **Create** | GitLab Jobs API client: downloads artifact zip, extracts, writes to storage |
-| `modules/feature-traffic/server/scheduler.js` | **Create** | Twice-daily scheduler + manual trigger, sync lock, status tracking |
-| `modules/feature-traffic/server/index.js` | **Modify** | Update `DATA_PREFIX` to `feature-traffic`, add config/status/refresh routes, initialize scheduler |
-| `modules/feature-traffic/server/export.js` | **Create** | Export hook for "download test data" anonymization |
-| `modules/feature-traffic/client/components/FeatureTrafficSettings.vue` | **Create** | Settings UI for GitLab project, job name, branch, artifact path, refresh interval |
-| `modules/feature-traffic/module.json` | **Modify** | Add `client.settingsComponent` and `export` block (see module.json changes below) |
+| `modules/releases/server/execution/gitlab-fetch.js` | **Create** | GitLab Jobs API client: downloads artifact zip, extracts, writes to storage |
+| `modules/releases/server/execution/scheduler.js` | **Create** | Twice-daily scheduler + manual trigger, sync lock, status tracking |
+| `modules/releases/server/execution/index.js` | **Modify** | Update `DATA_PREFIX` to `feature-traffic`, add config/status/refresh routes, initialize scheduler |
+| `modules/releases/server/execution/export.js` | **Create** | Export hook for "download test data" anonymization |
+| `modules/releases/client/execute/components/FeatureTrafficSettings.vue` | **Create** | Settings UI for GitLab project, job name, branch, artifact path, refresh interval |
+| `modules/releases/module.json` | **Modify** | Add `client.settingsComponent` and `export` block (see module.json changes below) |
 | `deploy/openshift/base/backend-deployment.yaml` | **Modify** | Add `FEATURE_TRAFFIC_GITLAB_TOKEN` env var (optional secretKeyRef from `team-tracker-secrets`) |
 | `deploy/openshift/overlays/prod/cronjob-sync-refresh.yaml` | **Modify** | Add feature-traffic refresh step to daily cronjob |
 | `deploy/OPENSHIFT.md` | **Modify** | Document new `FEATURE_TRAFFIC_GITLAB_TOKEN` secret key |
@@ -77,18 +77,18 @@ Replace the git-static dependency with a backend service that directly fetches a
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/modules/feature-traffic/features` | List features with filters (status, version, health, sort) |
-| GET | `/api/modules/feature-traffic/features/:key` | Full feature detail |
-| GET | `/api/modules/feature-traffic/versions` | Unique fix versions |
-| GET | `/api/modules/feature-traffic/status` | Data freshness and sync info |
+| GET | `/api/modules/releases/execution/features` | List features with filters (status, version, health, sort) |
+| GET | `/api/modules/releases/execution/features/:key` | Full feature detail |
+| GET | `/api/modules/releases/execution/versions` | Unique fix versions |
+| GET | `/api/modules/releases/execution/status` | Data freshness and sync info |
 
 ### New Routes
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| POST | `/api/modules/feature-traffic/refresh` | Admin | Trigger manual data refresh from GitLab CI |
-| GET | `/api/modules/feature-traffic/config` | Admin | Get current fetch configuration |
-| POST | `/api/modules/feature-traffic/config` | Admin | Save fetch configuration (triggers immediate fetch if newly enabled) |
+| POST | `/api/modules/releases/execution/refresh` | Admin | Trigger manual data refresh from GitLab CI |
+| GET | `/api/modules/releases/execution/config` | Admin | Get current fetch configuration |
+| POST | `/api/modules/releases/execution/config` | Admin | Save fetch configuration (triggers immediate fetch if newly enabled) |
 
 All admin routes use `context.requireAdmin` middleware (provided via module context from `dev-server.js`):
 ```javascript
@@ -129,7 +129,7 @@ The existing `/status` route response will be enhanced:
 
 **Token resolution order**: `process.env.FEATURE_TRAFFIC_GITLAB_TOKEN || process.env.GITLAB_TOKEN`. In most environments, `GITLAB_TOKEN` (already configured for GitLab contribution stats) will work since both need `read_api` scope on the same gitlab.com instance. The dedicated `FEATURE_TRAFFIC_GITLAB_TOKEN` env var exists as an override for cases where the pipeline project requires a different account or token (e.g., the project is in a group the contributions token doesn't have access to). In practice, most deployments will only need `GITLAB_TOKEN` and won't set `FEATURE_TRAFFIC_GITLAB_TOKEN` at all. The Settings UI status will show which token source is active (`"tokenSource": "FEATURE_TRAFFIC_GITLAB_TOKEN"` or `"tokenSource": "GITLAB_TOKEN"` or `null`).
 
-### Settings UI Config (stored in `data/feature-traffic/config.json`)
+### Settings UI Config (stored in `data/releases/execution/config.json`)
 
 Follows the `data/{module-slug}/config.json` convention used by other modules (`ai-impact/config.json`, `org-roster/config.json`, etc.).
 
@@ -146,7 +146,7 @@ const DEFAULT_CONFIG = {
 };
 ```
 
-**Startup behavior**: On server start, config is loaded via `{ ...DEFAULT_CONFIG, ...storage.readFromStorage('feature-traffic/config.json') }` (merge-with-defaults pattern from `ai-impact/config.js`). If no config file exists, defaults are used. The scheduler only starts if `enabled: true` AND a token is available. This means a fresh deployment does nothing until an admin visits Settings, reviews the defaults, and enables the module — which triggers the immediate first fetch.
+**Startup behavior**: On server start, config is loaded via `{ ...DEFAULT_CONFIG, ...storage.readFromStorage('releases/execution/config.json') }` (merge-with-defaults pattern from `ai-impact/config.js`). If no config file exists, defaults are used. The scheduler only starts if `enabled: true` AND a token is available. This means a fresh deployment does nothing until an admin visits Settings, reviews the defaults, and enables the module — which triggers the immediate first fetch.
 
 ### Settings UI Component
 
@@ -165,7 +165,7 @@ Follows the pattern established by `OrgRosterSettings.vue`.
 Follows the pattern from `shared/server/roster-sync/index.js`:
 
 ```javascript
-// modules/feature-traffic/server/scheduler.js
+// modules/releases/server/execution/scheduler.js
 
 let fetchInProgress = false;
 let schedulerTimer = null;
@@ -197,7 +197,7 @@ async function runFetch(storage) {
 Key behaviors:
 - **12-hour interval** (default), configurable via Settings. Runs relative to process start time, not at specific clock times. The daily cronjob provides the consistent anchor.
 - **Immediate fetch on first config save**: When config is saved for the first time (or re-enabled after being disabled), trigger an immediate fetch rather than waiting for the first interval tick. This avoids the "configured it, but no data for 12 hours" problem.
-- **Manual trigger** via POST `/api/modules/feature-traffic/refresh`
+- **Manual trigger** via POST `/api/modules/releases/execution/refresh`
 - **Mutex lock** prevents concurrent fetches
 - **Cooldown on manual refresh**: After a successful fetch, subsequent manual refresh requests within 5 minutes return `{ status: 'cooldown', retryAfter: <seconds> }` (HTTP 429). This prevents rapid sequential requests from hammering the GitLab API. The mutex alone prevents concurrent fetches but not rapid sequential ones.
 - **Scheduler restarts** when config changes (interval updated via Settings)
@@ -222,7 +222,7 @@ This endpoint returns a zip archive of the job's artifacts.
 - Strip the configured artifact path prefix (e.g., `output/`) when writing to storage
 - **JSON parsing**: Each extracted file must be parsed with `JSON.parse()` before passing to `storage.writeToStorage(key, data)`, which expects a JS object (it calls `JSON.stringify` internally). Files that fail JSON parsing are logged as warnings and skipped — a single malformed file does not abort the entire extraction. Only `.json` files are processed; non-JSON entries in the zip are ignored.
 - Project path is URL-encoded at fetch time via `encodeURIComponent` (the `/` chars in `redhat/rhel-ai/agentic-ci/feature-traffic` must be encoded)
-- **Atomic write strategy**: To prevent a crash mid-extraction from leaving `data/feature-traffic/` in a corrupted state (new `index.json` referencing old feature files), use a staging approach:
+- **Atomic write strategy**: To prevent a crash mid-extraction from leaving `data/releases/execution/` in a corrupted state (new `index.json` referencing old feature files), use a staging approach:
   1. Extract and parse all files in-memory first (into a `Map<path, object>`)
   2. If all critical files are present and valid (at minimum `index.json`), write feature files first, then write `index.json` last
   3. This ensures `index.json` never references features that haven't been written yet
@@ -256,8 +256,8 @@ When running locally without a GitLab token:
 
 The existing "Download Test Data" system handles demo mode. The module will:
 
-1. **Add an export hook** (`modules/feature-traffic/server/export.js`) that:
-   - Reads data from `data/feature-traffic/`
+1. **Add an export hook** (`modules/releases/server/execution/export.js`) that:
+   - Reads data from `data/releases/execution/`
    - Anonymizes Jira issue keys and summaries using the mapping object
    - Anonymizes person names/account IDs in feature data
    - Writes anonymized files via `addFile()`
@@ -271,8 +271,8 @@ The existing "Download Test Data" system handles demo mode. The module will:
      "export": {
        "customHandler": true,
        "files": [
-         { "path": "feature-traffic/index.json", "notes": "Feature index with summary metrics" },
-         { "path": "feature-traffic/features/*.json", "notes": "Per-feature detail files" }
+         { "path": "releases/execution/index.json", "notes": "Feature index with summary metrics" },
+         { "path": "releases/execution/features/*.json", "notes": "Per-feature detail files" }
        ]
      }
    }
@@ -295,9 +295,9 @@ The feature data contains Jira-sourced fields that need anonymization:
 | Concern | Resolution |
 |---------|------------|
 | API routes | **No change** — same paths, same response shapes for `/features`, `/features/:key`, `/versions` |
-| `/status` response | New fields added (`lastFetch`, `nextScheduledFetch`, `configured`, `staleWarning`). `dataSource` value changes from `'git-static module: feature-traffic-data'` to `'gitlab-ci (...)'`. **Verified safe**: no frontend code references `dataSource` (grep confirms zero matches in `modules/feature-traffic/client/`). Adding new fields is non-breaking. |
+| `/status` response | New fields added (`lastFetch`, `nextScheduledFetch`, `configured`, `staleWarning`). `dataSource` value changes from `'git-static module: feature-traffic-data'` to `'gitlab-ci (...)'`. **Verified safe**: no frontend code references `dataSource` (grep confirms zero matches in `modules/releases/client/execute/`). Adding new fields is non-breaking. |
 | Frontend | **No change** — same composables, same views. The frontend uses `fetchedAt`, `features`, `featureCount` from the `/features` endpoint and does not consume `/status` at all. |
-| Data location | Changes from `data/modules/feature-traffic-data/latest/` to `data/feature-traffic/`. Uses the `data/{module-slug}/` convention established by newer modules (`data/org-roster/`, `data/ai-impact/`, `data/release-analysis/`). The `data/modules/` prefix is exclusively for git-static clones and is being phased out. |
+| Data location | Changes from `data/modules/feature-traffic-data/latest/` to `data/releases/execution/`. Uses the `data/{module-slug}/` convention established by newer modules (`data/org-roster/`, `data/ai-impact/`, `data/release-analysis/`). The `data/modules/` prefix is exclusively for git-static clones and is being phased out. |
 | Old data cleanup | On existing deployments, stale data at `data/modules/feature-traffic-data/` will remain on the PVC. This is harmless but wastes space. Document in deployment notes that admins can safely `rm -rf data/modules/feature-traffic-data/` after upgrading. |
 | git-static registration | Module no longer needs git-static config. Any existing `modules-state.json` entry for `feature-traffic-data` becomes orphaned but harmless. |
 | Module manifest | `requires: []` stays empty — no dependency on git-static |
@@ -318,7 +318,7 @@ The feature data contains Jira-sourced fields that need anonymization:
    ```sh
    # Step: Trigger Feature Traffic refresh
    echo "=== Triggering Feature Traffic refresh ==="
-   curl -sf -X POST "$BACKEND/api/modules/feature-traffic/refresh" \
+   curl -sf -X POST "$BACKEND/api/modules/releases/execution/refresh" \
      -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" || echo "Feature Traffic refresh skipped"
    ```
 4. **`.env.example`**: Add `FEATURE_TRAFFIC_GITLAB_TOKEN` with a comment explaining it's optional and what scope is needed
@@ -341,10 +341,10 @@ Alternative: If we want to avoid a new dependency, we could shell out to `unzip`
 
 | Test | Location | Description |
 |------|----------|-------------|
-| gitlab-fetch unit tests | `modules/feature-traffic/__tests__/server/gitlab-fetch.test.js` | Mock GitLab API responses, test zip extraction, error handling |
-| scheduler unit tests | `modules/feature-traffic/__tests__/server/scheduler.test.js` | Test interval scheduling, mutex, config reload |
-| route tests | `modules/feature-traffic/__tests__/server/routes.test.js` | Test new config/refresh routes, auth requirements |
-| export hook tests | `modules/feature-traffic/__tests__/server/export.test.js` | Test anonymization of feature data |
+| gitlab-fetch unit tests | `modules/releases/__tests__/server/gitlab-fetch.test.js` | Mock GitLab API responses, test zip extraction, error handling |
+| scheduler unit tests | `modules/releases/__tests__/server/scheduler.test.js` | Test interval scheduling, mutex, config reload |
+| route tests | `modules/releases/__tests__/server/routes.test.js` | Test new config/refresh routes, auth requirements |
+| export hook tests | `modules/releases/__tests__/server/export.test.js` | Test anonymization of feature data |
 
 ## Implementation Phases
 
@@ -395,8 +395,8 @@ All concerns from review rounds have been addressed:
 | 4 | Node 22 has no built-in zip support | Corrected — `node:zlib` is gzip/deflate only, `adm-zip` is required |
 | 5 | Justify separate token env var | Token fallback: `FEATURE_TRAFFIC_GITLAB_TOKEN \|\| GITLAB_TOKEN`. Most deployments reuse existing token. |
 | 6 | `setInterval` doesn't run at specific times | Description corrected to interval-based. Cronjob provides consistent anchor. |
-| 7 | Data path convention | Uses `data/feature-traffic/` matching newer module convention (`org-roster/`, `ai-impact/`, etc.) |
-| 8 | Config path and startup behavior | Uses `data/feature-traffic/config.json` with DEFAULT_CONFIG merge. Disabled by default until admin enables. |
+| 7 | Data path convention | Uses `data/releases/execution/` matching newer module convention (`org-roster/`, `ai-impact/`, etc.) |
+| 8 | Config path and startup behavior | Uses `data/releases/execution/config.json` with DEFAULT_CONFIG merge. Disabled by default until admin enables. |
 | 9 | Status route shape changes | Verified: no frontend code references `dataSource`. Adding fields is non-breaking. |
 | 10 | Old data cleanup | Documented: admins can safely delete `data/modules/feature-traffic-data/` |
 | 11 | Memory usage of zip extraction | Estimated 5-20 MB in-memory, well within container limits |

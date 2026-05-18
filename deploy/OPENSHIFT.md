@@ -41,8 +41,8 @@ oc patch secret team-tracker-secrets \
   --type merge \
   -p "{\"stringData\":{\"GITLAB_TOKEN\":\"$(tr -d '\n' < ~/.your-gitlab-token)\"}}"
 
-# Optional: Feature Traffic GitLab token (for CI artifact fetching)
-# Only needed if the feature-traffic pipeline project requires a different token than GITLAB_TOKEN
+# Optional: Releases Execution GitLab token (for CI artifact fetching)
+# Only needed if the execution pipeline project requires a different token than GITLAB_TOKEN
 # Use a PAT with read_api scope
 oc patch secret team-tracker-secrets \
   -n team-tracker \
@@ -59,7 +59,7 @@ oc create secret generic google-sa-key \
   -n team-tracker \
   --from-file=google-sa-key.json=./secrets/google-sa-key.json
 
-# Optional: SmartSheet API token (for release-planning module -- release discovery)
+# Optional: SmartSheet API token (for releases module -- release discovery)
 # Generate a token at: My Account > Personal Settings > API Access > Generate New Access Token
 oc patch secret team-tracker-secrets \
   -n team-tracker \

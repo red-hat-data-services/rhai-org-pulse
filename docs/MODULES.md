@@ -123,10 +123,10 @@ import { useModuleLink } from '@shared/client/composables/useModuleLink.js'
 const { navigateTo: crossNavigate } = useModuleLink()
 
 // Navigate to another module's view
-crossNavigate('feature-traffic', 'feature-detail', { key: 'RHAISTRAT-123' })
+crossNavigate('releases', 'feature-detail', { key: 'RHAISTRAT-123' })
 ```
 
-This produces a hash URL like `#/feature-traffic/feature-detail?key=RHAISTRAT-123` and updates `window.location.hash`. Use intra-module `moduleNav.navigateTo()` for navigation within your own module.
+This produces a hash URL like `#/releases/feature-detail?key=RHAISTRAT-123` and updates `window.location.hash`. Use intra-module `moduleNav.navigateTo()` for navigation within your own module.
 
 ## Backend Entry (`server/index.js`)
 

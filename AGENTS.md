@@ -44,17 +44,18 @@ If something requires significant computation — complex aggregations across
 hundreds of Jira issues, ML scoring, data enrichment, bulk cross-referencing —
 it belongs in an external process (CI pipeline, GitLab job, scheduled task)
 that pushes pre-computed results into the app. The app backend should do
-lightweight fetching, caching, and serving. Feature Traffic and AI Impact
-assessments are good examples of this pattern: external pipelines push data
-via the bulk API endpoints.
+lightweight fetching, caching, and serving. The releases module's execution
+pipeline (GitLab CI artifact fetch) and AI Impact assessments are good
+examples of this pattern: external pipelines push data via the bulk API
+endpoints.
 
 ### 4. New pages go in existing modules when the domain overlaps
 
 Only create a new module when it has a genuinely distinct domain with no
 conceptual home in an existing module. If a feature is a new way to look at
 data that relates to an existing module's purpose, add it as a view there.
-Current modules: ai-impact, feature-traffic, release-analysis, release-planning,
-system-health, team-tracker, upstream-pulse.
+Current modules: ai-impact, releases, system-health, team-tracker,
+upstream-pulse.
 
 ### 5. No TypeScript
 

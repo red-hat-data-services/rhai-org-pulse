@@ -1,8 +1,7 @@
 {
   "upstream-pulse": true,
   "ai-impact": true,
-  "org-roster": true,
-  "release-analysis": true,
+  "releases": true,
   "team-tracker": true,
-  "feature-traffic": true
+  "system-health": true
 }

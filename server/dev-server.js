@@ -116,7 +116,7 @@ const roleStore = createRoleStore(readFromStorage, writeToStorage, {
     return config?.authEmailDomain || null;
   }
 });
-const { authMiddleware, requireAdmin, requireTeamAdmin, requireScope, seedRoles } = createAuthMiddleware(readFromStorage, writeToStorage, {
+const { authMiddleware, requireAdmin, requireTeamAdmin, requireReleaseManager, requireScope, seedRoles } = createAuthMiddleware(readFromStorage, writeToStorage, {
   tokenValidator: apiTokens,
   roleStore
 });
@@ -619,14 +619,10 @@ app.get('/api/token-scopes', function(req, res) {
       { key: 'gitlab:write', label: 'GitLab (Write)', description: 'Refresh GitLab data', category: 'GitLab' },
       { key: 'team-tracker:read', label: 'Team Tracker (Read)', description: 'Read team structure, fields, snapshots', category: 'Team Tracker' },
       { key: 'team-tracker:write', label: 'Team Tracker (Write)', description: 'Mutate team structure, fields, snapshots', category: 'Team Tracker' },
-      { key: 'feature-traffic:read', label: 'Feature Traffic (Read)', description: 'Read feature traffic data', category: 'Feature Traffic' },
-      { key: 'feature-traffic:write', label: 'Feature Traffic (Write)', description: 'Refresh/configure feature traffic', category: 'Feature Traffic' },
+      { key: 'releases:read', label: 'Releases (Read)', description: 'Read release planning, execution, and delivery data', category: 'Releases' },
+      { key: 'releases:write', label: 'Releases (Write)', description: 'Mutate release planning, execution, and delivery data', category: 'Releases' },
       { key: 'ai-impact:read', label: 'AI Impact (Read)', description: 'Read AI impact data', category: 'AI Impact' },
       { key: 'ai-impact:write', label: 'AI Impact (Write)', description: 'Push/clear AI impact data', category: 'AI Impact' },
-      { key: 'release-analysis:read', label: 'Release Analysis (Read)', description: 'Read release analysis data', category: 'Release Analysis' },
-      { key: 'release-analysis:write', label: 'Release Analysis (Write)', description: 'Mutate release analysis data', category: 'Release Analysis' },
-      { key: 'release-planning:read', label: 'Release Planning (Read)', description: 'Read release planning / health data', category: 'Release Planning' },
-      { key: 'release-planning:write', label: 'Release Planning (Write)', description: 'Mutate release planning data', category: 'Release Planning' },
       { key: 'upstream-pulse:read', label: 'Upstream Pulse (Read)', description: 'Read upstream pulse data', category: 'Upstream Pulse' },
       { key: 'upstream-pulse:write', label: 'Upstream Pulse (Write)', description: 'Mutate upstream pulse data', category: 'Upstream Pulse' },
       { key: 'health-metrics:read', label: 'Health Metrics (Read)', description: 'Read health metrics data', category: 'Health Metrics' },
@@ -640,8 +636,7 @@ app.get('/api/token-scopes', function(req, res) {
         label: 'Read Only',
         description: 'Read access to all data, no mutations',
         scopes: ['roster:read', 'metrics:read', 'github:read', 'gitlab:read',
-                 'team-tracker:read', 'feature-traffic:read', 'ai-impact:read',
-                 'release-analysis:read', 'release-planning:read',
+                 'team-tracker:read', 'releases:read', 'ai-impact:read',
                  'upstream-pulse:read', 'health-metrics:read']
       },
       {
@@ -1282,7 +1277,7 @@ messageRegistry.registerProvider('backup-staleness', async function(userContext)
     return [];
   }
 });
-const moduleContext = { storage: storageModule, requireAuth: authMiddleware, requireAdmin, requireTeamAdmin, requireScope, roleStore, registerDiagnostics: null };
+const moduleContext = { storage: storageModule, requireAuth: authMiddleware, requireAdmin, requireTeamAdmin, requireReleaseManager, requireScope, roleStore, registerDiagnostics: null };
 
 const persistedState = loadModuleState(storageModule);
 // Persist defaults for any newly discovered modules at startup (not in GET handlers).

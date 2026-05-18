@@ -99,11 +99,13 @@ function isManager(uid, registry) {
  * @param {{ people: Object }} registry
  * @param {boolean} isAdminFlag - Whether the user is an admin
  * @param {boolean} [isTeamAdminFlag] - Whether the user is a team admin
- * @returns {'admin'|'team-admin'|'manager'|'user'}
+ * @param {boolean} [isReleaseManagerFlag] - Whether the user is a release manager
+ * @returns {'admin'|'team-admin'|'release-manager'|'manager'|'user'}
  */
-function getPermissionTier(uid, registry, isAdminFlag, isTeamAdminFlag) {
+function getPermissionTier(uid, registry, isAdminFlag, isTeamAdminFlag, isReleaseManagerFlag) {
   if (isAdminFlag) return 'admin';
   if (isTeamAdminFlag) return 'team-admin';
+  if (isReleaseManagerFlag) return 'release-manager';
   if (!uid) return 'user';
   if (isManager(uid, registry)) return 'manager';
   return 'user';

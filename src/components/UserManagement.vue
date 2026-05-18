@@ -60,6 +60,7 @@
           >
             <option value="admin">Admin</option>
             <option value="team-admin">Team Admin</option>
+            <option value="release-manager">Release Manager</option>
             <option value="usage-metrics-viewer">Usage Metrics Viewer</option>
           </select>
         </div>
@@ -106,10 +107,12 @@
                 class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mr-1"
                 :class="role === 'admin'
                   ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
-                  : role === 'usage-metrics-viewer'
-                    ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
-                    : 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'"
-              >{{ { admin: 'Admin', 'team-admin': 'Team Admin', 'usage-metrics-viewer': 'Metrics Viewer' }[role] || role }}</span>
+                  : role === 'release-manager'
+                    ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300'
+                    : role === 'usage-metrics-viewer'
+                      ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                      : 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'"
+              >{{ { admin: 'Admin', 'team-admin': 'Team Admin', 'release-manager': 'Release Manager', 'usage-metrics-viewer': 'Metrics Viewer' }[role] || role }}</span>
             </td>
             <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ entry.assignedBy }}</td>
             <td class="px-4 py-3 text-right">
@@ -120,7 +123,7 @@
                 class="ml-1 text-xs text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                 :title="`Remove ${role} role`"
               >
-                Remove {{ { admin: 'Admin', 'team-admin': 'Team Admin', 'usage-metrics-viewer': 'Metrics Viewer' }[role] || role }}
+                Remove {{ { admin: 'Admin', 'team-admin': 'Team Admin', 'release-manager': 'Release Manager', 'usage-metrics-viewer': 'Metrics Viewer' }[role] || role }}
               </button>
             </td>
           </tr>

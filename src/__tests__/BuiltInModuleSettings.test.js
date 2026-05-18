@@ -27,10 +27,10 @@ const sampleModules = {
       requiredBy: []
     },
     {
-      slug: 'release-analysis',
-      name: 'Release Analysis',
-      description: 'Release tracking',
-      icon: 'activity',
+      slug: 'releases',
+      name: 'Releases',
+      description: 'Release lifecycle management',
+      icon: 'rocket',
       requires: [],
       defaultEnabled: true,
       enabled: true,
@@ -49,7 +49,7 @@ describe('BuiltInModuleSettings', () => {
     const wrapper = mount(BuiltInModuleSettings)
     await flushPromises()
     expect(wrapper.text()).toContain('People & Teams')
-    expect(wrapper.text()).toContain('Release Analysis')
+    expect(wrapper.text()).toContain('Releases')
   })
 
   it('shows loading state', () => {
@@ -101,7 +101,7 @@ describe('BuiltInModuleSettings', () => {
     const modulesWithDeps = {
       modules: [{
         ...sampleModules.modules[0],
-        requires: ['release-analysis'],
+        requires: ['releases'],
         requiredBy: []
       }, {
         ...sampleModules.modules[1],
@@ -113,7 +113,7 @@ describe('BuiltInModuleSettings', () => {
     const wrapper = mount(BuiltInModuleSettings)
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Requires: Release Analysis')
+    expect(wrapper.text()).toContain('Requires: Releases')
     expect(wrapper.text()).toContain('Required by: People & Teams')
   })
 
@@ -173,7 +173,7 @@ describe('BuiltInModuleSettings', () => {
   })
 
   it('shows inline error when disable is blocked', async () => {
-    const err = new Error('Cannot disable: required by release-analysis')
+    const err = new Error('Cannot disable: required by releases')
     err.status = 400
     mockDisableModule.mockRejectedValue(err)
 

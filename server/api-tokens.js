@@ -26,15 +26,26 @@ const VALID_SCOPES = [
   'github:read', 'github:write',
   'gitlab:read', 'gitlab:write',
   'team-tracker:read', 'team-tracker:write',
-  'feature-traffic:read', 'feature-traffic:write',
+  'releases:read', 'releases:write',
   'ai-impact:read', 'ai-impact:write',
-  'release-analysis:read', 'release-analysis:write',
-  'release-planning:read', 'release-planning:write',
   'upstream-pulse:read', 'upstream-pulse:write',
   'health-metrics:read', 'health-metrics:write',
   'admin:manage',
   'tokens:manage',
 ];
+
+/**
+ * Old scope names that map to new unified releases scopes.
+ * Used to auto-migrate existing tokens on startup.
+ */
+const SCOPE_MIGRATION_MAP = {
+  'feature-traffic:read': 'releases:read',
+  'feature-traffic:write': 'releases:write',
+  'release-analysis:read': 'releases:read',
+  'release-analysis:write': 'releases:write',
+  'release-planning:read': 'releases:read',
+  'release-planning:write': 'releases:write',
+};
 
 /**
  * Validate a scopes value. Returns normalized scopes or throws on invalid input.
@@ -121,12 +132,47 @@ function _withWriteLock(fn) {
 }
 
 /**
+ * Migrate old scope names to new unified releases scopes on existing tokens.
+ * Runs once on startup. Idempotent.
+ */
+function _migrateScopes() {
+  if (!_storage) return;
+  const tokens = _loadTokens();
+  let migrated = 0;
+  for (const token of tokens) {
+    if (!token.scopes || !Array.isArray(token.scopes)) continue;
+    if (token.scopes.length === 1 && token.scopes[0] === '*') continue;
+    let changed = false;
+    const newScopes = [];
+    for (const scope of token.scopes) {
+      const replacement = SCOPE_MIGRATION_MAP[scope];
+      if (replacement) {
+        if (!newScopes.includes(replacement)) newScopes.push(replacement);
+        changed = true;
+      } else {
+        if (!newScopes.includes(scope)) newScopes.push(scope);
+      }
+    }
+    if (changed) {
+      token.scopes = newScopes;
+      migrated++;
+    }
+  }
+  if (migrated > 0) {
+    _saveTokens(tokens);
+    _invalidateIndex();
+    console.log(`[api-tokens] Migrated scopes on ${migrated} token(s): old release module scopes -> releases:*`);
+  }
+}
+
+/**
  * Initialize the token store with a storage module.
  */
 function init(storageModule) {
   _storage = storageModule;
   _hashIndex = null;
   _lastUsedWriteTimes = new Map();
+  _migrateScopes();
 }
 
 /**

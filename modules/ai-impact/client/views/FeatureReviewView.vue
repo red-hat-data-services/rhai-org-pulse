@@ -33,7 +33,7 @@ function handleRetry() {
 function handleSelectFeature(feature) {
   if (feature) {
     // Navigate to the consolidated Feature Traffic Feature page
-    crossNavigate('feature-traffic', 'feature-detail', {
+    crossNavigate('releases', 'feature-detail', {
       key: feature.key,
       fromFeatureReview: '1'
     })

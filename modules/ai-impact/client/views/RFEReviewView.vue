@@ -105,7 +105,7 @@ function handleCloseModal() {
 }
 
 function handleNavigateToFeature(featureKey) {
-  crossNavigate('feature-traffic', 'feature-detail', {
+  crossNavigate('releases', 'feature-detail', {
     key: featureKey,
     fromRfe: selectedRFE.value?.key
   })

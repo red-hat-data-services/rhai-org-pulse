@@ -1,0 +1,30 @@
+{
+  "name": "Releases",
+  "slug": "releases",
+  "defaultEnabled": true,
+  "description": "Unified release lifecycle: planning, execution tracking, and delivery readiness",
+  "icon": "rocket",
+  "order": 10,
+  "client": {
+    "entry": "./client/index.js",
+    "navItems": [
+      { "id": "plan", "label": "Plan", "icon": "ClipboardList", "default": true },
+      { "id": "execute", "label": "Execute", "icon": "GitBranch" },
+      { "id": "deliver", "label": "Deliver", "icon": "Rocket" },
+      { "id": "reports", "label": "Reports", "icon": "BarChart3" },
+      { "id": "audit", "label": "Audit", "icon": "History" }
+    ],
+    "settingsComponent": "./client/components/ReleasesSettings.vue"
+  },
+  "server": {
+    "entry": "./server/index.js"
+  },
+  "export": {
+    "customHandler": true,
+    "files": [
+      { "path": "releases/registry.json", "notes": "Canonical release registry" },
+      { "path": "releases/execution/index.json", "notes": "Feature index with summary metrics" },
+      { "path": "releases/execution/features/*.json", "notes": "Per-feature detail files" }
+    ]
+  }
+}

@@ -183,10 +183,10 @@ spec:
                     echo "WARNING: Feature Jira sync timed out (non-fatal, continuing)"
                   fi
 
-                  # Step 5: Trigger Feature Traffic refresh
-                  echo "=== Triggering Feature Traffic refresh ==="
-                  curl -sf -X POST "$BACKEND/api/modules/feature-traffic/refresh" \
-                    -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" || echo "Feature Traffic refresh skipped"
+                  # Step 5: Trigger Releases Execution refresh
+                  echo "=== Triggering Releases Execution refresh ==="
+                  curl -sf -X POST "$BACKEND/api/modules/releases/execution/refresh" \
+                    -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" || echo "Releases Execution refresh skipped"
 
                   # Step 6: Trigger data backup to S3
                   echo "=== Triggering data backup ==="

@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "releases": [
+    {
+      "id": "rhoai-2.14",
+      "displayName": "RHOAI 2.14",
+      "fixVersions": ["RHOAI-2.14", "rhoai-2.14"],
+      "productPagesShortname": "red_hat_openshift_ai",
+      "productPagesVersion": "2.14",
+      "milestones": {
+        "codeFreeze": "2026-06-01",
+        "ea1": "2026-06-15",
+        "ga": "2026-07-01"
+      },
+      "state": "active",
+      "createdAt": "2026-05-01T00:00:00Z",
+      "updatedAt": "2026-05-01T00:00:00Z"
+    },
+    {
+      "id": "rhoai-2.15",
+      "displayName": "RHOAI 2.15",
+      "fixVersions": ["RHOAI-2.15", "rhoai-2.15"],
+      "productPagesShortname": "red_hat_openshift_ai",
+      "productPagesVersion": "2.15",
+      "milestones": {
+        "codeFreeze": "2026-08-01",
+        "ga": "2026-09-01"
+      },
+      "state": "active",
+      "createdAt": "2026-05-01T00:00:00Z",
+      "updatedAt": "2026-05-01T00:00:00Z"
+    },
+    {
+      "id": "rhoai-2.13",
+      "displayName": "RHOAI 2.13",
+      "fixVersions": ["RHOAI-2.13"],
+      "productPagesShortname": "red_hat_openshift_ai",
+      "productPagesVersion": "2.13",
+      "milestones": {
+        "ga": "2026-04-15"
+      },
+      "state": "archived",
+      "createdAt": "2026-03-01T00:00:00Z",
+      "updatedAt": "2026-04-20T00:00:00Z"
+    }
+  ]
+}

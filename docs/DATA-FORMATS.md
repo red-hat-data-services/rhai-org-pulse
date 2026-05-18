@@ -692,9 +692,9 @@ Admin-configurable settings for the AI Impact module.
 - `trendThresholdPp` is the percentage-point threshold for classifying trends as "growing" or "declining" (0-50)
 - Defaults are used when no config file exists
 
-## Release Analysis — Config (`data/release-analysis/config.json`)
+## Releases — Delivery Config (`data/releases/delivery/config.json`)
 
-Admin-configurable settings for the Release Analysis module.
+Admin-configurable settings for the Releases module delivery domain (formerly Release Analysis).
 
 ```json
 {
@@ -754,9 +754,9 @@ Stores hashed API tokens for bearer-token authentication. Created on first token
 
 ---
 
-## Feature Traffic — Index (`data/feature-traffic/index.json`)
+## Releases — Execution Index (`data/releases/execution/index.json`)
 
-Summary index of all tracked features, produced by the GitLab CI pipeline.
+Summary index of all tracked features, produced by the GitLab CI pipeline (formerly Feature Traffic).
 
 ```json
 {
@@ -779,7 +779,7 @@ Summary index of all tracked features, produced by the GitLab CI pipeline.
 }
 ```
 
-## Feature Traffic — Feature Detail (`data/feature-traffic/features/{KEY}.json`)
+## Releases — Execution Feature Detail (`data/releases/execution/features/{KEY}.json`)
 
 Per-feature detail file with epic breakdown.
 
@@ -847,9 +847,9 @@ Heuristic narrative signals for the Feature detail **Traffic Signals** panel (bl
 - **`source`**: `"derived"` from embedded epic/issue JSON; editors may set `"edited"` after manual refinement (your pipeline may still overwrite on the next fetch unless you preserve edits out-of-band).
 - Traffic **blockers** here are **not** the same as Jira **priority = Blocker** — they reflect backlog/integration risk and explicit **`isBlocked`** links on issues.
 
-## Feature Traffic — Config (`data/feature-traffic/config.json`)
+## Releases — Execution Config (`data/releases/execution/config.json`)
 
-Admin-configurable settings for GitLab CI artifact fetching.
+Admin-configurable settings for GitLab CI artifact fetching (formerly Feature Traffic config).
 
 ```json
 {
@@ -867,7 +867,7 @@ Admin-configurable settings for GitLab CI artifact fetching.
 - `enabled` defaults to `false`. Module does nothing until an admin enables it in Settings.
 - `artifactPath` is the directory prefix stripped from zip entry paths (e.g., `output/index.json` becomes `index.json`).
 
-## Feature Traffic — Last Fetch (`data/feature-traffic/last-fetch.json`)
+## Releases — Execution Last Fetch (`data/releases/execution/last-fetch.json`)
 
 Metadata from the most recent fetch attempt.
 
