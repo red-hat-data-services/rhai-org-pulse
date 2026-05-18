@@ -356,12 +356,12 @@ onBeforeUnmount(() => {
                 <div>
                   <div class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ jiraMetrics.resolved?.issues?.length || 0 }}</div>
                   <div class="text-xs text-gray-500 dark:text-gray-400">Resolved Issues</div>
-                  <div class="text-[10px] text-gray-400 dark:text-gray-500">90 days</div>
+                  <div class="text-[10px] text-gray-400 dark:text-gray-500">365 days</div>
                 </div>
                 <div>
                   <div class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ jiraMetrics.resolved?.storyPoints || 0 }}</div>
                   <div class="text-xs text-gray-500 dark:text-gray-400">Story Points</div>
-                  <div class="text-[10px] text-gray-400 dark:text-gray-500">90 days</div>
+                  <div class="text-[10px] text-gray-400 dark:text-gray-500">365 days</div>
                 </div>
                 <div>
                   <div class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ jiraMetrics.cycleTime?.avgDays != null ? jiraMetrics.cycleTime.avgDays + 'd' : '—' }}</div>

@@ -193,13 +193,14 @@ Tests run in same Playwright container as smoke tests. Uses tag-based filtering 
 CI workflow (`integration-tests.yml`):
 - Triggers on changes to `modules/**` or `tests/integration/**`
 - Uses `dorny/paths-filter` to detect which modules changed
+- Uses matrix strategy: changed modules are automatically added to test matrix via `steps.filter.outputs.changes`
 - Runs tests only for changed modules via generic `test-module` Makefile target
 - Reusable composite action at `.github/actions/test-org-pulse-module/`
 
 To add integration tests for a new module:
 1. Create `tests/integration/<module>.spec.js` with `@<module-name>` tag
-2. Add filter in `integration-tests.yml` `detect-changes` job
-3. Add job output and test job (copy pattern from `test-ai-impact`)
+2. Add filter definition in `integration-tests.yml` `detect-changes` job filters section
+3. That's it! The matrix automatically picks up the new module when it changes
 
 ### Building images on ARM Macs
 Standard `--platform linux/amd64` builds fail: npm times out under QEMU, esbuild crashes. Workaround: build/install natively, then copy into amd64 base images. See `deploy/OPENSHIFT.md` step 3 for details. This works because the backend has no native Node addons (all pure JS).

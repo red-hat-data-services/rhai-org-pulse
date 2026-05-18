@@ -182,10 +182,7 @@ MODULE_NAME=ai-impact                   # Choose a testable module
 make test-module MODULE=${MODULE_NAME}  # Runs the integration tests against an existing module
 ```
 
-Available, testable modules:
-- [ai-impact](./modules/ai-impact/)
-
-Integration tests for [other modules](./modules/) are coming soon.
+Available, testable modules can be found here by name: [tests/integration](./tests/integration/)
 
 ## Deployment
 

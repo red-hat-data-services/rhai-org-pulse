@@ -19,7 +19,8 @@ jobs:
       contents: read
       pull-requests: read
     outputs:
-      ai-impact: ${{ steps.filter.outputs.ai-impact }}
+      # This captures the dynamic JSON array of modules to test
+      enabled-modules: ${{ steps.build-matrix.outputs.modules }}
 
     steps:
       - uses: actions/checkout@v4
@@ -27,23 +28,52 @@ jobs:
       - uses: dorny/paths-filter@v3
         id: filter
         with:
+          # This determines which keys get added to the 'changes' output array
+          # Adding a new module here automatically adds it to the test matrix
           filters: |
+            shared-test-files:
+              - 'tests/integration/constants.js'
+              - 'tests/integration/helpers.js'
             ai-impact:
               - 'modules/ai-impact/**'
               - 'tests/integration/ai-impact.spec.js'
-              - 'tests/integration/constants.js'
-              - 'tests/integration/helpers.js'
+            feature-traffic:
+              - 'modules/feature-traffic/**'
+              - 'tests/integration/feature-traffic.spec.js'
 
-  test-ai-impact:
-    name: Test AI Impact Module
+      - name: Build module matrix
+        id: build-matrix
+        run: |
+          # If shared test files changed, then test all modules
+          if [ "${{ steps.filter.outputs.shared-test-files }}" == "true" ]; then
+            MODULES='["ai-impact", "feature-traffic"]'
+          else
+            # Otherwise, use the modules that have direct changes
+            MODULES='${{ steps.filter.outputs.changes }}'
+            # Remove 'shared-test-files' from the array if it's present
+            MODULES=$(echo "$MODULES" | jq 'map(select(. != "shared-test-files"))')
+          fi
+
+          echo "modules=$MODULES" >> $GITHUB_OUTPUT
+          echo "Testing modules: $MODULES"
+
+  run-tests:
+    name: Test ${{ matrix.module }}
     needs: detect-changes
-    if: needs.detect-changes.outputs.ai-impact == 'true'
+    # Only run if one or more modules need testing
+    if: needs.detect-changes.outputs.enabled-modules != '[]'
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    strategy:
+      fail-fast: false  # Allows other modules to finish even if one fails
+      matrix:
+        module: ${{ fromJson(needs.detect-changes.outputs.enabled-modules) }}
+
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/test-org-pulse-module
+      - name: Run Module Test
+        uses: ./.github/actions/test-org-pulse-module
         with:
-          module: ai-impact
+          module: ${{ matrix.module }}
