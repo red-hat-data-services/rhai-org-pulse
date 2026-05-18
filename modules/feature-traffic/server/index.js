@@ -10,7 +10,7 @@ const {
 const DATA_PREFIX = 'feature-traffic';
 
 module.exports = function registerRoutes(router, context) {
-  const { storage } = context;
+  const { storage, requireScope } = context;
 
   function readDataFile(relativePath) {
     return storage.readFromStorage(`${DATA_PREFIX}/${relativePath}`);
@@ -20,7 +20,7 @@ module.exports = function registerRoutes(router, context) {
   initScheduler(storage);
 
   // GET /features — list all features with summary metrics
-  router.get('/features', function(req, res) {
+  router.get('/features', requireScope('feature-traffic:read'), function(req, res) {
     const index = readDataFile('index.json');
     if (!index || !index.features) {
       return res.json({
@@ -74,7 +74,7 @@ module.exports = function registerRoutes(router, context) {
   });
 
   // GET /features/:key — full feature detail
-  router.get('/features/:key', function(req, res) {
+  router.get('/features/:key', requireScope('feature-traffic:read'), function(req, res) {
     const key = req.params.key.toUpperCase();
 
     // Validate key format (RHAISTRAT in production, TEST* in demo mode)
@@ -91,7 +91,7 @@ module.exports = function registerRoutes(router, context) {
   });
 
   // GET /status — data freshness and sync info
-  router.get('/status', function(req, res) {
+  router.get('/status', requireScope('feature-traffic:read'), function(req, res) {
     const index = readDataFile('index.json');
     const lastFetch = readDataFile('last-fetch.json');
     const config = loadConfig(storage);
@@ -135,7 +135,7 @@ module.exports = function registerRoutes(router, context) {
   });
 
   // GET /versions — list unique fix versions across all features
-  router.get('/versions', function(req, res) {
+  router.get('/versions', requireScope('feature-traffic:read'), function(req, res) {
     const index = readDataFile('index.json');
     if (!index || !index.features) {
       return res.json({ versions: [] });
@@ -152,7 +152,7 @@ module.exports = function registerRoutes(router, context) {
   });
 
   // POST /refresh — trigger manual data refresh (admin only)
-  router.post('/refresh', context.requireAdmin, async function(req, res) {
+  router.post('/refresh', context.requireAdmin, requireScope('feature-traffic:write'), async function(req, res) {
     try {
       const result = await manualRefresh(storage);
       if (result.httpStatus === 429) {
@@ -165,7 +165,7 @@ module.exports = function registerRoutes(router, context) {
   });
 
   // GET /config — get current fetch configuration (admin only)
-  router.get('/config', context.requireAdmin, function(req, res) {
+  router.get('/config', context.requireAdmin, requireScope('feature-traffic:write'), function(req, res) {
     const config = loadConfig(storage);
     res.json({
       ...config,
@@ -175,7 +175,7 @@ module.exports = function registerRoutes(router, context) {
   });
 
   // POST /config — save fetch configuration (admin only)
-  router.post('/config', context.requireAdmin, async function(req, res) {
+  router.post('/config', context.requireAdmin, requireScope('feature-traffic:write'), async function(req, res) {
     try {
       const result = await onConfigSave(storage, req.body);
       res.json(result);

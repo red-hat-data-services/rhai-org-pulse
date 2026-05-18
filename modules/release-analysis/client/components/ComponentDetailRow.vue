@@ -11,7 +11,7 @@
         : 'hover:bg-gray-50/60 dark:hover:bg-gray-800/20'"
       @click="toggleExpand"
     >
-      <!-- Top row: name + project chips + expand caret -->
+      <!-- Top row: name + project chips + predicted date + expand caret -->
       <div class="flex items-start justify-between gap-2 mb-3">
         <div class="flex items-center gap-2 min-w-0 flex-wrap">
           <span class="font-semibold text-gray-800 dark:text-gray-100 text-base leading-tight truncate">{{ comp.name }}</span>
@@ -21,6 +21,15 @@
             :key="proj"
             class="inline-flex items-center rounded-md bg-indigo-50 dark:bg-indigo-900/40 border border-indigo-200/70 dark:border-indigo-700/50 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-indigo-600 dark:text-indigo-300"
           >{{ proj }}</span>
+          <span
+            v-if="comp.predictedDate"
+            class="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-semibold tabular-nums"
+            :class="isPredictedLate ? 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-200/70 dark:border-red-700/50' : 'bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 border border-teal-200/70 dark:border-teal-700/50'"
+            :title="'Predicted completion based on velocity and total workload (release + other open work)'"
+          >
+            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>
+            Predicted: {{ formatPredictedDate(comp.predictedDate) }}
+          </span>
         </div>
         <span
           class="transition-transform duration-200 text-[10px] shrink-0 mt-0.5"
@@ -296,6 +305,18 @@ function isStrategicExpanded(key) {
 const total = computed(() =>
   (props.comp.issues_to_do || 0) + (props.comp.issues_doing || 0) + (props.comp.issues_done || 0)
 )
+
+const isPredictedLate = computed(() => {
+  if (!props.comp.predictedDate || !props.comp.forecast?.T) return false
+  const dueDate = new Date()
+  dueDate.setDate(dueDate.getDate() + props.comp.forecast.T)
+  return new Date(props.comp.predictedDate) > dueDate
+})
+
+function formatPredictedDate(isoDate) {
+  const d = new Date(isoDate + 'T00:00:00')
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
 
 function pct(part, whole) {
   if (!whole || part <= 0) return '0%'

@@ -4,6 +4,11 @@ node_modules/
 # Build output
 dist/
 
+# Playwright
+playwright-report/
+test-results/
+.playwright/
+
 # Environment variables
 .env
 .env.local
@@ -22,6 +27,7 @@ Thumbs.db
 
 # Local dev data
 data/
+data-backup.tar.gz
 
 # Google Sheets service account key
 secrets/

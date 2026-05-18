@@ -161,7 +161,7 @@ describe('computeAutofixMetrics', () => {
 })
 
 describe('buildTrendData', () => {
-  it('returns weekly data points with merged field', () => {
+  it('returns weekly data points with breakdown fields', () => {
     const issues = [
       { created: new Date().toISOString(), pipelineState: 'autofix-merged', components: [] }
     ]
@@ -171,10 +171,40 @@ describe('buildTrendData', () => {
     expect(trend[0]).toHaveProperty('triaged')
     expect(trend[0]).toHaveProperty('autofixed')
     expect(trend[0]).toHaveProperty('merged')
+    expect(trend[0]).toHaveProperty('review')
+    expect(trend[0]).toHaveProperty('ciFailing')
+    expect(trend[0]).toHaveProperty('blocked')
+    expect(trend[0]).toHaveProperty('maxRetries')
+    expect(trend[0]).toHaveProperty('missingInfo')
+    expect(trend[0]).toHaveProperty('stale')
   })
 
   it('returns 13 points for 3months window', () => {
     const trend = buildTrendData([], '3months')
     expect(trend).toHaveLength(13)
+  })
+
+  it('counts waiting-on-humans breakdowns correctly', () => {
+    const now = new Date()
+    const recent = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString()
+    const issues = [
+      { created: recent, pipelineState: 'autofix-review', components: [] },
+      { created: recent, pipelineState: 'autofix-review', components: [] },
+      { created: recent, pipelineState: 'autofix-ci-failing', components: [] },
+      { created: recent, pipelineState: 'autofix-blocked', components: [] },
+      { created: recent, pipelineState: 'autofix-max-retries', components: [] },
+      { created: recent, pipelineState: 'autofix-merged', components: [] },
+      { created: recent, pipelineState: 'triage-missing-info', components: [] },
+      { created: recent, pipelineState: 'triage-stale', components: [] }
+    ]
+    const trend = buildTrendData(issues, 'week')
+    const lastPoint = trend[trend.length - 1]
+    expect(lastPoint.review).toBe(2)
+    expect(lastPoint.ciFailing).toBe(1)
+    expect(lastPoint.blocked).toBe(1)
+    expect(lastPoint.maxRetries).toBe(1)
+    expect(lastPoint.merged).toBe(1)
+    expect(lastPoint.missingInfo).toBe(1)
+    expect(lastPoint.stale).toBe(1)
   })
 })

@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { nextTick } from 'vue'
 import RiskPopover from '../../client/components/RiskPopover.vue'
-import BigRockHealthPopover from '../../client/components/BigRockHealthPopover.vue'
 
 // ─── RiskPopover ───
 
@@ -73,7 +72,7 @@ describe('RiskPopover', function() {
   })
 
   it('shows 1 flag without plural', async function() {
-    var flags = [{ category: 'DOR_INCOMPLETE', severity: 'medium', message: '45% met' }]
+    var flags = [{ category: 'VELOCITY_LAG', severity: 'medium', message: '45% complete' }]
     var wrapper = mount(RiskPopover, {
       props: { level: 'yellow', flags: flags, flagCount: 1 },
       slots: { default: '<span>dot</span>' },
@@ -118,32 +117,91 @@ describe('RiskPopover', function() {
     wrapper.unmount()
   })
 
-  it('shows DoR summary in full variant', async function() {
-    var dor = { completionPct: 45, checkedCount: 5, totalCount: 11 }
-    var flags = [{ category: 'DOR_INCOMPLETE', severity: 'medium', message: '45% met' }]
+  it('shows planning status in full variant', async function() {
+    var dod = { gate: 'dod', passed: false, checks: [
+      { id: 'DoD-1', label: 'Owner Assigned', passed: true },
+      { id: 'DoD-2', label: 'Fix Version Set', passed: false }
+    ] }
+    var flags = [{ category: 'MILESTONE_MISS', severity: 'medium', message: 'Behind deadline' }]
     var wrapper = mount(RiskPopover, {
-      props: { level: 'yellow', flags: flags, flagCount: 1, dor: dor, variant: 'full' },
+      props: { level: 'yellow', flags: flags, flagCount: 1, dod: dod, planningStatus: 'in-planning', variant: 'full' },
       slots: { default: '<span>dot</span>' },
       attachTo: document.body
     })
     await wrapper.find('[role="button"]').trigger('click')
     await nextTick()
-    expect(wrapper.text()).toContain('DoR: 45%')
-    expect(wrapper.text()).toContain('5/11 items')
+    expect(wrapper.text()).toContain('Planning: In Planning')
+    expect(wrapper.text()).toContain('1 DoD check remaining')
     wrapper.unmount()
   })
 
-  it('does not show DoR in compact variant', async function() {
-    var dor = { completionPct: 45, checkedCount: 5, totalCount: 11 }
-    var flags = [{ category: 'DOR_INCOMPLETE', severity: 'medium', message: '45% met' }]
+  it('shows DoR blocked message when DoR fails', async function() {
+    var dor = { gate: 'dor', passed: false, blockers: [
+      { id: 'DoR-B1', label: 'Strategy Human Sign-off', passed: false, detail: 'not-assessed' },
+      { id: 'DoR-B2', label: 'RICE Score Present', passed: true, detail: 'complete' }
+    ], warnings: [] }
+    var flags = [{ category: 'MILESTONE_MISS', severity: 'medium', message: 'Behind deadline' }]
     var wrapper = mount(RiskPopover, {
-      props: { level: 'yellow', flags: flags, flagCount: 1, dor: dor, variant: 'compact' },
+      props: { level: 'yellow', flags: flags, flagCount: 1, dor: dor, planningStatus: 'not-ready', variant: 'full' },
       slots: { default: '<span>dot</span>' },
       attachTo: document.body
     })
     await wrapper.find('[role="button"]').trigger('click')
     await nextTick()
-    expect(wrapper.text()).not.toContain('DoR:')
+    expect(wrapper.text()).toContain('DoR blocked: Strategy Human Sign-off')
+    wrapper.unmount()
+  })
+
+  it('shows DoR warning count when warnings fail', async function() {
+    var dor = { gate: 'dor', passed: true, blockers: [
+      { id: 'DoR-B1', label: 'Strategy Human Sign-off', passed: true, detail: 'strat-creator-disabled' },
+      { id: 'DoR-B2', label: 'RICE Score Present', passed: true, detail: 'rice-disabled' }
+    ], warnings: [
+      { id: 'DoR-W1', label: 'Owner Assigned', passed: false, detail: null },
+      { id: 'DoR-W2', label: 'Version Set', passed: false, detail: 'No fixVersion or targetVersion' },
+      { id: 'DoR-W3', label: 'Blockers Resolved', passed: true, detail: null }
+    ] }
+    var flags = [{ category: 'MILESTONE_MISS', severity: 'medium', message: 'Behind deadline' }]
+    var wrapper = mount(RiskPopover, {
+      props: { level: 'yellow', flags: flags, flagCount: 1, dor: dor, planningStatus: 'ready-for-execution', variant: 'full' },
+      slots: { default: '<span>dot</span>' },
+      attachTo: document.body
+    })
+    await wrapper.find('[role="button"]').trigger('click')
+    await nextTick()
+    expect(wrapper.text()).toContain('2 DoR warnings')
+    wrapper.unmount()
+  })
+
+  it('does not show DoR info when DoR passes with no warnings', async function() {
+    var dor = { gate: 'dor', passed: true, blockers: [
+      { id: 'DoR-B1', label: 'Strategy Human Sign-off', passed: true, detail: 'strat-creator-disabled' }
+    ], warnings: [
+      { id: 'DoR-W1', label: 'Owner Assigned', passed: true, detail: 'jdoe@redhat.com' }
+    ] }
+    var flags = [{ category: 'MILESTONE_MISS', severity: 'medium', message: 'Behind deadline' }]
+    var wrapper = mount(RiskPopover, {
+      props: { level: 'yellow', flags: flags, flagCount: 1, dor: dor, planningStatus: 'ready-for-execution', variant: 'full' },
+      slots: { default: '<span>dot</span>' },
+      attachTo: document.body
+    })
+    await wrapper.find('[role="button"]').trigger('click')
+    await nextTick()
+    expect(wrapper.text()).not.toContain('DoR blocked')
+    expect(wrapper.text()).not.toContain('DoR warning')
+    wrapper.unmount()
+  })
+
+  it('does not show planning status in compact variant', async function() {
+    var flags = [{ category: 'MILESTONE_MISS', severity: 'medium', message: 'Behind deadline' }]
+    var wrapper = mount(RiskPopover, {
+      props: { level: 'yellow', flags: flags, flagCount: 1, planningStatus: 'in-planning', variant: 'compact' },
+      slots: { default: '<span>dot</span>' },
+      attachTo: document.body
+    })
+    await wrapper.find('[role="button"]').trigger('click')
+    await nextTick()
+    expect(wrapper.text()).not.toContain('Planning:')
     wrapper.unmount()
   })
 
@@ -196,97 +254,4 @@ describe('RiskPopover', function() {
   })
 })
 
-// ─── BigRockHealthPopover ───
-
-describe('BigRockHealthPopover', function() {
-  it('renders slot content', function() {
-    var wrapper = mount(BigRockHealthPopover, {
-      props: { worstLevel: 'green', features: [], totalFlags: 0 },
-      slots: { default: '<span class="badge">OK</span>' }
-    })
-    expect(wrapper.find('.badge').exists()).toBe(true)
-  })
-
-  it('shows per-feature breakdown when pinned (only flagged features)', async function() {
-    var features = [
-      { key: 'RHOAI-1234', level: 'red', flagCount: 2, flagCategories: ['MILESTONE_MISS', 'VELOCITY_LAG'] },
-      { key: 'RHOAI-5678', level: 'yellow', flagCount: 1, flagCategories: ['DOR_INCOMPLETE'] },
-      { key: 'RHOAI-9012', level: 'green', flagCount: 0, flagCategories: [] }
-    ]
-    var wrapper = mount(BigRockHealthPopover, {
-      props: { worstLevel: 'red', features: features, totalFlags: 3 },
-      slots: { default: '<span>Critical</span>' },
-      attachTo: document.body
-    })
-    await wrapper.find('[role="button"]').trigger('click')
-    await nextTick()
-    expect(wrapper.text()).toContain('Health: Critical')
-    expect(wrapper.text()).toContain('2 features')
-    expect(wrapper.text()).toContain('RHOAI-1234')
-    expect(wrapper.text()).toContain('Red')
-    expect(wrapper.text()).toContain('2 flags')
-    expect(wrapper.text()).toContain('MILESTONE_MISS, VELOCITY_LAG')
-    expect(wrapper.text()).toContain('RHOAI-5678')
-    expect(wrapper.text()).not.toContain('RHOAI-9012')
-    wrapper.unmount()
-  })
-
-  it('shows +N more for >10 flagged features', async function() {
-    var features = []
-    for (var i = 0; i < 12; i++) {
-      features.push({ key: 'F-' + (i + 1), level: 'yellow', flagCount: 1, flagCategories: ['DOR'] })
-    }
-    var wrapper = mount(BigRockHealthPopover, {
-      props: { worstLevel: 'yellow', features: features, totalFlags: 12 },
-      slots: { default: '<span>At Risk</span>' },
-      attachTo: document.body
-    })
-    await wrapper.find('[role="button"]').trigger('click')
-    await nextTick()
-    expect(wrapper.text()).toContain('+2 more features')
-    expect(wrapper.text()).toContain('F-1')
-    expect(wrapper.text()).toContain('F-10')
-    expect(wrapper.text()).not.toContain('F-11')
-    wrapper.unmount()
-  })
-
-  it('does not show popover when all features are green', async function() {
-    var features = [
-      { key: 'F-1', level: 'green', flagCount: 0, flagCategories: [] }
-    ]
-    var wrapper = mount(BigRockHealthPopover, {
-      props: { worstLevel: 'green', features: features, totalFlags: 0 },
-      slots: { default: '<span>OK</span>' },
-      attachTo: document.body
-    })
-    await wrapper.find('[role="button"]').trigger('click')
-    await nextTick()
-    expect(wrapper.find('[role="dialog"]').exists()).toBe(false)
-    wrapper.unmount()
-  })
-
-  it('shows correct label for yellow level', async function() {
-    var wrapper = mount(BigRockHealthPopover, {
-      props: { worstLevel: 'yellow', features: [{ key: 'F-1', level: 'yellow', flagCount: 1, flagCategories: ['DOR'] }], totalFlags: 1 },
-      slots: { default: '<span>At Risk</span>' },
-      attachTo: document.body
-    })
-    await wrapper.find('[role="button"]').trigger('click')
-    await nextTick()
-    expect(wrapper.text()).toContain('Health: At Risk')
-    wrapper.unmount()
-  })
-
-  it('shows singular "feature" for 1 flagged feature', async function() {
-    var wrapper = mount(BigRockHealthPopover, {
-      props: { worstLevel: 'yellow', features: [{ key: 'F-1', level: 'yellow', flagCount: 1, flagCategories: ['DOR'] }], totalFlags: 1 },
-      slots: { default: '<span>At Risk</span>' },
-      attachTo: document.body
-    })
-    await wrapper.find('[role="button"]').trigger('click')
-    await nextTick()
-    expect(wrapper.text()).toContain('1 feature)')
-    expect(wrapper.text()).not.toContain('1 features')
-    wrapper.unmount()
-  })
-})
+// BigRockHealthPopover tests removed -- component was deleted in favor of BigRockExpandedRow

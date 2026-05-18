@@ -27,13 +27,13 @@ const BULK_CAP = 5000;
  * @param {object} context - Module context with storage and auth middleware
  */
 module.exports = function registerAssessmentRoutes(router, context) {
-  const { storage, requireAdmin } = context;
+  const { storage, requireAdmin, requireScope } = context;
   const { readFromStorage } = storage;
 
   // ─── 1. Static routes FIRST ───
 
   // GET /assessments/status (Admin) — assessment data status for settings page
-  router.get('/assessments/status', requireAdmin, function(req, res) {
+  router.get('/assessments/status', requireAdmin, requireScope('ai-impact:read'), function(req, res) {
     const data = readAssessments(readFromStorage);
     res.json({
       lastSyncedAt: data.lastSyncedAt,
@@ -43,7 +43,7 @@ module.exports = function registerAssessmentRoutes(router, context) {
   });
 
   // POST /assessments/bulk (Admin) — bulk upsert assessments
-  router.post('/assessments/bulk', requireAdmin, jsonLimit, function(req, res) {
+  router.post('/assessments/bulk', requireAdmin, requireScope('ai-impact:write'), jsonLimit, function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Assessment ingest disabled in demo mode' });
     }
@@ -90,7 +90,7 @@ module.exports = function registerAssessmentRoutes(router, context) {
   });
 
   // DELETE /assessments (Admin) — clear all assessment data
-  router.delete('/assessments', requireAdmin, function(req, res) {
+  router.delete('/assessments', requireAdmin, requireScope('ai-impact:write'), function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Assessment ingest disabled in demo mode' });
     }
@@ -100,7 +100,7 @@ module.exports = function registerAssessmentRoutes(router, context) {
   });
 
   // GET /assessments — list all latest assessments (slim projection)
-  router.get('/assessments', function(req, res) {
+  router.get('/assessments', requireScope('ai-impact:read'), function(req, res) {
     const data = readAssessments(readFromStorage);
     res.json(getLatestProjection(data));
   });
@@ -108,7 +108,7 @@ module.exports = function registerAssessmentRoutes(router, context) {
   // ─── 2. Parameterized routes AFTER ───
 
   // GET /assessments/:key — single RFE assessment + history
-  router.get('/assessments/:key', function(req, res) {
+  router.get('/assessments/:key', requireScope('ai-impact:read'), function(req, res) {
     const data = readAssessments(readFromStorage);
     const entry = data.assessments[req.params.key];
     if (!entry) {
@@ -121,7 +121,7 @@ module.exports = function registerAssessmentRoutes(router, context) {
   });
 
   // PUT /assessments/:key (Admin) — upsert single assessment
-  router.put('/assessments/:key', requireAdmin, jsonLimit, function(req, res) {
+  router.put('/assessments/:key', requireAdmin, requireScope('ai-impact:write'), jsonLimit, function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Assessment ingest disabled in demo mode' });
     }

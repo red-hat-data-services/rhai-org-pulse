@@ -45,18 +45,35 @@ describe('useApiTokens', () => {
     expect(allTokens.value).toEqual(mockTokens)
   })
 
-  it('createToken sends POST and reloads tokens', async () => {
-    const created = { token: 'tt_newtoken', id: '1', name: 'New', expiresAt: null }
+  it('createToken sends POST with scopes and reloads tokens', async () => {
+    const created = { token: 'tt_newtoken', id: '1', name: 'New', scopes: ['roster:read'], expiresAt: null }
     // First call: POST, second call: GET (reload)
     global.fetch = vi.fn()
       .mockResolvedValueOnce({ ok: true, status: 201, json: () => Promise.resolve(created) })
       .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve({ tokens: [{ id: '1', name: 'New' }] }) })
 
     const { createToken } = useApiTokens()
-    const result = await createToken('New Token', '90d')
+    const result = await createToken('New Token', '90d', ['roster:read'])
 
     expect(result.token).toBe('tt_newtoken')
+    expect(result.scopes).toEqual(['roster:read'])
     expect(global.fetch).toHaveBeenCalledTimes(2)
+    const body = JSON.parse(global.fetch.mock.calls[0][1].body)
+    expect(body.scopes).toEqual(['roster:read'])
+  })
+
+  it('createToken sends null scopes for full access', async () => {
+    const created = { token: 'tt_newtoken', id: '1', name: 'New', scopes: null, expiresAt: null }
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce({ ok: true, status: 201, json: () => Promise.resolve(created) })
+      .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve({ tokens: [] }) })
+
+    const { createToken } = useApiTokens()
+    const result = await createToken('Full', '90d', null)
+
+    expect(result.scopes).toBeNull()
+    const body = JSON.parse(global.fetch.mock.calls[0][1].body)
+    expect(body.scopes).toBeNull()
   })
 
   it('revokeToken sends DELETE and reloads tokens', async () => {
@@ -71,6 +88,44 @@ describe('useApiTokens', () => {
     const firstCall = global.fetch.mock.calls[0]
     expect(firstCall[0]).toContain('/tokens/tok-1')
     expect(firstCall[1].method).toBe('DELETE')
+  })
+
+  it('loadAvailableScopes fetches scope catalog', async () => {
+    const scopeData = { scopes: [{ key: 'roster:read', label: 'Roster (Read)', category: 'Roster' }], presets: [] }
+    mockFetch(scopeData)
+
+    const { availableScopes, loadAvailableScopes } = useApiTokens()
+    await loadAvailableScopes()
+
+    expect(availableScopes.value).toEqual(scopeData)
+  })
+
+  it('updateTokenScopes sends PATCH and reloads tokens', async () => {
+    const updated = { id: '1', name: 'Test', scopes: ['roster:read'] }
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(updated) })
+      .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve({ tokens: [updated] }) })
+
+    const { updateTokenScopes } = useApiTokens()
+    const result = await updateTokenScopes('tok-1', ['roster:read'])
+
+    expect(result.scopes).toEqual(['roster:read'])
+    expect(global.fetch.mock.calls[0][0]).toContain('/tokens/tok-1/scopes')
+    expect(global.fetch.mock.calls[0][1].method).toBe('PATCH')
+  })
+
+  it('adminUpdateTokenScopes sends PATCH to admin endpoint', async () => {
+    const updated = { id: '1', name: 'Test', scopes: ['roster:read'] }
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve(updated) })
+      .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve({ tokens: [updated] }) })
+      .mockResolvedValueOnce({ ok: true, status: 200, json: () => Promise.resolve({ tokens: [updated] }) })
+
+    const { adminUpdateTokenScopes } = useApiTokens()
+    const result = await adminUpdateTokenScopes('tok-1', ['roster:read'])
+
+    expect(result.scopes).toEqual(['roster:read'])
+    expect(global.fetch.mock.calls[0][0]).toContain('/admin/tokens/tok-1/scopes')
   })
 
   it('sets error on load failure', async () => {

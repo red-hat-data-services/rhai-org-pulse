@@ -262,7 +262,10 @@ import {
   Info,
   KeyRound,
   ClipboardList,
-  History
+  BookOpen,
+  History,
+  Hospital,
+  LayoutDashboard
 } from 'lucide-vue-next'
 import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 
@@ -301,8 +304,12 @@ const ICON_MAP = {
   'activity': Activity,
   'network': Network,
   'clipboard-list': ClipboardList,
+  BookOpen,
   ClipboardList,
-  History
+  History,
+  Hospital,
+  'hospital': Hospital,
+  LayoutDashboard
 }
 
 const props = defineProps({
@@ -312,9 +319,12 @@ const props = defineProps({
   activeViewId: String,
   user: Object,
   isAdmin: Boolean,
+  isTeamAdmin: { type: Boolean, default: false },
+  isManager: { type: Boolean, default: false },
   modules: { type: Array, default: () => [] },
   builtInManifests: { type: Array, default: () => [] },
-  titlePrefix: { type: String, default: '' }
+  titlePrefix: { type: String, default: '' },
+  teamDataSource: { type: String, default: '' }
 })
 
 defineEmits(['navigate', 'toggle-collapse', 'close-mobile'])
@@ -338,15 +348,25 @@ onBeforeUnmount(() => {
   document.removeEventListener('click', onClickOutside)
 })
 
-// Auto-expand active module section
+// Auto-expand active module section (collapse others for accordion behavior)
 watch(() => props.activeModule, (newVal) => {
   if (newVal && props.builtInManifests.some(m => m.slug === newVal)) {
+    for (const key of Object.keys(expandedSections.value)) {
+      expandedSections.value[key] = false
+    }
     expandedSections.value[newVal] = true
   }
 }, { immediate: true })
 
 function toggleSection(sectionId) {
-  expandedSections.value[sectionId] = !expandedSections.value[sectionId]
+  const wasExpanded = expandedSections.value[sectionId]
+  // Collapse all sections, then toggle the clicked one (accordion behavior)
+  for (const key of Object.keys(expandedSections.value)) {
+    expandedSections.value[key] = false
+  }
+  if (!wasExpanded) {
+    expandedSections.value[sectionId] = true
+  }
 }
 
 function resolveIcon(iconName) {
@@ -378,13 +398,22 @@ const navSections = computed(() => {
       expanded: expandedSections.value[manifest.slug] || false,
       headerLabel: manifest.name,
       headerIcon: resolveIcon(manifest.icon),
-      items: navItems.map(item => ({
-        id: `${manifest.slug}::${item.id}`,
-        label: item.label,
-        icon: resolveIcon(item.icon),
-        disabled: item.disabled || false,
-        separatorBefore: item.separatorBefore || false
-      }))
+      items: navItems
+        .filter(item => {
+          if (item.requireCondition === 'in-app-mode' && props.teamDataSource !== 'in-app') return false
+          if (!item.requireRole) return true
+          if (props.isAdmin) return true
+          if (item.requireRole === 'team-admin') return props.isTeamAdmin
+          if (item.requireRole === 'manager') return props.isManager || props.isTeamAdmin
+          return false
+        })
+        .map(item => ({
+          id: `${manifest.slug}::${item.id}`,
+          label: item.label,
+          icon: resolveIcon(item.icon),
+          disabled: item.disabled || false,
+          separatorBefore: item.separatorBefore || false
+        }))
     })
   }
 

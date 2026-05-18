@@ -1,0 +1,264 @@
+{
+  "fetchedAt": "2026-05-10T06:00:00.000Z",
+  "minDate": "2025-05-22",
+  "count": 4,
+  "releases": [
+    {
+      "version": "rhoai-3.4",
+      "gaDate": "2026-04-10",
+      "codeFreezeDate": "2026-03-20",
+      "gaSnapshotCommits": {
+        "fbc": "1fc85976a4db56f7e0c4abc1d2e3f4a5b6c7d8e9",
+        "registry": "8f5786a5b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6"
+      },
+      "exceptions": {
+        "fbc": {
+          "configExcludes": [
+            "cve",
+            "step_image_registries",
+            "source_image.exists"
+          ],
+          "volatileExcludes": [
+            {
+              "value": "test.no_erred_tests:fbc-fips-check-oci-ta",
+              "effectiveUntil": "2026-05-15T00:00:00Z",
+              "reference": "https://redhat.atlassian.net/browse/OCPEXCEPT-63",
+              "imageUrl": null,
+              "comment": "Konflux bug that causes fips check to fail when there's no x86 variant of the container image available. Extending the exception by 2 weeks to allow KONFLUX-10393 to be released."
+            },
+            {
+              "value": "test.no_failed_tests:fbc-fips-check-oci-ta",
+              "effectiveUntil": "2026-05-15T00:00:00Z",
+              "reference": "https://redhat.atlassian.net/browse/OCPEXCEPT-63",
+              "imageUrl": null,
+              "comment": "Konflux bug that causes fips check to fail when there's no x86 variant of the container image available."
+            },
+            {
+              "value": "tasks.required_tasks_found:fbc-fips-check-oci-ta",
+              "effectiveUntil": "2026-04-30T00:00:00Z",
+              "reference": "https://redhat.atlassian.net/browse/OCPEXCEPT-64",
+              "imageUrl": null,
+              "comment": "Adding exception to skip the fips checks for 2.25.5 dashboard issue release."
+            },
+            {
+              "value": "schedule.weekday_restriction",
+              "effectiveUntil": "2026-04-27T00:00:00Z",
+              "reference": "https://redhat.atlassian.net/browse/RHOAIENG-59732",
+              "imageUrl": null,
+              "comment": "Weekday exception to cover 3.3.2 release and 2.25.5 dashboard issue."
+            }
+          ]
+        },
+        "registry": {
+          "configExcludes": [
+            "cve.cve_blockers",
+            "rpm_signature.allowed:9cd0a493d42d0685"
+          ],
+          "volatileExcludes": [
+            {
+              "value": "sbom_spdx.disallowed_package_attributes",
+              "effectiveUntil": "2026-06-30T00:00:00Z",
+              "reference": "https://issues.redhat.com/browse/RHOAIENG-16260",
+              "imageUrl": null,
+              "comment": "v2.16 uses deprecated nodejs-18 image. Seeking exception to meet SLA. To be updated in future release."
+            },
+            {
+              "value": "hermetic_task.hermetic",
+              "effectiveUntil": "2026-06-30T00:00:00Z",
+              "reference": "https://issues.redhat.com/browse/RHOAIENG-31398",
+              "imageUrl": "quay.io/rhoai/odh-mlmd-grpc-server-rhel9",
+              "comment": "MLMD hermetic exception."
+            },
+            {
+              "value": "hermetic_task",
+              "effectiveUntil": "2026-06-30T00:00:00Z",
+              "reference": "https://issues.redhat.com/browse/KONFLUX-7552",
+              "imageUrl": "quay.io/rhoai/odh-llama-stack-core-rhel9",
+              "comment": "llama stack hermetic exclusion. AIPCC team is working on hermetic builds of this image."
+            },
+            {
+              "value": "sbom_spdx.allowed_package_sources:pkg:generic/libtokenizers",
+              "effectiveUntil": "2026-06-30T00:00:00Z",
+              "reference": "https://issues.redhat.com/browse/RHOAIENG-28098",
+              "imageUrl": null,
+              "comment": "quay to registry.redhat.io migration exception for tokenizers library."
+            },
+            {
+              "value": "rpm_signature.allowed:8a3872bf3228467c",
+              "effectiveUntil": "2026-05-31T00:00:00Z",
+              "reference": "https://issues.redhat.com/browse/PSX-1042",
+              "imageUrl": null,
+              "comment": "odh-vllm-gaudi was released with EPEL packages in previous rhoai releases. Exception needed while Gaudi team will document their usage of non-RH RPMs."
+            },
+            {
+              "value": "hermetic_task.hermetic",
+              "effectiveUntil": "2026-06-30T00:00:00Z",
+              "reference": "https://issues.redhat.com/browse/RHOAIENG-28098",
+              "imageUrl": "quay.io/rhoai/odh-kserve-controller-rhel9",
+              "comment": "quay to registry.redhat.io migration exception for kserve controller."
+            },
+            {
+              "value": "hermetic_task.hermetic",
+              "effectiveUntil": "2026-06-30T00:00:00Z",
+              "reference": "https://issues.redhat.com/browse/RHOAIENG-28098",
+              "imageUrl": "quay.io/rhoai/odh-kserve-storage-initializer-rhel9",
+              "comment": "quay to registry.redhat.io migration exception for kserve storage initializer."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "version": "rhoai-3.3.2",
+      "gaDate": "2026-03-25",
+      "codeFreezeDate": "2026-03-19",
+      "gaSnapshotCommits": {
+        "fbc": "69618cd9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5",
+        "registry": "6489db5c7477de6fd5e387b94a17f2157f05b270"
+      },
+      "exceptions": {
+        "fbc": {
+          "configExcludes": [
+            "cve",
+            "step_image_registries",
+            "source_image.exists"
+          ],
+          "volatileExcludes": [
+            {
+              "value": "test.no_erred_tests:fbc-fips-check-oci-ta",
+              "effectiveUntil": "2026-04-15T00:00:00Z",
+              "reference": "https://redhat.atlassian.net/browse/OCPEXCEPT-63",
+              "imageUrl": null,
+              "comment": "RHOAI FIPS exception extension for 3.3.2 release."
+            },
+            {
+              "value": "test.no_failed_tests:fbc-fips-check-oci-ta",
+              "effectiveUntil": "2026-04-15T00:00:00Z",
+              "reference": "https://redhat.atlassian.net/browse/OCPEXCEPT-63",
+              "imageUrl": null,
+              "comment": "RHOAI FIPS exception extension for 3.3.2 release."
+            }
+          ]
+        },
+        "registry": {
+          "configExcludes": [
+            "cve.cve_blockers",
+            "rpm_signature.allowed:9cd0a493d42d0685"
+          ],
+          "volatileExcludes": [
+            {
+              "value": "sbom_spdx.disallowed_package_attributes",
+              "effectiveUntil": "2026-06-30T00:00:00Z",
+              "reference": "https://issues.redhat.com/browse/RHOAIENG-16260",
+              "imageUrl": null,
+              "comment": "nodejs-18 deprecated image exception."
+            },
+            {
+              "value": "hermetic_task.hermetic",
+              "effectiveUntil": "2026-06-30T00:00:00Z",
+              "reference": "https://issues.redhat.com/browse/RHOAIENG-31398",
+              "imageUrl": "quay.io/rhoai/odh-mlmd-grpc-server-rhel9",
+              "comment": "MLMD hermetic exception."
+            },
+            {
+              "value": "hermetic_task.hermetic",
+              "effectiveUntil": "2026-06-30T00:00:00Z",
+              "reference": "https://issues.redhat.com/browse/RHOAIENG-28098",
+              "imageUrl": "quay.io/rhoai/odh-must-gather-rhel9",
+              "comment": "must-gather hermetic exception."
+            },
+            {
+              "value": "rpm_signature.allowed:8a3872bf3228467c",
+              "effectiveUntil": "2026-04-30T00:00:00Z",
+              "reference": "https://issues.redhat.com/browse/PSX-1042",
+              "imageUrl": null,
+              "comment": "odh-vllm-gaudi EPEL packages exception."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "version": "rhoai-3.3",
+      "gaDate": "2026-01-15",
+      "codeFreezeDate": "2026-01-03",
+      "gaSnapshotCommits": {
+        "fbc": "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0",
+        "registry": "b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1"
+      },
+      "exceptions": {
+        "fbc": {
+          "configExcludes": [
+            "cve",
+            "step_image_registries",
+            "source_image.exists"
+          ],
+          "volatileExcludes": [
+            {
+              "value": "test.no_erred_tests:fbc-fips-check-oci-ta",
+              "effectiveUntil": "2026-02-28T00:00:00Z",
+              "reference": "https://redhat.atlassian.net/browse/OCPEXCEPT-63",
+              "imageUrl": null,
+              "comment": "FIPS check exception for initial 3.3 release."
+            }
+          ]
+        },
+        "registry": {
+          "configExcludes": [
+            "cve.cve_blockers",
+            "rpm_signature.allowed:9cd0a493d42d0685"
+          ],
+          "volatileExcludes": [
+            {
+              "value": "sbom_spdx.disallowed_package_attributes",
+              "effectiveUntil": "2026-06-30T00:00:00Z",
+              "reference": "https://issues.redhat.com/browse/RHOAIENG-16260",
+              "imageUrl": null,
+              "comment": "nodejs-18 deprecated image exception. To be updated in future release."
+            },
+            {
+              "value": "hermetic_task.hermetic",
+              "effectiveUntil": "2026-06-30T00:00:00Z",
+              "reference": "https://issues.redhat.com/browse/RHOAIENG-31398",
+              "imageUrl": "quay.io/rhoai/odh-mlmd-grpc-server-rhel9",
+              "comment": "MLMD hermetic exception."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "version": "rhoai-2.25.4",
+      "gaDate": "2025-09-10",
+      "codeFreezeDate": "2025-09-03",
+      "gaSnapshotCommits": {
+        "fbc": "c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2",
+        "registry": "d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3"
+      },
+      "exceptions": {
+        "fbc": {
+          "configExcludes": [
+            "cve",
+            "step_image_registries",
+            "source_image.exists"
+          ],
+          "volatileExcludes": []
+        },
+        "registry": {
+          "configExcludes": [
+            "cve.cve_blockers"
+          ],
+          "volatileExcludes": [
+            {
+              "value": "sbom_spdx.disallowed_package_attributes",
+              "effectiveUntil": "2025-12-31T00:00:00Z",
+              "reference": "https://issues.redhat.com/browse/RHOAIENG-16260",
+              "imageUrl": null,
+              "comment": "nodejs-18 deprecated image exception for 2.25 z-stream."
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

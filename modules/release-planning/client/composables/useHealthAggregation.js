@@ -64,7 +64,7 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
       var level = effectiveLevel(h)
       var existing = map[f.rfe]
       if (!existing || isWorse(level, effectiveLevel(existing))) {
-        map[f.rfe] = { risk: { ...h.risk, level: level }, dor: h.dor || null }
+        map[f.rfe] = { risk: { ...h.risk, level: level }, dor: h.dor || null, dod: h.dod || null, planningStatus: h.planningStatus || '' }
       }
     }
     return map
@@ -85,10 +85,12 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
       if (!h || !h.risk) continue
 
       if (!result[rockName]) {
-        result[rockName] = { worstLevel: 'green', totalFlags: 0, featureCount: 0 }
+        result[rockName] = { worstLevel: 'green', totalFlags: 0, featureCount: 0, dorPassedCount: 0, dodPassedCount: 0 }
       }
       result[rockName].featureCount++
       result[rockName].totalFlags += (h.risk.score || 0)
+      if (h.dor && h.dor.passed) result[rockName].dorPassedCount++
+      if (h.dod && h.dod.passed) result[rockName].dodPassedCount++
       var level = effectiveLevel(h)
       if (isWorse(level, result[rockName].worstLevel)) {
         result[rockName].worstLevel = level
@@ -116,10 +118,40 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
         key: f.issueKey,
         level: level,
         flagCount: flags.length,
-        flagCategories: flags.map(function(fl) { return fl.category })
+        flagCategories: flags.map(function(fl) { return fl.category }),
+        summary: h ? (h.summary || '') : '',
+        dorPassed: h && h.dor ? h.dor.passed : null,
+        dodPassed: h && h.dod ? h.dod.passed : null,
+        planningStatus: h ? (h.planningStatus || '') : '',
+        deliveryOwner: h ? (h.deliveryOwner || '') : '',
+        jiraUrl: h ? (h.jiraUrl || '') : '',
+        override: h && h.risk ? (h.risk.override || null) : null,
+        status: h ? (h.status || '') : ''
       })
     }
     return result
+  })
+
+  /**
+   * Tier 1 health summary: counts green/yellow/red for Tier 1 features only.
+   * Filters healthData.features directly by tier === 1 and uses effectiveLevel()
+   * to respect risk overrides.
+   */
+  var tier1HealthSummary = computed(function() {
+    if (!healthData.value || !healthData.value.features) {
+      return null
+    }
+    var counts = { green: 0, yellow: 0, red: 0 }
+    var healthFeatures = healthData.value.features
+    for (var i = 0; i < healthFeatures.length; i++) {
+      var h = healthFeatures[i]
+      if (h.tier !== 1) continue
+      var level = effectiveLevel(h)
+      if (level && counts[level] !== undefined) {
+        counts[level]++
+      }
+    }
+    return { byRisk: counts }
   })
 
   return {
@@ -127,6 +159,7 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
     rfeKeyToHealth: rfeKeyToHealth,
     rockHealth: rockHealth,
     rockFeatures: rockFeatures,
-    healthSummary: healthSummary
+    healthSummary: healthSummary,
+    tier1HealthSummary: tier1HealthSummary
   }
 }

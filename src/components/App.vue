@@ -8,9 +8,12 @@
       :active-view-id="activeViewId"
       :user="authUser"
       :is-admin="authIsAdmin"
+      :is-team-admin="authIsTeamAdmin"
+      :is-manager="authIsManager"
       :modules="gitStaticModules"
       :built-in-manifests="builtInManifests"
       :title-prefix="titlePrefix"
+      :team-data-source="rosterData?.teamDataSource || ''"
       @navigate="handleSidebarNavigate"
       @toggle-collapse="sidebarCollapsed = !sidebarCollapsed"
       @close-mobile="mobileMenuOpen = false"
@@ -21,6 +24,26 @@
       class="min-h-screen transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)]"
       :class="sidebarCollapsed ? 'pl-[72px]' : 'pl-[260px]'"
     >
+      <!-- Impersonation banner -->
+      <div
+        v-if="isImpersonating"
+        class="sticky top-0 z-20 flex items-center justify-center gap-3 px-4 py-2 bg-amber-100 dark:bg-amber-900/40 border-b border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-200 text-sm font-medium"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+        </svg>
+        <span>
+          Viewing as: <strong>{{ impersonatingDisplayName }}</strong> ({{ impersonatingUidValue }})
+          <span v-if="authUser?.permissionTier"> — {{ authUser.permissionTier }} tier</span>
+        </span>
+        <button
+          @click="handleStopImpersonating"
+          class="ml-2 px-3 py-1 text-xs font-semibold bg-amber-200 dark:bg-amber-800 hover:bg-amber-300 dark:hover:bg-amber-700 text-amber-900 dark:text-amber-100 rounded transition-colors"
+        >
+          Stop Impersonating
+        </button>
+      </div>
+
       <!-- Top bar -->
       <header class="sticky top-0 z-10 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl border-b border-gray-200/60 dark:border-gray-700/60">
         <div class="flex items-center justify-between px-6 lg:px-8 h-16">
@@ -84,6 +107,12 @@
             </button>
           </div>
         </div>
+
+        <!-- App-wide messages (sticky with header) -->
+        <AppMessages
+          :messages="appMessages"
+          @dismiss="dismissMessage"
+        />
       </header>
 
       <!-- Page content -->
@@ -174,8 +203,13 @@ import AppSidebar from './AppSidebar.vue'
 import LandingPage from './LandingPage.vue'
 import ModuleIframeView from './ModuleIframeView.vue'
 import BackendConnectivityModal from './BackendConnectivityModal.vue'
+import AppMessages from '@shared/client/components/AppMessages.vue'
 import { computed, ref, readonly, provide, onUnmounted, watch } from 'vue'
 import { useAuth } from '@shared/client/composables/useAuth'
+import { useImpersonation } from '@shared/client/composables/useImpersonation'
+import { onRecovery, offRecovery } from '@shared/client/composables/useBackendHealth'
+import { useMessages } from '@shared/client/composables/useMessages'
+import { usePermissions } from '@shared/client/composables/usePermissions'
 import { useRoster } from '@shared/client/composables/useRoster'
 import { useGithubStats } from '@shared/client/composables/useGithubStats'
 import { useGitlabStats } from '@shared/client/composables/useGitlabStats'
@@ -203,20 +237,38 @@ export default {
     RefreshModal,
     LandingPage,
     ModuleIframeView,
-    BackendConnectivityModal
+    BackendConnectivityModal,
+    AppMessages
   },
   setup() {
-    const { user: authUser, isAdmin: authIsAdmin } = useAuth()
-    const { loadRoster, teams, selectedOrgKey, selectOrg } = useRoster()
-    const { loadGithubStats } = useGithubStats()
-    const { loadGitlabStats } = useGitlabStats()
-    const { modulesData, loadModules, enabledBuiltInSlugs, loadEnabledBuiltInSlugs } = useModules()
+    const { user: authUser, isAdmin: authIsAdmin, isTeamAdmin: authIsTeamAdmin, refresh: refreshAuth } = useAuth()
+    const { isImpersonating, impersonatingUid: impersonatingUidRef, impersonatingName: impersonatingNameRef, stopImpersonating } = useImpersonation()
+    const { isManager: authIsManager, refresh: refreshPermissions } = usePermissions()
+    const { loadRoster, reloadRoster, teams, selectedOrgKey, selectOrg, rosterData } = useRoster()
+    const { loadGithubStats, reloadGithubStats } = useGithubStats()
+    const { loadGitlabStats, reloadGitlabStats } = useGitlabStats()
+    const { modulesData, loadModules, reloadModules, enabledBuiltInSlugs, loadEnabledBuiltInSlugs } = useModules()
     const { mode: themeMode, cycle: cycleTheme } = useTheme()
+    const { messages: appMessages, fetchMessages, dismiss: dismissMessage } = useMessages()
     const titlePrefix = ref('')
 
     watch(titlePrefix, (prefix) => {
       document.title = prefix ? `${prefix} Org Pulse` : 'Org Pulse'
     })
+
+    function handleBackendRecovery() {
+      reloadRoster()
+      reloadGithubStats()
+      reloadGitlabStats()
+      reloadModules()
+      refreshAuth()
+      refreshPermissions()
+      fetchMessages()
+      fetchLastRefreshed()
+      fetchSiteConfig()
+    }
+    onRecovery(handleBackendRecovery)
+    onUnmounted(() => offRecovery(handleBackendRecovery))
 
     const lastRefreshedAt = ref(null)
     const tick = ref(0)
@@ -324,6 +376,40 @@ export default {
         if (qs) hash += `?${qs}`
         window.location.hash = hash
       },
+      updateParams(newParams, { push = true } = {}) {
+        const hash = window.location.hash || '#/'
+        const raw = hash.slice(2)
+        const qIdx = raw.indexOf('?')
+        const pathPart = qIdx >= 0 ? raw.substring(0, qIdx) : raw
+        const queryPart = qIdx >= 0 ? raw.substring(qIdx + 1) : ''
+        const params = {}
+        if (queryPart) {
+          for (const pair of queryPart.split('&')) {
+            const eqIdx = pair.indexOf('=')
+            if (eqIdx >= 0) {
+              params[decodeURIComponent(pair.substring(0, eqIdx))] = decodeURIComponent(pair.substring(eqIdx + 1))
+            } else if (pair) {
+              params[decodeURIComponent(pair)] = ''
+            }
+          }
+        }
+        for (const [k, v] of Object.entries(newParams)) {
+          if (v === undefined || v === null) {
+            delete params[k]
+          } else {
+            params[k] = String(v)
+          }
+        }
+        let newHash = `#/${pathPart}`
+        const qs = Object.entries(params)
+          .filter(([, v]) => v !== undefined && v !== null)
+          .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+          .join('&')
+        if (qs) newHash += `?${qs}`
+        routeParams.value = { ...params }
+        const method = push ? 'pushState' : 'replaceState'
+        history[method](null, '', newHash)
+      },
       goBack() {
         history.back()
       },
@@ -331,9 +417,22 @@ export default {
       moduleSlug: readonly(activeModuleSlugRef)
     })
 
+    function handleStopImpersonating() {
+      stopImpersonating({ refreshAuth, refreshPermissions })
+    }
+
+    const impersonatingUidValue = computed(() => impersonatingUidRef.value)
+    const impersonatingDisplayName = computed(() => impersonatingNameRef.value || impersonatingUidRef.value)
+
     return {
       authUser,
       authIsAdmin,
+      authIsTeamAdmin,
+      authIsManager,
+      isImpersonating,
+      impersonatingUidValue,
+      impersonatingDisplayName,
+      handleStopImpersonating,
       titlePrefix,
       fetchSiteConfig,
       lastRefreshedLabel,
@@ -350,6 +449,7 @@ export default {
       allBuiltInManifests,
       builtInManifests,
       loadBuiltInManifestsFromApi,
+      rosterData,
       rosterTeams: teams,
       selectedOrgKey,
       selectOrg,
@@ -358,7 +458,10 @@ export default {
       activeModuleSlugRef,
       routeParams,
       themeMode,
-      cycleTheme
+      cycleTheme,
+      appMessages,
+      fetchMessages,
+      dismissMessage
     }
   },
   data() {
@@ -410,6 +513,7 @@ export default {
   },
   async mounted() {
     window.addEventListener('hashchange', this.onHashChange)
+    window.addEventListener('popstate', this.onPopState)
     window.addEventListener('keydown', this.onKeyDown)
     await this.loadBuiltInManifestsFromApi()
     if (this.authUser) {
@@ -418,6 +522,7 @@ export default {
   },
   beforeUnmount() {
     window.removeEventListener('hashchange', this.onHashChange)
+    window.removeEventListener('popstate', this.onPopState)
     window.removeEventListener('keydown', this.onKeyDown)
   },
   methods: {
@@ -447,6 +552,17 @@ export default {
       } finally {
         this.isLoading = false
       }
+      // Fetch messages independently -- non-blocking, never delays initial render
+      this.fetchMessages()
+
+      // Check tracking opt-out status (non-blocking)
+      this._trackingDisabled = import.meta.env.VITE_DEMO_MODE === 'true';
+      if (!this._trackingDisabled) {
+        fetch('/api/health-metrics/tracking/status')
+          .then(r => r.json())
+          .then(data => { if (data.optedOut) this._trackingDisabled = true; })
+          .catch(() => {});
+      }
     },
 
     parseHash(hash) {
@@ -475,7 +591,7 @@ export default {
         return
       }
       if (parts[0] === 'people') { window.location.replace('#/team-tracker/people'); return }
-      if (parts[0] === 'trends') { window.location.replace('#/team-tracker/trends'); return }
+      if (parts[0] === 'trends') { window.location.replace('#/team-tracker/reports?report=trends'); return }
       if (parts[0] === 'reports') { window.location.replace('#/team-tracker/reports'); return }
       // Redirect any org-roster bookmarks to team-tracker (modules merged)
       if (parts[0] === 'org-roster') {
@@ -554,6 +670,14 @@ export default {
         }
 
         // Legacy view redirects within team-tracker
+        if (manifest.slug === 'team-tracker' && parts[1] === 'trends') {
+          window.location.replace('#/team-tracker/reports?report=trends')
+          return
+        }
+        if (manifest.slug === 'team-tracker' && parts[1] === 'org-allocation') {
+          window.location.replace('#/team-tracker/reports?report=allocation')
+          return
+        }
         if (manifest.slug === 'team-tracker' && parts[1] === 'dashboard') {
           window.location.replace('#/team-tracker/home')
           return
@@ -567,6 +691,24 @@ export default {
         const viewId = parts[1] || this.getDefaultViewId(manifest)
         this.activeViewId = viewId
         await this.loadModuleView(manifest.slug, viewId)
+
+        // Usage tracking beacon — fire-and-forget
+        if (!this._trackingDisabled) {
+          let page = `${manifest.slug}::${viewId}`;
+          // Per-report tracking granularity: append report ID when viewing a specific report
+          if (viewId === 'reports' && params.report) {
+            page = `${manifest.slug}::reports/${params.report}`;
+          }
+          if (this._lastTrackedPage !== page || Date.now() - (this._lastTrackTime || 0) > 2000) {
+            this._lastTrackedPage = page;
+            this._lastTrackTime = Date.now();
+            fetch('/api/health-metrics/track', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ page })
+            }).catch(() => {});
+          }
+        }
         return
       }
 
@@ -609,6 +751,10 @@ export default {
     },
 
     onHashChange() {
+      this.restoreFromHash()
+    },
+
+    onPopState() {
       this.restoreFromHash()
     },
 
@@ -686,13 +832,13 @@ export default {
       this.isRefreshing = true
       try {
         const refreshes = [refreshMetrics({ scope: 'all', force, sources })]
-        if (this.enabledBuiltInSlugs?.includes('allocation-tracker')) {
+        if (this.enabledBuiltInSlugs?.includes('team-tracker')) {
           refreshes.push(
-            apiRequest('/modules/allocation-tracker/refresh', {
+            apiRequest('/modules/team-tracker/allocation/refresh', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ hardRefresh: force })
-            }).catch(err => console.error('Allocation tracker refresh failed:', err))
+            }).catch(err => console.error('Allocation refresh failed:', err))
           )
         }
         await Promise.all(refreshes)

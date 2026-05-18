@@ -31,7 +31,7 @@ This proposal defines the operational mechanics of the **Planning domain** -- th
 4. A **dependency management system** using Jira links and a dedicated tracking view
 5. A **formal commit gate** -- the ceremony that transitions a release from Planning to Execution
 
-The proposal maps each need against existing tooling in the People & Teams platform (release-planning, feature-traffic, release-analysis, team-tracker, allocation-tracker modules) and identifies specific gaps to close. It is honest about data limitations -- notably that capacity signals are directional estimates (not precise sprint velocity), that several pipeline extensions are needed before automated checks work, and that cross-module data access requires architectural care.
+The proposal maps each need against existing tooling in the People & Teams platform (release-planning, feature-traffic, release-analysis, team-tracker modules) and identifies specific gaps to close. It is honest about data limitations -- notably that capacity signals are directional estimates (not precise sprint velocity), that several pipeline extensions are needed before automated checks work, and that cross-module data access requires architectural care.
 
 ### Key Decisions Needed
 

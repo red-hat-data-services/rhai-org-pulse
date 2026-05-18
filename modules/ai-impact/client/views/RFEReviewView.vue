@@ -3,12 +3,14 @@ import { ref, computed, watch, inject } from 'vue'
 import { useAIImpact } from '../composables/useAIImpact.js'
 import { useAssessments } from '../composables/useAssessments.js'
 import { useFeatures } from '../composables/useFeatures.js'
+import { useModuleLink } from '@shared/client/composables/useModuleLink.js'
 import { PHASES } from '../constants.js'
 import PhaseContent from '../components/PhaseContent.vue'
 import RFEDetailModal from '../components/RFEDetailModal.vue'
 import AIImpactGuide from '../components/AIImpactGuide.vue'
 
 const moduleNav = inject('moduleNav')
+const { navigateTo: crossNavigate } = useModuleLink()
 
 const selectedRFE = ref(null)
 const notFoundRFE = ref(null)
@@ -94,9 +96,7 @@ function handleRetry() {
 
 function handleSelectRFE(rfe) {
   selectedRFE.value = rfe
-  if (rfe) {
-    moduleNav.navigateTo('rfe-review', { select: rfe.key })
-  }
+  moduleNav.navigateTo('rfe-review', { select: rfe.key })
 }
 
 function handleCloseModal() {
@@ -105,7 +105,10 @@ function handleCloseModal() {
 }
 
 function handleNavigateToFeature(featureKey) {
-  moduleNav.navigateTo('feature-review', { select: featureKey })
+  crossNavigate('feature-traffic', 'feature-detail', {
+    key: featureKey,
+    fromRfe: selectedRFE.value?.key
+  })
 }
 
 // Handle incoming select param (cross-link from Feature Review)
@@ -150,6 +153,7 @@ watch([() => moduleNav.params.value, rfeData], ([params]) => {
       :priorityFilter="priorityFilter"
       :statusFilter="statusFilter"
       :selectedRFE="selectedRFE"
+      :rfeToFeature="rfeToFeature"
       @update:timeWindow="timeWindow = $event"
       @update:filter="filter = $event"
       @update:searchQuery="searchQuery = $event"

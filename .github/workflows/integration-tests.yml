@@ -1,0 +1,49 @@
+name: Integration Tests
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'modules/**'
+      - 'tests/integration/**'
+
+concurrency:
+  group: integration-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  detect-changes:
+    name: Detect Changed Modules
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      ai-impact: ${{ steps.filter.outputs.ai-impact }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            ai-impact:
+              - 'modules/ai-impact/**'
+              - 'tests/integration/ai-impact.spec.js'
+              - 'tests/integration/constants.js'
+              - 'tests/integration/helpers.js'
+
+  test-ai-impact:
+    name: Test AI Impact Module
+    needs: detect-changes
+    if: needs.detect-changes.outputs.ai-impact == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/test-org-pulse-module
+        with:
+          module: ai-impact

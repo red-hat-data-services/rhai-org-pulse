@@ -1,4 +1,10 @@
-# AI Platform People & Teams
+# AI Platform People & Teams — Claude Code Reference
+
+@../AGENTS.md
+
+This file extends AGENTS.md with architecture details, integration specifics,
+and API routes that Claude Code needs for deep codebase work. For conventions,
+hard constraints, and code style: see AGENTS.md (imported above).
 
 ## Local Development
 
@@ -16,14 +22,14 @@ npm run dev:full       # Starts Vite (5173) + Express (3001)
 |----------|-------------|
 | `JIRA_EMAIL` | Your @redhat.com email |
 | `JIRA_TOKEN` | Jira Cloud API token from https://id.atlassian.com/manage-profile/security/api-tokens |
-| `ADMIN_EMAILS` | Comma-separated admin emails (seeds the allowlist) |
+| `ADMIN_EMAILS` | Comma-separated admin emails (seeds the role store) |
 
 ### Optional Environment Variables
 
 | Variable | Description |
 |----------|-------------|
 | `GITHUB_TOKEN` | Classic PAT with `read:user` scope (for contribution stats). Fine-grained tokens don't work with GraphQL API. |
-| `GITLAB_TOKEN` | GitLab PAT with `read_api` scope (for contribution stats). Without it, only public project contributions are counted. |
+| `GITLAB_TOKEN` | GitLab PAT with `read_api` scope (for contribution stats). |
 | `GITLAB_BASE_URL` | GitLab instance URL (default: `https://gitlab.com`) |
 | `IPA_BIND_DN` | LDAP bind DN for IPA roster sync (service account). Required for roster sync. |
 | `IPA_BIND_PASSWORD` | LDAP bind password for IPA roster sync. Required for roster sync. |
@@ -32,149 +38,58 @@ npm run dev:full       # Starts Vite (5173) + Express (3001)
 | `PRODUCT_PAGES_CLIENT_SECRET` | OAuth client secret for Product Pages (production). Used with `PRODUCT_PAGES_CLIENT_ID`. |
 | `PRODUCT_PAGES_TOKEN` | Personal bearer token for Product Pages (local dev fallback). Used when OAuth env vars are not set. |
 | `FEATURE_TRAFFIC_GITLAB_TOKEN` | GitLab PAT with `read_api` scope for feature-traffic pipeline. Overrides `GITLAB_TOKEN` for CI artifact fetching. |
-| `DEMO_MODE` / `VITE_DEMO_MODE` | Set both to `true` to run with fixture data (no credentials needed) |
-
-### Commands
-
-- `npm run dev:full` — start both Vite and Express servers
-- `npm run dev` — Vite only (frontend)
-- `npm run dev:server` — Express only (backend, requires .env)
-- `npm test` — run all tests
-- `npm run test:watch` — run tests in watch mode
-
-## Architecture
-
-- **Frontend**: Vue 3 SPA with Composition API (`<script setup>`), Vite 6, Tailwind CSS 3
-- **Backend**: Express API server (port 3001), single `server/dev-server.js` for both local dev and production
-- **Modules**: Built-in modules live in `modules/<slug>/` with auto-discovery (see Module System below)
-- **Charts**: Chart.js 4 + vue-chartjs 5
-- **Auth**: OpenShift OAuth proxy in production; no auth in local dev (uses `ADMIN_EMAILS` env var)
-- **Storage**: Local filesystem (`./data/`), mounted as PVC in OpenShift
-- **Hosting**: OpenShift (frontend nginx + backend Express), deployed via ArgoCD
+| `AUTH_EMAIL_DOMAIN` | Override email domain for role matching (e.g. `cluster.local`). When set, role assignments normalize emails to this domain. Env var takes precedence over `authEmailDomain` in site-config.json. |
+| `DEMO_MODE` / `VITE_DEMO_MODE` | Set both to `true` for fixture data (no credentials needed). |
 
 ## Key Concepts
 
 ### Data Flow
-- **Roster**: `data/org-roster-full.json` defines all orgs, teams, and members. Built automatically by roster sync (LDAP + Google Sheets). The `deriveRoster()` function transforms this into the API response format.
-- **Person metrics**: Individual Jira stats stored as `data/people/{name}.json`. Fetched via JQL queries against Jira with 365-day lookback.
-- **GitHub contributions**: `data/github-contributions.json` stores contribution counts per user. `data/github-history.json` stores monthly history. Fetched via GitHub GraphQL API with `GITHUB_TOKEN`.
-- **GitLab contributions**: `data/gitlab-contributions.json` and `data/gitlab-history.json`. Fetched via GitLab GraphQL API across one or more configured instances (see `gitlabInstances` in roster-sync-config). Each user entry may include an `instances` array for per-instance contribution breakdowns.
-- **Snapshots**: Monthly metric snapshots stored in `data/snapshots/{sanitized-teamKey}/{YYYY-MM-DD}.json` (teamKey sanitized: `::` → `--`, special chars → `_`). Generated from person metrics + GitHub/GitLab history. Admin can delete all via Settings > Snapshots.
-- **Trends**: Built dynamically from person metric files by bucketing resolved issues by month, with org/team breakdowns.
-- **Site config**: `data/site-config.json` stores platform-level settings (title prefix). Editable by admins via Settings > General.
-- **Composite keys**: Teams are identified by `orgKey::teamName` (e.g., `shgriffi::Model Serving`).
-- **Data file formats**: See `docs/DATA-FORMATS.md` for the JSON schema of every data file. Demo fixtures in `fixtures/` must always match production format.
+- **Roster**: `data/org-roster-full.json` — built by roster sync (LDAP + Google Sheets). `deriveRoster()` transforms into API format.
+- **Person metrics**: `data/people/{name}.json` — per-person Jira stats, 365-day lookback.
+- **GitHub contributions**: `data/github-contributions.json` + `data/github-history.json`.
+- **GitLab contributions**: `data/gitlab-contributions.json` + `data/gitlab-history.json`. Multi-instance support via `gitlabInstances` config.
+- **Snapshots**: `data/snapshots/{sanitized-teamKey}/{YYYY-MM-DD}.json` (teamKey sanitized: `::` → `--`).
+- **Trends**: Built dynamically from person metric files by bucketing resolved issues by month.
+- **Site config**: `data/site-config.json` — platform-level settings (title prefix, auth email domain).
+- **Composite keys**: Teams = `orgKey::teamName` (e.g., `shgriffi::Model Serving`).
+- **Field options**: `data/team-data/field-options/<name>.json` — named allowed-value sets, referenced by `optionsRef`.
+- **Messages**: `data/messages.json` — admin announcements, merged with computed provider messages.
+- **Data file formats**: See `docs/DATA-FORMATS.md`. Demo fixtures must match production format.
 
 ### Roster Sync (`shared/server/roster-sync/`)
-Automated roster building that replaces manual scripts:
-- **IPA LDAP** (`ipa-client.js`): Traverses Red Hat corporate directory (`ipa.corp.redhat.com`) via LDAPS from configured org root UIDs. Requires VPN and service account credentials (`IPA_BIND_DN`, `IPA_BIND_PASSWORD`).
-  - `ldapjs` v3: `createClient()` is synchronous. Search entries use `entry.attributes` array with `.type` and `.values`.
-  - Extracts GitHub and GitLab usernames from `rhatSocialUrl` LDAP field.
-- **Google Sheets** (`sheets.js`): Enriches LDAP data with team assignments, focus areas, etc. Sheet names are auto-discovered from the spreadsheet ID.
-  - Auth via `GOOGLE_SERVICE_ACCOUNT_KEY_FILE` env var pointing to a service account JSON key.
-- **Username Inference** (`username-inference.js`): Optionally infers missing GitHub/GitLab usernames by fuzzy-matching roster people against GitHub org members or GitLab group members. Configured via Settings UI (`githubOrgs`, `gitlabInstances`). Supports per-instance GitLab credentials; falls back to legacy `gitlabGroups` if `gitlabInstances` is absent.
-- **Config** (`config.js`): Org roots, Google Sheet ID, username inference settings, and excluded job titles stored in `data/roster-sync-config.json`, managed via Settings UI.
-- **Scheduler** (`index.js`): Runs sync daily (24h interval). Can be triggered manually via API or Settings UI.
+- **IPA LDAP** (`ipa-client.js`): Traverses `ipa.corp.redhat.com` via LDAPS. `ldapjs` v3: `createClient()` is synchronous; entries use `entry.attributes` array with `.type`/`.values`. GitHub/GitLab usernames from `rhatSocialUrl`.
+- **Google Sheets** (`sheets.js`): Enriches LDAP data. Sheet names auto-discovered. Auth via `GOOGLE_SERVICE_ACCOUNT_KEY_FILE`.
+- **Username Inference** (`username-inference.js`): Fuzzy-matches roster against GitHub org / GitLab group members.
+- **Config**: `data/roster-sync-config.json`, managed via Settings UI.
+- **Scheduler**: Daily sync (24h interval), manual trigger via API.
 
 ### Jira Integration (Jira Cloud — redhat.atlassian.net)
-- Auth: Basic auth with `JIRA_EMAIL` + `JIRA_TOKEN` (API token), base64-encoded
-- Uses the Sprint Report API (`/rest/greenhopper/1.0/rapid/charts/sprintreport`) for sprint data (committed vs delivered)
-- Uses `/rest/api/3/search/jql` (GET with cursor-based `nextPageToken` pagination) for person-level metrics
-- Auto-resolves roster display names to Jira Cloud accountIds via `/rest/api/2/user/search?query=`, cached in `data/jira-name-map.json` (format: `{ "Name": { accountId, displayName } }`)
-- JQL uses `assignee = "accountId"` (not display names)
-- Story points field: `customfield_10028`
-- Searches across all Jira projects (no project filter)
+- Basic auth: `JIRA_EMAIL` + `JIRA_TOKEN`, base64-encoded.
+- Sprint Report API: `/rest/greenhopper/1.0/rapid/charts/sprintreport`.
+- JQL search: `/rest/api/3/search/jql` (GET, cursor-based `nextPageToken`).
+- Name resolution: `/rest/api/2/user/search?query=`, cached in `data/jira-name-map.json`.
+- JQL uses `assignee = "accountId"` (not display names).
+- Story points field: `customfield_10028`.
 
 ### GitHub Integration (`modules/team-tracker/server/github/contributions.js`)
-- Uses GitHub GraphQL API directly via `node-fetch` (no `gh` CLI dependency)
-- Auth via `GITHUB_TOKEN` env var (classic PAT with `read:user` scope)
-- Batches users (10 per batch for counts, 5 for history) with 2-second delays between batches to avoid rate limiting
-- Functions are async: `fetchContributions(usernames)` and `fetchContributionHistory(usernames)`
+- GraphQL API via `node-fetch`. Auth: `GITHUB_TOKEN` (classic PAT, `read:user` scope).
+- Batches: 10 users/batch (counts), 5 (history), 2s delay between batches.
 
 ### GitLab Integration (`modules/team-tracker/server/gitlab/contributions.js`)
-- Uses GitLab GraphQL API (group-level `contributions` query) via `node-fetch`
-- Supports multiple GitLab instances configured via `gitlabInstances` in roster-sync-config (managed in Settings UI)
-- Each instance specifies a `tokenEnvVar` (name of env var holding the PAT with `read_api` scope), `baseUrl`, `label`, and `groups`
-- Instances are fetched in parallel (`Promise.allSettled`) with per-instance 5-minute timeout; within each instance, groups × monthly windows are fetched sequentially with 200ms delays
-- `validateInstances()` validates config at fetch time; invalid entries are skipped with warnings
-- Legacy `gitlabGroups` config is auto-migrated to `gitlabInstances` on first load
+- GraphQL API (group-level `contributions` query). Multi-instance via `gitlabInstances` config.
+- Parallel per-instance (`Promise.allSettled`), 5-min timeout; sequential within instance (200ms delays).
 
 ### Module System
-- **Built-in modules** live in `modules/<slug>/` with `module.json` manifests, `client/`, `server/`, and `__tests__/` directories
-- **Auto-discovery**: Frontend uses `import.meta.glob('/modules/*/module.json')`, backend scans filesystem via `server/module-loader.js`
-- **Shared code**: `shared/client/` (composables, services, components) and `shared/server/` (storage, auth) — importable via `@shared` alias
-- **Vite aliases**: `@shared` → `shared/`, `@modules` → `modules/`
-- **Navigation**: Modules use `inject('moduleNav')` for `navigateTo(viewId, params)`, `goBack()`, and reactive `params`
-- **Hash routing**: `#/<module-slug>/<view-id>?key=value`
-- **Backend routes**: Module server routes are mounted at `/api/modules/<slug>/`
-- **Legacy forwards**: Team Tracker routes are aliased from `/api/roster` etc. to `/api/modules/team-tracker/...` for backward compatibility
-- **Module guide**: See `docs/MODULES.md` for creating new modules; use `/create-module` command to bootstrap
-- **Validation**: `npm run validate:modules` checks all manifests; runs in CI before tests
-- **Stability contract**: `shared/API.md` documents shared exports; modules cannot import from other modules
+- Auto-discovery: frontend `import.meta.glob('/modules/*/module.json')`, backend `server/module-loader.js`.
+- Vite aliases: `@shared` → `shared/`, `@modules` → `modules/`.
+- Navigation: `inject('moduleNav')` → `navigateTo(viewId, params)`, `goBack()`.
+- Hash routing: `#/<module-slug>/<view-id>?key=value`.
+- Backend routes mounted at `/api/modules/<slug>/`.
+- Legacy forwards: `/api/roster` etc. → `/api/modules/team-tracker/...`.
 
 ### Caching
-- Frontend uses localStorage stale-while-revalidate pattern (prefix `tt_cache:`)
-- API functions accept an `onData` callback: called immediately with cached data, then again with fresh data
-
-## Local Kind Cluster
-
-For testing the containerized deployment locally, see `deploy/KIND.md`. The `deploy/openshift/overlays/local/` overlay strips OpenShift-specific resources (OAuth proxy, Route, ServiceAccount) and uses locally-built images with `imagePullPolicy: Never`. Cluster name is `team-tracker` (not the default `kind`). If using Podman: `export KIND_EXPERIMENTAL_PROVIDER=podman`.
-
-## Deployment
-
-Deployed to OpenShift via ArgoCD. Full deployment guide: `deploy/OPENSHIFT.md`.
-
-| Component | Image | Details |
-|-----------|-------|---------|
-| Frontend | `quay.io/org-pulse/team-tracker-frontend` | nginx serving Vue SPA, proxies /api to backend |
-| Backend | `quay.io/org-pulse/team-tracker-backend` | Express server with PVC-mounted data directory |
-| OAuth Proxy | `quay.io/openshift/origin-oauth-proxy:4.16` | Sidecar on frontend pod |
-
-Overlays: `deploy/openshift/overlays/dev/` (namespace: `team-tracker`), `deploy/openshift/overlays/preprod/` (namespace: `ambient-code--team-tracker`), and `deploy/openshift/overlays/prod/`.
-
-Secrets (created manually on cluster, not in git):
-- `team-tracker-secrets`: `JIRA_EMAIL`, `JIRA_TOKEN`, `GITHUB_TOKEN` (optional), `GITLAB_TOKEN` (optional), `FEATURE_TRAFFIC_GITLAB_TOKEN` (optional)
-- `frontend-proxy-cookie`: `session_secret`
-- `google-sa-key`: Google service account JSON key (mounted at `/etc/secrets/`)
-
-### CI/CD & Image Strategy
-
-**GitHub Actions workflows** (`.github/workflows/`):
-- **`ci.yml`** — Runs on all PRs and pushes to `main`. Lints, tests, builds, and validates kustomize overlays (kustomize validation only runs when `deploy/` files change). The job name "Test & Build" is the single required status check.
-- **`build-images.yml`** — Triggers on pushes to `main` when backend or frontend source files change. Detects which components changed, builds/smoke-tests/pushes only the affected images to Quay.io with `:<sha>` and `:latest` tags, then creates a single PR to update prod overlay image tags.
-
-**Automatic prod deployment flow:**
-1. PR merged to `main` → build workflow detects changed components, runs tests, builds affected images, pushes `quay.io/org-pulse/team-tracker-*:<sha>` + `:latest`
-2. A single `update-prod-image` job creates one follow-up PR updating all affected image tags via `kustomize edit set image`, then auto-merges it (`gh pr merge --auto --squash`)
-3. ArgoCD (auto-sync) picks up the manifest change and rolls out the new image(s)
-
-**Image tagging:**
-- Prod overlay pins images to git SHA tags (e.g., `quay.io/org-pulse/team-tracker-backend:abc1234...`), updated automatically by CI
-- Dev and preprod overlays use `:latest`
-
-**ConfigMap changes trigger rollouts** via kustomize `configMapGenerator` — ConfigMap names include a content hash suffix (e.g., `team-tracker-config-5h2f9k`), so any data change produces a new name and triggers a pod rollout automatically.
-
-**Branch protection** uses a GitHub repository ruleset on `main`:
-- Requires PRs (no direct pushes)
-- Requires "Test & Build" status check
-- Admin role has bypass (used by `GH_PAT` secret for CI auto-merge PRs)
-
-**Repo secrets:**
-- `QUAY_USERNAME` / `QUAY_PASSWORD` — Quay.io registry credentials for image push
-- `GH_PAT` — Personal access token with admin bypass, used by CI to create and auto-merge image tag update PRs
-- `GCP_SA_KEY` — GCP service account JSON key for Vertex AI auth (Claude code review)
-
-**Daily CronJob** (`deploy/openshift/overlays/prod/cronjob-sync-refresh.yaml`): Runs at 6:00 AM UTC, triggers roster sync then full metrics refresh via the backend API.
-
-### Building images on ARM Macs
-Standard `--platform linux/amd64` builds fail: npm times out under QEMU, esbuild crashes. Workaround: build/install natively, then copy into amd64 base images. See `deploy/OPENSHIFT.md` step 3 for details. This works because the backend has no native Node addons (all pure JS).
-
-### Dev vs prod
-- **Dev overlay** clears `ADMIN_EMAILS` via `configMapGenerator` merge behavior. When empty, the first authenticated user is auto-added to the allowlist.
-- **Prod overlay** keeps `ADMIN_EMAILS` to pre-seed the allowlist with known admins.
-
-### Auth flow (production)
-OpenShift OAuth proxy (sidecar on frontend pod) authenticates users and sets `X-Forwarded-Email` / `X-Forwarded-User` headers. The backend reads `X-Forwarded-Email` and checks it against `data/allowlist.json`. If the allowlist is empty, the first request auto-adds the user.
+- Frontend: localStorage stale-while-revalidate (prefix `tt_cache:`).
+- API functions accept `onData` callback: called with cached data immediately, then fresh data.
 
 ## Project Structure
 
@@ -197,129 +112,243 @@ shared/
     auth.js         # Auth middleware (requireAuth, requireAdmin)
     roster-sync/    # Roster sync engine (LDAP + Google Sheets), config, constants
     index.js        # Barrel export
-  API.md            # Stability contract for shared exports
-
-modules/
-  team-tracker/     # Main module: delivery metrics, sprint tracking
-    module.json     # Module manifest
-    client/         # Views, components, composables, utils
-    server/         # Jira, GitHub, GitLab integrations
-    __tests__/      # Module tests (client/ and server/)
-
-server/
-  dev-server.js     # Express server (local dev + production)
-  module-loader.js  # Backend module auto-discovery
-
-scripts/
-  validate-modules.js  # CI manifest validation
-
-deploy/
-  backend.Dockerfile    # Backend container image
-  frontend.Dockerfile   # Frontend container image (multi-stage Vite build -> nginx)
-  nginx.conf            # nginx config for SPA + API proxy
-  openshift/
-    base/               # Kustomize base manifests
-    overlays/dev/       # Dev cluster overlay (namespace: team-tracker)
-    overlays/preprod/   # Preprod cluster overlay (namespace: ambient-code--team-tracker)
-    overlays/prod/      # Prod cluster overlay
-
-docs/
-  MODULES.md            # Module development guide
-  module-template/      # Starter template for new modules
-
-.github/
-  instructions/
-    review.instructions.md  # Shared code review criteria
-  workflows/                # CI/CD workflows
-
-AGENTS.md           # Vendor-neutral AI agent conventions
-data/               # Local dev data (gitignored)
-secrets/            # Service account keys (gitignored)
 ```
 
-## Code Style, Testing & Documentation
+## Local Kind Cluster
 
-See [`AGENTS.md`](../AGENTS.md) for code style, testing, and documentation
-maintenance conventions. Those apply to all AI agents and are the single source
-of truth. A pre-commit hook (`lint-staged` + `husky`) auto-runs ESLint on staged
-files, but always verify with `npm run lint` before committing.
+For testing the containerized deployment locally, see `deploy/KIND.md`. The `deploy/openshift/overlays/local/` overlay strips OpenShift-specific resources (OAuth proxy, Route, ServiceAccount) and uses locally-built images with `imagePullPolicy: Never`. Cluster name is `team-tracker` (not the default `kind`). If using Podman: `export KIND_EXPERIMENTAL_PROVIDER=podman`.
 
-## Code Review
+## Deployment
 
-Review criteria are centralized in
-[`.github/instructions/review.instructions.md`](../.github/instructions/review.instructions.md).
-This file is used by the CI review workflow, the `/pr-review` slash command, and
-GitHub Copilot code review.
+Deployed to OpenShift via ArgoCD. Full guide: `deploy/OPENSHIFT.md`.
+
+| Component | Image |
+|-----------|-------|
+| Frontend | `quay.io/org-pulse/team-tracker-frontend` (nginx + Vue SPA) |
+| Backend | `quay.io/org-pulse/team-tracker-backend` (Express + PVC data) |
+| OAuth Proxy | `quay.io/openshift/origin-oauth-proxy:4.16` (sidecar) |
+
+Overlays: `dev/` (team-tracker ns), `preprod/` (ambient-code--team-tracker ns), `prod/`.
+
+### CI/CD
+- **`ci.yml`** — PRs + main: lint, test, build, kustomize validate. Required check: "Test & Build".
+- **`build-images.yml`** — main pushes: detect changed components, build/push to Quay (`:<sha>` + `:latest`), create PR to update prod image tags, auto-merge.
+- ConfigMap changes auto-trigger rollouts via kustomize `configMapGenerator` — ConfigMap names include a content hash suffix (e.g., `team-tracker-config-5h2f9k`), so any data change produces a new name and triggers a pod rollout automatically.
+
+**Branch protection** uses a GitHub repository ruleset on `main`:
+- Requires PRs (no direct pushes)
+- Requires "Test & Build" status check
+- Admin role has bypass (used by `GH_PAT` secret for CI auto-merge PRs)
+
+**Repo secrets:**
+- `QUAY_USERNAME` / `QUAY_PASSWORD` — Quay.io registry credentials for image push
+- `GH_PAT` — Personal access token with admin bypass, used by CI to create and auto-merge image tag update PRs
+- `GCP_SA_KEY` — GCP service account JSON key for Vertex AI auth (Claude code review)
+
+**Daily CronJob** (`deploy/openshift/overlays/prod/cronjob-sync-refresh.yaml`): Runs at 6:00 AM UTC, triggers roster sync then full metrics refresh via the backend API.
+
+### Testing
+
+**Unit tests** use Vitest with jsdom and @vue/test-utils. Run via `npm test`.
+
+**Smoke tests** use Playwright to verify the production container images. Located in `tests/smoke/app-loads.spec.js`. These run automatically in CI after images are built and can also be run locally:
+
+```bash
+make build-frontend-image  # Build frontend container
+make build-backend-image   # Build backend container
+make smoke-test            # Run Playwright smoke tests (uses demo mode)
+```
+
+Smoke tests verify:
+- Application loads without JavaScript errors (console errors, unhandled exceptions)
+- Core UI structure renders (sidebar, main content, page title)
+- Data/API integration works (no stuck loading spinners, no error states)
+- Client-side routing functions (hash-based navigation)
+- Basic accessibility (semantic landmarks present)
+
+Playwright runs in a container (`mcr.microsoft.com/playwright:v1.60.0`), so no local browser installation needed. Works on any OS (RHEL/Podman, macOS/Docker, Ubuntu). The Makefile auto-detects the container runtime (prefers Podman on RHEL).
+
+**IMPORTANT:** The Playwright version must match between `package.json` (`@playwright/test`) and `Makefile` (`PLAYWRIGHT_IMAGE`). When updating Playwright, change both files to the same version to prevent browser binary mismatches.
+
+CI workflow (`build-images.yml`):
+1. Builds frontend and backend images via `make build-frontend-image` and `make build-backend-image`
+2. Runs `make smoke-test FRONTEND_IMAGE=<image>:<sha> BACKEND_IMAGE=<image>:<sha>` against the built images
+3. Uploads images to Quay if tests pass
+
+**Integration tests** use Playwright to verify module-specific functionality against production containers in demo mode. Located in `tests/integration/<module>.spec.js`:
+
+```bash
+make test-module MODULE=ai-impact
+```
+
+Integration tests verify:
+- Modules are visible and clickable in sidebar
+- Module views load correctly
+- Module content renders (buttons, inputs, tables, cards)
+- API endpoints return data
+- Disabled menu items are non-clickable
+
+Tests run in same Playwright container as smoke tests. Uses tag-based filtering (`@module-name`) for selective execution.
+
+CI workflow (`integration-tests.yml`):
+- Triggers on changes to `modules/**` or `tests/integration/**`
+- Uses `dorny/paths-filter` to detect which modules changed
+- Runs tests only for changed modules via generic `test-module` Makefile target
+- Reusable composite action at `.github/actions/test-org-pulse-module/`
+
+To add integration tests for a new module:
+1. Create `tests/integration/<module>.spec.js` with `@<module-name>` tag
+2. Add filter in `integration-tests.yml` `detect-changes` job
+3. Add job output and test job (copy pattern from `test-ai-impact`)
+
+### Building images on ARM Macs
+Standard `--platform linux/amd64` builds fail: npm times out under QEMU, esbuild crashes. Workaround: build/install natively, then copy into amd64 base images. See `deploy/OPENSHIFT.md` step 3 for details. This works because the backend has no native Node addons (all pure JS).
+
+### Dev vs prod
+- **Dev overlay** clears `ADMIN_EMAILS` via `configMapGenerator` merge behavior. When empty, the first authenticated user is auto-added to the role store.
+- **Prod overlay** keeps `ADMIN_EMAILS` to pre-seed the role store with known admins.
+
+### Auth Flow (production)
+OAuth proxy (sidecar on frontend pod) authenticates users and sets `X-Forwarded-Email` / `X-Forwarded-User` headers. Backend reads `X-Forwarded-Email` and checks against `data/roles.json` via role-store. Empty role store → first user auto-added.
 
 ## API Routes
 
-In production, all routes are authenticated via OpenShift OAuth proxy. The proxy sets `X-Forwarded-Email` and `X-Forwarded-User` headers. All routes are prefixed with `/api`.
+All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 
 **GET:**
 - `/api/healthz` — health check (no auth)
-- `/api/whoami` — current user info (supports both proxy and token auth)
-- `/api/site-config` — site configuration (titlePrefix)
-- `/api/tokens` — list current user's API tokens
-- `/api/admin/tokens` — list all API tokens (admin)
+- `/api/whoami` — current user info (proxy + token auth). Includes `permissionTier`, `isTeamAdmin`, `roles`.
+- `/api/site-config` — site configuration
+- `/api/messages` — app-wide messages (computed + stored)
+- `/api/tokens` — current user's API tokens
+- `/api/token-scopes` — available scope catalog and presets
+- `/api/admin/tokens` — all API tokens (admin)
 - `/api/roster` — org/team structure with members
-- `/api/team/:teamKey/metrics` — team member metrics (teamKey = `orgKey::teamName`)
+- `/api/team/:teamKey/metrics` — team member metrics
 - `/api/person/:name/metrics` — individual person metrics
 - `/api/people/metrics` — bulk all-people metrics
 - `/api/github/contributions` — GitHub contribution data
 - `/api/gitlab/contributions` — GitLab contribution data
-- `/api/trends` — monthly Jira + GitHub + GitLab trend data
+- `/api/trends` — monthly trend data
 - `/api/allowlist` — authorized email list
-- `/api/admin/roster-sync/config` — roster sync configuration
-- `/api/admin/roster-sync/status` — sync status (running/last result, includes `phase`, `phaseLabel`, `metadataSync`, `stale` fields)
-- `/api/modules/team-tracker/sheets/discover` — discover sheet names in a Google Spreadsheet (admin, requires `spreadsheetId` query param)
-- `/api/modules/release-analysis/product-pages/products` — Product Pages product list for autocomplete (admin, includes authStatus)
-- `/api/modules/feature-traffic/features` — list features with filters (status, version, health, sort)
-- `/api/modules/feature-traffic/features/:key` — full feature detail
+- `/api/roles/me` — current user's roles
+- `/api/roles` — all role assignments (admin)
+- `/api/admin/roster-sync/config` — roster sync config
+- `/api/admin/roster-sync/status` — sync status
+- `/api/modules/team-tracker/sheets/discover` — discover sheet names (admin)
+- `/api/modules/team-tracker/org-teams` — org-roster teams with member counts
+- `/api/modules/team-tracker/org-teams/:teamKey` — single team detail
+- `/api/modules/team-tracker/org-teams/:teamKey/members` — team members
+- `/api/modules/team-tracker/permissions/me` — permission tier + managed UIDs
+- `/api/modules/team-tracker/manager/dashboard` — manager dashboard data
+- `/api/modules/team-tracker/structure/teams` — list teams
+- `/api/modules/team-tracker/structure/unassigned` — unassigned people
+- `/api/modules/team-tracker/structure/field-definitions` — field definitions
+- `/api/modules/team-tracker/structure/audit-log` — audit log
+- `/api/modules/team-tracker/registry/people/search/ldap` — LDAP search (rate-limited)
+- `/api/modules/team-tracker/field-options` — list field option sets
+- `/api/modules/team-tracker/field-options/:name` — single option set
+- `/api/modules/team-tracker/snapshots/:teamKey` — team snapshots
+- `/api/modules/team-tracker/snapshots/:teamKey/:personName` — person snapshots
+- `/api/modules/team-tracker/components` — component list (deprecated alias)
+- `/api/modules/team-tracker/structure/migrate/preview` — migration preview (admin)
+- `/api/modules/team-tracker/structure/migrate/field-to-options/preview` — field-to-options migration preview (team-admin)
+- `/api/modules/release-analysis/product-pages/products` — Product Pages products (admin)
+- `/api/modules/release-analysis/conforma/releases` — conforma releases
+- `/api/modules/release-analysis/conforma/releases/:version` — release detail
+- `/api/modules/release-analysis/conforma/status` — conforma data status
+- `/api/modules/feature-traffic/features` — features (filterable)
+- `/api/modules/feature-traffic/features/:key` — feature detail
 - `/api/modules/feature-traffic/versions` — unique fix versions
-- `/api/modules/feature-traffic/status` — data freshness, sync info, staleness warning
-- `/api/modules/feature-traffic/config` — fetch configuration (admin)
-- `/api/modules/ai-impact/assessments` — list all latest assessments (slim projection)
-- `/api/modules/ai-impact/assessments/:key` — single RFE assessment + history
-- `/api/modules/ai-impact/assessments/status` — assessment data status (admin)
-- `/api/modules/ai-impact/features` — list all features (slim projection)
+- `/api/modules/feature-traffic/status` — data freshness
+- `/api/modules/feature-traffic/config` — fetch config (admin)
+- `/api/modules/ai-impact/assessments` — all assessments
+- `/api/modules/ai-impact/assessments/:key` — single assessment + history
+- `/api/modules/ai-impact/assessments/status` — assessment status (admin)
+- `/api/modules/ai-impact/features` — all features
 - `/api/modules/ai-impact/features/:key` — single feature + history
-- `/api/modules/ai-impact/features/status` — feature data status (admin)
+- `/api/modules/ai-impact/features/status` — feature status (admin)
+- `/api/health-metrics/tracking/status` — opt-out status
+- `/api/health-metrics/dashboard` — aggregated dashboard (admin/viewer)
+- `/api/health-metrics/pages` — per-page stats (admin/viewer)
+- `/api/health-metrics/pages/:pageId` — page detail (admin/viewer)
+- `/api/health-metrics/user-types` — views by user type (admin/viewer)
+- `/api/health-metrics/config` — config (admin)
+- `/api/health-metrics/viewers` — authorized viewers (admin)
+- `/api/health-metrics/field-definitions` — field definitions for settings (admin)
 
 **PUT:**
-- `/api/modules/ai-impact/assessments/:key` — upsert single assessment (admin)
-- `/api/modules/ai-impact/features/:key` — upsert single feature (admin)
+- `/api/modules/team-tracker/field-options/:name` — replace option set values (admin)
+- `/api/modules/ai-impact/assessments/:key` — upsert assessment (admin)
+- `/api/modules/ai-impact/features/:key` — upsert feature (admin)
 
 **POST:**
-- `/api/tokens` — create a new API token (returns raw token once)
-- `/api/site-config` — update site configuration (admin)
-
-- `/api/roster/refresh` — refresh all person metrics from Jira
-- `/api/team/:teamKey/refresh` — refresh metrics for one team
+- `/api/tokens` — create API token
+- `/api/site-config` — update site config (admin)
+- `/api/admin/messages` — create announcement (admin)
+- `/api/roster/refresh` — refresh all person metrics
+- `/api/team/:teamKey/refresh` — refresh team metrics
 - `/api/person/:name/metrics?refresh=true` — refresh single person
-- `/api/github/refresh` — refresh all GitHub contributions
+- `/api/github/refresh` — refresh GitHub contributions
 - `/api/github/contributions/:username/refresh` — refresh single user
-- `/api/gitlab/refresh` — refresh all GitLab contributions
+- `/api/gitlab/refresh` — refresh GitLab contributions
 - `/api/gitlab/contributions/:username/refresh` — refresh single user
 - `/api/trends/jira/refresh` — refresh Jira trends
 - `/api/trends/github/refresh` — refresh GitHub history
 - `/api/trends/gitlab/refresh` — refresh GitLab history
-- `/api/admin/roster-sync/config` — save roster sync configuration
-- `/api/admin/roster-sync/trigger` — trigger manual roster sync
-- `/api/admin/roster-sync/unified` — trigger unified roster + metadata sync (admin)
-- `/api/allowlist` — update authorized email list
-- `/api/modules/team-tracker/snapshots/generate` — generate snapshots for all teams (admin)
-- `/api/modules/feature-traffic/refresh` — trigger manual data refresh from GitLab CI (admin)
-- `/api/modules/feature-traffic/config` — save fetch configuration (admin)
+- `/api/admin/roster-sync/config` — save sync config
+- `/api/admin/roster-sync/trigger` — trigger manual sync
+- `/api/admin/roster-sync/unified` — unified roster + metadata sync (admin)
+- `/api/allowlist` — update email list
+- `/api/roles/assign` — assign role (admin)
+- `/api/roles/revoke` — revoke role (admin)
+- `/api/modules/team-tracker/snapshots/generate` — generate snapshots (admin)
+- `/api/modules/team-tracker/structure/teams` — create team (admin/team-admin)
+- `/api/modules/team-tracker/structure/teams/:teamId/members` — assign person (manager/admin)
+- `/api/modules/team-tracker/structure/teams/:teamId/members/bulk` — bulk assign (manager/admin)
+- `/api/modules/team-tracker/structure/field-definitions/person` — create person field (admin/team-admin)
+- `/api/modules/team-tracker/structure/field-definitions/person/reorder` — reorder (admin/team-admin)
+- `/api/modules/team-tracker/structure/field-definitions/team` — create team field (admin/team-admin)
+- `/api/modules/team-tracker/structure/field-definitions/team/reorder` — reorder (admin/team-admin)
+- `/api/modules/team-tracker/structure/migrate` — Sheets-to-in-app migration (admin)
+- `/api/modules/team-tracker/structure/migrate/field-to-options` — field-to-options migration (team-admin)
+- `/api/modules/team-tracker/field-options/:name/values` — add option values (team-admin)
+- `/api/modules/team-tracker/registry/people/ldap-import` — LDAP import (team-admin/admin)
+- `/api/modules/feature-traffic/refresh` — manual data refresh (admin)
+- `/api/modules/feature-traffic/config` — save fetch config (admin)
+- `/api/modules/release-analysis/conforma/bulk` — full replace conforma data (admin)
 - `/api/modules/ai-impact/assessments/bulk` — bulk upsert assessments (admin)
 - `/api/modules/ai-impact/features/bulk` — bulk upsert features (admin)
+- `/api/health-metrics/track` — record page view (rate-limited)
+- `/api/health-metrics/tracking/opt-out` — opt out (authenticated)
+- `/api/health-metrics/config` — update config (admin)
+- `/api/health-metrics/aggregate` — force re-aggregate (admin)
+- `/api/health-metrics/viewers` — add viewer (admin)
+
+**PATCH:**
+- `/api/tokens/:id/scopes` — update own token scopes
+- `/api/admin/tokens/:id/scopes` — update any token scopes (admin)
+- `/api/modules/team-tracker/structure/teams/:teamId` — rename team (admin/team-admin)
+- `/api/modules/team-tracker/structure/field-definitions/person/:fieldId` — edit field def (admin/team-admin)
+- `/api/modules/team-tracker/structure/field-definitions/team/:fieldId` — edit field def (admin/team-admin)
+- `/api/modules/team-tracker/structure/person/:uid/fields` — update person fields (manager/admin)
+- `/api/modules/team-tracker/structure/teams/:teamId/fields` — update team fields (admin/team-admin)
+- `/api/modules/team-tracker/structure/teams/:teamId/boards` — update team boards (admin/team-admin)
+- `/api/modules/team-tracker/field-options/:name/values/rename` — rename option value with cascade (admin)
 
 **DELETE:**
-- `/api/tokens/:id` — revoke own API token
-- `/api/admin/tokens/:id` — revoke any API token (admin)
-- `/api/modules/team-tracker/snapshots` — delete all stored snapshots (admin)
-- `/api/modules/ai-impact/assessments` — clear all assessment data (admin)
-- `/api/modules/ai-impact/features` — clear all feature data (admin)
-
-**GET (snapshots):**
-- `/api/modules/team-tracker/snapshots/:teamKey` — all snapshots for a team
-- `/api/modules/team-tracker/snapshots/:teamKey/:personName` — person snapshots within a team
+- `/api/tokens/:id` — revoke own token
+- `/api/admin/tokens/:id` — revoke any token (admin)
+- `/api/admin/messages/:id` — remove announcement (admin)
+- `/api/modules/team-tracker/snapshots` — delete all snapshots (admin)
+- `/api/modules/release-analysis/conforma` — clear conforma data (admin)
+- `/api/modules/ai-impact/assessments` — clear assessments (admin)
+- `/api/modules/ai-impact/features` — clear features (admin)
+- `/api/modules/team-tracker/structure/teams/:teamId` — delete team (admin/team-admin)
+- `/api/modules/team-tracker/structure/teams/:teamId/members/:uid` — unassign person (manager/admin)
+- `/api/modules/team-tracker/structure/field-definitions/person/:fieldId` — soft-delete field (admin/team-admin)
+- `/api/modules/team-tracker/structure/field-definitions/team/:fieldId` — soft-delete field (admin/team-admin)
+- `/api/modules/team-tracker/field-options/:name/values` — remove option values (admin)
+- `/api/health-metrics/tracking/opt-out` — opt back in (authenticated)
+- `/api/health-metrics/events` — purge raw events (admin)
+- `/api/health-metrics/viewers/:email` — remove viewer (admin)

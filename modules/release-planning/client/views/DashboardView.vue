@@ -5,6 +5,7 @@ import { useReleaseHealth } from '../composables/useReleaseHealth'
 import { useBigRockEditor } from '../composables/useBigRockEditor'
 import { useFilters } from '../composables/useFilters'
 import { useHealthAggregation } from '../composables/useHealthAggregation'
+import { useReleaseDistribution } from '../composables/useReleaseDistribution'
 import { useRefreshPolling } from '../composables/useRefreshPolling'
 import { useClickOutside } from '../composables/useClickOutside'
 import { exportMarkdown as exportMd, exportCsv as exportCsvFile } from '../utils/outcomes-export'
@@ -29,7 +30,7 @@ const {
 
 const { releases, loadReleases } = useReleases()
 
-const { healthData, loadHealth } = useReleaseHealth()
+const { healthData, healthLoading, loadHealth } = useReleaseHealth()
 
 const {
   formData, editingRock, isNewRock,
@@ -71,8 +72,10 @@ const {
   rfeKeyToHealth,
   rockHealth,
   rockFeatures,
-  healthSummary
+  tier1HealthSummary
 } = useHealthAggregation(healthData, features, rfes, bigRocks)
+
+const { releaseDistribution } = useReleaseDistribution(features)
 const warning = computed(() => candidates.value ? candidates.value.warning : null)
 const pipelineWarnings = computed(() => candidates.value ? candidates.value.pipelineWarnings || [] : [])
 const canEdit = computed(() => !demoMode.value && permissions.value && permissions.value.canEdit)
@@ -375,10 +378,7 @@ onMounted(async function() {
 
     <template v-if="candidates">
       <!-- Summary -->
-      <SummaryCards :summary="summary" :healthSummary="healthSummary" />
-
-      <!-- Recent Activity -->
-      <RecentActivity :version="selectedVersion" />
+      <SummaryCards :summary="summary" :tier1HealthSummary="tier1HealthSummary" :releaseDistribution="releaseDistribution" />
 
       <!-- Tabs -->
       <div>
@@ -407,7 +407,7 @@ onMounted(async function() {
               >{{ tabCount(tab.id) }}</span>
             </button>
           </div>
-          <div class="relative pb-2" @click.stop @keydown.escape="closeExportMenu">
+          <div class="relative pb-2 pl-3 ml-3 border-l border-gray-200 dark:border-gray-700" @click.stop @keydown.escape="closeExportMenu">
             <button
               @click="toggleExportMenu"
               :aria-expanded="exportMenuOpen"
@@ -468,6 +468,7 @@ onMounted(async function() {
           :rockHealth="rockHealth"
           :rockFeatures="rockFeatures"
           :loading="loading"
+          :healthLoading="healthLoading"
           @editRock="handleEditRock"
           @addRock="handleAddRock"
           @deleteRock="handleDeleteRock"
@@ -492,6 +493,9 @@ onMounted(async function() {
           :rfeKeyToHealth="rfeKeyToHealth"
         />
       </div>
+
+      <!-- Recent Activity -->
+      <RecentActivity :version="selectedVersion" />
     </template>
 
     <!-- No releases configured -->

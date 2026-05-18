@@ -133,135 +133,118 @@
 
     <!-- Docs tab -->
     <template v-if="activeTab === 'docs'">
-      <!-- AI SDLC Materials -->
-      <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3">AI SDLC Materials</h2>
+      <template v-for="(section, sIdx) in docsSections" :key="section.id">
+        <h2
+          class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3"
+          :class="{ 'mt-8': sIdx > 0 }"
+        >
+          {{ section.label }}
+        </h2>
 
-      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-          RFE Builder
-          <a href="https://app.slack.com/client/E030G10V24F/C0AMPLH0Y9G" target="_blank" rel="noopener" class="ml-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">#wg-rhai-rfe-builder</a>
-        </h3>
-        <div class="flex flex-wrap gap-4">
-          <a
-            v-for="link in rfeLinks"
-            :key="link.label"
-            :href="link.url"
-            target="_blank"
-            rel="noopener"
-            class="flex items-center gap-2.5 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
-          >
-            <component :is="link.icon" :size="18" :stroke-width="1.7" class="flex-shrink-0 text-gray-500 dark:text-gray-400" />
-            <span>{{ link.label }}</span>
-            <ExternalLink :size="14" class="flex-shrink-0 text-gray-400 dark:text-gray-500" />
-          </a>
+        <div
+          v-for="cat in section.categories"
+          :key="cat.id"
+          class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6"
+        >
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            {{ cat.title }}
+            <a
+              v-if="cat.slackChannel"
+              :href="cat.slackChannel.url"
+              target="_blank"
+              rel="noopener"
+              class="ml-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              {{ cat.slackChannel.name }}
+            </a>
+          </h3>
+          <div class="flex flex-wrap gap-4">
+            <a
+              v-for="link in cat.resolvedLinks"
+              :key="link.url"
+              :href="link.url"
+              target="_blank"
+              rel="noopener"
+              class="flex items-center gap-2.5 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
+            >
+              <component :is="link.icon" :size="18" :stroke-width="1.7" class="flex-shrink-0 text-gray-500 dark:text-gray-400" />
+              <span>{{ link.label }}</span>
+              <ExternalLink :size="14" class="flex-shrink-0 text-gray-400 dark:text-gray-500" />
+            </a>
+          </div>
         </div>
+      </template>
+    </template>
+
+    <!-- Site Usage tab -->
+    <template v-if="activeTab === 'usage' && canViewMetrics">
+      <SiteUsageTab />
+    </template>
+
+    <!-- Backups tab -->
+    <template v-if="activeTab === 'backups' && isAdmin">
+      <!-- Status card -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Backup Status</h3>
+          <button
+            @click="triggerBackup"
+            :disabled="backupInProgress"
+            class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <DatabaseBackup :size="16" />
+            {{ backupInProgress ? 'Backing up...' : 'Back Up Now' }}
+          </button>
+        </div>
+
+        <div v-if="backupsLoading" class="text-sm text-gray-500 dark:text-gray-400">Loading backup status...</div>
+        <div v-else-if="backupsError" class="text-sm text-red-600 dark:text-red-400">{{ backupsError }}</div>
+        <div v-else-if="backupsList.length === 0" class="text-sm text-gray-500 dark:text-gray-400">
+          No backups found. Trigger a backup to protect against data loss.
+        </div>
+        <div v-else>
+          <div class="flex items-center gap-3">
+            <span class="text-sm text-gray-700 dark:text-gray-300">
+              Last backup: <span class="font-medium">{{ formatBackupDate(backupsList[0].lastModified) }}</span>
+              <span class="text-gray-500 dark:text-gray-400">({{ formatBackupSize(backupsList[0].sizeBytes) }})</span>
+            </span>
+            <span
+              class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold"
+              :class="backupStatusClasses"
+            >
+              <span class="w-1.5 h-1.5 rounded-full" :class="backupDotClass"></span>
+              {{ backupStatusLabel }}
+            </span>
+          </div>
+        </div>
+
+        <p v-if="backupSuccess" class="mt-3 text-sm text-green-600 dark:text-green-400">{{ backupSuccess }}</p>
       </div>
 
-      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-          STRAT Builder
-          <a href="https://app.slack.com/client/E030G10V24F/C0APA0E2J3Z" target="_blank" rel="noopener" class="ml-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">#wg-rhai-strat-refine-review</a>
-        </h3>
-        <div class="flex flex-wrap gap-4">
-          <a
-            v-for="link in stratBuilderLinks"
-            :key="link.label"
-            :href="link.url"
-            target="_blank"
-            rel="noopener"
-            class="flex items-center gap-2.5 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
-          >
-            <component :is="link.icon" :size="18" :stroke-width="1.7" class="flex-shrink-0 text-gray-500 dark:text-gray-400" />
-            <span>{{ link.label }}</span>
-            <ExternalLink :size="14" class="flex-shrink-0 text-gray-400 dark:text-gray-500" />
-          </a>
-        </div>
-      </div>
-
-      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-          AI Quality
-          <a href="https://app.slack.com/client/E030G10V24F/C0ANMTUF5FW" target="_blank" rel="noopener" class="ml-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">#wg-rhai-quality-eng-builder</a>
-        </h3>
-        <div class="flex flex-wrap gap-4">
-          <a
-            v-for="link in aiQualityLinks"
-            :key="link.label"
-            :href="link.url"
-            target="_blank"
-            rel="noopener"
-            class="flex items-center gap-2.5 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
-          >
-            <component :is="link.icon" :size="18" :stroke-width="1.7" class="flex-shrink-0 text-gray-500 dark:text-gray-400" />
-            <span>{{ link.label }}</span>
-            <ExternalLink :size="14" class="flex-shrink-0 text-gray-400 dark:text-gray-500" />
-          </a>
-        </div>
-      </div>
-
-      <!-- AI Workflows Enablement -->
-      <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 mt-8 mb-3">AI Workflows Enablement</h2>
-
-      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-          Jira Autofix
-          <a href="https://app.slack.com/client/E030G10V24F/C0ASJ32PJ0N" target="_blank" rel="noopener" class="ml-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">#wg-rhai-ai-first-code-autofix</a>
-        </h3>
-        <div class="flex flex-wrap gap-4">
-          <a
-            v-for="link in jiraAutofixLinks"
-            :key="link.label"
-            :href="link.url"
-            target="_blank"
-            rel="noopener"
-            class="flex items-center gap-2.5 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
-          >
-            <component :is="link.icon" :size="18" :stroke-width="1.7" class="flex-shrink-0 text-gray-500 dark:text-gray-400" />
-            <span>{{ link.label }}</span>
-            <ExternalLink :size="14" class="flex-shrink-0 text-gray-400 dark:text-gray-500" />
-          </a>
-        </div>
-      </div>
-
-      <!-- Other Enablement -->
-      <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100 mt-8 mb-3">Other Enablement</h2>
-
-      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-          Agent Eval Harness
-          <a href="https://app.slack.com/client/E030G10V24F/C0B01HA68KC" target="_blank" rel="noopener" class="ml-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:underline">#wg-agent-eval-harness</a>
-        </h3>
-        <div class="flex flex-wrap gap-4">
-          <a
-            v-for="link in agentEvalHarnessLinks"
-            :key="link.label"
-            :href="link.url"
-            target="_blank"
-            rel="noopener"
-            class="flex items-center gap-2.5 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
-          >
-            <component :is="link.icon" :size="18" :stroke-width="1.7" class="flex-shrink-0 text-gray-500 dark:text-gray-400" />
-            <span>{{ link.label }}</span>
-            <ExternalLink :size="14" class="flex-shrink-0 text-gray-400 dark:text-gray-500" />
-          </a>
-        </div>
-      </div>
-
-      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">RFE Builder Lessons Learned</h3>
-        <div class="flex flex-wrap gap-4">
-          <a
-            v-for="link in rfeBuilderLessonsLearnedLinks"
-            :key="link.label"
-            :href="link.url"
-            target="_blank"
-            rel="noopener"
-            class="flex items-center gap-2.5 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
-          >
-            <component :is="link.icon" :size="18" :stroke-width="1.7" class="flex-shrink-0 text-gray-500 dark:text-gray-400" />
-            <span>{{ link.label }}</span>
-            <ExternalLink :size="14" class="flex-shrink-0 text-gray-400 dark:text-gray-500" />
-          </a>
+      <!-- Backup list -->
+      <div v-if="backupsList.length > 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Available Backups</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-gray-200 dark:border-gray-700">
+                <th class="text-left py-2 pr-4 text-gray-500 dark:text-gray-400 font-medium">Date</th>
+                <th class="text-left py-2 pr-4 text-gray-500 dark:text-gray-400 font-medium">Size</th>
+                <th class="text-left py-2 text-gray-500 dark:text-gray-400 font-medium">Key</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                v-for="b in backupsList"
+                :key="b.key"
+                class="border-b border-gray-100 dark:border-gray-700/50 last:border-0"
+              >
+                <td class="py-2 pr-4 text-gray-900 dark:text-gray-100">{{ formatBackupDate(b.lastModified) }}</td>
+                <td class="py-2 pr-4 text-gray-600 dark:text-gray-400">{{ formatBackupSize(b.sizeBytes) }}</td>
+                <td class="py-2 text-gray-500 dark:text-gray-400 font-mono text-xs truncate max-w-xs" :title="b.key">{{ b.key }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </template>
@@ -428,11 +411,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import {
   Info,
   BookOpen,
   Wrench,
+  BarChart3 as BarChart3Icon,
   ExternalLink,
   Download as DownloadIcon,
   Copy as CopyIcon,
@@ -447,25 +431,51 @@ import {
   Milestone,
   Bug,
   MessageSquarePlus,
-  FileCode2
+  FileCode2,
+  DatabaseBackup
 } from 'lucide-vue-next'
+import { useAuth } from '@shared/client'
+import SiteUsageTab from './health-metrics/SiteUsageTab.vue'
+import { enablementCategories, enablementSections } from '@shared/client/enablement-links.js'
+
+const { isAdmin: authIsAdmin, roles } = useAuth()
 
 const props = defineProps({
   isAdmin: Boolean,
   initialTab: { type: String, default: null }
 })
 
-const tabs = [
-  { id: 'about', label: 'About', icon: Info },
-  { id: 'docs', label: 'Docs', icon: BookOpen },
-  { id: 'help', label: 'Help & Debug', icon: Wrench }
-]
+const canViewMetrics = computed(() =>
+  props.isAdmin || authIsAdmin.value || roles.value.includes('usage-metrics-viewer')
+)
+
+const tabs = computed(() => {
+  const base = [
+    { id: 'about', label: 'About', icon: Info },
+    { id: 'docs', label: 'Docs', icon: BookOpen },
+  ]
+  if (canViewMetrics.value) {
+    base.push({ id: 'usage', label: 'Site Usage', icon: BarChart3Icon })
+  }
+  if (props.isAdmin || authIsAdmin.value) {
+    base.push({ id: 'backups', label: 'Backups', icon: DatabaseBackup })
+  }
+  base.push({ id: 'help', label: 'Help & Debug', icon: Wrench })
+  return base
+})
 
 const activeTab = ref(props.initialTab || 'about')
 
 watch(() => props.initialTab, (val) => {
-  if (val && tabs.some(t => t.id === val)) {
+  if (val && tabs.value.some(t => t.id === val)) {
     activeTab.value = val
+  }
+})
+
+watch(activeTab, (tab) => {
+  const hash = tab === 'about' ? '#/about' : `#/about?tab=${tab}`
+  if (window.location.hash !== hash) {
+    window.history.replaceState(null, '', hash)
   }
 })
 
@@ -498,42 +508,112 @@ const issueTemplates = [
   { label: 'Bug Report', icon: Bug, url: repoBase + '/issues/new?template=bug-report.yml' }
 ]
 
-const rfeLinks = [
-  { label: 'Enablement Recording', icon: Video, url: 'https://drive.google.com/file/d/1qZomlB-TK2FODtmvjzpMeH_g5qpuAOh-/view?usp=sharing' },
-  { label: 'Enablement Slides', icon: Presentation, url: 'https://docs.google.com/presentation/d/1O-F8naJxAfYtcXjTJHySYjeLtrKfb1OHhtyhoItya0s/edit?usp=sharing' },
-  { label: 'Enablement Notes', icon: StickyNote, url: 'https://docs.google.com/document/d/1pTpIvKkYns2aG5g0ueOxy6P8j1m_yNnD13XBB35NgWQ/edit?usp=sharing' },
-  { label: 'Demo', icon: Play, url: 'https://drive.google.com/file/d/1ANaZOeUorSMqlFm3WzfK1xRPvld2TGM-/view' }
-]
+const iconMap = { Video, Presentation, StickyNote, Play }
 
-const stratBuilderLinks = [
-  { label: 'Enablement Recording', icon: Video, url: 'https://drive.google.com/file/d/1dXtifXiAsbnZtfiU9-vKUCEvfLX5ANvg/view' },
-  { label: 'Enablement Slides', icon: Presentation, url: 'https://docs.google.com/presentation/d/1oBIyJo30MSuig9Q1Qokq-6yclm_OL9htbWV91_YWMFs/edit?slide=id.g3dc5b8ade0b_0_14#slide=id.g3dc5b8ade0b_0_14' },
-  { label: 'Enablement Notes', icon: StickyNote, url: 'https://docs.google.com/document/d/1n-UEt0RloVmEDmjO4E3EoEQPLJTNVwPvao4Uvf3XD4U/edit?tab=t.uwq8408i1mre' }
-]
+function resolveIcon(name) {
+  return iconMap[name] || Video
+}
 
-const aiQualityLinks = [
-  { label: 'Enablement Recording', icon: Video, url: 'https://drive.google.com/file/d/1jlsw8rVpRRo1Y1kkKhJ7LHDy3N6C_Uxp/view' },
-  { label: 'Enablement Slides', icon: Presentation, url: 'https://docs.google.com/presentation/d/1XuLna0_2DHX7EzepJHk03PpQF1urFoF39xaq9N-G6rY/edit?slide=id.g3d48d3b5671_0_5160#slide=id.g3d48d3b5671_0_5160' },
-  { label: 'Enablement Notes', icon: StickyNote, url: 'https://docs.google.com/document/d/1B006LrfEAUf_wb6Hr7PZJnpg2oW2bAQdxNmYcbLJo30/edit?tab=t.iqa6kux2ki3f' }
-]
+const docsSections = enablementSections.map(s => ({
+  ...s,
+  categories: enablementCategories
+    .filter(c => c.section === s.id)
+    .map(c => ({
+      ...c,
+      resolvedLinks: c.links.map(l => ({ ...l, icon: resolveIcon(l.icon) })),
+    })),
+}))
 
-const jiraAutofixLinks = [
-  { label: 'Enablement Recording', icon: Video, url: 'https://drive.google.com/file/d/1b-PZD3OiPAA8LOZ8lWmfcNZBByUa0Nel/view?ts=69e8ff07' },
-  { label: 'Enablement Slides', icon: Presentation, url: 'https://docs.google.com/presentation/d/1_UaHAI65K1P5Y2pAhZ4ie2KY-tHiSrqbnWN0UUqvsYs/edit?slide=id.g3d84ce2c2ca_1_0#slide=id.g3d84ce2c2ca_1_0' },
-  { label: 'Enablement Notes', icon: StickyNote, url: 'https://docs.google.com/document/d/1O3i5Ijoo3fi-gPHG0e9ON70Nfij2EUdfU18KOrVQADY/edit?tab=t.4ih80ylpl5y1' }
-]
+// --- Backups state ---
+const backupsList = ref([])
+const backupsLoading = ref(false)
+const backupsError = ref(null)
+const backupInProgress = ref(false)
+const backupSuccess = ref(null)
 
-const agentEvalHarnessLinks = [
-  { label: 'Enablement Recording', icon: Video, url: 'https://drive.google.com/file/d/1SVPwRZzo2U1ohnlTtgjlyOvXHrJB1Jxu/view' },
-  { label: 'Enablement Slides', icon: Presentation, url: 'https://docs.google.com/presentation/d/15vhrPqtu-uzxQC4v3whN8YQL1NK46kqNULhZff3uC8E/edit?slide=id.g3d8e714406d_0_0#slide=id.g3d8e714406d_0_0' },
-  { label: 'Enablement Notes', icon: StickyNote, url: 'https://docs.google.com/document/d/1HJJBt2Psnqy7JWx26UUP0fENJqDPAZBDhFcHpHt6sjM/edit?tab=t.tcc7ue9usok7' }
-]
+const isAdmin = computed(() => props.isAdmin || authIsAdmin.value)
 
-const rfeBuilderLessonsLearnedLinks = [
-  { label: 'Lessons Learned Recording', icon: Video, url: 'https://drive.google.com/file/d/15UWUdbITmkccmxeW8U1oIxlS3Wei2j3g/view' },
-  { label: 'Lessons Learned Slides', icon: Presentation, url: 'https://docs.google.com/presentation/d/1XhMa0hn6no4ALO2W7y8HthqF0iQh3b9z9vXja7BMKao/edit?slide=id.slide_01#slide=id.slide_01' },
-  { label: 'Lessons Learned Notes', icon: StickyNote, url: 'https://docs.google.com/document/d/1glUr8WhghdDmri1KKSCJutMjfzxnueoZuYGFjg2OwxI/edit?tab=t.q557l4ag5zjk' }
-]
+async function fetchBackups() {
+  backupsLoading.value = true
+  backupsError.value = null
+  try {
+    const res = await fetch('/api/admin/backup')
+    if (!res.ok) throw new Error('Failed to load backups')
+    const data = await res.json()
+    backupsList.value = data.backups || []
+  } catch (err) {
+    backupsError.value = err.message
+  } finally {
+    backupsLoading.value = false
+  }
+}
+
+async function triggerBackup() {
+  backupInProgress.value = true
+  backupSuccess.value = null
+  backupsError.value = null
+  try {
+    const res = await fetch('/api/admin/backup', { method: 'POST' })
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      throw new Error(body.error || 'Backup failed')
+    }
+    backupSuccess.value = 'Backup completed successfully.'
+    await fetchBackups()
+    setTimeout(() => { backupSuccess.value = null }, 5000)
+  } catch (err) {
+    backupsError.value = err.message
+  } finally {
+    backupInProgress.value = false
+  }
+}
+
+function formatBackupDate(dateStr) {
+  if (!dateStr) return 'Unknown'
+  return new Date(dateStr).toLocaleString()
+}
+
+function formatBackupSize(bytes) {
+  if (!bytes) return 'Unknown'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+}
+
+const backupAgeHours = computed(() => {
+  if (backupsList.value.length === 0) return null
+  const latest = backupsList.value[0]
+  return (Date.now() - new Date(latest.lastModified).getTime()) / (1000 * 60 * 60)
+})
+
+const backupStatusLabel = computed(() => {
+  const h = backupAgeHours.value
+  if (h === null) return ''
+  if (h < 24) return 'Healthy'
+  if (h < 48) return 'Aging'
+  return 'Overdue'
+})
+
+const backupStatusClasses = computed(() => {
+  const h = backupAgeHours.value
+  if (h === null) return ''
+  if (h < 24) return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+  if (h < 48) return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
+  return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+})
+
+const backupDotClass = computed(() => {
+  const h = backupAgeHours.value
+  if (h === null) return ''
+  if (h < 24) return 'bg-green-500'
+  if (h < 48) return 'bg-yellow-500'
+  return 'bg-red-500'
+})
+
+watch(activeTab, (val) => {
+  if (val === 'backups' && isAdmin.value && backupsList.value.length === 0 && !backupsLoading.value) {
+    fetchBackups()
+  }
+})
 
 // --- Help & Debug state ---
 const buildInfo = ref({})
@@ -552,6 +632,9 @@ onMounted(async function () {
     }
   } catch {
     // Build info will show defaults
+  }
+  if (activeTab.value === 'backups' && isAdmin.value) {
+    fetchBackups()
   }
 })
 

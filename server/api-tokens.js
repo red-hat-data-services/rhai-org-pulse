@@ -20,6 +20,57 @@ const EXPIRATION_OPTIONS = {
   '1y': 365 * 24 * 60 * 60 * 1000
 };
 
+const VALID_SCOPES = [
+  'roster:read', 'roster:write',
+  'metrics:read', 'metrics:write',
+  'github:read', 'github:write',
+  'gitlab:read', 'gitlab:write',
+  'team-tracker:read', 'team-tracker:write',
+  'feature-traffic:read', 'feature-traffic:write',
+  'ai-impact:read', 'ai-impact:write',
+  'release-analysis:read', 'release-analysis:write',
+  'release-planning:read', 'release-planning:write',
+  'upstream-pulse:read', 'upstream-pulse:write',
+  'health-metrics:read', 'health-metrics:write',
+  'admin:manage',
+  'tokens:manage',
+];
+
+/**
+ * Validate a scopes value. Returns normalized scopes or throws on invalid input.
+ */
+function validateScopes(scopes) {
+  if (scopes === null || scopes === undefined) return null; // full access
+  if (!Array.isArray(scopes)) throw new Error('scopes must be an array or null');
+  if (scopes.length === 1 && scopes[0] === '*') return ['*'];
+  const invalid = scopes.filter(s => !VALID_SCOPES.includes(s));
+  if (invalid.length > 0) throw new Error(`Invalid scopes: ${invalid.join(', ')}`);
+  return [...new Set(scopes)]; // deduplicate
+}
+
+/**
+ * Enforce scope escalation prevention for token-authenticated requests.
+ * Returns null if OK, or an error message string if escalation detected.
+ */
+function enforceTokenScopeCeiling(requestingScopes, requestedScopes) {
+  // No ceiling for full-access tokens or browser auth
+  if (!requestingScopes || (requestingScopes.length === 1 && requestingScopes[0] === '*')) {
+    return null; // no restriction
+  }
+  // If the requesting token is scoped, null/empty = full access = escalation
+  if (!requestedScopes || requestedScopes.length === 0) {
+    return 'Cannot grant full access from a scoped token';
+  }
+  if (requestedScopes.length === 1 && requestedScopes[0] === '*') {
+    return 'Cannot grant wildcard access from a scoped token';
+  }
+  const excess = requestedScopes.filter(s => !requestingScopes.includes(s));
+  if (excess.length > 0) {
+    return `Cannot grant scopes beyond your token's current access: ${excess.join(', ')}`;
+  }
+  return null; // OK
+}
+
 // In-memory state
 let _hashIndex = null; // Map<tokenHash, tokenRecord>
 let _lastUsedWriteTimes = new Map(); // Map<tokenId, timestamp>
@@ -88,10 +139,11 @@ function generateToken() {
 
 /**
  * Create a new API token for a user.
- * Returns { token, id, name, expiresAt } on success, or throws on validation error.
+ * Returns { token, id, name, scopes, expiresAt } on success, or throws on validation error.
  */
-function createToken(ownerEmail, name, expiresIn) {
+function createToken(ownerEmail, name, expiresIn, scopes) {
   return _withWriteLock(() => {
+    const validatedScopes = validateScopes(scopes);
     const tokens = _loadTokens();
 
     // Per-user limit
@@ -124,6 +176,7 @@ function createToken(ownerEmail, name, expiresIn) {
       tokenHash,
       tokenPrefix: rawToken.substring(0, 3 + 8), // "tt_" + 8 hex chars
       ownerEmail,
+      scopes: validatedScopes,
       createdAt: now,
       expiresAt,
       lastUsedAt: null
@@ -137,6 +190,7 @@ function createToken(ownerEmail, name, expiresIn) {
       token: rawToken,
       id,
       name,
+      scopes: record.scopes,
       expiresAt
     };
   });
@@ -221,10 +275,36 @@ function sanitizeToken(t) {
     name: t.name,
     tokenPrefix: t.tokenPrefix,
     ownerEmail: t.ownerEmail,
+    scopes: t.scopes || null,   // normalize undefined → null for JSON consistency
     createdAt: t.createdAt,
     expiresAt: t.expiresAt,
     lastUsedAt: t.lastUsedAt
   };
+}
+
+/**
+ * Update scopes for an existing token.
+ * If ownerEmail is provided, only update if the token belongs to that user.
+ * If ownerEmail is null, update regardless of owner (admin use).
+ * Returns updated sanitized token or null if not found.
+ */
+function updateTokenScopes(tokenId, ownerEmail, scopes) {
+  return _withWriteLock(() => {
+    const validatedScopes = validateScopes(scopes);
+    const tokens = _loadTokens();
+    const token = tokens.find(t => {
+      if (t.id !== tokenId) return false;
+      if (ownerEmail && t.ownerEmail !== ownerEmail) return false;
+      return true;
+    });
+
+    if (!token) return null;
+
+    token.scopes = validatedScopes;
+    _saveTokens(tokens);
+    _invalidateIndex();
+    return sanitizeToken(token);
+  });
 }
 
 /**
@@ -266,12 +346,16 @@ module.exports = {
   touchLastUsed,
   listUserTokens,
   listAllTokens,
+  updateTokenScopes,
   revokeToken,
   adminRevokeToken,
+  validateScopes,
+  enforceTokenScopeCeiling,
   // Constants for testing
   TOKEN_PREFIX,
   MAX_TOKENS_PER_USER,
   EXPIRATION_OPTIONS,
+  VALID_SCOPES,
   // Internal for testing
   _hashToken,
   _resetForTest() {

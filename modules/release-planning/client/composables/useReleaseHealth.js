@@ -56,21 +56,6 @@ export function useReleaseHealth() {
     }
   }
 
-  async function updateDorItem(version, featureKey, items, notes) {
-    var body = { items: items }
-    if (notes !== undefined) {
-      body.notes = notes
-    }
-    return apiRequest(
-      API_BASE + '/releases/' + encodeURIComponent(version) + '/health/dor/' + encodeURIComponent(featureKey),
-      {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      }
-    )
-  }
-
   async function setRiskOverride(version, featureKey, level, reason) {
     return apiRequest(
       API_BASE + '/releases/' + encodeURIComponent(version) + '/health/override/' + encodeURIComponent(featureKey),
@@ -150,7 +135,6 @@ export function useReleaseHealth() {
     healthRefreshing: healthRefreshing,
     healthCacheStale: healthCacheStale,
     loadHealth: loadHealth,
-    updateDorItem: updateDorItem,
     setRiskOverride: setRiskOverride,
     removeRiskOverride: removeRiskOverride,
     triggerHealthRefresh: triggerHealthRefresh,

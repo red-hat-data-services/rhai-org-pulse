@@ -2,11 +2,11 @@ import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import RiskBadge from '../../client/components/RiskBadge.vue'
 import HealthSummaryCards from '../../client/components/HealthSummaryCards.vue'
-import DorChecklist from '../../client/components/DorChecklist.vue'
 import RiceScoreDisplay from '../../client/components/RiceScoreDisplay.vue'
 import HealthFilterBar from '../../client/components/HealthFilterBar.vue'
 import MilestoneTimeline from '../../client/components/MilestoneTimeline.vue'
 import FeatureHealthTable from '../../client/components/FeatureHealthTable.vue'
+import BigRockExpandedRow from '../../client/components/BigRockExpandedRow.vue'
 
 // ─── RiskBadge ───
 
@@ -63,10 +63,14 @@ describe('RiskBadge', function() {
 describe('HealthSummaryCards', function() {
   var cardCounts = {
     total: 15,
-    riceComplete: 12,
-    ownerAssigned: 10,
-    scopeEstimated: 8,
-    dorComplete: 6
+    dorPassed: 12,
+    dodPassed: 8,
+    stratSignedOff: 10,
+    riceComplete: 13,
+    ownerAssigned: 11,
+    versionSet: 14,
+    unblocked: 12,
+    escalatedBlockers: 2
   }
 
   it('renders nothing when cardCounts is null', function() {
@@ -74,29 +78,46 @@ describe('HealthSummaryCards', function() {
     expect(wrapper.text()).toBe('')
   })
 
-  it('renders 4 readiness cards', function() {
+  it('renders 4 primary cards with three-gate labels', function() {
     var wrapper = mount(HealthSummaryCards, { props: { cardCounts: cardCounts } })
-    expect(wrapper.text()).toContain('RICE Score Present')
-    expect(wrapper.text()).toContain('Owner Assigned')
-    expect(wrapper.text()).toContain('Scope Estimated')
-    expect(wrapper.text()).toContain('DoR Complete')
+    expect(wrapper.text()).toContain('DoR Passed')
+    expect(wrapper.text()).toContain('DoD Passed')
+    expect(wrapper.text()).toContain('Strategy Signed Off')
+    expect(wrapper.text()).toContain('RICE Complete')
   })
 
-  it('shows count fractions for each card', function() {
+  it('shows count fractions for primary cards', function() {
     var wrapper = mount(HealthSummaryCards, { props: { cardCounts: cardCounts } })
     expect(wrapper.text()).toContain('12')
-    expect(wrapper.text()).toContain('10')
     expect(wrapper.text()).toContain('8')
-    expect(wrapper.text()).toContain('6')
+    expect(wrapper.text()).toContain('10')
+    expect(wrapper.text()).toContain('13')
     expect(wrapper.text()).toContain('/ 15')
   })
 
-  it('shows percentage for each card', function() {
+  it('shows percentage for primary cards', function() {
     var wrapper = mount(HealthSummaryCards, { props: { cardCounts: cardCounts } })
     expect(wrapper.text()).toContain('80%')  // 12/15
-    expect(wrapper.text()).toContain('67%')  // 10/15
     expect(wrapper.text()).toContain('53%')  // 8/15
-    expect(wrapper.text()).toContain('40%')  // 6/15
+    expect(wrapper.text()).toContain('67%')  // 10/15
+    expect(wrapper.text()).toContain('87%')  // 13/15
+  })
+
+  it('hides detail cards by default', function() {
+    var wrapper = mount(HealthSummaryCards, { props: { cardCounts: cardCounts } })
+    expect(wrapper.text()).not.toContain('Version Set')
+    expect(wrapper.text()).toContain('Show details')
+  })
+
+  it('shows detail cards when toggle clicked', async function() {
+    var wrapper = mount(HealthSummaryCards, { props: { cardCounts: cardCounts } })
+    var toggle = wrapper.findAll('button').filter(function(b) { return b.text().includes('details') })
+    await toggle[0].trigger('click')
+    expect(wrapper.text()).toContain('Owner Assigned')
+    expect(wrapper.text()).toContain('Version Set')
+    expect(wrapper.text()).toContain('Unblocked')
+    expect(wrapper.text()).toContain('Escalated Blockers')
+    expect(wrapper.text()).toContain('Hide details')
   })
 
   it('renders planning deadline when provided', function() {
@@ -116,66 +137,11 @@ describe('HealthSummaryCards', function() {
     expect(wrapper.text()).not.toContain('Planning Deadline')
   })
 
-  it('does not emit filterByRisk events', function() {
-    var wrapper = mount(HealthSummaryCards, { props: { cardCounts: cardCounts } })
-    var buttons = wrapper.findAll('button')
-    // Cards are divs, not buttons -- no click interaction
-    expect(buttons.length).toBe(0)
-  })
-
   it('handles zero total gracefully', function() {
-    var zeroCounts = { total: 0, riceComplete: 0, ownerAssigned: 0, scopeEstimated: 0, dorComplete: 0 }
+    var zeroCounts = { total: 0, dorPassed: 0, dodPassed: 0, stratSignedOff: 0, riceComplete: 0, ownerAssigned: 0, versionSet: 0, unblocked: 0, escalatedBlockers: 0 }
     var wrapper = mount(HealthSummaryCards, { props: { cardCounts: zeroCounts } })
     expect(wrapper.text()).toContain('0')
     expect(wrapper.text()).toContain('/ 0')
-  })
-})
-
-// ─── DorChecklist ───
-
-describe('DorChecklist', function() {
-  var items = [
-    { id: 'F-1', label: 'Description exists', type: 'automated', checked: true, source: 'jira' },
-    { id: 'F-2', label: 'Target version set', type: 'automated', checked: false, source: 'jira' },
-    { id: 'F-3', label: 'Stakeholders identified', type: 'manual', checked: false, source: 'manual' }
-  ]
-
-  it('renders all items', function() {
-    var wrapper = mount(DorChecklist, { props: { items: items, canEdit: false } })
-    expect(wrapper.text()).toContain('Description exists')
-    expect(wrapper.text()).toContain('Target version set')
-    expect(wrapper.text()).toContain('Stakeholders identified')
-  })
-
-  it('displays checked count in header', function() {
-    var wrapper = mount(DorChecklist, { props: { items: items, canEdit: false } })
-    expect(wrapper.text()).toContain('1/3')
-  })
-
-  it('shows lock icon for automated items', function() {
-    var wrapper = mount(DorChecklist, { props: { items: items, canEdit: true } })
-    var automatedRows = wrapper.findAll('[data-automated]').length
-    || wrapper.findAll('svg').length
-    expect(automatedRows).toBeGreaterThan(0)
-  })
-
-  it('emits toggleItem when manual item row is clicked and canEdit is true', async function() {
-    var wrapper = mount(DorChecklist, { props: { items: items, canEdit: true, featureKey: 'T-1' } })
-    var checkboxes = wrapper.findAll('input[type="checkbox"]')
-    if (checkboxes.length > 0) {
-      await checkboxes[0].trigger('click')
-      expect(wrapper.emitted('toggleItem')).toBeDefined()
-    }
-  })
-
-  it('shows textarea when canEdit is true', function() {
-    var wrapper = mount(DorChecklist, { props: { items: items, canEdit: true, notes: '' } })
-    expect(wrapper.find('textarea').exists()).toBe(true)
-  })
-
-  it('shows read-only notes when canEdit is false and notes exist', function() {
-    var wrapper = mount(DorChecklist, { props: { items: items, canEdit: false, notes: 'Some notes here' } })
-    expect(wrapper.text()).toContain('Some notes here')
   })
 })
 
@@ -310,6 +276,46 @@ describe('HealthFilterBar', function() {
     expect(wrapper.emitted('update:searchQuery')).toBeDefined()
     expect(wrapper.emitted('update:searchQuery')[0][0]).toBe('test query')
   })
+
+  it('renders planning status filter dropdown', function() {
+    var wrapper = mount(HealthFilterBar)
+    var selects = wrapper.findAll('select')
+    var planningSelect = selects.filter(function(s) { return s.attributes('aria-label') === 'Filter by planning status' })
+    expect(planningSelect.length).toBe(1)
+    expect(planningSelect[0].text()).toContain('All Statuses')
+    expect(planningSelect[0].text()).toContain('Not Ready')
+    expect(planningSelect[0].text()).toContain('In Planning')
+    expect(planningSelect[0].text()).toContain('Ready for Execution')
+  })
+
+  it('emits update:planningStatusFilter on change', async function() {
+    var wrapper = mount(HealthFilterBar)
+    var selects = wrapper.findAll('select')
+    var planningSelect = selects.filter(function(s) { return s.attributes('aria-label') === 'Filter by planning status' })
+    await planningSelect[0].setValue('not-ready')
+    expect(wrapper.emitted('update:planningStatusFilter')).toBeDefined()
+    expect(wrapper.emitted('update:planningStatusFilter')[0][0]).toBe('not-ready')
+  })
+
+  it('renders risk level filter dropdown', function() {
+    var wrapper = mount(HealthFilterBar)
+    var selects = wrapper.findAll('select')
+    var riskSelect = selects.filter(function(s) { return s.attributes('aria-label') === 'Filter by risk level' })
+    expect(riskSelect.length).toBe(1)
+    expect(riskSelect[0].text()).toContain('All Risk Levels')
+    expect(riskSelect[0].text()).toContain('Green')
+    expect(riskSelect[0].text()).toContain('Yellow')
+    expect(riskSelect[0].text()).toContain('Red')
+  })
+
+  it('emits update:riskLevelFilter on change', async function() {
+    var wrapper = mount(HealthFilterBar)
+    var selects = wrapper.findAll('select')
+    var riskSelect = selects.filter(function(s) { return s.attributes('aria-label') === 'Filter by risk level' })
+    await riskSelect[0].setValue('red')
+    expect(wrapper.emitted('update:riskLevelFilter')).toBeDefined()
+    expect(wrapper.emitted('update:riskLevelFilter')[0][0]).toBe('red')
+  })
 })
 
 // ─── MilestoneTimeline ───
@@ -356,14 +362,18 @@ describe('FeatureHealthTable', function() {
     {
       key: 'T-1', summary: 'Feature 1', status: 'In Progress',
       risk: { level: 'green', flags: [], riskScore: 0 },
-      dor: { checkedCount: 10, totalCount: 13, completionPct: 77, items: [] },
+      dor: { gate: 'dor', passed: true, blockers: [], warnings: [] },
+      dod: { gate: 'dod', passed: true, checks: [] },
+      planningStatus: 'ready-for-execution',
       rice: null, components: 'Model Serving', phase: 'GA', bigRock: 'MaaS',
       deliveryOwner: 'Alice', priorityScore: 65, priorityBreakdown: { rice: 50, bigRock: 100, priority: 60, complexity: 50 }
     },
     {
       key: 'T-2', summary: 'Feature 2', status: 'New',
       risk: { level: 'red', flags: [{ category: 'MILESTONE_MISS', severity: 'high', message: 'Past deadline' }], riskScore: 1 },
-      dor: { checkedCount: 3, totalCount: 13, completionPct: 23, items: [] },
+      dor: { gate: 'dor', passed: true, blockers: [], warnings: [] },
+      dod: { gate: 'dod', passed: false, checks: [{ id: 'DoD-1', label: 'Owner Assigned', passed: false }] },
+      planningStatus: 'in-planning',
       rice: { score: 250, complete: true }, components: 'Pipelines', phase: 'TP', bigRock: null,
       deliveryOwner: 'Bob', priorityScore: 42, priorityBreakdown: { rice: 40, bigRock: 60, priority: 40, complexity: 30 }
     }
@@ -409,5 +419,107 @@ describe('FeatureHealthTable', function() {
     var wrapper = mount(FeatureHealthTable, { props: { features: features } })
     var headers = wrapper.findAll('th')
     expect(headers.length).toBe(11)
+  })
+})
+
+// ─── BigRockExpandedRow ───
+
+describe('BigRockExpandedRow', function() {
+  var sampleFeatures = [
+    {
+      key: 'RHOAI-101', level: 'green', flagCount: 0, flagCategories: [],
+      summary: 'Enable model serving', deliveryOwner: 'Smith', jiraUrl: 'https://issues.redhat.com/browse/RHOAI-101',
+      override: null, dorPassed: true, dodPassed: true, planningStatus: 'ready-for-execution', status: 'In Progress'
+    },
+    {
+      key: 'RHOAI-102', level: 'yellow', flagCount: 1, flagCategories: ['VELOCITY_LAG'],
+      summary: 'Add KServe support', deliveryOwner: 'Jones', jiraUrl: 'https://issues.redhat.com/browse/RHOAI-102',
+      override: null, dorPassed: true, dodPassed: false, planningStatus: 'in-planning', status: 'In Progress'
+    },
+    {
+      key: 'RHOAI-103', level: 'red', flagCount: 2, flagCategories: ['BLOCKED', 'MILESTONE_MISS'],
+      summary: 'Batch inference pipeline with really long summary text that should be truncated when displayed',
+      deliveryOwner: 'Chen', jiraUrl: 'https://issues.redhat.com/browse/RHOAI-103',
+      override: { riskOverride: 'yellow', reason: 'PM override' }, dorPassed: false, dodPassed: false,
+      planningStatus: 'not-ready', status: 'New'
+    }
+  ]
+
+  function mountExpanded(props) {
+    return mount(BigRockExpandedRow, {
+      props: Object.assign({ colspan: 6, rockName: 'MaaS' }, props)
+    })
+  }
+
+  it('renders feature rows with keys, summaries, and owners', function() {
+    var wrapper = mountExpanded({ features: sampleFeatures })
+    expect(wrapper.text()).toContain('RHOAI-101')
+    expect(wrapper.text()).toContain('RHOAI-102')
+    expect(wrapper.text()).toContain('RHOAI-103')
+    expect(wrapper.text()).toContain('Enable model serving')
+    expect(wrapper.text()).toContain('Smith')
+    expect(wrapper.text()).toContain('Jones')
+    expect(wrapper.text()).toContain('Chen')
+  })
+
+  it('shows empty state when features array is empty', function() {
+    var wrapper = mountExpanded({ features: [] })
+    expect(wrapper.text()).toContain('No feature health data available')
+  })
+
+  it('shows loading state when loading is true', function() {
+    var wrapper = mountExpanded({ features: [], loading: true })
+    expect(wrapper.text()).toContain('Loading feature health...')
+  })
+
+  it('renders feature keys as links when jiraUrl is provided', function() {
+    var wrapper = mountExpanded({ features: sampleFeatures })
+    var links = wrapper.findAll('a')
+    var featureLinks = links.filter(function(a) { return a.text() === 'RHOAI-101' })
+    expect(featureLinks.length).toBe(1)
+    expect(featureLinks[0].attributes('href')).toBe('https://issues.redhat.com/browse/RHOAI-101')
+    expect(featureLinks[0].attributes('target')).toBe('_blank')
+  })
+
+  it('shows risk flag categories or -- for no flags', function() {
+    var wrapper = mountExpanded({ features: sampleFeatures })
+    expect(wrapper.text()).toContain('--')
+    expect(wrapper.text()).toContain('VELOCITY_LAG')
+    expect(wrapper.text()).toContain('BLOCKED, MILESTONE_MISS')
+  })
+
+  it('renders "View all in Features tab" link', function() {
+    var wrapper = mountExpanded({ features: sampleFeatures, rockName: 'MaaS' })
+    var viewLink = wrapper.findAll('a').filter(function(a) { return a.text().includes('View all in Features tab') })
+    expect(viewLink.length).toBe(1)
+    expect(viewLink[0].attributes('href')).toContain('#/release-planning/health')
+    expect(viewLink[0].attributes('href')).toContain('bigRock=MaaS')
+  })
+
+  it('shows override indicator (M) when feature has override', function() {
+    var wrapper = mountExpanded({ features: sampleFeatures })
+    var overrideIndicators = wrapper.findAll('span').filter(function(s) { return s.text() === 'M' })
+    expect(overrideIndicators.length).toBe(1)
+  })
+
+  it('renders colored health dots for each feature', function() {
+    var wrapper = mountExpanded({ features: sampleFeatures })
+    var dots = wrapper.findAll('[role="img"]')
+    expect(dots.length).toBe(3)
+    expect(dots[0].classes().join(' ')).toContain('bg-green-500')
+    expect(dots[1].classes().join(' ')).toContain('bg-yellow-500')
+    expect(dots[2].classes().join(' ')).toContain('bg-red-500')
+  })
+
+  it('sets correct colspan on the wrapping td', function() {
+    var wrapper = mountExpanded({ features: sampleFeatures, colspan: 8 })
+    var td = wrapper.find('td')
+    expect(td.attributes('colspan')).toBe('8')
+  })
+
+  it('has 4 column headers in the inner table', function() {
+    var wrapper = mountExpanded({ features: sampleFeatures })
+    var headers = wrapper.findAll('th')
+    expect(headers.length).toBe(4)
   })
 })

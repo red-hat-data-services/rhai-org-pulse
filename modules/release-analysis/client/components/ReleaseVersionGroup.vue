@@ -120,7 +120,7 @@
                 Probability at Release
               </p>
               <p class="text-2xl font-bold tabular-nums" :class="pValueClass">{{ groupForecast.pAtDeadline }}%</p>
-              <p class="text-[11px] mt-0.5" :class="pSubClass">{{ formatDueDate(group.earliestRelease) }}</p>
+              <p class="text-[11px] mt-0.5" :class="pSubClass">{{ formatDueDate(group.earliestRelease || group.earliestDue) }}</p>
             </div>
 
             <div class="rounded-lg border border-amber-200 dark:border-amber-700/50 bg-amber-50/60 dark:bg-amber-900/20 px-4 py-3">
@@ -136,12 +136,8 @@
             </div>
           </div>
           <p class="text-[9px] text-gray-400 dark:text-gray-500 mt-2">
-            1,000 simulations per release, worst-case per iteration.
-            {{ groupForecast.productCount }} release(s) simulated · {{ groupForecast.totalRemaining }} remaining issues.
-            <template v-if="groupForecast.redCount || groupForecast.yellowCount">
-              Risk-adjusted velocity:
-              <template v-if="groupForecast.redCount">{{ groupForecast.redCount }} red (-40%)</template><template v-if="groupForecast.redCount && groupForecast.yellowCount">, </template><template v-if="groupForecast.yellowCount">{{ groupForecast.yellowCount }} yellow (-20%)</template>.
-            </template>
+            1,000 simulations, per-component critical path (slowest component determines release).
+            {{ groupForecast.componentCount }} component(s) simulated · {{ groupForecast.totalRemaining }} total workload (release + other open work).
           </p>
         </div>
 
@@ -197,72 +193,91 @@ const completionPct = computed(() => {
   return Math.round((props.group.totals.issues_done / totalIssues.value) * 100)
 })
 
-// ── Monte Carlo simulation (per-product independent, take max per iteration) ──
+// ── Monte Carlo simulation (per-component critical path, take max per iteration) ──
+
+const FORECAST_WINDOW = 14
 
 function getToday() { const d = new Date(); d.setHours(0, 0, 0, 0); return d }
 function addDays(date, days) { const d = new Date(date); d.setDate(d.getDate() + days); return d }
-function daysBetween(from, to) { return Math.ceil((to - from) / (1000 * 60 * 60 * 24)) }
 
-/**
- * Risk-adjusted velocity discount: at-risk products historically underperform
- * their baseline throughput due to blockers, scope creep, and quality issues.
- */
-const RISK_VELOCITY_FACTOR = { red: 0.6, yellow: 0.8, green: 1.0 }
+function buildComponentForecasts(releases) {
+  const cv = props.componentVelocity || {}
+  const gw = props.componentGlobalWorkload || {}
+  const componentMap = {}
 
-const groupForecast = computed(() => {
-  const products = []
-  let redCount = 0
-  let yellowCount = 0
-  for (const r of props.group.releases) {
-    const mc = props.mcInputsMap.get(r.releaseNumber)
-    if (mc && mc.notDoneCount > 0 && mc.totalVelocity > 0) {
-      const risk = r.risk || 'green'
-      const factor = RISK_VELOCITY_FACTOR[risk] ?? 1.0
-      products.push({
-        notDoneCount: mc.notDoneCount,
-        velocity: mc.totalVelocity * factor,
-        risk
-      })
-      if (risk === 'red') redCount++
-      else if (risk === 'yellow') yellowCount++
+  for (const r of releases) {
+    const issues = Array.isArray(r.issues) && r.issues.length ? r.issues : (Array.isArray(r.features) ? r.features : [])
+    for (const issue of issues) {
+      if (issue.statusBucket === 'done') continue
+      const names = issue.components?.length ? issue.components : ['(No component)']
+      for (const name of names) {
+        if (!componentMap[name]) componentMap[name] = { remaining: 0 }
+        componentMap[name].remaining++
+      }
     }
   }
-  if (!products.length) return null
 
-  const deadline = props.group.earliestRelease
+  const components = []
+  for (const [name, data] of Object.entries(componentMap)) {
+    const velocity = cv[name]?.velocity || 0
+    if (velocity <= 0 || data.remaining <= 0) continue
+    const globalEntry = gw[name]
+    const globalTotalOpen = globalEntry?.totalOpen || 0
+    const otherWorkload = Math.max(0, globalTotalOpen - data.remaining)
+    components.push({
+      name,
+      totalWorkload: data.remaining + otherWorkload,
+      velocity
+    })
+  }
+  return components
+}
+
+const groupForecast = computed(() => {
+  const components = buildComponentForecasts(props.group.releases)
+  if (!components.length) return null
+
+  const deadline = props.group.earliestRelease || props.group.earliestDue
   if (!deadline) return null
 
   const today = getToday()
-  const dueObj = new Date(deadline + 'T00:00:00')
-  const daysToDeadline = daysBetween(today, dueObj)
+
+  const onTrackCount = components.filter(comp => {
+    const windowsNeeded = comp.totalWorkload / comp.velocity
+    const daysNeeded = Math.ceil(windowsNeeded * FORECAST_WINDOW)
+    const predictedISO = addDays(today, daysNeeded).toISOString().slice(0, 10)
+    return predictedISO <= deadline
+  }).length
+
+  const pAtDeadline = Math.round((onTrackCount / components.length) * 100)
 
   const groupCompletionDays = new Array(ITERATIONS)
   for (let i = 0; i < ITERATIONS; i++) {
     let maxDays = 0
-    for (const p of products) {
-      const scale = 14 / p.velocity
-      const days = Math.min(Math.ceil(gammaSample(p.notDoneCount, scale)), MAX_DAYS)
+    for (const comp of components) {
+      const scale = FORECAST_WINDOW / comp.velocity
+      const days = Math.min(Math.ceil(gammaSample(comp.totalWorkload, scale)), MAX_DAYS)
       if (days > maxDays) maxDays = days
     }
     groupCompletionDays[i] = maxDays
   }
   groupCompletionDays.sort((a, b) => a - b)
 
-  const completedByDeadline = groupCompletionDays.filter(d => d <= daysToDeadline).length
-  const pAtDeadline = Math.round((completedByDeadline / ITERATIONS) * 100)
   const p85Days = groupCompletionDays[Math.ceil(ITERATIONS * 0.85) - 1]
   const p95Days = groupCompletionDays[Math.ceil(ITERATIONS * 0.95) - 1]
 
+  const totalRemaining = components.reduce((s, c) => s + c.totalWorkload, 0)
+
   return {
     pAtDeadline,
+    onTrackCount,
     p85Days,
     p85Date: addDays(today, p85Days),
     p95Days,
     p95Date: addDays(today, p95Days),
-    productCount: products.length,
-    totalRemaining: products.reduce((s, p) => s + p.notDoneCount, 0),
-    redCount,
-    yellowCount
+    productCount: props.group.releases.length,
+    totalRemaining,
+    componentCount: components.length
   }
 })
 

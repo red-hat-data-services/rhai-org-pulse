@@ -187,7 +187,7 @@ function computeRequiredBy(allModules) {
 
 // ─── Router Creation ───
 
-function createModuleRouters(modules, context, enabledSlugs, diagnosticsRegistry) {
+function createModuleRouters(modules, context, enabledSlugs, diagnosticsRegistry, messageRegistry) {
   const routers = {}
   for (const mod of modules) {
     if (!mod.server?.entry) continue
@@ -206,6 +206,12 @@ function createModuleRouters(modules, context, enabledSlugs, diagnosticsRegistry
           diagnosticsRegistry[mod.slug] = fn
         }
       }
+      // Set up per-module message provider registration
+      if (messageRegistry) {
+        context.registerMessageProvider = function(id, fn) {
+          messageRegistry.registerProvider(id, fn)
+        }
+      }
       require(entryPath)(router, context)
       routers[mod.slug] = router
       _mountedAtStartup.add(mod.slug)
@@ -214,8 +220,9 @@ function createModuleRouters(modules, context, enabledSlugs, diagnosticsRegistry
       console.error(`[module-loader] Failed to create router for "${mod.slug}":`, err.message)
     }
   }
-  // Clean up — don't leave a stale registerDiagnostics on the context
+  // Clean up — don't leave stale registration functions on the context
   context.registerDiagnostics = null
+  context.registerMessageProvider = null
   return routers
 }
 

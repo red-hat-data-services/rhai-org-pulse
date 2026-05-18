@@ -126,26 +126,66 @@ PRs receive an automated Claude code review that can fix minor issues directly.
 The review criteria are defined in
 [`.github/instructions/review.instructions.md`](.github/instructions/review.instructions.md).
 
-### Code style
+### Code style & conventions
+
+See [`AGENTS.md`](AGENTS.md) for the full list of code style conventions and
+hard constraints. Key points:
 
 - `<script setup>` for new Vue components
-- CommonJS (`require`) for server-side code
-- ES modules (`import`) for frontend code
+- CommonJS (`require`) for server-side code, ES modules for frontend
 - No TypeScript — plain JavaScript throughout
 - Tailwind CSS utility classes for styling
-- Extract reusable logic into composables (`src/composables/`)
+- No cross-module imports (use `@shared` or API calls)
+- Extract reusable logic into composables (`shared/client/composables/`)
 
-### Writing tests
+### Testing
 
-Tests use **Vitest** with **jsdom** and **@vue/test-utils**.
+#### Unit tests
+
+Unit tests use **Vitest** with **jsdom** and **@vue/test-utils**:
 
 ```bash
+npm test            # Run all tests
+npm run test:watch  # Watch mode
+
 # Run a specific test file
 npx vitest run server/jira/__tests__/sprint-report.test.js
-
-# Run in watch mode
-npm run test:watch
 ```
+
+#### Smoke tests
+
+Smoke tests use **Playwright** to verify the production container images work correctly. These run in CI and can also be run locally on any OS (RHEL, macOS, Ubuntu), but do NOT require secrets/credentials to run.
+
+**Note:** First-time image pulls can take a while (~5-10 minutes)
+
+```bash
+make build-backend-image   # Builds an image with the backend sources (required for frontend tests)
+make build-frontend-image  # Builds an image with the frontend sources
+make smoke-test            # Run smoke tests against both containers (uses demo mode)
+```
+
+Smoke tests run Playwright in a container, so no local browser installation is needed. The backend runs in demo mode (using fixture data) so no credentials are required.
+
+**macOS note:** The Playwright container bind-mounts your workspace and runs `npm ci`, which installs Linux-native packages into your local `node_modules/`. After running `make smoke-test`, you may need to run `npm ci` again to restore macOS-native packages before running local commands like `npm test` or `npm run dev`.
+
+#### Integration tests
+
+Integration tests are run using **Playwright**. They validate that:
+1. Modules are visible _and_ clickable from the sidebar
+1. Modules load in Org Pulse when clicked
+1. Module content renders properly after being loaded
+
+Use `make` to run a module's integration tests:
+
+```bash
+MODULE_NAME=ai-impact                   # Choose a testable module
+make test-module MODULE=${MODULE_NAME}  # Runs the integration tests against an existing module
+```
+
+Available, testable modules:
+- [ai-impact](./modules/ai-impact/)
+
+Integration tests for [other modules](./modules/) are coming soon.
 
 ## Deployment
 

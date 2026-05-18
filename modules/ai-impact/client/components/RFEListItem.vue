@@ -2,7 +2,8 @@
 defineProps({
   rfe: { type: Object, required: true },
   selected: { type: Boolean, default: false },
-  assessment: { type: Object, default: null }
+  assessment: { type: Object, default: null },
+  hasLinkedFeature: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['select'])
@@ -79,7 +80,16 @@ function getInvolvementClass(involvement) {
           </span>
         </div>
       </div>
-      <div class="flex items-center shrink-0">
+      <div class="flex items-center gap-1 shrink-0">
+        <span
+          v-if="hasLinkedFeature"
+          class="text-blue-500 dark:text-blue-400"
+          title="View Feature"
+        >
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        </span>
         <svg class="h-4 w-4 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>

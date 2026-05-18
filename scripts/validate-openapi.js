@@ -5,11 +5,85 @@
  *
  * 1. Checks the spec is valid OpenAPI 3.x via @apidevtools/swagger-parser
  * 2. Compares the number of documented paths against expected counts
+ * 3. Scans route source files for router.verb() calls and flags any that
+ *    lack a preceding @openapi annotation
  */
 
 const SwaggerParser = require('@apidevtools/swagger-parser');
 const path = require('path');
 const fs = require('fs');
+
+function collectJsFiles(dir) {
+  const results = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) results.push(...collectJsFiles(full));
+    else if (entry.name.endsWith('.js')) results.push(full);
+  }
+  return results;
+}
+
+/**
+ * Scans JS source files for Express route registrations that are missing
+ * an @openapi JSDoc annotation. Returns an array of { file, line, route }
+ * objects for each undocumented route.
+ */
+function findUndocumentedRoutes() {
+  const rootDir = path.resolve(__dirname, '..');
+  const files = [path.join(rootDir, 'server/dev-server.js')];
+
+  // Scan all module server directories
+  const modulesDir = path.join(rootDir, 'modules');
+  if (fs.existsSync(modulesDir)) {
+    for (const mod of fs.readdirSync(modulesDir, { withFileTypes: true })) {
+      if (!mod.isDirectory()) continue;
+      const serverDir = path.join(modulesDir, mod.name, 'server');
+      if (fs.existsSync(serverDir)) files.push(...collectJsFiles(serverDir));
+    }
+  }
+
+  const routeRegex = /(?:router|app)\.(get|post|put|patch|delete)\(\s*['"`]([^'"`]+)['"`]/;
+  const missing = [];
+
+  for (const filePath of files) {
+    const content = fs.readFileSync(filePath, 'utf8');
+    const lines = content.split('\n');
+
+    for (let i = 0; i < lines.length; i++) {
+      const match = lines[i].match(routeRegex);
+      if (!match) continue;
+
+      const method = match[1].toUpperCase();
+      const route = match[2];
+
+      // Look backwards for @openapi in the preceding comment block
+      // Some annotations with many parameters can span 50+ lines
+      let hasAnnotation = false;
+      for (let j = i - 1; j >= Math.max(0, i - 60); j--) {
+        const prev = lines[j].trim();
+        if (prev === '' || prev === '*/') continue;
+        // Skip single-line comments between annotation and route
+        if (prev.startsWith('//')) continue;
+        if (prev.startsWith('*') || prev.startsWith('/**')) {
+          if (prev.includes('@openapi') || prev.includes('@swagger')) {
+            hasAnnotation = true;
+            break;
+          }
+          continue;
+        }
+        // Hit a non-comment line — stop looking
+        break;
+      }
+
+      if (!hasAnnotation) {
+        const relPath = path.relative(rootDir, filePath);
+        missing.push({ file: relPath, line: i + 1, route: `${method} ${route}` });
+      }
+    }
+  }
+
+  return missing;
+}
 
 async function main() {
   // Generate spec
@@ -53,6 +127,20 @@ async function main() {
   }
 
   console.log('  Coverage check passed.');
+
+  // 3. Scan for undocumented routes
+  console.log('\nScanning for undocumented routes...');
+  const missing = findUndocumentedRoutes();
+
+  if (missing.length > 0) {
+    console.warn(`  WARNING: Found ${missing.length} route(s) without @openapi annotations:\n`);
+    for (const m of missing) {
+      console.warn(`    ${m.file}:${m.line}  ${m.route}`);
+    }
+    console.warn('\n  Add @openapi JSDoc annotations to these routes.');
+  } else {
+    console.log('  All routes have @openapi annotations.');
+  }
   console.log('\nOpenAPI validation complete.');
 }
 

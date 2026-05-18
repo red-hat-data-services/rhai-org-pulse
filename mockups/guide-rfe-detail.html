@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RFE Review Detail — AI Factory Guide</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: Inter, system-ui, sans-serif; background: #111827; color: #e5e7eb; }
+  .fade-in { animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  details summary { cursor: pointer; }
+  details summary::-webkit-details-marker { display: none; }
+  details[open] .chevron { transform: rotate(90deg); }
+  .chevron { transition: transform 0.2s ease; }
+</style>
+</head>
+<body class="min-h-screen p-6">
+
+<div class="max-w-3xl mx-auto fade-in">
+
+  <!-- Breadcrumb -->
+  <div class="mb-4">
+    <button class="flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 cursor-pointer">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      Back to Pipeline Overview
+    </button>
+  </div>
+
+  <!-- ─── 1. Header ─── -->
+  <div class="flex items-start justify-between mb-8">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-full bg-blue-500/20 border-2 border-blue-500 flex items-center justify-center">
+        <span class="text-blue-400 text-sm font-bold">1</span>
+      </div>
+      <div>
+        <h1 class="text-xl font-bold text-white">RFE Review</h1>
+        <p class="text-sm text-gray-400">Every RFE is automatically assessed daily at 4:00 AM UTC. A failing score blocks the RFE from progressing.</p>
+      </div>
+    </div>
+    <button class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors flex-shrink-0 ml-4">
+      Go to RFE Review
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+
+  <!-- ─── 2. How it works timeline ─── -->
+  <div class="bg-gray-800/60 border border-gray-700 rounded-xl p-6 mb-6">
+    <h2 class="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-4">How it works</h2>
+    <div class="relative ml-1">
+      <div class="absolute left-[15px] top-0 bottom-0 w-0.5 bg-gray-700"></div>
+
+      <!-- Step 1 -->
+      <div class="flex items-start gap-4 relative pb-5">
+        <div class="w-8 h-8 rounded-full bg-blue-500/20 border-2 border-blue-500 flex items-center justify-center flex-shrink-0 z-10">
+          <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+        </div>
+        <div>
+          <div class="text-sm font-semibold text-white">RFE Ingestion</div>
+          <div class="text-xs text-gray-400 mt-0.5">Pipeline fetches all RFEs from Jira for assessment</div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="flex items-start gap-4 relative pb-5">
+        <div class="w-8 h-8 rounded-full bg-blue-500/20 border-2 border-blue-500 flex items-center justify-center flex-shrink-0 z-10">
+          <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+        </div>
+        <div>
+          <div class="text-sm font-semibold text-white">AI Assessment</div>
+          <div class="text-xs text-gray-400 mt-0.5">Each RFE is scored independently against the quality rubric</div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="flex items-start gap-4 relative pb-5">
+        <div class="w-8 h-8 rounded-full bg-blue-500/20 border-2 border-blue-500 flex items-center justify-center flex-shrink-0 z-10">
+          <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+        </div>
+        <div>
+          <div class="text-sm font-semibold text-white">Auto-Revision</div>
+          <div class="text-xs text-gray-400 mt-0.5">Failing RFEs are automatically improved where possible</div>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="flex items-start gap-4 relative pb-5">
+        <div class="w-8 h-8 rounded-full bg-blue-500/20 border-2 border-blue-500 flex items-center justify-center flex-shrink-0 z-10">
+          <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+        </div>
+        <div>
+          <div class="text-sm font-semibold text-white">Feasibility Check</div>
+          <div class="text-xs text-gray-400 mt-0.5">Technical feasibility is evaluated and labeled on the Jira ticket</div>
+        </div>
+      </div>
+
+      <!-- Step 5 -->
+      <div class="flex items-start gap-4 relative">
+        <div class="w-8 h-8 rounded-full bg-gray-700 border-2 border-gray-600 flex items-center justify-center flex-shrink-0 z-10">
+          <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        </div>
+        <div>
+          <div class="text-sm font-semibold text-white">Human Review</div>
+          <div class="text-xs text-gray-400 mt-0.5">RFEs that can't be auto-fixed are flagged for PM action</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 3. What you need to do ─── -->
+  <div class="bg-blue-500/10 border border-blue-500/30 rounded-xl p-6 mb-6">
+    <h2 class="text-sm font-semibold text-blue-400 uppercase tracking-wide mb-3">What you need to do</h2>
+    <ul class="space-y-3">
+      <li class="flex items-start gap-3">
+        <svg class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        <span class="text-sm text-gray-300">Write your business justification in the <strong class="text-white">Description</strong> field — that's what the AI reads</span>
+      </li>
+      <li class="flex items-start gap-3">
+        <svg class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+        <span class="text-sm text-gray-300">Watch for the <code class="px-1.5 py-0.5 bg-amber-500/15 text-amber-400 text-xs rounded">needs-attention</code> label on your Jira tickets</span>
+      </li>
+      <li class="flex items-start gap-3">
+        <svg class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+        <span class="text-sm text-gray-300">If your RFE fails, edit the ticket — it'll be re-assessed on the next daily run</span>
+      </li>
+      <li class="flex items-start gap-3">
+        <svg class="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        <span class="text-sm text-gray-300">Focus on avoiding <strong class="text-white">zero scores</strong> — any zero is an automatic fail regardless of total</span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- ─── 4. Scoring quick reference ─── -->
+  <div class="bg-gray-800/60 border border-gray-700 rounded-xl p-6 mb-6">
+    <h2 class="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-4">Scoring quick reference</h2>
+    <p class="text-xs text-gray-500 mb-4">Pass: ≥ 7/10 total AND no zeros on any criterion</p>
+
+    <div class="space-y-3">
+      <!-- WHAT -->
+      <div class="flex items-center gap-3 p-3 bg-gray-700/30 rounded-lg">
+        <div class="w-16 text-right">
+          <span class="text-sm font-bold text-white">WHAT</span>
+          <span class="text-xs text-gray-500 ml-1">0-2</span>
+        </div>
+        <div class="w-px h-8 bg-gray-600"></div>
+        <div class="flex-1">
+          <div class="text-sm text-gray-300">Is the customer need clearly described?</div>
+          <div class="text-xs text-gray-500 mt-0.5">Zero = "Unclear Outcome"</div>
+        </div>
+      </div>
+
+      <!-- WHY -->
+      <div class="flex items-center gap-3 p-3 bg-gray-700/30 rounded-lg">
+        <div class="w-16 text-right">
+          <span class="text-sm font-bold text-white">WHY</span>
+          <span class="text-xs text-gray-500 ml-1">0-2</span>
+        </div>
+        <div class="w-px h-8 bg-gray-600"></div>
+        <div class="flex-1">
+          <div class="text-sm text-gray-300">Is there business justification?</div>
+          <div class="text-xs text-gray-500 mt-0.5">Named customers/revenue → 2 · Generic segments → 1 · Nothing → 0 "WHY Void"</div>
+        </div>
+      </div>
+
+      <!-- HOW -->
+      <div class="flex items-center gap-3 p-3 bg-gray-700/30 rounded-lg">
+        <div class="w-16 text-right">
+          <span class="text-sm font-bold text-white">HOW</span>
+          <span class="text-xs text-gray-500 ml-1">0-2</span>
+        </div>
+        <div class="w-px h-8 bg-gray-600"></div>
+        <div class="flex-1">
+          <div class="text-sm text-gray-300">Does it leave architecture to engineering?</div>
+          <div class="text-xs text-gray-500 mt-0.5">Referencing platform technologies is fine · Zero = "Architecture Prescription"</div>
+        </div>
+      </div>
+
+      <!-- TASK -->
+      <div class="flex items-center gap-3 p-3 bg-gray-700/30 rounded-lg">
+        <div class="w-16 text-right">
+          <span class="text-sm font-bold text-white">TASK</span>
+          <span class="text-xs text-gray-500 ml-1">0-2</span>
+        </div>
+        <div class="w-px h-8 bg-gray-600"></div>
+        <div class="flex-1">
+          <div class="text-sm text-gray-300">Is this a business need, not a chore?</div>
+          <div class="text-xs text-gray-500 mt-0.5">Zero = "Task Masquerade"</div>
+        </div>
+      </div>
+
+      <!-- SIZE -->
+      <div class="flex items-center gap-3 p-3 bg-gray-700/30 rounded-lg">
+        <div class="w-16 text-right">
+          <span class="text-sm font-bold text-white">SIZE</span>
+          <span class="text-xs text-gray-500 ml-1">0-2</span>
+        </div>
+        <div class="w-px h-8 bg-gray-600"></div>
+        <div class="flex-1">
+          <div class="text-sm text-gray-300">Does it map to roughly one strategy feature?</div>
+          <div class="text-xs text-gray-500 mt-0.5">Zero = "Kitchen-Sink Scope"</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 5. Jira labels legend (collapsible) ─── -->
+  <div class="bg-gray-800/60 border border-gray-700 rounded-xl mb-6">
+    <details>
+      <summary class="flex items-center justify-between p-5 select-none">
+        <h2 class="text-sm font-semibold text-gray-300 uppercase tracking-wide">Jira Labels Reference</h2>
+        <svg class="w-4 h-4 text-gray-500 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </summary>
+      <div class="px-5 pb-5 -mt-1">
+        <div class="grid grid-cols-1 gap-2">
+          <div class="flex items-center gap-3 p-2.5 bg-gray-700/30 rounded-lg">
+            <code class="text-xs bg-green-500/15 text-green-400 px-2 py-0.5 rounded whitespace-nowrap">autofix-rubric-pass</code>
+            <span class="text-xs text-gray-400">RFE passed quality scoring</span>
+          </div>
+          <div class="flex items-center gap-3 p-2.5 bg-gray-700/30 rounded-lg">
+            <code class="text-xs bg-amber-500/15 text-amber-400 px-2 py-0.5 rounded whitespace-nowrap">needs-attention</code>
+            <span class="text-xs text-gray-400">Automation couldn't resolve all issues — you need to act</span>
+          </div>
+          <div class="flex items-center gap-3 p-2.5 bg-gray-700/30 rounded-lg">
+            <code class="text-xs bg-blue-500/15 text-blue-400 px-2 py-0.5 rounded whitespace-nowrap">auto-revised</code>
+            <span class="text-xs text-gray-400">Content was improved by automation</span>
+          </div>
+          <div class="flex items-center gap-3 p-2.5 bg-gray-700/30 rounded-lg">
+            <code class="text-xs bg-blue-500/15 text-blue-400 px-2 py-0.5 rounded whitespace-nowrap">auto-created</code>
+            <span class="text-xs text-gray-400">RFE was created by the pipeline</span>
+          </div>
+          <div class="flex items-center gap-3 p-2.5 bg-gray-700/30 rounded-lg">
+            <code class="text-xs bg-green-500/15 text-green-400 px-2 py-0.5 rounded whitespace-nowrap">feasibility-pass</code>
+            <span class="text-xs text-gray-400">Technically feasible</span>
+          </div>
+          <div class="flex items-center gap-3 p-2.5 bg-gray-700/30 rounded-lg">
+            <code class="text-xs bg-red-500/15 text-red-400 px-2 py-0.5 rounded whitespace-nowrap">feasibility-fail</code>
+            <span class="text-xs text-gray-400">Technically infeasible — review and revise</span>
+          </div>
+          <div class="flex items-center gap-3 p-2.5 bg-gray-700/30 rounded-lg">
+            <code class="text-xs bg-gray-500/15 text-gray-400 px-2 py-0.5 rounded whitespace-nowrap">feasibility-unknown</code>
+            <span class="text-xs text-gray-400">Feasibility couldn't be determined</span>
+          </div>
+          <div class="flex items-center gap-3 p-2.5 bg-gray-700/30 rounded-lg">
+            <code class="text-xs bg-purple-500/15 text-purple-400 px-2 py-0.5 rounded whitespace-nowrap">split-original</code>
+            <span class="text-xs text-gray-400">This RFE was decomposed into smaller RFEs</span>
+          </div>
+          <div class="flex items-center gap-3 p-2.5 bg-gray-700/30 rounded-lg">
+            <code class="text-xs bg-purple-500/15 text-purple-400 px-2 py-0.5 rounded whitespace-nowrap">split-result</code>
+            <span class="text-xs text-gray-400">This RFE was produced by splitting another</span>
+          </div>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- ─── 6. Links ─── -->
+  <div class="bg-gray-800/60 border border-gray-700 rounded-xl p-6">
+    <!-- Learn -->
+    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Learn</h3>
+    <div class="flex gap-2 flex-wrap mb-5">
+      <a href="https://drive.google.com/file/d/1qZomlB-TK2FODtmvjzpMeH_g5qpuAOh-/view?usp=sharing" target="_blank" class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-700/50 hover:bg-gray-700 rounded-lg text-xs text-gray-300 hover:text-white transition-colors">
+        <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Enablement Recording
+      </a>
+      <a href="https://docs.google.com/presentation/d/1O-F8naJxAfYtcXjTJHySYjeLtrKfb1OHhtyhoItya0s/edit?usp=sharing" target="_blank" class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-700/50 hover:bg-gray-700 rounded-lg text-xs text-gray-300 hover:text-white transition-colors">
+        <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+        Slides
+      </a>
+      <a href="https://docs.google.com/document/d/1pTpIvKkYns2aG5g0ueOxy6P8j1m_yNnD13XBB35NgWQ/edit?usp=sharing" target="_blank" class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-700/50 hover:bg-gray-700 rounded-lg text-xs text-gray-300 hover:text-white transition-colors">
+        <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Notes
+      </a>
+      <a href="https://drive.google.com/file/d/1ANaZOeUorSMqlFm3WzfK1xRPvld2TGM-/view" target="_blank" class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-700/50 hover:bg-gray-700 rounded-lg text-xs text-gray-300 hover:text-white transition-colors">
+        <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Demo
+      </a>
+    </div>
+
+    <!-- Tools -->
+    <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Tools &amp; Community</h3>
+    <div class="flex gap-2 flex-wrap">
+      <a href="https://github.com/n1hility/assess-rfe" target="_blank" class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-700/50 hover:bg-gray-700 rounded-lg text-xs text-gray-300 hover:text-white transition-colors">
+        <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+        assess-rfe plugin
+      </a>
+      <a href="https://github.com/jwforres/rfe-creator" target="_blank" class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-700/50 hover:bg-gray-700 rounded-lg text-xs text-gray-300 hover:text-white transition-colors">
+        <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+        rfe-creator plugin
+      </a>
+      <a href="https://github.com/opendatahub-io/skills-registry" target="_blank" class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-700/50 hover:bg-gray-700 rounded-lg text-xs text-gray-300 hover:text-white transition-colors">
+        <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+        Skills Registry
+      </a>
+      <a href="https://app.slack.com/client/E030G10V24F/C0AMPLH0Y9G" target="_blank" class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-700/50 hover:bg-gray-700 rounded-lg text-xs text-gray-300 hover:text-white transition-colors">
+        <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
+        #wg-rhai-rfe-builder
+      </a>
+      <a href="https://app.slack.com/client/E030G10V24F/forum-rhai-ai-first" target="_blank" class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-700/50 hover:bg-gray-700 rounded-lg text-xs text-gray-300 hover:text-white transition-colors">
+        <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        #forum-rhai-ai-first
+      </a>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

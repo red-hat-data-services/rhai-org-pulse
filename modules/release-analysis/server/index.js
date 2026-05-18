@@ -1,6 +1,7 @@
 const { jiraRequest, JIRA_HOST, fetchAllJqlResults } = require('../../../shared/server/jira')
 const { getConfig, saveConfig, deleteConfig } = require('./config')
 const { fetchProductsByShortname, fetchAllProducts, getProductPagesToken, getAuthStatus } = require('./product-pages')
+const registerConformaRoutes = require('./conforma')
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true'
 
@@ -980,7 +981,9 @@ async function runFullAnalysis(storage, config) {
 const CACHE_MAX_AGE_MS = 60 * 60 * 1000 // 1 hour
 
 module.exports = function registerRoutes(router, context) {
-  const { storage, requireAuth, requireAdmin } = context
+  registerConformaRoutes(router, context)
+
+  const { storage, requireAuth, requireAdmin, requireScope } = context
   const { readFromStorage, writeToStorage } = storage
 
   let refreshState = { running: false, lastResult: null }
@@ -1014,7 +1017,7 @@ module.exports = function registerRoutes(router, context) {
 
   // --- Config routes ---
 
-  router.get('/config', requireAdmin, function(req, res) {
+  router.get('/config', requireAdmin, requireScope('release-analysis:write'), function(req, res) {
     const saved = readFromStorage('release-analysis/config.json')
     const hasStoredConfig = saved && typeof saved === 'object' && !saved._deleted
     const config = getConfig(readFromStorage)
@@ -1025,7 +1028,7 @@ module.exports = function registerRoutes(router, context) {
     res.json({ config, source: hasStoredConfig ? 'stored' : 'env' })
   })
 
-  router.post('/config', requireAdmin, function(req, res) {
+  router.post('/config', requireAdmin, requireScope('release-analysis:write'), function(req, res) {
     try {
       saveConfig(writeToStorage, req.body)
       res.json({ status: 'saved' })
@@ -1034,7 +1037,7 @@ module.exports = function registerRoutes(router, context) {
     }
   })
 
-  router.delete('/config', requireAdmin, function(req, res) {
+  router.delete('/config', requireAdmin, requireScope('release-analysis:write'), function(req, res) {
     deleteConfig(writeToStorage)
     const config = getConfig(readFromStorage)
     res.json({ config, source: 'env' })
@@ -1042,7 +1045,7 @@ module.exports = function registerRoutes(router, context) {
 
   // --- Product Pages routes ---
 
-  router.get('/product-pages/products', requireAdmin, async function(req, res) {
+  router.get('/product-pages/products', requireAdmin, requireScope('release-analysis:write'), async function(req, res) {
     try {
       const config = getConfig(readFromStorage)
       const authStatus = getAuthStatus()
@@ -1056,11 +1059,11 @@ module.exports = function registerRoutes(router, context) {
 
   // --- Refresh routes ---
 
-  router.get('/refresh/status', requireAuth, function(req, res) {
+  router.get('/refresh/status', requireAuth, requireScope('release-analysis:read'), function(req, res) {
     res.json(refreshState)
   })
 
-  router.post('/refresh', requireAdmin, function(req, res) {
+  router.post('/refresh', requireAdmin, requireScope('release-analysis:write'), function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Refresh disabled in demo mode' })
     }
@@ -1073,7 +1076,7 @@ module.exports = function registerRoutes(router, context) {
 
   // --- Analysis route (stale-while-revalidate) ---
 
-  router.get('/analysis', requireAuth, function(req, res) {
+  router.get('/analysis', requireAuth, requireScope('release-analysis:read'), function(req, res) {
     try {
       const forceRefresh = req.query.refresh === 'true'
       const cached = readFromStorage('release-analysis/analysis-cache.json')
@@ -1122,7 +1125,7 @@ module.exports = function registerRoutes(router, context) {
     }
   }
 
-  router.post('/admin/releases', requireAdmin, function(req, res) {
+  router.post('/admin/releases', requireAdmin, requireScope('release-analysis:write'), function(req, res) {
     try {
       const releases = Array.isArray(req.body?.releases) ? req.body.releases : null
       if (!releases || releases.length === 0) {

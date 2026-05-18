@@ -93,6 +93,24 @@ spec:
                   name: team-tracker-secrets
                   key: SMARTSHEET_API_TOKEN
                   optional: true
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: aws-backup-credentials
+                  key: AWS_ACCESS_KEY_ID
+                  optional: true
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: aws-backup-credentials
+                  key: AWS_SECRET_ACCESS_KEY
+                  optional: true
+            - name: AWS_BACKUP_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: aws-backup-credentials
+                  key: AWS_BACKUP_BUCKET
+                  optional: true
           volumeMounts:
             - name: data
               mountPath: /app/data

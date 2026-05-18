@@ -132,31 +132,31 @@ spec:
                     echo "WARNING: AI Impact refresh timed out (non-fatal, continuing)"
                   fi
 
-                  # Step 4: Trigger Allocation Tracker refresh (all projects)
-                  echo "=== Triggering Allocation Tracker refresh ==="
-                  curl -sf -X POST "$BACKEND/api/modules/allocation-tracker/refresh" \
+                  # Step 4: Trigger Allocation refresh (all teams)
+                  echo "=== Triggering Allocation refresh ==="
+                  curl -sf -X POST "$BACKEND/api/modules/team-tracker/allocation/refresh" \
                     -H "Content-Type: application/json" \
                     -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" \
-                    -d '{}' || echo "Allocation Tracker refresh failed (non-fatal)"
+                    -d '{}' || echo "Allocation refresh failed (non-fatal)"
                   sleep 5
                   ATTEMPTS=0
                   MAX_ATTEMPTS=60
                   while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
                     sleep 10
                     ATTEMPTS=$((ATTEMPTS + 1))
-                    STATUS=$(curl -sf "$BACKEND/api/modules/allocation-tracker/refresh/status" \
+                    STATUS=$(curl -sf "$BACKEND/api/modules/team-tracker/allocation/refresh/status" \
                       -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" 2>/dev/null)
                     echo "  Allocation refresh status: $STATUS"
                     RUNNING=$(echo "$STATUS" | grep -oE '"running"\s*:\s*true' || true)
                     if [ -z "$RUNNING" ]; then
-                      echo "Allocation Tracker refresh complete after $ATTEMPTS checks"
+                      echo "Allocation refresh complete after $ATTEMPTS checks"
                       break
                     fi
                     echo "Still refreshing... (attempt $ATTEMPTS/$MAX_ATTEMPTS)"
                   done
 
                   if [ $ATTEMPTS -ge $MAX_ATTEMPTS ]; then
-                    echo "WARNING: Allocation Tracker refresh timed out (non-fatal, continuing)"
+                    echo "WARNING: Allocation refresh timed out (non-fatal, continuing)"
                   fi
 
                   # Step 4b: Sync feature labels from Jira
@@ -187,6 +187,13 @@ spec:
                   echo "=== Triggering Feature Traffic refresh ==="
                   curl -sf -X POST "$BACKEND/api/modules/feature-traffic/refresh" \
                     -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" || echo "Feature Traffic refresh skipped"
+
+                  # Step 6: Trigger data backup to S3
+                  echo "=== Triggering data backup ==="
+                  BACKUP_RESP=$(curl -sf -X POST "$BACKEND/api/admin/backup" \
+                    -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" -H "Content-Type: application/json" \
+                    --max-time 120) || echo "WARNING: Backup failed (non-fatal)"
+                  echo "Backup response: $BACKUP_RESP"
 
                   echo "=== Sync and refresh completed successfully ==="
               resources:

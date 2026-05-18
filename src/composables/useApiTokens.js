@@ -5,6 +5,7 @@ import { apiRequest } from '@shared/client/services/api'
 // share the same token cache (same approach as useAllowlist)
 const tokens = ref([])
 const allTokens = ref([])
+const availableScopes = ref(null)
 const loading = ref(false)
 const error = ref(null)
 
@@ -32,12 +33,42 @@ export function useApiTokens() {
     }
   }
 
-  async function createToken(name, expiresIn) {
+  async function loadAvailableScopes() {
+    try {
+      const data = await apiRequest('/token-scopes')
+      availableScopes.value = data
+    } catch (err) {
+      console.error('Failed to load available scopes:', err)
+    }
+  }
+
+  async function createToken(name, expiresIn, scopes = null) {
     const data = await apiRequest('/tokens', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, expiresIn })
+      body: JSON.stringify({ name, expiresIn, scopes })
     })
+    await loadTokens()
+    return data
+  }
+
+  async function updateTokenScopes(id, scopes) {
+    const data = await apiRequest(`/tokens/${id}/scopes`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scopes })
+    })
+    await loadTokens()
+    return data
+  }
+
+  async function adminUpdateTokenScopes(id, scopes) {
+    const data = await apiRequest(`/admin/tokens/${id}/scopes`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scopes })
+    })
+    await loadAllTokens()
     await loadTokens()
     return data
   }
@@ -56,11 +87,15 @@ export function useApiTokens() {
   return {
     tokens,
     allTokens,
+    availableScopes,
     loading,
     error,
     loadTokens,
     loadAllTokens,
+    loadAvailableScopes,
     createToken,
+    updateTokenScopes,
+    adminUpdateTokenScopes,
     revokeToken,
     adminRevokeToken
   }

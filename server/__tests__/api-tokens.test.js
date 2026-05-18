@@ -209,6 +209,194 @@ describe('api-tokens', () => {
     })
   })
 
+  describe('createToken with scopes', () => {
+    it('creates a token with valid scopes', async () => {
+      const result = await apiTokens.createToken('user@test.com', 'Scoped', null, ['roster:read', 'metrics:read'])
+      expect(result.scopes).toEqual(['roster:read', 'metrics:read'])
+    })
+
+    it('creates a full-access token with null scopes', async () => {
+      const result = await apiTokens.createToken('user@test.com', 'Full', null, null)
+      expect(result.scopes).toBeNull()
+    })
+
+    it('creates a full-access token when scopes omitted', async () => {
+      const result = await apiTokens.createToken('user@test.com', 'Default', null)
+      expect(result.scopes).toBeNull()
+    })
+
+    it('accepts wildcard ["*"] scopes', async () => {
+      const result = await apiTokens.createToken('user@test.com', 'Wild', null, ['*'])
+      expect(result.scopes).toEqual(['*'])
+    })
+
+    it('accepts empty array [] scopes', async () => {
+      const result = await apiTokens.createToken('user@test.com', 'Empty', null, [])
+      expect(result.scopes).toEqual([])
+    })
+
+    it('rejects invalid scopes', async () => {
+      await expect(apiTokens.createToken('user@test.com', 'Bad', null, ['invalid:scope']))
+        .rejects.toThrow('Invalid scopes')
+    })
+
+    it('rejects non-array scopes', async () => {
+      await expect(apiTokens.createToken('user@test.com', 'Bad', null, 'roster:read'))
+        .rejects.toThrow('scopes must be an array or null')
+    })
+
+    it('deduplicates scopes', async () => {
+      const result = await apiTokens.createToken('user@test.com', 'Dupes', null, ['roster:read', 'roster:read'])
+      expect(result.scopes).toEqual(['roster:read'])
+    })
+
+    it('stores scopes on the record', async () => {
+      await apiTokens.createToken('user@test.com', 'Scoped', null, ['roster:read'])
+      const data = storage._store['api-tokens.json']
+      expect(data.tokens[0].scopes).toEqual(['roster:read'])
+    })
+
+    it('return value includes scopes field', async () => {
+      const result = await apiTokens.createToken('user@test.com', 'Test', null, ['metrics:read'])
+      expect(result).toHaveProperty('scopes')
+      expect(result.scopes).toEqual(['metrics:read'])
+    })
+  })
+
+  describe('updateTokenScopes', () => {
+    it('updates scopes on own token', async () => {
+      const { id } = await apiTokens.createToken('user@test.com', 'Test', null, ['roster:read'])
+      const updated = await apiTokens.updateTokenScopes(id, 'user@test.com', ['metrics:read', 'github:read'])
+      expect(updated.scopes).toEqual(['metrics:read', 'github:read'])
+    })
+
+    it('returns null when token not owned by user', async () => {
+      const { id } = await apiTokens.createToken('user1@test.com', 'Test', null)
+      const result = await apiTokens.updateTokenScopes(id, 'user2@test.com', ['roster:read'])
+      expect(result).toBeNull()
+    })
+
+    it('admin can update any token (ownerEmail null)', async () => {
+      const { id } = await apiTokens.createToken('user@test.com', 'Test', null)
+      const updated = await apiTokens.updateTokenScopes(id, null, ['roster:read'])
+      expect(updated.scopes).toEqual(['roster:read'])
+    })
+
+    it('validates scope values', async () => {
+      const { id } = await apiTokens.createToken('user@test.com', 'Test', null)
+      await expect(apiTokens.updateTokenScopes(id, 'user@test.com', ['bad:scope']))
+        .rejects.toThrow('Invalid scopes')
+    })
+
+    it('returns null for non-existent token', async () => {
+      const result = await apiTokens.updateTokenScopes('nonexistent', 'user@test.com', ['roster:read'])
+      expect(result).toBeNull()
+    })
+  })
+
+  describe('sanitizeToken with scopes', () => {
+    it('includes scopes field', async () => {
+      await apiTokens.createToken('user@test.com', 'Test', null, ['roster:read'])
+      const list = apiTokens.listUserTokens('user@test.com')
+      expect(list[0]).toHaveProperty('scopes')
+      expect(list[0].scopes).toEqual(['roster:read'])
+    })
+
+    it('normalizes undefined scopes to null', () => {
+      // Simulate a legacy token record without scopes
+      storage.writeToStorage('api-tokens.json', {
+        tokens: [{
+          id: 'legacy-1',
+          name: 'Legacy',
+          tokenHash: 'abc',
+          tokenPrefix: 'tt_legacy00',
+          ownerEmail: 'user@test.com',
+          createdAt: '2026-01-01T00:00:00Z',
+          expiresAt: null,
+          lastUsedAt: null
+          // No scopes field
+        }]
+      })
+      apiTokens._resetForTest()
+      const list = apiTokens.listUserTokens('user@test.com')
+      expect(list[0].scopes).toBeNull()
+    })
+  })
+
+  describe('legacy tokens', () => {
+    it('legacy tokens without scopes field still validate correctly', async () => {
+      const { token } = await apiTokens.createToken('user@test.com', 'Test', null)
+      // Manually remove scopes from the stored record
+      const data = storage._store['api-tokens.json']
+      delete data.tokens[0].scopes
+      apiTokens._resetForTest()
+      const record = apiTokens.validateToken(token)
+      expect(record).toBeTruthy()
+      expect(record.ownerEmail).toBe('user@test.com')
+    })
+  })
+
+  describe('validateScopes', () => {
+    it('returns null for null input', () => {
+      expect(apiTokens.validateScopes(null)).toBeNull()
+    })
+
+    it('returns null for undefined input', () => {
+      expect(apiTokens.validateScopes(undefined)).toBeNull()
+    })
+
+    it('accepts valid scopes', () => {
+      expect(apiTokens.validateScopes(['roster:read', 'metrics:write'])).toEqual(['roster:read', 'metrics:write'])
+    })
+
+    it('rejects invalid scopes', () => {
+      expect(() => apiTokens.validateScopes(['bad'])).toThrow('Invalid scopes: bad')
+    })
+
+    it('accepts wildcard', () => {
+      expect(apiTokens.validateScopes(['*'])).toEqual(['*'])
+    })
+
+    it('rejects non-array', () => {
+      expect(() => apiTokens.validateScopes('roster:read')).toThrow('scopes must be an array or null')
+    })
+  })
+
+  describe('enforceTokenScopeCeiling', () => {
+    it('returns null for full-access requesting token (null)', () => {
+      expect(apiTokens.enforceTokenScopeCeiling(null, ['roster:read'])).toBeNull()
+    })
+
+    it('returns null for wildcard requesting token', () => {
+      expect(apiTokens.enforceTokenScopeCeiling(['*'], ['roster:read'])).toBeNull()
+    })
+
+    it('returns null when requested is subset', () => {
+      expect(apiTokens.enforceTokenScopeCeiling(['roster:read', 'metrics:read'], ['roster:read'])).toBeNull()
+    })
+
+    it('returns error when requested exceeds requesting', () => {
+      const result = apiTokens.enforceTokenScopeCeiling(['roster:read'], ['roster:read', 'metrics:read'])
+      expect(result).toContain('Cannot grant scopes beyond')
+      expect(result).toContain('metrics:read')
+    })
+
+    it('blocks wildcard from scoped token', () => {
+      const result = apiTokens.enforceTokenScopeCeiling(['roster:read'], ['*'])
+      expect(result).toContain('Cannot grant wildcard')
+    })
+
+    it('rejects empty requested scopes from a scoped token', () => {
+      const result = apiTokens.enforceTokenScopeCeiling(['roster:read'], [])
+      expect(result).toContain('Cannot grant full access')
+    })
+
+    it('rejects null requested scopes from a scoped token', () => {
+      const result = apiTokens.enforceTokenScopeCeiling(['roster:read'], null)
+      expect(result).toContain('Cannot grant full access')
+    })
+  })
+
   describe('write lock serialization', () => {
     it('handles concurrent creates without data loss', async () => {
       const promises = []

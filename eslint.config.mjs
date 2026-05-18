@@ -8,7 +8,8 @@ export default [
       'node_modules/**',
       'dist/**',
       'amplify/**',
-      'coverage/**'
+      'coverage/**',
+      'data/**'
     ]
   },
   js.configs.recommended,

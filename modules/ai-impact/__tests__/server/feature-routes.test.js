@@ -32,7 +32,8 @@ function makeContext(storageData = null) {
     storage: {
       readFromStorage: vi.fn().mockReturnValue(storageData)
     },
-    requireAdmin: (req, res, next) => next()
+    requireAdmin: (req, res, next) => next(),
+    requireScope: () => (req, res, next) => next()
   };
 }
 

@@ -23,7 +23,7 @@ function isValidVersion(version) {
 }
 
 module.exports = function registerRoutes(router, context) {
-  const { storage, requireAuth, requireAdmin } = context
+  const { storage, requireAuth, requireAdmin, requireScope } = context
   const { readFromStorage, writeToStorage } = storage
   const listStorageFiles = storage.listStorageFiles || null
   const deleteFromStorage = storage.deleteFromStorage || null
@@ -188,13 +188,14 @@ module.exports = function registerRoutes(router, context) {
     storage: storage,
     requireAuth: requireAuth,
     requirePM: requirePM,
+    requireScope: requireScope,
     refreshStates: refreshStates,
     MAX_CONCURRENT_REFRESHES: MAX_CONCURRENT_REFRESHES,
     sendJsonWithETag: sendJsonWithETag
   })
 
   // GET /releases
-  router.get('/releases', requireAuth, function(req, res) {
+  router.get('/releases', requireAuth, requireScope('release-planning:read'), function(req, res) {
     if (DEMO_MODE) {
       const demoConfig = loadFixture('config.json')
       if (demoConfig && demoConfig.releases) {
@@ -214,7 +215,7 @@ module.exports = function registerRoutes(router, context) {
   })
 
   // GET /releases/:version/candidates
-  router.get('/releases/:version/candidates', requireAuth, function(req, res) {
+  router.get('/releases/:version/candidates', requireAuth, requireScope('release-planning:read'), function(req, res) {
     const version = req.params.version
     if (!isValidVersion(version)) {
       return res.status(400).json({ error: 'Invalid version format' })
@@ -287,7 +288,7 @@ module.exports = function registerRoutes(router, context) {
   })
 
   // POST /releases/:version/refresh
-  router.post('/releases/:version/refresh', requirePM, function(req, res) {
+  router.post('/releases/:version/refresh', requirePM, requireScope('release-planning:write'), function(req, res) {
     const version = req.params.version
     if (!isValidVersion(version)) {
       return res.status(400).json({ error: 'Invalid version format' })
@@ -309,7 +310,7 @@ module.exports = function registerRoutes(router, context) {
   })
 
   // GET /refresh/status
-  router.get('/refresh/status', requireAuth, function(req, res) {
+  router.get('/refresh/status', requireAuth, requireScope('release-planning:read'), function(req, res) {
     const version = req.query && req.query.version
     if (version) {
       return res.json(getRefreshState(version))
@@ -330,7 +331,7 @@ module.exports = function registerRoutes(router, context) {
   })
 
   // GET /config
-  router.get('/config', requireAdmin, function(req, res) {
+  router.get('/config', requireAdmin, requireScope('release-planning:write'), function(req, res) {
     const config = getConfig(readFromStorage)
     res.json(config)
   })
@@ -367,7 +368,7 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── GET /permissions ───
 
-  router.get('/permissions', requireAuth, function(req, res) {
+  router.get('/permissions', requireAuth, requireScope('release-planning:read'), function(req, res) {
     res.json({
       canEdit: !!req.isAdmin || isPM(req.userEmail, readFromStorage)
     })
@@ -376,7 +377,7 @@ module.exports = function registerRoutes(router, context) {
   // ─── PUT /releases/:version/big-rocks/reorder ───
   // Must be registered BEFORE the :name route so Express doesn't match "reorder" as a name param.
 
-  router.put('/releases/:version/big-rocks/reorder', requirePM, async function(req, res) {
+  router.put('/releases/:version/big-rocks/reorder', requirePM, requireScope('release-planning:write'), async function(req, res) {
     const version = req.params.version
     if (!isValidVersion(version)) {
       return res.status(400).json({ error: 'Invalid version format' })
@@ -406,7 +407,7 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── PUT /releases/:version/big-rocks/:name ───
 
-  router.put('/releases/:version/big-rocks/:name', requirePM, async function(req, res) {
+  router.put('/releases/:version/big-rocks/:name', requirePM, requireScope('release-planning:write'), async function(req, res) {
     const version = req.params.version
     if (!isValidVersion(version)) {
       return res.status(400).json({ error: 'Invalid version format' })
@@ -457,7 +458,7 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── POST /releases/:version/big-rocks ───
 
-  router.post('/releases/:version/big-rocks', requirePM, async function(req, res) {
+  router.post('/releases/:version/big-rocks', requirePM, requireScope('release-planning:write'), async function(req, res) {
     const version = req.params.version
     if (!isValidVersion(version)) {
       return res.status(400).json({ error: 'Invalid version format' })
@@ -502,7 +503,7 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── DELETE /releases/:version/big-rocks/:name ───
 
-  router.delete('/releases/:version/big-rocks/:name', requirePM, async function(req, res) {
+  router.delete('/releases/:version/big-rocks/:name', requirePM, requireScope('release-planning:write'), async function(req, res) {
     const version = req.params.version
     if (!isValidVersion(version)) {
       return res.status(400).json({ error: 'Invalid version format' })
@@ -548,7 +549,7 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── POST /releases ───
 
-  router.post('/releases', requirePM, async function(req, res) {
+  router.post('/releases', requirePM, requireScope('release-planning:write'), async function(req, res) {
     const version = req.body && req.body.version
     const cloneFrom = req.body && req.body.cloneFrom
 
@@ -587,7 +588,7 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── DELETE /releases/:version ───
 
-  router.delete('/releases/:version', requireAdmin, async function(req, res) {
+  router.delete('/releases/:version', requireAdmin, requireScope('release-planning:write'), async function(req, res) {
     const version = req.params.version
     if (!isValidVersion(version)) {
       return res.status(400).json({ error: 'Invalid version format' })
@@ -627,7 +628,7 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── POST /jira/validate-keys ───
 
-  router.post('/jira/validate-keys', requirePM, function(req, res) {
+  router.post('/jira/validate-keys', requirePM, requireScope('release-planning:write'), function(req, res) {
     const keys = req.body && req.body.keys
     if (!Array.isArray(keys) || keys.length === 0) {
       return res.status(400).json({ error: 'keys must be a non-empty array' })
@@ -659,12 +660,12 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── PM User Management ───
 
-  router.get('/pm-users', requireAdmin, function(req, res) {
+  router.get('/pm-users', requireAdmin, requireScope('release-planning:write'), function(req, res) {
     const emails = getPMUsers(readFromStorage)
     res.json({ emails: emails })
   })
 
-  router.post('/pm-users', requireAdmin, function(req, res) {
+  router.post('/pm-users', requireAdmin, requireScope('release-planning:write'), function(req, res) {
     const email = req.body && req.body.email
     if (!email || typeof email !== 'string' || !email.trim()) {
       return res.status(400).json({ error: 'email is required' })
@@ -678,7 +679,7 @@ module.exports = function registerRoutes(router, context) {
     res.json({ emails: emails })
   })
 
-  router.delete('/pm-users/:email', requireAdmin, function(req, res) {
+  router.delete('/pm-users/:email', requireAdmin, requireScope('release-planning:write'), function(req, res) {
     let email
     try {
       email = decodeURIComponent(req.params.email)
@@ -696,7 +697,7 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Google Doc Import ───
 
-  router.post('/releases/:version/import/doc/preview', requirePM, async function(req, res) {
+  router.post('/releases/:version/import/doc/preview', requirePM, requireScope('release-planning:write'), async function(req, res) {
     const version = req.params.version
     if (!isValidVersion(version)) {
       return res.status(400).json({ error: 'Invalid version format' })
@@ -732,7 +733,7 @@ module.exports = function registerRoutes(router, context) {
     }
   })
 
-  router.post('/releases/:version/import/doc', requirePM, async function(req, res) {
+  router.post('/releases/:version/import/doc', requirePM, requireScope('release-planning:write'), async function(req, res) {
     const version = req.params.version
     if (!isValidVersion(version)) {
       return res.status(400).json({ error: 'Invalid version format' })
@@ -779,7 +780,7 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── SmartSheet Release Discovery ───
 
-  router.get('/smartsheet/releases', requireAuth, async function(req, res) {
+  router.get('/smartsheet/releases', requireAuth, requireScope('release-planning:read'), async function(req, res) {
     try {
       if (!smartsheetClient.isConfigured()) {
         return res.status(503).json({
@@ -814,7 +815,7 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Admin Seed / Bootstrap ───
 
-  router.post('/admin/seed', requireAdmin, async function(req, res) {
+  router.post('/admin/seed', requireAdmin, requireScope('release-planning:write'), async function(req, res) {
     const config = req.body
     if (!config || typeof config !== 'object' || !config.releases) {
       return res.status(400).json({ error: 'Request body must include a "releases" object' })
@@ -891,7 +892,7 @@ module.exports = function registerRoutes(router, context) {
     }
   })
 
-  router.get('/admin/seed/fixture', requireAdmin, function(req, res) {
+  router.get('/admin/seed/fixture', requireAdmin, requireScope('release-planning:write'), function(req, res) {
     const fixture = loadFixture('config.json')
     if (!fixture) {
       return res.status(404).json({ error: 'No fixture data found' })
@@ -901,7 +902,7 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Audit Log ───
 
-  router.get('/audit-log', requireAuth, function(req, res) {
+  router.get('/audit-log', requireAuth, requireScope('release-planning:read'), function(req, res) {
     const version = req.query.version || null
     const action = req.query.action || null
     const limit = Math.min(Math.max(parseInt(req.query.limit) || 50, 1), 500)

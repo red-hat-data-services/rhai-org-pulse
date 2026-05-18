@@ -43,6 +43,9 @@ function readRosterFull(storage) {
     }
   }
 
+  // Filter out auxiliary people bucket from legacy roster shape
+  delete orgMap['_auxiliary'];
+
   return {
     orgs: orgMap,
     generatedAt: registry.meta?.generatedAt,

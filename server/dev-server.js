@@ -22,7 +22,9 @@ errorBuffer.install();
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 const storageModule = DEMO_MODE ? require('../shared/server/demo-storage') : require('../shared/server/storage');
 const { readFromStorage, writeToStorage } = storageModule;
-const { createAuthMiddleware, proxySecretGuard } = require('../shared/server/auth');
+const { createAuthMiddleware, proxySecretGuard, blockDuringImpersonation } = require('../shared/server/auth');
+const { createRoleStore } = require('../shared/server/role-store');
+const auditLog = require('../shared/server/audit-log');
 const apiTokens = require('./api-tokens');
 
 const modulesConfig = require('./modules/config');
@@ -61,7 +63,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "*");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
   next();
 });
 
@@ -90,14 +92,33 @@ if (DEMO_MODE) {
         message: 'Token creation disabled in demo mode'
       });
     }
+    // Demo mode: block token scope editing
+    if (req.method === 'PATCH' && req.path.match(/^\/api\/(admin\/)?tokens\/[^/]+\/scopes$/)) {
+      return res.status(403).json({
+        status: 'skipped',
+        message: 'Token scope editing disabled in demo mode'
+      });
+    }
     next();
   });
 }
 
 // ─── Auth (from shared package) ───
 
-const { authMiddleware, requireAdmin, seedAdminList } = createAuthMiddleware(readFromStorage, writeToStorage, {
-  tokenValidator: apiTokens
+const roleStore = createRoleStore(readFromStorage, writeToStorage, {
+  getAuthDomain: () => {
+    // Env var takes precedence (solves bootstrap: can be set in ConfigMap
+    // before first deployment, so migration runs on first startup)
+    if (process.env.AUTH_EMAIL_DOMAIN) {
+      return process.env.AUTH_EMAIL_DOMAIN.trim().toLowerCase();
+    }
+    const config = readFromStorage('site-config.json');
+    return config?.authEmailDomain || null;
+  }
+});
+const { authMiddleware, requireAdmin, requireTeamAdmin, requireScope, seedRoles } = createAuthMiddleware(readFromStorage, writeToStorage, {
+  tokenValidator: apiTokens,
+  roleStore
 });
 
 // ─── Swagger UI (before auth) ───
@@ -198,6 +219,16 @@ app.use(authMiddleware);
  *                 authMethod:
  *                   type: string
  *                   enum: [token, proxy, local-dev]
+ *                 permissionTier:
+ *                   type: string
+ *                   enum: [admin, manager, user]
+ *                 impersonating:
+ *                   type: boolean
+ *                   description: Present and true when X-Impersonate-Uid header is active
+ *                 realAdmin:
+ *                   type: string
+ *                   format: email
+ *                   description: The real admin's email (only present during impersonation)
  */
 app.get('/api/whoami', function(req, res) {
   // For proxy-authenticated users, try to get display name from headers
@@ -208,13 +239,39 @@ app.get('/api/whoami', function(req, res) {
     const email = req.headers['x-forwarded-email'];
     displayName = preferred || user || email || req.userEmail;
   }
-  res.json({
+
+  const response = {
     email: req.userEmail,
     displayName,
     isAdmin: req.isAdmin,
+    isTeamAdmin: req.isTeamAdmin || false,
+    roles: roleStore.getRoles(req.userEmail),
+    permissionTier: req.permissionTier || (req.isAdmin ? 'admin' : 'user'),
     authMethod: req.authMethod || (req.headers['x-forwarded-email'] ? 'proxy' : 'local-dev')
-  });
+  };
+
+  if (req.isImpersonating) {
+    response.impersonating = true;
+    response.realAdmin = req.realAdminEmail;
+    if (req.impersonatedDisplayName) response.displayName = req.impersonatedDisplayName;
+  }
+
+  res.json(response);
 });
+
+// ─── Helpers ───
+
+/** Validate a domain name per RFC 1123: labels separated by dots, each 1-63 chars, alphanumeric + hyphen. */
+function isValidDomain(domain) {
+  if (!domain || typeof domain !== 'string') return false;
+  if (domain.length > 253) return false;
+  if (domain.includes('@') || /\s/.test(domain)) return false;
+  const labels = domain.split('.');
+  if (labels.length < 1) return false;
+  return labels.every(label =>
+    label.length >= 1 && label.length <= 63 && /^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(label)
+  );
+}
 
 // ─── Routes: Site Config ───
 
@@ -234,11 +291,17 @@ app.get('/api/whoami', function(req, res) {
  *               properties:
  *                 titlePrefix:
  *                   type: string
+ *                 authEmailDomain:
+ *                   type: string
+ *                   description: Auth email domain for role matching (e.g. cluster.local)
  */
 app.get('/api/site-config', function(req, res) {
   try {
-    const config = readFromStorage('site-config.json') || { titlePrefix: '' };
-    res.json({ titlePrefix: config.titlePrefix || '' });
+    const config = readFromStorage('site-config.json') || {};
+    res.json({
+      titlePrefix: config.titlePrefix || '',
+      authEmailDomain: config.authEmailDomain || ''
+    });
   } catch (error) {
     console.error('Get site-config error:', error);
     res.status(500).json({ error: error.message });
@@ -261,26 +324,334 @@ app.get('/api/site-config', function(req, res) {
  *               titlePrefix:
  *                 type: string
  *                 maxLength: 100
+ *               authEmailDomain:
+ *                 type: string
+ *                 maxLength: 253
+ *                 description: Auth email domain for role matching (e.g. cluster.local)
  *     responses:
  *       200:
  *         description: Updated site configuration
  */
-app.post('/api/site-config', requireAdmin, function(req, res) {
+app.post('/api/site-config', requireAdmin, requireScope('admin:manage'), function(req, res) {
   try {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Configuration changes disabled in demo mode' });
     }
-    const { titlePrefix } = req.body;
-    if (typeof titlePrefix !== 'string' || titlePrefix.length > 100) {
-      return res.status(400).json({ error: 'titlePrefix must be a string of 100 characters or fewer' });
+    const existing = readFromStorage('site-config.json') || {};
+    const updates = {};
+
+    // titlePrefix
+    if (req.body.titlePrefix !== undefined) {
+      if (typeof req.body.titlePrefix !== 'string' || req.body.titlePrefix.length > 100) {
+        return res.status(400).json({ error: 'titlePrefix must be a string of 100 characters or fewer' });
+      }
+      updates.titlePrefix = req.body.titlePrefix;
     }
-    const config = { titlePrefix };
+
+    // authEmailDomain
+    if (req.body.authEmailDomain !== undefined) {
+      const domain = req.body.authEmailDomain.trim().toLowerCase();
+      if (domain && !isValidDomain(domain)) {
+        return res.status(400).json({ error: 'authEmailDomain must be a valid domain name (no @ or whitespace, max 253 chars)' });
+      }
+      updates.authEmailDomain = domain;
+    }
+
+    const config = { ...existing, ...updates };
     writeToStorage('site-config.json', config);
+
+    // Trigger role migration when authEmailDomain changes
+    if (updates.authEmailDomain !== undefined && updates.authEmailDomain !== existing.authEmailDomain) {
+      auditLog.appendAuditEntry({ readFromStorage, writeToStorage }, {
+        action: 'config.authEmailDomain.change',
+        actor: req.userEmail || 'unknown',
+        entityType: 'config',
+        entityId: 'site-config',
+        field: 'authEmailDomain',
+        oldValue: existing.authEmailDomain || '',
+        newValue: updates.authEmailDomain,
+        detail: `Auth email domain changed from "${existing.authEmailDomain || ''}" to "${updates.authEmailDomain}"`
+      });
+
+      roleStore.invalidateCache();
+      const count = roleStore.migrateEmailDomains();
+      if (count > 0) {
+        console.log(`site-config: authEmailDomain changed, migrated ${count} role(s)`);
+      }
+    }
+
     res.json(config);
   } catch (error) {
     console.error('Save site-config error:', error);
     res.status(500).json({ error: error.message });
   }
+});
+
+// ─── Routes: App-wide Messages ───
+
+app.get('/api/messages', async function(req, res) {
+  const userContext = {
+    email: req.userEmail,
+    uid: req.userUid,
+    isAdmin: req.isAdmin,
+    isTeamAdmin: req.isTeamAdmin,
+    permissionTier: req.permissionTier
+  };
+
+  try {
+    const computed = await messageRegistry.getMessages(userContext);
+
+    // Merge stored messages
+    const stored = readFromStorage('messages.json') || [];
+    const all = [...computed, ...stored];
+
+    res.json({ messages: all });
+  } catch (err) {
+    console.error('[messages] Aggregation failed:', err.message);
+    res.json({ messages: [] });
+  }
+});
+
+app.post('/api/admin/messages', requireAdmin, requireScope('admin:manage'), function(req, res) {
+  const { type, text, link } = req.body || {};
+
+  // Validate required fields
+  if (!text || typeof text !== 'string' || !text.trim()) {
+    return res.status(400).json({ error: 'text is required and must be a non-empty string' });
+  }
+
+  const allowedTypes = ['warning', 'info', 'error'];
+  if (!type || !allowedTypes.includes(type)) {
+    return res.status(400).json({ error: `type must be one of: ${allowedTypes.join(', ')}` });
+  }
+
+  // Validate link shape if present
+  if (link != null) {
+    if (typeof link !== 'object' || typeof link.label !== 'string' || !link.label.trim()
+        || typeof link.href !== 'string' || !link.href.trim()) {
+      return res.status(400).json({ error: 'link must have non-empty string "label" and "href" properties' });
+    }
+    const SAFE_HREF = /^(https?:\/\/|#)/i;
+    if (!SAFE_HREF.test(link.href.trim())) {
+      return res.status(400).json({ error: 'link.href must be an http(s) or hash URL' });
+    }
+  }
+
+  const id = `admin:${Date.now()}`;
+  const message = {
+    id,
+    type,
+    text: text.trim(),
+    link: link ? { label: link.label.trim(), href: link.href.trim() } : null
+  };
+
+  const stored = readFromStorage('messages.json') || [];
+  stored.push(message);
+  writeToStorage('messages.json', stored);
+
+  res.status(201).json(message);
+});
+
+app.delete('/api/admin/messages/:id', requireAdmin, requireScope('admin:manage'), function(req, res) {
+  const stored = readFromStorage('messages.json') || [];
+  const index = stored.findIndex(m => m.id === req.params.id);
+
+  if (index === -1) {
+    return res.status(404).json({ error: 'Message not found' });
+  }
+
+  stored.splice(index, 1);
+  writeToStorage('messages.json', stored);
+
+  res.status(204).end();
+});
+
+// ─── Routes: Backups ───
+
+const backup = require('../shared/server/backup');
+
+let backupRunning = false;
+
+/**
+ * @openapi
+ * /api/admin/backup:
+ *   post:
+ *     tags: [Backup]
+ *     summary: Trigger a data backup to S3 (admin only)
+ *     responses:
+ *       200:
+ *         description: Backup created successfully
+ *       409:
+ *         description: Backup already in progress
+ */
+app.post('/api/admin/backup', requireAdmin, requireScope('admin:manage'), async function(req, res) {
+  if (backupRunning) {
+    return res.status(409).json({ error: 'Backup already in progress' });
+  }
+  backupRunning = true;
+  try {
+    const result = await backup.createBackup();
+    const retention = await backup.applyRetention();
+    res.json({ ...result, deleted: retention.deleted });
+  } catch (error) {
+    console.error('[backup] Backup failed:', error);
+    res.status(500).json({ error: error.message });
+  } finally {
+    backupRunning = false;
+  }
+});
+
+/**
+ * @openapi
+ * /api/admin/backup:
+ *   get:
+ *     tags: [Backup]
+ *     summary: List available backups (admin only)
+ *     responses:
+ *       200:
+ *         description: List of backups
+ */
+app.get('/api/admin/backup', requireAdmin, requireScope('admin:manage'), async function(req, res) {
+  try {
+    const backups = await backup.listBackups();
+    res.json({ backups });
+  } catch (error) {
+    console.error('[backup] List failed:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * @openapi
+ * /api/admin/backup/restore:
+ *   post:
+ *     tags: [Backup]
+ *     summary: Restore data from an S3 backup (admin only)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [key]
+ *             properties:
+ *               key:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Restore completed
+ *       400:
+ *         description: Invalid or missing key
+ */
+app.post('/api/admin/backup/restore', requireAdmin, requireScope('admin:manage'), blockDuringImpersonation, async function(req, res) {
+  const { key } = req.body || {};
+  if (!key || typeof key !== 'string') {
+    return res.status(400).json({ error: 'key is required' });
+  }
+  if (!key.startsWith('team-tracker/backup-')) {
+    return res.status(400).json({ error: 'Invalid backup key format' });
+  }
+  try {
+    const result = await backup.restoreBackup(key);
+    res.json(result);
+  } catch (error) {
+    console.error('[backup] Restore failed:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ─── Routes: Token Scopes Catalog ───
+
+/**
+ * @openapi
+ * /api/token-scopes:
+ *   get:
+ *     tags: [Auth]
+ *     summary: Get available token scope catalog
+ *     description: Returns available scopes and presets for the UI. Requires authentication but no specific scope.
+ *     responses:
+ *       200:
+ *         description: Scope catalog with presets
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 scopes:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       key:
+ *                         type: string
+ *                       label:
+ *                         type: string
+ *                       description:
+ *                         type: string
+ *                       category:
+ *                         type: string
+ *                 presets:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       key:
+ *                         type: string
+ *                       label:
+ *                         type: string
+ *                       description:
+ *                         type: string
+ *                       scopes:
+ *                         type: array
+ *                         items:
+ *                           type: string
+ */
+app.get('/api/token-scopes', function(req, res) {
+  res.json({
+    scopes: [
+      { key: 'roster:read', label: 'Roster (Read)', description: 'Read roster and org data', category: 'Roster' },
+      { key: 'roster:write', label: 'Roster (Write)', description: 'Trigger roster sync and refresh', category: 'Roster' },
+      { key: 'metrics:read', label: 'Metrics (Read)', description: 'Read person/team metrics and trends', category: 'Metrics' },
+      { key: 'metrics:write', label: 'Metrics (Write)', description: 'Refresh metrics', category: 'Metrics' },
+      { key: 'github:read', label: 'GitHub (Read)', description: 'Read GitHub contribution data', category: 'GitHub' },
+      { key: 'github:write', label: 'GitHub (Write)', description: 'Refresh GitHub data', category: 'GitHub' },
+      { key: 'gitlab:read', label: 'GitLab (Read)', description: 'Read GitLab contribution data', category: 'GitLab' },
+      { key: 'gitlab:write', label: 'GitLab (Write)', description: 'Refresh GitLab data', category: 'GitLab' },
+      { key: 'team-tracker:read', label: 'Team Tracker (Read)', description: 'Read team structure, fields, snapshots', category: 'Team Tracker' },
+      { key: 'team-tracker:write', label: 'Team Tracker (Write)', description: 'Mutate team structure, fields, snapshots', category: 'Team Tracker' },
+      { key: 'feature-traffic:read', label: 'Feature Traffic (Read)', description: 'Read feature traffic data', category: 'Feature Traffic' },
+      { key: 'feature-traffic:write', label: 'Feature Traffic (Write)', description: 'Refresh/configure feature traffic', category: 'Feature Traffic' },
+      { key: 'ai-impact:read', label: 'AI Impact (Read)', description: 'Read AI impact data', category: 'AI Impact' },
+      { key: 'ai-impact:write', label: 'AI Impact (Write)', description: 'Push/clear AI impact data', category: 'AI Impact' },
+      { key: 'release-analysis:read', label: 'Release Analysis (Read)', description: 'Read release analysis data', category: 'Release Analysis' },
+      { key: 'release-analysis:write', label: 'Release Analysis (Write)', description: 'Mutate release analysis data', category: 'Release Analysis' },
+      { key: 'release-planning:read', label: 'Release Planning (Read)', description: 'Read release planning / health data', category: 'Release Planning' },
+      { key: 'release-planning:write', label: 'Release Planning (Write)', description: 'Mutate release planning data', category: 'Release Planning' },
+      { key: 'upstream-pulse:read', label: 'Upstream Pulse (Read)', description: 'Read upstream pulse data', category: 'Upstream Pulse' },
+      { key: 'upstream-pulse:write', label: 'Upstream Pulse (Write)', description: 'Mutate upstream pulse data', category: 'Upstream Pulse' },
+      { key: 'health-metrics:read', label: 'Health Metrics (Read)', description: 'Read health metrics data', category: 'Health Metrics' },
+      { key: 'health-metrics:write', label: 'Health Metrics (Write)', description: 'Mutate health metrics data', category: 'Health Metrics' },
+      { key: 'admin:manage', label: 'Admin', description: 'Admin-only shell operations', category: 'Admin' },
+      { key: 'tokens:manage', label: 'Tokens', description: 'Manage own tokens (always implicitly granted)', category: 'Admin' }
+    ],
+    presets: [
+      {
+        key: 'read-only',
+        label: 'Read Only',
+        description: 'Read access to all data, no mutations',
+        scopes: ['roster:read', 'metrics:read', 'github:read', 'gitlab:read',
+                 'team-tracker:read', 'feature-traffic:read', 'ai-impact:read',
+                 'release-analysis:read', 'release-planning:read',
+                 'upstream-pulse:read', 'health-metrics:read']
+      },
+      {
+        key: 'full-access',
+        label: 'Full Access',
+        description: 'All scopes (same as no restrictions)',
+        scopes: ['*']
+      }
+    ]
+  });
 });
 
 // ─── Routes: API Tokens ───
@@ -304,7 +675,7 @@ app.post('/api/site-config', requireAdmin, function(req, res) {
  *                   items:
  *                     $ref: '#/components/schemas/ApiToken'
  */
-app.get('/api/tokens', function(req, res) {
+app.get('/api/tokens', blockDuringImpersonation, requireScope('tokens:manage'), function(req, res) {
   try {
     const tokens = apiTokens.listUserTokens(req.userEmail);
     res.json({ tokens });
@@ -335,6 +706,12 @@ app.get('/api/tokens', function(req, res) {
  *                 type: string
  *                 enum: [30d, 90d, 1y]
  *                 nullable: true
+ *               scopes:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 nullable: true
+ *                 description: Scope restrictions. Null or omitted for full access.
  *     responses:
  *       201:
  *         description: Token created (raw token shown only once)
@@ -349,6 +726,11 @@ app.get('/api/tokens', function(req, res) {
  *                   type: string
  *                 name:
  *                   type: string
+ *                 scopes:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                   nullable: true
  *                 expiresAt:
  *                   type: string
  *                   nullable: true
@@ -358,10 +740,16 @@ app.get('/api/tokens', function(req, res) {
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: Scope escalation attempt
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
-app.post('/api/tokens', async function(req, res) {
+app.post('/api/tokens', blockDuringImpersonation, requireScope('tokens:manage'), async function(req, res) {
   try {
-    const { name, expiresIn } = req.body;
+    const { name, expiresIn, scopes } = req.body;
 
     // Validate name
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
@@ -376,11 +764,23 @@ app.post('/api/tokens', async function(req, res) {
       return res.status(400).json({ error: 'expiresIn must be one of: 30d, 90d, 1y, or null' });
     }
 
-    const result = await apiTokens.createToken(req.userEmail, name.trim(), expiresIn || null);
+    // Scope escalation guard for token-authenticated requests
+    if (req.authMethod === 'token') {
+      const validated = scopes != null ? apiTokens.validateScopes(scopes) : null;
+      const escalation = apiTokens.enforceTokenScopeCeiling(req.tokenScopes, validated);
+      if (escalation) {
+        return res.status(403).json({ error: escalation });
+      }
+    }
+
+    const result = await apiTokens.createToken(req.userEmail, name.trim(), expiresIn || null, scopes !== undefined ? scopes : null);
     res.status(201).json(result);
   } catch (error) {
     if (error.statusCode) {
       return res.status(error.statusCode).json({ error: error.message });
+    }
+    if (error.message && (error.message.includes('Invalid scopes') || error.message.includes('scopes must be'))) {
+      return res.status(400).json({ error: error.message });
     }
     console.error('Create token error:', error);
     res.status(500).json({ error: error.message });
@@ -405,7 +805,7 @@ app.post('/api/tokens', async function(req, res) {
  *       404:
  *         $ref: '#/components/responses/NotFound'
  */
-app.delete('/api/tokens/:id', async function(req, res) {
+app.delete('/api/tokens/:id', blockDuringImpersonation, requireScope('tokens:manage'), async function(req, res) {
   try {
     const revoked = await apiTokens.revokeToken(req.params.id, req.userEmail);
     if (!revoked) {
@@ -414,6 +814,68 @@ app.delete('/api/tokens/:id', async function(req, res) {
     res.json({ success: true });
   } catch (error) {
     console.error('Revoke token error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * @openapi
+ * /api/tokens/{id}/scopes:
+ *   patch:
+ *     tags: [Auth]
+ *     summary: Update scopes on own API token
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [scopes]
+ *             properties:
+ *               scopes:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 nullable: true
+ *     responses:
+ *       200:
+ *         description: Updated token record
+ *       400:
+ *         description: Invalid scopes
+ *       403:
+ *         description: Scope escalation or impersonation blocked
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ */
+app.patch('/api/tokens/:id/scopes', blockDuringImpersonation, requireScope('tokens:manage'), async function(req, res) {
+  try {
+    const { scopes } = req.body;
+
+    // Scope escalation guard for token-authenticated requests
+    if (req.authMethod === 'token') {
+      const validated = scopes != null ? apiTokens.validateScopes(scopes) : null;
+      const escalation = apiTokens.enforceTokenScopeCeiling(req.tokenScopes, validated);
+      if (escalation) {
+        return res.status(403).json({ error: escalation });
+      }
+    }
+
+    const updated = await apiTokens.updateTokenScopes(req.params.id, req.userEmail, scopes);
+    if (!updated) {
+      return res.status(404).json({ error: 'Token not found' });
+    }
+    res.json(updated);
+  } catch (error) {
+    if (error.message && (error.message.includes('Invalid scopes') || error.message.includes('scopes must be'))) {
+      return res.status(400).json({ error: error.message });
+    }
+    console.error('Update token scopes error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -439,7 +901,7 @@ app.delete('/api/tokens/:id', async function(req, res) {
  *       403:
  *         $ref: '#/components/responses/Forbidden'
  */
-app.get('/api/admin/tokens', requireAdmin, function(req, res) {
+app.get('/api/admin/tokens', requireAdmin, requireScope('admin:manage'), function(req, res) {
   try {
     const tokens = apiTokens.listAllTokens();
     res.json({ tokens });
@@ -469,7 +931,7 @@ app.get('/api/admin/tokens', requireAdmin, function(req, res) {
  *       404:
  *         $ref: '#/components/responses/NotFound'
  */
-app.delete('/api/admin/tokens/:id', requireAdmin, async function(req, res) {
+app.delete('/api/admin/tokens/:id', requireAdmin, requireScope('admin:manage'), blockDuringImpersonation, async function(req, res) {
   try {
     const revoked = await apiTokens.adminRevokeToken(req.params.id);
     if (!revoked) {
@@ -478,6 +940,68 @@ app.delete('/api/admin/tokens/:id', requireAdmin, async function(req, res) {
     res.json({ success: true });
   } catch (error) {
     console.error('Admin revoke token error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * @openapi
+ * /api/admin/tokens/{id}/scopes:
+ *   patch:
+ *     tags: [Auth]
+ *     summary: Update scopes on any API token (admin)
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [scopes]
+ *             properties:
+ *               scopes:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 nullable: true
+ *     responses:
+ *       200:
+ *         description: Updated token record
+ *       400:
+ *         description: Invalid scopes
+ *       403:
+ *         description: Admin access required or scope escalation
+ *       404:
+ *         $ref: '#/components/responses/NotFound'
+ */
+app.patch('/api/admin/tokens/:id/scopes', requireAdmin, requireScope('admin:manage'), blockDuringImpersonation, async function(req, res) {
+  try {
+    const { scopes } = req.body;
+
+    // Scope escalation guard for token-authenticated requests
+    if (req.authMethod === 'token') {
+      const validated = scopes != null ? apiTokens.validateScopes(scopes) : null;
+      const escalation = apiTokens.enforceTokenScopeCeiling(req.tokenScopes, validated);
+      if (escalation) {
+        return res.status(403).json({ error: escalation });
+      }
+    }
+
+    const updated = await apiTokens.updateTokenScopes(req.params.id, null, scopes);
+    if (!updated) {
+      return res.status(404).json({ error: 'Token not found' });
+    }
+    res.json(updated);
+  } catch (error) {
+    if (error.message && (error.message.includes('Invalid scopes') || error.message.includes('scopes must be'))) {
+      return res.status(400).json({ error: error.message });
+    }
+    console.error('Admin update token scopes error:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -502,10 +1026,9 @@ app.delete('/api/admin/tokens/:id', requireAdmin, async function(req, res) {
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-app.get('/api/allowlist', requireAdmin, function(req, res) {
+app.get('/api/allowlist', requireAdmin, requireScope('admin:manage'), function(req, res) {
   try {
-    const data = readFromStorage('allowlist.json') || { emails: [] };
-    res.json({ emails: data.emails });
+    res.json({ emails: roleStore.getAdminEmails() });
   } catch (error) {
     console.error('Read allowlist error:', error);
     res.status(500).json({ error: error.message });
@@ -553,7 +1076,7 @@ app.get('/api/allowlist', requireAdmin, function(req, res) {
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-app.post('/api/allowlist', requireAdmin, function(req, res) {
+app.post('/api/allowlist', requireAdmin, requireScope('admin:manage'), blockDuringImpersonation, function(req, res) {
   try {
     const { email } = req.body;
     if (!email || typeof email !== 'string') {
@@ -565,14 +1088,13 @@ app.post('/api/allowlist', requireAdmin, function(req, res) {
       return res.status(400).json({ error: 'A valid email address is required' });
     }
 
-    const data = readFromStorage('allowlist.json') || { emails: [] };
-    if (data.emails.includes(normalized)) {
+    if (roleStore.hasRole(normalized, 'admin')) {
       return res.status(409).json({ error: 'Email is already on the allowlist' });
     }
 
-    data.emails.push(normalized);
-    writeToStorage('allowlist.json', data);
-    res.json({ emails: data.emails });
+    const result = roleStore.assignRole(normalized, 'admin', req.auditActor || req.userEmail);
+    if (result.demo) return res.json(result);
+    res.json({ emails: roleStore.getAdminEmails() });
   } catch (error) {
     console.error('Add to allowlist error:', error);
     res.status(500).json({ error: error.message });
@@ -612,25 +1134,77 @@ app.post('/api/allowlist', requireAdmin, function(req, res) {
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-app.delete('/api/allowlist/:email', requireAdmin, function(req, res) {
+app.delete('/api/allowlist/:email', requireAdmin, requireScope('admin:manage'), blockDuringImpersonation, function(req, res) {
   try {
     const email = decodeURIComponent(req.params.email).toLowerCase();
-    const data = readFromStorage('allowlist.json') || { emails: [] };
 
-    if (!data.emails.includes(email)) {
+    if (!roleStore.hasRole(email, 'admin')) {
       return res.status(404).json({ error: 'Email not found on allowlist' });
     }
 
-    if (data.emails.length <= 1) {
+    const result = roleStore.revokeRole(email, 'admin', req.auditActor || req.userEmail);
+    if (result.demo) return res.json(result);
+    res.json({ emails: roleStore.getAdminEmails() });
+  } catch (error) {
+    if (error.message === 'Cannot remove the last admin') {
       return res.status(400).json({ error: 'Cannot remove the last user from the allowlist' });
     }
-
-    data.emails = data.emails.filter(e => e !== email);
-    writeToStorage('allowlist.json', data);
-    res.json({ emails: data.emails });
-  } catch (error) {
     console.error('Remove from allowlist error:', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// ─── Routes: Role Management ───
+
+app.get('/api/roles/me', function(req, res) {
+  res.json({ roles: roleStore.getRoles(req.userEmail) });
+});
+
+app.get('/api/roles', requireAdmin, requireScope('admin:manage'), function(req, res) {
+  try {
+    res.json({ assignments: roleStore.listAssignments() });
+  } catch (error) {
+    console.error('List roles error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/roles/assign', requireAdmin, requireScope('admin:manage'), blockDuringImpersonation, function(req, res) {
+  try {
+    const { email, role } = req.body;
+    if (!email || typeof email !== 'string') {
+      return res.status(400).json({ error: 'email is required' });
+    }
+    if (!role || typeof role !== 'string') {
+      return res.status(400).json({ error: 'role is required' });
+    }
+    const result = roleStore.assignRole(email, role, req.auditActor || req.userEmail);
+    if (result.demo) return res.json(result);
+    res.json(result);
+  } catch (error) {
+    console.error('Assign role error:', error);
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.post('/api/roles/revoke', requireAdmin, requireScope('admin:manage'), blockDuringImpersonation, function(req, res) {
+  try {
+    const { email, role } = req.body;
+    if (!email || typeof email !== 'string') {
+      return res.status(400).json({ error: 'email is required' });
+    }
+    if (!role || typeof role !== 'string') {
+      return res.status(400).json({ error: 'role is required' });
+    }
+    const result = roleStore.revokeRole(email, role, req.auditActor || req.userEmail);
+    if (result.demo) return res.json(result);
+    res.json(result);
+  } catch (error) {
+    if (error.message === 'Cannot remove the last admin') {
+      return res.status(400).json({ error: error.message });
+    }
+    console.error('Revoke role error:', error);
+    res.status(400).json({ error: error.message });
   }
 });
 
@@ -673,7 +1247,42 @@ app.get('/api/modules', function(req, res) {
 // builtInModules is populated once via getDiscoveredModules() (see top of file).
 
 const diagnosticsRegistry = {};
-const moduleContext = { storage: storageModule, requireAuth: authMiddleware, requireAdmin, registerDiagnostics: null };
+const messageRegistry = require('../shared/server/message-registry');
+
+// Register backup staleness message provider (admin-only warning when latest backup > 48h old)
+const BACKUP_STALE_HOURS = 48;
+messageRegistry.registerProvider('backup-staleness', async function(userContext) {
+  if (!userContext.isAdmin) return [];
+  if (!process.env.AWS_BACKUP_BUCKET) return [];
+  try {
+    const backups = await backup.listBackups();
+    if (backups.length === 0) {
+      return [{
+        id: 'backup:no-backups',
+        type: 'warning',
+        text: 'No data backups found. Trigger a backup from About > Backups to protect against data loss.',
+        link: { label: 'Go to Backups', href: '#/about?tab=backups' }
+      }];
+    }
+    const latest = backups[0];
+    const ageMs = Date.now() - new Date(latest.lastModified).getTime();
+    const ageHours = ageMs / (1000 * 60 * 60);
+    if (ageHours > BACKUP_STALE_HOURS) {
+      const ageDays = Math.floor(ageHours / 24);
+      const ageLabel = ageDays >= 1 ? `${ageDays} day${ageDays === 1 ? '' : 's'}` : `${Math.floor(ageHours)} hours`;
+      return [{
+        id: 'backup:stale',
+        type: 'warning',
+        text: `Data backup is overdue — last backup was ${ageLabel} ago.`,
+        link: { label: 'Go to Backups', href: '#/about?tab=backups' }
+      }];
+    }
+    return [];
+  } catch {
+    return [];
+  }
+});
+const moduleContext = { storage: storageModule, requireAuth: authMiddleware, requireAdmin, requireTeamAdmin, requireScope, roleStore, registerDiagnostics: null };
 
 const persistedState = loadModuleState(storageModule);
 // Persist defaults for any newly discovered modules at startup (not in GET handlers).
@@ -692,7 +1301,7 @@ const effectiveState = getEffectiveState(builtInModules, startupState);
 reconcileStartupState(builtInModules, effectiveState, storageModule);
 const enabledSlugs = new Set(Object.entries(effectiveState).filter(([, v]) => v).map(([k]) => k));
 
-const moduleRouters = createModuleRouters(builtInModules, moduleContext, enabledSlugs, diagnosticsRegistry);
+const moduleRouters = createModuleRouters(builtInModules, moduleContext, enabledSlugs, diagnosticsRegistry, messageRegistry);
 
 const ttRouter = moduleRouters['team-tracker'];
 if (ttRouter && enabledSlugs.has('team-tracker')) {
@@ -715,6 +1324,9 @@ if (ttRouter && enabledSlugs.has('team-tracker')) {
     '/api/trend': '/trend',
     '/api/admin/roster-sync': '/admin/roster-sync',
     '/api/admin/jira-sync': '/admin/jira-sync',
+    '/api/modules/allocation-tracker/refresh': '/allocation/refresh',
+    '/api/modules/allocation-tracker/refresh/status': '/allocation/refresh/status',
+    '/api/modules/allocation-tracker/classify': '/allocation/classify',
   };
 
   for (const [legacyPath, modulePath] of Object.entries(LEGACY_FORWARDS)) {
@@ -726,6 +1338,10 @@ if (ttRouter && enabledSlugs.has('team-tracker')) {
 }
 
 mountModuleRouters(app, builtInModules, moduleRouters);
+
+// ─── Health Metrics (core feature, not a module) ───
+const { createHealthMetricsRouter } = require('./health-metrics/routes');
+app.use('/api/health-metrics', createHealthMetricsRouter(moduleContext));
 
 /**
  * @openapi
@@ -789,7 +1405,7 @@ app.get('/api/modules/:slug', function(req, res) {
  *         $ref: '#/components/responses/ServerError'
  */
 // Admin: list modules (with git fields, masked tokens)
-app.get('/api/admin/modules', requireAdmin, function(req, res) {
+app.get('/api/admin/modules', requireAdmin, requireScope('admin:manage'), function(req, res) {
   try {
     const config = modulesConfig.loadModulesConfig(storageModule) || { modules: [] };
     res.json({ modules: config.modules.map(modulesConfig.sanitizeForAdmin) });
@@ -830,7 +1446,7 @@ app.get('/api/admin/modules', requireAdmin, function(req, res) {
  *         $ref: '#/components/responses/ServerError'
  */
 // Admin: register new module
-app.post('/api/admin/modules', requireAdmin, function(req, res) {
+app.post('/api/admin/modules', requireAdmin, requireScope('admin:manage'), function(req, res) {
   try {
     const result = modulesConfig.addModule(storageModule, req.body);
     if (result.error) {
@@ -883,7 +1499,7 @@ app.post('/api/admin/modules', requireAdmin, function(req, res) {
  *         $ref: '#/components/responses/ServerError'
  */
 // Admin: update module
-app.put('/api/admin/modules/:slug', requireAdmin, function(req, res) {
+app.put('/api/admin/modules/:slug', requireAdmin, requireScope('admin:manage'), function(req, res) {
   try {
     const result = modulesConfig.updateModule(storageModule, req.params.slug, req.body);
     if (result.error) {
@@ -928,7 +1544,7 @@ app.put('/api/admin/modules/:slug', requireAdmin, function(req, res) {
  *         $ref: '#/components/responses/ServerError'
  */
 // Admin: remove module
-app.delete('/api/admin/modules/:slug', requireAdmin, function(req, res) {
+app.delete('/api/admin/modules/:slug', requireAdmin, requireScope('admin:manage'), function(req, res) {
   try {
     const result = modulesConfig.removeModule(storageModule, req.params.slug);
     if (result.error) {
@@ -982,7 +1598,7 @@ app.delete('/api/admin/modules/:slug', requireAdmin, function(req, res) {
  *         $ref: '#/components/responses/ServerError'
  */
 // Admin: sync one module
-app.post('/api/admin/modules/:slug/sync', requireAdmin, async function(req, res) {
+app.post('/api/admin/modules/:slug/sync', requireAdmin, requireScope('admin:manage'), async function(req, res) {
   try {
     const mod = modulesConfig.getModule(storageModule, req.params.slug);
     if (!mod) {
@@ -1028,7 +1644,7 @@ app.post('/api/admin/modules/:slug/sync', requireAdmin, async function(req, res)
  *         $ref: '#/components/responses/ServerError'
  */
 // Admin: sync all git-static modules
-app.post('/api/admin/modules/sync', requireAdmin, async function(req, res) {
+app.post('/api/admin/modules/sync', requireAdmin, requireScope('admin:manage'), async function(req, res) {
   try {
     // Start sync in background
     gitSync.syncAllModules(storageModule).then(function(result) {
@@ -1065,7 +1681,7 @@ app.post('/api/admin/modules/sync', requireAdmin, async function(req, res) {
  *         $ref: '#/components/responses/ServerError'
  */
 // Admin: get sync status
-app.get('/api/admin/modules/sync/status', requireAdmin, function(req, res) {
+app.get('/api/admin/modules/sync/status', requireAdmin, requireScope('admin:manage'), function(req, res) {
   try {
     res.json(gitSync.getSyncStatus(storageModule));
   } catch (error) {
@@ -1075,6 +1691,26 @@ app.get('/api/admin/modules/sync/status', requireAdmin, function(req, res) {
 });
 
 const { handleExport } = require('./export');
+
+// Rate limiter for expensive export endpoints (per-user, 5 requests per 10 minutes)
+const EXPORT_RATE_MAX = 5;
+const EXPORT_RATE_WINDOW_MS = 10 * 60_000;
+const exportRateCounts = new Map();
+
+function exportRateLimit(req, res, next) {
+  const email = req.userEmail;
+  const now = Date.now();
+  const entry = exportRateCounts.get(email);
+  if (!entry || now - entry.windowStart >= EXPORT_RATE_WINDOW_MS) {
+    exportRateCounts.set(email, { windowStart: now, count: 1 });
+    return next();
+  }
+  entry.count++;
+  if (entry.count > EXPORT_RATE_MAX) {
+    return res.status(429).json({ error: 'Rate limit exceeded. Try again later.' });
+  }
+  return next();
+}
 
 /**
  * @openapi
@@ -1090,10 +1726,12 @@ const { handleExport } = require('./export');
  *             schema:
  *               type: string
  *               format: binary
+ *       429:
+ *         description: Rate limit exceeded
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-app.get('/api/export/test-data', requireAdmin, function(req, res) {
+app.get('/api/export/test-data', requireAdmin, requireScope('admin:manage'), exportRateLimit, function(req, res) {
   handleExport(req, res, storageModule, builtInModules);
 });
 
@@ -1124,10 +1762,12 @@ const mustGather = require('./must-gather');
  *               type: object
  *       403:
  *         $ref: '#/components/responses/Forbidden'
+ *       429:
+ *         description: Rate limit exceeded
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-app.get('/api/must-gather', requireAdmin, async function(req, res) {
+app.get('/api/must-gather', requireAdmin, requireScope('admin:manage'), exportRateLimit, async function(req, res) {
   try {
     const redact = req.query.redact === 'aggressive' ? 'aggressive' : 'minimal';
     const bundle = await mustGather.collect({
@@ -1186,7 +1826,7 @@ app.get('/api/must-gather', requireAdmin, async function(req, res) {
  *         $ref: '#/components/responses/ServerError'
  */
 // Admin: get all built-in modules with state
-app.get('/api/admin/modules/state', requireAdmin, function(req, res) {
+app.get('/api/admin/modules/state', requireAdmin, requireScope('admin:manage'), function(req, res) {
   try {
     const discovered = builtInModules;
     const currentState = loadModuleState(storageModule);
@@ -1252,7 +1892,7 @@ app.get('/api/admin/modules/state', requireAdmin, function(req, res) {
  *         $ref: '#/components/responses/ServerError'
  */
 // Admin: enable a built-in module
-app.post('/api/admin/modules/:slug/enable', requireAdmin, function(req, res) {
+app.post('/api/admin/modules/:slug/enable', requireAdmin, requireScope('admin:manage'), function(req, res) {
   try {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Module state changes disabled in demo mode' });
@@ -1332,7 +1972,7 @@ app.post('/api/admin/modules/:slug/enable', requireAdmin, function(req, res) {
  *         $ref: '#/components/responses/ServerError'
  */
 // Admin: disable a built-in module
-app.post('/api/admin/modules/:slug/disable', requireAdmin, function(req, res) {
+app.post('/api/admin/modules/:slug/disable', requireAdmin, requireScope('admin:manage'), function(req, res) {
   try {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Module state changes disabled in demo mode' });
@@ -1416,7 +2056,16 @@ app.options('/api/{*path}', function(req, res) { res.status(200).end(); });
 
 // ─── Start ───
 
-seedAdminList();
+// Warn if AUTH_EMAIL_DOMAIN is set but invalid
+if (process.env.AUTH_EMAIL_DOMAIN) {
+  const envDomain = process.env.AUTH_EMAIL_DOMAIN.trim().toLowerCase();
+  if (!isValidDomain(envDomain)) {
+    console.warn(`WARNING: AUTH_EMAIL_DOMAIN="${process.env.AUTH_EMAIL_DOMAIN}" is not a valid domain name. Role email normalization may not work correctly.`);
+  }
+}
+
+seedRoles();
+roleStore.migrateEmailDomains();
 modulesConfig.seedIfMissing(storageModule);
 
 // Start daily module sync

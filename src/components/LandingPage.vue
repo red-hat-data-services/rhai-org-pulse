@@ -115,7 +115,8 @@ import {
   Layout,
   Network,
   ChartCandlestick,
-  Sparkles
+  Sparkles,
+  Hospital
 } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -144,7 +145,8 @@ const iconMap = {
   'box': Box,
   'network': Network,
   'chart-candlestick': ChartCandlestick,
-  'sparkles': Sparkles
+  'sparkles': Sparkles,
+  'hospital': Hospital
 }
 
 function getIcon(iconName) {

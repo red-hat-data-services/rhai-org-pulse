@@ -56,6 +56,7 @@ describe('feature-traffic routes', () => {
     context = {
       storage,
       requireAdmin,
+      requireScope: () => (req, res, next) => next(),
       registerDiagnostics: vi.fn()
     }
     registerRoutes(router, context)
@@ -80,15 +81,15 @@ describe('feature-traffic routes', () => {
 
   describe('requireAdmin middleware', () => {
     it('gates POST /refresh behind requireAdmin', () => {
-      expect(router.post).toHaveBeenCalledWith('/refresh', requireAdmin, expect.any(Function))
+      expect(router.post).toHaveBeenCalledWith('/refresh', requireAdmin, expect.any(Function), expect.any(Function))
     })
 
     it('gates GET /config behind requireAdmin', () => {
-      expect(router.get).toHaveBeenCalledWith('/config', requireAdmin, expect.any(Function))
+      expect(router.get).toHaveBeenCalledWith('/config', requireAdmin, expect.any(Function), expect.any(Function))
     })
 
     it('gates POST /config behind requireAdmin', () => {
-      expect(router.post).toHaveBeenCalledWith('/config', requireAdmin, expect.any(Function))
+      expect(router.post).toHaveBeenCalledWith('/config', requireAdmin, expect.any(Function), expect.any(Function))
     })
   })
 
@@ -114,7 +115,7 @@ describe('feature-traffic routes', () => {
         'feature-traffic/last-fetch.json': { status: 'success', timestamp: '2026-04-08T06:00:00Z' }
       })
       const r = makeRouter()
-      registerRoutes(r, { storage: storageWithData, requireAdmin: vi.fn(), registerDiagnostics: vi.fn() })
+      registerRoutes(r, { storage: storageWithData, requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn() })
 
       const handler = r._routes.get['/status'].at(-1)
       const res = makeRes()
@@ -134,7 +135,7 @@ describe('feature-traffic routes', () => {
         'feature-traffic/config.json': { enabled: true }
       })
       const r = makeRouter()
-      registerRoutes(r, { storage: storageWithConfig, requireAdmin: vi.fn(), registerDiagnostics: vi.fn() })
+      registerRoutes(r, { storage: storageWithConfig, requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn() })
 
       const handler = r._routes.post['/refresh'].at(-1)
 
@@ -160,7 +161,7 @@ describe('feature-traffic routes', () => {
 
       const storageForConfig = makeStorage()
       const r = makeRouter()
-      registerRoutes(r, { storage: storageForConfig, requireAdmin: vi.fn(), registerDiagnostics: vi.fn() })
+      registerRoutes(r, { storage: storageForConfig, requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn() })
 
       const postHandler = r._routes.post['/config'].at(-1)
       const res1 = makeRes()
@@ -191,7 +192,7 @@ describe('feature-traffic routes', () => {
 
     it('rejects http:// in gitlabBaseUrl', async () => {
       const r = makeRouter()
-      registerRoutes(r, { storage: makeStorage(), requireAdmin: vi.fn(), registerDiagnostics: vi.fn() })
+      registerRoutes(r, { storage: makeStorage(), requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn() })
 
       const handler = r._routes.post['/config'].at(-1)
       const res = makeRes()
@@ -207,7 +208,7 @@ describe('feature-traffic routes', () => {
 
     it('rejects invalid refreshIntervalHours', async () => {
       const r = makeRouter()
-      registerRoutes(r, { storage: makeStorage(), requireAdmin: vi.fn(), registerDiagnostics: vi.fn() })
+      registerRoutes(r, { storage: makeStorage(), requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn() })
 
       const handler = r._routes.post['/config'].at(-1)
 
@@ -228,7 +229,7 @@ describe('feature-traffic routes', () => {
 
     it('rejects non-string fields', async () => {
       const r = makeRouter()
-      registerRoutes(r, { storage: makeStorage(), requireAdmin: vi.fn(), registerDiagnostics: vi.fn() })
+      registerRoutes(r, { storage: makeStorage(), requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn() })
 
       const handler = r._routes.post['/config'].at(-1)
       const res = makeRes()
@@ -241,7 +242,7 @@ describe('feature-traffic routes', () => {
 
     it('rejects non-boolean enabled', async () => {
       const r = makeRouter()
-      registerRoutes(r, { storage: makeStorage(), requireAdmin: vi.fn(), registerDiagnostics: vi.fn() })
+      registerRoutes(r, { storage: makeStorage(), requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn() })
 
       const handler = r._routes.post['/config'].at(-1)
       const res = makeRes()

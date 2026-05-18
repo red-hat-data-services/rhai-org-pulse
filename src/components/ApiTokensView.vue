@@ -6,7 +6,7 @@
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Create and manage personal API tokens for programmatic access.</p>
       </div>
       <button
-        @click="showCreateModal = true"
+        @click="openCreateModal"
         class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors"
       >
         <Plus :size="16" />
@@ -36,8 +36,9 @@
           <code class="block bg-blue-100 dark:bg-blue-900/40 px-3 py-2 rounded-lg text-xs font-mono break-all">curl -H "Authorization: Bearer tt_..." {{ apiBaseUrl }}/api/roster</code>
         </div>
         <ul class="list-disc list-inside space-y-1 text-xs">
-          <li>Tokens are shown <strong>once</strong> at creation — copy immediately.</li>
+          <li>Tokens are shown <strong>once</strong> at creation -- copy immediately.</li>
           <li>Tokens can have an optional expiration (30 days, 90 days, or 1 year).</li>
+          <li>Scopes control which API endpoints a token can access.</li>
           <li>Revoke tokens at any time from this page.</li>
           <li>In production, use the dedicated API route hostname for token-authenticated requests.</li>
         </ul>
@@ -85,9 +86,10 @@
           <tr class="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
             <th class="px-4 py-2">Name</th>
             <th class="px-4 py-2">Prefix</th>
-            <th class="px-4 py-2 hidden sm:table-cell">Created</th>
+            <th class="px-4 py-2 hidden sm:table-cell">Scopes</th>
+            <th class="px-4 py-2 hidden md:table-cell">Created</th>
             <th class="px-4 py-2">Expires</th>
-            <th class="px-4 py-2 hidden md:table-cell">Last Used</th>
+            <th class="px-4 py-2 hidden lg:table-cell">Last Used</th>
             <th class="px-4 py-2"></th>
           </tr>
         </thead>
@@ -95,14 +97,21 @@
           <tr v-for="token in tokens" :key="token.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
             <td class="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">{{ token.name }}</td>
             <td class="px-4 py-3 font-mono text-xs text-gray-500 dark:text-gray-400">{{ token.tokenPrefix }}...</td>
-            <td class="px-4 py-3 text-gray-500 dark:text-gray-400 hidden sm:table-cell">{{ formatDate(token.createdAt) }}</td>
+            <td class="px-4 py-3 hidden sm:table-cell">
+              <ScopeBadge :scopes="token.scopes" />
+            </td>
+            <td class="px-4 py-3 text-gray-500 dark:text-gray-400 hidden md:table-cell">{{ formatDate(token.createdAt) }}</td>
             <td class="px-4 py-3">
               <span v-if="!token.expiresAt" class="text-gray-400 dark:text-gray-500">Never</span>
               <span v-else-if="isExpired(token.expiresAt)" class="text-red-600 dark:text-red-400 font-medium">Expired</span>
               <span v-else class="text-gray-500 dark:text-gray-400">{{ formatDate(token.expiresAt) }}</span>
             </td>
-            <td class="px-4 py-3 text-gray-500 dark:text-gray-400 hidden md:table-cell">{{ token.lastUsedAt ? formatDate(token.lastUsedAt) : 'Never' }}</td>
-            <td class="px-4 py-3 text-right">
+            <td class="px-4 py-3 text-gray-500 dark:text-gray-400 hidden lg:table-cell">{{ token.lastUsedAt ? formatDate(token.lastUsedAt) : 'Never' }}</td>
+            <td class="px-4 py-3 text-right space-x-2">
+              <button
+                @click="openEditScopesModal(token)"
+                class="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 text-xs font-medium"
+              >Scopes</button>
               <button
                 @click="handleRevoke(token.id)"
                 class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-xs font-medium"
@@ -135,9 +144,10 @@
               <th class="px-4 py-2">Owner</th>
               <th class="px-4 py-2">Name</th>
               <th class="px-4 py-2 hidden sm:table-cell">Prefix</th>
-              <th class="px-4 py-2 hidden md:table-cell">Created</th>
+              <th class="px-4 py-2 hidden md:table-cell">Scopes</th>
+              <th class="px-4 py-2 hidden lg:table-cell">Created</th>
               <th class="px-4 py-2">Expires</th>
-              <th class="px-4 py-2 hidden lg:table-cell">Last Used</th>
+              <th class="px-4 py-2 hidden xl:table-cell">Last Used</th>
               <th class="px-4 py-2"></th>
             </tr>
           </thead>
@@ -146,14 +156,21 @@
               <td class="px-4 py-3 text-gray-600 dark:text-gray-300">{{ token.ownerEmail }}</td>
               <td class="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">{{ token.name }}</td>
               <td class="px-4 py-3 font-mono text-xs text-gray-500 dark:text-gray-400 hidden sm:table-cell">{{ token.tokenPrefix }}...</td>
-              <td class="px-4 py-3 text-gray-500 dark:text-gray-400 hidden md:table-cell">{{ formatDate(token.createdAt) }}</td>
+              <td class="px-4 py-3 hidden md:table-cell">
+                <ScopeBadge :scopes="token.scopes" />
+              </td>
+              <td class="px-4 py-3 text-gray-500 dark:text-gray-400 hidden lg:table-cell">{{ formatDate(token.createdAt) }}</td>
               <td class="px-4 py-3">
                 <span v-if="!token.expiresAt" class="text-gray-400 dark:text-gray-500">Never</span>
                 <span v-else-if="isExpired(token.expiresAt)" class="text-red-600 dark:text-red-400 font-medium">Expired</span>
                 <span v-else class="text-gray-500 dark:text-gray-400">{{ formatDate(token.expiresAt) }}</span>
               </td>
-              <td class="px-4 py-3 text-gray-500 dark:text-gray-400 hidden lg:table-cell">{{ token.lastUsedAt ? formatDate(token.lastUsedAt) : 'Never' }}</td>
-              <td class="px-4 py-3 text-right">
+              <td class="px-4 py-3 text-gray-500 dark:text-gray-400 hidden xl:table-cell">{{ token.lastUsedAt ? formatDate(token.lastUsedAt) : 'Never' }}</td>
+              <td class="px-4 py-3 text-right space-x-2">
+                <button
+                  @click="openEditScopesModal(token, true)"
+                  class="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 text-xs font-medium"
+                >Scopes</button>
                 <button
                   @click="handleAdminRevoke(token.id)"
                   class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 text-xs font-medium"
@@ -168,7 +185,7 @@
     <!-- Create Token Modal -->
     <div v-if="showCreateModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div class="absolute inset-0 bg-black/30 dark:bg-black/50 backdrop-blur-sm" @click="showCreateModal = false" />
-      <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4">
+      <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto">
         <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Create API Token</h3>
         <div>
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Token Name</label>
@@ -193,6 +210,49 @@
             <option :value="null">No expiration</option>
           </select>
         </div>
+
+        <!-- Scope Selection -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Permissions</label>
+          <select
+            v-model="scopePreset"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent mb-2"
+            @change="applyScopePreset"
+          >
+            <option value="full">Full Access (all permissions)</option>
+            <option value="read-only">Read Only (all read scopes)</option>
+            <option value="custom">Custom (select individually)</option>
+          </select>
+
+          <div v-if="scopePreset === 'custom' && scopeCatalog" class="border border-gray-200 dark:border-gray-600 rounded-lg p-3 max-h-60 overflow-y-auto space-y-3">
+            <div v-for="(scopes, category) in groupedScopes" :key="category">
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">{{ category }}</p>
+              <label
+                v-for="scope in scopes"
+                :key="scope.key"
+                class="flex items-start gap-2 py-0.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded px-1"
+              >
+                <input
+                  type="checkbox"
+                  :value="scope.key"
+                  v-model="selectedScopes"
+                  class="mt-0.5 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500"
+                />
+                <span class="text-sm">
+                  <span class="text-gray-900 dark:text-gray-100">{{ scope.label }}</span>
+                  <span class="text-gray-400 dark:text-gray-500 ml-1 text-xs">{{ scope.key }}</span>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Empty scopes warning -->
+          <div v-if="scopePreset === 'custom' && selectedScopes.length === 0" class="mt-2 flex items-start gap-2 text-amber-600 dark:text-amber-400 text-xs">
+            <AlertTriangle :size="14" class="mt-0.5 flex-shrink-0" />
+            <span>No scopes selected. This token will not be able to access any API endpoints (except token management).</span>
+          </div>
+        </div>
+
         <div v-if="createError" class="text-sm text-red-600 dark:text-red-400">{{ createError }}</div>
         <div class="flex justify-end gap-3 pt-2">
           <button
@@ -207,13 +267,94 @@
         </div>
       </div>
     </div>
+
+    <!-- Edit Scopes Modal -->
+    <div v-if="showEditScopesModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div class="absolute inset-0 bg-black/30 dark:bg-black/50 backdrop-blur-sm" @click="showEditScopesModal = false" />
+      <div class="relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Edit Token Scopes</h3>
+        <p class="text-sm text-gray-500 dark:text-gray-400">
+          Token: <span class="font-medium text-gray-900 dark:text-gray-100">{{ editingToken?.name }}</span>
+        </p>
+
+        <div>
+          <select
+            v-model="editScopePreset"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent mb-2"
+            @change="applyEditScopePreset"
+          >
+            <option value="full">Full Access (all permissions)</option>
+            <option value="read-only">Read Only (all read scopes)</option>
+            <option value="custom">Custom (select individually)</option>
+          </select>
+
+          <div v-if="editScopePreset === 'custom' && scopeCatalog" class="border border-gray-200 dark:border-gray-600 rounded-lg p-3 max-h-60 overflow-y-auto space-y-3">
+            <div v-for="(scopes, category) in groupedScopes" :key="category">
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">{{ category }}</p>
+              <label
+                v-for="scope in scopes"
+                :key="scope.key"
+                class="flex items-start gap-2 py-0.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded px-1"
+              >
+                <input
+                  type="checkbox"
+                  :value="scope.key"
+                  v-model="editSelectedScopes"
+                  class="mt-0.5 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500"
+                />
+                <span class="text-sm">
+                  <span class="text-gray-900 dark:text-gray-100">{{ scope.label }}</span>
+                  <span class="text-gray-400 dark:text-gray-500 ml-1 text-xs">{{ scope.key }}</span>
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div v-if="editScopePreset === 'custom' && editSelectedScopes.length === 0" class="mt-2 flex items-start gap-2 text-amber-600 dark:text-amber-400 text-xs">
+            <AlertTriangle :size="14" class="mt-0.5 flex-shrink-0" />
+            <span>No scopes selected. This token will not be able to access any API endpoints (except token management).</span>
+          </div>
+        </div>
+
+        <div v-if="editScopesError" class="text-sm text-red-600 dark:text-red-400">{{ editScopesError }}</div>
+        <div class="flex justify-end gap-3 pt-2">
+          <button
+            @click="showEditScopesModal = false"
+            class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          >Cancel</button>
+          <button
+            @click="handleUpdateScopes"
+            :disabled="savingScopes"
+            class="px-4 py-2 text-sm font-medium text-white bg-gray-900 dark:bg-gray-100 dark:text-gray-900 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >{{ savingScopes ? 'Saving...' : 'Save Scopes' }}</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { Plus, Info, ChevronUp, ChevronDown, Copy, X, CheckCircle, Shield } from 'lucide-vue-next'
+import { ref, computed, onMounted, h } from 'vue'
+import { Plus, Info, ChevronUp, ChevronDown, Copy, X, CheckCircle, Shield, AlertTriangle } from 'lucide-vue-next'
 import { useApiTokens } from '../composables/useApiTokens'
+
+const badgeClass = 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium'
+const ScopeBadge = {
+  props: { scopes: { default: null } },
+  setup(props) {
+    return () => {
+      const s = props.scopes
+      if (s === null || (Array.isArray(s) && s.length === 1 && s[0] === '*')) {
+        return h('span', { class: `${badgeClass} bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300` }, 'Full access')
+      }
+      if (Array.isArray(s) && s.length === 0) {
+        return h('span', { class: `${badgeClass} bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300` }, 'No scopes')
+      }
+      const count = Array.isArray(s) ? s.length : 0
+      return h('span', { class: `${badgeClass} bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300` }, `${count} scope${count === 1 ? '' : 's'}`)
+    }
+  }
+}
 
 const props = defineProps({
   isAdmin: Boolean
@@ -224,10 +365,14 @@ const emit = defineEmits(['toast'])
 const {
   tokens,
   allTokens,
+  availableScopes,
   loading,
   loadTokens,
   loadAllTokens,
+  loadAvailableScopes,
   createToken,
+  updateTokenScopes,
+  adminUpdateTokenScopes,
   revokeToken,
   adminRevokeToken
 } = useApiTokens()
@@ -242,31 +387,144 @@ const copied = ref(false)
 const copyFailed = ref(false)
 const creating = ref(false)
 const createError = ref(null)
+const scopePreset = ref('full')
+const selectedScopes = ref([])
+
+// Edit scopes modal state
+const showEditScopesModal = ref(false)
+const editingToken = ref(null)
+const editingTokenIsAdmin = ref(false)
+const editScopePreset = ref('custom')
+const editSelectedScopes = ref([])
+const editScopesError = ref(null)
+const savingScopes = ref(false)
 
 const apiBaseUrl = window.location.origin
 
+const scopeCatalog = computed(() => {
+  if (!availableScopes.value) return null
+  return availableScopes.value.scopes || []
+})
+
+const groupedScopes = computed(() => {
+  if (!scopeCatalog.value) return {}
+  const groups = {}
+  for (const scope of scopeCatalog.value) {
+    const cat = scope.category || 'Other'
+    if (!groups[cat]) groups[cat] = []
+    groups[cat].push(scope)
+  }
+  return groups
+})
+
+const readOnlyScopes = computed(() => {
+  if (!scopeCatalog.value) return []
+  return scopeCatalog.value
+    .filter(s => s.key.endsWith(':read'))
+    .map(s => s.key)
+})
+
 onMounted(async () => {
   await loadTokens()
+  await loadAvailableScopes()
   if (props.isAdmin) {
     await loadAllTokens()
   }
 })
+
+function openCreateModal() {
+  newTokenName.value = ''
+  newTokenExpiry.value = '90d'
+  scopePreset.value = 'full'
+  selectedScopes.value = []
+  createError.value = null
+  showCreateModal.value = true
+}
+
+function applyScopePreset() {
+  if (scopePreset.value === 'read-only') {
+    selectedScopes.value = [...readOnlyScopes.value]
+  } else if (scopePreset.value === 'full') {
+    selectedScopes.value = []
+  }
+}
+
+function applyEditScopePreset() {
+  if (editScopePreset.value === 'read-only') {
+    editSelectedScopes.value = [...readOnlyScopes.value]
+  } else if (editScopePreset.value === 'full') {
+    editSelectedScopes.value = []
+  }
+}
+
+function computeScopesForSubmit(preset, selected) {
+  if (preset === 'full') return null
+  if (preset === 'read-only') return [...readOnlyScopes.value]
+  return [...selected]
+}
 
 async function handleCreate() {
   if (!newTokenName.value.trim() || creating.value) return
   creating.value = true
   createError.value = null
   try {
-    const result = await createToken(newTokenName.value.trim(), newTokenExpiry.value)
+    const scopes = computeScopesForSubmit(scopePreset.value, selectedScopes.value)
+    const result = await createToken(newTokenName.value.trim(), newTokenExpiry.value, scopes)
     newlyCreatedToken.value = result.token
     showCreateModal.value = false
     newTokenName.value = ''
     newTokenExpiry.value = '90d'
+    scopePreset.value = 'full'
+    selectedScopes.value = []
     if (props.isAdmin) await loadAllTokens()
   } catch (err) {
     createError.value = err.message
   } finally {
     creating.value = false
+  }
+}
+
+function openEditScopesModal(token, isAdmin = false) {
+  editingToken.value = token
+  editingTokenIsAdmin.value = isAdmin
+  editScopesError.value = null
+  savingScopes.value = false
+
+  if (token.scopes === null || (Array.isArray(token.scopes) && token.scopes.length === 1 && token.scopes[0] === '*')) {
+    editScopePreset.value = 'full'
+    editSelectedScopes.value = []
+  } else if (Array.isArray(token.scopes)) {
+    const isReadOnly = token.scopes.length > 0 &&
+      token.scopes.every(s => s.endsWith(':read')) &&
+      readOnlyScopes.value.length === token.scopes.length &&
+      readOnlyScopes.value.every(s => token.scopes.includes(s))
+    editScopePreset.value = isReadOnly ? 'read-only' : 'custom'
+    editSelectedScopes.value = [...token.scopes]
+  } else {
+    editScopePreset.value = 'full'
+    editSelectedScopes.value = []
+  }
+
+  showEditScopesModal.value = true
+}
+
+async function handleUpdateScopes() {
+  if (savingScopes.value) return
+  savingScopes.value = true
+  editScopesError.value = null
+  try {
+    const scopes = computeScopesForSubmit(editScopePreset.value, editSelectedScopes.value)
+    if (editingTokenIsAdmin.value) {
+      await adminUpdateTokenScopes(editingToken.value.id, scopes)
+    } else {
+      await updateTokenScopes(editingToken.value.id, scopes)
+    }
+    showEditScopesModal.value = false
+    emit('toast', { message: 'Token scopes updated', type: 'success' })
+  } catch (err) {
+    editScopesError.value = err.message
+  } finally {
+    savingScopes.value = false
   }
 }
 

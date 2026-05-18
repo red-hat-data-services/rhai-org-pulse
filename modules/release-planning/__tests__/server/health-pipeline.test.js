@@ -52,12 +52,20 @@ describe('getFeaturePhase', function() {
     expect(getFeaturePhase({ fixVersions: ['rhoai-3.5 GA'] })).toBe('GA')
   })
 
-  it('infers TP from fixVersions containing EA1', function() {
-    expect(getFeaturePhase({ fixVersions: ['rhoai-3.5-EA1'] })).toBe('TP')
+  it('infers EA1 from fixVersions containing EA1', function() {
+    expect(getFeaturePhase({ fixVersions: ['rhoai-3.5-EA1'] })).toBe('EA1')
   })
 
-  it('infers DP from fixVersions containing EA2', function() {
-    expect(getFeaturePhase({ fixVersions: ['rhoai-3.5-EA2'] })).toBe('DP')
+  it('infers EA2 from fixVersions containing EA2', function() {
+    expect(getFeaturePhase({ fixVersions: ['rhoai-3.5-EA2'] })).toBe('EA2')
+  })
+
+  it('maps DP1 fixVersion to DP', function() {
+    expect(getFeaturePhase({ fixVersions: ['rhoai-3.5-DP1'] })).toBe('DP')
+  })
+
+  it('maps DP2 fixVersion to DP', function() {
+    expect(getFeaturePhase({ fixVersions: ['rhoai-3.5-DP2'] })).toBe('DP')
   })
 
   it('returns empty string when no releaseType or matching fixVersions', function() {
@@ -111,12 +119,17 @@ describe('computeMilestoneInfo', function() {
 describe('buildEmptyCache', function() {
   it('returns correct structure with zero counts', function() {
     var cache = buildEmptyCache('3.5', ['some warning'])
+    expect(cache.healthCacheVersion).toBe(2)
     expect(cache.version).toBe('3.5')
     expect(cache.cachedAt).toBeDefined()
     expect(cache.milestones).toBeNull()
     expect(cache.summary.totalFeatures).toBe(0)
     expect(cache.summary.byRisk).toEqual({ green: 0, yellow: 0, red: 0 })
-    expect(cache.summary.dorCompletionRate).toBe(0)
+    expect(cache.summary.byPlanningStatus).toEqual({ 'not-ready': 0, 'in-planning': 0, 'ready-for-execution': 0 })
+    expect(cache.summary.cardCounts).toBeDefined()
+    expect(cache.summary.cardCounts.total).toBe(0)
+    expect(cache.summary.stratCreatorCoverage).toBeDefined()
+    expect(cache.summary.stratCreatorCoverage.signedOff).toBe(0)
     expect(cache.summary.averageRiceScore).toBeNull()
     expect(cache.features).toEqual([])
     expect(cache.enrichmentStatus.warnings).toContain('some warning')
@@ -759,15 +772,25 @@ describe('runHealthPipeline', function() {
       { issueKey: 'T-1', summary: 'F1', status: 'In Progress', components: '', fixVersion: '', deliveryOwner: 'Jane', tier: 1 }
     ]))
     var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
+    expect(result.healthCacheVersion).toBe(2)
     expect(result.version).toBe('3.5')
     expect(result.cachedAt).toBeDefined()
     expect(result.phase).toBe('all')
     expect(result.summary).toBeDefined()
     expect(result.summary.byRisk).toBeDefined()
-    expect(typeof result.summary.dorCompletionRate).toBe('number')
+    expect(result.summary.byPlanningStatus).toBeDefined()
+    expect(result.summary.cardCounts).toBeDefined()
+    expect(result.summary.cardCounts.total).toBe(1)
+    expect(result.summary.stratCreatorCoverage).toBeDefined()
     expect(result.features[0]).toHaveProperty('key')
     expect(result.features[0]).toHaveProperty('risk')
     expect(result.features[0]).toHaveProperty('dor')
+    expect(result.features[0]).toHaveProperty('dod')
+    expect(result.features[0]).toHaveProperty('planningStatus')
+    expect(result.features[0]).toHaveProperty('issueType')
+    expect(result.features[0]).toHaveProperty('versionStatus')
+    expect(result.features[0].dor.gate).toBe('dor')
+    expect(result.features[0].dod.gate).toBe('dod')
   })
 
   it('computes planningFreezes from previous phase code freeze minus 7 days', async function() {

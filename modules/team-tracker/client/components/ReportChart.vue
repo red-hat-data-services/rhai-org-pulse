@@ -12,7 +12,7 @@ const DEFAULT_COLORS = [
 </script>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { Bar, Doughnut } from 'vue-chartjs'
 import {
   Chart as ChartJS,
@@ -36,6 +36,20 @@ const props = defineProps({
   title: { type: String, default: '' }
 })
 
+const isDark = ref(false)
+let observer
+onMounted(() => {
+  isDark.value = document.documentElement.classList.contains('dark')
+  observer = new MutationObserver(() => {
+    isDark.value = document.documentElement.classList.contains('dark')
+  })
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+})
+onUnmounted(() => { observer?.disconnect() })
+
+const textColor = computed(() => isDark.value ? 'rgba(209, 213, 219, 1)' : 'rgba(107, 114, 128, 1)')
+const gridColor = computed(() => isDark.value ? 'rgba(75, 85, 99, 0.5)' : 'rgba(229, 231, 235, 1)')
+
 const chartComponent = computed(() => props.type === 'doughnut' ? Doughnut : Bar)
 
 const chartData = computed(() => ({
@@ -44,7 +58,7 @@ const chartData = computed(() => ({
     data: props.data,
     backgroundColor: props.labels.map((_, i) => props.colors[i % props.colors.length]),
     borderWidth: props.type === 'doughnut' ? 2 : 0,
-    borderColor: props.type === 'doughnut' ? '#fff' : undefined
+    borderColor: props.type === 'doughnut' ? (isDark.value ? '#1f2937' : '#fff') : undefined
   }]
 }))
 
@@ -58,6 +72,7 @@ const chartOptions = computed(() => {
         position: 'right',
         labels: {
           font: { size: 12 },
+          color: textColor.value,
           padding: 12,
           usePointStyle: true,
           pointStyle: 'circle'
@@ -66,6 +81,7 @@ const chartOptions = computed(() => {
       title: {
         display: !!props.title,
         text: props.title,
+        color: textColor.value,
         font: { size: 14, weight: 'bold' },
         padding: { bottom: 12 }
       },
@@ -91,13 +107,13 @@ const chartOptions = computed(() => {
     base.scales = {
       x: {
         beginAtZero: true,
-        grid: { color: 'rgba(0,0,0,0.05)' },
-        ticks: { font: { size: 11 } }
+        grid: { color: gridColor.value },
+        ticks: { font: { size: 11 }, color: textColor.value }
       },
       y: {
         beginAtZero: true,
-        grid: { color: 'rgba(0,0,0,0.05)' },
-        ticks: { font: { size: 11 } }
+        grid: { color: gridColor.value },
+        ticks: { font: { size: 11 }, color: textColor.value }
       }
     }
   }

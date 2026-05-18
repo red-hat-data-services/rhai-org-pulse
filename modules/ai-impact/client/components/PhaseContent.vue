@@ -24,7 +24,8 @@ const props = defineProps({
   passFailFilter: { type: String, default: 'all' },
   priorityFilter: { type: String, default: 'all' },
   statusFilter: { type: String, default: 'all' },
-  selectedRFE: { type: Object, default: null }
+  selectedRFE: { type: Object, default: null },
+  rfeToFeature: { type: Object, default: () => ({}) }
 })
 
 const emit = defineEmits([
@@ -126,6 +127,7 @@ const isEmpty = computed(() => !props.rfeData?.fetchedAt)
           :priorityFilter="priorityFilter"
           :statusFilter="statusFilter"
           :selectedRFE="selectedRFE"
+          :rfeToFeature="rfeToFeature"
           @update:filter="emit('update:filter', $event)"
           @update:searchQuery="emit('update:searchQuery', $event)"
           @update:sortBy="emit('update:sortBy', $event)"

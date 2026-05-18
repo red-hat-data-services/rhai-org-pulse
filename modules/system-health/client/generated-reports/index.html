@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quality Analysis Sample Landing</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      color: #1f2937;
+      background: #f8fafc;
+    }
+    .card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 1.2rem;
+      margin-bottom: 1.2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #ffffff;
+    }
+    th, td {
+      border: 1px solid #e5e7eb;
+      padding: 0.7rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #f1f5f9;
+    }
+    a {
+      color: #2563eb;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Quality Analysis Sample (5 Repos)</h1>
+    <p><strong>Generated:</strong> 2026-05-07 10:59:58</p>
+    <p><strong>Average score:</strong> 4.24/10</p>
+    <p>This is a lightweight static-scan sample meant to validate the master/detail reporting flow.</p>
+  </div>
+
+  <div class="card">
+    <h2>Repository Reports</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Repository (detail page)</th>
+          <th>Source</th>
+          <th>Overall score</th>
+          <th>Top gaps</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+            <tr>
+              <td><a href="quality-report-opendatahub-io-argo-workflows.html">opendatahub-io/argo-workflows</a></td>
+              <td><a href="https://github.com/opendatahub-io/argo-workflows" target="_blank">GitHub</a></td>
+              <td>8.2/10</td>
+              <td>Agent guidance for testing is minimal</td>
+            </tr>
+            
+            <tr>
+              <td><a href="quality-report-opendatahub-io-autogluon.html">opendatahub-io/autogluon</a></td>
+              <td><a href="https://github.com/opendatahub-io/autogluon" target="_blank">GitHub</a></td>
+              <td>5.2/10</td>
+              <td>Agent guidance for testing is minimal, Coverage tracking and enforcement are missing</td>
+            </tr>
+            
+            <tr>
+              <td><a href="quality-report-opendatahub-io-ai-helpers.html">opendatahub-io/ai-helpers</a></td>
+              <td><a href="https://github.com/opendatahub-io/ai-helpers" target="_blank">GitHub</a></td>
+              <td>4.4/10</td>
+              <td>Coverage tracking and enforcement are missing, Limited integration and end-to-end coverage</td>
+            </tr>
+            
+            <tr>
+              <td><a href="quality-report-opendatahub-io-agents.html">opendatahub-io/agents</a></td>
+              <td><a href="https://github.com/opendatahub-io/agents" target="_blank">GitHub</a></td>
+              <td>2.1/10</td>
+              <td>PR-time build validation is incomplete, Container image validation is weak</td>
+            </tr>
+            
+            <tr>
+              <td><a href="quality-report-opendatahub-io-agent-ops.html">opendatahub-io/agent-ops</a></td>
+              <td><a href="https://github.com/opendatahub-io/agent-ops" target="_blank">GitHub</a></td>
+              <td>1.3/10</td>
+              <td>Agent guidance for testing is minimal, PR-time build validation is incomplete</td>
+            </tr>
+            
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

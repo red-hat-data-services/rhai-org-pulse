@@ -147,6 +147,7 @@ describe('release-planning routes', function() {
       storage: storage,
       requireAuth: function(req, res, next) { next() },
       requireAdmin: function(req, res, next) { next() },
+      requireScope: function() { return function(req, res, next) { next() } },
       registerDiagnostics: vi.fn()
     }
     registerRoutes(router, context)
@@ -193,6 +194,7 @@ describe('release-planning routes', function() {
       expect(router.post).toHaveBeenCalledWith(
         '/releases/:version/refresh',
         expect.any(Function),
+        expect.any(Function),
         expect.any(Function)
       )
     })
@@ -200,6 +202,7 @@ describe('release-planning routes', function() {
     it('uses requireAuth on GET /audit-log', function() {
       expect(router.get).toHaveBeenCalledWith(
         '/audit-log',
+        expect.any(Function),
         expect.any(Function),
         expect.any(Function)
       )

@@ -26,6 +26,16 @@
       >
         {{ tab.label }}
       </button>
+      <!-- Health & Metrics tab -->
+      <button
+        @click="activeTab = 'health-metrics'"
+        class="px-4 py-2 text-sm font-medium border-b-2 transition-colors -mb-px"
+        :class="activeTab === 'health-metrics'
+          ? 'border-primary-600 text-primary-600 dark:text-primary-400'
+          : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'"
+      >
+        Health & Metrics
+      </button>
       <!-- Users tab -->
       <button
         @click="activeTab = 'users'"
@@ -64,6 +74,11 @@
       />
     </template>
 
+    <HealthMetricsSettings
+      v-if="activeTab === 'health-metrics'"
+      @toast="(t) => $emit('toast', t)"
+    />
+
     <UserManagement
       v-if="activeTab === 'users'"
       @toast="(t) => $emit('toast', t)"
@@ -82,6 +97,7 @@ import ModuleSettings from './ModuleSettings.vue'
 import BuiltInModuleSettings from './BuiltInModuleSettings.vue'
 import UserManagement from './UserManagement.vue'
 import SiteSettings from './SiteSettings.vue'
+import HealthMetricsSettings from './health-metrics/HealthMetricsSettings.vue'
 import { loadModuleSettingsComponent } from '../module-loader'
 
 const props = defineProps({

@@ -364,7 +364,7 @@ describe('BigRockEditPanel', function() {
 
     it('emits cancel when close button is clicked', async function() {
       var wrapper = mountPanel()
-      var closeBtn = wrapper.find('[aria-label="Close panel"]')
+      var closeBtn = wrapper.find('[aria-label="Close dialog"]')
       await closeBtn.trigger('click')
 
       expect(wrapper.emitted('cancel')).toBeTruthy()
@@ -412,7 +412,7 @@ describe('BigRockEditPanel', function() {
       await ownerInput.setValue('changed@redhat.com')
       await nextTick()
 
-      var closeBtn = wrapper.find('[aria-label="Close panel"]')
+      var closeBtn = wrapper.find('[aria-label="Close dialog"]')
       await closeBtn.trigger('click')
       await nextTick()
 

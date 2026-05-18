@@ -221,6 +221,7 @@ function startPeriodicRosterPush(storage) {
 }
 
 module.exports = function registerRoutes(router, context) {
+  const { requireScope } = context;
 
   function handleProxyError(res, err) {
     const status = err.upstreamStatus || 502;
@@ -231,7 +232,7 @@ module.exports = function registerRoutes(router, context) {
     });
   }
 
-  router.get('/config', async function(req, res) {
+  router.get('/config', requireScope('upstream-pulse:read'), async function(req, res) {
     try {
       const connection = await checkConnection();
       res.json({
@@ -244,7 +245,7 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
-  router.get('/dashboard', async function(req, res) {
+  router.get('/dashboard', requireScope('upstream-pulse:read'), async function(req, res) {
     try {
       const data = await proxyRequest('/api/metrics/dashboard', {
         days: req.query.days,
@@ -257,7 +258,7 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
-  router.get('/contributors', async function(req, res) {
+  router.get('/contributors', requireScope('upstream-pulse:read'), async function(req, res) {
     try {
       const data = await proxyRequest('/api/metrics/contributors', {
         days: req.query.days,
@@ -271,7 +272,7 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
-  router.get('/leadership', async function(req, res) {
+  router.get('/leadership', requireScope('upstream-pulse:read'), async function(req, res) {
     try {
       const data = await proxyRequest('/api/metrics/leadership', {
         githubOrg: req.query.githubOrg,
@@ -283,7 +284,7 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
-  router.get('/projects', async function(req, res) {
+  router.get('/projects', requireScope('upstream-pulse:read'), async function(req, res) {
     try {
       const data = await proxyRequest('/api/projects', {
         githubOrg: req.query.githubOrg
@@ -294,7 +295,7 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
-  router.get('/orgs', async function(req, res) {
+  router.get('/orgs', requireScope('upstream-pulse:read'), async function(req, res) {
     try {
       const data = await proxyRequest('/api/orgs', {
         days: req.query.days
@@ -305,7 +306,7 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
-  router.get('/project-jobs', async function(req, res) {
+  router.get('/project-jobs', requireScope('upstream-pulse:read'), async function(req, res) {
     try {
       const projectId = req.query.projectId;
       if (!projectId) {
@@ -334,7 +335,7 @@ module.exports = function registerRoutes(router, context) {
 
   const { requireAdmin } = context;
 
-  router.get('/repo-info', requireAdmin, async function(req, res) {
+  router.get('/repo-info', requireAdmin, requireScope('upstream-pulse:write'), async function(req, res) {
     try {
       const data = await proxyAdminGet('/api/github/repo-info', {
         org: req.query.org,
@@ -346,7 +347,7 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
-  router.post('/projects', requireAdmin, async function(req, res) {
+  router.post('/projects', requireAdmin, requireScope('upstream-pulse:write'), async function(req, res) {
     try {
       const data = await proxyMutatingRequest('/api/projects', req.body, req);
       for (const key of responseCache.keys()) {
@@ -367,7 +368,7 @@ module.exports = function registerRoutes(router, context) {
 
   // ── Roster push (sync org-pulse team data to upstream-pulse) ──
 
-  router.post('/roster-push', requireAdmin, async function(req, res) {
+  router.post('/roster-push', requireAdmin, requireScope('upstream-pulse:write'), async function(req, res) {
     try {
       const result = await pushRosterToUpstream(context.storage);
       if (!result.skipped) {

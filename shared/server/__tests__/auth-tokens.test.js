@@ -152,6 +152,94 @@ describe('authMiddleware with Bearer tokens', () => {
   })
 })
 
+describe('requireScope', () => {
+  let requireScope
+
+  beforeEach(() => {
+    const storage = createMockStorage()
+    const result = createAuthMiddleware(
+      storage.readFromStorage.bind(storage),
+      storage.writeToStorage.bind(storage),
+      { tokenValidator: { validateToken() { return null }, touchLastUsed() {} } }
+    )
+    requireScope = result.requireScope
+  })
+
+  it('passes when token has correct scope', () => {
+    const req = createMockReq()
+    req.authMethod = 'token'
+    req.tokenScopes = ['roster:read', 'metrics:read']
+    const res = createMockRes()
+    let nextCalled = false
+    requireScope('roster:read')(req, res, () => { nextCalled = true })
+    expect(nextCalled).toBe(true)
+  })
+
+  it('returns 403 with requiredScope when token lacks scope', () => {
+    const req = createMockReq()
+    req.authMethod = 'token'
+    req.tokenScopes = ['roster:read']
+    const res = createMockRes()
+    let nextCalled = false
+    requireScope('metrics:read')(req, res, () => { nextCalled = true })
+    expect(nextCalled).toBe(false)
+    expect(res.statusCode).toBe(403)
+    expect(res.body.requiredScope).toBe('metrics:read')
+    // Must NOT include grantedScopes
+    expect(res.body.grantedScopes).toBeUndefined()
+  })
+
+  it('passes for token with null scopes (legacy full access)', () => {
+    const req = createMockReq()
+    req.authMethod = 'token'
+    req.tokenScopes = null
+    const res = createMockRes()
+    let nextCalled = false
+    requireScope('roster:read')(req, res, () => { nextCalled = true })
+    expect(nextCalled).toBe(true)
+  })
+
+  it('passes for token with undefined scopes (legacy full access)', () => {
+    const req = createMockReq()
+    req.authMethod = 'token'
+    req.tokenScopes = undefined
+    const res = createMockRes()
+    let nextCalled = false
+    requireScope('roster:read')(req, res, () => { nextCalled = true })
+    expect(nextCalled).toBe(true)
+  })
+
+  it('passes for token with ["*"] wildcard scopes', () => {
+    const req = createMockReq()
+    req.authMethod = 'token'
+    req.tokenScopes = ['*']
+    const res = createMockRes()
+    let nextCalled = false
+    requireScope('roster:read')(req, res, () => { nextCalled = true })
+    expect(nextCalled).toBe(true)
+  })
+
+  it('bypasses scope checks for browser auth (authMethod !== token)', () => {
+    const req = createMockReq()
+    // authMethod is not set (proxy/local-dev)
+    req.tokenScopes = undefined
+    const res = createMockRes()
+    let nextCalled = false
+    requireScope('admin:manage')(req, res, () => { nextCalled = true })
+    expect(nextCalled).toBe(true)
+  })
+
+  it('tokens:manage scope is always implicitly granted', () => {
+    const req = createMockReq()
+    req.authMethod = 'token'
+    req.tokenScopes = ['roster:read'] // does NOT include tokens:manage
+    const res = createMockRes()
+    let nextCalled = false
+    requireScope('tokens:manage')(req, res, () => { nextCalled = true })
+    expect(nextCalled).toBe(true)
+  })
+})
+
 describe('proxySecretGuard with Bearer tokens', () => {
   let originalEnv, tokenValidator
 

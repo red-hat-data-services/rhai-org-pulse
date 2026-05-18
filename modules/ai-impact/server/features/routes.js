@@ -66,13 +66,13 @@ async function runSync(readFromStorage) {
  * @param {object} context - Module context with storage and auth middleware
  */
 module.exports = function registerFeatureRoutes(router, context) {
-  const { storage, requireAdmin } = context;
+  const { storage, requireAdmin, requireScope } = context;
   const { readFromStorage } = storage;
 
   // ─── 1. Static routes FIRST ───
 
   // GET /features/status (Admin) — feature data status for settings page
-  router.get('/features/status', requireAdmin, function(req, res) {
+  router.get('/features/status', requireAdmin, requireScope('ai-impact:read'), function(req, res) {
     const data = readFeatures(readFromStorage);
     res.json({
       lastSyncedAt: data.lastSyncedAt,
@@ -83,12 +83,12 @@ module.exports = function registerFeatureRoutes(router, context) {
   });
 
   // GET /features/sync/status — sync state for polling
-  router.get('/features/sync/status', function(req, res) {
+  router.get('/features/sync/status', requireScope('ai-impact:read'), function(req, res) {
     res.json(syncState);
   });
 
   // POST /features/sync (Admin) — trigger Jira label sync
-  router.post('/features/sync', requireAdmin, async function(req, res) {
+  router.post('/features/sync', requireAdmin, requireScope('ai-impact:write'), async function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Sync disabled in demo mode' });
     }
@@ -101,7 +101,7 @@ module.exports = function registerFeatureRoutes(router, context) {
   });
 
   // POST /features/bulk (Admin) — bulk upsert features
-  router.post('/features/bulk', requireAdmin, jsonLimit, function(req, res) {
+  router.post('/features/bulk', requireAdmin, requireScope('ai-impact:write'), jsonLimit, function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Feature ingest disabled in demo mode' });
     }
@@ -157,7 +157,7 @@ module.exports = function registerFeatureRoutes(router, context) {
   });
 
   // DELETE /features (Admin) — clear all feature data
-  router.delete('/features', requireAdmin, function(req, res) {
+  router.delete('/features', requireAdmin, requireScope('ai-impact:write'), function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Feature ingest disabled in demo mode' });
     }
@@ -167,7 +167,7 @@ module.exports = function registerFeatureRoutes(router, context) {
   });
 
   // GET /features — list all features (slim projection)
-  router.get('/features', function(req, res) {
+  router.get('/features', requireScope('ai-impact:read'), function(req, res) {
     const data = readFeatures(readFromStorage);
     res.json(getLatestProjection(data));
   });
@@ -175,7 +175,7 @@ module.exports = function registerFeatureRoutes(router, context) {
   // ─── 2. Parameterized routes AFTER ───
 
   // GET /features/:key — single feature + history
-  router.get('/features/:key', function(req, res) {
+  router.get('/features/:key', requireScope('ai-impact:read'), function(req, res) {
     const data = readFeatures(readFromStorage);
     const entry = data.features[req.params.key];
     if (!entry) {
@@ -188,7 +188,7 @@ module.exports = function registerFeatureRoutes(router, context) {
   });
 
   // PUT /features/:key (Admin) — upsert single feature
-  router.put('/features/:key', requireAdmin, jsonLimit, function(req, res) {
+  router.put('/features/:key', requireAdmin, requireScope('ai-impact:write'), jsonLimit, function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Feature ingest disabled in demo mode' });
     }

@@ -6,19 +6,25 @@ function makeHealthData(features) {
   return { features: features, summary: { total: features.length } }
 }
 
-function makeFeature(key, rfe, bigRock) {
-  return { issueKey: key, rfe: rfe || null, bigRock: bigRock || null }
+function makeFeature(key, rfe, bigRock, tier) {
+  return { issueKey: key, rfe: rfe || null, bigRock: bigRock || null, tier: tier || null }
 }
 
-function makeHealthFeature(key, level, flags, override) {
+function makeHealthFeature(key, level, flags, override, extras) {
   var result = {
     key: key,
+    summary: (extras && extras.summary) || 'Summary for ' + key,
+    status: (extras && extras.status) || 'In Progress',
+    deliveryOwner: (extras && extras.deliveryOwner) || 'Owner of ' + key,
+    jiraUrl: (extras && extras.jiraUrl) || 'https://issues.redhat.com/browse/' + key,
     risk: {
       level: level,
       score: flags ? flags.length : 0,
       flags: flags || []
     },
-    dor: { completionPct: 50 }
+    dor: { gate: 'dor', passed: true, blockers: [], warnings: [] },
+    dod: { gate: 'dod', passed: level === 'green', checks: [] },
+    planningStatus: level === 'green' ? 'ready-for-execution' : 'in-planning'
   }
   if (override) {
     result.risk.override = override
@@ -134,7 +140,7 @@ describe('useHealthAggregation', function() {
       var hd = ref(makeHealthData([
         makeHealthFeature('FEAT-1', 'green', []),
         makeHealthFeature('FEAT-2', 'yellow', [{ category: 'EA1_MISS' }]),
-        makeHealthFeature('FEAT-3', 'red', [{ category: 'BLOCKED' }, { category: 'UNESTIMATED' }])
+        makeHealthFeature('FEAT-3', 'red', [{ category: 'BLOCKED' }, { category: 'MILESTONE_MISS' }])
       ]))
       var features = ref([
         makeFeature('FEAT-1', null, 'Rock A'),
@@ -145,8 +151,12 @@ describe('useHealthAggregation', function() {
       var result = useHealthAggregation(hd, features, ref([]), ref([]))
       expect(result.rockHealth.value['Rock A'].worstLevel).toBe('yellow')
       expect(result.rockHealth.value['Rock A'].featureCount).toBe(2)
+      expect(result.rockHealth.value['Rock A'].dorPassedCount).toBe(2)
+      expect(result.rockHealth.value['Rock A'].dodPassedCount).toBe(1)
       expect(result.rockHealth.value['Rock B'].worstLevel).toBe('red')
       expect(result.rockHealth.value['Rock B'].featureCount).toBe(1)
+      expect(result.rockHealth.value['Rock B'].dorPassedCount).toBe(1)
+      expect(result.rockHealth.value['Rock B'].dodPassedCount).toBe(0)
     })
 
     it('respects risk overrides for rock health', function() {
@@ -180,7 +190,7 @@ describe('useHealthAggregation', function() {
   })
 
   describe('rockFeatures', function() {
-    it('groups features by big rock with health detail', function() {
+    it('groups features by big rock with health detail including enriched fields', function() {
       var hd = ref(makeHealthData([
         makeHealthFeature('FEAT-1', 'green', []),
         makeHealthFeature('FEAT-2', 'red', [{ category: 'BLOCKED' }])
@@ -193,18 +203,31 @@ describe('useHealthAggregation', function() {
       var result = useHealthAggregation(hd, features, ref([]), ref([]))
       var rf = result.rockFeatures.value['Rock A']
       expect(rf).toHaveLength(2)
-      expect(rf[0]).toEqual({
-        key: 'FEAT-1',
-        level: 'green',
-        flagCount: 0,
-        flagCategories: []
-      })
-      expect(rf[1]).toEqual({
-        key: 'FEAT-2',
-        level: 'red',
-        flagCount: 1,
-        flagCategories: ['BLOCKED']
-      })
+      expect(rf[0].key).toBe('FEAT-1')
+      expect(rf[0].level).toBe('green')
+      expect(rf[0].flagCount).toBe(0)
+      expect(rf[0].flagCategories).toEqual([])
+      expect(rf[0].summary).toBe('Summary for FEAT-1')
+      expect(rf[0].dorPassed).toBe(true)
+      expect(rf[0].dodPassed).toBe(true)
+      expect(rf[0].planningStatus).toBe('ready-for-execution')
+      expect(rf[0].deliveryOwner).toBe('Owner of FEAT-1')
+      expect(rf[0].jiraUrl).toBe('https://issues.redhat.com/browse/FEAT-1')
+      expect(rf[0].override).toBe(null)
+      expect(rf[0].status).toBe('In Progress')
+
+      expect(rf[1].key).toBe('FEAT-2')
+      expect(rf[1].level).toBe('red')
+      expect(rf[1].flagCount).toBe(1)
+      expect(rf[1].flagCategories).toEqual(['BLOCKED'])
+      expect(rf[1].summary).toBe('Summary for FEAT-2')
+      expect(rf[1].dorPassed).toBe(true)
+      expect(rf[1].dodPassed).toBe(false)
+      expect(rf[1].planningStatus).toBe('in-planning')
+      expect(rf[1].deliveryOwner).toBe('Owner of FEAT-2')
+      expect(rf[1].jiraUrl).toBe('https://issues.redhat.com/browse/FEAT-2')
+      expect(rf[1].override).toBe(null)
+      expect(rf[1].status).toBe('In Progress')
     })
 
     it('defaults to green when feature has no health data', function() {
@@ -228,6 +251,54 @@ describe('useHealthAggregation', function() {
 
       var result = useHealthAggregation(hd, features, ref([]), ref([]))
       expect(result.rockFeatures.value['Rock A'][0].level).toBe('yellow')
+      expect(result.rockFeatures.value['Rock A'][0].override).toEqual({ riskOverride: 'yellow', reason: 'OK' })
+    })
+
+    it('null-guards enriched fields when feature has no health entry', function() {
+      var hd = ref(makeHealthData([
+        makeHealthFeature('FEAT-1', 'green', [])
+      ]))
+      var features = ref([
+        makeFeature('FEAT-1', null, 'Rock A'),
+        makeFeature('FEAT-UNKNOWN', null, 'Rock A')
+      ])
+
+      var result = useHealthAggregation(hd, features, ref([]), ref([]))
+      var rf = result.rockFeatures.value['Rock A']
+      expect(rf).toHaveLength(2)
+      var unknown = rf[1]
+      expect(unknown.key).toBe('FEAT-UNKNOWN')
+      expect(unknown.level).toBe('green')
+      expect(unknown.flagCount).toBe(0)
+      expect(unknown.flagCategories).toEqual([])
+      expect(unknown.summary).toBe('')
+      expect(unknown.dorPassed).toBe(null)
+      expect(unknown.dodPassed).toBe(null)
+      expect(unknown.planningStatus).toBe('')
+      expect(unknown.deliveryOwner).toBe('')
+      expect(unknown.jiraUrl).toBe('')
+      expect(unknown.override).toBe(null)
+      expect(unknown.status).toBe('')
+    })
+
+    it('green count never exceeds total count (fraction consistency)', function() {
+      var hd = ref(makeHealthData([
+        makeHealthFeature('FEAT-1', 'green', []),
+        makeHealthFeature('FEAT-2', 'yellow', [{ category: 'DOR' }]),
+        makeHealthFeature('FEAT-3', 'red', [{ category: 'BLOCKED' }])
+      ]))
+      var features = ref([
+        makeFeature('FEAT-1', null, 'Rock A'),
+        makeFeature('FEAT-2', null, 'Rock A'),
+        makeFeature('FEAT-3', null, 'Rock A')
+      ])
+
+      var result = useHealthAggregation(hd, features, ref([]), ref([]))
+      var rf = result.rockFeatures.value['Rock A']
+      var greenCount = rf.filter(function(f) { return f.level === 'green' }).length
+      expect(greenCount).toBeLessThanOrEqual(rf.length)
+      expect(greenCount).toBe(1)
+      expect(rf.length).toBe(3)
     })
   })
 
@@ -259,6 +330,41 @@ describe('useHealthAggregation', function() {
         makeFeature('FEAT-2', null, 'Rock A')
       ]
       expect(result.rockHealth.value['Rock A'].featureCount).toBe(2)
+    })
+  })
+
+  describe('tier1HealthSummary', function() {
+    it('counts only Tier 1 health features', function() {
+      var hd = ref(makeHealthData([
+        makeHealthFeature('FEAT-1', 'green', []),
+        makeHealthFeature('FEAT-2', 'yellow', [{ category: 'EA1_MISS' }]),
+        makeHealthFeature('FEAT-3', 'red', [{ category: 'BLOCKED' }])
+      ]))
+      // Stamp tier on the health features directly
+      hd.value.features[0].tier = 1
+      hd.value.features[1].tier = 1
+      hd.value.features[2].tier = 2  // Not Tier 1
+      var features = ref([])
+
+      var result = useHealthAggregation(hd, features, ref([]), ref([]))
+      expect(result.tier1HealthSummary.value.byRisk).toEqual({ green: 1, yellow: 1, red: 0 })
+    })
+
+    it('respects risk overrides', function() {
+      var hd = ref(makeHealthData([
+        makeHealthFeature('FEAT-1', 'red', [{ category: 'BLOCKED' }], { riskOverride: 'green', reason: 'PM override' })
+      ]))
+      hd.value.features[0].tier = 1
+      var features = ref([])
+
+      var result = useHealthAggregation(hd, features, ref([]), ref([]))
+      // Override changes red -> green
+      expect(result.tier1HealthSummary.value.byRisk).toEqual({ green: 1, yellow: 0, red: 0 })
+    })
+
+    it('returns null when no health data', function() {
+      var result = useHealthAggregation(ref(null), ref([]), ref([]), ref([]))
+      expect(result.tier1HealthSummary.value).toBe(null)
     })
   })
 })

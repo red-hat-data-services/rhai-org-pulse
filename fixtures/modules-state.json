@@ -4,6 +4,5 @@
   "org-roster": true,
   "release-analysis": true,
   "team-tracker": true,
-  "feature-traffic": true,
-  "allocation-tracker": true
+  "feature-traffic": true
 }

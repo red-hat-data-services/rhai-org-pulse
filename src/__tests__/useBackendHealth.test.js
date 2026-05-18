@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-let useBackendHealth, _resetForTesting
+let useBackendHealth, _resetForTesting, onRecovery, offRecovery
 
 describe('useBackendHealth', () => {
   beforeEach(async () => {
@@ -10,6 +10,8 @@ describe('useBackendHealth', () => {
     const mod = await import('@shared/client/composables/useBackendHealth')
     useBackendHealth = mod.useBackendHealth
     _resetForTesting = mod._resetForTesting
+    onRecovery = mod.onRecovery
+    offRecovery = mod.offRecovery
     _resetForTesting()
   })
 
@@ -90,5 +92,47 @@ describe('useBackendHealth', () => {
     await vi.advanceTimersByTimeAsync(0)
     await vi.advanceTimersByTimeAsync(5000)
     expect(isBackendDown.value).toBe(true)
+  })
+
+  it('calls recovery callbacks when backend recovers', async () => {
+    const cb = vi.fn()
+    onRecovery(cb)
+
+    global.fetch = vi.fn().mockRejectedValue(new Error('network'))
+    useBackendHealth()
+    await vi.advanceTimersByTimeAsync(0)
+    await vi.advanceTimersByTimeAsync(5000)
+
+    global.fetch = vi.fn().mockResolvedValue({ ok: true })
+    await vi.advanceTimersByTimeAsync(5000)
+    expect(cb).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not call recovery callbacks on normal healthy checks', async () => {
+    const cb = vi.fn()
+    onRecovery(cb)
+
+    global.fetch = vi.fn().mockResolvedValue({ ok: true })
+    useBackendHealth()
+    await vi.advanceTimersByTimeAsync(0)
+    await vi.advanceTimersByTimeAsync(5000)
+    await vi.advanceTimersByTimeAsync(5000)
+    expect(cb).not.toHaveBeenCalled()
+  })
+
+  it('stops calling removed recovery callbacks', async () => {
+    const cb = vi.fn()
+    onRecovery(cb)
+
+    global.fetch = vi.fn().mockRejectedValue(new Error('network'))
+    useBackendHealth()
+    await vi.advanceTimersByTimeAsync(0)
+    await vi.advanceTimersByTimeAsync(5000)
+
+    offRecovery(cb)
+
+    global.fetch = vi.fn().mockResolvedValue({ ok: true })
+    await vi.advanceTimersByTimeAsync(5000)
+    expect(cb).not.toHaveBeenCalled()
   })
 })

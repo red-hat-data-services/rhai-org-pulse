@@ -5,11 +5,15 @@ import { ref } from 'vue'
 // Mock the composable
 const mockTokens = ref([])
 const mockAllTokens = ref([])
+const mockAvailableScopes = ref(null)
 const mockLoading = ref(false)
 const mockError = ref(null)
 const mockLoadTokens = vi.fn().mockResolvedValue()
 const mockLoadAllTokens = vi.fn().mockResolvedValue()
+const mockLoadAvailableScopes = vi.fn().mockResolvedValue()
 const mockCreateToken = vi.fn()
+const mockUpdateTokenScopes = vi.fn()
+const mockAdminUpdateTokenScopes = vi.fn()
 const mockRevokeToken = vi.fn()
 const mockAdminRevokeToken = vi.fn()
 
@@ -17,11 +21,15 @@ vi.mock('../composables/useApiTokens', () => ({
   useApiTokens: () => ({
     tokens: mockTokens,
     allTokens: mockAllTokens,
+    availableScopes: mockAvailableScopes,
     loading: mockLoading,
     error: mockError,
     loadTokens: mockLoadTokens,
     loadAllTokens: mockLoadAllTokens,
+    loadAvailableScopes: mockLoadAvailableScopes,
     createToken: mockCreateToken,
+    updateTokenScopes: mockUpdateTokenScopes,
+    adminUpdateTokenScopes: mockAdminUpdateTokenScopes,
     revokeToken: mockRevokeToken,
     adminRevokeToken: mockAdminRevokeToken
   })
@@ -35,10 +43,12 @@ describe('ApiTokensView', () => {
     vi.clearAllMocks()
     mockTokens.value = []
     mockAllTokens.value = []
+    mockAvailableScopes.value = null
     mockLoading.value = false
     mockError.value = null
     mockLoadTokens.mockResolvedValue()
     mockLoadAllTokens.mockResolvedValue()
+    mockLoadAvailableScopes.mockResolvedValue()
 
     const mod = await import('../components/ApiTokensView.vue')
     ApiTokensView = mod.default
@@ -144,6 +154,92 @@ describe('ApiTokensView', () => {
     })
     await flushPromises()
     expect(mockLoadAllTokens).toHaveBeenCalled()
+  })
+
+  it('shows scope badge in token table', async () => {
+    mockTokens.value = [
+      {
+        id: '1',
+        name: 'Scoped Token',
+        tokenPrefix: 'tt_abc12345',
+        scopes: ['roster:read', 'metrics:read'],
+        createdAt: '2026-04-01T00:00:00Z',
+        expiresAt: null,
+        lastUsedAt: null
+      }
+    ]
+
+    const wrapper = mount(ApiTokensView, {
+      props: { isAdmin: false }
+    })
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('2 scopes')
+  })
+
+  it('shows full access badge for null scopes', async () => {
+    mockTokens.value = [
+      {
+        id: '1',
+        name: 'Full Token',
+        tokenPrefix: 'tt_abc12345',
+        scopes: null,
+        createdAt: '2026-04-01T00:00:00Z',
+        expiresAt: null,
+        lastUsedAt: null
+      }
+    ]
+
+    const wrapper = mount(ApiTokensView, {
+      props: { isAdmin: false }
+    })
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Full access')
+  })
+
+  it('shows Permissions field in create modal', async () => {
+    const wrapper = mount(ApiTokensView, {
+      props: { isAdmin: false }
+    })
+    await flushPromises()
+
+    const createBtn = wrapper.findAll('button').find(b => b.text().includes('Create Token'))
+    await createBtn.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).toContain('Permissions')
+    expect(wrapper.text()).toContain('Full Access')
+  })
+
+  it('calls loadAvailableScopes on mount', async () => {
+    mount(ApiTokensView, {
+      props: { isAdmin: false }
+    })
+    await flushPromises()
+    expect(mockLoadAvailableScopes).toHaveBeenCalled()
+  })
+
+  it('shows Scopes button for each token', async () => {
+    mockTokens.value = [
+      {
+        id: '1',
+        name: 'Test Token',
+        tokenPrefix: 'tt_abc12345',
+        scopes: ['roster:read'],
+        createdAt: '2026-04-01T00:00:00Z',
+        expiresAt: null,
+        lastUsedAt: null
+      }
+    ]
+
+    const wrapper = mount(ApiTokensView, {
+      props: { isAdmin: false }
+    })
+    await flushPromises()
+
+    const scopesBtns = wrapper.findAll('button').filter(b => b.text() === 'Scopes')
+    expect(scopesBtns.length).toBeGreaterThan(0)
   })
 
   it('has collapsible help panel', async () => {

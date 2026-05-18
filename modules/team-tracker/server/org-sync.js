@@ -354,9 +354,16 @@ async function runSync(storage, sheetId, config) {
   }
 
   // 3. Fetch and parse component mapping, filtered to kept teams
+  // Skip component sheet sync when in-app component data exists (field options migrated)
+  const fieldStore = require('../../../shared/server/field-store');
+  const fieldDefs = fieldStore.readFieldDefinitions(storage);
+  const hasInAppComponents = (fieldDefs.teamFields || []).some(
+    f => !f.deleted && f.optionsRef === 'components'
+  );
+
   const keptTeamNames = new Set(rawTeams.map(t => t.name));
   let componentMap = {};
-  if (componentsTab && sheetId) {
+  if (componentsTab && sheetId && !hasInAppComponents) {
     try {
       console.log(`[org-roster sync] Fetching "${componentsTab}"...`);
       const compData = await fetchRawSheet(sheetId, componentsTab);
@@ -393,10 +400,12 @@ async function runSync(storage, sheetId, config) {
     teams: rawTeams
   });
 
-  storage.writeToStorage('org-roster/components.json', {
-    fetchedAt: new Date().toISOString(),
-    components: componentMap
-  });
+  if (!hasInAppComponents) {
+    storage.writeToStorage('org-roster/components.json', {
+      fetchedAt: new Date().toISOString(),
+      components: componentMap
+    });
+  }
 
   storage.writeToStorage('org-roster/sync-status.json', {
     lastSyncAt: new Date().toISOString(),

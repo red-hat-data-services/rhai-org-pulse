@@ -25,6 +25,9 @@ on:
       # Shared
       - 'modules/*/module.json'
       - 'package*.json'
+      # Smoke tests
+      - 'tests/smoke/**'
+      - 'playwright.config.js'
 
 concurrency:
   group: build-images-${{ github.ref_name }}
@@ -62,7 +65,7 @@ jobs:
           fi
 
           # Check frontend paths
-          if echo "$CHANGED" | grep -qE '^(src/|public/|modules/[^/]+/client/|modules/[^/]+/module\.json|shared/client/|index\.html|vite\.config|tailwind\.config|postcss\.config|deploy/frontend\.Dockerfile|deploy/nginx\.conf|deploy/nginx-entrypoint\.sh|package)'; then
+          if echo "$CHANGED" | grep -qE '^(src/|public/|modules/[^/]+/client/|modules/[^/]+/module\.json|shared/client/|index\.html|vite\.config|tailwind\.config|postcss\.config|deploy/frontend\.Dockerfile|deploy/nginx\.conf|deploy/nginx-entrypoint\.sh|tests/smoke/|playwright\.config|package)'; then
             FRONTEND=true
           fi
 
@@ -152,38 +155,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build image
-        run: |
-          docker build \
-            -f deploy/frontend.Dockerfile \
-            -t ${{ env.FRONTEND_IMAGE }}:${{ github.sha }} \
-            .
+      - name: Build frontend image
+        run: make build-frontend-image CONTAINER_RUNTIME=docker FRONTEND_IMAGE=${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
 
-      - name: Smoke test
-        run: |
-          # Start a dummy backend on the host so nginx can resolve the
-          # "backend" upstream at startup (it crashes without it)
-          python3 -m http.server 3001 &
-          BACKEND_PID=$!
-          docker run -d --network host --add-host=backend:127.0.0.1 \
-            --name frontend-smoke \
-            ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
-          echo "Waiting for nginx to be ready..."
-          for i in $(seq 1 10); do
-            if curl -sf --max-time 2 http://localhost:8080/healthz > /dev/null 2>&1; then
-              echo "✅ Smoke test passed — nginx responded on /healthz (attempt $i)"
-              docker stop frontend-smoke
-              kill $BACKEND_PID 2>/dev/null
-              exit 0
-            fi
-            echo "  Attempt $i/10 — not ready yet, retrying in 3s..."
-            sleep 3
-          done
-          echo "❌ Smoke test failed — nginx never responded"
-          docker logs frontend-smoke
-          docker stop frontend-smoke
-          kill $BACKEND_PID 2>/dev/null
-          exit 1
+      - name: Build backend image (needed for frontend smoke tests to work)
+        run: make build-backend-image CONTAINER_RUNTIME=docker BACKEND_IMAGE=${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+
+      - name: Run frontend smoke tests with Playwright
+        run: make smoke-test CONTAINER_RUNTIME=docker FRONTEND_IMAGE=${{ env.FRONTEND_IMAGE }}:${{ github.sha }} BACKEND_IMAGE=${{ env.BACKEND_IMAGE }}:${{ github.sha }}
 
       - name: Login to Quay.io
         uses: docker/login-action@v3

@@ -12,7 +12,8 @@ const props = defineProps({
   sortBy: { type: String, default: 'default' },
   passFailFilter: { type: String, default: 'all' },
   priorityFilter: { type: String, default: 'all' },
-  statusFilter: { type: String, default: 'all' }
+  statusFilter: { type: String, default: 'all' },
+  rfeToFeature: { type: Object, default: () => ({}) }
 })
 
 const emit = defineEmits(['update:filter', 'update:searchQuery', 'update:sortBy', 'update:passFailFilter', 'update:priorityFilter', 'update:statusFilter', 'selectRFE'])
@@ -217,6 +218,7 @@ function handleSelectRFE(rfe) {
         :rfe="rfe"
         :selected="selectedRFE?.key === rfe.key"
         :assessment="assessments[rfe.key] || null"
+        :hasLinkedFeature="!!rfeToFeature[rfe.key]"
         @select="handleSelectRFE"
       />
     </div>

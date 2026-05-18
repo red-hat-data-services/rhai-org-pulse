@@ -1,5 +1,5 @@
 module.exports = function registerRoutes(router, context) {
-  const { storage, requireAdmin } = context;
+  const { storage, requireAdmin, requireTeamAdmin, requireScope, roleStore } = context;
   const { readFromStorage, writeToStorage, listStorageFiles, deleteStorageDirectory } = storage;
 
   const DEMO_MODE = process.env.DEMO_MODE === 'true';
@@ -114,10 +114,33 @@ module.exports = function registerRoutes(router, context) {
     const orgDisplayNames = getOrgDisplayNames();
     const liveConfig = rosterSyncConfig.loadConfig(storage);
     const teamStructure = liveConfig?.teamStructure || null;
+    const teamDataSource = liveConfig?.teamDataSource || 'sheets';
+
+    // In-app mode: load teams and field definitions
+    const teamsData = teamDataSource === 'in-app' ? teamStore.readTeams(storage) : null;
+    const fieldDefs = teamDataSource === 'in-app' ? fieldStore.readFieldDefinitions(storage) : null;
+    const personFieldDefs = fieldDefs ? fieldDefs.personFields.filter(f => !f.deleted) : [];
+
+    // Build team ID -> team name lookup for in-app mode
+    const teamIdToName = {};
+    const teamIdToTeam = {};
+    if (teamsData) {
+      for (const team of Object.values(teamsData.teams)) {
+        teamIdToName[team.id] = team.name;
+        teamIdToTeam[team.id] = team;
+      }
+    }
 
     let visibleFields = [];
     let primaryDisplayField = null;
-    if (teamStructure && Array.isArray(teamStructure.customFields)) {
+
+    if (teamDataSource === 'in-app') {
+      visibleFields = personFieldDefs
+        .filter(f => f.visible)
+        .map(f => ({ key: f.id, label: f.label }));
+      const primary = personFieldDefs.find(f => f.primaryDisplay);
+      if (primary) primaryDisplayField = primary.id;
+    } else if (teamStructure && Array.isArray(teamStructure.customFields)) {
       visibleFields = teamStructure.customFields
         .filter(f => f.visible)
         .map(f => ({ key: f.key, label: f.displayLabel || f.key }));
@@ -127,16 +150,9 @@ module.exports = function registerRoutes(router, context) {
 
     for (const [orgKey, orgData] of Object.entries(full.orgs)) {
       const teamMap = {};
-      const allMembers = [orgData.leader, ...orgData.members];
+      const allMembers = [orgData.leader, ...orgData.members].filter(Boolean);
 
       for (const person of allMembers) {
-        const groupingValue = teamStructure
-          ? (person._teamGrouping || person.miroTeam || null)
-          : (person.miroTeam || null);
-        const teamNames = groupingValue
-          ? groupingValue.split(',').map(t => t.trim()).filter(Boolean)
-          : ['_unassigned'];
-
         const memberEntry = {
           name: person.name,
           jiraDisplayName: person.name,
@@ -154,7 +170,12 @@ module.exports = function registerRoutes(router, context) {
           customFields: {}
         };
 
-        if (teamStructure && Array.isArray(teamStructure.customFields)) {
+        // Build customFields based on data source
+        if (teamDataSource === 'in-app') {
+          for (const fieldDef of personFieldDefs) {
+            memberEntry.customFields[fieldDef.id] = person._appFields?.[fieldDef.id] || null;
+          }
+        } else if (teamStructure && Array.isArray(teamStructure.customFields)) {
           for (const field of teamStructure.customFields) {
             memberEntry.customFields[field.key] = person[field.key] || null;
           }
@@ -163,25 +184,66 @@ module.exports = function registerRoutes(router, context) {
           memberEntry.customFields.jiraComponent = person.jiraComponent || null;
         }
 
+        // Determine team placement based on data source
+        let teamNames;
+        if (teamDataSource === 'in-app') {
+          if (Array.isArray(person.teamIds) && person.teamIds.length > 0) {
+            teamNames = person.teamIds.map(id => teamIdToName[id]).filter(Boolean);
+            if (teamNames.length === 0) teamNames = ['_unassigned'];
+          } else {
+            teamNames = ['_unassigned'];
+          }
+        } else {
+          const groupingValue = teamStructure
+            ? (person._teamGrouping || person.miroTeam || null)
+            : (person.miroTeam || null);
+          teamNames = groupingValue
+            ? groupingValue.split(',').map(t => t.trim()).filter(Boolean)
+            : ['_unassigned'];
+        }
+
         for (const teamName of teamNames) {
           if (!teamMap[teamName]) {
             teamMap[teamName] = {
               displayName: teamName === '_unassigned' ? 'Unassigned' : teamName,
-              members: []
+              members: [],
+              metadata: {}
             };
+            // Attach team metadata in in-app mode
+            if (teamDataSource === 'in-app') {
+              const teamObj = Object.values(teamsData.teams).find(t => t.name === teamName && t.orgKey === orgKey);
+              if (teamObj) {
+                teamMap[teamName].metadata = teamObj.metadata || {};
+                teamMap[teamName].teamId = teamObj.id;
+              }
+            }
           }
           teamMap[teamName].members.push(memberEntry);
         }
       }
 
+      // In in-app mode, add empty structure teams that had no members assigned
+      if (teamsData) {
+        for (const team of Object.values(teamsData.teams)) {
+          if (team.orgKey === orgKey && !teamMap[team.name]) {
+            teamMap[team.name] = {
+              displayName: team.name,
+              members: [],
+              metadata: team.metadata || {},
+              teamId: team.id
+            };
+          }
+        }
+      }
+
       orgs.push({
         key: orgKey,
-        displayName: orgDisplayNames[orgKey] || orgData.leader.name,
-        leader: {
+        displayName: orgDisplayNames[orgKey] || orgData.leader?.name || orgKey,
+        leader: orgData.leader ? {
           name: orgData.leader.name,
           uid: orgData.leader.uid,
           title: orgData.leader.title
-        },
+        } : null,
         teams: teamMap
       });
     }
@@ -231,7 +293,17 @@ module.exports = function registerRoutes(router, context) {
       console.log(`[roster] Merged org "${displayName}": ${mergedKeys.slice(1).join(', ')} merged into ${canonical.key}`);
     }
 
-    return { vp: full.vp, orgs, visibleFields, primaryDisplayField, mergedKeyMap };
+    const result = { vp: full.vp, orgs, visibleFields, primaryDisplayField, mergedKeyMap, teamDataSource };
+
+    // Add field definitions and permissions in in-app mode
+    if (teamDataSource === 'in-app') {
+      result.fieldDefinitions = {
+        personFields: personFieldDefs,
+        teamFields: fieldDefs.teamFields.filter(f => !f.deleted)
+      };
+    }
+
+    return result;
   }
 
   /**
@@ -366,6 +438,1355 @@ module.exports = function registerRoutes(router, context) {
     return result;
   }
 
+  // ─── Field Helpers ───
+
+  function isFieldEmpty(value, field) {
+    if (value === null || value === undefined || value === '') return true
+    if (Array.isArray(value) && value.length === 0) return true
+    if (field.multiValue && Array.isArray(value) && value.every(v => !v)) return true
+    return false
+  }
+
+  // ─── Permissions ───
+
+  const permissions = require('../../../shared/server/permissions');
+
+  // Build manager map at startup and rebuild on registry writes
+  let managerMap = new Map();
+  function rebuildManagerMap() {
+    const registry = readFromStorage('team-data/registry.json');
+    if (registry) {
+      managerMap = permissions.buildManagerMap(registry);
+    }
+  }
+  rebuildManagerMap();
+
+  /**
+   * requireTeamPurview middleware.
+   * Allows admins, team-admins, or managers who have purview over the team
+   * (i.e., at least one of their managed reports is assigned to the team).
+   */
+  function requireTeamPurview(req, res, next) {
+    if (req.isAdmin) return next();
+    if (req.isTeamAdmin) return next();
+    if (!req.userUid) return res.status(403).json({ error: 'Cannot determine your identity' });
+    const managed = permissions.getManagedUids(req.userUid, managerMap);
+    if (managed.size === 0) return res.status(403).json({ error: 'Not authorized for this team' });
+    const registry = readFromStorage('team-data/registry.json');
+    if (!registry || !registry.people) return res.status(403).json({ error: 'Not authorized for this team' });
+    const teamId = req.params.teamId;
+    for (const uid of managed) {
+      const person = registry.people[uid];
+      if (person && Array.isArray(person.teamIds) && person.teamIds.includes(teamId)) {
+        return next();
+      }
+    }
+    return res.status(403).json({ error: 'Not authorized for this team' });
+  }
+
+  /**
+   * requireManagerOrAdmin middleware factory.
+   * Takes a getter function that extracts the target UID from the request.
+   */
+  function requireManagerOrAdmin(getTargetUid) {
+    return (req, res, next) => {
+      if (req.isAdmin) return next();
+      if (req.isTeamAdmin) return next();
+      const targetUid = getTargetUid(req);
+      if (!req.userUid) return res.status(403).json({ error: 'Cannot determine your identity' });
+      const managed = permissions.getManagedUids(req.userUid, managerMap);
+      if (managed.has(targetUid)) return next();
+      return res.status(403).json({ error: 'Not authorized for this person' });
+    };
+  }
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/permissions/me:
+   *   get:
+   *     tags: ['TT: Permissions']
+   *     summary: Get current user's permission tier and managed UIDs
+   *     responses:
+   *       200:
+   *         description: Permission info
+   */
+  router.get('/permissions/me', requireScope('roster:read'), function(req, res) {
+    const managed = req.userUid
+      ? [...permissions.getManagedUids(req.userUid, managerMap)]
+      : [];
+    res.json({
+      email: req.userEmail,
+      uid: req.userUid,
+      tier: req.permissionTier,
+      managedUids: managed,
+      roles: roleStore ? roleStore.getRoles(req.userEmail) : []
+    });
+  });
+
+  // ─── Manager Dashboard ───
+
+  const { getManagerPurview } = require('./manager-purview');
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/manager/dashboard:
+   *   get:
+   *     tags: ['TT: Manager']
+   *     summary: Get manager dashboard data (purview, reports, teams, field definitions)
+   *     responses:
+   *       200:
+   *         description: Manager purview data
+   *       403:
+   *         description: User is not a manager
+   */
+  router.get('/manager/dashboard', requireScope('roster:read'), function(req, res) {
+    // Handle null userUid (e.g. local dev where email isn't in registry)
+    if (!req.userUid) {
+      return res.json({
+        manager: null,
+        directReports: [],
+        teams: [],
+        fieldDefinitions: { person: [], team: [] },
+        reason: 'no-registry-identity'
+      });
+    }
+
+    const registry = readFromStorage('team-data/registry.json');
+    if (!registry || !registry.people) {
+      return res.json({
+        manager: null,
+        directReports: [],
+        teams: [],
+        fieldDefinitions: { person: [], team: [] },
+        reason: 'no-registry-identity'
+      });
+    }
+
+    const managerPerson = registry.people[req.userUid];
+
+    // Check if user has direct reports (is a manager)
+    const directReportSet = permissions.getDirectReports(req.userUid, registry);
+    if (directReportSet.size === 0) {
+      // If the user is admin or team-admin, return no-direct-reports rather than 403
+      if (req.isAdmin || req.isTeamAdmin) {
+        return res.json({
+          manager: managerPerson ? {
+            uid: req.userUid,
+            name: managerPerson.name || null,
+            email: managerPerson.email || null
+          } : null,
+          directReports: [],
+          teams: [],
+          fieldDefinitions: { person: [], team: [] },
+          reason: 'no-direct-reports'
+        });
+      }
+      return res.status(403).json({ error: 'You are not a manager' });
+    }
+
+    const teamStore = require('../../../shared/server/team-store');
+    const fieldStore = require('../../../shared/server/field-store');
+    const fieldOptionsStore = require('./field-options-store');
+    const teamsData = teamStore.readTeams(storage);
+    const fieldDefs = fieldStore.readFieldDefinitions(storage);
+    const personFieldDefs = fieldDefs ? fieldDefs.personFields.filter(f => !f.deleted) : [];
+    const teamFieldDefs = fieldDefs ? fieldDefs.teamFields.filter(f => !f.deleted) : [];
+
+    // Resolve optionsRef fields (e.g. Component) so allowedValues are populated
+    for (const field of [...personFieldDefs, ...teamFieldDefs]) {
+      if (field.optionsRef && !field.allowedValues) {
+        const values = fieldOptionsStore.getValues(storage, field.optionsRef);
+        if (values) {
+          field.allowedValues = values;
+          field._resolvedFromOptions = true;
+        }
+      }
+    }
+
+    const includeIndirect = req.query?.includeIndirect === 'true';
+    const purview = getManagerPurview(req.userUid, registry, teamsData, { includeIndirect });
+
+    // Build enriched direct reports with customFields
+    const directReports = purview.directReportUids.map(uid => {
+      const person = registry.people[uid];
+      if (!person) return null;
+      const customFields = {};
+      for (const fieldDef of personFieldDefs) {
+        customFields[fieldDef.id] = person._appFields?.[fieldDef.id] || null;
+      }
+      return {
+        uid: person.uid,
+        name: person.name || null,
+        email: person.email || null,
+        title: person.title || null,
+        teamIds: person.teamIds || [],
+        customFields
+      };
+    }).filter(Boolean);
+
+    // Build enriched indirect reports when requested
+    let indirectReports;
+    if (includeIndirect && purview.indirectReportUids) {
+      indirectReports = purview.indirectReportUids.map(uid => {
+        const person = registry.people[uid];
+        if (!person) return null;
+        const customFields = {};
+        for (const fieldDef of personFieldDefs) {
+          customFields[fieldDef.id] = person._appFields?.[fieldDef.id] || null;
+        }
+        return {
+          uid: person.uid,
+          name: person.name || null,
+          email: person.email || null,
+          title: person.title || null,
+          teamIds: person.teamIds || [],
+          managerUid: person.managerUid || null,
+          customFields
+        };
+      }).filter(Boolean);
+    }
+
+    // Collect distinct orgRoot values from direct reports to determine available teams
+    const orgRoots = new Set();
+    const allReportUids = includeIndirect
+      ? [...purview.directReportUids, ...(purview.indirectReportUids || [])]
+      : purview.directReportUids;
+    for (const uid of allReportUids) {
+      const person = registry.people[uid];
+      if (person && person.orgRoot) orgRoots.add(person.orgRoot);
+    }
+    // Also include the manager's own orgRoot as a fallback
+    if (managerPerson && managerPerson.orgRoot) orgRoots.add(managerPerson.orgRoot);
+
+    const allOrgTeams = teamsData && teamsData.teams
+      ? Object.values(teamsData.teams)
+          .filter(t => orgRoots.has(t.orgKey))
+          .map(t => ({ id: t.id, name: t.name, orgKey: t.orgKey }))
+      : [];
+
+    // Build a uid->name map for person-reference-linked values in team metadata
+    const referencedPeople = {};
+    const personRefTeamFields = teamFieldDefs.filter(f => f.type === 'person-reference-linked');
+    if (personRefTeamFields.length > 0) {
+      for (const team of purview.teams) {
+        for (const field of personRefTeamFields) {
+          const val = team.metadata[field.id];
+          const uids = Array.isArray(val) ? val : (val ? [val] : []);
+          for (const uid of uids) {
+            if (uid && !referencedPeople[uid]) {
+              const person = registry.people[uid];
+              referencedPeople[uid] = person?.name || uid;
+            }
+          }
+        }
+      }
+    }
+
+    // Build slim people list from full registry for person-reference autocomplete
+    const allPeople = [];
+    for (const [uid, person] of Object.entries(registry.people)) {
+      if (person.status !== 'active') continue;
+      allPeople.push({ uid, name: person.name || uid, title: person.title || '' });
+    }
+
+    // Enrich teams with org display names
+    const orgDisplayNames = getOrgDisplayNames();
+    for (const team of purview.teams) {
+      team.orgDisplayName = orgDisplayNames[team.orgKey] || team.orgKey;
+    }
+
+    const response = {
+      manager: managerPerson ? {
+        uid: req.userUid,
+        name: managerPerson.name || null,
+        email: managerPerson.email || null
+      } : null,
+      directReports,
+      teams: purview.teams,
+      allOrgTeams,
+      allPeople,
+      referencedPeople,
+      fieldDefinitions: {
+        person: personFieldDefs,
+        team: teamFieldDefs
+      }
+    };
+    if (includeIndirect) response.indirectReports = indirectReports || [];
+    res.json(response);
+  });
+
+  // ─── Routes: Team Structure Management ───
+
+  const teamStore = require('../../../shared/server/team-store');
+  const fieldStore = require('../../../shared/server/field-store');
+  const auditLog = require('../../../shared/server/audit-log');
+  const fieldOptionsStore = require('./field-options-store');
+  const { migrateToInApp, previewMigration } = require('../../../shared/server/team-migration');
+
+  // Options resolver for field validation — resolves optionsRef to allowed values
+  const optionsResolver = (ref) => fieldOptionsStore.getValues(storage, ref);
+
+  // Helper: check if demo mode and return demo flag on write ops
+  function demoWriteGuard(res) {
+    if (DEMO_MODE) {
+      return res.json({ demo: true, message: 'Demo mode — changes are not saved' });
+    }
+    return null;
+  }
+
+  // ─── Team CRUD ───
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/teams:
+   *   get:
+   *     tags: ['TT: Structure']
+   *     summary: List all teams
+   *     parameters:
+   *       - in: query
+   *         name: orgKey
+   *         schema:
+   *           type: string
+   *         description: Filter teams by org key
+   *     responses:
+   *       200:
+   *         description: List of teams
+   */
+  router.get('/structure/teams', requireScope('team-tracker:read'), function(req, res) {
+    const data = teamStore.readTeams(storage);
+    let teams = Object.values(data.teams);
+    if (req.query.orgKey) {
+      teams = teams.filter(t => t.orgKey === req.query.orgKey);
+    }
+    res.json({ teams });
+  });
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/teams:
+   *   post:
+   *     tags: ['TT: Structure']
+   *     summary: Create a new team
+   *     responses:
+   *       201:
+   *         description: Created team
+   */
+  router.post('/structure/teams', requireTeamAdmin, requireScope('team-tracker:write'), function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const { name, orgKey } = req.body;
+    if (!name || !orgKey) return res.status(400).json({ error: 'name and orgKey are required' });
+    if (typeof name !== 'string' || name.length > 100) return res.status(400).json({ error: 'name must be a string of 100 characters or fewer' });
+    const team = teamStore.createTeam(storage, name.trim(), orgKey, req.auditActor);
+    rebuildManagerMap();
+    res.status(201).json(team);
+  });
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/teams/{teamId}:
+   *   patch:
+   *     tags: ['TT: Structure']
+   *     summary: Rename a team
+   *     parameters:
+   *       - in: path
+   *         name: teamId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The team ID
+   *     responses:
+   *       200:
+   *         description: Updated team
+   */
+  router.patch('/structure/teams/:teamId', requireTeamAdmin, requireScope('team-tracker:write'), function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const { name } = req.body;
+    if (!name) return res.status(400).json({ error: 'name is required' });
+    if (typeof name !== 'string' || name.length > 100) return res.status(400).json({ error: 'name must be a string of 100 characters or fewer' });
+    const team = teamStore.renameTeam(storage, req.params.teamId, name.trim(), req.auditActor);
+    if (!team) return res.status(404).json({ error: 'Team not found' });
+    res.json(team);
+  });
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/teams/{teamId}:
+   *   delete:
+   *     tags: ['TT: Structure']
+   *     summary: Delete a team
+   *     parameters:
+   *       - in: path
+   *         name: teamId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The team ID
+   *     responses:
+   *       200:
+   *         description: Deletion result
+   */
+  router.delete('/structure/teams/:teamId', requireTeamAdmin, requireScope('team-tracker:write'), function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const result = teamStore.deleteTeam(storage, req.params.teamId, req.auditActor);
+    if (!result) return res.status(404).json({ error: 'Team not found' });
+    rebuildManagerMap();
+    res.json(result);
+  });
+
+  // ─── Team Member Assignment ───
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/teams/{teamId}/members:
+   *   post:
+   *     tags: ['TT: Structure']
+   *     summary: Assign a person to a team
+   *     parameters:
+   *       - in: path
+   *         name: teamId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The team ID
+   *     responses:
+   *       200:
+   *         description: Assignment result
+   */
+  router.post('/structure/teams/:teamId/members',
+    requireManagerOrAdmin(req => req.body.uid),
+    requireScope('team-tracker:write'),
+    function(req, res) {
+      const guard = demoWriteGuard(res);
+      if (guard) return;
+      const { uid } = req.body;
+      if (!uid) return res.status(400).json({ error: 'uid is required' });
+      const result = teamStore.assignMember(storage, req.params.teamId, uid, req.auditActor);
+      if (result.error) return res.status(404).json(result);
+      rebuildManagerMap();
+      res.json(result);
+    }
+  );
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/teams/{teamId}/members/bulk:
+   *   post:
+   *     tags: ['TT: Structure']
+   *     summary: Bulk assign people to a team
+   *     parameters:
+   *       - in: path
+   *         name: teamId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The team ID
+   *     responses:
+   *       200:
+   *         description: Bulk assignment result
+   */
+  router.post('/structure/teams/:teamId/members/bulk', requireScope('team-tracker:write'), function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const { uids } = req.body;
+    if (!Array.isArray(uids) || uids.length === 0) {
+      return res.status(400).json({ error: 'uids array is required' });
+    }
+    // All-or-nothing permission check
+    if (!req.isAdmin && !req.isTeamAdmin) {
+      if (!req.userUid) return res.status(403).json({ error: 'Cannot determine your identity' });
+      const managed = permissions.getManagedUids(req.userUid, managerMap);
+      const denied = uids.filter(uid => !managed.has(uid));
+      if (denied.length > 0) {
+        return res.status(403).json({ error: 'Not authorized for all requested people', denied });
+      }
+    }
+    const result = teamStore.assignMembersBulk(storage, req.params.teamId, uids, req.auditActor);
+    if (result.error) return res.status(404).json(result);
+    rebuildManagerMap();
+    res.json(result);
+  });
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/teams/{teamId}/members/{uid}:
+   *   delete:
+   *     tags: ['TT: Structure']
+   *     summary: Unassign a person from a team
+   *     parameters:
+   *       - in: path
+   *         name: teamId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The team ID
+   *       - in: path
+   *         name: uid
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The person's UID
+   *     responses:
+   *       200:
+   *         description: Unassignment result
+   */
+  router.delete('/structure/teams/:teamId/members/:uid',
+    requireManagerOrAdmin(req => req.params.uid),
+    requireScope('team-tracker:write'),
+    function(req, res) {
+      const guard = demoWriteGuard(res);
+      if (guard) return;
+      const result = teamStore.unassignMember(storage, req.params.teamId, req.params.uid, req.auditActor);
+      if (result.error) return res.status(404).json(result);
+      rebuildManagerMap();
+      res.json(result);
+    }
+  );
+
+  // ─── Unassigned People ───
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/unassigned:
+   *   get:
+   *     tags: ['TT: Structure']
+   *     summary: List unassigned people
+   *     parameters:
+   *       - in: query
+   *         name: scope
+   *         schema:
+   *           type: string
+   *           enum: [all, direct, org]
+   *         description: Scope filter (default all)
+   *     responses:
+   *       200:
+   *         description: List of unassigned people
+   */
+  router.get('/structure/unassigned', requireScope('team-tracker:read'), function(req, res) {
+    const VALID_SCOPES = ['all', 'direct', 'org'];
+    const scope = req.query.scope || 'all';
+    if (!VALID_SCOPES.includes(scope)) {
+      return res.status(400).json({ error: `Invalid scope. Must be one of: ${VALID_SCOPES.join(', ')}` });
+    }
+    const registry = readFromStorage('team-data/registry.json');
+    const people = teamStore.getUnassigned(storage, scope, req.userUid, req.isAdmin, managerMap, registry);
+    res.json({ people });
+  });
+
+  // ─── Field Definitions ───
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/field-definitions:
+   *   get:
+   *     tags: ['TT: Structure']
+   *     summary: List all field definitions (person and team)
+   *     responses:
+   *       200:
+   *         description: Person and team field definitions
+   */
+  router.get('/structure/field-definitions', requireScope('team-tracker:read'), function(req, res) {
+    const defs = fieldStore.readFieldDefinitions(storage);
+    // Filter out soft-deleted fields for non-admin/team-admin users
+    if (!req.isAdmin && !req.isTeamAdmin) {
+      defs.personFields = defs.personFields.filter(f => !f.deleted);
+      defs.teamFields = defs.teamFields.filter(f => !f.deleted);
+    }
+    // Resolve optionsRef fields: inject allowedValues from field options into response
+    for (const scope of ['personFields', 'teamFields']) {
+      for (const field of (defs[scope] || [])) {
+        if (field.optionsRef && !field.allowedValues) {
+          const values = fieldOptionsStore.getValues(storage, field.optionsRef);
+          if (values) {
+            field.allowedValues = values;
+            field._resolvedFromOptions = true;
+          }
+        }
+      }
+    }
+    res.json(defs);
+  });
+
+  const VALID_FIELD_TYPES = ['free-text', 'constrained', 'person-reference-linked'];
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/field-definitions/person:
+   *   post:
+   *     tags: ['TT: Structure']
+   *     summary: Create a person-level field definition
+   *     responses:
+   *       201:
+   *         description: Created field definition
+   */
+  router.post('/structure/field-definitions/person', requireTeamAdmin, requireScope('team-tracker:write'), function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const { label, type, required, visible, primaryDisplay, allowedValues, multiValue, optionsRef } = req.body;
+    if (!label) return res.status(400).json({ error: 'label is required' });
+    if (typeof label !== 'string' || label.length > 100) return res.status(400).json({ error: 'label must be a string of 100 characters or fewer' });
+    if (type && !VALID_FIELD_TYPES.includes(type)) return res.status(400).json({ error: `Invalid type. Must be one of: ${VALID_FIELD_TYPES.join(', ')}` });
+    try {
+      const field = fieldStore.createFieldDefinition(storage, 'person', {
+        label: label.trim(), type, required, visible, primaryDisplay, allowedValues, multiValue, optionsRef
+      }, req.auditActor);
+      res.status(201).json(field);
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/field-definitions/person/{fieldId}:
+   *   patch:
+   *     tags: ['TT: Structure']
+   *     summary: Edit a person-level field definition
+   *     parameters:
+   *       - in: path
+   *         name: fieldId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The field definition ID
+   *     responses:
+   *       200:
+   *         description: Updated field definition
+   */
+  router.patch('/structure/field-definitions/person/:fieldId', requireTeamAdmin, requireScope('team-tracker:write'), function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    try {
+      const result = fieldStore.updateFieldDefinition(storage, 'person', req.params.fieldId, req.body, req.auditActor);
+      if (!result) return res.status(404).json({ error: 'Field not found' });
+      res.json(result);
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/field-definitions/person/{fieldId}:
+   *   delete:
+   *     tags: ['TT: Structure']
+   *     summary: Soft-delete a person-level field definition
+   *     parameters:
+   *       - in: path
+   *         name: fieldId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The field definition ID
+   *     responses:
+   *       200:
+   *         description: Deleted field definition
+   */
+  router.delete('/structure/field-definitions/person/:fieldId', requireTeamAdmin, requireScope('team-tracker:write'), function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const result = fieldStore.softDeleteField(storage, 'person', req.params.fieldId, req.auditActor);
+    if (!result) return res.status(404).json({ error: 'Field not found' });
+    res.json(result);
+  });
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/field-definitions/person/reorder:
+   *   post:
+   *     tags: ['TT: Structure']
+   *     summary: Reorder person-level field definitions
+   *     responses:
+   *       200:
+   *         description: Reorder confirmation
+   */
+  router.post('/structure/field-definitions/person/reorder', requireTeamAdmin, requireScope('team-tracker:write'), function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const { orderedIds } = req.body;
+    if (!Array.isArray(orderedIds)) return res.status(400).json({ error: 'orderedIds array is required' });
+    fieldStore.reorderFields(storage, 'person', orderedIds, req.auditActor);
+    res.json({ ok: true });
+  });
+
+  // ─── Team Field Definitions ───
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/field-definitions/team:
+   *   post:
+   *     tags: ['TT: Structure']
+   *     summary: Create a team-level field definition
+   *     responses:
+   *       201:
+   *         description: Created field definition
+   */
+  router.post('/structure/field-definitions/team', requireTeamAdmin, requireScope('team-tracker:write'), function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const { label, type, required, visible, primaryDisplay, allowedValues, multiValue, optionsRef } = req.body;
+    if (!label) return res.status(400).json({ error: 'label is required' });
+    if (typeof label !== 'string' || label.length > 100) return res.status(400).json({ error: 'label must be a string of 100 characters or fewer' });
+    if (type && !VALID_FIELD_TYPES.includes(type)) return res.status(400).json({ error: `Invalid type. Must be one of: ${VALID_FIELD_TYPES.join(', ')}` });
+    try {
+      const field = fieldStore.createFieldDefinition(storage, 'team', {
+        label: label.trim(), type, required, visible, primaryDisplay, allowedValues, multiValue, optionsRef
+      }, req.auditActor);
+      res.status(201).json(field);
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/field-definitions/team/{fieldId}:
+   *   patch:
+   *     tags: ['TT: Structure']
+   *     summary: Edit a team-level field definition
+   *     parameters:
+   *       - in: path
+   *         name: fieldId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The field definition ID
+   *     responses:
+   *       200:
+   *         description: Updated field definition
+   */
+  router.patch('/structure/field-definitions/team/:fieldId', requireTeamAdmin, requireScope('team-tracker:write'), function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    try {
+      const result = fieldStore.updateFieldDefinition(storage, 'team', req.params.fieldId, req.body, req.auditActor);
+      if (!result) return res.status(404).json({ error: 'Field not found' });
+      res.json(result);
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/field-definitions/team/{fieldId}:
+   *   delete:
+   *     tags: ['TT: Structure']
+   *     summary: Soft-delete a team-level field definition
+   *     parameters:
+   *       - in: path
+   *         name: fieldId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The field definition ID
+   *     responses:
+   *       200:
+   *         description: Deleted field definition
+   */
+  router.delete('/structure/field-definitions/team/:fieldId', requireTeamAdmin, requireScope('team-tracker:write'), function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const result = fieldStore.softDeleteField(storage, 'team', req.params.fieldId, req.auditActor);
+    if (!result) return res.status(404).json({ error: 'Field not found' });
+    res.json(result);
+  });
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/field-definitions/team/reorder:
+   *   post:
+   *     tags: ['TT: Structure']
+   *     summary: Reorder team-level field definitions
+   *     responses:
+   *       200:
+   *         description: Reorder confirmation
+   */
+  router.post('/structure/field-definitions/team/reorder', requireTeamAdmin, requireScope('team-tracker:write'), function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const { orderedIds } = req.body;
+    if (!Array.isArray(orderedIds)) return res.status(400).json({ error: 'orderedIds array is required' });
+    fieldStore.reorderFields(storage, 'team', orderedIds, req.auditActor);
+    res.json({ ok: true });
+  });
+
+  // ─── Field Options ───
+
+  const MAX_FIELD_OPTION_VALUES = 500;
+  const MAX_FIELD_OPTION_VALUE_LENGTH = 200;
+
+  function sanitizeOptionsName(name) {
+    return name.replace(/[^a-z0-9_-]/gi, '');
+  }
+
+  function validateFieldOptionValues(values) {
+    for (let i = 0; i < values.length; i++) {
+      if (typeof values[i] !== 'string') {
+        return `values[${i}] must be a string`;
+      }
+      if (values[i].length > MAX_FIELD_OPTION_VALUE_LENGTH) {
+        return `values[${i}] exceeds maximum length of ${MAX_FIELD_OPTION_VALUE_LENGTH} characters`;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/field-options:
+   *   get:
+   *     tags: ['TT: Structure']
+   *     summary: List all field option sets
+   *     responses:
+   *       200:
+   *         description: List of field option sets
+   */
+  router.get('/field-options', requireScope('team-tracker:read'), function(req, res) {
+    try {
+      const options = fieldOptionsStore.listFieldOptions(storage);
+      res.json({ options });
+    } catch {
+      res.status(500).json({ error: 'Failed to list field options' });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/field-options/{name}:
+   *   get:
+   *     tags: ['TT: Structure']
+   *     summary: Get a single field option set by name
+   *     parameters:
+   *       - in: path
+   *         name: name
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The option set name
+   *     responses:
+   *       200:
+   *         description: Field option set with values
+   */
+  router.get('/field-options/:name', requireScope('team-tracker:read'), function(req, res) {
+    const safeName = sanitizeOptionsName(req.params.name);
+    if (!safeName) return res.status(400).json({ error: 'Invalid option set name' });
+    try {
+      const data = fieldOptionsStore.readFieldOptions(storage, safeName);
+      if (!data) return res.status(404).json({ error: 'Field option set not found' });
+      res.json(data);
+    } catch {
+      res.status(500).json({ error: 'Failed to load field options' });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/field-options/{name}:
+   *   put:
+   *     tags: ['TT: Structure']
+   *     summary: Replace a field option set's values
+   *     parameters:
+   *       - in: path
+   *         name: name
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The option set name
+   *     responses:
+   *       200:
+   *         description: Updated field option set
+   */
+  router.put('/field-options/:name', requireAdmin, requireScope('team-tracker:write'), function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const safeName = sanitizeOptionsName(req.params.name);
+    if (!safeName) return res.status(400).json({ error: 'Invalid option set name' });
+    const { values, label } = req.body;
+    if (!Array.isArray(values)) return res.status(400).json({ error: 'values must be an array' });
+    if (values.length > MAX_FIELD_OPTION_VALUES) return res.status(400).json({ error: `values exceeds maximum of ${MAX_FIELD_OPTION_VALUES} entries` });
+    const valErr = validateFieldOptionValues(values);
+    if (valErr) return res.status(400).json({ error: valErr });
+    try {
+      const result = fieldOptionsStore.replaceValues(storage, safeName, values, label, req.auditActor);
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/field-options/{name}/values:
+   *   post:
+   *     tags: ['TT: Structure']
+   *     summary: Add values to a field option set
+   *     parameters:
+   *       - in: path
+   *         name: name
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The option set name
+   *     responses:
+   *       200:
+   *         description: Updated field option set
+   */
+  router.post('/field-options/:name/values', requireTeamAdmin, requireScope('team-tracker:write'), function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const safeName = sanitizeOptionsName(req.params.name);
+    if (!safeName) return res.status(400).json({ error: 'Invalid option set name' });
+    const { values } = req.body;
+    if (!Array.isArray(values) || values.length === 0) return res.status(400).json({ error: 'values must be a non-empty array' });
+    const valErr = validateFieldOptionValues(values);
+    if (valErr) return res.status(400).json({ error: valErr });
+    // Check total count after add
+    const existing = fieldOptionsStore.getValues(storage, safeName);
+    const currentCount = existing ? existing.length : 0;
+    if (currentCount + values.length > MAX_FIELD_OPTION_VALUES) {
+      return res.status(400).json({ error: `Adding ${values.length} values would exceed maximum of ${MAX_FIELD_OPTION_VALUES} (current: ${currentCount})` });
+    }
+    try {
+      const result = fieldOptionsStore.addValues(storage, safeName, values, req.auditActor);
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/field-options/{name}/values:
+   *   delete:
+   *     tags: ['TT: Structure']
+   *     summary: Remove values from a field option set
+   *     parameters:
+   *       - in: path
+   *         name: name
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The option set name
+   *     responses:
+   *       200:
+   *         description: Updated field option set
+   */
+  router.delete('/field-options/:name/values', requireAdmin, requireScope('team-tracker:write'), function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const safeName = sanitizeOptionsName(req.params.name);
+    if (!safeName) return res.status(400).json({ error: 'Invalid option set name' });
+    const { values } = req.body;
+    if (!Array.isArray(values) || values.length === 0) return res.status(400).json({ error: 'values must be a non-empty array' });
+    const valErr = validateFieldOptionValues(values);
+    if (valErr) return res.status(400).json({ error: valErr });
+    try {
+      const result = fieldOptionsStore.removeValues(storage, safeName, values, req.auditActor);
+      if (!result) return res.status(404).json({ error: 'Field option set not found' });
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/field-options/{name}/values/rename:
+   *   patch:
+   *     tags: ['TT: Structure']
+   *     summary: Rename a value in a field option set (cascades to all records)
+   *     parameters:
+   *       - in: path
+   *         name: name
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The option set name
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               oldValue:
+   *                 type: string
+   *               newValue:
+   *                 type: string
+   *     responses:
+   *       200:
+   *         description: Rename result with count of updated records
+   */
+  router.patch('/field-options/:name/values/rename', requireTeamAdmin, requireScope('team-tracker:write'), function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const safeName = sanitizeOptionsName(req.params.name);
+    if (!safeName) return res.status(400).json({ error: 'Invalid option set name' });
+    const { oldValue, newValue } = req.body;
+    if (!oldValue || typeof oldValue !== 'string') return res.status(400).json({ error: 'oldValue is required and must be a string' });
+    if (!newValue || typeof newValue !== 'string') return res.status(400).json({ error: 'newValue is required and must be a string' });
+    const trimmed = newValue.trim();
+    if (!trimmed) return res.status(400).json({ error: 'newValue cannot be empty' });
+    if (trimmed.length > 200) return res.status(400).json({ error: 'newValue must be 200 characters or fewer' });
+    try {
+      const result = fieldOptionsStore.renameValue(storage, safeName, oldValue.trim(), trimmed, req.auditActor);
+      if (!result) return res.status(404).json({ error: 'Field option set not found' });
+      res.json(result);
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
+  });
+
+  // ─── Person Field Values ───
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/person/{uid}/fields:
+   *   patch:
+   *     tags: ['TT: Structure']
+   *     summary: Update a person's field values
+   *     parameters:
+   *       - in: path
+   *         name: uid
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The person's UID
+   *     responses:
+   *       200:
+   *         description: Updated field values
+   */
+  router.patch('/structure/person/:uid/fields',
+    requireManagerOrAdmin(req => req.params.uid),
+    requireScope('team-tracker:write'),
+    function(req, res) {
+      const guard = demoWriteGuard(res);
+      if (guard) return;
+      if (typeof req.body !== 'object' || Array.isArray(req.body) || !req.body) {
+        return res.status(400).json({ error: 'Request body must be a JSON object' });
+      }
+
+      // Load existing person fields for required-field checks
+      const registry = readFromStorage('team-data/registry.json');
+      const person = registry && registry.people && registry.people[req.params.uid];
+      const existingValues = person && person._appFields ? person._appFields : {};
+
+      const { validated, warnings, errors } = fieldStore.validateFieldValues(storage, 'person', req.body, existingValues, { optionsResolver });
+      if (errors.length > 0) return res.status(400).json({ error: errors.join('; ') });
+
+      const result = fieldStore.updatePersonFields(storage, req.params.uid, validated, req.auditActor);
+      if (!result) return res.status(404).json({ error: 'Person not found' });
+      if (warnings.length > 0) result._warnings = warnings;
+      res.json(result);
+    }
+  );
+
+  // ─── Team Field Values ───
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/teams/{teamId}/fields:
+   *   patch:
+   *     tags: ['TT: Structure']
+   *     summary: Update a team's field values
+   *     parameters:
+   *       - in: path
+   *         name: teamId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The team ID
+   *     responses:
+   *       200:
+   *         description: Updated team metadata
+   */
+  router.patch('/structure/teams/:teamId/fields', requireTeamPurview, requireScope('team-tracker:write'), function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    if (typeof req.body !== 'object' || Array.isArray(req.body) || !req.body) {
+      return res.status(400).json({ error: 'Request body must be a JSON object' });
+    }
+
+    // Load existing team metadata for required-field checks
+    const teamsData = teamStore.readTeams(storage);
+    const team = teamsData.teams && teamsData.teams[req.params.teamId];
+    const existingValues = team && team.metadata ? team.metadata : {};
+
+    const { validated, warnings, errors } = fieldStore.validateFieldValues(storage, 'team', req.body, existingValues, { optionsResolver });
+    if (errors.length > 0) return res.status(400).json({ error: errors.join('; ') });
+
+    const result = teamStore.updateTeamFields(storage, req.params.teamId, validated, req.auditActor);
+    if (!result) return res.status(404).json({ error: 'Team not found' });
+    // Return flat metadata (not full team object) + optional warnings
+    const response = { ...(result.metadata || {}) };
+    if (warnings.length > 0) response._warnings = warnings;
+    res.json(response);
+  });
+
+  // ─── Team Boards ───
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/teams/{teamId}/boards:
+   *   patch:
+   *     tags: ['TT: Structure']
+   *     summary: Update a team's boards
+   *     parameters:
+   *       - in: path
+   *         name: teamId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The team ID
+   *     responses:
+   *       200:
+   *         description: Updated boards list
+   */
+  router.patch('/structure/teams/:teamId/boards', requireTeamPurview, requireScope('team-tracker:write'), function(req, res) {
+    const guard = demoWriteGuard(res);
+    if (guard) return;
+    const { boards } = req.body;
+    if (!Array.isArray(boards)) {
+      return res.status(400).json({ error: 'boards must be an array' });
+    }
+    if (boards.length > 50) {
+      return res.status(400).json({ error: 'boards array exceeds maximum of 50 entries' });
+    }
+    for (const b of boards) {
+      if (!b.url || typeof b.url !== 'string') {
+        return res.status(400).json({ error: 'Each board must have a url string' });
+      }
+      if (!b.url.startsWith('https://') && !b.url.startsWith('http://')) {
+        return res.status(400).json({ error: 'Each board url must start with https:// or http://' });
+      }
+      if (b.url.length > 2048) {
+        return res.status(400).json({ error: 'Board url exceeds maximum length of 2048 characters' });
+      }
+      if (b.boardId !== undefined && (typeof b.boardId !== 'number' || !Number.isInteger(b.boardId) || b.boardId < 0)) {
+        return res.status(400).json({ error: 'boardId must be a non-negative integer' });
+      }
+      if (b.sprintFilter !== undefined && typeof b.sprintFilter !== 'string') {
+        return res.status(400).json({ error: 'sprintFilter must be a string' });
+      }
+    }
+    try {
+      const result = teamStore.updateTeamBoards(storage, req.params.teamId, boards, req.auditActor);
+      if (!result) return res.status(404).json({ error: 'Team not found' });
+      res.json({ boards: result });
+    } catch (err) {
+      return res.status(400).json({ error: err.message });
+    }
+  });
+
+  // ─── Audit Log ───
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/audit-log:
+   *   get:
+   *     tags: ['TT: Admin']
+   *     summary: Query the audit log
+   *     parameters:
+   *       - in: query
+   *         name: from
+   *         schema:
+   *           type: string
+   *         description: Start date filter
+   *       - in: query
+   *         name: to
+   *         schema:
+   *           type: string
+   *         description: End date filter
+   *       - in: query
+   *         name: action
+   *         schema:
+   *           type: string
+   *         description: Filter by action type
+   *       - in: query
+   *         name: actor
+   *         schema:
+   *           type: string
+   *         description: Filter by actor
+   *       - in: query
+   *         name: entityId
+   *         schema:
+   *           type: string
+   *         description: Filter by entity ID
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: integer
+   *         description: Max entries to return (1-200)
+   *       - in: query
+   *         name: offset
+   *         schema:
+   *           type: integer
+   *         description: Pagination offset
+   *     responses:
+   *       200:
+   *         description: Audit log entries
+   */
+  router.get('/structure/audit-log', requireScope('team-tracker:read'), function(req, res) {
+    // Only admin and managers can view audit log
+    if (req.permissionTier === 'user') {
+      return res.status(403).json({ error: 'Manager or admin access required' });
+    }
+    const limit = req.query.limit ? Math.max(1, Math.min(200, parseInt(req.query.limit, 10) || 50)) : undefined;
+    const offset = req.query.offset ? Math.max(0, parseInt(req.query.offset, 10) || 0) : undefined;
+    const filters = {
+      from: req.query.from,
+      to: req.query.to,
+      action: req.query.action,
+      actor: req.query.actor,
+      entityId: req.query.entityId,
+      limit,
+      offset
+    };
+    const result = auditLog.queryAuditLog(storage, filters);
+
+    // For non-admin managers, filter entries to only their managed subtree
+    if (!req.isAdmin && req.userUid) {
+      const managed = permissions.getManagedUids(req.userUid, managerMap);
+      result.entries = result.entries.filter(e => {
+        // Allow entries about people/teams the manager manages
+        if (e.entityType === 'person') return managed.has(e.entityId);
+        // Allow system and field entries (no person-specific data)
+        if (e.entityType === 'field' || e.entityType === 'system') return true;
+        // For team entries, allow if manager can see at least one person on that team
+        if (e.entityType === 'team') return true;
+        return false;
+      });
+      result.total = result.entries.length;
+    }
+
+    res.json(result);
+  });
+
+  // ─── Migration ───
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/migrate/preview:
+   *   get:
+   *     tags: ['TT: Admin']
+   *     summary: Preview Sheets-to-in-app migration
+   *     responses:
+   *       200:
+   *         description: Migration preview data
+   */
+  router.get('/structure/migrate/preview', requireAdmin, requireScope('team-tracker:write'), async function(req, res) {
+    try {
+      const config = rosterSyncConfig.loadConfig(storage);
+      if (!config) return res.status(400).json({ error: 'No config found' });
+      const preview = await previewMigration(storage, config);
+      res.json(preview);
+    } catch (err) {
+      console.error('[migration] Preview failed:', err);
+      res.status(500).json({ error: 'Migration preview failed: ' + err.message });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/migrate:
+   *   post:
+   *     tags: ['TT: Admin']
+   *     summary: Trigger Sheets-to-in-app migration
+   *     responses:
+   *       200:
+   *         description: Migration result
+   */
+  router.post('/structure/migrate', requireAdmin, requireScope('team-tracker:write'), async function(req, res) {
+    try {
+      const guard = demoWriteGuard(res);
+      if (guard) return;
+      const config = rosterSyncConfig.loadConfig(storage);
+      if (!config) return res.status(400).json({ error: 'No config found' });
+      const fieldOverrides = req.body?.fieldOverrides || null;
+      const result = await migrateToInApp(storage, config, req.auditActor, fieldOverrides);
+      if (result.migrated) {
+        config._migratedToInApp = new Date().toISOString();
+        rosterSyncConfig.saveConfig(storage, config);
+        rebuildManagerMap();
+      }
+      res.json(result);
+    } catch (err) {
+      console.error('[migration] Migration failed:', err);
+      res.status(500).json({ error: 'Migration failed: ' + err.message });
+    }
+  });
+
+  // ─── Field-to-Field-Options Migration ───
+
+  const fieldOptionsMigration = require('./migration/field-options-migration');
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/migrate/field-to-options/preview:
+   *   get:
+   *     tags: ['TT: Admin']
+   *     summary: Preview a field-to-field-options migration
+   *     parameters:
+   *       - in: query
+   *         name: fieldId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: The source field ID to migrate
+   *     responses:
+   *       200:
+   *         description: Migration preview with extracted values
+   */
+  router.get('/structure/migrate/field-to-options/preview', requireTeamAdmin, requireScope('team-tracker:write'), function(req, res) {
+    try {
+      const { fieldId } = req.query;
+      if (!fieldId || typeof fieldId !== 'string') {
+        return res.status(400).json({ error: 'fieldId query parameter is required' });
+      }
+      const result = fieldOptionsMigration.previewMigration(storage, fieldId);
+      if (result.error) return res.status(400).json({ error: result.error });
+      res.json(result);
+    } catch (err) {
+      console.error('[migration] Preview failed:', err);
+      res.status(500).json({ error: 'Preview failed: ' + err.message });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/migrate/field-to-options:
+   *   post:
+   *     tags: ['TT: Admin']
+   *     summary: Execute a field-to-field-options migration
+   *     responses:
+   *       200:
+   *         description: Migration result
+   */
+  router.post('/structure/migrate/field-to-options', requireTeamAdmin, requireScope('team-tracker:write'), function(req, res) {
+    try {
+      const guard = demoWriteGuard(res);
+      if (guard) return;
+      const { sourceFieldId, optionSetName, optionSetLabel, createCounterpart, counterpartLabel, seedFromMembers } = req.body;
+      if (!sourceFieldId || !optionSetName) {
+        return res.status(400).json({ error: 'sourceFieldId and optionSetName are required' });
+      }
+      if (typeof optionSetName !== 'string' || !/^[a-z0-9_-]+$/.test(optionSetName)) {
+        return res.status(400).json({ error: 'optionSetName must be lowercase alphanumeric with hyphens/underscores' });
+      }
+      const result = fieldOptionsMigration.executeMigration(storage, {
+        sourceFieldId, optionSetName, optionSetLabel, createCounterpart, counterpartLabel, seedFromMembers
+      }, req.auditActor);
+      if (result.error) return res.status(400).json({ error: result.error });
+      res.json(result);
+    } catch (err) {
+      console.error('[migration] Field-to-options migration failed:', err);
+      res.status(500).json({ error: 'Migration failed: ' + err.message });
+    }
+  });
+
   // ─── Routes: Unified Refresh ───
 
   /**
@@ -380,7 +1801,7 @@ module.exports = function registerRoutes(router, context) {
    *       403:
    *         description: Forbidden — admin access required
    */
-  router.get('/refresh/status', requireAdmin, function(req, res) {
+  router.get('/refresh/status', requireAdmin, requireScope('metrics:read'), function(req, res) {
     res.json(refreshState);
   });
 
@@ -410,7 +1831,7 @@ module.exports = function registerRoutes(router, context) {
    *       500:
    *         description: Server error
    */
-  router.post('/refresh', async function(req, res) {
+  router.post('/refresh', requireScope('metrics:write'), async function(req, res) {
     const { scope, name, teamKey, orgKey } = req.body || {};
     const force = req.body?.force === true;
     const sources = req.body?.sources || { jira: true, github: true, gitlab: true };
@@ -707,7 +2128,7 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Array of configured sprint boards
    */
-  router.get('/boards', function(req, res) {
+  router.get('/boards', requireScope('metrics:read'), function(req, res) {
     try {
       const teamsData = readFromStorage('teams.json');
       if (!teamsData || !teamsData.teams) {
@@ -749,7 +2170,7 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: List of sprints for the board
    */
-  router.get('/boards/:boardId/sprints', function(req, res) {
+  router.get('/boards/:boardId/sprints', requireScope('metrics:read'), function(req, res) {
     try {
       const { boardId } = req.params;
       const data = readFromStorage(`sprints/team-${boardId}.json`)
@@ -781,7 +2202,7 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Sprint trend data for the board
    */
-  router.get('/boards/:boardId/trend', function(req, res) {
+  router.get('/boards/:boardId/trend', requireScope('metrics:read'), function(req, res) {
     try {
       const { boardId } = req.params;
       const sprintIndex = readFromStorage(`sprints/team-${boardId}.json`)
@@ -843,7 +2264,7 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Sprint detail data
    */
-  router.get('/sprints/:sprintId', function(req, res) {
+  router.get('/sprints/:sprintId', requireScope('metrics:read'), function(req, res) {
     try {
       const { sprintId } = req.params;
       const data = readFromStorage(`sprints/${sprintId}.json`);
@@ -869,7 +2290,7 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Sprint board team configuration
    */
-  router.get('/teams', function(req, res) {
+  router.get('/teams', requireScope('roster:read'), function(req, res) {
     try {
       const data = readFromStorage('teams.json');
       if (!data) {
@@ -900,7 +2321,7 @@ module.exports = function registerRoutes(router, context) {
    *       403:
    *         description: Forbidden — admin access required
    */
-  router.post('/teams', requireAdmin, function(req, res) {
+  router.post('/teams', requireAdmin, requireScope('roster:write'), function(req, res) {
     try {
       const { teams } = req.body;
       if (!teams || !Array.isArray(teams)) {
@@ -924,7 +2345,7 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Dashboard summary data
    */
-  router.get('/dashboard-summary', function(req, res) {
+  router.get('/dashboard-summary', requireScope('metrics:read'), function(req, res) {
     try {
       const data = readFromStorage('dashboard-summary.json');
       if (data) {
@@ -1013,7 +2434,7 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Aggregated trend data
    */
-  router.get('/trend', function(req, res) {
+  router.get('/trend', requireScope('metrics:read'), function(req, res) {
     try {
       const boardIds = (req.query.boardIds || '').split(',').filter(Boolean);
       if (boardIds.length === 0) {
@@ -1076,7 +2497,7 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Last refresh timestamp and config info
    */
-  router.get('/last-refreshed', function(req, res) {
+  router.get('/last-refreshed', requireScope('metrics:read'), function(req, res) {
     const data = readFromStorage('last-refreshed.json');
     const jiraConfig = jiraSyncConfig.loadConfig(storage);
     res.json({
@@ -1099,7 +2520,7 @@ module.exports = function registerRoutes(router, context) {
    *             schema:
    *               $ref: '#/components/schemas/RosterResponse'
    */
-  router.get('/roster', function(req, res) {
+  router.get('/roster', requireScope('roster:read'), function(req, res) {
     try {
       const full = readRosterFull();
       if (!full) {
@@ -1107,6 +2528,19 @@ module.exports = function registerRoutes(router, context) {
       }
       const roster = deriveRoster();
       const { mergedKeyMap: _mergedKeyMap, ...rosterResponse } = roster;
+
+      // Add permissions context for in-app mode
+      if (rosterResponse.teamDataSource === 'in-app') {
+        const managed = req.userUid
+          ? [...permissions.getManagedUids(req.userUid, managerMap)]
+          : [];
+        rosterResponse.permissions = {
+          tier: req.permissionTier,
+          uid: req.userUid,
+          managedUids: managed
+        };
+      }
+
       res.json(rosterResponse);
     } catch (error) {
       console.error('Read roster error:', error);
@@ -1124,7 +2558,7 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Metrics for all people
    */
-  router.get('/people/metrics', function(req, res) {
+  router.get('/people/metrics', requireScope('metrics:read'), function(req, res) {
     try {
       const files = listStorageFiles('people');
       if (files.length === 0) return res.json({});
@@ -1174,7 +2608,7 @@ module.exports = function registerRoutes(router, context) {
    *             schema:
    *               $ref: '#/components/schemas/PersonMetrics'
    */
-  router.get('/person/:jiraDisplayName/metrics', async function(req, res) {
+  router.get('/person/:jiraDisplayName/metrics', requireScope('metrics:read'), async function(req, res) {
     try {
       const name = decodeURIComponent(req.params.jiraDisplayName);
       const key = sanitizeFilename(name);
@@ -1216,7 +2650,7 @@ module.exports = function registerRoutes(router, context) {
    *             schema:
    *               $ref: '#/components/schemas/TeamMetrics'
    */
-  router.get('/team/:teamKey/metrics', function(req, res) {
+  router.get('/team/:teamKey/metrics', requireScope('metrics:read'), function(req, res) {
     try {
       const teamKey = decodeURIComponent(req.params.teamKey);
       const roster = deriveRoster();
@@ -1327,7 +2761,7 @@ module.exports = function registerRoutes(router, context) {
    *       403:
    *         description: Forbidden — admin access required
    */
-  router.delete('/jira-name-cache', requireAdmin, function(req, res) {
+  router.delete('/jira-name-cache', requireAdmin, requireScope('metrics:write'), function(req, res) {
     jiraNameCache = {};
     writeToStorage('jira-name-map.json', {});
     res.json({ success: true });
@@ -1349,7 +2783,7 @@ module.exports = function registerRoutes(router, context) {
    *             schema:
    *               $ref: '#/components/schemas/GitHubContributions'
    */
-  router.get('/github/contributions', function(req, res) {
+  router.get('/github/contributions', requireScope('github:read'), function(req, res) {
     try {
       const cache = readGithubCache();
       res.json(cache);
@@ -1376,7 +2810,7 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: GitHub contribution data for the user
    */
-  router.get('/github/contributions/:username', function(req, res) {
+  router.get('/github/contributions/:username', requireScope('github:read'), function(req, res) {
     try {
       const username = decodeURIComponent(req.params.username);
       const cache = readGithubCache();
@@ -1404,7 +2838,7 @@ module.exports = function registerRoutes(router, context) {
    *             schema:
    *               $ref: '#/components/schemas/GitLabContributions'
    */
-  router.get('/gitlab/contributions', function(req, res) {
+  router.get('/gitlab/contributions', requireScope('gitlab:read'), function(req, res) {
     try {
       const cache = readGitlabCache();
       res.json(cache);
@@ -1431,7 +2865,7 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: GitLab contribution data for the user
    */
-  router.get('/gitlab/contributions/:username', function(req, res) {
+  router.get('/gitlab/contributions/:username', requireScope('gitlab:read'), function(req, res) {
     try {
       const username = decodeURIComponent(req.params.username);
       const cache = readGitlabCache();
@@ -1455,7 +2889,7 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Combined trend data from all sources
    */
-  router.get('/trends', function(req, res) {
+  router.get('/trends', requireScope('metrics:read'), function(req, res) {
     try {
       const jira = buildJiraTrends();
       const github = readGithubHistoryCache();
@@ -1486,7 +2920,7 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Annotations for the sprint
    */
-  router.get('/sprints/:sprintId/annotations', function(req, res) {
+  router.get('/sprints/:sprintId/annotations', requireScope('metrics:read'), function(req, res) {
     try {
       const { sprintId } = req.params;
       const data = readFromStorage(`annotations/${sprintId}.json`);
@@ -1528,7 +2962,7 @@ module.exports = function registerRoutes(router, context) {
    *       400:
    *         description: Missing assignee or text
    */
-  router.put('/sprints/:sprintId/annotations', function(req, res) {
+  router.put('/sprints/:sprintId/annotations', requireScope('metrics:write'), function(req, res) {
     try {
       const { sprintId } = req.params;
       const { assignee, text } = req.body;
@@ -1590,7 +3024,7 @@ module.exports = function registerRoutes(router, context) {
    *       404:
    *         description: Annotation not found
    */
-  router.delete('/sprints/:sprintId/annotations/:assignee/:annotationId', requireAdmin, function(req, res) {
+  router.delete('/sprints/:sprintId/annotations/:assignee/:annotationId', requireAdmin, requireScope('metrics:write'), function(req, res) {
     try {
       const { sprintId, assignee, annotationId } = req.params;
       const data = readFromStorage(`annotations/${sprintId}.json`);
@@ -1629,7 +3063,7 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Configuration status
    */
-  router.get('/roster-sync/configured', function(req, res) {
+  router.get('/roster-sync/configured', requireScope('roster:read'), function(req, res) {
     try {
       const config = rosterSyncConfig.loadConfig(storage);
       res.json({ configured: !!config });
@@ -1659,7 +3093,7 @@ module.exports = function registerRoutes(router, context) {
    *       403:
    *         description: Forbidden — admin access required
    */
-  router.get('/sheets/discover', requireAdmin, async function(req, res) {
+  router.get('/sheets/discover', requireAdmin, requireScope('team-tracker:read'), async function(req, res) {
     try {
       const { spreadsheetId } = req.query;
 
@@ -1693,7 +3127,7 @@ module.exports = function registerRoutes(router, context) {
    *       403:
    *         description: Forbidden — admin access required
    */
-  router.get('/admin/roster-sync/field-definitions', requireAdmin, function(req, res) {
+  router.get('/admin/roster-sync/field-definitions', requireAdmin, requireScope('roster:write'), function(req, res) {
     try {
       const config = rosterSyncConfig.loadConfig(storage);
       res.json({ customFields: (config && config.customFields) || [] });
@@ -1715,7 +3149,7 @@ module.exports = function registerRoutes(router, context) {
    *       403:
    *         description: Forbidden — admin access required
    */
-  router.get('/admin/roster-sync/config', requireAdmin, function(req, res) {
+  router.get('/admin/roster-sync/config', requireAdmin, requireScope('roster:write'), function(req, res) {
     try {
       const config = rosterSyncConfig.loadConfig(storage);
       if (!config) {
@@ -1749,9 +3183,9 @@ module.exports = function registerRoutes(router, context) {
    *       403:
    *         description: Forbidden — admin access required
    */
-  router.post('/admin/roster-sync/config', requireAdmin, function(req, res) {
+  router.post('/admin/roster-sync/config', requireAdmin, requireScope('roster:write'), function(req, res) {
     try {
-      const { orgRoots, googleSheetId, sheetNames, githubOrgs, gitlabGroups, gitlabInstances, teamStructure, excludedTitles } = req.body;
+      const { orgRoots, googleSheetId, sheetNames, githubOrgs, gitlabGroups, gitlabInstances, teamStructure, excludedTitles, teamDataSource } = req.body;
 
       if (orgRoots !== undefined) {
         if (!Array.isArray(orgRoots) || orgRoots.length === 0) {
@@ -1902,6 +3336,12 @@ module.exports = function registerRoutes(router, context) {
       if (gitlabInstances !== undefined) config.gitlabInstances = gitlabInstances || [];
       if (validatedTeamStructure !== undefined) config.teamStructure = validatedTeamStructure;
       if (validatedExcludedTitles !== undefined) config.excludedTitles = validatedExcludedTitles;
+      if (teamDataSource !== undefined) {
+        if (!['sheets', 'in-app'].includes(teamDataSource)) {
+          return res.status(400).json({ error: 'teamDataSource must be "sheets" or "in-app"' });
+        }
+        config.teamDataSource = teamDataSource;
+      }
 
       if (config.teamStructure) {
         const fm = {};
@@ -1942,7 +3382,7 @@ module.exports = function registerRoutes(router, context) {
    *       403:
    *         description: Forbidden — admin access required
    */
-  router.post('/admin/roster-sync/custom-fields', requireAdmin, function(req, res) {
+  router.post('/admin/roster-sync/custom-fields', requireAdmin, requireScope('roster:write'), function(req, res) {
     try {
       const { customFields } = req.body;
 
@@ -2019,7 +3459,7 @@ module.exports = function registerRoutes(router, context) {
    *       403:
    *         description: Forbidden — admin access required
    */
-  router.post('/admin/roster-sync/trigger', requireAdmin, function(req, res) {
+  router.post('/admin/roster-sync/trigger', requireAdmin, requireScope('roster:write'), function(req, res) {
     try {
       if (consolidatedSync.isSyncInProgress()) {
         return res.json({ status: 'already_running' });
@@ -2055,7 +3495,7 @@ module.exports = function registerRoutes(router, context) {
    *         description: Forbidden — admin access required
    */
   // Status handler — uses unifiedSyncState which is set after org-teams routes register
-  router.get('/admin/roster-sync/status', requireAdmin, function(req, res) {
+  router.get('/admin/roster-sync/status', requireAdmin, requireScope('roster:write'), function(req, res) {
     try {
       const config = rosterSyncConfig.loadConfig(storage);
       const metadataSyncStatus = readFromStorage('org-roster/sync-status.json');
@@ -2112,7 +3552,7 @@ module.exports = function registerRoutes(router, context) {
    *       403:
    *         description: Forbidden — admin access required
    */
-  router.get('/admin/jira-sync/config', requireAdmin, function(req, res) {
+  router.get('/admin/jira-sync/config', requireAdmin, requireScope('metrics:write'), function(req, res) {
     try {
       const config = jiraSyncConfig.loadConfig(storage);
       res.json({ projectKeys: [], ...config });
@@ -2142,7 +3582,7 @@ module.exports = function registerRoutes(router, context) {
    *       403:
    *         description: Forbidden — admin access required
    */
-  router.post('/admin/jira-sync/config', requireAdmin, function(req, res) {
+  router.post('/admin/jira-sync/config', requireAdmin, requireScope('metrics:write'), function(req, res) {
     try {
       const { projectKeys } = req.body;
 
@@ -2237,7 +3677,7 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Array of team snapshots
    */
-  router.get('/snapshots/:teamKey', function(req, res) {
+  router.get('/snapshots/:teamKey', requireScope('team-tracker:read'), function(req, res) {
     try {
       const teamKey = decodeURIComponent(req.params.teamKey);
       const data = getOrGenerateTeamSnapshots(teamKey);
@@ -2271,7 +3711,7 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Array of person snapshots
    */
-  router.get('/snapshots/:teamKey/:personName', function(req, res) {
+  router.get('/snapshots/:teamKey/:personName', requireScope('team-tracker:read'), function(req, res) {
     try {
       const teamKey = decodeURIComponent(req.params.teamKey);
       const personName = decodeURIComponent(req.params.personName);
@@ -2302,7 +3742,7 @@ module.exports = function registerRoutes(router, context) {
    *       403:
    *         description: Forbidden — admin access required
    */
-  router.post('/snapshots/generate', requireAdmin, function(req, res) {
+  router.post('/snapshots/generate', requireAdmin, requireScope('team-tracker:write'), function(req, res) {
     try {
       const roster = deriveRoster();
       const completedPeriods = snapshots.getCompletedPeriods();
@@ -2354,7 +3794,7 @@ module.exports = function registerRoutes(router, context) {
    *       403:
    *         description: Forbidden — admin access required
    */
-  router.delete('/snapshots', requireAdmin, function(req, res) {
+  router.delete('/snapshots', requireAdmin, requireScope('team-tracker:write'), function(req, res) {
     try {
       const result = deleteStorageDirectory('snapshots');
       res.json({ success: true, deleted: result.deleted });
@@ -2363,6 +3803,11 @@ module.exports = function registerRoutes(router, context) {
       res.status(500).json({ error: error.message });
     }
   });
+
+  // ─── Allocation Routes ───
+
+  const registerAllocationRoutes = require('./allocation/routes');
+  registerAllocationRoutes(router, context);
 
   // ─── Diagnostics Hook ───
 
@@ -2541,6 +3986,80 @@ module.exports = function registerRoutes(router, context) {
     });
   }
 
+  // ─── Message Provider: Field Completeness ───
+
+  if (context.registerMessageProvider) {
+    const { getManagerPurview } = require('./manager-purview');
+
+    context.registerMessageProvider('team-tracker:field-completeness', async function(user) {
+      // Early bailout: skip all disk I/O for non-managers.
+      if (!user.uid) return [];
+      if (user.permissionTier === 'user') return [];
+
+      const registry = readFromStorage('team-data/registry.json');
+      if (!registry || !registry.people) return [];
+
+      // Verify this user actually has direct reports
+      const directReportSet = permissions.getDirectReports(user.uid, registry);
+      if (directReportSet.size === 0) return [];
+
+      const fieldStore = require('../../../shared/server/field-store');
+      const teamStore = require('../../../shared/server/team-store');
+      const fieldDefs = fieldStore.readFieldDefinitions(storage);
+      if (!fieldDefs) return [];
+
+      const personFields = fieldDefs.personFields.filter(f => !f.deleted && f.visible);
+      const teamFields = fieldDefs.teamFields.filter(f => !f.deleted && f.visible);
+
+      // If no visible person fields and no team fields, still check boards
+      // (boards are always a completeness concern for teams)
+
+      // Count incomplete direct reports
+      let incompletePersonCount = 0;
+      for (const uid of directReportSet) {
+        const person = registry.people[uid];
+        if (!person || person.status !== 'active') continue;
+        const hasEmpty = personFields.some(f => isFieldEmpty(person._appFields?.[f.id], f));
+        if (hasEmpty) incompletePersonCount++;
+      }
+
+      // Count incomplete teams
+      const teamsData = teamStore.readTeams(storage);
+      const purview = getManagerPurview(user.uid, registry, teamsData, { includeIndirect: false });
+      let incompleteTeamCount = 0;
+      for (const team of purview.teams) {
+        const hasEmptyBoards = !team.boards || team.boards.length === 0;
+        const hasEmptyField = teamFields.some(f => isFieldEmpty(team.metadata?.[f.id], f));
+        if (hasEmptyBoards || hasEmptyField) incompleteTeamCount++;
+      }
+
+      if (incompletePersonCount === 0 && incompleteTeamCount === 0) return [];
+
+      // Build message text
+      const parts = [];
+      if (incompletePersonCount > 0) {
+        const noun = incompletePersonCount === 1 ? 'person' : 'people';
+        parts.push(`${incompletePersonCount} ${noun}`);
+      }
+      if (incompleteTeamCount > 0) {
+        const noun = incompleteTeamCount === 1 ? 'team' : 'teams';
+        parts.push(`${incompleteTeamCount} ${noun}`);
+      }
+      const subject = parts.join(' and ');
+      const verb = (incompletePersonCount + incompleteTeamCount) === 1 ? 'has' : 'have';
+
+      return [{
+        id: 'team-tracker:field-completeness',
+        type: 'warning',
+        text: `${subject} ${verb} incomplete fields.`,
+        link: {
+          label: 'Review',
+          href: '#/team-tracker/manager-dashboard'
+        }
+      }];
+    });
+  }
+
   // ─── Absorbed routes from org-roster and team-data ───
 
   const registerIpaRegistryRoutes = require('./routes/ipa-registry');
@@ -2552,7 +4071,19 @@ module.exports = function registerRoutes(router, context) {
 
   // ─── Unified Sync ───
 
-  router.post('/admin/roster-sync/unified', requireAdmin, function(req, res) {
+  /**
+   * @openapi
+   * /api/modules/team-tracker/admin/roster-sync/unified:
+   *   post:
+   *     tags: ['TT: Admin']
+   *     summary: Trigger unified roster + metadata sync
+   *     responses:
+   *       200:
+   *         description: Sync started
+   *       409:
+   *         description: Sync already in progress
+   */
+  router.post('/admin/roster-sync/unified', requireAdmin, requireScope('roster:write'), function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Sync disabled in demo mode' });
     }

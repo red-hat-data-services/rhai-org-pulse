@@ -7,7 +7,7 @@
 const { runSync, calculateHeadcountByRole, parseTeamBoardsTab } = require('../org-sync');
 const { fetchAllRfeBacklog } = require('../rfe');
 const { getAllPeople, getTeamRollup, collectRoleNames } = require('../../../../shared/server/roster');
-const { getOrgDisplayNames } = require('../../../../shared/server/roster-sync/config');
+const { getOrgDisplayNames, loadConfig: loadRosterSyncConfig } = require('../../../../shared/server/roster-sync/config');
 const { fetchRawSheet } = require('../../../../shared/server/google-sheets');
 
 let orgSyncInProgress = false;
@@ -22,7 +22,7 @@ function isOrgSyncInProgress() {
 }
 
 module.exports = function registerOrgTeamsRoutes(router, context) {
-  const { storage, requireAdmin } = context;
+  const { storage, requireAdmin, requireScope } = context;
   const { readFromStorage, writeToStorage } = storage;
   const DEMO_MODE = process.env.DEMO_MODE === 'true';
 
@@ -64,10 +64,23 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
   }
 
   function buildEnrichedTeams(orgFilter) {
+    const rosterConfig = loadRosterSyncConfig(storage);
+    const isInAppMode = (rosterConfig?.teamDataSource || 'sheets') === 'in-app';
+
     const metaData = readFromStorage('org-roster/teams-metadata.json');
-    const compData = readFromStorage('org-roster/components.json');
-    const componentMap = compData?.components || {};
     const boardNames = metaData?.boardNames || {};
+
+    // Resolve component field from team field definitions via optionsRef
+    const fieldStore = require('../../../../shared/server/field-store');
+    const fieldDefs = fieldStore.readFieldDefinitions(storage);
+    const componentFieldDef = (fieldDefs.teamFields || []).find(
+      f => !f.deleted && f.optionsRef === 'components'
+    );
+    const componentFieldId = componentFieldDef?.id;
+
+    // Fallback: legacy component map for pre-migration state
+    const compData = !componentFieldId ? readFromStorage('org-roster/components.json') : null;
+    const componentMap = compData?.components || {};
 
     // Build a lookup of metadata by composite key for enrichment
     const metaByKey = {};
@@ -82,8 +95,12 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
     const orgKeyToDisplay = buildOrgKeyToDisplayName();
     const orgTeamPeopleMap = groupPeopleByOrgTeam(allPeople, orgKeyToDisplay);
 
-    const rosterNames = new Set(allPeople.map(p => p.name).filter(Boolean));
-    const allNames = collectRoleNames(allPeople, ['engineeringLead', 'productManager'], rosterNames);
+    // In in-app mode, PM/Eng Lead are team fields in metadata — skip person-level rollup
+    let allNames = new Set();
+    if (!isInAppMode) {
+      const rosterNames = new Set(allPeople.map(p => p.name).filter(Boolean));
+      allNames = collectRoleNames(allPeople, ['engineeringLead', 'productManager'], rosterNames);
+    }
 
     const teams = [];
     for (const [compositeKey, teamPeople] of Object.entries(orgTeamPeopleMap)) {
@@ -93,8 +110,8 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
       if (orgFilter && org !== orgFilter) continue;
 
       const counts = calculateHeadcountByRole(teamPeople);
-      const engLeads = getTeamRollup(teamPeople, 'engineeringLead', allNames);
-      const productManagers = getTeamRollup(teamPeople, 'productManager', allNames);
+      const engLeads = isInAppMode ? [] : getTeamRollup(teamPeople, 'engineeringLead', allNames);
+      const productManagers = isInAppMode ? [] : getTeamRollup(teamPeople, 'productManager', allNames);
 
       const filterCounts = {};
       for (const p of teamPeople) {
@@ -103,17 +120,68 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
       }
       const jiraFilter = Object.entries(filterCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
 
-      // Enrich with metadata (board URLs, etc.) if available
+      // Boards: will be enriched after structure lookup (priority cascade)
       const meta = metaByKey[compositeKey];
       const teamBoardUrls = meta?.boardUrls || [];
-      const boards = teamBoardUrls.map(url => ({ url, name: boardNames[url] || null }));
+      const metaBoards = teamBoardUrls.map(url => ({ url, name: boardNames[url] || null }));
+      // Default to metadata boards; overridden below if structure boards exist
+      let boards = metaBoards;
 
-      const components = [];
-      for (const [comp, teamNames] of Object.entries(componentMap)) {
-        if (teamNames.includes(name)) components.push(comp);
+      // Components: sourced from team metadata after structure enrichment; legacy fallback here
+      let components = [];
+      if (!componentFieldId) {
+        for (const [comp, teamNames] of Object.entries(componentMap)) {
+          if (teamNames.includes(name)) components.push(comp);
+        }
       }
 
       teams.push({ org, name, boardUrls: teamBoardUrls, boards, engLeads, productManagers, headcount: counts, components, memberCount: teamPeople.length, jiraFilter });
+    }
+
+    // Enrich with structure team metadata (C1 fix)
+    const teamStore = require('../../../../shared/server/team-store');
+    const structureData = teamStore.readTeams(storage);
+    const structureByComposite = {};
+    for (const [id, t] of Object.entries(structureData.teams)) {
+      const displayName = orgKeyToDisplay[t.orgKey] || t.orgKey;
+      structureByComposite[`${displayName}::${t.name}`] = { ...t, id };
+    }
+    for (const team of teams) {
+      const key = `${team.org}::${team.name}`;
+      const structure = structureByComposite[key];
+      if (structure) {
+        team.structureId = structure.id;
+        team.metadata = structure.metadata || {};
+        // Priority cascade: prefer structure boards over metadata boards
+        if (Array.isArray(structure.boards)) {
+          // Backfill boardId for boards saved before extraction was added
+          team.boards = structure.boards.map(b => b.boardId != null ? b : { ...b, boardId: teamStore.extractBoardId(b.url) });
+          team.boardUrls = team.boards.map(b => b.url);
+        }
+      }
+    }
+
+    // Source components from team metadata when component field exists
+    if (componentFieldId) {
+      for (const team of teams) {
+        if (team.metadata && team.metadata[componentFieldId]) {
+          team.components = [].concat(team.metadata[componentFieldId]);
+        }
+      }
+    }
+
+    // Add empty structure teams that have no members assigned yet
+    const existingKeys = new Set(teams.map(t => `${t.org}::${t.name}`));
+    for (const [compositeKey, structure] of Object.entries(structureByComposite)) {
+      if (existingKeys.has(compositeKey)) continue;
+      const sepIdx = compositeKey.indexOf('::');
+      const org = compositeKey.substring(0, sepIdx);
+      const name = compositeKey.substring(sepIdx + 2);
+      if (orgFilter && org !== orgFilter) continue;
+      const emptyTeamComponents = componentFieldId && structure.metadata?.[componentFieldId]
+        ? [].concat(structure.metadata[componentFieldId])
+        : [];
+      teams.push({ org, name, boardUrls: [], boards: [], engLeads: [], productManagers: [], headcount: {}, components: emptyTeamComponents, memberCount: 0, jiraFilter: null, structureId: structure.id, metadata: structure.metadata || {} });
     }
 
     // Find people with no team assignment
@@ -144,7 +212,23 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
 
   // ─── GET /org-teams ───
 
-  router.get('/org-teams', function(req, res) {
+  /**
+   * @openapi
+   * /api/modules/team-tracker/org-teams:
+   *   get:
+   *     tags: ['OR: Teams']
+   *     summary: List org-roster teams with member counts, boards, and components
+   *     parameters:
+   *       - in: query
+   *         name: org
+   *         schema:
+   *           type: string
+   *         description: Filter by org name
+   *     responses:
+   *       200:
+   *         description: List of enriched teams with unassigned people
+   */
+  router.get('/org-teams', requireScope('roster:read'), function(req, res) {
     try {
       const { teams, unassigned, totalPeople, fetchedAt } = buildEnrichedTeams(req.query.org);
       const rfeData = readFromStorage('org-roster/rfe-backlog.json');
@@ -162,7 +246,26 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
 
   // ─── GET /org-teams/:teamKey ───
 
-  router.get('/org-teams/:teamKey', function(req, res) {
+  /**
+   * @openapi
+   * /api/modules/team-tracker/org-teams/{teamKey}:
+   *   get:
+   *     tags: ['OR: Teams']
+   *     summary: Get single org-roster team detail
+   *     parameters:
+   *       - in: path
+   *         name: teamKey
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Composite key (org::teamName)
+   *     responses:
+   *       200:
+   *         description: Team detail with RFE issues
+   *       404:
+   *         description: Team not found
+   */
+  router.get('/org-teams/:teamKey', requireScope('roster:read'), function(req, res) {
     try {
       const teamKey = decodeURIComponent(req.params.teamKey);
       const sepIdx = teamKey.indexOf('::');
@@ -185,7 +288,24 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
 
   // ─── GET /org-teams/:teamKey/members ───
 
-  router.get('/org-teams/:teamKey/members', function(req, res) {
+  /**
+   * @openapi
+   * /api/modules/team-tracker/org-teams/{teamKey}/members:
+   *   get:
+   *     tags: ['OR: Teams']
+   *     summary: Get members of an org-roster team
+   *     parameters:
+   *       - in: path
+   *         name: teamKey
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Composite key (org::teamName)
+   *     responses:
+   *       200:
+   *         description: List of team members
+   */
+  router.get('/org-teams/:teamKey/members', requireScope('roster:read'), function(req, res) {
     try {
       const teamKey = decodeURIComponent(req.params.teamKey);
       const sepIdx = teamKey.indexOf('::');
@@ -210,7 +330,17 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
 
   // ─── GET /org-list ───
 
-  router.get('/org-list', function(req, res) {
+  /**
+   * @openapi
+   * /api/modules/team-tracker/org-list:
+   *   get:
+   *     tags: ['OR: Teams']
+   *     summary: List all orgs with team counts and headcounts
+   *     responses:
+   *       200:
+   *         description: List of orgs
+   */
+  router.get('/org-list', requireScope('roster:read'), function(req, res) {
     try {
       // Derive orgs and team counts from people data (source of truth)
       const allPeople = getAllPeople(storage);
@@ -245,7 +375,26 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
 
   // ─── GET /org-summary/:orgName ───
 
-  router.get('/org-summary/:orgName', function(req, res) {
+  /**
+   * @openapi
+   * /api/modules/team-tracker/org-summary/{orgName}:
+   *   get:
+   *     tags: ['OR: Teams']
+   *     summary: Get org-level summary with role breakdown and RFE counts
+   *     parameters:
+   *       - in: path
+   *         name: orgName
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Org name (or _all for all orgs)
+   *     responses:
+   *       200:
+   *         description: Org summary with teams, roles, and RFE data
+   *       404:
+   *         description: No data for this org
+   */
+  router.get('/org-summary/:orgName', requireScope('roster:read'), function(req, res) {
     try {
       const orgName = decodeURIComponent(req.params.orgName);
       const isAll = orgName === '_all';
@@ -269,13 +418,7 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
         roleFte[role] = (roleFte[role] || 0) + (1 / Math.max(teamCount, 1));
       }
 
-      const compData = readFromStorage('org-roster/components.json');
-      const orgComponents = [];
-      if (compData) {
-        for (const [comp, teamNames] of Object.entries(compData.components || {})) {
-          if (teams.some(t => teamNames.includes(t.name))) orgComponents.push(comp);
-        }
-      }
+      const orgComponents = [...new Set(teams.flatMap(t => t.components || []))];
 
       const rfeData = readFromStorage('org-roster/rfe-backlog.json');
       let totalRfeCount = 0;
@@ -306,15 +449,53 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
 
   // ─── Components & RFE ───
 
-  router.get('/components', function(req, res) {
+  /**
+   * @openapi
+   * /api/modules/team-tracker/components:
+   *   get:
+   *     tags: ['OR: Teams']
+   *     summary: (Deprecated) Get component-to-team mapping
+   *     responses:
+   *       200:
+   *         description: Component map
+   *     deprecated: true
+   */
+  router.get('/components', requireScope('team-tracker:read'), function(req, res) {
     try {
-      res.json(readFromStorage('org-roster/components.json') || { components: {} });
+      const { teams } = buildEnrichedTeams();
+      const components = {};
+      for (const team of teams) {
+        for (const comp of (team.components || [])) {
+          if (!components[comp]) components[comp] = [];
+          if (!components[comp].includes(team.name)) {
+            components[comp].push(team.name);
+          }
+        }
+      }
+      res.set('X-Deprecated', 'Use team metadata components field instead');
+      res.json({ components });
     } catch {
       res.status(500).json({ error: 'Failed to load component data' });
     }
   });
 
-  router.get('/rfe-backlog', function(req, res) {
+  /**
+   * @openapi
+   * /api/modules/team-tracker/rfe-backlog:
+   *   get:
+   *     tags: ['OR: RFE']
+   *     summary: Get RFE backlog data by component and team
+   *     parameters:
+   *       - in: query
+   *         name: org
+   *         schema:
+   *           type: string
+   *         description: Filter by org name
+   *     responses:
+   *       200:
+   *         description: RFE backlog grouped by component and team
+   */
+  router.get('/rfe-backlog', requireScope('roster:read'), function(req, res) {
     try {
       const data = readFromStorage('org-roster/rfe-backlog.json');
       if (!data) return res.json({ byComponent: {}, byTeam: {} });
@@ -336,7 +517,17 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
     }
   });
 
-  router.get('/rfe-config', function(req, res) {
+  /**
+   * @openapi
+   * /api/modules/team-tracker/rfe-config:
+   *   get:
+   *     tags: ['OR: RFE']
+   *     summary: Get RFE configuration (Jira project, issue type, component mapping)
+   *     responses:
+   *       200:
+   *         description: RFE configuration
+   */
+  router.get('/rfe-config', requireScope('roster:read'), function(req, res) {
     try {
       const config = getOrgConfig();
       res.json({
@@ -352,12 +543,36 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
 
   // ─── Org Config ───
 
-  router.get('/org-config', requireAdmin, function(req, res) {
+  /**
+   * @openapi
+   * /api/modules/team-tracker/org-config:
+   *   get:
+   *     tags: ['OR: Config']
+   *     summary: Get org-roster configuration (admin)
+   *     responses:
+   *       200:
+   *         description: Org configuration object
+   *       403:
+   *         description: Admin access required
+   */
+  router.get('/org-config', requireAdmin, requireScope('roster:write'), function(req, res) {
     try { res.json(getOrgConfig()); }
     catch { res.status(500).json({ error: 'Failed to load configuration' }); }
   });
 
-  router.post('/org-config', requireAdmin, function(req, res) {
+  /**
+   * @openapi
+   * /api/modules/team-tracker/org-config:
+   *   post:
+   *     tags: ['OR: Config']
+   *     summary: Save org-roster configuration (admin)
+   *     responses:
+   *       200:
+   *         description: Updated configuration
+   *       403:
+   *         description: Admin access required
+   */
+  router.post('/org-config', requireAdmin, requireScope('roster:write'), function(req, res) {
     try {
       const body = req.body;
       if (!body || typeof body !== 'object' || Array.isArray(body)) {
@@ -382,7 +597,19 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
 
   // ─── Sheet Orgs & Configured Orgs (for org name mapping UI) ───
 
-  router.get('/sheet-orgs', requireAdmin, async function(req, res) {
+  /**
+   * @openapi
+   * /api/modules/team-tracker/sheet-orgs:
+   *   get:
+   *     tags: ['OR: Config']
+   *     summary: Get org names from Google Sheet or roster config (admin)
+   *     responses:
+   *       200:
+   *         description: List of org names from sheet
+   *       403:
+   *         description: Admin access required
+   */
+  router.get('/sheet-orgs', requireAdmin, requireScope('roster:write'), async function(req, res) {
     try {
       const config = getOrgConfig();
       const tabName = config.teamBoardsTab;
@@ -407,7 +634,17 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
     }
   });
 
-  router.get('/configured-orgs', function(req, res) {
+  /**
+   * @openapi
+   * /api/modules/team-tracker/configured-orgs:
+   *   get:
+   *     tags: ['OR: Config']
+   *     summary: Get configured org display names
+   *     responses:
+   *       200:
+   *         description: List of configured org names
+   */
+  router.get('/configured-orgs', requireScope('roster:read'), function(req, res) {
     try {
       const displayNames = buildOrgKeyToDisplayName();
       const orgs = Object.values(displayNames).sort();
@@ -420,7 +657,17 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
 
   // ─── Sheets Sync ───
 
-  router.get('/org-sync/status', function(req, res) {
+  /**
+   * @openapi
+   * /api/modules/team-tracker/org-sync/status:
+   *   get:
+   *     tags: ['OR: Sync']
+   *     summary: Get org sync status
+   *     responses:
+   *       200:
+   *         description: Sync status with last sync time and current state
+   */
+  router.get('/org-sync/status', requireScope('roster:read'), function(req, res) {
     try {
       const data = readFromStorage('org-roster/sync-status.json');
       res.json(data || { lastSyncAt: null, status: 'never', syncing: orgSyncInProgress });
@@ -463,7 +710,21 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
   // Export triggerOrgSync for unified endpoint
   _triggerOrgSync = triggerOrgSync;
 
-  router.post('/org-sync/trigger', requireAdmin, async function(req, res) {
+  /**
+   * @openapi
+   * /api/modules/team-tracker/org-sync/trigger:
+   *   post:
+   *     tags: ['OR: Sync']
+   *     summary: Trigger manual org sync (admin)
+   *     responses:
+   *       200:
+   *         description: Sync started
+   *       403:
+   *         description: Admin access required
+   *       409:
+   *         description: Sync already in progress
+   */
+  router.post('/org-sync/trigger', requireAdmin, requireScope('roster:write'), async function(req, res) {
     if (orgSyncInProgress) return res.status(409).json({ error: 'Sync already in progress' });
 
     res.json({ status: 'started' });
