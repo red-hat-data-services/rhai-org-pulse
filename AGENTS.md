@@ -125,3 +125,4 @@ make test-module MODULE=<name>  # Run integration tests for a module
 | `shared/API.md` | Shared export stability contract | All |
 | `docs/MODULES.md` | Module development guide | All |
 | `docs/DATA-FORMATS.md` | JSON schemas for data files | All |
+| `docs/GITLAB-CLASSIFICATION-PIPELINE.md` | External GitLab classification automation | All |
