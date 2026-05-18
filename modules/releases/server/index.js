@@ -109,11 +109,15 @@ function migrateStoragePaths(storage) {
 module.exports = function registerRoutes(router, context) {
   const { storage, requireAuth, requireAdmin, requireReleaseManager, requireScope, roleStore } = context;
 
-  // Run storage path migration on module startup
-  try {
-    migrateStoragePaths(storage);
-  } catch (err) {
-    console.error('[releases] Storage migration failed:', err.message);
+  // Run storage path migration on module startup (skip if already done)
+  const migrationMarker = storage.readFromStorage('releases/.migration-complete');
+  if (!migrationMarker) {
+    try {
+      migrateStoragePaths(storage);
+      storage.writeToStorage('releases/.migration-complete', { completedAt: new Date().toISOString() });
+    } catch (err) {
+      console.error('[releases] Storage migration failed:', err.message);
+    }
   }
 
   // Registry routes (top-level under /api/modules/releases/)

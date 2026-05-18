@@ -58,6 +58,7 @@ export function useReleaseAnalysis({ onLoaded } = {}) {
   const analysis = ref(null)
   let pollTimer = null
   let pollStart = 0
+  let unmounted = false
 
   function stopPolling() {
     if (pollTimer) {
@@ -67,7 +68,7 @@ export function useReleaseAnalysis({ onLoaded } = {}) {
   }
 
   async function pollRefreshStatus() {
-    if (Date.now() - pollStart > MAX_POLL_MS) {
+    if (unmounted || Date.now() - pollStart > MAX_POLL_MS) {
       stopPolling()
       refreshing.value = false
       return
@@ -85,7 +86,9 @@ export function useReleaseAnalysis({ onLoaded } = {}) {
       // Polling failure is non-critical; keep trying
     }
 
-    pollTimer = setTimeout(pollRefreshStatus, POLL_INTERVAL_MS)
+    if (!unmounted) {
+      pollTimer = setTimeout(pollRefreshStatus, POLL_INTERVAL_MS)
+    }
   }
 
   function startPolling() {
@@ -167,6 +170,7 @@ export function useReleaseAnalysis({ onLoaded } = {}) {
   })
 
   onUnmounted(() => {
+    unmounted = true
     stopPolling()
   })
 

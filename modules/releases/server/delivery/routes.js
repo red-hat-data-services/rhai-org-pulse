@@ -702,10 +702,12 @@ async function detectSprintWindow(config) {
  */
 async function fetchSprintIssueKeys(sprintId) {
   if (!sprintId) return new Set()
+  const sanitizedId = parseInt(sprintId, 10)
+  if (!Number.isFinite(sanitizedId)) return new Set()
   try {
     const issues = await fetchAllJqlResults(
       jiraRequest,
-      `sprint = ${sprintId}`,
+      `sprint = ${sanitizedId}`,
       'key',
       { maxResults: 100 }
     )
@@ -840,8 +842,11 @@ async function fetchDeliverableChildrenCounts(deliverableKeys) {
     batches.push(deliverableKeys.slice(i, i + batchSize))
   }
 
+  const JIRA_KEY_RE = /^[A-Z][A-Z0-9]+-\d+$/
   await Promise.all(batches.map(async (batch, idx) => {
-    const keysStr = batch.join(', ')
+    const safeBatch = batch.filter(k => JIRA_KEY_RE.test(k))
+    if (!safeBatch.length) return
+    const keysStr = safeBatch.join(', ')
     const jql = `"Epic Link" in (${keysStr}) ORDER BY key ASC`
     try {
       const children = await fetchAllJqlResults(

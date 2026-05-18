@@ -26,7 +26,7 @@
       "byUserType": { "Backend": 70, "Frontend": 48, "DevOps": 40, "QE": 25, "unknown": 15 },
       "byPermissionTier": { "admin": 25, "manager": 60, "user": 113 }
     },
-    "release-analysis::main": {
+    "releases::deliver": {
       "views": 156,
       "uniqueUsers": 15,
       "byUserType": { "Backend": 55, "Frontend": 38, "Full Stack": 30, "unknown": 33 },
@@ -38,7 +38,7 @@
       "byUserType": { "Backend": 30, "Frontend": 22, "DevOps": 18, "unknown": 19 },
       "byPermissionTier": { "admin": 15, "manager": 30, "user": 44 }
     },
-    "feature-traffic::features": {
+    "releases::execute": {
       "views": 67,
       "uniqueUsers": 10,
       "byUserType": { "Backend": 25, "Frontend": 18, "ML Engineer": 14, "unknown": 10 },
