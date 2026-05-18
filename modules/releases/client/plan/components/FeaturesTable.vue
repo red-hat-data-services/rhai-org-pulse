@@ -86,7 +86,7 @@ const groupedFeatures = computed(() => {
               <td class="px-3 py-2 border border-gray-300 dark:border-gray-600">
                 <div class="flex items-center gap-1">
                   <a
-                    :href="'#/releases/feature-detail?key=' + encodeURIComponent(item.data.issueKey)"
+                    :href="'#/releases/feature-detail?key=' + encodeURIComponent(item.data.issueKey) + '&from=plan'"
                     class="text-primary-600 dark:text-blue-400 font-mono text-xs hover:underline"
                   >{{ item.data.issueKey }}</a>
                   <a

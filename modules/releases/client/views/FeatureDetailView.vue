@@ -110,12 +110,15 @@ const hasDeliveryInsight = computed(() => {
 
 const fromRfe = computed(() => nav.params.value.fromRfe)
 const fromFeatureReview = computed(() => nav.params.value.fromFeatureReview)
+const fromPlan = computed(() => nav.params.value.from === 'plan')
 
 function goBack() {
   if (fromRfe.value) {
     crossNavigate('ai-impact', 'rfe-review', { select: fromRfe.value })
   } else if (fromFeatureReview.value) {
     crossNavigate('ai-impact', 'feature-review')
+  } else if (fromPlan.value) {
+    nav.navigateTo('plan')
   } else {
     nav.navigateTo('execute')
   }
@@ -296,7 +299,7 @@ onMounted(() => {
       class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-1"
       @click="goBack"
     >
-      &larr; {{ fromRfe ? 'Back to RFE Review' : fromFeatureReview ? 'Back to Feature Review' : 'Back to Execute' }}
+      &larr; {{ fromRfe ? 'Back to RFE Review' : fromFeatureReview ? 'Back to Feature Review' : fromPlan ? 'Back to Plan' : 'Back to Execute' }}
     </button>
 
     <!-- Loading -->

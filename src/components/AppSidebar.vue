@@ -461,13 +461,16 @@ function isNavItemActive(item, section) {
     // item.id is "slug::viewId"
     const [slug, viewId] = item.id.split('::')
     if (props.activeModule !== slug) return false
-    // Mark dashboard-like views as active for the default nav item
+    // Check if the active view is a hidden route mapped to this nav item
     const manifest = props.builtInManifests.find(m => m.slug === slug)
+    const hiddenRoutes = manifest?.client?.hiddenRoutes || {}
+    if (hiddenRoutes[props.activeViewId] === viewId) return true
+    // Mark dashboard-like views as active for the default nav item
     const defaultItem = manifest?.client?.navItems?.find(n => n.default)
     if (defaultItem && viewId === defaultItem.id) {
-      // Active for the default view AND any internal-only views
+      // Active for the default view AND any unmapped internal-only views
       const navViewIds = new Set((manifest.client?.navItems || []).map(n => n.id))
-      return props.activeViewId === viewId || !navViewIds.has(props.activeViewId)
+      return props.activeViewId === viewId || (!navViewIds.has(props.activeViewId) && !(props.activeViewId in hiddenRoutes))
     }
     return props.activeViewId === viewId
   }

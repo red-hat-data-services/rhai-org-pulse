@@ -15,7 +15,10 @@
       { "id": "reports", "label": "Reports", "icon": "BarChart3" },
       { "id": "audit", "label": "Audit", "icon": "History" }
     ],
-    "settingsComponent": "./client/components/ReleasesSettings.vue"
+    "settingsComponent": "./client/components/ReleasesSettings.vue",
+    "hiddenRoutes": {
+      "feature-detail": "execute"
+    }
   },
   "server": {
     "entry": "./server/index.js"

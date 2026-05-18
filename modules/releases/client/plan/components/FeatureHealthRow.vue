@@ -110,9 +110,9 @@ var flagSeverityClass = {
         >{{ feature.key }}</a>
         <span v-else class="font-mono text-xs text-gray-700 dark:text-gray-300">{{ feature.key }}</span>
         <a
-          :href="'#/releases/feature-detail?key=' + encodeURIComponent(feature.key)"
+          :href="'#/releases/feature-detail?key=' + encodeURIComponent(feature.key) + '&from=plan'"
           class="text-gray-400 hover:text-primary-600 dark:hover:text-blue-400"
-          title="View in Execute"
+          title="View feature detail"
           @click.stop
         >
           <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
