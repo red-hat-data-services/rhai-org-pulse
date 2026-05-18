@@ -774,7 +774,7 @@ function labelColorClasses(color) {
               </div>
               <div>
                 <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">Trigger</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Add the <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700/50 text-teal-600 dark:text-teal-400 text-xs rounded font-mono">ai1st-doc-create</code> label to the Jira issue needing documentation (preferably RHAISTRAT)</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Add the <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700/50 text-teal-600 dark:text-teal-400 text-xs rounded font-mono">ai1st-doc-start</code> label to the Jira issue needing documentation (preferably RHAISTRAT)</div>
                 <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">This at the moment for AI-First is the signal that dev work is completed and documentation can begin</div>
               </div>
             </div>
@@ -813,7 +813,7 @@ function labelColorClasses(color) {
           <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Jira Labels Reference</h3>
           <div class="space-y-2">
             <div class="flex items-center gap-3 p-2.5 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-              <code class="text-xs px-2 py-0.5 rounded whitespace-nowrap font-mono bg-green-500/15 text-green-600 dark:text-green-400">ai1st-doc-create</code>
+              <code class="text-xs px-2 py-0.5 rounded whitespace-nowrap font-mono bg-green-500/15 text-green-600 dark:text-green-400">ai1st-doc-start</code>
               <span class="text-xs text-gray-500 dark:text-gray-400">Add this label to trigger AI documentation generation</span>
             </div>
             <div class="flex items-center gap-3 p-2.5 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
@@ -833,7 +833,7 @@ function labelColorClasses(color) {
           <ul class="space-y-3">
             <li class="flex items-start gap-3">
               <Pencil :size="20" class="text-teal-600 dark:text-teal-400 flex-shrink-0 mt-0.5" />
-              <span class="text-sm text-gray-700 dark:text-gray-300">Add the <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700/50 text-teal-700 dark:text-teal-400 text-xs rounded font-mono">ai1st-doc-create</code> label to (preferably) RHAISTRAT issues that need documentation</span>
+              <span class="text-sm text-gray-700 dark:text-gray-300">Add the <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700/50 text-teal-700 dark:text-teal-400 text-xs rounded font-mono">ai1st-doc-start</code> label to (preferably) RHAISTRAT issues that need documentation</span>
             </li>
             <li class="flex items-start gap-3">
               <Eye :size="20" class="text-teal-600 dark:text-teal-400 flex-shrink-0 mt-0.5" />

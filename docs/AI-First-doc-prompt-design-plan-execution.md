@@ -24,7 +24,7 @@ semantic: check how many of the RHAISTRAT which are Dev-Complete and requing doc
 Row graph C.
 Y: Number of RHAISTRAT and RHOAIENG with `ai1st-doc-invoked` label or ``ai1st-doc-contributed` label which have been modified in the last 30days
 X: last rolling 30days
-semantic: check trend of the tool usage (the `ai1st-doc-create` label is substituted by `ai1st-doc-invoked` and then with `ai1st-doc-contributed` comes from the Merge Requests)
+semantic: check trend of the tool usage (the `ai1st-doc-start` label is substituted by `ai1st-doc-invoked` and then with `ai1st-doc-contributed` comes from the Merge Requests)
 note: modified in the last 30days to get the moving average and over the last rolling 30days to get the trend (2nd derivative)
 
 Table 
@@ -260,7 +260,7 @@ Layout (top to bottom):
    - Graph B: Coverage Rate (0–100%)
    - Graph C: Tool Activity (7-day rolling average, two series: invoked + contributed)
 
-4. **Features Ready for Documentation Table**: instruction banner for `ai1st-doc-create` label, then sortable/filterable table with Key, Summary, Status, AI-First Doc Contributed (Yes/Not yet), CCS Epic, MR Link(s) columns. Default sort: "Not yet" first. MR links displayed as `!1234` (GitLab) or `#123` (GitHub).
+4. **Features Ready for Documentation Table**: instruction banner for `ai1st-doc-start` label, then sortable/filterable table with Key, Summary, Status, AI-First Doc Contributed (Yes/Not yet), CCS Epic, MR Link(s) columns. Default sort: "Not yet" first. MR links displayed as `!1234` (GitLab) or `#123` (GitHub).
 
 5. **Completed with Documentation Table**: Resolved/Closed RHAISTRAT issues with `ai1st-doc-contributed` updated in last 30 days. Shows empty-state row when no matches.
 

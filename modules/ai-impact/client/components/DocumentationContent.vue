@@ -380,7 +380,7 @@ function mrLabel(url) {
               </div>
             </div>
             <div class="px-5 py-2.5 border-b border-gray-200 dark:border-gray-700 bg-indigo-50 dark:bg-indigo-500/10 text-xs text-gray-600 dark:text-gray-400">
-              To trigger AI-First documentation, add the label <code class="px-1.5 py-0.5 rounded-md bg-gray-200/80 dark:bg-gray-700/80 text-gray-800 dark:text-gray-200 font-mono text-[11px] border border-gray-300/60 dark:border-gray-600/60">ai1st-doc-create</code> to the Jira issue (preferably RHAISTRAT, but not required).
+              To trigger AI-First documentation, add the label <code class="px-1.5 py-0.5 rounded-md bg-gray-200/80 dark:bg-gray-700/80 text-gray-800 dark:text-gray-200 font-mono text-[11px] border border-gray-300/60 dark:border-gray-600/60">ai1st-doc-start</code> to the Jira issue (preferably RHAISTRAT, but not required).
             </div>
             <div class="overflow-x-auto">
               <table class="w-full text-sm">
