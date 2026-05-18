@@ -171,6 +171,9 @@ function phaseFeatureCount(tabId) {
 // ─── Filter options ───
 
 var bigRockOptions = computed(function() {
+  if (healthData.value && healthData.value.bigRockNames && healthData.value.bigRockNames.length > 0) {
+    return healthData.value.bigRockNames.slice().sort()
+  }
   var rocks = {}
   for (var i = 0; i < features.value.length; i++) {
     var rock = features.value[i].bigRock
