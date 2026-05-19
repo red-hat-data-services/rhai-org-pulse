@@ -244,6 +244,18 @@ function getFeaturePhaseSignal(phaseId) {
                 >
                   {{ getPhaseSignal(phase.id).detail }}
                 </button>
+                <a
+                  v-if="testPlan.gitlabPath"
+                  :href="`https://gitlab.com/redhat/rhel-ai/agentic-ci/test-plans-data/-/tree/main/${testPlan.gitlabPath}`"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="ml-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+                  title="View test plan in GitLab"
+                >
+                  <svg class="inline h-3 w-3" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M22.65 14.39L12 22.13 1.35 14.39a.84.84 0 0 1-.3-.94l1.22-3.78 2.44-7.51A.42.42 0 0 1 4.82 2a.43.43 0 0 1 .58 0 .42.42 0 0 1 .11.18l2.44 7.49h8.1l2.44-7.51A.42.42 0 0 1 18.6 2a.43.43 0 0 1 .58 0 .42.42 0 0 1 .11.18l2.44 7.51L23 13.45a.84.84 0 0 1-.35.94z"/>
+                  </svg>
+                </a>
               </template>
               <template v-else-if="phase.status === 'coming-soon' && phase.id !== 'feature-review' && phase.id !== 'build-release'">
                 <span class="text-gray-300 dark:text-gray-600">No signals yet</span>

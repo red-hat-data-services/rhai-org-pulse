@@ -32,7 +32,8 @@
         "humanReviewStatus": "approved",
         "approvedBy": "Alice Nguyen",
         "approvedAt": "2026-05-10T14:30:00Z",
-        "reviewedAt": "2026-05-10T12:00:00Z"
+        "reviewedAt": "2026-05-10T12:00:00Z",
+        "gitlabPath": "RHAISTRAT/20260510-120000-RHAISTRAT-1168/gpu_observability_dashboard"
       },
       "history": [
         {

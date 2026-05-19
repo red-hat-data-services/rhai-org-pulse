@@ -215,6 +215,34 @@ describe('validateTestPlan', () => {
     expect(result.valid).toBe(true);
     expect(result.data.humanReviewStatus).toBe('needs-review');
   });
+
+  describe('gitlabPath', () => {
+    it('accepts valid gitlabPath string', () => {
+      const result = validateTestPlan(makeValid({
+        gitlabPath: 'RHAISTRAT/20260510-120000-RHAISTRAT-1168/gpu_observability_dashboard'
+      }));
+      expect(result.valid).toBe(true);
+      expect(result.data.gitlabPath).toBe('RHAISTRAT/20260510-120000-RHAISTRAT-1168/gpu_observability_dashboard');
+    });
+
+    it('accepts omitted gitlabPath (optional field)', () => {
+      const result = validateTestPlan(makeValid());
+      expect(result.valid).toBe(true);
+      expect(result.data.gitlabPath).toBeUndefined();
+    });
+
+    it('rejects non-string gitlabPath', () => {
+      const result = validateTestPlan(makeValid({ gitlabPath: 123 }));
+      expect(result.valid).toBe(false);
+      expect(result.errors.some(e => e.includes('gitlabPath must be a string'))).toBe(true);
+    });
+
+    it('accepts null gitlabPath', () => {
+      const result = validateTestPlan(makeValid({ gitlabPath: null }));
+      expect(result.valid).toBe(true);
+      expect(result.data.gitlabPath).toBeUndefined();
+    });
+  });
 });
 
 describe('deriveHumanReviewStatus', () => {

@@ -202,6 +202,11 @@ function validateTestPlan(body) {
     }
   }
 
+  // gitlabPath: optional string (path to test plan in GitLab repo)
+  if (b.gitlabPath !== undefined && b.gitlabPath !== null && typeof b.gitlabPath !== 'string') {
+    errors.push('gitlabPath must be a string');
+  }
+
   if (errors.length > 0) {
     return { valid: false, errors };
   }
@@ -241,7 +246,8 @@ function validateTestPlan(body) {
       humanReviewStatus: resolvedHumanReviewStatus || undefined,
       approvedBy: b.approvedBy || undefined,
       approvedAt: b.approvedAt || undefined,
-      reviewedAt: b.reviewedAt
+      reviewedAt: b.reviewedAt,
+      gitlabPath: b.gitlabPath || undefined
     }
   };
 }
