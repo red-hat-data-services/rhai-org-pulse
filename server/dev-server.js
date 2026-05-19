@@ -161,8 +161,36 @@ app.get('/healthz', function(req, res) {
  *                   type: string
  *                   example: ok
  */
-app.get('/api/healthz', function(req, res) {
-  res.json({ status: 'ok' });
+app.get('/api/healthz', async function(req, res) {
+  const result = { status: 'ok', dependencies: {} };
+
+  // Check Product Builds FastAPI connectivity
+  try {
+    const { getConfig } = require('../modules/product-builds/server/index.js');
+    const config = getConfig(readFromStorage);
+    if (config.baseUrl) {
+      const start = Date.now();
+      try {
+        const upstream = await fetch(config.baseUrl, {
+          signal: AbortSignal.timeout(5000),
+          headers: { 'Accept': 'application/json' }
+        });
+        result.dependencies['aipcc-dashboard-api'] = {
+          status: upstream.ok ? 'ok' : 'degraded',
+          latency: Date.now() - start
+        };
+      } catch {
+        result.dependencies['aipcc-dashboard-api'] = {
+          status: 'unavailable',
+          latency: Date.now() - start
+        };
+      }
+    }
+  } catch {
+    // Module not loaded or not configured — skip
+  }
+
+  res.json(result);
 });
 
 /**

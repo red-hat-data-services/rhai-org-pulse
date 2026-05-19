@@ -229,8 +229,11 @@
 import {
   Home,
   BarChart3,
+  Box,
   Briefcase,
   Building2,
+  Factory,
+  PackageOpen,
   ChartColumnStacked,
   FolderOpen,
   FolderTree,
@@ -273,8 +276,11 @@ import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 
 const ICON_MAP = {
   BarChart3,
+  Box,
   Briefcase,
   Building2,
+  Factory,
+  PackageOpen,
   ChartColumnStacked,
   FolderOpen,
   FolderTree,
