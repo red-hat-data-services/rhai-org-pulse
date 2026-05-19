@@ -88,10 +88,53 @@ async function mainContentIsVisible(page) {
   return await mainContent.isVisible();
 }
 
+/**
+ * Counts the number of disabled navigation items on the page
+ *
+ * Checks for disabled state via:
+ * - aria-disabled attribute
+ * - disabled attribute
+ * - CSS classes (disabled, opacity-50)
+ * - CSS styles (cursor: not-allowed, pointer-events: none)
+ *
+ * @param {import('@playwright/test').Page} page - Playwright page object
+ * @returns {Promise<number>} - Count of disabled navigation items
+ */
+async function countDisabledNavItems(page) {
+  const navButtons = page.locator('aside nav button');
+  const count = await navButtons.count();
+
+  let disabledCount = 0;
+  for (let i = 0; i < count; i++) {
+    const button = navButtons.nth(i);
+    const buttonText = await button.textContent();
+
+    // Check if the button is disabled via various methods
+    const isAriaDisabled = await button.getAttribute('aria-disabled');
+    const isDisabledAttr = await button.getAttribute('disabled');
+    const hasDisabledClass = await button.evaluate(el => {
+      const classes = el.className || '';
+      const styles = window.getComputedStyle(el);
+      return classes.includes('disabled') ||
+             classes.includes('opacity-50') ||
+             styles.cursor === 'not-allowed' ||
+             styles.pointerEvents === 'none';
+    });
+
+    if (isAriaDisabled === 'true' || isDisabledAttr !== null || hasDisabledClass) {
+      disabledCount++;
+      console.log(`Found disabled menu item: "${buttonText}"`);
+    }
+  }
+
+  return disabledCount;
+}
+
 module.exports = {
   setupErrorTracking,
   logCapturedErrors,
   pageHasContent,
   pageLoadComplete,
-  mainContentIsVisible
+  mainContentIsVisible,
+  countDisabledNavItems
 };

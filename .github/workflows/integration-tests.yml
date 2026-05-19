@@ -40,13 +40,16 @@ jobs:
             feature-traffic:
               - 'modules/feature-traffic/**'
               - 'tests/integration/feature-traffic.spec.js'
+            system-health:
+              - 'modules/system-health/**'
+              - 'tests/integration/system-health.spec.js'
 
       - name: Build module matrix
         id: build-matrix
         run: |
           # If shared test files changed, then test all modules
           if [ "${{ steps.filter.outputs.shared-test-files }}" == "true" ]; then
-            MODULES='["ai-impact", "feature-traffic"]'
+            MODULES='["ai-impact", "feature-traffic", "system-health"]'
           else
             # Otherwise, use the modules that have direct changes
             MODULES='${{ steps.filter.outputs.changes }}'
