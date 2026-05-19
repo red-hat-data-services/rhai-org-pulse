@@ -1,0 +1,24 @@
+[
+  {
+    "key": "INFERENG-3456",
+    "summary": "Inference server memory leak with long-running requests",
+    "priority": "Critical",
+    "status": "Open",
+    "affectedVersions": ["rhoai-3.3"],
+    "components": ["Model Serving"],
+    "created": "2026-04-08T13:30:00.000Z",
+    "resolved": null,
+    "releaseDate": "2026-03-15"
+  },
+  {
+    "key": "INFERENG-3412",
+    "summary": "Model loading fails for ONNX runtime",
+    "priority": "Blocker",
+    "status": "Closed",
+    "affectedVersions": ["rhoai-3.2"],
+    "components": ["Model Serving"],
+    "created": "2026-01-15T10:15:00.000Z",
+    "resolved": "2026-01-22T16:40:00.000Z",
+    "releaseDate": "2025-12-10"
+  }
+]

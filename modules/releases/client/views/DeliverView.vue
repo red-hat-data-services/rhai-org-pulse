@@ -40,6 +40,7 @@ import ReleaseChipBar from '../deliver/components/ReleaseChipBar.vue'
 const RiskDashboard = defineAsyncComponent(() => import('../deliver/views/MainView.vue'))
 const ComponentBreakdown = defineAsyncComponent(() => import('../deliver/views/ProjectBreakdownView.vue'))
 const ConformaInsights = defineAsyncComponent(() => import('../deliver/views/ConformaExceptionsView.vue'))
+const PostReleaseDefects = defineAsyncComponent(() => import('../deliver/views/PostReleaseDefectsView.vue'))
 
 const { loading, refreshing, error, analysis, refreshAnalysis } = useReleaseAnalysis()
 
@@ -54,6 +55,7 @@ const tabs = [
   { id: 'risk-dashboard', label: 'Risk Dashboard' },
   { id: 'component-breakdown', label: 'Component Breakdown' },
   { id: 'conforma-insights', label: 'Conforma Insights' },
+  { id: 'post-release-defects', label: 'Post-Release Defects' },
 ]
 
 const activeTab = ref('risk-dashboard')
@@ -62,6 +64,7 @@ const componentMap = {
   'risk-dashboard': RiskDashboard,
   'component-breakdown': ComponentBreakdown,
   'conforma-insights': ConformaInsights,
+  'post-release-defects': PostReleaseDefects,
 }
 
 const activeComponent = computed(() => componentMap[activeTab.value])

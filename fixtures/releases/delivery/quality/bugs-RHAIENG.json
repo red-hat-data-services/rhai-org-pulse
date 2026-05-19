@@ -1,0 +1,13 @@
+[
+  {
+    "key": "RHAIENG-5123",
+    "summary": "Model registry API returns stale metadata",
+    "priority": "Major",
+    "status": "Closed",
+    "affectedVersions": ["rhoai-3.3"],
+    "components": ["Model Registry"],
+    "created": "2026-03-28T11:45:00.000Z",
+    "resolved": "2026-04-05T14:20:00.000Z",
+    "releaseDate": "2026-03-15"
+  }
+]

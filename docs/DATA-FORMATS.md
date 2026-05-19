@@ -725,6 +725,82 @@ Admin-configurable settings for the Releases module delivery domain (formerly Re
 
 ---
 
+## Releases — Quality Versions (`data/releases/delivery/quality/versions.json`)
+
+All fix versions with release dates from tracked projects (RHOAIENG, AIPCC, RHAIENG, INFERENG).
+
+```json
+[
+  {
+    "name": "rhoai-3.3",
+    "releaseDate": "2026-03-15",
+    "project": "RHOAIENG",
+    "released": true
+  }
+]
+```
+
+**Fields:**
+- `name` (string): Version name from Jira fix version
+- `releaseDate` (string): ISO date (YYYY-MM-DD) when version was released
+- `project` (string): Jira project key
+- `released` (boolean): Whether version is marked as released in Jira
+
+---
+
+## Releases — Quality Bugs (`data/releases/delivery/quality/bugs-{PROJECT}.json`)
+
+Blocker/Critical/Major bugs with affected versions, per project. Only bugs created >= version release date (post-release discovery).
+
+```json
+[
+  {
+    "key": "RHOAIENG-15234",
+    "summary": "Dashboard fails to load when multiple models are deployed",
+    "priority": "Critical",
+    "status": "Closed",
+    "affectedVersions": ["rhoai-3.3"],
+    "components": ["Dashboard"],
+    "created": "2026-03-20T10:15:00.000Z",
+    "resolved": "2026-03-22T14:30:00.000Z",
+    "releaseDate": "2026-03-15"
+  }
+]
+```
+
+**Fields:**
+- `key` (string): Jira issue key
+- `summary` (string): Issue summary
+- `priority` (string): Priority name (Blocker, Critical, or Major)
+- `status` (string): Current Jira status
+- `affectedVersions` (string[]): Array of version names this bug affects
+- `components` (string[]): Array of component names
+- `created` (string): ISO timestamp when bug was filed
+- `resolved` (string | null): ISO timestamp when bug was resolved, or null if open
+- `releaseDate` (string): Earliest release date among affected versions (for filtering)
+
+**Files:**
+- `bugs-RHOAIENG.json`
+- `bugs-AIPCC.json`
+- `bugs-RHAIENG.json`
+- `bugs-INFERENG.json`
+
+---
+
+## Releases — Quality Components (`data/releases/delivery/quality/components.json`)
+
+All unique component names from the tracked projects, sorted alphabetically.
+
+```json
+[
+  "Dashboard",
+  "Data Science Pipelines",
+  "Model Serving"
+]
+```
+
+---
+
 ## API Tokens — `data/api-tokens.json`
 
 Stores hashed API tokens for bearer-token authentication. Created on first token creation.

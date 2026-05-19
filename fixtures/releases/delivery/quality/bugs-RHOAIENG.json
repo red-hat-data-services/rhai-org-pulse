@@ -1,0 +1,189 @@
+[
+  {
+    "key": "RHOAIENG-15234",
+    "summary": "Dashboard fails to load when multiple models are deployed",
+    "priority": "Critical",
+    "status": "Closed",
+    "affectedVersions": ["rhoai-3.3"],
+    "components": ["Dashboard"],
+    "created": "2026-03-20T10:15:00.000Z",
+    "resolved": "2026-03-22T14:30:00.000Z",
+    "releaseDate": "2026-03-15"
+  },
+  {
+    "key": "RHOAIENG-15267",
+    "summary": "Model serving timeout in high-load scenarios",
+    "priority": "Blocker",
+    "status": "Closed",
+    "affectedVersions": ["rhoai-3.3"],
+    "components": ["Model Serving"],
+    "created": "2026-03-18T08:45:00.000Z",
+    "resolved": "2026-03-19T16:20:00.000Z",
+    "releaseDate": "2026-03-15"
+  },
+  {
+    "key": "RHOAIENG-15289",
+    "summary": "Workbench pods fail to start with custom images",
+    "priority": "Major",
+    "status": "In Progress",
+    "affectedVersions": ["rhoai-3.3"],
+    "components": ["Workbenches"],
+    "created": "2026-03-25T14:20:00.000Z",
+    "resolved": null,
+    "releaseDate": "2026-03-15"
+  },
+  {
+    "key": "RHOAIENG-15312",
+    "summary": "Data science pipeline fails with large datasets",
+    "priority": "Critical",
+    "status": "Open",
+    "affectedVersions": ["rhoai-3.3"],
+    "components": ["Data Science Pipelines"],
+    "created": "2026-04-02T11:30:00.000Z",
+    "resolved": null,
+    "releaseDate": "2026-03-15"
+  },
+  {
+    "key": "RHOAIENG-15345",
+    "summary": "GPU allocation fails in multi-user environment",
+    "priority": "Blocker",
+    "status": "In Progress",
+    "affectedVersions": ["rhoai-3.3"],
+    "components": ["Workbenches", "Model Serving"],
+    "created": "2026-04-10T09:15:00.000Z",
+    "resolved": null,
+    "releaseDate": "2026-03-15"
+  },
+  {
+    "key": "RHOAIENG-14892",
+    "summary": "Dashboard metrics not updating in real-time",
+    "priority": "Major",
+    "status": "Closed",
+    "affectedVersions": ["rhoai-3.2"],
+    "components": ["Dashboard"],
+    "created": "2025-12-15T10:00:00.000Z",
+    "resolved": "2025-12-18T15:45:00.000Z",
+    "releaseDate": "2025-12-10"
+  },
+  {
+    "key": "RHOAIENG-14923",
+    "summary": "Model deployment fails with TensorFlow models",
+    "priority": "Critical",
+    "status": "Closed",
+    "affectedVersions": ["rhoai-3.2"],
+    "components": ["Model Serving"],
+    "created": "2025-12-12T14:30:00.000Z",
+    "resolved": "2025-12-20T11:20:00.000Z",
+    "releaseDate": "2025-12-10"
+  },
+  {
+    "key": "RHOAIENG-14956",
+    "summary": "Pipeline execution hangs on step transition",
+    "priority": "Blocker",
+    "status": "Closed",
+    "affectedVersions": ["rhoai-3.2"],
+    "components": ["Data Science Pipelines"],
+    "created": "2025-12-22T09:15:00.000Z",
+    "resolved": "2026-01-05T16:30:00.000Z",
+    "releaseDate": "2025-12-10"
+  },
+  {
+    "key": "RHOAIENG-14989",
+    "summary": "Notebook server crashes with CUDA out of memory",
+    "priority": "Critical",
+    "status": "Closed",
+    "affectedVersions": ["rhoai-3.2"],
+    "components": ["Workbenches"],
+    "created": "2026-01-08T13:45:00.000Z",
+    "resolved": "2026-01-15T10:20:00.000Z",
+    "releaseDate": "2025-12-10"
+  },
+  {
+    "key": "RHOAIENG-15012",
+    "summary": "Storage quota not enforced correctly",
+    "priority": "Major",
+    "status": "Closed",
+    "affectedVersions": ["rhoai-3.2"],
+    "components": ["Dashboard"],
+    "created": "2026-01-20T11:30:00.000Z",
+    "resolved": "2026-02-03T14:15:00.000Z",
+    "releaseDate": "2025-12-10"
+  },
+  {
+    "key": "RHOAIENG-15045",
+    "summary": "Distributed training job fails to start",
+    "priority": "Blocker",
+    "status": "Closed",
+    "affectedVersions": ["rhoai-3.2"],
+    "components": ["Distributed Workloads"],
+    "created": "2026-02-10T08:20:00.000Z",
+    "resolved": "2026-02-18T16:45:00.000Z",
+    "releaseDate": "2025-12-10"
+  },
+  {
+    "key": "RHOAIENG-15078",
+    "summary": "Model registry fails to sync across clusters",
+    "priority": "Critical",
+    "status": "Closed",
+    "affectedVersions": ["rhoai-3.2"],
+    "components": ["Model Registry"],
+    "created": "2026-03-05T10:15:00.000Z",
+    "resolved": "2026-03-12T13:30:00.000Z",
+    "releaseDate": "2025-12-10"
+  },
+  {
+    "key": "RHOAIENG-14234",
+    "summary": "Authentication loop in dashboard",
+    "priority": "Major",
+    "status": "Closed",
+    "affectedVersions": ["rhoai-3.1"],
+    "components": ["Dashboard"],
+    "created": "2025-09-25T09:30:00.000Z",
+    "resolved": "2025-09-28T14:20:00.000Z",
+    "releaseDate": "2025-09-20"
+  },
+  {
+    "key": "RHOAIENG-14267",
+    "summary": "Model inference returns incorrect results",
+    "priority": "Blocker",
+    "status": "Closed",
+    "affectedVersions": ["rhoai-3.1"],
+    "components": ["Model Serving"],
+    "created": "2025-09-22T11:15:00.000Z",
+    "resolved": "2025-09-24T16:40:00.000Z",
+    "releaseDate": "2025-09-20"
+  },
+  {
+    "key": "RHOAIENG-14289",
+    "summary": "Pipeline artifacts missing after execution",
+    "priority": "Critical",
+    "status": "Closed",
+    "affectedVersions": ["rhoai-3.1"],
+    "components": ["Data Science Pipelines"],
+    "created": "2025-10-05T10:45:00.000Z",
+    "resolved": "2025-10-12T15:30:00.000Z",
+    "releaseDate": "2025-09-20"
+  },
+  {
+    "key": "RHOAIENG-14312",
+    "summary": "Workbench fails to save large notebooks",
+    "priority": "Major",
+    "status": "Closed",
+    "affectedVersions": ["rhoai-3.1"],
+    "components": ["Workbenches"],
+    "created": "2025-10-18T14:20:00.000Z",
+    "resolved": "2025-10-25T11:45:00.000Z",
+    "releaseDate": "2025-09-20"
+  },
+  {
+    "key": "RHOAIENG-14345",
+    "summary": "Distributed training hangs during checkpoint",
+    "priority": "Critical",
+    "status": "Closed",
+    "affectedVersions": ["rhoai-3.1"],
+    "components": ["Distributed Workloads"],
+    "created": "2025-11-02T09:15:00.000Z",
+    "resolved": "2025-11-10T16:20:00.000Z",
+    "releaseDate": "2025-09-20"
+  }
+]

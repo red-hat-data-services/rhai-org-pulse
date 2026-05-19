@@ -286,6 +286,9 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/modules/releases/delivery/conforma/releases` — conforma releases
 - `/api/modules/releases/delivery/conforma/releases/:version` — conforma release detail
 - `/api/modules/releases/delivery/conforma/status` — conforma data status
+- `/api/modules/releases/delivery/quality/versions` — quality versions with bug counts
+- `/api/modules/releases/delivery/quality/bugs` — cumulative bug data for selected versions
+- `/api/modules/releases/delivery/quality/components` — components with bug counts
 - `/api/modules/ai-impact/assessments` — all assessments
 - `/api/modules/ai-impact/assessments/:key` — single assessment + history
 - `/api/modules/ai-impact/assessments/status` — assessment status (admin)
@@ -370,6 +373,7 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/modules/releases/delivery/refresh` — refresh delivery data (admin)
 - `/api/modules/releases/delivery/admin/releases` — upload releases (admin)
 - `/api/modules/releases/delivery/conforma/bulk` — full replace conforma data (admin)
+- `/api/modules/releases/delivery/quality/refresh` — refresh quality data from Jira (admin)
 - `/api/modules/ai-impact/assessments/bulk` — bulk upsert assessments (admin)
 - `/api/modules/ai-impact/features/bulk` — bulk upsert features (admin)
 - `/api/modules/ai-impact/test-plans/bulk` — bulk upsert test plans (admin)
