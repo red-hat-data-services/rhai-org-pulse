@@ -1,4 +1,4 @@
-const jira = require('../../../../shared/server/jira');
+const jira = require('../../../../../shared/server/jira');
 
 async function fetchVersions(projects, { jiraFetch } = {}) {
   const request = jiraFetch || jira.jiraRequest;
@@ -19,7 +19,7 @@ async function fetchVersions(projects, { jiraFetch } = {}) {
         }
       }
     } catch (error) {
-      console.warn(`[release-analysis/quality] Failed to fetch versions for ${project}:`, error.message);
+      console.warn(`[releases/quality] Failed to fetch versions for ${project}:`, error.message);
     }
   }
 
@@ -99,7 +99,7 @@ async function fetchBugs(project, versions, { jiraFetchAll } = {}) {
       bug.releaseDate && new Date(bug.created) >= new Date(bug.releaseDate)
     );
   } catch (error) {
-    console.error(`[release-analysis/quality] Failed to fetch bugs for ${project}:`, error.message);
+    console.error(`[releases/quality] Failed to fetch bugs for ${project}:`, error.message);
     return [];
   }
 }

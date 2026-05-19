@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { computeCumulativeBugData } from '../../server/quality/calculations.js'
+import { computeCumulativeBugData } from '../../../server/delivery/quality/calculations.js'
 
 describe('computeCumulativeBugData', () => {
   it('returns empty datasets when no bugs', () => {

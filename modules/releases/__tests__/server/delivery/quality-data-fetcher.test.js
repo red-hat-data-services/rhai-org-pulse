@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { fetchVersions, fetchBugs } from '../../server/quality/data-fetcher.js'
+import { fetchVersions, fetchBugs } from '../../../server/delivery/quality/data-fetcher.js'
 
 describe('fetchVersions', () => {
   it('fetches and deduplicates versions from multiple projects', async () => {
