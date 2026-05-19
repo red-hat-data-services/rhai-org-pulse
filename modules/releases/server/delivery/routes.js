@@ -1271,7 +1271,7 @@ module.exports = function registerRoutes(router, context) {
 
   /**
    * @openapi
-   * /api/modules/releases/quality/versions:
+   * /api/modules/releases/delivery/quality/versions:
    *   get:
    *     tags: ['Releases: Quality']
    *     summary: List release versions with bug counts
@@ -1313,7 +1313,7 @@ module.exports = function registerRoutes(router, context) {
 
   /**
    * @openapi
-   * /api/modules/releases/quality/bugs:
+   * /api/modules/releases/delivery/quality/bugs:
    *   get:
    *     tags: ['Releases: Quality']
    *     summary: Get cumulative bug data for selected versions
@@ -1366,7 +1366,7 @@ module.exports = function registerRoutes(router, context) {
 
   /**
    * @openapi
-   * /api/modules/releases/quality/components:
+   * /api/modules/releases/delivery/quality/components:
    *   get:
    *     tags: ['Releases: Quality']
    *     summary: List components with bug counts
@@ -1398,7 +1398,7 @@ module.exports = function registerRoutes(router, context) {
 
   /**
    * @openapi
-   * /api/modules/releases/quality/refresh:
+   * /api/modules/releases/delivery/quality/refresh:
    *   post:
    *     tags: ['Releases: Quality']
    *     summary: Refresh quality data from Jira (admin)
