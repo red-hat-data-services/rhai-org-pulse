@@ -1,0 +1,68 @@
+<!-- Space: {{SPACE_KEY}} -->
+<!-- Title: Org Pulse — How to Engage -->
+<!-- Parent: {{PARENT_PAGE}} -->
+
+# How to Engage — Org Pulse Application Team
+
+This page defines how other teams interact with the Org Pulse platform team — what we offer, how to reach us, and what to expect.
+
+## Team Identity
+
+| Field | Value |
+|---|---|
+| **Team Name** | Org Pulse Application Team |
+| **Platform Lead** | {{LEAD_NAME}} ({{LEAD_GITHUB}}) |
+| **Platform Co-Lead** | {{COLEAD_NAME}} ({{COLEAD_GITHUB}}) |
+
+## Team Focus
+
+Provide self-service delivery visibility and organizational intelligence to RHAI engineering teams, enabling data-driven decision-making without manual data gathering.
+
+## Services Provided
+
+{{SERVICES_TABLE}}
+
+## How Teams Engage With Us
+
+| Consuming Team | Engagement Model | Purpose | Duration |
+|---|---|---|---|
+| RHAI Delivery Teams | **Self-Service** | Consume dashboards and APIs for delivery metrics | Ongoing |
+| Program Office | **Self-Service** | Consume release analysis and feature traffic data | Ongoing |
+| RHAI Leadership | **Self-Service** | Consume org-wide trends and AI impact metrics | Ongoing |
+| New Module Contributors | **Collaboration** | Co-develop new modules during initial build phase | Time-boxed |
+
+## Software Owned & Maintained
+
+| System | Repository | Purpose |
+|---|---|---|
+| Org Pulse Application | [rhai-org-pulse]({{REPO_URL}}) | Platform application (Vue 3 + Express.js) |
+| OpenShift Deployment | [deploy/openshift/]({{REPO_URL}}/tree/main/deploy/openshift) | Kustomize overlays (dev, preprod, prod) |
+| CI/CD Pipelines | [.github/workflows/]({{REPO_URL}}/tree/main/.github/workflows) | GitHub Actions for lint, test, build, image push |
+
+## Service Level Expectations
+
+| Metric | Target |
+|---|---|
+| **Availability** | Best-effort during business hours (US/APAC) |
+| **Data Freshness** | Daily sync at 06:00 UTC via CronJob |
+| **Incident Response** | Slack channel / GitHub issues |
+| **API Stability** | Shared API contract documented in [shared/API.md]({{REPO_URL}}/blob/main/shared/API.md) |
+
+## Communication Channels
+
+| Channel | Purpose |
+|---|---|
+| **GitHub Issues** | Bug reports, feature requests, module proposals |
+| **Pull Requests** | Code contributions (all PRs require review) |
+| **Slack** | Real-time questions and support |
+
+## Versioning Approach
+
+- Production images use **git SHA pinning** (e.g., `abc1234`)
+- Dev/preprod environments use `:latest` tags
+- API changes follow the shared API stability contract
+- Module manifests (`module.json`) are versioned with the application
+
+---
+
+*This page is auto-generated from the Org Pulse repository. To propose changes, submit a PR to [docs/confluence/]({{REPO_URL}}/tree/main/docs/confluence).*

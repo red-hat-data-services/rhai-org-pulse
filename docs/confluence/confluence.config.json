@@ -1,0 +1,89 @@
+{
+  "confluence": {
+    "spaceKey": "RHAI",
+    "parentPageTitle": "Org Pulse Application",
+    "baseUrl": "https://redhat.atlassian.net/wiki"
+  },
+  "platform": {
+    "name": "Org Pulse",
+    "consumptionModel": "Self-Service",
+    "prodUrl": "https://team-tracker.apps.int.spoke.prod.us-west-2.aws.paas.redhat.com/",
+    "repoUrl": "https://github.com/red-hat-data-services/rhai-org-pulse",
+    "apiDocsPath": "/api/docs",
+    "lead": {
+      "name": "Saiesh Prabhu",
+      "github": "@saprabhu05",
+      "role": "Platform Lead"
+    },
+    "coLead": {
+      "name": "Erle Marion",
+      "github": "@emarion",
+      "role": "Platform Co-Lead"
+    }
+  },
+  "modules": {
+    "team-tracker": {
+      "owner": "@accorvin",
+      "ownerName": "Alex Corvin",
+      "status": "Active",
+      "audiences": {
+        "roles": ["Individual Contributors", "Team Leads", "Managers", "Directors"],
+        "teams": ["RHAI Engineering", "RHAI Platform"]
+      }
+    },
+    "org-roster": {
+      "owner": "@accorvin",
+      "ownerName": "Alex Corvin",
+      "status": "Active",
+      "audiences": {
+        "roles": ["Team Leads", "Managers", "Program Managers"],
+        "teams": ["RHAI Engineering", "Program Office"]
+      }
+    },
+    "release-analysis": {
+      "owner": "@saprabhu05",
+      "ownerName": "Saiesh Prabhu",
+      "status": "Active",
+      "audiences": {
+        "roles": ["Program Managers", "Managers", "Directors"],
+        "teams": ["Program Office", "RHAI Engineering"]
+      }
+    },
+    "feature-traffic": {
+      "owner": "Unassigned",
+      "ownerName": "Unassigned",
+      "status": "Active",
+      "audiences": {
+        "roles": ["Program Managers", "Team Leads"],
+        "teams": ["Program Office", "RHAI Engineering"]
+      }
+    },
+    "ai-impact": {
+      "owner": "@accorvin",
+      "ownerName": "Alex Corvin",
+      "status": "Active",
+      "audiences": {
+        "roles": ["Managers", "Directors", "Program Managers"],
+        "teams": ["RHAI Leadership", "Program Office"]
+      }
+    },
+    "allocation-tracker": {
+      "owner": "Unassigned",
+      "ownerName": "Unassigned",
+      "status": "Beta (Disabled by Default)",
+      "audiences": {
+        "roles": ["Team Leads", "Managers"],
+        "teams": ["RHAI Engineering", "Program Office"]
+      }
+    },
+    "upstream-pulse": {
+      "owner": "Unassigned",
+      "ownerName": "Unassigned",
+      "status": "Beta (Disabled by Default)",
+      "audiences": {
+        "roles": ["Individual Contributors", "Team Leads", "Managers"],
+        "teams": ["RHAI Engineering", "Open Source Program Office"]
+      }
+    }
+  }
+}
