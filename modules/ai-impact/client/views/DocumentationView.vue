@@ -1,6 +1,7 @@
 <script setup>
 import { useDocumentation } from '../composables/useDocumentation.js'
 import DocumentationContent from '../components/DocumentationContent.vue'
+import AIImpactGuide from '../components/AIImpactGuide.vue'
 
 const { docData, loading, error, load } = useDocumentation()
 </script>
@@ -13,5 +14,6 @@ const { docData, loading, error, load } = useDocumentation()
       :docData="docData"
       @retry="load"
     />
+    <AIImpactGuide defaultTab="enablement" />
   </div>
 </template>

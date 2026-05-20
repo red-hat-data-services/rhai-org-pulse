@@ -2,6 +2,10 @@
 import { ref, onMounted } from 'vue'
 import AssessmentGuideModal from './AssessmentGuideModal.vue'
 
+const props = defineProps({
+  defaultTab: { type: String, default: null }
+})
+
 const DISMISS_KEY = 'ai-impact-guide-dismissed'
 
 const showGuideModal = ref(false)
@@ -9,6 +13,7 @@ const initialTab = ref(null)
 
 onMounted(() => {
   if (localStorage.getItem(DISMISS_KEY) !== 'true') {
+    initialTab.value = props.defaultTab
     showGuideModal.value = true
   }
 })
