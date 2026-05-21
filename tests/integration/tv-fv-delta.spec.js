@@ -106,23 +106,25 @@ const FIXTURE_DATA = {
 };
 
 // ---------------------------------------------------------------------------
-// Module manifest for release-planning (includes tv-fv-delta nav item)
+// Module manifest for releases (includes tv-fv-delta nav item)
 // ---------------------------------------------------------------------------
 
-const RELEASE_PLANNING_MANIFEST = {
-  name: 'Release Planning',
-  slug: 'release-planning',
+const RELEASES_MANIFEST = {
+  name: 'Releases',
+  slug: 'releases',
   defaultEnabled: true,
-  description: 'RHOAI release planning dashboard',
-  icon: 'clipboard-list',
-  order: 20,
+  description: 'Unified release lifecycle: planning, execution tracking, and delivery readiness',
+  icon: 'rocket',
+  order: 10,
   client: {
     entry: './client/index.js',
     navItems: [
-      { id: 'main', label: 'Outcomes', icon: 'ClipboardList', default: true },
-      { id: 'health', label: 'Release Plan Health', icon: 'HeartPulse' },
+      { id: 'plan', label: 'Plan', icon: 'ClipboardList', default: true },
+      { id: 'execute', label: 'Execute', icon: 'GitBranch' },
+      { id: 'deliver', label: 'Deliver', icon: 'Rocket' },
+      { id: 'reports', label: 'Reports', icon: 'BarChart3' },
       { id: 'tv-fv-delta', label: 'TV/FV Delta', icon: 'GitCompareArrows' },
-      { id: 'audit-log', label: 'Audit Log', icon: 'History' }
+      { id: 'audit', label: 'Audit', icon: 'History' }
     ]
   },
   server: { entry: './server/index.js' }
@@ -160,7 +162,7 @@ async function mockAllApis(page, tvfvData) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify([RELEASE_PLANNING_MANIFEST, DEEP_ANALYTICS_MANIFEST])
+      body: JSON.stringify([RELEASES_MANIFEST, DEEP_ANALYTICS_MANIFEST])
     });
   });
 
@@ -169,7 +171,7 @@ async function mockAllApis(page, tvfvData) {
     route.fulfill({
       status: 200,
       contentType: 'application/json',
-      body: JSON.stringify({ 'release-planning': true, 'deep-analytics': true })
+      body: JSON.stringify({ 'releases': true, 'deep-analytics': true })
     });
   });
 
@@ -244,7 +246,7 @@ test.describe('TV/FV Delta — View Loading @tv-fv-delta', () => {
 
   test('should load the view without JavaScript errors', async ({ page }) => {
     await mockAllApis(page);
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -253,7 +255,7 @@ test.describe('TV/FV Delta — View Loading @tv-fv-delta', () => {
 
   test('should render the page heading and subtitle', async ({ page }) => {
     await mockAllApis(page);
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -268,7 +270,7 @@ test.describe('TV/FV Delta — View Loading @tv-fv-delta', () => {
 
   test('should render metadata line with timestamps and staleness note', async ({ page }) => {
     await mockAllApis(page);
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -296,7 +298,7 @@ test.describe('TV/FV Delta — View Loading @tv-fv-delta', () => {
     });
 
     await mockAllApis(page);
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -319,7 +321,7 @@ test.describe('TV/FV Delta — Executive Summary @tv-fv-delta', () => {
   });
 
   test('should render the executive summary table with correct headers', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -337,7 +339,7 @@ test.describe('TV/FV Delta — Executive Summary @tv-fv-delta', () => {
   });
 
   test('should render one row per release in timeline order', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -358,7 +360,7 @@ test.describe('TV/FV Delta — Executive Summary @tv-fv-delta', () => {
   });
 
   test('should display correct counts in executive summary', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -376,7 +378,7 @@ test.describe('TV/FV Delta — Executive Summary @tv-fv-delta', () => {
   });
 
   test('should colour-code alignment percentages', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -396,7 +398,7 @@ test.describe('TV/FV Delta — Executive Summary @tv-fv-delta', () => {
   });
 
   test('should highlight the selected release row', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -411,7 +413,7 @@ test.describe('TV/FV Delta — Executive Summary @tv-fv-delta', () => {
   });
 
   test('should select release when clicking executive summary row', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -435,7 +437,7 @@ test.describe('TV/FV Delta — Executive Summary @tv-fv-delta', () => {
   });
 
   test('should render executive summary counts as clickable Jira links', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -462,7 +464,7 @@ test.describe('TV/FV Delta — Release Tabs @tv-fv-delta', () => {
   });
 
   test('should render release tab buttons for all releases', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -475,7 +477,7 @@ test.describe('TV/FV Delta — Release Tabs @tv-fv-delta', () => {
   });
 
   test('should highlight the active release tab', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -493,7 +495,7 @@ test.describe('TV/FV Delta — Release Tabs @tv-fv-delta', () => {
   });
 
   test('should switch release when clicking a tab', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -527,7 +529,7 @@ test.describe('TV/FV Delta — Category Sections @tv-fv-delta', () => {
   });
 
   test('should render all four category sections for EA1', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -542,7 +544,7 @@ test.describe('TV/FV Delta — Category Sections @tv-fv-delta', () => {
   });
 
   test('should show correct counts in category headings', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -555,7 +557,7 @@ test.describe('TV/FV Delta — Category Sections @tv-fv-delta', () => {
   });
 
   test('should update category counts when switching releases', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -573,7 +575,7 @@ test.describe('TV/FV Delta — Category Sections @tv-fv-delta', () => {
   });
 
   test('should show "View in Jira" links on each category section', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -586,7 +588,7 @@ test.describe('TV/FV Delta — Category Sections @tv-fv-delta', () => {
   });
 
   test('should hide Mismatched section when count is zero', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -614,7 +616,7 @@ test.describe('TV/FV Delta — Collapsible Behaviour @tv-fv-delta', () => {
   });
 
   test('should start with all category sections collapsed', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -632,7 +634,7 @@ test.describe('TV/FV Delta — Collapsible Behaviour @tv-fv-delta', () => {
   });
 
   test('should expand a section when clicking its summary', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -654,7 +656,7 @@ test.describe('TV/FV Delta — Collapsible Behaviour @tv-fv-delta', () => {
   });
 
   test('should retain open/closed state when switching releases', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -691,7 +693,7 @@ test.describe('TV/FV Delta — Collapsible Behaviour @tv-fv-delta', () => {
   });
 
   test('should have disclosure triangles that rotate on open', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -717,7 +719,7 @@ test.describe('TV/FV Delta — Feature Tables @tv-fv-delta', () => {
   });
 
   test('should render feature rows when section is expanded', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -733,7 +735,7 @@ test.describe('TV/FV Delta — Feature Tables @tv-fv-delta', () => {
   });
 
   test('should render feature keys as clickable Jira links', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -751,7 +753,7 @@ test.describe('TV/FV Delta — Feature Tables @tv-fv-delta', () => {
   });
 
   test('should display correct columns for standard categories', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -775,7 +777,7 @@ test.describe('TV/FV Delta — Feature Tables @tv-fv-delta', () => {
   });
 
   test('should display extra TV/FV columns for mismatched category', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -802,7 +804,7 @@ test.describe('TV/FV Delta — Feature Tables @tv-fv-delta', () => {
   });
 
   test('should render color status as badges', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -826,7 +828,7 @@ test.describe('TV/FV Delta — Feature Tables @tv-fv-delta', () => {
   });
 
   test('should sort columns when clicking headers', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -872,7 +874,7 @@ test.describe('TV/FV Delta — Feature Tables @tv-fv-delta', () => {
   });
 
   test('should update feature rows when switching releases', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -911,7 +913,7 @@ test.describe('TV/FV Delta — Component Breakdown @tv-fv-delta', () => {
   });
 
   test('should render component breakdown section', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -922,7 +924,7 @@ test.describe('TV/FV Delta — Component Breakdown @tv-fv-delta', () => {
   });
 
   test('should show per-release component data (EA1 has Serving with 3 features)', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -939,7 +941,7 @@ test.describe('TV/FV Delta — Component Breakdown @tv-fv-delta', () => {
   });
 
   test('should update component breakdown when switching releases', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -967,7 +969,7 @@ test.describe('TV/FV Delta — Component Breakdown @tv-fv-delta', () => {
   });
 
   test('should display correct component breakdown columns', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -986,7 +988,7 @@ test.describe('TV/FV Delta — Component Breakdown @tv-fv-delta', () => {
   });
 
   test('should colour-code component alignment percentages', async ({ page }) => {
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -1034,7 +1036,7 @@ test.describe('TV/FV Delta — No Data State @tv-fv-delta', () => {
       });
     });
 
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
@@ -1059,7 +1061,7 @@ test.describe('TV/FV Delta — No Data State @tv-fv-delta', () => {
       });
     });
 
-    await page.goto('/#/release-planning/tv-fv-delta');
+    await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
