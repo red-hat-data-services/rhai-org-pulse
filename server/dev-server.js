@@ -1695,6 +1695,13 @@ const exportRateCounts = new Map();
 function exportRateLimit(req, res, next) {
   const email = req.userEmail;
   const now = Date.now();
+  // Cleanup expired entries to prevent unbounded growth
+  for (const [key, value] of exportRateCounts.entries()) {
+    if (now - value.windowStart >= EXPORT_RATE_WINDOW_MS) {
+      exportRateCounts.delete(key);
+    }
+  }
+
   const entry = exportRateCounts.get(email);
   if (!entry || now - entry.windowStart >= EXPORT_RATE_WINDOW_MS) {
     exportRateCounts.set(email, { windowStart: now, count: 1 });

@@ -434,6 +434,18 @@ module.exports = function registerRoutes(router, context) {
     var releases = (req.body && Array.isArray(req.body.releases) && req.body.releases.length > 0)
       ? req.body.releases
       : DEFAULT_RELEASES
+
+    // Validate each release string to prevent JQL injection
+    var jqlSafePattern = /^[a-zA-Z0-9._-]+$/
+    for (var i = 0; i < releases.length; i++) {
+      if (typeof releases[i] !== 'string' || !jqlSafePattern.test(releases[i])) {
+        return res.status(400).json({
+          error: 'Invalid release name: ' + releases[i],
+          detail: 'Release names must contain only alphanumeric characters, dots, underscores, and hyphens'
+        })
+      }
+    }
+
     triggerBackgroundRefresh(releases)
     res.json({ status: 'started', releases: releases })
   })

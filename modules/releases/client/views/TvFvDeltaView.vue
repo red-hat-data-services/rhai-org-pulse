@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { apiRequest } from '@shared/client'
 import ClickableCount from '../components/ClickableCount.vue'
 import FeatureTable from '../components/FeatureTable.vue'
@@ -10,7 +10,10 @@ const error = ref(null)
 const refreshing = ref(false)
 
 const selectedRelease = ref('')
-const drillDown = ref({ visible: false, title: '', features: [] })
+
+// Track timers for cleanup
+let pipelinePollTimeout = null
+let refreshPollInterval = null
 
 const FEATURE_COLS = ['key', 'summary', 'status', 'color_status', 'product_manager', 'assignee', 'team', 'component']
 const MISMATCHED_COLS = ['key', 'summary', 'status', 'target_version', 'fix_versions', 'product_manager', 'assignee', 'team', 'component']
@@ -51,7 +54,7 @@ async function fetchData() {
     if (result._noCache) {
       // Pipeline running for the first time — poll
       refreshing.value = true
-      setTimeout(fetchData, 5000)
+      pipelinePollTimeout = setTimeout(fetchData, 5000)
       return
     }
     data.value = result
@@ -72,15 +75,21 @@ async function triggerRefresh() {
   try {
     await apiRequest('/modules/deep-analytics/tv-fv-delta/refresh', { method: 'POST' })
     // Poll for completion
-    const poll = setInterval(async () => {
+    if (refreshPollInterval) clearInterval(refreshPollInterval)
+    refreshPollInterval = setInterval(async () => {
       try {
         const status = await apiRequest('/modules/deep-analytics/tv-fv-delta/refresh/status')
         if (!status.running) {
-          clearInterval(poll)
+          clearInterval(refreshPollInterval)
+          refreshPollInterval = null
           refreshing.value = false
           await fetchData()
         }
-      } catch { clearInterval(poll); refreshing.value = false }
+      } catch {
+        clearInterval(refreshPollInterval)
+        refreshPollInterval = null
+        refreshing.value = false
+      }
     }, 3000)
   } catch (e) {
     refreshing.value = false
@@ -89,6 +98,11 @@ async function triggerRefresh() {
 }
 
 onMounted(fetchData)
+
+onBeforeUnmount(() => {
+  if (pipelinePollTimeout) clearTimeout(pipelinePollTimeout)
+  if (refreshPollInterval) clearInterval(refreshPollInterval)
+})
 
 const releaseData = computed(() => {
   if (!data.value || !selectedRelease.value) return null
@@ -99,10 +113,6 @@ const releaseSummary = computed(() => {
   if (!data.value) return null
   return data.value.executive_summary.find(s => s.release === selectedRelease.value)
 })
-
-function closeDrillDown() {
-  drillDown.value = { visible: false, title: '', features: [] }
-}
 </script>
 
 <template>
@@ -378,30 +388,5 @@ function closeDrillDown() {
         </div>
       </details>
     </template>
-
-    <!-- Drill-down modal -->
-    <div
-      v-if="drillDown.visible"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      @click.self="closeDrillDown"
-    >
-      <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[80vh] flex flex-col">
-        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">{{ drillDown.title }}</h3>
-          <button
-            class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
-            @click="closeDrillDown"
-          >
-            &times;
-          </button>
-        </div>
-        <div class="overflow-auto flex-1 p-4">
-          <FeatureTable
-            :features="drillDown.features"
-            :columns="FEATURE_COLS"
-          />
-        </div>
-      </div>
-    </div>
   </div>
 </template>

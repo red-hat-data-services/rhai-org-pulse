@@ -8,5 +8,5 @@ export const routes = {
   'deliver': defineAsyncComponent(() => import('./views/DeliverView.vue')),
   'reports': defineAsyncComponent(() => import('./views/ReportsView.vue')),
   'audit': defineAsyncComponent(() => import('./views/AuditView.vue')),
-  'tv-fv-delta': defineAsyncComponent(() => import('../../deep-analytics/client/views/TvFvDeltaView.vue')),
+  'tv-fv-delta': defineAsyncComponent(() => import('./views/TvFvDeltaView.vue')),
 }

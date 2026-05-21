@@ -312,6 +312,10 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/modules/ai-impact/component-onboarding` — all component onboarding entries (latest projection)
 - `/api/modules/ai-impact/component-onboarding/:key` — single component onboarding entry + history
 - `/api/modules/ai-impact/component-onboarding/status` — component onboarding data status (admin)
+- `/api/modules/deep-analytics/tv-fv-delta` — TV/FV delta analysis with stale-while-revalidate (auth)
+- `/api/modules/deep-analytics/tv-fv-delta/refresh/status` — TV/FV delta refresh status (auth)
+- `/api/modules/deep-analytics/release-health` — release health metrics (auth)
+- `/api/modules/deep-analytics/status` — deep analytics module status (auth)
 - `/api/modules/product-builds/config` — AIPCC Dashboard API configuration (admin)
 - `/api/modules/product-builds/health` — AIPCC Dashboard API connectivity check
 - `/api/modules/product-builds/products/:key` — product details (proxied)
@@ -423,6 +427,8 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/modules/team-tracker/structure/teams/:teamId/fields` — update team fields (admin/team-admin)
 - `/api/modules/team-tracker/structure/teams/:teamId/boards` — update team boards (admin/team-admin)
 - `/api/modules/team-tracker/field-options/:name/values/rename` — rename option value with cascade (admin)
+- `/api/modules/deep-analytics/tv-fv-delta/refresh` — trigger TV/FV delta refresh (admin)
+- `/api/modules/deep-analytics/ingest/:type` — ingest data from external source (admin)
 
 **DELETE:**
 - `/api/tokens/:id` — revoke own token
