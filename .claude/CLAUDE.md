@@ -88,6 +88,11 @@ npm run dev:full       # Starts Vite (5173) + Express (3001)
 - Backend routes mounted at `/api/modules/<slug>/`.
 - Legacy forwards: `/api/roster` etc. → `/api/modules/team-tracker/...`.
 
+### Platform Modularization (Active)
+- **Plan:** `docs/plans/platform-modularization.md` — phased extraction of core platform from AI Eng-specific modules.
+- **Key constraint:** No hardcoded Jira project keys — modules must use `module.json` config or Settings UI.
+- **Cross-module rule:** Modules must not directly import from or fetch APIs of other modules. Use `useModuleLink` with availability guards for optional integrations.
+
 ### Caching
 - Frontend: localStorage stale-while-revalidate (prefix `tt_cache:`).
 - API functions accept `onData` callback: called with cached data immediately, then fresh data.
