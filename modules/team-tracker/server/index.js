@@ -804,6 +804,231 @@ module.exports = function registerRoutes(router, context) {
 
   /**
    * @openapi
+   * /api/modules/team-tracker/structure/teams/query:
+   *   get:
+   *     tags: ['TT: Structure']
+   *     summary: Query teams by metadata field values
+   *     description: >
+   *       Filter teams by metadata field values. Each filter is a `fieldId:value` pair
+   *       (split on the first colon). To filter by field label instead of ID, prefix with
+   *       `label:` (e.g. `label:Components:Pipelines`). Value matching is case-insensitive.
+   *       For array metadata fields, a team matches if any element matches. Multiple filters
+   *       on the same field with `match=all` means the team must have ALL specified values.
+   *       With no filters, returns all teams.
+   *     parameters:
+   *       - in: query
+   *         name: filter
+   *         schema:
+   *           type: array
+   *           items:
+   *             type: string
+   *         style: form
+   *         explode: true
+   *         description: 'Field filter: `fieldId:value` or `label:FieldLabel:value`'
+   *       - in: query
+   *         name: match
+   *         schema:
+   *           type: string
+   *           enum: [all, any]
+   *           default: all
+   *         description: How multiple filters combine (AND vs OR)
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: integer
+   *           default: 200
+   *         description: Maximum number of teams to return
+   *       - in: query
+   *         name: offset
+   *         schema:
+   *           type: integer
+   *           default: 0
+   *         description: Number of teams to skip
+   *     responses:
+   *       200:
+   *         description: Matching teams
+   *       400:
+   *         description: Invalid filter syntax, unknown field, or ambiguous label
+   */
+  router.get('/structure/teams/query', requireScope('team-tracker:read'), function(req, res) {
+    const matchMode = req.query.match || 'all';
+    if (matchMode !== 'all' && matchMode !== 'any') {
+      return res.status(400).json({ error: 'match must be "all" or "any"' });
+    }
+
+    const limit = Math.max(1, Math.min(1000, parseInt(req.query.limit, 10) || 200));
+    const offset = Math.max(0, parseInt(req.query.offset, 10) || 0);
+
+    // Normalize filter to array
+    const rawFilters = req.query.filter
+      ? (Array.isArray(req.query.filter) ? req.query.filter : [req.query.filter])
+      : [];
+
+    // Resolve field definitions for label lookup
+    const fieldDefs = fieldStore.readFieldDefinitions(storage);
+    const teamFields = (fieldDefs.teamFields || []).filter(f => !f.deleted);
+
+    // Parse and resolve filters
+    const parsed = [];
+    for (const raw of rawFilters) {
+      let fieldKey, value;
+
+      if (raw.startsWith('label:')) {
+        // label:FieldLabel:value — split off prefix, then first colon
+        const afterPrefix = raw.substring(6);
+        const colonIdx = afterPrefix.indexOf(':');
+        if (colonIdx === -1) {
+          return res.status(400).json({ error: `Invalid label filter (missing value): ${raw}` });
+        }
+        const label = afterPrefix.substring(0, colonIdx);
+        value = afterPrefix.substring(colonIdx + 1);
+
+        const matches = teamFields.filter(f => f.label.toLowerCase() === label.toLowerCase());
+        if (matches.length === 0) {
+          return res.status(400).json({ error: `No team field found with label "${label}"` });
+        }
+        if (matches.length > 1) {
+          return res.status(400).json({
+            error: `Ambiguous label "${label}" matches ${matches.length} fields. Use field ID instead: ${matches.map(f => f.id).join(', ')}`
+          });
+        }
+        fieldKey = matches[0].id;
+      } else {
+        // fieldId:value — split on first colon
+        const colonIdx = raw.indexOf(':');
+        if (colonIdx === -1) {
+          return res.status(400).json({ error: `Invalid filter (expected fieldId:value): ${raw}` });
+        }
+        fieldKey = raw.substring(0, colonIdx);
+        value = raw.substring(colonIdx + 1);
+
+        if (!teamFields.some(f => f.id === fieldKey)) {
+          return res.status(400).json({ error: `Unknown team field ID "${fieldKey}"` });
+        }
+      }
+
+      parsed.push({ fieldId: fieldKey, value });
+    }
+
+    // Load teams and filter
+    const data = teamStore.readTeams(storage);
+    let teams = Object.values(data.teams);
+
+    if (parsed.length > 0) {
+      teams = teams.filter(team => {
+        const meta = team.metadata || {};
+        const results = parsed.map(({ fieldId, value }) => {
+          const stored = meta[fieldId];
+          if (stored == null) return false;
+          const needle = value.toLowerCase();
+          if (Array.isArray(stored)) {
+            return stored.some(v => String(v).toLowerCase() === needle);
+          }
+          return String(stored).toLowerCase() === needle;
+        });
+        return matchMode === 'all' ? results.every(Boolean) : results.some(Boolean);
+      });
+    }
+
+    const total = teams.length;
+    const paged = teams.slice(offset, offset + limit);
+
+    res.json({ teams: paged, total, limit, offset });
+  });
+
+  /**
+   * @openapi
+   * /api/modules/team-tracker/structure/group-by:
+   *   get:
+   *     tags: ['TT: Structure']
+   *     summary: Group teams by a metadata field value
+   *     description: >
+   *       Returns an inverted index mapping each distinct value of a team metadata field
+   *       to the teams that have it. Useful for lookups like "which teams own each component?"
+   *       Specify the field by ID (`field` param) or by label (`label` param, case-insensitive).
+   *       Teams with null, empty string, or empty array values for the field are omitted.
+   *       For multi-value (array) fields, a team appears under every value it has.
+   *     parameters:
+   *       - in: query
+   *         name: field
+   *         schema:
+   *           type: string
+   *         description: Field ID to group by (mutually exclusive with `label`)
+   *       - in: query
+   *         name: label
+   *         schema:
+   *           type: string
+   *         description: Field label to group by, case-insensitive (mutually exclusive with `field`)
+   *     responses:
+   *       200:
+   *         description: Grouped teams by field value
+   *       400:
+   *         description: Missing/invalid field, ambiguous label, or both field and label provided
+   */
+  router.get('/structure/group-by', requireScope('team-tracker:read'), function(req, res) {
+    const { field: fieldParam, label: labelParam } = req.query;
+
+    if (fieldParam && labelParam) {
+      return res.status(400).json({ error: 'Provide either "field" or "label", not both' });
+    }
+    if (!fieldParam && !labelParam) {
+      return res.status(400).json({ error: 'Provide a "field" (field ID) or "label" (field label) query parameter' });
+    }
+
+    const fieldDefs = fieldStore.readFieldDefinitions(storage);
+    const teamFields = (fieldDefs.teamFields || []).filter(f => !f.deleted);
+
+    let resolvedField;
+    if (fieldParam) {
+      resolvedField = teamFields.find(f => f.id === fieldParam);
+      if (!resolvedField) {
+        return res.status(400).json({ error: `Unknown team field ID "${fieldParam}"` });
+      }
+    } else {
+      const matches = teamFields.filter(f => f.label.toLowerCase() === labelParam.toLowerCase());
+      if (matches.length === 0) {
+        return res.status(400).json({ error: `No team field found with label "${labelParam}"` });
+      }
+      if (matches.length > 1) {
+        return res.status(400).json({
+          error: `Ambiguous label "${labelParam}" matches ${matches.length} fields. Use "field" parameter instead: ${matches.map(f => f.id).join(', ')}`
+        });
+      }
+      resolvedField = matches[0];
+    }
+
+    const data = teamStore.readTeams(storage);
+    const index = Object.create(null);
+    const seenTeamIds = new Set();
+
+    for (const team of Object.values(data.teams)) {
+      const raw = (team.metadata || {})[resolvedField.id];
+      if (raw == null) continue;
+
+      const values = Array.isArray(raw) ? raw : [raw];
+      const teamObj = { id: team.id, name: team.name, orgKey: team.orgKey, metadata: team.metadata || {} };
+
+      for (const v of values) {
+        const str = String(v);
+        if (str === '') continue;
+        if (!index[str]) index[str] = [];
+        index[str].push(teamObj);
+        seenTeamIds.add(team.id);
+      }
+    }
+
+    res.json({
+      fieldId: resolvedField.id,
+      label: resolvedField.label,
+      type: resolvedField.type,
+      index,
+      valueCount: Object.keys(index).length,
+      teamCount: seenTeamIds.size
+    });
+  });
+
+  /**
+   * @openapi
    * /api/modules/team-tracker/structure/teams:
    *   post:
    *     tags: ['TT: Structure']

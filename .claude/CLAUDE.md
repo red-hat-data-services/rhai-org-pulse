@@ -245,6 +245,8 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/modules/team-tracker/manager/dashboard` — manager dashboard data
 - `/api/modules/team-tracker/admin/field-completeness` — all people/teams with field data for data quality auditing (team-admin/admin)
 - `/api/modules/team-tracker/structure/teams` — list teams
+- `/api/modules/team-tracker/structure/teams/query` — query teams by metadata field values with AND/OR, pagination
+- `/api/modules/team-tracker/structure/group-by` — group teams by metadata field value (inverted index)
 - `/api/modules/team-tracker/structure/unassigned` — unassigned people
 - `/api/modules/team-tracker/structure/field-definitions` — field definitions
 - `/api/modules/team-tracker/structure/audit-log` — audit log
