@@ -55,7 +55,7 @@ async function fetchBugs(project, versions, { jiraFetchAll } = {}) {
     AND priority in (Blocker, Critical, Major)
     AND issuetype = Bug
     AND affectedVersion is not EMPTY
-    AND created >= -2y
+    AND created >= -730d
     ORDER BY created DESC
   `.trim().replace(/\s+/g, ' ');
 
