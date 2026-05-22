@@ -19,13 +19,18 @@ const FEATURE_COLS = ['key', 'summary', 'status', 'color_status', 'product_manag
 const MISMATCHED_COLS = ['key', 'summary', 'status', 'target_version', 'fix_versions', 'product_manager', 'assignee', 'team', 'component']
 
 const releaseComponentBreakdown = computed(() => {
-  if (!releaseData.value) return []
+  if (!releaseData.value || !data.value) return []
+
+  // Get ALL components from server (including those with 0 features)
+  const allComponentNames = data.value.metadata?.all_components || []
+
   const allFeatures = [
     ...releaseData.value.aligned.map(f => ({ ...f, category: 'aligned' })),
     ...releaseData.value.tv_only.map(f => ({ ...f, category: 'tv_only' })),
     ...releaseData.value.fv_only.map(f => ({ ...f, category: 'fv_only' })),
     ...releaseData.value.mismatched.map(f => ({ ...f, category: 'mismatched' })),
   ]
+
   const compMap = {}
   for (const feat of allFeatures) {
     const comps = feat.component ? feat.component.split(', ').map(c => c.trim()).filter(Boolean) : []
@@ -38,13 +43,34 @@ const releaseComponentBreakdown = computed(() => {
       }
     }
   }
-  return Object.values(compMap)
-    .sort((a, b) => b.total - a.total)
-    .map(c => ({
-      ...c,
-      keys: undefined,
-      alignment_pct: c.total ? Math.round(1000 * c.aligned / c.total) / 10 : 0,
-    }))
+
+  // Merge ALL components from Jira with computed counts
+  const compList = allComponentNames.map(compName => {
+    const computed = compMap[compName]
+    if (computed) {
+      return {
+        component: compName,
+        total: computed.total,
+        aligned: computed.aligned,
+        tv_only: computed.tv_only,
+        fv_only: computed.fv_only,
+        mismatched: computed.mismatched,
+        alignment_pct: computed.total ? Math.round(1000 * computed.aligned / computed.total) / 10 : 0,
+      }
+    } else {
+      return {
+        component: compName,
+        total: 0,
+        aligned: 0,
+        tv_only: 0,
+        fv_only: 0,
+        mismatched: 0,
+        alignment_pct: 0,
+      }
+    }
+  })
+
+  return compList.sort((a, b) => b.total - a.total || a.component.localeCompare(b.component))
 })
 
 async function fetchData() {

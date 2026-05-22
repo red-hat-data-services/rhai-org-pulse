@@ -47,6 +47,21 @@ function extractVersionNames(fixVersions) {
 }
 
 // ---------------------------------------------------------------------------
+// Fetch all components from Jira project
+// ---------------------------------------------------------------------------
+
+async function fetchAllComponents() {
+  try {
+    var response = await jiraRequest('/rest/api/2/project/RHAISTRAT/components')
+    if (!Array.isArray(response)) return []
+    return response.map(function(c) { return c.name }).filter(Boolean).sort()
+  } catch (err) {
+    console.error('[deep-analytics] Failed to fetch components:', err.message)
+    return []
+  }
+}
+
+// ---------------------------------------------------------------------------
 // JQL URL builder
 // ---------------------------------------------------------------------------
 
@@ -178,7 +193,7 @@ function classifyFeatures(features, releases) {
 // Build export payload
 // ---------------------------------------------------------------------------
 
-function buildExport(classifications, releases, fetchTimestamp) {
+function buildExport(classifications, releases, fetchTimestamp, allComponents) {
   var baseJql = 'project = RHAISTRAT AND issuetype = Feature'
 
   var executiveSummary = []
@@ -253,36 +268,50 @@ function buildExport(classifications, releases, fetchTimestamp) {
     }
   }
 
+  // Build component breakdown from ALL Jira components (even if 0 features)
+  var allCompNames = allComponents && allComponents.length > 0 ? allComponents : Object.keys(compMap).sort()
   var componentBreakdown = []
-  var compNames = Object.keys(compMap).sort()
-  for (var cn = 0; cn < compNames.length; cn++) {
-    var name = compNames[cn]
+
+  for (var cn = 0; cn < allCompNames.length; cn++) {
+    var name = allCompNames[cn]
     var data = compMap[name]
     var uniqueKeys = new Set()
-    data.keys.forEach(function(k) { uniqueKeys.add(k.split(':')[0]) })
-    var total = uniqueKeys.size
-    if (total < 2) continue
+    var total = 0
+    var aligned = 0
+    var tv_only = 0
+    var fv_only = 0
+    var mismatched = 0
+
+    if (data) {
+      data.keys.forEach(function(k) { uniqueKeys.add(k.split(':')[0]) })
+      total = uniqueKeys.size
+      aligned = data.aligned || 0
+      tv_only = data.tv_only || 0
+      fv_only = data.fv_only || 0
+      mismatched = data.mismatched || 0
+    }
 
     var compQ = '"' + name + '"'
     componentBreakdown.push({
       component: name,
       total: total,
       total_jql: jqlUrl(baseJql + ' AND component = ' + compQ + ' AND "Target Version" in (' + releases.join(', ') + ')'),
-      aligned: data.aligned,
-      tv_only: data.tv_only,
-      fv_only: data.fv_only,
-      mismatched: data.mismatched,
-      alignment_pct: total > 0 ? Math.round(1000 * data.aligned / total) / 10 : 0
+      aligned: aligned,
+      tv_only: tv_only,
+      fv_only: fv_only,
+      mismatched: mismatched,
+      alignment_pct: total > 0 ? Math.round(1000 * aligned / total) / 10 : 0
     })
   }
-  componentBreakdown.sort(function(a, b) { return b.total - a.total })
+  componentBreakdown.sort(function(a, b) { return b.total - a.total || a.component.localeCompare(b.component) })
 
   return {
     metadata: {
       generated_at: new Date().toISOString(),
       data_timestamp: fetchTimestamp,
       releases: releases,
-      total_features: classifications.length
+      total_features: classifications.length,
+      all_components: allComponents || []
     },
     executive_summary: executiveSummary,
     releases: releaseBuckets,
@@ -296,6 +325,11 @@ function buildExport(classifications, releases, fetchTimestamp) {
 
 async function fetchAndClassify(releases, storage) {
   var fetchTimestamp = new Date().toISOString()
+
+  // Fetch all components from Jira (for complete breakdown)
+  console.log('[deep-analytics] Fetching all components from RHAISTRAT')
+  var allComponents = await fetchAllComponents()
+  console.log('[deep-analytics] Fetched ' + allComponents.length + ' components from Jira')
 
   // Build JQL: features that have TV or FV in any of the target releases
   var releaseList = releases.join(', ')
@@ -313,7 +347,7 @@ async function fetchAndClassify(releases, storage) {
   console.log('[deep-analytics] Classified ' + classifications.length + ' feature-release pairs')
 
   // Build export
-  var result = buildExport(classifications, releases, fetchTimestamp)
+  var result = buildExport(classifications, releases, fetchTimestamp, allComponents)
 
   // Cache
   storage.writeToStorage(CACHE_KEY, result)
