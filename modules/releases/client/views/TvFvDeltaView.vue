@@ -21,9 +21,6 @@ const MISMATCHED_COLS = ['key', 'summary', 'status', 'target_version', 'fix_vers
 const releaseComponentBreakdown = computed(() => {
   if (!releaseData.value || !data.value) return []
 
-  // Get ALL components from server (including those with 0 features)
-  const allComponentNames = data.value.metadata?.all_components || []
-
   const allFeatures = [
     ...releaseData.value.aligned.map(f => ({ ...f, category: 'aligned' })),
     ...releaseData.value.tv_only.map(f => ({ ...f, category: 'tv_only' })),
@@ -44,31 +41,48 @@ const releaseComponentBreakdown = computed(() => {
     }
   }
 
-  // Merge ALL components from Jira with computed counts
-  const compList = allComponentNames.map(compName => {
-    const computed = compMap[compName]
-    if (computed) {
-      return {
-        component: compName,
-        total: computed.total,
-        aligned: computed.aligned,
-        tv_only: computed.tv_only,
-        fv_only: computed.fv_only,
-        mismatched: computed.mismatched,
-        alignment_pct: computed.total ? Math.round(1000 * computed.aligned / computed.total) / 10 : 0,
+  // Get ALL components from server (including those with 0 features)
+  const allComponentNames = data.value.metadata?.all_components || []
+
+  let compList
+  if (allComponentNames.length > 0) {
+    // Server has full component list - merge with computed counts
+    compList = allComponentNames.map(compName => {
+      const computed = compMap[compName]
+      if (computed) {
+        return {
+          component: compName,
+          total: computed.total,
+          aligned: computed.aligned,
+          tv_only: computed.tv_only,
+          fv_only: computed.fv_only,
+          mismatched: computed.mismatched,
+          alignment_pct: computed.total ? Math.round(1000 * computed.aligned / computed.total) / 10 : 0,
+        }
+      } else {
+        return {
+          component: compName,
+          total: 0,
+          aligned: 0,
+          tv_only: 0,
+          fv_only: 0,
+          mismatched: 0,
+          alignment_pct: 0,
+        }
       }
-    } else {
-      return {
-        component: compName,
-        total: 0,
-        aligned: 0,
-        tv_only: 0,
-        fv_only: 0,
-        mismatched: 0,
-        alignment_pct: 0,
-      }
-    }
-  })
+    })
+  } else {
+    // Fallback: show only components that appear in features
+    compList = Object.values(compMap).map(c => ({
+      component: c.component,
+      total: c.total,
+      aligned: c.aligned,
+      tv_only: c.tv_only,
+      fv_only: c.fv_only,
+      mismatched: c.mismatched,
+      alignment_pct: c.total ? Math.round(1000 * c.aligned / c.total) / 10 : 0,
+    }))
+  }
 
   return compList.sort((a, b) => b.total - a.total || a.component.localeCompare(b.component))
 })
