@@ -239,11 +239,9 @@ function buildExport(classifications, releases, fetchTimestamp, allComponents) {
         product_manager: item.product_manager,
         assignee: item.assignee,
         team: item.team,
-        component: item.component
-      }
-      if (item.category === 'mismatched') {
-        row.target_version = item.target_version
-        row.fix_versions = item.fix_versions
+        component: item.component,
+        target_version: item.target_version,
+        fix_versions: item.fix_versions
       }
       bucket[item.category].push(row)
     }

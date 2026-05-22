@@ -15,8 +15,7 @@ const selectedRelease = ref('')
 let pipelinePollTimeout = null
 let refreshPollInterval = null
 
-const FEATURE_COLS = ['key', 'summary', 'status', 'color_status', 'product_manager', 'assignee', 'team', 'component']
-const MISMATCHED_COLS = ['key', 'summary', 'status', 'target_version', 'fix_versions', 'product_manager', 'assignee', 'team', 'component']
+const FEATURE_COLS = ['key', 'summary', 'status', 'target_version', 'fix_versions', 'color_status', 'product_manager', 'assignee', 'team', 'component']
 
 const releaseComponentBreakdown = computed(() => {
   if (!releaseData.value || !data.value) return []
@@ -349,7 +348,7 @@ const releaseSummary = computed(() => {
           </summary>
           <FeatureTable
             :features="releaseData.mismatched"
-            :columns="MISMATCHED_COLS"
+            :columns="FEATURE_COLS"
           />
         </details>
 
