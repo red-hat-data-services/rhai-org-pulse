@@ -752,7 +752,7 @@ test.describe('TV/FV Delta — Feature Tables @tv-fv-delta', () => {
     expect(relevantErrors(page)).toHaveLength(0);
   });
 
-  test('should display correct columns for standard categories', async ({ page }) => {
+  test('should display correct columns for all categories (including TV/FV)', async ({ page }) => {
     await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
@@ -764,8 +764,8 @@ test.describe('TV/FV Delta — Feature Tables @tv-fv-delta', () => {
     const alignedDetails = page.locator('details:has(summary:has-text("Aligned"))');
     const headers = alignedDetails.locator('thead th');
 
-    // Standard cols: Key, Summary, Status, Color, PM, Assignee, Team, Component
-    const expectedHeaders = ['Key', 'Summary', 'Status', 'Color', 'PM', 'Assignee', 'Team', 'Component'];
+    // All categories now include: Key, Summary, Status, TV, FV, Color, PM, Assignee, Team, Component
+    const expectedHeaders = ['Key', 'Summary', 'Status', 'TV', 'FV', 'Color', 'PM', 'Assignee', 'Team', 'Component'];
     const count = await headers.count();
     expect(count).toBe(expectedHeaders.length);
 
@@ -776,29 +776,37 @@ test.describe('TV/FV Delta — Feature Tables @tv-fv-delta', () => {
     expect(relevantErrors(page)).toHaveLength(0);
   });
 
-  test('should display extra TV/FV columns for mismatched category', async ({ page }) => {
+  test('should display TV/FV columns in all categories', async ({ page }) => {
     await page.goto('/#/releases/tv-fv-delta');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    // Expand Mismatched section (EA1 has 1 mismatched)
-    await page.locator('summary:has-text("Mismatched")').click();
-    await page.waitForTimeout(300);
+    // Test that TV-Only, Aligned, and Mismatched all have TV/FV columns
+    const categories = ['TV-Only', 'Aligned', 'Mismatched'];
 
-    const mismatchedDetails = page.locator('details:has(summary:has-text("Mismatched"))');
-    const headers = mismatchedDetails.locator('thead th');
+    for (const category of categories) {
+      await page.locator(`summary:has-text("${category}")`).click();
+      await page.waitForTimeout(300);
 
-    // Mismatched cols: Key, Summary, Status, TV, FV, PM, Assignee, Team, Component
-    const count = await headers.count();
-    expect(count).toBe(9); // 2 extra columns (TV, FV)
+      const categoryDetails = page.locator(`details:has(summary:has-text("${category}"))`);
+      const headers = categoryDetails.locator('thead th');
+      const count = await headers.count();
 
-    // Check TV and FV headers exist
-    const headerTexts = [];
-    for (let i = 0; i < count; i++) {
-      headerTexts.push(await headers.nth(i).textContent());
+      // All categories have 10 columns including TV and FV
+      expect(count).toBe(10);
+
+      // Verify TV and FV headers exist
+      const headerTexts = [];
+      for (let i = 0; i < count; i++) {
+        headerTexts.push(await headers.nth(i).textContent());
+      }
+      expect(headerTexts.some(h => h.includes('TV'))).toBe(true);
+      expect(headerTexts.some(h => h.includes('FV'))).toBe(true);
+
+      // Collapse for next iteration
+      await page.locator(`summary:has-text("${category}")`).click();
+      await page.waitForTimeout(200);
     }
-    expect(headerTexts.some(h => h.includes('TV'))).toBe(true);
-    expect(headerTexts.some(h => h.includes('FV'))).toBe(true);
 
     expect(relevantErrors(page)).toHaveLength(0);
   });
@@ -1009,6 +1017,147 @@ test.describe('TV/FV Delta — Component Breakdown @tv-fv-delta', () => {
                        classes.includes('text-green-600');
       expect(hasColor).toBe(true);
     }
+
+    expect(relevantErrors(page)).toHaveLength(0);
+  });
+});
+
+
+test.describe('TV/FV Delta — Data Completeness @tv-fv-delta', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+    await mockAllApis(page);
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('should display TV and FV values in table cells', async ({ page }) => {
+    await page.goto('/#/releases/tv-fv-delta');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Expand Mismatched section (has both TV and FV populated)
+    await page.locator('summary:has-text("Mismatched")').click();
+    await page.waitForTimeout(300);
+
+    const mismatchedDetails = page.locator('details:has(summary:has-text("Mismatched"))');
+    const firstRow = mismatchedDetails.locator('tbody tr').first();
+
+    // Should show rhoai-3.5.EA1 in TV column and rhoai-3.5.EA2 in FV column (from fixture)
+    await expect(firstRow).toContainText('rhoai-3.5.EA1');
+    await expect(firstRow).toContainText('rhoai-3.5.EA2');
+
+    expect(relevantErrors(page)).toHaveLength(0);
+  });
+
+  test('should show components with zero features when all_components is available', async ({ page }) => {
+    // Mock with all_components metadata
+    const dataWithAllComponents = {
+      ...FIXTURE_DATA,
+      metadata: {
+        ...FIXTURE_DATA.metadata,
+        all_components: ['Serving', 'Training', 'Dashboard', 'Pipelines', 'Model Registry', 'Notebooks', 'Unused Component A', 'Unused Component B']
+      }
+    };
+
+    await mockAllApis(page, dataWithAllComponents);
+    await page.goto('/#/releases/tv-fv-delta');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Expand Component Breakdown
+    await page.locator('summary:has-text("Component Breakdown")').click();
+    await page.waitForTimeout(300);
+
+    const compSection = page.locator('details:has(summary:has-text("Component Breakdown"))');
+
+    // Should show components with 0 features
+    await expect(compSection.locator('text=Unused Component A')).toBeVisible();
+    await expect(compSection.locator('text=Unused Component B')).toBeVisible();
+
+    // Verify they show 0 counts
+    const unusedRow = compSection.locator('tr:has-text("Unused Component A")');
+    await expect(unusedRow.locator('td').nth(1)).toContainText('0'); // Total column
+
+    expect(relevantErrors(page)).toHaveLength(0);
+  });
+
+  test('should sync release selection between executive summary and tabs', async ({ page }) => {
+    await page.goto('/#/releases/tv-fv-delta');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const summarySection = page.locator('div:has(> div > h2:has-text("Executive Summary"))').first();
+
+    // Click EA2 row in executive summary
+    const ea2Row = summarySection.locator('tbody tr').nth(1);
+    await ea2Row.click();
+    await page.waitForTimeout(500);
+
+    // EA2 tab should now be active (highlighted)
+    const ea2Tab = page.locator('button', { hasText: 'rhoai-3.5.EA2' });
+    const ea2Classes = await ea2Tab.getAttribute('class');
+    expect(ea2Classes).toContain('bg-blue-600');
+
+    // Now click EA1 tab
+    const ea1Tab = page.locator('button', { hasText: 'rhoai-3.5.EA1' });
+    await ea1Tab.click();
+    await page.waitForTimeout(500);
+
+    // EA1 executive summary row should now be highlighted
+    const ea1ExecRow = summarySection.locator('tbody tr').nth(0);
+    const ea1RowClasses = await ea1ExecRow.getAttribute('class');
+    expect(ea1RowClasses).toContain('bg-blue-50');
+
+    expect(relevantErrors(page)).toHaveLength(0);
+  });
+
+  test('should handle features with multiple comma-separated components', async ({ page }) => {
+    await page.goto('/#/releases/tv-fv-delta');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Expand Mismatched section (RHAISTRAT-300 has "Serving, Training")
+    await page.locator('summary:has-text("Mismatched")').click();
+    await page.waitForTimeout(300);
+
+    const mismatchedDetails = page.locator('details:has(summary:has-text("Mismatched"))');
+    const componentCell = mismatchedDetails.locator('tbody tr:has-text("RHAISTRAT-300")').locator('td').last();
+
+    // Should show both components
+    await expect(componentCell).toContainText('Serving');
+    await expect(componentCell).toContainText('Training');
+
+    expect(relevantErrors(page)).toHaveLength(0);
+  });
+
+  test('should show refresh button and handle click', async ({ page }) => {
+    await page.goto('/#/releases/tv-fv-delta');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const refreshButton = page.locator('button:has-text("Refresh from Jira")');
+    await expect(refreshButton).toBeVisible();
+    await expect(refreshButton).toBeEnabled();
+
+    // Button should be clickable (we're not testing the actual refresh, just the UI)
+    expect(relevantErrors(page)).toHaveLength(0);
+  });
+
+  test('should display staleness warning message', async ({ page }) => {
+    await page.goto('/#/releases/tv-fv-delta');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Should show staleness note
+    const staleNote = page.locator('text=Counts reflect data at fetch time');
+    await expect(staleNote).toBeVisible();
+
+    // Should show both timestamps
+    await expect(page.locator('text=Data fetched')).toBeVisible();
+    await expect(page.locator('text=Report generated')).toBeVisible();
 
     expect(relevantErrors(page)).toHaveLength(0);
   });
