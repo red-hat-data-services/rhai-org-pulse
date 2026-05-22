@@ -314,6 +314,7 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/modules/ai-impact/component-onboarding/status` — component onboarding data status (admin)
 - `/api/modules/deep-analytics/tv-fv-delta` — TV/FV delta analysis with stale-while-revalidate (auth)
 - `/api/modules/deep-analytics/tv-fv-delta/refresh/status` — TV/FV delta refresh status (auth)
+- `/api/modules/deep-analytics/tv-fv-delta/releases` — get configured releases from Smartsheet via planning module (auth)
 - `/api/modules/deep-analytics/release-health` — release health metrics (auth)
 - `/api/modules/deep-analytics/status` — deep analytics module status (auth)
 - `/api/modules/product-builds/config` — AIPCC Dashboard API configuration (admin)

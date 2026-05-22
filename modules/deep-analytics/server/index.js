@@ -6,7 +6,52 @@ const CACHE_KEY = 'deep-analytics/tv-fv-delta.json'
 const CACHE_MAX_AGE_MS = 60 * 60 * 1000 // 1 hour
 
 // Default releases — EA1, EA2, then GA (timeline order)
+// Fallback if Smartsheet/planning releases are not configured
 const DEFAULT_RELEASES = ['rhoai-3.5.EA1', 'rhoai-3.5.EA2', 'rhoai-3.5']
+
+// ---------------------------------------------------------------------------
+// Fetch releases from planning module (Smartsheet SSOT)
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetch configured releases from planning module and expand to EA1, EA2, GA variants.
+ * Returns array of release strings in timeline order: [...EA1s, ...EA2s, ...GAs]
+ */
+async function fetchReleasesFromPlanning(storage) {
+  try {
+    // Try to read from planning module's config
+    var planningData = storage.readFromStorage('releases/planning/config.json')
+    if (!planningData || !planningData.releases) {
+      console.log('[deep-analytics] No planning config found, using default releases')
+      return DEFAULT_RELEASES
+    }
+
+    var baseVersions = Object.keys(planningData.releases).sort()
+    if (baseVersions.length === 0) {
+      console.log('[deep-analytics] No releases configured, using defaults')
+      return DEFAULT_RELEASES
+    }
+
+    // Expand each base version to EA1, EA2, GA
+    var expanded = []
+    for (var i = 0; i < baseVersions.length; i++) {
+      var base = baseVersions[i]
+      expanded.push(base + '.EA1')
+    }
+    for (var j = 0; j < baseVersions.length; j++) {
+      expanded.push(baseVersions[j] + '.EA2')
+    }
+    for (var k = 0; k < baseVersions.length; k++) {
+      expanded.push(baseVersions[k])
+    }
+
+    console.log('[deep-analytics] Fetched ' + baseVersions.length + ' base releases from planning, expanded to ' + expanded.length + ' variants')
+    return expanded
+  } catch (err) {
+    console.error('[deep-analytics] Failed to fetch releases from planning:', err.message)
+    return DEFAULT_RELEASES
+  }
+}
 
 // Jira custom field IDs
 const CF_TARGET_VERSION = 'customfield_10855'
@@ -459,13 +504,19 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Refresh started or already running
    */
-  router.post('/tv-fv-delta/refresh', requireAdmin, function (req, res) {
+  router.post('/tv-fv-delta/refresh', requireAdmin, async function (req, res) {
     if (refreshState.running) {
       return res.json({ status: 'already_running', startedAt: refreshState.startedAt })
     }
-    var releases = (req.body && Array.isArray(req.body.releases) && req.body.releases.length > 0)
-      ? req.body.releases
-      : DEFAULT_RELEASES
+
+    var releases
+    if (req.body && Array.isArray(req.body.releases) && req.body.releases.length > 0) {
+      // User-provided releases
+      releases = req.body.releases
+    } else {
+      // Auto-discover from planning module (Smartsheet SSOT)
+      releases = await fetchReleasesFromPlanning(storage)
+    }
 
     // Validate each release string to prevent JQL injection
     var jqlSafePattern = /^[a-zA-Z0-9._-]+$/
@@ -494,6 +545,25 @@ module.exports = function registerRoutes(router, context) {
    */
   router.get('/tv-fv-delta/refresh/status', requireAuth, function (req, res) {
     res.json(refreshState)
+  })
+
+  /**
+   * @openapi
+   * /api/modules/deep-analytics/tv-fv-delta/releases:
+   *   get:
+   *     tags: ['Deep Analytics']
+   *     summary: Get configured releases from planning module (Smartsheet SSOT)
+   *     responses:
+   *       200:
+   *         description: Release list expanded to EA1, EA2, GA variants
+   */
+  router.get('/tv-fv-delta/releases', requireAuth, async function (req, res) {
+    var releases = await fetchReleasesFromPlanning(storage)
+    res.json({
+      releases: releases,
+      source: releases === DEFAULT_RELEASES ? 'default' : 'planning',
+      fetchedAt: new Date().toISOString()
+    })
   })
 
   /**
