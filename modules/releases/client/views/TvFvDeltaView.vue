@@ -39,7 +39,6 @@ const releaseComponentBreakdown = computed(() => {
     }
   }
   return Object.values(compMap)
-    .filter(c => c.total >= 2)
     .sort((a, b) => b.total - a.total)
     .map(c => ({
       ...c,
