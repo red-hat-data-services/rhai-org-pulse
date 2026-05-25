@@ -12,6 +12,7 @@ configMapGenerator:
   literals:
   - API_PUBLIC_URL=https://api-team-tracker.apps.int.spoke.prod.us-west-2.aws.paas.redhat.com
   - AUTH_EMAIL_DOMAIN=cluster.local
+  - PRODUCT_BUILDS_API_URL=https://aipcc-dashboard-api.apps.int.prod-stable-spoke1-dc-iad2.itup.redhat.com
   name: team-tracker-config
 
 patches:
