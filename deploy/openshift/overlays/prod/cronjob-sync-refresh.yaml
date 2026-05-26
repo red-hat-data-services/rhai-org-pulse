@@ -199,45 +199,28 @@ spec:
                   curl -sf -X POST "$BACKEND/api/modules/releases/execution/refresh" \
                     -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" || echo "Releases Execution refresh skipped"
 
-                  # Step 7: Trigger Feature Hygiene refresh for active releases
-                  echo "=== Triggering Feature Hygiene refresh ==="
-                  REGISTRY_RESP=$(curl -sf "$BACKEND/api/modules/releases/registry" \
-                    -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER") || true
-                  if [ -n "$REGISTRY_RESP" ]; then
-                    # Extract fixVersions from active releases (status != "archived")
-                    # Each release has fixVersions array; grab the first version from each active release
-                    VERSIONS=$(echo "$REGISTRY_RESP" | grep -oE '"fixVersions"\s*:\s*\["[^"]*"' | sed 's/.*\["//' | sort -u)
-                    if [ -n "$VERSIONS" ]; then
-                      for VERSION in $VERSIONS; do
-                        echo "  Refreshing hygiene for version: $VERSION"
-                        curl -sf -X POST "$BACKEND/api/modules/releases/hygiene/refresh?version=$VERSION" \
-                          -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" || { echo "  WARNING: Hygiene refresh trigger failed for $VERSION (non-fatal)"; continue; }
+                  # Step 7: Trigger Feature Hygiene refresh for all stored versions
+                  echo "=== Triggering Feature Hygiene refresh (all versions) ==="
+                  curl -sf -X POST "$BACKEND/api/modules/releases/hygiene/refresh-all" \
+                    -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" || echo "Hygiene refresh-all skipped (no data yet)"
 
-                        # Poll until complete
-                        ATTEMPTS=0
-                        MAX_ATTEMPTS=30
-                        while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
-                          sleep 10
-                          ATTEMPTS=$((ATTEMPTS + 1))
-                          STATUS=$(curl -sf "$BACKEND/api/modules/releases/hygiene/refresh/status" \
-                            -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER")
-                          RUNNING=$(echo "$STATUS" | grep -oE '"running"\s*:\s*true' || true)
-                          if [ -z "$RUNNING" ]; then
-                            echo "  Hygiene refresh complete for $VERSION after $ATTEMPTS checks"
-                            break
-                          fi
-                          echo "  Still refreshing hygiene for $VERSION... (attempt $ATTEMPTS/$MAX_ATTEMPTS)"
-                        done
-
-                        if [ $ATTEMPTS -ge $MAX_ATTEMPTS ]; then
-                          echo "  WARNING: Hygiene refresh timed out for $VERSION (non-fatal, continuing)"
-                        fi
-                      done
-                    else
-                      echo "  No active release versions found, skipping hygiene refresh"
+                  ATTEMPTS=0
+                  MAX_ATTEMPTS=60
+                  while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
+                    sleep 10
+                    ATTEMPTS=$((ATTEMPTS + 1))
+                    STATUS=$(curl -sf "$BACKEND/api/modules/releases/hygiene/refresh/status" \
+                      -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER")
+                    RUNNING=$(echo "$STATUS" | grep -oE '"running"\s*:\s*true' || true)
+                    if [ -z "$RUNNING" ]; then
+                      echo "Hygiene refresh complete after $ATTEMPTS checks"
+                      break
                     fi
-                  else
-                    echo "  Could not fetch release registry, skipping hygiene refresh"
+                    echo "Still refreshing hygiene... (attempt $ATTEMPTS/$MAX_ATTEMPTS)"
+                  done
+
+                  if [ $ATTEMPTS -ge $MAX_ATTEMPTS ]; then
+                    echo "WARNING: Hygiene refresh timed out (non-fatal, continuing)"
                   fi
 
                   # Step 8: Trigger data backup to S3

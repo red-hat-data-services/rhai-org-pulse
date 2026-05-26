@@ -453,6 +453,7 @@ module.exports = function registerHygieneRoutes(router, context) {
       running: refreshState.running,
       startedAt: refreshState.startedAt,
       completedAt: refreshState.completedAt,
+      lastSuccessAt: refreshState.lastSuccessAt,
       lastResult: refreshState.lastResult,
       progress: refreshState.progress
     });

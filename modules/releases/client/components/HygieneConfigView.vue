@@ -364,9 +364,9 @@ async function pollRefreshStatus() {
     try {
       const data = await apiRequest('/modules/releases/hygiene/refresh/status')
       if (data.running) {
-        refreshStatus.value = data.message || 'Refreshing...'
+        refreshStatus.value = (data.progress && data.progress.message) || 'Refreshing...'
       } else {
-        refreshStatus.value = data.message || 'Refresh complete.'
+        refreshStatus.value = (data.lastResult && data.lastResult.message) || 'Refresh complete.'
         refreshing.value = false
         clearInterval(refreshPollId)
         refreshPollId = null
