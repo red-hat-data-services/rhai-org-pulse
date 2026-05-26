@@ -222,6 +222,7 @@ function startPeriodicRosterPush(storage) {
 
 module.exports = function registerRoutes(router, context) {
   const { requireScope } = context;
+  const DEMO_MODE = process.env.DEMO_MODE === 'true';
 
   // Register module scopes
   context.registerScopes([
@@ -238,8 +239,139 @@ module.exports = function registerRoutes(router, context) {
     });
   }
 
+  // Demo mode stub data
+  function getDemoData(endpoint) {
+    if (endpoint === 'dashboard') {
+      return {
+        contributions: {
+          all: { team: 1250, total: 5000, teamPercent: 25 },
+          commits: { team: 500, total: 2000, teamPercent: 25 },
+          pullRequests: { team: 300, total: 1200, teamPercent: 25 },
+          reviews: { team: 250, total: 1000, teamPercent: 25 },
+          issues: { team: 200, total: 800, teamPercent: 25 }
+        },
+        summary: {
+          activeContributors: 42,
+          trackedProjects: 6,
+          periodStart: '2024-01-01',
+          periodEnd: '2024-01-31'
+        },
+        topContributors: [
+          { id: '1', name: 'Alice Johnson', githubUsername: 'alicecodes', total: 450, commits: 200, prs: 100, reviews: 100, issues: 50 },
+          { id: '2', name: 'Bob Smith', githubUsername: 'bobsmith', total: 380, commits: 180, prs: 80, reviews: 80, issues: 40 }
+        ],
+        orgActivity: [
+          { org: 'kubernetes', orgName: 'Kubernetes', total: 500, totalContributions: 2000, teamSharePercent: 25, percentChange: 15, activeTeamMembers: 10, leadershipCount: 3, maintainerCount: 2 },
+          { org: 'kubeflow', orgName: 'Kubeflow', total: 300, totalContributions: 1200, teamSharePercent: 25, percentChange: 10, activeTeamMembers: 8, leadershipCount: 2, maintainerCount: 1 },
+          { org: 'kserve', orgName: 'KServe', total: 250, totalContributions: 1000, teamSharePercent: 25, percentChange: 8, activeTeamMembers: 7, leadershipCount: 1, maintainerCount: 1 },
+          { org: 'ray-project', orgName: 'Ray Project', total: 200, totalContributions: 800, teamSharePercent: 25, percentChange: 5, activeTeamMembers: 6, leadershipCount: 0, maintainerCount: 0 }
+        ],
+        dailyBreakdown: [
+          { date: '2024-01-01', team: 25, total: 100 },
+          { date: '2024-01-02', team: 30, total: 120 },
+          { date: '2024-01-03', team: 28, total: 110 }
+        ],
+        topProjects: [
+          { id: '1', name: 'kubernetes', githubOrg: 'kubernetes', githubRepo: 'kubernetes', contributions: 450, activeContributors: 15 },
+          { id: '2', name: 'kubeflow', githubOrg: 'kubeflow', githubRepo: 'kubeflow', contributions: 320, activeContributors: 12 },
+          { id: '3', name: 'kserve', githubOrg: 'kserve', githubRepo: 'kserve', contributions: 280, activeContributors: 10 },
+          { id: '4', name: 'ray-project', githubOrg: 'ray-project', githubRepo: 'ray', contributions: 200, activeContributors: 8 }
+        ],
+        trends: {},
+        leadership: {
+          byOrg: [
+            {
+              orgName: 'Kubernetes',
+              positions: [
+                {
+                  positionType: 'steering_committee',
+                  roleTitle: 'Steering Committee',
+                  teamCount: 2,
+                  members: [
+                    { id: 'leader1', name: 'Sarah Chen', githubUsername: 'sarahchen', avatarUrl: 'https://github.com/sarahchen.png' },
+                    { id: 'leader2', name: 'Mike Rodriguez', githubUsername: 'mikerodriguez', avatarUrl: 'https://github.com/mikerodriguez.png' }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      };
+    } else if (endpoint === 'contributors') {
+      return {
+        contributors: [
+          { id: '1', name: 'Alice Johnson', githubUsername: 'alicecodes', total: 450, commits: 200, prs: 100, reviews: 100, issues: 50 },
+          { id: '2', name: 'Bob Smith', githubUsername: 'bobsmith', total: 380, commits: 180, prs: 80, reviews: 80, issues: 40 }
+        ]
+      };
+    } else if (endpoint === 'leadership') {
+      return {
+        summary: {
+          codeOwnerFiles: 15,
+          totalCodeOwnerFiles: 50,
+          ownerPositions: 8,
+          totalOwnerPositions: 25,
+          projectLeadPositions: 5,
+          totalProjectLeadPositions: 20,
+          reviewerPositions: 12,
+          totalReviewerPositions: 40,
+          projectsWithTeamLeadership: 4
+        },
+        members: [
+          {
+            id: 'm1',
+            name: 'Alex Thompson',
+            githubUsername: 'alexthompson',
+            roles: [
+              { projectId: 'p1', projectName: 'kubernetes', role: 'Owner' },
+              { projectId: 'p2', projectName: 'kubeflow', role: 'Reviewer' }
+            ]
+          },
+          {
+            id: 'm2',
+            name: 'Jordan Lee',
+            githubUsername: 'jordanlee',
+            roles: [
+              { projectId: 'p3', projectName: 'kserve', role: 'Owner' },
+              { projectId: 'p4', projectName: 'ray-project', role: 'Reviewer' }
+            ]
+          }
+        ],
+        byOrg: []
+      };
+    } else if (endpoint === 'projects') {
+      return {
+        projects: [
+          { id: '1', name: 'kubernetes', githubOrg: 'kubernetes', githubRepo: 'kubernetes', contributions: 450, activeContributors: 15 },
+          { id: '2', name: 'kubeflow', githubOrg: 'kubeflow', githubRepo: 'kubeflow', contributions: 320, activeContributors: 12 }
+        ]
+      };
+    } else if (endpoint === 'orgs') {
+      return {
+        orgs: [
+          { org: 'kubernetes', orgName: 'Kubernetes', total: 500, totalContributions: 2000, teamSharePercent: 25, activeTeamMembers: 10 },
+          { org: 'kubeflow', orgName: 'Kubeflow', total: 300, totalContributions: 1200, teamSharePercent: 25, activeTeamMembers: 8 }
+        ],
+        summary: {
+          totalContributions: 800,
+          activeMembers: 18,
+          activeOrgs: 2,
+          avgTeamShare: 25.0
+        }
+      };
+    }
+    return {};
+  }
+
   router.get('/config', requireScope('upstream-pulse:read'), async function(req, res) {
     try {
+      if (DEMO_MODE) {
+        return res.json({
+          baseUrl: 'http://demo-upstream-pulse',
+          configured: true,
+          connection: { reachable: true, status: 200 }
+        });
+      }
       const connection = await checkConnection();
       res.json({
         baseUrl: getBaseUrl(),
@@ -253,6 +385,9 @@ module.exports = function registerRoutes(router, context) {
 
   router.get('/dashboard', requireScope('upstream-pulse:read'), async function(req, res) {
     try {
+      if (DEMO_MODE) {
+        return res.json(getDemoData('dashboard'));
+      }
       const data = await proxyRequest('/api/metrics/dashboard', {
         days: req.query.days,
         githubOrg: req.query.githubOrg,
@@ -266,6 +401,9 @@ module.exports = function registerRoutes(router, context) {
 
   router.get('/contributors', requireScope('upstream-pulse:read'), async function(req, res) {
     try {
+      if (DEMO_MODE) {
+        return res.json(getDemoData('contributors'));
+      }
       const data = await proxyRequest('/api/metrics/contributors', {
         days: req.query.days,
         limit: req.query.limit,
@@ -280,6 +418,9 @@ module.exports = function registerRoutes(router, context) {
 
   router.get('/leadership', requireScope('upstream-pulse:read'), async function(req, res) {
     try {
+      if (DEMO_MODE) {
+        return res.json(getDemoData('leadership'));
+      }
       const data = await proxyRequest('/api/metrics/leadership', {
         githubOrg: req.query.githubOrg,
         projectId: req.query.projectId,
@@ -292,6 +433,9 @@ module.exports = function registerRoutes(router, context) {
 
   router.get('/projects', requireScope('upstream-pulse:read'), async function(req, res) {
     try {
+      if (DEMO_MODE) {
+        return res.json(getDemoData('projects'));
+      }
       const data = await proxyRequest('/api/projects', {
         githubOrg: req.query.githubOrg
       });
@@ -303,6 +447,9 @@ module.exports = function registerRoutes(router, context) {
 
   router.get('/orgs', requireScope('upstream-pulse:read'), async function(req, res) {
     try {
+      if (DEMO_MODE) {
+        return res.json(getDemoData('orgs'));
+      }
       const data = await proxyRequest('/api/orgs', {
         days: req.query.days
       });
@@ -314,6 +461,30 @@ module.exports = function registerRoutes(router, context) {
 
   router.get('/project-jobs', requireScope('upstream-pulse:read'), async function(req, res) {
     try {
+      if (DEMO_MODE) {
+        return res.json({
+          jobs: [
+            {
+              id: 'job-1',
+              projectId: req.query.projectId,
+              status: 'completed',
+              startedAt: '2026-01-15T10:00:00Z',
+              completedAt: '2026-01-15T10:05:00Z',
+              message: 'Sync completed successfully',
+              itemsProcessed: 1250
+            },
+            {
+              id: 'job-2',
+              projectId: req.query.projectId,
+              status: 'completed',
+              startedAt: '2026-01-14T10:00:00Z',
+              completedAt: '2026-01-14T10:03:00Z',
+              message: 'Sync completed successfully',
+              itemsProcessed: 1180
+            }
+          ]
+        });
+      }
       const projectId = req.query.projectId;
       if (!projectId) {
         return res.status(400).json({ error: 'projectId query param is required' });
@@ -343,6 +514,14 @@ module.exports = function registerRoutes(router, context) {
 
   router.get('/repo-info', requireAdmin, requireScope('upstream-pulse:write'), async function(req, res) {
     try {
+      if (DEMO_MODE) {
+        return res.json({
+          org: req.query.org,
+          repo: req.query.repo,
+          exists: true,
+          visibility: 'public'
+        });
+      }
       const data = await proxyAdminGet('/api/github/repo-info', {
         org: req.query.org,
         repo: req.query.repo,

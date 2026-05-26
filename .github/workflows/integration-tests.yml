@@ -43,13 +43,16 @@ jobs:
             people-teams:
               - 'modules/team-tracker/**'
               - 'tests/integration/people-teams.spec.js'
+            upstream-pulse:
+              - 'modules/upstream-pulse/**'
+              - 'tests/integration/upstream-pulse.spec.js'
 
       - name: Build module matrix
         id: build-matrix
         run: |
           # If shared test files changed, then test all modules
           if [ "${{ steps.filter.outputs.shared-test-files }}" == "true" ]; then
-            MODULES='["ai-impact", "system-health", "people-teams"]'
+            MODULES='["ai-impact", "system-health", "people-teams", "upstream-pulse"]'
           else
             # Otherwise, use the modules that have direct changes
             MODULES='${{ steps.filter.outputs.changes }}'

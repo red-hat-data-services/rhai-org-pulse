@@ -1,6 +1,6 @@
 /**
  * Sets up error tracking for a Playwright page
- * 
+ *
  * Captures both page errors and console errors
  * @param {import('@playwright/test').Page} page - Playwright page object
  */
