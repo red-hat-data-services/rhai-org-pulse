@@ -8,7 +8,7 @@
   "client": {
     "entry": "./client/index.js",
     "navItems": [
-      { "id": "registry", "label": "Registry", "icon": "Database", "requireRole": "release-manager" },
+      { "id": "registry", "label": "Manage", "icon": "Database", "requireRole": "release-manager" },
       { "id": "plan", "label": "Plan", "icon": "ClipboardList", "default": true },
       { "id": "execute", "label": "Execute", "icon": "GitBranch" },
       { "id": "deliver", "label": "Deliver", "icon": "Rocket" },

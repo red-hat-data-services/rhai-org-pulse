@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-4xl mx-auto py-6 px-4">
+  <div>
     <!-- Permission guard -->
     <div v-if="!hasAccess" class="text-center py-16">
       <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Access Denied</h2>
@@ -7,6 +7,30 @@
     </div>
 
     <template v-else>
+    <!-- Tab bar -->
+    <div class="border-b border-gray-200 dark:border-gray-700">
+      <nav class="flex -mb-px px-4" aria-label="Manage sub-tabs">
+        <button
+          v-for="tab in manageTabs"
+          :key="tab.id"
+          @click="activeTab = tab.id"
+          class="px-4 py-3 text-sm font-medium border-b-2 transition-colors"
+          :class="activeTab === tab.id
+            ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+            : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'"
+        >
+          {{ tab.label }}
+        </button>
+      </nav>
+    </div>
+
+    <!-- Hygiene Rules tab -->
+    <div v-if="activeTab === 'hygiene'" class="p-6">
+      <HygieneConfigView />
+    </div>
+
+    <!-- Releases tab -->
+    <div v-else class="max-w-4xl mx-auto py-6 px-4">
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Release Registry</h1>
       <div class="flex items-center gap-3">
@@ -403,14 +427,45 @@
         </button>
       </div>
     </div>
+    </div>
     </template>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUpdate, nextTick } from 'vue'
+import { ref, computed, onMounted, onBeforeUpdate, nextTick, watch, inject } from 'vue'
 import { apiRequest } from '@shared/client/services/api.js'
 import { useAuth } from '@shared/client/composables/useAuth.js'
+import HygieneConfigView from '../components/HygieneConfigView.vue'
+
+const nav = inject('moduleNav')
+
+const manageTabs = [
+  { id: 'releases', label: 'Releases' },
+  { id: 'hygiene', label: 'Hygiene Rules' },
+]
+
+const VALID_MANAGE_TABS = manageTabs.map(t => t.id)
+const DEFAULT_MANAGE_TAB = 'releases'
+
+const activeTab = ref(DEFAULT_MANAGE_TAB)
+
+let updatingFromUrl = false
+
+watch(activeTab, (tab) => {
+  if (!updatingFromUrl) {
+    nav.updateParams({ tab: tab === DEFAULT_MANAGE_TAB ? undefined : tab })
+  }
+})
+
+watch(() => nav.params.value?.tab, (tabParam) => {
+  const tab = tabParam && VALID_MANAGE_TABS.includes(tabParam) ? tabParam : DEFAULT_MANAGE_TAB
+  if (activeTab.value !== tab) {
+    updatingFromUrl = true
+    activeTab.value = tab
+    nextTick(() => { updatingFromUrl = false })
+  }
+}, { immediate: true })
 
 const { isAdmin, roles: userRoles } = useAuth()
 const hasAccess = computed(() => isAdmin.value || userRoles.value.includes('release-manager'))

@@ -7,8 +7,6 @@ const loading = ref(true)
 const saving = ref(false)
 const saveError = ref(null)
 const saveSuccess = ref(false)
-const refreshStatus = ref(null)
-const refreshing = ref(false)
 const statusData = ref(null)
 
 async function loadConfig() {
@@ -53,31 +51,12 @@ async function saveConfig() {
     setTimeout(() => { saveSuccess.value = false }, 3000)
     // Reload status if fetch was triggered
     if (result.status === 'success' || result.status === 'error') {
-      refreshStatus.value = result
       loadStatus()
     }
   } catch (e) {
     saveError.value = e.message
   } finally {
     saving.value = false
-  }
-}
-
-async function triggerRefresh() {
-  refreshing.value = true
-  refreshStatus.value = null
-  try {
-    const result = await apiRequest('/modules/releases/execution/refresh', { method: 'POST' })
-    refreshStatus.value = result
-    loadStatus()
-  } catch (e) {
-    if (e.status === 429) {
-      refreshStatus.value = { status: 'cooldown', message: 'Please wait before refreshing again.' }
-    } else {
-      refreshStatus.value = { status: 'error', message: e.message }
-    }
-  } finally {
-    refreshing.value = false
   }
 }
 
@@ -198,42 +177,5 @@ onMounted(() => {
       </div>
     </template>
 
-    <!-- Manual Refresh -->
-    <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-      <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Data Refresh</h4>
-      <div class="flex items-center gap-3">
-        <button
-          @click="triggerRefresh"
-          :disabled="refreshing"
-          class="px-4 py-2 bg-gray-800 text-white rounded-md text-sm hover:bg-gray-900 disabled:opacity-50 dark:bg-gray-700 dark:hover:bg-gray-600"
-        >
-          {{ refreshing ? 'Refreshing...' : 'Refresh Now' }}
-        </button>
-        <div v-if="refreshStatus" class="text-sm">
-          <span :class="{
-            'text-green-600 dark:text-green-400': refreshStatus.status === 'success',
-            'text-red-600 dark:text-red-400': refreshStatus.status === 'error',
-            'text-yellow-600 dark:text-yellow-400': refreshStatus.status === 'cooldown' || refreshStatus.status === 'artifact_expired',
-            'text-gray-500 dark:text-gray-400': refreshStatus.status === 'skipped'
-          }">
-            {{ refreshStatus.status }}
-          </span>
-          <span v-if="refreshStatus.message"> &mdash; {{ refreshStatus.message }}</span>
-          <span v-if="refreshStatus.fileCount"> ({{ refreshStatus.fileCount }} files)</span>
-          <span v-if="refreshStatus.duration"> in {{ (refreshStatus.duration / 1000).toFixed(1) }}s</span>
-        </div>
-      </div>
-
-      <!-- Last Sync Info -->
-      <div v-if="statusData?.lastFetch" class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-        Last fetch:
-        <span :class="statusData.lastFetch.status === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
-          {{ statusData.lastFetch.status }}
-        </span>
-        <span v-if="statusData.lastFetch.timestamp">
-          at {{ new Date(statusData.lastFetch.timestamp).toLocaleString() }}
-        </span>
-      </div>
-    </div>
   </div>
 </template>

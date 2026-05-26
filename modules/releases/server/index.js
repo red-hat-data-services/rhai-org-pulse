@@ -11,6 +11,7 @@ const { registerRegistryRoutes } = require('./registry');
 const registerPlanningRoutes = require('./planning/routes');
 const registerExecutionRoutes = require('./execution/routes');
 const registerDeliveryRoutes = require('./delivery/routes');
+const registerHygieneRoutes = require('./hygiene/routes');
 const { getAuditLog } = require('./planning/audit-log');
 
 /**
@@ -158,6 +159,18 @@ module.exports = function registerRoutes(router, context) {
   });
   router.use('/delivery', deliveryRouter);
 
+  // Hygiene sub-router (mounted at /api/modules/releases/hygiene/)
+  var hygieneRouter = express.Router();
+  registerHygieneRoutes(hygieneRouter, {
+    storage,
+    requireAuth,
+    requireAdmin,
+    requireReleaseManager,
+    requireScope,
+    registerDiagnostics: context.registerDiagnostics || null
+  });
+  router.use('/hygiene', hygieneRouter);
+
   // ─── Unified Audit Routes ───
 
   /**
@@ -177,7 +190,7 @@ module.exports = function registerRoutes(router, context) {
    *         description: Filter by action type
    *       - in: query
    *         name: domain
-   *         schema: { type: string, enum: [planning, execution, delivery, registry] }
+   *         schema: { type: string, enum: [planning, execution, delivery, registry, hygiene] }
    *         description: Filter by domain
    *       - in: query
    *         name: limit
