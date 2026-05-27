@@ -1,0 +1,106 @@
+{
+  "version": "3.5",
+  "phase": "GA",
+  "snapshotAt": "2026-08-01T09:00:00.000Z",
+  "snapshotTrigger": "manual",
+  "featureKeys": [
+    "RHOAIENG-1001",
+    "RHOAIENG-1002",
+    "RHOAIENG-1003",
+    "RHOAIENG-1004",
+    "RHOAIENG-1005",
+    "RHOAIENG-1006",
+    "RHOAIENG-1007",
+    "RHOAIENG-1008",
+    "RHOAIENG-1009",
+    "RHOAIENG-1010",
+    "RHOAIENG-1011",
+    "RHOAIENG-1012"
+  ],
+  "features": [
+    {
+      "key": "RHOAIENG-1001",
+      "summary": "MaaS: Multi-model serving with shared GPU",
+      "status": "Done",
+      "components": ["Model Serving"],
+      "deliveryOwner": "David Kim"
+    },
+    {
+      "key": "RHOAIENG-1002",
+      "summary": "Model Registry: Distributed model versioning with S3",
+      "status": "Done",
+      "components": ["Model Registry"],
+      "deliveryOwner": "Emily Rodriguez"
+    },
+    {
+      "key": "RHOAIENG-1003",
+      "summary": "Distributed Training: Auto-scaling job orchestration",
+      "status": "Done",
+      "components": ["Distributed Training"],
+      "deliveryOwner": "Michael Johnson"
+    },
+    {
+      "key": "RHOAIENG-1004",
+      "summary": "Data Science Pipelines: MLflow integration",
+      "status": "In Progress",
+      "components": ["Pipelines"],
+      "deliveryOwner": "Jennifer Lopez"
+    },
+    {
+      "key": "RHOAIENG-1005",
+      "summary": "LLM Gateway: Token usage analytics dashboard",
+      "status": "Done",
+      "components": ["LLM Gateway"],
+      "deliveryOwner": "Carlos Martinez"
+    },
+    {
+      "key": "RHOAIENG-1006",
+      "summary": "TrustyAI: Bias detection for tabular datasets",
+      "status": "Done",
+      "components": ["TrustyAI"],
+      "deliveryOwner": "Amanda White"
+    },
+    {
+      "key": "RHOAIENG-1007",
+      "summary": "Pipeline Optimizer: Cost prediction engine",
+      "status": "Done",
+      "components": ["Pipelines"],
+      "deliveryOwner": "Lisa Anderson"
+    },
+    {
+      "key": "RHOAIENG-1008",
+      "summary": "Workbench: Real-time collaboration for notebooks",
+      "status": "In Progress",
+      "components": ["Workbench"],
+      "deliveryOwner": "Rachel Green"
+    },
+    {
+      "key": "RHOAIENG-1009",
+      "summary": "KServe: Custom runtime SDK v2",
+      "status": "Done",
+      "components": ["Model Serving"],
+      "deliveryOwner": "Thomas Brown"
+    },
+    {
+      "key": "RHOAIENG-1010",
+      "summary": "Security: RBAC for notebook environments",
+      "status": "Done",
+      "components": ["Security"],
+      "deliveryOwner": "Patricia Davis"
+    },
+    {
+      "key": "RHOAIENG-1011",
+      "summary": "Monitoring: Real-time GPU utilization metrics",
+      "status": "Done",
+      "components": ["Monitoring"],
+      "deliveryOwner": "Christopher Lee"
+    },
+    {
+      "key": "RHOAIENG-1012",
+      "summary": "Admin Dashboard: GPU allocation heatmap",
+      "status": "Done",
+      "components": ["Dashboard"],
+      "deliveryOwner": "James Wilson"
+    }
+  ]
+}

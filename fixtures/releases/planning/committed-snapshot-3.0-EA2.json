@@ -1,0 +1,33 @@
+{
+  "version": "3.0",
+  "phase": "EA2",
+  "snapshotAt": "2024-12-15T00:00:00.000Z",
+  "snapshotTrigger": "auto",
+  "featureKeys": ["RHOAIENG-501", "RHOAIENG-502", "RHOAIENG-503", "RHOAIENG-504"],
+  "features": [
+    {
+      "key": "RHOAIENG-501",
+      "summary": "Model Serving: vLLM runtime support",
+      "components": "Model Serving",
+      "deliveryOwner": "Alice Chen"
+    },
+    {
+      "key": "RHOAIENG-502",
+      "summary": "Dashboard: Resource quota visualization",
+      "components": "Dashboard",
+      "deliveryOwner": "Bob Martinez"
+    },
+    {
+      "key": "RHOAIENG-503",
+      "summary": "Pipelines: Kubeflow Pipelines v2 SDK",
+      "components": "Pipelines",
+      "deliveryOwner": "Carol Davis"
+    },
+    {
+      "key": "RHOAIENG-504",
+      "summary": "Workbench: JupyterLab 4.0 upgrade",
+      "components": "Workbench",
+      "deliveryOwner": "David Lee"
+    }
+  ]
+}

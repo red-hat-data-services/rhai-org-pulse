@@ -1,0 +1,21 @@
+{
+  "version": "3.0",
+  "phase": "EA1",
+  "snapshotAt": "2024-11-01T00:00:00.000Z",
+  "snapshotTrigger": "auto",
+  "featureKeys": ["RHOAIENG-501", "RHOAIENG-502"],
+  "features": [
+    {
+      "key": "RHOAIENG-501",
+      "summary": "Model Serving: vLLM runtime support",
+      "components": "Model Serving",
+      "deliveryOwner": "Alice Chen"
+    },
+    {
+      "key": "RHOAIENG-502",
+      "summary": "Dashboard: Resource quota visualization",
+      "components": "Dashboard",
+      "deliveryOwner": "Bob Martinez"
+    }
+  ]
+}
