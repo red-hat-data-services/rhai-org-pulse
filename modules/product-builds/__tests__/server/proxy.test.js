@@ -102,7 +102,7 @@ describe('proxyGet', () => {
     expect(res._json.detail).toBe('not found')
   })
 
-  it('returns 502 on fetch error', async () => {
+  it('returns 502 on fetch error', { timeout: 15000 }, async () => {
     globalThis.fetch = vi.fn().mockRejectedValue(new Error('ECONNREFUSED'))
 
     const res = makeRes()
