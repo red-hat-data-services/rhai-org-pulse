@@ -1,8 +1,8 @@
-const { jiraRequest, JIRA_HOST, fetchAllJqlResults } = require('../../../shared/server/jira')
+const { jiraRequest, JIRA_HOST, fetchAllJqlResults } = require('../../../../shared/server/jira')
 
 const JIRA_BROWSE = JIRA_HOST + '/browse'
 const JIRA_SEARCH = JIRA_HOST + '/issues/?jql='
-const CACHE_KEY = 'deep-analytics/tv-fv-delta.json'
+const CACHE_KEY = 'releases/tv-fv-delta.json'
 const CACHE_MAX_AGE_MS = 60 * 60 * 1000 // 1 hour
 
 // Default releases — EA1, EA2, then GA (timeline order)
@@ -22,13 +22,13 @@ async function fetchReleasesFromPlanning(storage) {
     // Try to read from planning module's config
     var planningData = storage.readFromStorage('releases/planning/config.json')
     if (!planningData || !planningData.releases) {
-      console.log('[deep-analytics] No planning config found, using default releases')
+      console.log('[releases/tv-fv-delta] No planning config found, using default releases')
       return DEFAULT_RELEASES
     }
 
     var baseVersions = Object.keys(planningData.releases).sort()
     if (baseVersions.length === 0) {
-      console.log('[deep-analytics] No releases configured, using defaults')
+      console.log('[releases/tv-fv-delta] No releases configured, using defaults')
       return DEFAULT_RELEASES
     }
 
@@ -45,10 +45,10 @@ async function fetchReleasesFromPlanning(storage) {
       expanded.push(baseVersions[k])
     }
 
-    console.log('[deep-analytics] Fetched ' + baseVersions.length + ' base releases from planning, expanded to ' + expanded.length + ' variants')
+    console.log('[releases/tv-fv-delta] Fetched ' + baseVersions.length + ' base releases from planning, expanded to ' + expanded.length + ' variants')
     return expanded
   } catch (err) {
-    console.error('[deep-analytics] Failed to fetch releases from planning:', err.message)
+    console.error('[releases/tv-fv-delta] Failed to fetch releases from planning:', err.message)
     return DEFAULT_RELEASES
   }
 }
@@ -91,6 +91,17 @@ function extractVersionNames(fixVersions) {
   return fixVersions.map(function(v) { return v.name || '' }).join(', ')
 }
 
+/**
+ * Detect z-stream (patch) releases — e.g. rhoai-3.4.1, rhoai-3.5.2.
+ * These carry bug fixes only, not features, so they don't belong in TV/FV analysis.
+ * Pattern: rhoai-X.Y.Z where Z is purely numeric (vs EA1, EA2 which are feature milestones).
+ */
+function isZStream(versionName) {
+  if (!versionName) return false
+  // Match rhoai-<major>.<minor>.<patch> where patch is a number
+  return /^rhoai-\d+\.\d+\.\d+$/i.test(versionName.trim())
+}
+
 // ---------------------------------------------------------------------------
 // Fetch all components from Jira project
 // ---------------------------------------------------------------------------
@@ -101,7 +112,7 @@ async function fetchAllComponents() {
     if (!Array.isArray(response)) return []
     return response.map(function(c) { return c.name }).filter(Boolean).sort()
   } catch (err) {
-    console.error('[deep-analytics] Failed to fetch components:', err.message)
+    console.error('[releases/tv-fv-delta] Failed to fetch components:', err.message)
     return []
   }
 }
@@ -263,9 +274,9 @@ function buildExport(classifications, releases, fetchTimestamp, allComponents) {
       aligned: cats.aligned,
       aligned_jql: jqlUrl(baseJql + ' AND "Target Version" in (' + release + ') AND fixVersion in (' + release + ')'),
       tv_only: cats.tv_only,
-      tv_only_jql: jqlUrl(baseJql + ' AND "Target Version" in (' + release + ') AND (fixVersion is EMPTY OR fixVersion not in (' + release + '))'),
+      tv_only_jql: jqlUrl(baseJql + ' AND "Target Version" in (' + release + ') AND fixVersion is EMPTY'),
       fv_only: cats.fv_only,
-      fv_only_jql: jqlUrl(baseJql + ' AND fixVersion in (' + release + ') AND ("Target Version" is EMPTY OR "Target Version" not in (' + release + '))'),
+      fv_only_jql: jqlUrl(baseJql + ' AND fixVersion in (' + release + ') AND "Target Version" is EMPTY'),
       mismatched: cats.mismatched,
       mismatched_jql: jqlUrl(baseJql + ' AND "Target Version" in (' + release + ') AND fixVersion is not EMPTY AND fixVersion not in (' + release + ')'),
       alignment_pct: alignPct
@@ -370,31 +381,31 @@ async function fetchAndClassify(releases, storage) {
   var fetchTimestamp = new Date().toISOString()
 
   // Fetch all components from Jira (for complete breakdown)
-  console.log('[deep-analytics] Fetching all components from RHAISTRAT')
+  console.log('[releases/tv-fv-delta] Fetching all components from RHAISTRAT')
   var allComponents = await fetchAllComponents()
-  console.log('[deep-analytics] Fetched ' + allComponents.length + ' components from Jira')
+  console.log('[releases/tv-fv-delta] Fetched ' + allComponents.length + ' components from Jira')
 
   // Build JQL: features that have TV or FV in any of the target releases
   var releaseList = releases.join(', ')
   var jql = 'project = RHAISTRAT AND issuetype = Feature AND ("Target Version" in (' + releaseList + ') OR fixVersion in (' + releaseList + '))'
 
-  console.log('[deep-analytics] Fetching features: ' + jql)
+  console.log('[releases/tv-fv-delta] Fetching features: ' + jql)
   var issues = await fetchAllJqlResults(jiraRequest, jql, JQL_FIELDS)
-  console.log('[deep-analytics] Fetched ' + issues.length + ' issues from Jira')
+  console.log('[releases/tv-fv-delta] Fetched ' + issues.length + ' issues from Jira')
 
   // Normalise
   var features = issues.map(normalizeIssue)
 
   // Classify
   var classifications = classifyFeatures(features, releases)
-  console.log('[deep-analytics] Classified ' + classifications.length + ' feature-release pairs')
+  console.log('[releases/tv-fv-delta] Classified ' + classifications.length + ' feature-release pairs')
 
   // Build export
   var result = buildExport(classifications, releases, fetchTimestamp, allComponents)
 
   // Cache
   storage.writeToStorage(CACHE_KEY, result)
-  console.log('[deep-analytics] Cached TV/FV delta (' + JSON.stringify(result).length + ' bytes)')
+  console.log('[releases/tv-fv-delta] Cached TV/FV delta (' + JSON.stringify(result).length + ' bytes)')
 
   return result
 }
@@ -403,10 +414,20 @@ async function fetchAndClassify(releases, storage) {
 // Route registration
 // ---------------------------------------------------------------------------
 
-module.exports = function registerRoutes(router, context) {
+// Exported for testing
+module.exports = registerRoutes
+module.exports.normVer = normVer
+module.exports.parseVersions = parseVersions
+module.exports.extractVersionNames = extractVersionNames
+module.exports.isZStream = isZStream
+module.exports.normalizeIssue = normalizeIssue
+module.exports.classifyFeatures = classifyFeatures
+module.exports.buildExport = buildExport
+module.exports.DEFAULT_RELEASES = DEFAULT_RELEASES
+
+function registerRoutes(router, context) {
   var storage = context.storage
   var requireAuth = context.requireAuth
-  var requireAdmin = context.requireAdmin
 
   // Refresh state tracking
   var refreshState = { running: false, lastResult: null, startedAt: null }
@@ -416,7 +437,7 @@ module.exports = function registerRoutes(router, context) {
     refreshState.running = true
     refreshState.startedAt = new Date().toISOString()
 
-    console.log('[deep-analytics] Background refresh started')
+    console.log('[releases/tv-fv-delta] Background refresh started')
     fetchAndClassify(releases, storage)
       .then(function(result) {
         refreshState.running = false
@@ -425,7 +446,7 @@ module.exports = function registerRoutes(router, context) {
           message: result.metadata.total_features + ' feature-release pairs classified',
           completedAt: new Date().toISOString()
         }
-        console.log('[deep-analytics] Background refresh completed')
+        console.log('[releases/tv-fv-delta] Background refresh completed')
       })
       .catch(function(err) {
         refreshState.running = false
@@ -434,20 +455,15 @@ module.exports = function registerRoutes(router, context) {
           message: err.message,
           completedAt: new Date().toISOString()
         }
-        console.error('[deep-analytics] Background refresh failed:', err.message)
+        console.error('[releases/tv-fv-delta] Background refresh failed:', err.message)
       })
-  }
-
-  var REQUIRED_KEYS = {
-    'tv-fv-delta': ['metadata', 'executive_summary', 'releases'],
-    'release-healthcheck': ['metadata', 'executive_summary', 'features'],
   }
 
   /**
    * @openapi
-   * /api/modules/deep-analytics/tv-fv-delta:
+   * /api/modules/releases/tv-fv-delta:
    *   get:
-   *     tags: ['Deep Analytics']
+   *     tags: ['Releases']
    *     summary: Get TV vs FV delta analysis
    *     description: Returns cached data with stale-while-revalidate. Triggers background refresh if cache is stale.
    *     responses:
@@ -456,7 +472,7 @@ module.exports = function registerRoutes(router, context) {
    *       404:
    *         description: No data available — trigger a refresh
    */
-  router.get('/tv-fv-delta', requireAuth, function (req, res) {
+  router.get('/', requireAuth, function (req, res) {
     var data = storage.readFromStorage(CACHE_KEY)
 
     if (data) {
@@ -485,9 +501,9 @@ module.exports = function registerRoutes(router, context) {
 
   /**
    * @openapi
-   * /api/modules/deep-analytics/tv-fv-delta/refresh:
+   * /api/modules/releases/tv-fv-delta/refresh:
    *   post:
-   *     tags: ['Deep Analytics']
+   *     tags: ['Releases']
    *     summary: Trigger a refresh of TV/FV delta data from Jira
    *     security: [{ admin: [] }]
    *     requestBody:
@@ -504,7 +520,7 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Refresh started or already running
    */
-  router.post('/tv-fv-delta/refresh', requireAdmin, async function (req, res) {
+  router.post('/refresh', requireAuth, async function (req, res) {
     if (refreshState.running) {
       return res.json({ status: 'already_running', startedAt: refreshState.startedAt })
     }
@@ -535,29 +551,29 @@ module.exports = function registerRoutes(router, context) {
 
   /**
    * @openapi
-   * /api/modules/deep-analytics/tv-fv-delta/refresh/status:
+   * /api/modules/releases/tv-fv-delta/refresh/status:
    *   get:
-   *     tags: ['Deep Analytics']
+   *     tags: ['Releases']
    *     summary: Check status of the TV/FV delta refresh
    *     responses:
    *       200:
    *         description: Refresh state
    */
-  router.get('/tv-fv-delta/refresh/status', requireAuth, function (req, res) {
+  router.get('/refresh/status', requireAuth, function (req, res) {
     res.json(refreshState)
   })
 
   /**
    * @openapi
-   * /api/modules/deep-analytics/tv-fv-delta/releases:
+   * /api/modules/releases/tv-fv-delta/releases:
    *   get:
-   *     tags: ['Deep Analytics']
+   *     tags: ['Releases']
    *     summary: Get configured releases from planning module (Smartsheet SSOT)
    *     responses:
    *       200:
    *         description: Release list expanded to EA1, EA2, GA variants
    */
-  router.get('/tv-fv-delta/releases', requireAuth, async function (req, res) {
+  router.get('/releases', requireAuth, async function (req, res) {
     var releases = await fetchReleasesFromPlanning(storage)
     res.json({
       releases: releases,
@@ -568,102 +584,62 @@ module.exports = function registerRoutes(router, context) {
 
   /**
    * @openapi
-   * /api/modules/deep-analytics/release-health:
+   * /api/modules/releases/tv-fv-delta/versions:
    *   get:
-   *     tags: ['Deep Analytics']
-   *     summary: Get release healthcheck analysis
+   *     tags: ['Releases']
+   *     summary: Get all fix versions from the Jira project
    *     responses:
    *       200:
-   *         description: Release health data with hygiene, drift, and action items
-   *       404:
-   *         description: No data available — run the export pipeline
+   *         description: All project fix versions with release dates
    */
-  router.get('/release-health', requireAuth, function (req, res) {
-    var data = storage.readFromStorage('deep-analytics/release-healthcheck.json')
-    if (!data) {
-      return res.status(404).json({ error: 'No release healthcheck data available. Run the export pipeline first.' })
-    }
-    res.json(data)
-  })
+  router.get('/versions', requireAuth, async function (req, res) {
+    var VERSIONS_CACHE_KEY = 'releases/tv-fv-delta-versions.json'
+    var VERSIONS_CACHE_MAX_AGE_MS = 4 * 60 * 60 * 1000 // 4 hours
 
-  /**
-   * @openapi
-   * /api/modules/deep-analytics/status:
-   *   get:
-   *     tags: ['Deep Analytics']
-   *     summary: Check data availability for all deep-analytics datasets
-   *     responses:
-   *       200:
-   *         description: Availability and metadata for each dataset
-   */
-  router.get('/status', requireAuth, function (req, res) {
-    var tvfv = storage.readFromStorage(CACHE_KEY)
-    var health = storage.readFromStorage('deep-analytics/release-healthcheck.json')
-
-    res.json({
-      tv_fv_delta: tvfv
-        ? { available: true, generated_at: tvfv.metadata?.generated_at, releases: tvfv.metadata?.releases }
-        : { available: false },
-      release_healthcheck: health
-        ? { available: true, generated_at: health.metadata?.generated_at, target_version: health.metadata?.target_version }
-        : { available: false },
-      refresh: refreshState
-    })
-  })
-
-  /**
-   * @openapi
-   * /api/modules/deep-analytics/ingest/{type}:
-   *   post:
-   *     tags: ['Deep Analytics']
-   *     summary: Ingest JSON payload from external export pipeline
-   *     security: [{ admin: [] }]
-   *     parameters:
-   *       - in: path
-   *         name: type
-   *         required: true
-   *         schema:
-   *           type: string
-   *           enum: [tv-fv-delta, release-healthcheck]
-   *         description: Dataset type to ingest
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *     responses:
-   *       200:
-   *         description: Ingestion successful
-   *       400:
-   *         description: Invalid type or missing required keys
-   */
-  router.post('/ingest/:type', requireAdmin, function (req, res) {
-    var type = req.params.type
-    var validTypes = ['tv-fv-delta', 'release-healthcheck']
-    if (!validTypes.includes(type)) {
-      return res.status(400).json({ error: 'Invalid type. Must be one of: ' + validTypes.join(', ') })
+    // Check cache first
+    var cached = storage.readFromStorage(VERSIONS_CACHE_KEY)
+    if (cached && cached.fetchedAt) {
+      var age = Date.now() - new Date(cached.fetchedAt).getTime()
+      if (age < VERSIONS_CACHE_MAX_AGE_MS) {
+        return res.json(cached)
+      }
     }
 
-    var required = REQUIRED_KEYS[type]
-    var missing = required.filter(function(k) { return !(k in req.body) })
-    if (missing.length) {
-      return res.status(400).json({ error: 'Missing required keys: ' + missing.join(', ') })
-    }
+    try {
+      var response = await jiraRequest('/rest/api/2/project/RHAISTRAT/versions')
+      if (!Array.isArray(response)) {
+        return res.json({ versions: [], fetchedAt: new Date().toISOString() })
+      }
 
-    var filename = type === 'tv-fv-delta' ? 'tv-fv-delta.json' : 'release-healthcheck.json'
-    storage.writeToStorage('deep-analytics/' + filename, req.body)
-    res.json({ success: true, type: type, size: JSON.stringify(req.body).length })
+      var versions = response
+        .filter(function(v) { return !v.archived && !isZStream(v.name) })
+        .map(function(v) {
+          return {
+            id: v.id,
+            name: v.name,
+            released: !!v.released,
+            releaseDate: v.releaseDate || null
+          }
+        })
+        .sort(function(a, b) { return (a.name || '').localeCompare(b.name || '') })
+
+      var result = { versions: versions, fetchedAt: new Date().toISOString() }
+      storage.writeToStorage(VERSIONS_CACHE_KEY, result)
+      res.json(result)
+    } catch (err) {
+      console.error('[releases/tv-fv-delta] Failed to fetch versions:', err.message)
+      // Return stale cache if available
+      if (cached) return res.json(cached)
+      res.status(502).json({ error: 'Failed to fetch versions from Jira', detail: err.message })
+    }
   })
 
   // Diagnostics hook
   if (context.registerDiagnostics) {
     context.registerDiagnostics(async function () {
       var tvfv = storage.readFromStorage(CACHE_KEY)
-      var health = storage.readFromStorage('deep-analytics/release-healthcheck.json')
       return {
         tvFvDelta: tvfv ? { generatedAt: tvfv.metadata?.generated_at, releases: tvfv.metadata?.releases } : null,
-        releaseHealth: health ? { generatedAt: health.metadata?.generated_at } : null,
         refresh: refreshState
       }
     })

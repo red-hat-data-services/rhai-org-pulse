@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { apiRequest } from '@shared/client'
 import ClickableCount from '../components/ClickableCount.vue'
 import FeatureTable from '../components/FeatureTable.vue'
@@ -11,11 +11,170 @@ const refreshing = ref(false)
 
 const selectedRelease = ref('')
 
+// Release picker state
+const registryReleases = ref([])
+const chosenReleases = ref([])
+const pickerOpen = ref(false)
+
 // Track timers for cleanup
 let pipelinePollTimeout = null
 let refreshPollInterval = null
+const pickerRef = ref(null)
+
+// Close dropdown when clicking outside
+function handleClickOutside(e) {
+  if (pickerRef.value && !pickerRef.value.contains(e.target)) {
+    pickerOpen.value = false
+  }
+}
+
+// Auto-trigger refresh (watcher registered after definitions below)
+let refreshDebounce = null
+let initialLoadDone = false
 
 const FEATURE_COLS = ['key', 'summary', 'status', 'target_version', 'fix_versions', 'color_status', 'product_manager', 'assignee', 'team', 'component']
+
+// ---------------------------------------------------------------------------
+// Release picker logic
+// ---------------------------------------------------------------------------
+
+/** Pick the next N releases whose code freeze is in the future (or most recent if all past) */
+function autoSelectReleases(releases, count = 3) {
+  const now = Date.now()
+  const withDates = releases
+    .filter(r => r.state === 'active' && r.fixVersions?.length)
+    .map(r => ({
+      ...r,
+      freezeTs: r.milestones?.codeFreeze ? new Date(r.milestones.codeFreeze).getTime() : null,
+      gaTs: r.milestones?.ga ? new Date(r.milestones.ga).getTime() : null,
+    }))
+
+  // Upcoming: code freeze in the future, sorted soonest-first
+  const upcoming = withDates
+    .filter(r => r.freezeTs && r.freezeTs > now)
+    .sort((a, b) => a.freezeTs - b.freezeTs)
+
+  if (upcoming.length >= count) return upcoming.slice(0, count)
+
+  // Fill remaining with most recent past releases (newest first)
+  const past = withDates
+    .filter(r => !r.freezeTs || r.freezeTs <= now)
+    .sort((a, b) => (b.freezeTs || 0) - (a.freezeTs || 0))
+
+  return [...upcoming, ...past].slice(0, count)
+}
+
+/** Whether chosen releases differ from what's currently cached */
+const selectionDirty = computed(() => {
+  if (!data.value?.metadata?.releases) return allSelectedVersions.value.length > 0
+  const cached = [...data.value.metadata.releases].sort()
+  const chosen = [...allSelectedVersions.value].sort()
+  if (cached.length !== chosen.length) return true
+  return cached.some((v, i) => v !== chosen[i])
+})
+
+function formatDate(dateStr) {
+  if (!dateStr) return ''
+  return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+/** Whether a version is present in the currently loaded data */
+function isInCurrentData(name) {
+  return data.value?.metadata?.releases?.includes(name) ?? false
+}
+
+// Jira versions (dropdown source when registry is sparse)
+const jiraVersions = ref([])
+const chosenVersionNames = ref(new Set())
+const versionSearch = ref('')
+
+/** All available versions for the dropdown — registry releases + Jira versions, deduplicated */
+const availableVersions = computed(() => {
+  const seen = new Set()
+  const result = []
+
+  // Registry releases first (richer metadata)
+  for (const rel of registryReleases.value) {
+    for (const fv of (rel.fixVersions || [])) {
+      if (!seen.has(fv)) {
+        seen.add(fv)
+        result.push({
+          name: fv,
+          displayName: rel.displayName,
+          codeFreeze: rel.milestones?.codeFreeze || null,
+          source: 'registry',
+        })
+      }
+    }
+  }
+
+  // Then Jira versions
+  for (const v of jiraVersions.value) {
+    if (!seen.has(v.name)) {
+      seen.add(v.name)
+      result.push({
+        name: v.name,
+        displayName: v.name,
+        codeFreeze: null,
+        releaseDate: v.releaseDate,
+        released: v.released,
+        source: 'jira',
+      })
+    }
+  }
+
+  return result
+})
+
+/** Filtered versions for the dropdown search */
+const filteredVersions = computed(() => {
+  const q = versionSearch.value.toLowerCase().trim()
+  if (!q) return availableVersions.value
+  return availableVersions.value.filter(v => v.name.toLowerCase().includes(q) || v.displayName.toLowerCase().includes(q))
+})
+
+/** The version name strings that are currently selected */
+const allSelectedVersions = computed(() => [...chosenVersionNames.value])
+
+// Auto-trigger refresh when selection changes (after initial load)
+watch(allSelectedVersions, () => {
+  if (!initialLoadDone) return
+  if (!selectionDirty.value) return
+  if (refreshDebounce) clearTimeout(refreshDebounce)
+  refreshDebounce = setTimeout(() => {
+    triggerRefresh()
+  }, 800)
+})
+
+function toggleVersion(name) {
+  const s = new Set(chosenVersionNames.value)
+  if (s.has(name)) {
+    s.delete(name)
+  } else {
+    s.add(name)
+  }
+  chosenVersionNames.value = s
+}
+
+function removeVersion(name) {
+  const s = new Set(chosenVersionNames.value)
+  s.delete(name)
+  chosenVersionNames.value = s
+  // Also remove from registry picks if present
+  chosenReleases.value = chosenReleases.value.filter(r => !(r.fixVersions || []).includes(name) || (r.fixVersions || []).some(fv => fv !== name && s.has(fv)))
+}
+
+/** Enrich chosen version names with display info */
+const chosenVersionsDisplay = computed(() => {
+  return allSelectedVersions.value.map(name => {
+    const info = availableVersions.value.find(v => v.name === name)
+    return info || { name, displayName: name, source: 'manual' }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Component breakdown
+// ---------------------------------------------------------------------------
 
 const releaseComponentBreakdown = computed(() => {
   if (!releaseData.value || !data.value) return []
@@ -40,45 +199,19 @@ const releaseComponentBreakdown = computed(() => {
     }
   }
 
-  // Get ALL components from server (including those with 0 features)
   const allComponentNames = data.value.metadata?.all_components || []
 
   let compList
   if (allComponentNames.length > 0) {
-    // Server has full component list - merge with computed counts
     compList = allComponentNames.map(compName => {
-      const computed = compMap[compName]
-      if (computed) {
-        return {
-          component: compName,
-          total: computed.total,
-          aligned: computed.aligned,
-          tv_only: computed.tv_only,
-          fv_only: computed.fv_only,
-          mismatched: computed.mismatched,
-          alignment_pct: computed.total ? Math.round(1000 * computed.aligned / computed.total) / 10 : 0,
-        }
-      } else {
-        return {
-          component: compName,
-          total: 0,
-          aligned: 0,
-          tv_only: 0,
-          fv_only: 0,
-          mismatched: 0,
-          alignment_pct: 0,
-        }
-      }
+      const c = compMap[compName]
+      return c
+        ? { component: compName, total: c.total, aligned: c.aligned, tv_only: c.tv_only, fv_only: c.fv_only, mismatched: c.mismatched, alignment_pct: c.total ? Math.round(1000 * c.aligned / c.total) / 10 : 0 }
+        : { component: compName, total: 0, aligned: 0, tv_only: 0, fv_only: 0, mismatched: 0, alignment_pct: 0 }
     })
   } else {
-    // Fallback: show only components that appear in features
     compList = Object.values(compMap).map(c => ({
-      component: c.component,
-      total: c.total,
-      aligned: c.aligned,
-      tv_only: c.tv_only,
-      fv_only: c.fv_only,
-      mismatched: c.mismatched,
+      component: c.component, total: c.total, aligned: c.aligned, tv_only: c.tv_only, fv_only: c.fv_only, mismatched: c.mismatched,
       alignment_pct: c.total ? Math.round(1000 * c.aligned / c.total) / 10 : 0,
     }))
   }
@@ -86,11 +219,42 @@ const releaseComponentBreakdown = computed(() => {
   return compList.sort((a, b) => b.total - a.total || a.component.localeCompare(b.component))
 })
 
+// ---------------------------------------------------------------------------
+// Data fetching
+// ---------------------------------------------------------------------------
+
+async function fetchRegistry() {
+  try {
+    const result = await apiRequest('/modules/releases/registry')
+    registryReleases.value = (result.releases || []).filter(r => r.state === 'active')
+    if (!chosenReleases.value.length) {
+      const auto = autoSelectReleases(registryReleases.value)
+      chosenReleases.value = auto
+      // Seed chosenVersionNames from auto-selected registry releases
+      const names = new Set()
+      for (const rel of auto) {
+        for (const fv of (rel.fixVersions || [])) names.add(fv)
+      }
+      if (names.size) chosenVersionNames.value = names
+    }
+  } catch {
+    // Registry not available — fall back to whatever the server provides
+  }
+}
+
+async function fetchVersions() {
+  try {
+    const result = await apiRequest('/modules/releases/tv-fv-delta/versions')
+    jiraVersions.value = result.versions || []
+  } catch {
+    // Versions endpoint not available — dropdown will use registry only
+  }
+}
+
 async function fetchData() {
   try {
-    const result = await apiRequest('/modules/deep-analytics/tv-fv-delta')
+    const result = await apiRequest('/modules/releases/tv-fv-delta')
     if (result._noCache) {
-      // Pipeline running for the first time — poll
       refreshing.value = true
       pipelinePollTimeout = setTimeout(fetchData, 5000)
       return
@@ -111,16 +275,23 @@ async function triggerRefresh() {
   if (refreshing.value) return
   refreshing.value = true
   try {
-    await apiRequest('/modules/deep-analytics/tv-fv-delta/refresh', { method: 'POST' })
-    // Poll for completion
+    const body = allSelectedVersions.value.length
+      ? { releases: allSelectedVersions.value }
+      : {}
+    await apiRequest('/modules/releases/tv-fv-delta/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
     if (refreshPollInterval) clearInterval(refreshPollInterval)
     refreshPollInterval = setInterval(async () => {
       try {
-        const status = await apiRequest('/modules/deep-analytics/tv-fv-delta/refresh/status')
+        const status = await apiRequest('/modules/releases/tv-fv-delta/refresh/status')
         if (!status.running) {
           clearInterval(refreshPollInterval)
           refreshPollInterval = null
           refreshing.value = false
+          selectedRelease.value = ''
           await fetchData()
         }
       } catch {
@@ -135,9 +306,22 @@ async function triggerRefresh() {
   }
 }
 
-onMounted(fetchData)
+onMounted(async () => {
+  document.addEventListener('click', handleClickOutside)
+  await Promise.all([fetchRegistry(), fetchVersions()])
+  await fetchData()
+  // If registry was empty and we have cached data, seed from cached releases
+  if (!chosenVersionNames.value.size && data.value?.metadata?.releases?.length) {
+    chosenVersionNames.value = new Set(data.value.metadata.releases)
+  }
+  // Enable auto-refresh watcher now that initial state is settled
+  await nextTick()
+  initialLoadDone = true
+})
 
 onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
+  if (refreshDebounce) clearTimeout(refreshDebounce)
   if (pipelinePollTimeout) clearTimeout(pipelinePollTimeout)
   if (refreshPollInterval) clearInterval(refreshPollInterval)
 })
@@ -175,6 +359,84 @@ const releaseSummary = computed(() => {
       >
         {{ refreshing ? 'Refreshing...' : 'Refresh from Jira' }}
       </button>
+    </div>
+
+    <!-- Release Picker -->
+    <div class="mb-6">
+      <div class="flex items-center gap-3 flex-wrap">
+        <span class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Releases:</span>
+        <!-- Selected version chips -->
+        <span
+          v-for="v in chosenVersionsDisplay"
+          :key="v.name"
+          class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-full border"
+          :class="isInCurrentData(v.name)
+            ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800'
+            : 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-700 border-dashed'"
+        >
+          {{ v.displayName }}
+          <span v-if="v.codeFreeze" class="text-blue-400 dark:text-blue-500">
+            CF {{ formatDate(v.codeFreeze) }}
+          </span>
+          <button
+            @click="removeVersion(v.name)"
+            class="ml-0.5 opacity-40 hover:opacity-100 transition-opacity"
+            title="Remove"
+          >&times;</button>
+        </span>
+        <!-- Dropdown trigger -->
+        <div class="relative" ref="pickerRef">
+          <button
+            @click.stop="pickerOpen = !pickerOpen"
+            class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full border border-dashed border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+          >
+            + Add release
+          </button>
+          <!-- Dropdown panel -->
+          <div
+            v-if="pickerOpen"
+            class="absolute z-20 mt-1 left-0 w-80 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-lg"
+            @click.stop
+          >
+            <!-- Search -->
+            <div class="p-2 border-b border-gray-200 dark:border-gray-700">
+              <input
+                v-model="versionSearch"
+                type="text"
+                placeholder="Search versions..."
+                class="w-full px-2.5 py-1.5 text-sm rounded-md border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+            <!-- Version list -->
+            <div class="max-h-64 overflow-y-auto">
+              <button
+                v-for="v in filteredVersions"
+                :key="v.name"
+                class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/50 flex items-center justify-between gap-2 transition-colors"
+                :class="{ 'bg-blue-50 dark:bg-blue-900/20': chosenVersionNames.has(v.name) }"
+                @click.stop="toggleVersion(v.name)"
+              >
+                <div class="min-w-0">
+                  <span class="font-medium text-gray-900 dark:text-gray-100">{{ v.displayName }}</span>
+                  <span v-if="v.codeFreeze" class="ml-2 text-xs text-gray-400">CF {{ formatDate(v.codeFreeze) }}</span>
+                  <span v-else-if="v.releaseDate" class="ml-2 text-xs text-gray-400">{{ v.released ? 'Released' : 'Due' }} {{ formatDate(v.releaseDate) }}</span>
+                </div>
+                <span v-if="chosenVersionNames.has(v.name)" class="text-blue-500 flex-shrink-0">&#10003;</span>
+              </button>
+              <div v-if="!filteredVersions.length" class="px-3 py-4 text-center text-xs text-gray-400">
+                {{ availableVersions.length ? 'No matches' : 'No versions available' }}
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Refresh indicator -->
+        <span
+          v-if="refreshing"
+          class="px-2.5 py-1 text-xs font-medium rounded-full bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700"
+        >
+          Analyzing...
+        </span>
+      </div>
     </div>
 
     <div v-if="loading" class="text-gray-500 dark:text-gray-400">Loading...</div>
