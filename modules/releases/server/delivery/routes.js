@@ -249,6 +249,38 @@ function filterUnreleased(releases) {
   })
 }
 
+/**
+ * Filters releases to show versions 3.5 and above, excluding z-stream/patch releases and pre-3.5 versions.
+ *
+ * Matches: 3.5, 3.5.EA1, 3.6, rhoai-3.5, rhoai-3.5.EA2, rhoai-3.6, rhaiis-3.6.EA1, rhoai-3.7, rhoai-4.0
+ * Excludes: 3.4 (old), 3.3 (old), 3.5.1 (z-stream), 3.6.2 (z-stream), rhoai-3.4 (old)
+ *
+ * @param {Array} releases - Array of release objects with releaseNumber field
+ * @returns {Array} Filtered releases (3.5+ major releases only)
+ */
+function filterMajorReleasesFrom34(releases) {
+  // Match both "3.5" and "rhoai-3.5" formats (product prefix is optional)
+  const MAJOR_RELEASE_PATTERN = /^(?:[a-z]+-)?(\d+)\.(\d+)(?:\.EA\d*)?$/i
+  const TARGET_MAJOR = 3
+  const MIN_MINOR = 5
+
+  return releases.filter(r => {
+    const releaseNum = r.releaseNumber || ''
+    const match = releaseNum.match(MAJOR_RELEASE_PATTERN)
+
+    if (!match) {
+      // Doesn't match major release pattern - might be z-stream, filter out
+      return false
+    }
+
+    const major = parseInt(match[1], 10)
+    const minor = parseInt(match[2], 10)
+
+    // Only keep major version 3, minor version 5 and above (3.5, 3.6, 3.7, ...)
+    return major === TARGET_MAJOR && minor >= MIN_MINOR
+  })
+}
+
 async function fetchIssuesFromJira(config) {
   const clause = getDefaultFixVersionJql(config)
 
@@ -916,15 +948,16 @@ async function runFullAnalysis(storage, config) {
     analysisReleases = openReleases
   }
   const analysisOpenReleases = filterUnreleased(analysisReleases)
+  const filteredReleases = filterMajorReleasesFrom34(analysisOpenReleases)
 
-  if (!analysisOpenReleases.length) {
+  if (!filteredReleases.length) {
     throw new Error(
-      'No unreleased open releases found. Ensure Jira Fix Versions exist for your projects, ' +
-      'or configure Product Pages product shortnames in Release Analysis settings.'
+      'No unreleased major releases (3.5+) found. Ensure Product Pages product shortnames are configured correctly ' +
+      'with rhoai, rhelai, and RHAIIS, or check Jira Fix Versions for your projects.'
     )
   }
 
-  const result = buildAnalysis(analysisOpenReleases, issues, fieldMeta, config)
+  const result = buildAnalysis(filteredReleases, issues, fieldMeta, config)
   result.sprintWindow = sprintWindow || {
     startDate: new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10),
     endDate: new Date().toISOString().slice(0, 10),
@@ -1198,6 +1231,168 @@ module.exports = function registerRoutes(router, context) {
       })
     } catch (error) {
       console.error('[releases/delivery] analysis error:', error)
+      res.status(500).json({ error: error.message })
+    }
+  })
+
+  /**
+   * @openapi
+   * /api/modules/releases/delivery/commitment/{version}/{phase}:
+   *   get:
+   *     summary: Get commitment tracking data for a release phase
+   *     description: Compares committed features (from planning snapshot) with delivered features (from delivery analysis) to track commitment vs. delivery for OKR monitoring
+   *     tags: [Releases - Delivery]
+   *     parameters:
+   *       - in: path
+   *         name: version
+   *         required: true
+   *         schema: { type: string }
+   *         example: "3.5"
+   *       - in: path
+   *         name: phase
+   *         required: true
+   *         schema: { type: string, enum: [EA1, EA2, GA] }
+   *         example: "EA1"
+   *     responses:
+   *       200:
+   *         description: Commitment tracking metrics and feature lists
+   *       400:
+   *         description: Invalid phase
+   *       404:
+   *         description: No snapshot found for this version/phase
+   *       500:
+   *         description: Server error
+   */
+  router.get('/commitment/:version/:phase', requireAuth, requireScope('releases:read'), function(req, res) {
+    try {
+      const VALID_PHASES = ['EA1', 'EA2', 'GA']
+      const version = req.params.version
+      const phase = (req.params.phase || '').toUpperCase()
+
+      // Validate phase
+      if (!VALID_PHASES.includes(phase)) {
+        return res.status(400).json({ error: 'Invalid phase. Must be one of: EA1, EA2, GA' })
+      }
+
+      // Load snapshot
+      const snapshot = readFromStorage(`releases/planning/committed-snapshot-${version}-${phase}.json`)
+      if (!snapshot) {
+        return res.status(404).json({ error: `No committed snapshot found for ${version} ${phase}` })
+      }
+
+      // Load delivery analysis
+      const deliveryCache = readFromStorage('releases/delivery/analysis-cache.json')
+      const deliveryData = deliveryCache?.data || null
+
+      // Build feature map from delivery analysis
+      const deliveryFeatureMap = new Map()
+      if (deliveryData && deliveryData.releases) {
+        for (const release of deliveryData.releases) {
+          if (release.issues) {
+            for (const issue of release.issues) {
+              if (issue.key) {
+                deliveryFeatureMap.set(issue.key, issue)
+              }
+            }
+          }
+        }
+      }
+
+      // Initialize metrics and feature lists
+      const metrics = {
+        committed: snapshot.featureKeys.length,
+        delivered: 0,
+        percentDelivered: 0,
+        inProgress: 0,
+        notStarted: 0,
+        added: 0,
+        removed: 0
+      }
+
+      const features = {
+        delivered: [],
+        inProgress: [],
+        notStarted: [],
+        added: [],
+        removed: []
+      }
+
+      // Categorize committed features
+      const committedKeysSet = new Set(snapshot.featureKeys)
+      for (const key of snapshot.featureKeys) {
+        const deliveryFeature = deliveryFeatureMap.get(key)
+        if (!deliveryFeature) {
+          // Feature was in snapshot but not in delivery data → removed
+          const snapshotFeature = snapshot.features.find(f => f.key === key)
+          if (snapshotFeature) {
+            features.removed.push(snapshotFeature)
+            metrics.removed++
+          }
+          continue
+        }
+
+        // Feature exists in delivery data — categorize by status
+        const featureInfo = {
+          key: deliveryFeature.key,
+          summary: deliveryFeature.summary,
+          components: deliveryFeature.components || '',
+          deliveryOwner: deliveryFeature.deliveryOwner || '',
+          status: deliveryFeature.status || ''
+        }
+
+        const bucket = deliveryFeature.statusBucket || 'to_do'
+        if (bucket === 'done') {
+          features.delivered.push(featureInfo)
+          metrics.delivered++
+        } else if (bucket === 'doing') {
+          features.inProgress.push(featureInfo)
+          metrics.inProgress++
+        } else {
+          features.notStarted.push(featureInfo)
+          metrics.notStarted++
+        }
+      }
+
+      // Find features added after snapshot (in delivery but not in snapshot)
+      for (const [key, deliveryFeature] of deliveryFeatureMap.entries()) {
+        if (!committedKeysSet.has(key)) {
+          // Check if this feature belongs to this release/phase
+          const fixVersions = deliveryFeature.fixVersions || []
+          const hasPhaseMatch = fixVersions.some(fv => {
+            const normalized = normalizeText(fv)
+            return normalized.includes(normalizeText(version)) && normalized.includes(normalizeText(phase))
+          })
+
+          if (hasPhaseMatch) {
+            features.added.push({
+              key: deliveryFeature.key,
+              summary: deliveryFeature.summary,
+              components: deliveryFeature.components || '',
+              deliveryOwner: deliveryFeature.deliveryOwner || '',
+              status: deliveryFeature.status || ''
+            })
+            metrics.added++
+          }
+        }
+      }
+
+      // Calculate percentage delivered
+      if (metrics.committed > 0) {
+        metrics.percentDelivered = Math.round((metrics.delivered / metrics.committed) * 100 * 10) / 10
+      }
+
+      res.json({
+        version,
+        phase,
+        snapshot: {
+          snapshotAt: snapshot.snapshotAt,
+          trigger: snapshot.snapshotTrigger || 'unknown'
+        },
+        metrics,
+        features
+      })
+    } catch (error) {
+      console.error('[releases/delivery] commitment tracking error:', error)
       res.status(500).json({ error: error.message })
     }
   })
@@ -1527,3 +1722,6 @@ module.exports = function registerRoutes(router, context) {
     }
   })
 }
+
+// Export filter function for testing
+module.exports.filterMajorReleasesFrom34 = filterMajorReleasesFrom34

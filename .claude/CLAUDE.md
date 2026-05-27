@@ -92,6 +92,14 @@ npm run dev:full       # Starts Vite (5173) + Express (3001)
 - Frontend: localStorage stale-while-revalidate (prefix `tt_cache:`).
 - API functions accept `onData` callback: called with cached data immediately, then fresh data.
 
+### Release Filtering (Releases Module)
+- **Version filter**: Versions 3.5 and above are shown (3.4 and earlier excluded)
+- **Major releases only**: Z-stream/patch releases (3.5.1, 3.5.2) are excluded
+- **EA expansion**: Products with bundled EA/GA milestones (rhelai, RHAIIS) are expanded into discrete entries (EA1, EA2, GA)
+- **Product Pages as source**: All release metadata (dates, milestones) comes from Product Pages API
+- **Default products**: rhoai, rhelai, RHAIIS configured in `productPagesProductShortnames`
+- **Current releases**: 18 releases in demo fixture (2 versions × 3 products × 3 stages: EA1, EA2, GA)
+
 ## Project Structure
 
 ```
@@ -286,7 +294,8 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/modules/releases/delivery/config` — delivery config (admin)
 - `/api/modules/releases/delivery/product-pages/products` — Product Pages products (admin)
 - `/api/modules/releases/delivery/refresh/status` — delivery refresh status
-- `/api/modules/releases/delivery/analysis` — release analysis data
+- `/api/modules/releases/delivery/analysis` — release analysis data (fetches from Product Pages for rhoai/rhelai/RHAIIS, filters to 3.5+ major releases, expands EA/GA milestones, merges with Jira issues)
+- `/api/modules/releases/delivery/commitment/:version/:phase` — commitment tracking (snapshot vs delivered)
 - `/api/modules/releases/delivery/conforma/releases` — conforma releases
 - `/api/modules/releases/delivery/conforma/releases/:version` — conforma release detail
 - `/api/modules/releases/delivery/conforma/status` — conforma data status
