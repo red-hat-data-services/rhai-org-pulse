@@ -172,13 +172,8 @@ onMounted(async () => {
     // Load all versions (no component filter initially)
     versions.value = await getVersions();
 
-    // Default to RHOAI product if it exists
-    if (products.value.includes('rhoai')) {
-      selectedProduct.value = 'rhoai';
-    }
-
-    // Auto-select first 3 versions with bugs from filtered list
-    const versionsWithBugs = filteredVersions.value.filter(v => v.bugCount > 0);
+    // Auto-select first 3 versions with bugs from all products
+    const versionsWithBugs = versions.value.filter(v => v.bugCount > 0);
     if (versionsWithBugs.length > 0) {
       selectedVersions.value = versionsWithBugs.slice(0, 3).map(v => v.name);
     }
