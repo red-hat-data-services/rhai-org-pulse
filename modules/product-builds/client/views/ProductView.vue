@@ -83,7 +83,7 @@ async function loadMoreArtifacts() {
 const { arrivedState } = useScroll(window, { offset: { bottom: 200 } })
 
 watch(() => arrivedState.bottom, (arrived) => {
-  if (arrived) loadMoreArtifacts()
+  if (arrived && activeTab.value === 'artifacts') loadMoreArtifacts()
 })
 
 watch(activeTab, (tab) => {
