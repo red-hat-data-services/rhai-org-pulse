@@ -300,4 +300,10 @@ module.exports = function registerRoutes(router, context) {
 
     res.json({ status: 'completed', ...results });
   });
+
+  // ─── Export Hook ───
+
+  if (context.registerExport) {
+    context.registerExport(require('./export'));
+  }
 };

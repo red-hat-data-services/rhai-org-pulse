@@ -98,12 +98,6 @@ function validate() {
 
     // Export field validation
     if (manifest.export) {
-      if (manifest.export.customHandler === true) {
-        const exportPath = path.join(MODULES_DIR, dir, 'server', 'export.js')
-        if (!fs.existsSync(exportPath)) {
-          error(`export.customHandler is true but server/export.js not found`)
-        }
-      }
       if (manifest.export.files !== undefined && !Array.isArray(manifest.export.files)) {
         error(`export.files must be an array`)
       }

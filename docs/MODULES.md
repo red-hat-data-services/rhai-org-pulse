@@ -70,6 +70,33 @@ modules/your-module/
 | `client.settingsComponent` | No | Vue component for the Settings page |
 | `server.entry` | No | Path to backend entry point |
 
+### navItem Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `id` | string | Yes | Unique within module, maps to a key in the `routes` export |
+| `label` | string | Yes | Sidebar display text |
+| `icon` | string | Yes | Lucide icon name |
+| `default` | boolean | No | If `true`, this is the module's landing view |
+| `disabled` | boolean | No | If `true`, item is visible but non-clickable (greyed out) |
+| `requireRole` | string | No | Only show item to users with this role (e.g., `"manager"`, `"team-admin"`, `"release-manager"`) |
+| `requireCondition` | string | No | Only show when condition is met (e.g., `"in-app-mode"` — hides when roster is sheet-based) |
+| `separatorBefore` | boolean | No | Render a visual separator line above this item |
+
+### `hiddenRoutes`
+
+In `client`, you can declare `hiddenRoutes` — a map of route IDs to their parent navItem ID. These are routes that exist in the `routes` export but should not appear as sidebar items (e.g., detail views navigated to programmatically):
+
+```json
+{
+  "client": {
+    "hiddenRoutes": {
+      "feature-detail": "execute"
+    }
+  }
+}
+```
+
 ### navItems vs routes
 
 - **`navItems`** defines what appears in the sidebar. Each has `id`, `label`, `icon`, and optionally `default: true`.
@@ -131,6 +158,10 @@ This produces a hash URL like `#/releases/feature-detail?key=RHAISTRAT-123` and 
 ## Backend Entry (`server/index.js`)
 
 ```javascript
+/**
+ * @param {import('express').Router} router
+ * @param {import('@shared/server/module-context').ModuleContext} context
+ */
 module.exports = function registerRoutes(router, context) {
   const { storage, requireAuth, requireAdmin } = context
 
@@ -147,6 +178,35 @@ module.exports = function registerRoutes(router, context) {
 ```
 
 Routes are automatically mounted at `/api/modules/<slug>/`.
+
+## Server Context Reference
+
+The authoritative typedef for the context object is in `shared/server/module-context.js`. Each module receives a frozen, per-module context built by `buildModuleContext()`.
+
+### Context Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `storage` | object | Storage module (`readFromStorage`, `writeToStorage`, etc.) |
+| `requireAuth` | middleware | Requires authenticated user |
+| `requireAdmin` | middleware | Requires admin role |
+| `requireTeamAdmin` | middleware | Requires team-admin or admin role |
+| `requireReleaseManager` | middleware | Requires release-manager role |
+| `requireScope(name)` | function | Returns middleware for API token scope check |
+| `roleStore` | object | Role store instance |
+| `registerDiagnostics(fn)` | function | Register diagnostics hook (see below) |
+| `registerMessageProvider(id, fn)` | function | Register message provider (see below) |
+| `registerRefresh(id, config)` | function | Register refresh handler (see below) |
+| `registerExport(fn)` | function | Register data export hook (see below) |
+
+### Testing
+
+Use `createTestContext(overrides)` from `shared/server/module-context.js` to create a mock context for unit tests:
+
+```javascript
+const { createTestContext } = require('../../shared/server/module-context')
+const context = createTestContext({ storage: myMockStorage })
+```
 
 ## Shared Imports
 
@@ -224,14 +284,13 @@ The daily CronJob (`deploy/openshift/overlays/prod/cronjob-sync-refresh.yaml`) c
 
 ## Export Hook
 
-Modules can participate in the anonymized test data export by declaring an `export` field in `module.json` and providing a custom export handler.
+Modules can participate in the anonymized test data export by registering an export hook via `context.registerExport(fn)` and optionally declaring exported files in `module.json`.
 
-### module.json
+### module.json (optional)
 
 ```json
 {
   "export": {
-    "customHandler": true,
     "files": [
       { "path": "my-data.json", "notes": "Description of data" }
     ]
@@ -239,7 +298,19 @@ Modules can participate in the anonymized test data export by declaring an `expo
 }
 ```
 
-When `customHandler` is `true`, the orchestrator calls `server/export.js` during export. The `files` array is documentation-only when `customHandler` is `true`.
+The `files` array is documentation-only — it describes what the export hook produces. The actual export logic lives in the registered hook.
+
+### Registering an Export Hook
+
+In your `server/index.js`, register the export function:
+
+```javascript
+module.exports = function registerRoutes(router, context) {
+  // ... routes ...
+
+  context.registerExport(require('./export'))
+}
+```
 
 ### server/export.js
 
@@ -263,8 +334,6 @@ module.exports = async function(addFile, storage, mapping) {
 - `addFile(path, jsonData)` — adds a file to the tarball (path relative to `data/` root)
 - `storage` — shared storage layer (`readFromStorage`, `writeToStorage`, `listStorageFiles`)
 - `mapping` — universal PII mapping from `shared/server/anonymize.js` with functions like `getOrCreateNameMapping()`, `anonymizeJiraKey()`, `anonymizeIssueSummary()`, etc.
-
-The validation script (`npm run validate:modules`) checks that `server/export.js` exists when `customHandler` is `true`.
 
 ## Diagnostics Hook
 
@@ -302,11 +371,12 @@ module.exports = function registerRoutes(router, context) {
 - **Include data integrity checks**: Missing files, stale caches, configuration mismatches
 - **Keep it fast**: The hook has a 10-second timeout. Avoid expensive operations
 - **No PII in keys**: Put PII in values only — the must-gather redaction system anonymizes values but not the structure
-- **Guard the call**: Always check `if (context.registerDiagnostics)` for backward compatibility
+- **Guard the call**: Check `if (context.registerDiagnostics)` for backward compatibility with hand-rolled test contexts
 
 ### How It Works
 
-- `context.registerDiagnostics` is set per-module during router creation in `module-loader.js`
+- Each module's frozen context provides a `registerDiagnostics` function scoped to that module's slug
+- Multiple calls accumulate — sub-routers can each register their own diagnostics (e.g., releases' planning, execution, and delivery)
 - All registered hooks are called in parallel with a 10-second timeout via `collectModuleDiagnostics()`
 - Errors in one module's hook don't affect others
 - Results appear under `modules.<slug>` in the must-gather bundle
@@ -360,8 +430,8 @@ module.exports = function registerRoutes(router, context) {
 
 ### Guidelines
 
-- **Guard the call**: Always check `if (context.registerMessageProvider)` for backward compatibility
-- **Synchronous registration**: Providers must be registered synchronously during `require(entryPath)` — the same constraint as `registerDiagnostics`. Deferred registration (e.g., in `setTimeout`) will fail because the context is cleaned up after module loading
+- **Guard the call**: Check `if (context.registerMessageProvider)` for backward compatibility with hand-rolled test contexts
+- **Synchronous registration**: Providers must be registered synchronously during `require(entryPath)` — the same constraint as `registerDiagnostics`
 - **Per-request execution**: Provider functions are called on every `GET /api/messages` request with the current user context. Keep them fast
 - **Timeout**: Each provider has a 5-second timeout. Providers that exceed this are skipped with a warning
 - **Error isolation**: If a provider throws or times out, other providers still run and the endpoint still returns results
@@ -370,7 +440,7 @@ module.exports = function registerRoutes(router, context) {
 
 ### How It Works
 
-- `context.registerMessageProvider` is set per-module during router creation in `module-loader.js`
+- Each module's frozen context provides a `registerMessageProvider` function that delegates to the shared message registry
 - All registered providers are called sequentially by the message registry on `GET /api/messages`
 - Provider results are merged with admin-stored messages from `data/messages.json`
 - The client fetches messages once on app load (non-blocking) and renders them as sticky banners inside the header
