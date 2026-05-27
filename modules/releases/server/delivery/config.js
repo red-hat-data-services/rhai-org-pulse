@@ -7,7 +7,7 @@ const DEFAULT_CONFIG = {
   riskIssuesPerDayGreen: 1,
   riskIssuesPerDayYellow: 10,
   productPagesReleasesUrl: '',
-  productPagesProductShortnames: [],
+  productPagesProductShortnames: ['rhoai', 'rhelai', 'RHAII'],
   productPagesBaseUrl: 'https://productpages.redhat.com',
   productPagesTokenUrl: 'https://auth.redhat.com/auth/realms/EmployeeIDP/protocol/openid-connect/token',
   jiraAllProjects: false,
