@@ -21,16 +21,67 @@
     </div>
 
     <template v-else>
-      <div class="flex gap-4 mb-6">
-        <ComponentFilter
-          v-model="selectedComponent"
-          :components="allComponents"
-        />
-        <VersionSelector
-          v-model="selectedVersions"
-          :versions="versions"
-          :max-selections="6"
-        />
+      <!-- Stepped Filter Interface - Horizontal -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Step 1: Product Selection -->
+          <div class="relative">
+            <div class="flex items-center gap-2 mb-3">
+              <div class="flex items-center justify-center w-7 h-7 rounded-full bg-blue-600 text-white text-sm font-semibold flex-shrink-0">
+                1
+              </div>
+              <h3 class="text-base font-semibold">Product</h3>
+            </div>
+            <div class="pl-9">
+              <select
+                v-model="selectedProduct"
+                class="w-full px-3 py-2 text-sm border-2 rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900"
+              >
+                <option value="">All Products</option>
+                <option v-for="product in products" :key="product" :value="product">
+                  {{ product.toUpperCase() }}
+                </option>
+              </select>
+            </div>
+            <!-- Horizontal connector -->
+            <div class="hidden lg:block absolute top-3 -right-3 w-6 h-0.5 bg-gray-300 dark:bg-gray-600"></div>
+          </div>
+
+          <!-- Step 2: Version Selection (only if product selected or versions exist) -->
+          <div v-if="selectedProduct || filteredVersions.length > 0" class="relative">
+            <div class="flex items-center gap-2 mb-3">
+              <div class="flex items-center justify-center w-7 h-7 rounded-full bg-blue-600 text-white text-sm font-semibold flex-shrink-0">
+                2
+              </div>
+              <h3 class="text-base font-semibold">Versions <span class="text-xs font-normal text-gray-500">(max 6)</span></h3>
+            </div>
+            <div class="pl-9">
+              <VersionSelector
+                v-model="selectedVersions"
+                :versions="filteredVersions"
+                :max-selections="6"
+              />
+            </div>
+            <!-- Horizontal connector -->
+            <div class="hidden lg:block absolute top-3 -right-3 w-6 h-0.5 bg-gray-300 dark:bg-gray-600"></div>
+          </div>
+
+          <!-- Step 3: Component Filter (optional) -->
+          <div v-if="selectedVersions.length > 0 || selectedComponent" class="relative">
+            <div class="flex items-center gap-2 mb-3">
+              <div class="flex items-center justify-center w-7 h-7 rounded-full bg-gray-400 dark:bg-gray-600 text-white text-sm font-semibold flex-shrink-0">
+                3
+              </div>
+              <h3 class="text-base font-semibold">Component <span class="text-xs font-normal text-gray-500">(optional)</span></h3>
+            </div>
+            <div class="pl-9">
+              <ComponentFilter
+                v-model="selectedComponent"
+                :components="allComponents"
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div v-if="selectedVersions.length > 0" class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
@@ -71,7 +122,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useAuth } from '@shared/client/composables/useAuth';
 import VersionSelector from '../quality-components/VersionSelector.vue';
 import ComponentFilter from '../quality-components/ComponentFilter.vue';
@@ -82,12 +133,33 @@ const { isAdmin } = useAuth();
 
 const versions = ref([]);
 const allComponents = ref([]);
+const selectedProduct = ref('');
 const selectedVersions = ref([]);
 const selectedComponent = ref(null);
 const chartData = ref({ labels: [], datasets: [] });
 const loading = ref(true);
 const refreshing = ref(false);
 const error = ref(null);
+
+// Extract unique products from version names (rhoai-3.4 → rhoai)
+const products = computed(() => {
+  const productSet = new Set();
+  for (const v of versions.value) {
+    const match = v.name.match(/^(rhoai|rhelai|rhaiis)/i);
+    if (match) {
+      productSet.add(match[1].toLowerCase());
+    }
+  }
+  return Array.from(productSet).sort();
+});
+
+// Filter versions by selected product
+const filteredVersions = computed(() => {
+  if (!selectedProduct.value) return versions.value;
+  return versions.value.filter(v =>
+    v.name.toLowerCase().startsWith(selectedProduct.value + '-')
+  );
+});
 
 onMounted(async () => {
   try {
@@ -100,8 +172,13 @@ onMounted(async () => {
     // Load all versions (no component filter initially)
     versions.value = await getVersions();
 
-    // Auto-select first 3 versions with bugs (backend sorts by bug count descending)
-    const versionsWithBugs = versions.value.filter(v => v.bugCount > 0);
+    // Default to RHOAI product if it exists
+    if (products.value.includes('rhoai')) {
+      selectedProduct.value = 'rhoai';
+    }
+
+    // Auto-select first 3 versions with bugs from filtered list
+    const versionsWithBugs = filteredVersions.value.filter(v => v.bugCount > 0);
     if (versionsWithBugs.length > 0) {
       selectedVersions.value = versionsWithBugs.slice(0, 3).map(v => v.name);
     }
@@ -110,6 +187,17 @@ onMounted(async () => {
     error.value = err.message || 'Failed to load quality metrics data';
   } finally {
     loading.value = false;
+  }
+});
+
+// Watch product filter - auto-select versions when product changes
+watch(selectedProduct, () => {
+  // Auto-select first 3 versions with bugs from newly filtered list
+  const versionsWithBugs = filteredVersions.value.filter(v => v.bugCount > 0);
+  if (versionsWithBugs.length > 0) {
+    selectedVersions.value = versionsWithBugs.slice(0, 3).map(v => v.name);
+  } else {
+    selectedVersions.value = [];
   }
 });
 
@@ -122,7 +210,7 @@ watch(selectedComponent, async () => {
     versions.value = await getVersions(selectedComponent.value);
 
     // Auto-select first 3 versions with bugs after component filter change
-    const versionsWithBugs = versions.value.filter(v => v.bugCount > 0);
+    const versionsWithBugs = filteredVersions.value.filter(v => v.bugCount > 0);
     if (versionsWithBugs.length > 0) {
       selectedVersions.value = versionsWithBugs.slice(0, 3).map(v => v.name);
     } else {
