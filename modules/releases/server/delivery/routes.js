@@ -1358,7 +1358,10 @@ module.exports = function registerRoutes(router, context) {
           // Check if this feature belongs to this release/phase
           const fixVersion = deliveryFeature.fixVersion || ''
           const normalized = normalizeText(fixVersion)
-          const hasPhaseMatch = normalized.includes(normalizeText(version)) && normalized.includes(normalizeText(phase))
+          const versionMatch = normalized.includes(normalizeText(version))
+          const hasPhaseMatch = phase === 'GA'
+            ? versionMatch && !normalized.includes('ea')
+            : versionMatch && normalized.includes(normalizeText(phase))
 
           if (hasPhaseMatch) {
             features.added.push({
