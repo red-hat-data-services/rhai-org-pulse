@@ -276,8 +276,7 @@ function filterMajorReleasesFrom34(releases) {
     const major = parseInt(match[1], 10)
     const minor = parseInt(match[2], 10)
 
-    // Only keep major version 3, minor version 5 and above (3.5, 3.6, 3.7, ...)
-    return major === TARGET_MAJOR && minor >= MIN_MINOR
+    return major > TARGET_MAJOR || (major === TARGET_MAJOR && minor >= MIN_MINOR)
   })
 }
 
@@ -1357,11 +1356,9 @@ module.exports = function registerRoutes(router, context) {
       for (const [key, deliveryFeature] of deliveryFeatureMap.entries()) {
         if (!committedKeysSet.has(key)) {
           // Check if this feature belongs to this release/phase
-          const fixVersions = deliveryFeature.fixVersions || []
-          const hasPhaseMatch = fixVersions.some(fv => {
-            const normalized = normalizeText(fv)
-            return normalized.includes(normalizeText(version)) && normalized.includes(normalizeText(phase))
-          })
+          const fixVersion = deliveryFeature.fixVersion || ''
+          const normalized = normalizeText(fixVersion)
+          const hasPhaseMatch = normalized.includes(normalizeText(version)) && normalized.includes(normalizeText(phase))
 
           if (hasPhaseMatch) {
             features.added.push({

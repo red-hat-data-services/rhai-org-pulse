@@ -38,6 +38,18 @@ describe('filterMajorReleasesFrom34 - version and z-stream filtering', () => {
       expect(result).toHaveLength(4)
       expect(result.map(r => r.releaseNumber)).toEqual(['rhoai-3.5', 'rhoai-3.6', 'rhoai-3.7', 'rhoai-3.8.EA1'])
     })
+
+    it('includes major version 4.0 and beyond', () => {
+      const releases = [
+        { releaseNumber: 'rhoai-3.5' },
+        { releaseNumber: 'rhoai-4.0' },
+        { releaseNumber: 'rhoai-4.0.EA1' },
+        { releaseNumber: 'rhoai-4.1' },
+        { releaseNumber: 'rhoai-5.0' },
+      ]
+      const result = filterMajorReleasesFrom34(releases)
+      expect(result).toHaveLength(5)
+    })
   })
 
   describe('filters out pre-3.5 releases', () => {
