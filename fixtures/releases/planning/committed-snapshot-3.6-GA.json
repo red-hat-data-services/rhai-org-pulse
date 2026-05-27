@@ -1,0 +1,69 @@
+{
+  "version": "3.6",
+  "phase": "GA",
+  "snapshotAt": "2027-04-01T00:00:00.000Z",
+  "snapshotTrigger": "auto",
+  "featureKeys": ["RHOAIENG-1100", "RHOAIENG-1101", "RHOAIENG-1102", "RHOAIENG-1103", "RHOAIENG-1104", "RHOAIENG-1105", "RHOAIENG-1106", "RHOAIENG-1107", "RHOAIENG-1108", "RHOAIENG-1109"],
+  "features": [
+    {
+      "key": "RHOAIENG-1100",
+      "summary": "Feature 1100 for version 3.6",
+      "components": "Component 0",
+      "deliveryOwner": "Owner 0"
+    },
+    {
+      "key": "RHOAIENG-1101",
+      "summary": "Feature 1101 for version 3.6",
+      "components": "Component 1",
+      "deliveryOwner": "Owner 1"
+    },
+    {
+      "key": "RHOAIENG-1102",
+      "summary": "Feature 1102 for version 3.6",
+      "components": "Component 2",
+      "deliveryOwner": "Owner 2"
+    },
+    {
+      "key": "RHOAIENG-1103",
+      "summary": "Feature 1103 for version 3.6",
+      "components": "Component 3",
+      "deliveryOwner": "Owner 3"
+    },
+    {
+      "key": "RHOAIENG-1104",
+      "summary": "Feature 1104 for version 3.6",
+      "components": "Component 4",
+      "deliveryOwner": "Owner 4"
+    },
+    {
+      "key": "RHOAIENG-1105",
+      "summary": "Feature 1105 for version 3.6",
+      "components": "Component 0",
+      "deliveryOwner": "Owner 5"
+    },
+    {
+      "key": "RHOAIENG-1106",
+      "summary": "Feature 1106 for version 3.6",
+      "components": "Component 1",
+      "deliveryOwner": "Owner 6"
+    },
+    {
+      "key": "RHOAIENG-1107",
+      "summary": "Feature 1107 for version 3.6",
+      "components": "Component 2",
+      "deliveryOwner": "Owner 7"
+    },
+    {
+      "key": "RHOAIENG-1108",
+      "summary": "Feature 1108 for version 3.6",
+      "components": "Component 3",
+      "deliveryOwner": "Owner 8"
+    },
+    {
+      "key": "RHOAIENG-1109",
+      "summary": "Feature 1109 for version 3.6",
+      "components": "Component 4",
+      "deliveryOwner": "Owner 9"
+    }
+  ]
+}

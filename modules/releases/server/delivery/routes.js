@@ -1202,6 +1202,143 @@ module.exports = function registerRoutes(router, context) {
     }
   })
 
+  /**
+   * @openapi
+   * /api/modules/releases/delivery/commitment/{version}/{phase}:
+   *   get:
+   *     tags: ['Releases: Delivery']
+   *     summary: Get commitment tracking data for a release phase
+   *     description: Compare committed features at planning freeze vs. current delivery status
+   *     parameters:
+   *       - in: path
+   *         name: version
+   *         required: true
+   *         schema: { type: string }
+   *         description: Release version (e.g., "3.5")
+   *       - in: path
+   *         name: phase
+   *         required: true
+   *         schema: { type: string, enum: [EA1, EA2, GA] }
+   *         description: Release phase
+   *     responses:
+   *       200:
+   *         description: Commitment tracking metrics and feature lists
+   *       400:
+   *         description: Invalid phase
+   *       404:
+   *         description: No snapshot found for this version/phase
+   */
+  router.get('/commitment/:version/:phase', requireAuth, requireScope('releases:read'), function(req, res) {
+    try {
+      const { version, phase } = req.params
+
+      // Validate phase
+      const validPhases = ['EA1', 'EA2', 'GA']
+      if (!validPhases.includes(phase)) {
+        return res.status(400).json({ error: `Invalid phase. Must be one of: ${validPhases.join(', ')}` })
+      }
+
+      // Load committed snapshot
+      const snapshotPath = `releases/planning/committed-snapshot-${version}-${phase}.json`
+      const snapshot = readFromStorage(snapshotPath)
+
+      if (!snapshot) {
+        return res.status(404).json({ error: `No snapshot found for ${version} ${phase}` })
+      }
+
+      // Load delivery analysis
+      const analysisCache = readFromStorage('releases/delivery/analysis-cache.json')
+      if (!analysisCache?.data) {
+        return res.status(500).json({ error: 'Delivery analysis data not available' })
+      }
+
+      // Find the matching release in delivery data
+      const deliveryRelease = analysisCache.data.releases.find(r => r.releaseNumber === version)
+      const deliveryIssues = deliveryRelease?.issues || []
+
+      // Build feature maps
+      const committedKeys = new Set(snapshot.featureKeys)
+
+      // Categorize features
+      const delivered = []
+      const inProgress = []
+      const notStarted = []
+      const added = []
+      const removed = []
+
+      // Process committed features
+      for (const feature of snapshot.features) {
+        const deliveryFeature = deliveryIssues.find(i => i.key === feature.key)
+
+        if (deliveryFeature) {
+          const enriched = {
+            ...feature,
+            status: deliveryFeature.status,
+            statusBucket: deliveryFeature.statusBucket
+          }
+
+          if (deliveryFeature.statusBucket === 'done') {
+            delivered.push(enriched)
+          } else if (deliveryFeature.statusBucket === 'doing') {
+            inProgress.push(enriched)
+          } else {
+            notStarted.push(enriched)
+          }
+        } else {
+          // Committed but not in delivery data = removed
+          removed.push(feature)
+        }
+      }
+
+      // Process added features (in delivery but not committed)
+      for (const issue of deliveryIssues) {
+        if (!committedKeys.has(issue.key)) {
+          added.push({
+            key: issue.key,
+            summary: issue.summary,
+            components: issue.components,
+            deliveryOwner: issue.deliveryOwner,
+            status: issue.status,
+            statusBucket: issue.statusBucket
+          })
+        }
+      }
+
+      // Compute metrics
+      const committed = snapshot.featureKeys.length
+      const deliveredCount = delivered.length
+      const percentDelivered = committed > 0 ? Math.round((deliveredCount / committed) * 100) : 0
+
+      res.json({
+        version,
+        phase,
+        snapshot: {
+          snapshotAt: snapshot.snapshotAt,
+          trigger: snapshot.snapshotTrigger
+        },
+        metrics: {
+          committed,
+          delivered: deliveredCount,
+          percentDelivered,
+          inProgress: inProgress.length,
+          notStarted: notStarted.length,
+          added: added.length,
+          removed: removed.length
+        },
+        features: {
+          delivered,
+          inProgress,
+          notStarted,
+          added,
+          removed
+        }
+      })
+    } catch (error) {
+      console.error('[releases/delivery] commitment tracking error:', error)
+      res.status(500).json({ error: error.message })
+    }
+  })
+
   // --- Startup cache seeding ---
   // Warm the cache in the background so the first user request is instant
   if (!DEMO_MODE) {

@@ -1,0 +1,69 @@
+{
+  "version": "3.2",
+  "phase": "GA",
+  "snapshotAt": "2025-09-20T00:00:00.000Z",
+  "snapshotTrigger": "auto",
+  "featureKeys": ["RHOAIENG-701", "RHOAIENG-702", "RHOAIENG-703", "RHOAIENG-704", "RHOAIENG-705", "RHOAIENG-706", "RHOAIENG-707", "RHOAIENG-708", "RHOAIENG-709", "RHOAIENG-710"],
+  "features": [
+    {
+      "key": "RHOAIENG-701",
+      "summary": "Model Serving: Multi-model endpoint support",
+      "components": "Model Serving",
+      "deliveryOwner": "Rachel Kim"
+    },
+    {
+      "key": "RHOAIENG-702",
+      "summary": "Pipelines: DAG visualization improvements",
+      "components": "Pipelines",
+      "deliveryOwner": "Steve Johnson"
+    },
+    {
+      "key": "RHOAIENG-703",
+      "summary": "Monitoring: Custom alerting rules",
+      "components": "Monitoring",
+      "deliveryOwner": "Tina Martinez"
+    },
+    {
+      "key": "RHOAIENG-704",
+      "summary": "Dashboard: Multi-cluster support",
+      "components": "Dashboard",
+      "deliveryOwner": "Uma Patel"
+    },
+    {
+      "key": "RHOAIENG-705",
+      "summary": "Workbench: VS Code integration",
+      "components": "Workbench",
+      "deliveryOwner": "Victor Chen"
+    },
+    {
+      "key": "RHOAIENG-706",
+      "summary": "LLM Gateway: Rate limiting per user",
+      "components": "LLM Gateway",
+      "deliveryOwner": "Wendy Lopez"
+    },
+    {
+      "key": "RHOAIENG-707",
+      "summary": "Model Registry: Batch model registration API",
+      "components": "Model Registry",
+      "deliveryOwner": "Xavier Brown"
+    },
+    {
+      "key": "RHOAIENG-708",
+      "summary": "TrustyAI: Fairness metrics dashboard",
+      "components": "TrustyAI",
+      "deliveryOwner": "Yuki Tanaka"
+    },
+    {
+      "key": "RHOAIENG-709",
+      "summary": "Security: Audit log export to S3",
+      "components": "Security",
+      "deliveryOwner": "Zara Ahmed"
+    },
+    {
+      "key": "RHOAIENG-710",
+      "summary": "Distributed Training: Horovod integration",
+      "components": "Distributed Training",
+      "deliveryOwner": "Aaron Smith"
+    }
+  ]
+}

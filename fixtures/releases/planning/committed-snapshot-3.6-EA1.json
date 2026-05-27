@@ -1,0 +1,27 @@
+{
+  "version": "3.6",
+  "phase": "EA1",
+  "snapshotAt": "2027-02-01T00:00:00.000Z",
+  "snapshotTrigger": "auto",
+  "featureKeys": ["RHOAIENG-1100", "RHOAIENG-1101", "RHOAIENG-1102"],
+  "features": [
+    {
+      "key": "RHOAIENG-1100",
+      "summary": "Feature 1100 for version 3.6",
+      "components": "Component 0",
+      "deliveryOwner": "Owner 0"
+    },
+    {
+      "key": "RHOAIENG-1101",
+      "summary": "Feature 1101 for version 3.6",
+      "components": "Component 1",
+      "deliveryOwner": "Owner 1"
+    },
+    {
+      "key": "RHOAIENG-1102",
+      "summary": "Feature 1102 for version 3.6",
+      "components": "Component 2",
+      "deliveryOwner": "Owner 2"
+    }
+  ]
+}

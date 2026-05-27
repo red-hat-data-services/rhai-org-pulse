@@ -1,0 +1,58 @@
+{
+  "version": "3.5",
+  "phase": "EA2",
+  "snapshotAt": "2026-06-15T09:00:00.000Z",
+  "snapshotTrigger": "auto",
+  "featureKeys": [
+    "RHOAIENG-1001",
+    "RHOAIENG-1003",
+    "RHOAIENG-1005",
+    "RHOAIENG-1007",
+    "RHOAIENG-1008",
+    "RHOAIENG-1012"
+  ],
+  "features": [
+    {
+      "key": "RHOAIENG-1001",
+      "summary": "MaaS: Multi-model serving with shared GPU",
+      "status": "In Progress",
+      "components": ["Model Serving"],
+      "deliveryOwner": "David Kim"
+    },
+    {
+      "key": "RHOAIENG-1003",
+      "summary": "Distributed Training: Auto-scaling job orchestration",
+      "status": "In Progress",
+      "components": ["Distributed Training"],
+      "deliveryOwner": "Michael Johnson"
+    },
+    {
+      "key": "RHOAIENG-1005",
+      "summary": "LLM Gateway: Token usage analytics dashboard",
+      "status": "Review",
+      "components": ["LLM Gateway"],
+      "deliveryOwner": "Carlos Martinez"
+    },
+    {
+      "key": "RHOAIENG-1007",
+      "summary": "Pipeline Optimizer: Cost prediction engine",
+      "status": "In Progress",
+      "components": ["Pipelines"],
+      "deliveryOwner": "Lisa Anderson"
+    },
+    {
+      "key": "RHOAIENG-1008",
+      "summary": "Workbench: Real-time collaboration for notebooks",
+      "status": "In Progress",
+      "components": ["Workbench"],
+      "deliveryOwner": "Rachel Green"
+    },
+    {
+      "key": "RHOAIENG-1012",
+      "summary": "Admin Dashboard: GPU allocation heatmap",
+      "status": "Done",
+      "components": ["Dashboard"],
+      "deliveryOwner": "James Wilson"
+    }
+  ]
+}

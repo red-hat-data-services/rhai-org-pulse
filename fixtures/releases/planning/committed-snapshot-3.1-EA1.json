@@ -1,0 +1,27 @@
+{
+  "version": "3.1",
+  "phase": "EA1",
+  "snapshotAt": "2025-03-01T00:00:00.000Z",
+  "snapshotTrigger": "auto",
+  "featureKeys": ["RHOAIENG-601", "RHOAIENG-602", "RHOAIENG-603"],
+  "features": [
+    {
+      "key": "RHOAIENG-601",
+      "summary": "KServe: InferenceGraph support",
+      "components": "Model Serving",
+      "deliveryOwner": "Ian Rodriguez"
+    },
+    {
+      "key": "RHOAIENG-602",
+      "summary": "Distributed Training: PyTorch FSDP integration",
+      "components": "Distributed Training",
+      "deliveryOwner": "Julia Adams"
+    },
+    {
+      "key": "RHOAIENG-603",
+      "summary": "Data Science Pipelines: Vertex AI compatibility",
+      "components": "Pipelines",
+      "deliveryOwner": "Kevin Park"
+    }
+  ]
+}

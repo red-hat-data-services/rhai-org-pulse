@@ -1,0 +1,34 @@
+{
+  "version": "3.5",
+  "phase": "EA1",
+  "snapshotAt": "2026-05-01T09:00:00.000Z",
+  "snapshotTrigger": "auto",
+  "featureKeys": [
+    "RHOAIENG-1005",
+    "RHOAIENG-1008",
+    "RHOAIENG-1012"
+  ],
+  "features": [
+    {
+      "key": "RHOAIENG-1005",
+      "summary": "LLM Gateway: Token usage analytics dashboard",
+      "status": "In Progress",
+      "components": ["LLM Gateway"],
+      "deliveryOwner": "Carlos Martinez"
+    },
+    {
+      "key": "RHOAIENG-1008",
+      "summary": "Workbench: Real-time collaboration for notebooks",
+      "status": "To Do",
+      "components": ["Workbench"],
+      "deliveryOwner": "Rachel Green"
+    },
+    {
+      "key": "RHOAIENG-1012",
+      "summary": "Admin Dashboard: GPU allocation heatmap",
+      "status": "Review",
+      "components": ["Dashboard"],
+      "deliveryOwner": "James Wilson"
+    }
+  ]
+}
