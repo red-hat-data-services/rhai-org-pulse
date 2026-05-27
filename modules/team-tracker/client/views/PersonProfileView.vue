@@ -250,6 +250,9 @@ onBeforeUnmount(() => {
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 flex-wrap">
                   <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">{{ person.name }}</h2>
+                  <a v-if="person.uid" :href="'https://rover.redhat.com/people/profile/' + person.uid" target="_blank" rel="noopener" title="View Rover People profile" class="inline-flex items-center hover:opacity-80 transition-opacity">
+                    <img src="/redhat-logo.svg" alt="Red Hat" class="h-5 w-auto" />
+                  </a>
                   <span v-if="person.status === 'inactive'" class="text-xs font-normal px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400">Inactive</span>
                 </div>
                 <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{{ person.title }}</p>

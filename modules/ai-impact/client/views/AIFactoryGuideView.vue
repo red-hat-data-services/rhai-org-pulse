@@ -197,7 +197,7 @@ const testPlanLabels = [
 
 const testPlanToolLinks = [
   { label: 'odh-test-gen plugin', icon: Code, url: 'https://github.com/opendatahub-io/odh-test-gen' },
-  { label: 'opendatahub-test-plans repo', icon: Archive, url: 'https://github.com/opendatahub-io/opendatahub-test-plans' },
+  { label: 'test-plans repo', icon: Archive, url: 'https://gitlab.com/redhat/rhel-ai/agentic-ci/test-plans-data' },
   { label: 'Skills Registry', icon: BookOpen, url: 'https://github.com/opendatahub-io/skills-registry' },
   { label: 'Test Plan Skills Docs', icon: BookOpen, url: 'https://opendatahub-io.github.io/skills-registry/plugins/test-plan/' },
 ]
