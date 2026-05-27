@@ -2,6 +2,9 @@
   "name": "team-tracker",
   "private": true,
   "version": "0.0.0",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "vite",
     "dev:server": "node -r dotenv/config server/dev-server.js",
