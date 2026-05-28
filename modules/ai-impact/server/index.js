@@ -12,7 +12,7 @@ module.exports = function registerRoutes(router, context) {
   const { getConfig, saveConfig } = require('./config');
   const { computeAllMetrics } = require('./metrics');
   const { fetchAutofixData, computeAutofixMetrics, buildTrendData: buildAutofixTrend } = require('./jira/autofix-fetcher');
-  const { fetchDocData, fetchDocActivityEvents, fetchDocCumulativeStats, fetchDocCompletedData, computeDocMetrics, buildDocTrendData } = require('./jira/doc-fetcher');
+  const { fetchDocData, fetchDocActivityEvents, fetchDocCumulativeStats, fetchDocCompletedData, computeDocMetrics, buildDocTrendData, resolveMRLinksFromKpiData } = require('./jira/doc-fetcher');
   const { enrichMRStatuses } = require('./mr-status');
   const { fetchMrKpiData } = require('./gitlab/mr-kpi-fetcher');
 
@@ -285,7 +285,6 @@ module.exports = function registerRoutes(router, context) {
         }
         // Apply MR KPI cross-reference (strategy 3) to doc issues
         if (mrKpiData) {
-          const { resolveMRLinksFromKpiData } = require('./jira/doc-fetcher');
           resolveMRLinksFromKpiData(docResult.issues, mrKpiData);
         }
         try {

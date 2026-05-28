@@ -75,10 +75,14 @@ async function fetchCommitCount(host, project, iid, token) {
   }
 }
 
+const BOT_USERNAMES = [
+  'cp-ops-service',
+  'project_82936_bot_de8f25c2e1ca1c33b2b507874163e1c7'
+];
+
 function isBotAuthor(username) {
   if (!username) return true;
-  const lower = username.toLowerCase();
-  return lower.includes('bot') || lower.includes('service') || lower.includes('automation');
+  return BOT_USERNAMES.includes(username);
 }
 
 async function fetchFirstReviewAt(host, project, iid, token) {

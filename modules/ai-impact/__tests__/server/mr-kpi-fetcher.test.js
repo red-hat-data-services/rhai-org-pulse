@@ -146,7 +146,7 @@ describe('mr-kpi-fetcher', () => {
           ok: true,
           json: () => Promise.resolve([
             { created_at: '2026-04-01T10:00:30Z', system: false, author: { username: 'cp-ops-service' } },
-            { created_at: '2026-04-01T10:01:00Z', system: false, author: { username: 'project_123_bot_abc' } },
+            { created_at: '2026-04-01T10:01:00Z', system: false, author: { username: 'project_82936_bot_de8f25c2e1ca1c33b2b507874163e1c7' } },
             { created_at: '2026-04-02T09:00:00Z', system: false, author: { username: 'jdoe' } }
           ])
         })
@@ -177,7 +177,7 @@ describe('mr-kpi-fetcher', () => {
           ok: true,
           json: () => Promise.resolve([
             { created_at: '2026-04-01T10:00:30Z', system: false, author: { username: 'cp-ops-service' } },
-            { created_at: '2026-04-01T10:01:00Z', system: false, author: { username: 'automation-user' } }
+            { created_at: '2026-04-01T10:01:00Z', system: false, author: { username: 'project_82936_bot_de8f25c2e1ca1c33b2b507874163e1c7' } }
           ])
         })
       }
