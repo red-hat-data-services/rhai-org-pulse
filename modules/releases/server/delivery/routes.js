@@ -10,7 +10,9 @@ const FIX_VERSION_FIELD_KEY = 'fixVersions'
 
 function getDefaultFixVersionJql(config) {
   if (config.targetVersionJqlFragment) return config.targetVersionJqlFragment
-  return 'fixVersion is not EMPTY'
+  // Include both fixVersion and Target Version custom field
+  // Using the exact JQL syntax from the example
+  return '(fixVersion is not EMPTY OR "Target Version[Version Picker (multiple versions)]" is not EMPTY)'
 }
 
 function normalizeText(value) {
@@ -105,7 +107,12 @@ function extractVersionNamesFromField(fields, fieldId) {
 }
 
 function extractFixVersions(issue) {
-  return extractVersionNamesFromField(issue.fields || {}, FIX_VERSION_FIELD_KEY)
+  const versions = extractVersionNamesFromField(issue.fields || {}, FIX_VERSION_FIELD_KEY)
+  // Also check Target Version custom field (customfield_10855) - used by RHAISTRAT Features
+  const targetVersions = extractVersionNamesFromField(issue.fields || {}, 'customfield_10855')
+  // Combine and deduplicate
+  const combined = [...new Set([...versions, ...targetVersions])]
+  return combined
 }
 
 function percentile(values, p) {
@@ -251,10 +258,12 @@ function filterUnreleased(releases) {
 
 async function fetchIssuesFromJira(config) {
   const clause = getDefaultFixVersionJql(config)
+  // Match RHAISTRAT JQL: issuetype = Feature
+  const issueTypeFilter = 'issuetype = Feature'
 
   const jql = config.jiraAllProjects
-    ? `${clause} ORDER BY updated DESC`
-    : `project in (${config.projectKeys.join(',')}) AND ${clause} ORDER BY updated DESC`
+    ? `${clause} AND ${issueTypeFilter} ORDER BY updated DESC`
+    : `project in (${config.projectKeys.join(',')}) AND ${clause} AND ${issueTypeFilter} ORDER BY updated DESC`
 
   const fieldList = [
     'summary',
@@ -267,7 +276,8 @@ async function fetchIssuesFromJira(config) {
     'customfield_10014',
     config.storyPointsField,
     config.featureWeightField,
-    FIX_VERSION_FIELD_KEY
+    FIX_VERSION_FIELD_KEY,
+    'customfield_10855' // Target Version - used by RHAISTRAT Features
   ]
   const fields = [...new Set(fieldList)].join(',')
   const issues = await fetchAllJqlResults(jiraRequest, jql, fields, { maxResults: 100 }) || []
@@ -352,22 +362,6 @@ async function fetchUnreleasedJiraFixVersions(config) {
     codeFreezeDate: r.codeFreezeDate || null
   }))
   return { releases, warnings }
-}
-
-function enrichJiraReleasesWithProductPages(jiraReleases, productPagesReleases) {
-  const byNorm = new Map()
-  for (const p of productPagesReleases) {
-    byNorm.set(normalizeKey(p.releaseNumber), p)
-  }
-  return jiraReleases.map(r => {
-    const match = byNorm.get(normalizeKey(r.releaseNumber))
-    return {
-      productName: match?.productName || r.productName,
-      releaseNumber: r.releaseNumber,
-      dueDate: r.dueDate || match?.dueDate || null,
-      codeFreezeDate: match?.codeFreezeDate || r.codeFreezeDate || null
-    }
-  })
 }
 
 /**
@@ -879,7 +873,6 @@ async function runFullAnalysis(storage, config) {
   let issues = []
   let fieldMeta = { id: null, name: '', schemaCustom: '' }
   let jiraWarning = null
-  let jiraReleases = []
   let sprintWindow = null
   let componentVelocity = {}
   let componentGlobalWorkload = {}
@@ -896,7 +889,6 @@ async function runFullAnalysis(storage, config) {
     fieldMeta = jiraResult.fieldMeta
     componentVelocity = historicalVelocity
     componentGlobalWorkload = globalWorkload
-    jiraReleases = unreleasedJiraFixVersionData.releases
     if (unreleasedJiraFixVersionData.warnings.length) {
       jiraWarning = unreleasedJiraFixVersionData.warnings.join(' | ')
     }
@@ -904,17 +896,10 @@ async function runFullAnalysis(storage, config) {
     jiraWarning = `Jira data unavailable: ${err.message}`
   }
 
-  // When Product Pages product shortnames are configured, use Product Pages as
-  // the primary release source. Otherwise fall back to the legacy behavior where
-  // Jira Fix Versions are primary and Product Pages only enriches metadata.
-  let analysisReleases
-  if (config.productPagesProductShortnames?.length) {
-    analysisReleases = openReleases
-  } else if (jiraReleases.length) {
-    analysisReleases = enrichJiraReleasesWithProductPages(jiraReleases, openReleases)
-  } else {
-    analysisReleases = openReleases
-  }
+  // Always use Product Pages releases (openReleases) since we now support Target Version custom field
+  // which doesn't rely on Jira fix versions. The old approach of enriching Jira fix versions
+  // would exclude releases that don't exist in Jira's fix versions list.
+  const analysisReleases = openReleases
   const analysisOpenReleases = filterUnreleased(analysisReleases)
 
   if (!analysisOpenReleases.length) {
@@ -1280,12 +1265,15 @@ module.exports = function registerRoutes(router, context) {
       const removed = []
 
       // Process committed features
-      for (const feature of snapshot.features) {
-        const deliveryFeature = deliveryIssues.find(i => i.key === feature.key)
+      for (const featureKey of snapshot.featureKeys) {
+        const deliveryFeature = deliveryIssues.find(i => i.key === featureKey)
 
         if (deliveryFeature) {
           const enriched = {
-            ...feature,
+            key: deliveryFeature.key,
+            summary: deliveryFeature.summary,
+            components: deliveryFeature.components,
+            deliveryOwner: deliveryFeature.deliveryOwner,
             status: deliveryFeature.status,
             statusBucket: deliveryFeature.statusBucket,
             fixVersions: deliveryFeature.fixVersion ? [deliveryFeature.fixVersion] : []
@@ -1300,7 +1288,15 @@ module.exports = function registerRoutes(router, context) {
           }
         } else {
           // Committed but not in delivery data = removed
-          removed.push({ ...feature, fixVersions: [] })
+          removed.push({
+            key: featureKey,
+            summary: 'Feature removed from delivery scope',
+            components: [],
+            deliveryOwner: null,
+            status: 'Removed',
+            statusBucket: 'removed',
+            fixVersions: []
+          })
         }
       }
 
