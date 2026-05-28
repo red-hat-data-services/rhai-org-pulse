@@ -1223,6 +1223,11 @@ module.exports = function registerRoutes(router, context) {
         return res.status(400).json({ error: `Invalid phase. Must be one of: ${validPhases.join(', ')}` })
       }
 
+      // Validate version format (e.g. "3.5", "3.10") to prevent regex injection and path traversal
+      if (!/^\d+\.\d+$/.test(version)) {
+        return res.status(400).json({ error: 'Invalid version format. Expected X.Y (e.g., "3.5")' })
+      }
+
       // Load committed snapshot
       const snapshotPath = `releases/planning/committed-snapshot-${version}-${phase}.json`
       const snapshot = readFromStorage(snapshotPath)
@@ -1238,7 +1243,8 @@ module.exports = function registerRoutes(router, context) {
       }
 
       // Aggregate ALL releases that match this version (e.g., "3.5" matches "rhoai-3.5", "rhoai-3.5.EA1", "RHAII-3.5", etc.)
-      const versionPattern = new RegExp(`\\b${version.replace('.', '\\.')}\\b`)
+      const escaped = version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const versionPattern = new RegExp(`\\b${escaped}\\b`)
       const matchingReleases = analysisCache.data.releases.filter(r => versionPattern.test(r.releaseNumber))
 
       // Collect all issues from matching releases
