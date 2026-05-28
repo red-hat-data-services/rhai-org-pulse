@@ -134,14 +134,19 @@
             </div>
             <span class="text-xs text-green-600 dark:text-green-400 font-medium">Completed</span>
           </button>
-          <div v-if="expandedSections.delivered" class="border-t border-gray-200 dark:border-gray-700 p-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <FeatureCard
-                v-for="feature in data.features.delivered"
-                :key="feature.key"
-                :feature="feature"
-                variant="delivered"
-              />
+          <div v-if="expandedSections.delivered" class="border-t border-gray-200 dark:border-gray-700 p-4 space-y-6">
+            <div v-for="group in groupByFixVersion(data.features.delivered)" :key="group.fixVersion">
+              <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
+                {{ group.fixVersion }} <span class="text-gray-500 dark:text-gray-400 font-normal">({{ group.features.length }})</span>
+              </h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <FeatureCard
+                  v-for="feature in group.features"
+                  :key="feature.key"
+                  :feature="feature"
+                  variant="delivered"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -160,14 +165,19 @@
             </div>
             <span class="text-xs text-blue-600 dark:text-blue-400 font-medium">After Freeze</span>
           </button>
-          <div v-if="expandedSections.added" class="border-t border-gray-200 dark:border-gray-700 p-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <FeatureCard
-                v-for="feature in data.features.added"
-                :key="feature.key"
-                :feature="feature"
-                variant="added"
-              />
+          <div v-if="expandedSections.added" class="border-t border-gray-200 dark:border-gray-700 p-4 space-y-6">
+            <div v-for="group in groupByFixVersion(data.features.added)" :key="group.fixVersion">
+              <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
+                {{ group.fixVersion }} <span class="text-gray-500 dark:text-gray-400 font-normal">({{ group.features.length }})</span>
+              </h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <FeatureCard
+                  v-for="feature in group.features"
+                  :key="feature.key"
+                  :feature="feature"
+                  variant="added"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -186,14 +196,19 @@
             </div>
             <span class="text-xs text-amber-600 dark:text-amber-400 font-medium">After Freeze</span>
           </button>
-          <div v-if="expandedSections.removed" class="border-t border-gray-200 dark:border-gray-700 p-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <FeatureCard
-                v-for="feature in data.features.removed"
-                :key="feature.key"
-                :feature="feature"
-                variant="removed"
-              />
+          <div v-if="expandedSections.removed" class="border-t border-gray-200 dark:border-gray-700 p-4 space-y-6">
+            <div v-for="group in groupByFixVersion(data.features.removed)" :key="group.fixVersion">
+              <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
+                {{ group.fixVersion }} <span class="text-gray-500 dark:text-gray-400 font-normal">({{ group.features.length }})</span>
+              </h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <FeatureCard
+                  v-for="feature in group.features"
+                  :key="feature.key"
+                  :feature="feature"
+                  variant="removed"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -212,14 +227,19 @@
             </div>
             <span class="text-xs text-yellow-600 dark:text-yellow-400 font-medium">Not Delivered</span>
           </button>
-          <div v-if="expandedSections.inProgress" class="border-t border-gray-200 dark:border-gray-700 p-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <FeatureCard
-                v-for="feature in data.features.inProgress"
-                :key="feature.key"
-                :feature="feature"
-                variant="in-progress"
-              />
+          <div v-if="expandedSections.inProgress" class="border-t border-gray-200 dark:border-gray-700 p-4 space-y-6">
+            <div v-for="group in groupByFixVersion(data.features.inProgress)" :key="group.fixVersion">
+              <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
+                {{ group.fixVersion }} <span class="text-gray-500 dark:text-gray-400 font-normal">({{ group.features.length }})</span>
+              </h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <FeatureCard
+                  v-for="feature in group.features"
+                  :key="feature.key"
+                  :feature="feature"
+                  variant="in-progress"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -238,14 +258,19 @@
             </div>
             <span class="text-xs text-red-600 dark:text-red-400 font-medium">Not Delivered</span>
           </button>
-          <div v-if="expandedSections.notStarted" class="border-t border-gray-200 dark:border-gray-700 p-4">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <FeatureCard
-                v-for="feature in data.features.notStarted"
-                :key="feature.key"
-                :feature="feature"
-                variant="not-started"
-              />
+          <div v-if="expandedSections.notStarted" class="border-t border-gray-200 dark:border-gray-700 p-4 space-y-6">
+            <div v-for="group in groupByFixVersion(data.features.notStarted)" :key="group.fixVersion">
+              <h4 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 pb-2 border-b border-gray-200 dark:border-gray-700">
+                {{ group.fixVersion }} <span class="text-gray-500 dark:text-gray-400 font-normal">({{ group.features.length }})</span>
+              </h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <FeatureCard
+                  v-for="feature in group.features"
+                  :key="feature.key"
+                  :feature="feature"
+                  variant="not-started"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -308,6 +333,33 @@ const okrStatusText = computed(() => {
   if (pct >= 70) return '⚠ Below OKR Target'
   return '✗ Significantly Below OKR'
 })
+
+// Group features by fix version
+function groupByFixVersion(features) {
+  const groups = {}
+
+  for (const feature of features) {
+    const fixVersions = feature.fixVersions || []
+    const fixVersion = fixVersions.length > 0 ? fixVersions[0] : 'No Fix Version'
+
+    if (!groups[fixVersion]) {
+      groups[fixVersion] = []
+    }
+    groups[fixVersion].push(feature)
+  }
+
+  // Sort fix versions
+  const sortedKeys = Object.keys(groups).sort((a, b) => {
+    if (a === 'No Fix Version') return 1
+    if (b === 'No Fix Version') return -1
+    return a.localeCompare(b)
+  })
+
+  return sortedKeys.map(fixVersion => ({
+    fixVersion,
+    features: groups[fixVersion]
+  }))
+}
 
 function formatDate(isoDate) {
   if (!isoDate) return 'Unknown'

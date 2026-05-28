@@ -1274,7 +1274,8 @@ module.exports = function registerRoutes(router, context) {
           const enriched = {
             ...feature,
             status: deliveryFeature.status,
-            statusBucket: deliveryFeature.statusBucket
+            statusBucket: deliveryFeature.statusBucket,
+            fixVersions: deliveryFeature.fixVersions || []
           }
 
           if (deliveryFeature.statusBucket === 'done') {
@@ -1286,7 +1287,7 @@ module.exports = function registerRoutes(router, context) {
           }
         } else {
           // Committed but not in delivery data = removed
-          removed.push(feature)
+          removed.push({ ...feature, fixVersions: [] })
         }
       }
 
@@ -1299,7 +1300,8 @@ module.exports = function registerRoutes(router, context) {
             components: issue.components,
             deliveryOwner: issue.deliveryOwner,
             status: issue.status,
-            statusBucket: issue.statusBucket
+            statusBucket: issue.statusBucket,
+            fixVersions: issue.fixVersions || []
           })
         }
       }
