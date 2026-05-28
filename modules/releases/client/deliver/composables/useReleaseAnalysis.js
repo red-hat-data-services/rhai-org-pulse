@@ -4,7 +4,7 @@ import { apiRequest, SESSION_CACHE_PREFIX } from '@shared/client/services/api'
 const POLL_INTERVAL_MS = 3000
 const MAX_POLL_MS = 5 * 60 * 1000
 
-const CACHE_KEY = `${SESSION_CACHE_PREFIX}release-analysis:v8`
+const CACHE_KEY = `${SESSION_CACHE_PREFIX}release-analysis:v9`
 
 function readCache() {
   if (typeof sessionStorage === 'undefined') return null

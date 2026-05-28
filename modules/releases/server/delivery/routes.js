@@ -18,7 +18,11 @@ function normalizeText(value) {
 }
 
 function normalizeKey(value) {
-  return normalizeText(value).replace(/[^a-z0-9]/g, '')
+  // Remove common suffixes like " release", " GA", etc. before normalizing
+  let normalized = normalizeText(value);
+  normalized = normalized.replace(/\s+release$/i, ''); // "rhelai-3.5 EA1 release" → "rhelai-3.5 ea1"
+  normalized = normalized.replace(/\s+ga$/i, '');      // "RHAII-3.5 GA" → "rhaii-3.5"
+  return normalized.replace(/[^a-z0-9]/g, '');
 }
 
 function toIsoDate(dateValue) {
