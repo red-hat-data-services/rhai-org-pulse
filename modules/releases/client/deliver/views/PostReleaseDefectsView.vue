@@ -60,8 +60,8 @@
           <tbody>
             <tr v-for="(dataset, i) in chartData.datasets" :key="i" class="border-b dark:border-gray-700">
               <td class="py-2">{{ dataset.label }}</td>
-              <td class="text-right">{{ dataset.data.length > 0 ? dataset.data[dataset.data.length - 1] : 0 }}</td>
-              <td class="text-right">{{ dataset.data.length > 0 ? dataset.data.length - 1 : 0 }}</td>
+              <td class="text-right">{{ lastValue(dataset.data) }}</td>
+              <td class="text-right">{{ lastIndex(dataset.data) }}</td>
             </tr>
           </tbody>
         </table>
@@ -113,24 +113,18 @@ onMounted(async () => {
   }
 });
 
-// Watch component filter - refetch versions when component changes
+// Watch component filter - refetch chart data when component changes
 watch(selectedComponent, async () => {
   try {
     error.value = null;
 
-    // Refetch versions filtered by component (or all if null)
-    versions.value = await getVersions(selectedComponent.value);
-
-    // Auto-select first 3 versions with bugs after component filter change
-    const versionsWithBugs = versions.value.filter(v => v.bugCount > 0);
-    if (versionsWithBugs.length > 0) {
-      selectedVersions.value = versionsWithBugs.slice(0, 3).map(v => v.name);
-    } else {
-      selectedVersions.value = [];
+    if (selectedVersions.value.length > 0) {
+      const response = await getBugData(selectedVersions.value, selectedComponent.value);
+      chartData.value = { labels: response.labels, datasets: response.datasets };
     }
   } catch (err) {
     console.error('[quality] Failed to filter by component:', err);
-    error.value = err.message || 'Failed to filter versions by component';
+    error.value = err.message || 'Failed to filter chart data by component';
   }
 });
 
@@ -150,6 +144,20 @@ watch(selectedVersions, async () => {
   }
 }, { deep: true });
 
+function lastValue(data) {
+  for (let i = data.length - 1; i >= 0; i--) {
+    if (data[i] !== null) return data[i];
+  }
+  return 0;
+}
+
+function lastIndex(data) {
+  for (let i = data.length - 1; i >= 0; i--) {
+    if (data[i] !== null) return i;
+  }
+  return 0;
+}
+
 async function handleRefresh() {
   try {
     error.value = null;
@@ -160,8 +168,8 @@ async function handleRefresh() {
     // Reload components with fresh bug counts
     allComponents.value = await getComponents();
 
-    // Reload versions filtered by current component (if any)
-    versions.value = await getVersions(selectedComponent.value);
+    // Reload versions with fresh bug counts
+    versions.value = await getVersions();
 
     // Refetch chart data if versions are selected
     if (selectedVersions.value.length > 0) {

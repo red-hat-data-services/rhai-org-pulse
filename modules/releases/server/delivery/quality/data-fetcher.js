@@ -38,7 +38,7 @@ async function fetchVersions(projects, { jiraFetch } = {}) {
 }
 
 /**
- * Fetch Blocker/Critical/Major bugs with Affects Version
+ * Fetch all bugs with Affects Version (all priorities)
  * @param {string} project - Project key
  * @param {Array} versions - Version objects with release dates
  * @returns {Promise<Array>} - Bug objects
@@ -52,7 +52,6 @@ async function fetchBugs(project, versions, { jiraFetchAll } = {}) {
 
   const jql = `
     project = ${project}
-    AND priority in (Blocker, Critical, Major)
     AND issuetype = Bug
     AND affectedVersion is not EMPTY
     AND created >= -730d
@@ -105,5 +104,42 @@ async function fetchBugs(project, versions, { jiraFetchAll } = {}) {
   }
 }
 
-module.exports = { fetchVersions, fetchBugs };
+/**
+ * Fetch total bug count per version by querying all bugs across projects
+ * and counting locally. Equivalent to: issuetype = Bug AND affectedVersion = "x"
+ * @param {string[]} projects - Jira project keys
+ * @param {Array} versions - Version objects with name field
+ * @param {Object} [options]
+ * @param {Function} [options.jiraFetchAll] - Injectable fetchAllJqlResults for testing
+ * @returns {Promise<Map<string, number>>} - Map of version name to total bug count
+ */
+async function fetchBugCounts(projects, versions, { jiraFetchAll } = {}) {
+  const fetchAll = jiraFetchAll || jira.fetchAllJqlResults;
+  const counts = new Map();
+  for (const v of versions) {
+    counts.set(v.name, 0);
+  }
+
+  for (const project of projects) {
+    try {
+      const jql = `project = ${project} AND issuetype = Bug AND affectedVersion is not EMPTY AND created >= -730d`;
+      const issues = await fetchAll(jira.jiraRequest, jql, 'versions');
+
+      for (const issue of issues) {
+        const affectedVersions = (issue.fields.versions || []).map(v => v.name);
+        for (const vName of affectedVersions) {
+          if (counts.has(vName)) {
+            counts.set(vName, counts.get(vName) + 1);
+          }
+        }
+      }
+    } catch (error) {
+      console.warn(`[releases/quality] Failed to fetch bug counts for project ${project}:`, error.message);
+    }
+  }
+
+  return counts;
+}
+
+module.exports = { fetchVersions, fetchBugs, fetchBugCounts };
 
