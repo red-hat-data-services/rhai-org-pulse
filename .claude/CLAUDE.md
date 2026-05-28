@@ -313,7 +313,7 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/modules/ai-impact/component-onboarding` — all component onboarding entries (latest projection)
 - `/api/modules/ai-impact/component-onboarding/:key` — single component onboarding entry + history
 - `/api/modules/ai-impact/component-onboarding/status` — component onboarding data status (admin)
-- `/api/modules/ai-impact/mr-kpi-data` — MR quality KPI data fetched directly from GitLab
+- `/api/modules/ai-impact/doc-mr-kpi-data` — MR quality KPI data fetched directly from GitLab
 - `/api/modules/product-builds/config` — AIPCC Dashboard API configuration (admin)
 - `/api/modules/product-builds/health` — AIPCC Dashboard API connectivity check
 - `/api/modules/product-builds/products/:key` — product details (proxied)

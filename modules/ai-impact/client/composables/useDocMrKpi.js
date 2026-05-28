@@ -10,7 +10,7 @@ export function useDocMrKpi() {
     loading.value = true
     error.value = null
     try {
-      mrKpiData.value = await apiRequest('/modules/ai-impact/mr-kpi-data')
+      mrKpiData.value = await apiRequest('/modules/ai-impact/doc-mr-kpi-data')
     } catch (e) {
       error.value = e.message
     } finally {

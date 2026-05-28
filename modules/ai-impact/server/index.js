@@ -170,7 +170,7 @@ module.exports = function registerRoutes(router, context) {
 
   /**
    * @openapi
-   * /modules/ai-impact/mr-kpi-data:
+   * /modules/ai-impact/doc-mr-kpi-data:
    *   get:
    *     summary: MR KPI data fetched directly from GitLab
    *     tags: [ai-impact]
@@ -178,8 +178,8 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: MR KPI data with merge request metrics
    */
-  router.get('/mr-kpi-data', requireScope('ai-impact:read'), function(req, res) {
-    const data = readFromStorage('ai-impact/mr-kpi-data.json');
+  router.get('/doc-mr-kpi-data', requireScope('ai-impact:read'), function(req, res) {
+    const data = readFromStorage('ai-impact/doc-mr-kpi-data.json');
     if (!data || !data.mergeRequests) {
       return res.json({ fetchedAt: null, mergeRequests: [] });
     }
@@ -203,7 +203,7 @@ module.exports = function registerRoutes(router, context) {
     writeToStorage('ai-impact/rfe-data.json', null);
     writeToStorage('ai-impact/autofix-data.json', null);
     writeToStorage('ai-impact/doc-data.json', null);
-    writeToStorage('ai-impact/mr-kpi-data.json', null);
+    writeToStorage('ai-impact/doc-mr-kpi-data.json', null);
     res.json({ status: 'cleared' });
   });
 
@@ -255,7 +255,7 @@ module.exports = function registerRoutes(router, context) {
           fetchedAt: new Date().toISOString(),
           mergeRequests: mrKpiResult.mergeRequests
         };
-        writeToStorage('ai-impact/mr-kpi-data.json', mrKpiData);
+        writeToStorage('ai-impact/doc-mr-kpi-data.json', mrKpiData);
         mrKpiCount = mrKpiResult.mergeRequests.length;
       } catch (mrKpiErr) {
         console.error('[ai-impact] MR KPI data refresh failed:', mrKpiErr.message);
