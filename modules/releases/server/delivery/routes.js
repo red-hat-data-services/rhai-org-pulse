@@ -1252,9 +1252,22 @@ module.exports = function registerRoutes(router, context) {
         return res.status(500).json({ error: 'Delivery analysis data not available' })
       }
 
-      // Find the matching release in delivery data
-      const deliveryRelease = analysisCache.data.releases.find(r => r.releaseNumber === version)
-      const deliveryIssues = deliveryRelease?.issues || []
+      // Aggregate ALL releases that match this version (e.g., "3.5" matches "rhoai-3.5", "rhoai-3.5.EA1", "RHAII-3.5", etc.)
+      const versionPattern = new RegExp(`\\b${version.replace('.', '\\.')}\\b`)
+      const matchingReleases = analysisCache.data.releases.filter(r => versionPattern.test(r.releaseNumber))
+
+      // Collect all issues from matching releases
+      const deliveryIssues = []
+      const seenKeys = new Set()
+      for (const release of matchingReleases) {
+        for (const issue of release.issues || []) {
+          // Deduplicate by key (same issue may appear in multiple releases)
+          if (!seenKeys.has(issue.key)) {
+            deliveryIssues.push(issue)
+            seenKeys.add(issue.key)
+          }
+        }
+      }
 
       // Build feature maps
       const committedKeys = new Set(snapshot.featureKeys)
