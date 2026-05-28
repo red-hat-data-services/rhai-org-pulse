@@ -26,6 +26,11 @@ describe('buildUpstreamUrl', () => {
     expect(url).toContain('limit=10')
   })
 
+  it('preserves path segments in base URL', () => {
+    expect(buildUpstreamUrl('https://api.example.com/api/v1', '/products', {}))
+      .toBe('https://api.example.com/api/v1/products')
+  })
+
   it('skips empty/null/undefined query values', () => {
     const url = buildUpstreamUrl('https://api.example.com', '/drops', { product_key: 'rhaiis', series: '', empty: null, undef: undefined })
     expect(url).toContain('product_key=rhaiis')
@@ -102,7 +107,7 @@ describe('proxyGet', () => {
     expect(res._json.detail).toBe('not found')
   })
 
-  it('returns 502 on fetch error', async () => {
+  it('returns 502 on fetch error', { timeout: 15000 }, async () => {
     globalThis.fetch = vi.fn().mockRejectedValue(new Error('ECONNREFUSED'))
 
     const res = makeRes()

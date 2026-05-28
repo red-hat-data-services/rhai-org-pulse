@@ -1,14 +1,13 @@
 import { defineAsyncComponent } from 'vue'
 
-const RhaiisProductView = defineAsyncComponent(() => import('./views/RhaiisProductView.vue'))
-const PlaceholderProductView = defineAsyncComponent(() => import('./views/PlaceholderProductView.vue'))
+const ProductView = defineAsyncComponent(() => import('./views/ProductView.vue'))
 
 export const routes = {
-  'rhaiis': RhaiisProductView,
-  'rhel-ai': PlaceholderProductView,
-  'base-images': PlaceholderProductView,
-  'builder-images': PlaceholderProductView,
-  'wheel-collections': PlaceholderProductView,
+  'rhaiis': ProductView,
+  'rhel-ai': ProductView,
+  'base-images': ProductView,
+  'builder-images': ProductView,
+  'wheel-collections': ProductView,
   'drop-detail': defineAsyncComponent(() => import('./views/DropDetailView.vue')),
   'artifact-detail': defineAsyncComponent(() => import('./views/ArtifactDetailView.vue')),
 }
