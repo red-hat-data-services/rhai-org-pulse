@@ -127,6 +127,35 @@ async function checkConnection() {
   }
 }
 
+const GITLAB_DATA_PROJECT_ID = process.env.GITLAB_TEAM_DATA_PROJECT_ID || '82624331';
+const GITLAB_DATA_FILE_PATH = 'github-access.json';
+const GITLAB_DATA_CACHE_TTL = 30 * 60 * 1000;
+let _gitlabDataCache = null;
+
+async function fetchPytorchAccess() {
+  if (_gitlabDataCache && Date.now() - _gitlabDataCache.ts < GITLAB_DATA_CACHE_TTL) {
+    return _gitlabDataCache.data;
+  }
+
+  const token = process.env.GITLAB_TOKEN;
+  if (!token) return null;
+
+  const url = `https://gitlab.com/api/v4/projects/${GITLAB_DATA_PROJECT_ID}/repository/files/${GITLAB_DATA_FILE_PATH}/raw?ref=main`;
+  const resp = await fetch(url, {
+    timeout: 10000,
+    headers: { 'PRIVATE-TOKEN': token, 'Accept': 'application/json' },
+  });
+
+  if (!resp.ok) {
+    const body = await resp.text().catch(() => '');
+    throw new Error(`GitLab returned ${resp.status}: ${body.slice(0, 200)}`);
+  }
+
+  const data = await resp.json();
+  _gitlabDataCache = { data, ts: Date.now() };
+  return data;
+}
+
 const ROSTER_PUSH_SOURCE = 'org_pulse_roster';
 const ROSTER_PUSH_REPLACES = ['github_org_sync'];
 const ROSTER_PUSH_INTERVAL = 2 * 60 * 60 * 1000; // 2 hours
@@ -456,6 +485,30 @@ module.exports = function registerRoutes(router, context) {
       res.json(data);
     } catch (err) {
       handleProxyError(res, err);
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/modules/upstream-pulse/github-access:
+   *   get:
+   *     summary: PyTorch repository access levels
+   *     description: Returns team member access counts (write, triage, total) for pytorch/pytorch, sourced from GitLab team data repo.
+   *     tags: [upstream-pulse]
+   *     responses:
+   *       200:
+   *         description: Access level counts
+   */
+  router.get('/github-access', requireScope('upstream-pulse:read'), async function(req, res) {
+    try {
+      const data = await fetchPytorchAccess();
+      if (!data) {
+        return res.status(503).json({ error: 'GitLab token not configured' });
+      }
+      res.json(data);
+    } catch (err) {
+      console.error('[upstream-pulse] PyTorch access fetch failed:', err.message);
+      res.status(502).json({ error: 'Failed to fetch access data', message: err.message });
     }
   });
 
