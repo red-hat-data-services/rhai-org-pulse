@@ -295,6 +295,7 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/modules/releases/delivery/quality/bugs` — cumulative bug data for selected versions
 - `/api/modules/releases/delivery/quality/components` — components with bug counts
 - `/api/modules/releases/delivery/quality/debug` — debug diagnostics for bug count issues (admin)
+- `/api/modules/releases/delivery/commitment/:version/:phase` — commitment tracking data for a release phase
 - `/api/modules/releases/hygiene/features` — hygiene features for a version
 - `/api/modules/releases/hygiene/summary` — aggregate violation summary for a version
 - `/api/modules/releases/hygiene/refresh/status` — current hygiene refresh state
