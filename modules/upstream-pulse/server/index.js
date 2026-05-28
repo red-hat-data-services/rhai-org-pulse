@@ -488,17 +488,6 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
-  /**
-   * @openapi
-   * /api/modules/upstream-pulse/github-access:
-   *   get:
-   *     summary: PyTorch repository access levels
-   *     description: Returns team member access counts (write, triage, total) for pytorch/pytorch, sourced from GitLab team data repo.
-   *     tags: [upstream-pulse]
-   *     responses:
-   *       200:
-   *         description: Access level counts
-   */
   router.get('/github-access', requireScope('upstream-pulse:read'), async function(req, res) {
     try {
       const data = await fetchPytorchAccess();
