@@ -89,4 +89,42 @@ async function fetchAllJqlResults(jiraRequest, jql, fields, { maxResults = 100, 
   return issues;
 }
 
-module.exports = { JIRA_HOST, getJiraAuth, jiraRequest, fetchAllJqlResults };
+/**
+ * Fetch all versions from the given Jira projects.
+ * Uses the unpaginated /versions endpoint (returns flat array).
+ * @param {Function} jiraRequestFn - The jiraRequest function
+ * @param {string[]} projects - Jira project keys (e.g., ['RHAISTRAT', 'RHOAIENG'])
+ * @returns {Promise<Array<{ name: string, id: string, project: string, released: boolean, archived: boolean, releaseDate: string|null }>>}
+ */
+async function fetchProjectVersions(jiraRequestFn, projects) {
+  const versions = [];
+
+  for (const project of projects) {
+    try {
+      const data = await jiraRequestFn(
+        `/rest/api/3/project/${encodeURIComponent(project)}/versions`
+      );
+      const arr = Array.isArray(data) ? data : [];
+
+      for (let i = 0; i < arr.length; i++) {
+        const v = arr[i];
+        const name = String(v.name || '').trim();
+        if (!name) continue;
+        versions.push({
+          name,
+          id: String(v.id || ''),
+          project,
+          released: v.released === true,
+          archived: v.archived === true,
+          releaseDate: v.releaseDate || null
+        });
+      }
+    } catch (err) {
+      console.warn(`[jira] Failed to fetch versions for project ${project}: ${err.message}`);
+    }
+  }
+
+  return versions;
+}
+
+module.exports = { JIRA_HOST, getJiraAuth, jiraRequest, fetchAllJqlResults, fetchProjectVersions };

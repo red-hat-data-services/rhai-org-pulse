@@ -20,8 +20,8 @@ describe('field-options-store', () => {
   describe('listFieldOptions', () => {
     it('returns summary of all option sets', () => {
       const storage = makeStorage({
-        'team-data/field-options/components.json': {
-          name: 'components', label: 'Components', values: ['A', 'B', 'C']
+        'team-data/field-options/component.json': {
+          name: 'component', label: 'Components', values: ['A', 'B', 'C']
         },
         'team-data/field-options/tags.json': {
           name: 'tags', label: 'Tags', values: ['X']
@@ -29,7 +29,7 @@ describe('field-options-store', () => {
       })
       const result = fieldOptionsStore.listFieldOptions(storage)
       expect(result).toHaveLength(2)
-      expect(result[0]).toEqual({ name: 'components', label: 'Components', count: 3 })
+      expect(result[0]).toEqual({ name: 'component', label: 'Components', count: 3 })
       expect(result[1]).toEqual({ name: 'tags', label: 'Tags', count: 1 })
     })
 
@@ -43,11 +43,11 @@ describe('field-options-store', () => {
   describe('getValues', () => {
     it('returns values array for existing option set', () => {
       const storage = makeStorage({
-        'team-data/field-options/components.json': {
-          name: 'components', label: 'Components', values: ['A', 'B']
+        'team-data/field-options/component.json': {
+          name: 'component', label: 'Components', values: ['A', 'B']
         }
       })
-      expect(fieldOptionsStore.getValues(storage, 'components')).toEqual(['A', 'B'])
+      expect(fieldOptionsStore.getValues(storage, 'component')).toEqual(['A', 'B'])
     })
 
     it('returns null for non-existent option set', () => {
@@ -59,16 +59,16 @@ describe('field-options-store', () => {
   describe('addValues', () => {
     it('adds new values and deduplicates', () => {
       const storage = makeStorage({
-        'team-data/field-options/components.json': {
-          name: 'components', label: 'Components', values: ['A', 'B']
+        'team-data/field-options/component.json': {
+          name: 'component', label: 'Components', values: ['A', 'B']
         },
         'audit-log.json': { entries: [] }
       })
-      const result = fieldOptionsStore.addValues(storage, 'components', ['B', 'C', 'D'], 'user@test.com')
+      const result = fieldOptionsStore.addValues(storage, 'component', ['B', 'C', 'D'], 'user@test.com')
       expect(result.added).toEqual(['C', 'D'])
       expect(result.total).toBe(4)
 
-      const saved = storage._data['team-data/field-options/components.json']
+      const saved = storage._data['team-data/field-options/component.json']
       expect(saved.values).toEqual(['A', 'B', 'C', 'D']) // sorted
     })
 
@@ -93,9 +93,9 @@ describe('field-options-store', () => {
   describe('replaceValues', () => {
     it('replaces all values, dedupes and sorts', () => {
       const storage = makeStorage({ 'audit-log.json': { entries: [] } })
-      const result = fieldOptionsStore.replaceValues(storage, 'components', ['C', 'A', 'B', 'A'], 'Components', 'user@test.com')
+      const result = fieldOptionsStore.replaceValues(storage, 'component', ['C', 'A', 'B', 'A'], 'Components', 'user@test.com')
       expect(result.values).toEqual(['A', 'B', 'C'])
-      expect(result.name).toBe('components')
+      expect(result.name).toBe('component')
       expect(result.label).toBe('Components')
     })
   })
@@ -103,12 +103,12 @@ describe('field-options-store', () => {
   describe('removeValues', () => {
     it('removes specified values', () => {
       const storage = makeStorage({
-        'team-data/field-options/components.json': {
-          name: 'components', label: 'Components', values: ['A', 'B', 'C']
+        'team-data/field-options/component.json': {
+          name: 'component', label: 'Components', values: ['A', 'B', 'C']
         },
         'audit-log.json': { entries: [] }
       })
-      const result = fieldOptionsStore.removeValues(storage, 'components', ['B'], 'user@test.com')
+      const result = fieldOptionsStore.removeValues(storage, 'component', ['B'], 'user@test.com')
       expect(result.removed).toBe(1)
       expect(result.total).toBe(2)
     })
@@ -140,12 +140,12 @@ describe('field-options-store', () => {
   describe('renameValue', () => {
     it('renames a value in the option set and cascades to person records', () => {
       const storage = makeStorage({
-        'team-data/field-options/components.json': {
-          name: 'components', label: 'Components', values: ['Alpha', 'Beta', 'Gamma']
+        'team-data/field-options/component.json': {
+          name: 'component', label: 'Components', values: ['Alpha', 'Beta', 'Gamma']
         },
         'team-data/field-definitions.json': {
           personFields: [
-            { id: 'field_abc', type: 'constrained', optionsRef: 'components', deleted: false }
+            { id: 'field_abc', type: 'constrained', optionsRef: 'component', deleted: false }
           ],
           teamFields: []
         },
@@ -158,10 +158,10 @@ describe('field-options-store', () => {
         'team-data/teams.json': { teams: {} },
         'audit-log.json': { entries: [] }
       })
-      const result = fieldOptionsStore.renameValue(storage, 'components', 'Beta', 'Beta v2', 'admin@test.com')
+      const result = fieldOptionsStore.renameValue(storage, 'component', 'Beta', 'Beta v2', 'admin@test.com')
       expect(result.updated).toBe(1)
 
-      const opts = storage._data['team-data/field-options/components.json']
+      const opts = storage._data['team-data/field-options/component.json']
       expect(opts.values).toContain('Beta v2')
       expect(opts.values).not.toContain('Beta')
 
@@ -172,12 +172,12 @@ describe('field-options-store', () => {
 
     it('renames a value in multi-value arrays', () => {
       const storage = makeStorage({
-        'team-data/field-options/components.json': {
-          name: 'components', label: 'Components', values: ['A', 'B', 'C']
+        'team-data/field-options/component.json': {
+          name: 'component', label: 'Components', values: ['A', 'B', 'C']
         },
         'team-data/field-definitions.json': {
           personFields: [
-            { id: 'field_mv', type: 'constrained', optionsRef: 'components', deleted: false, multiValue: true }
+            { id: 'field_mv', type: 'constrained', optionsRef: 'component', deleted: false, multiValue: true }
           ],
           teamFields: []
         },
@@ -189,7 +189,7 @@ describe('field-options-store', () => {
         'team-data/teams.json': { teams: {} },
         'audit-log.json': { entries: [] }
       })
-      const result = fieldOptionsStore.renameValue(storage, 'components', 'B', 'B-renamed', 'admin@test.com')
+      const result = fieldOptionsStore.renameValue(storage, 'component', 'B', 'B-renamed', 'admin@test.com')
       expect(result.updated).toBe(1)
 
       const reg = storage._data['team-data/registry.json']
@@ -198,13 +198,13 @@ describe('field-options-store', () => {
 
     it('cascades to team metadata', () => {
       const storage = makeStorage({
-        'team-data/field-options/components.json': {
-          name: 'components', label: 'Components', values: ['X', 'Y']
+        'team-data/field-options/component.json': {
+          name: 'component', label: 'Components', values: ['X', 'Y']
         },
         'team-data/field-definitions.json': {
           personFields: [],
           teamFields: [
-            { id: 'field_t1', type: 'constrained', optionsRef: 'components', deleted: false }
+            { id: 'field_t1', type: 'constrained', optionsRef: 'component', deleted: false }
           ]
         },
         'team-data/registry.json': { people: {} },
@@ -215,7 +215,7 @@ describe('field-options-store', () => {
         },
         'audit-log.json': { entries: [] }
       })
-      const result = fieldOptionsStore.renameValue(storage, 'components', 'X', 'X-new', 'admin@test.com')
+      const result = fieldOptionsStore.renameValue(storage, 'component', 'X', 'X-new', 'admin@test.com')
       expect(result.updated).toBe(1)
 
       const teams = storage._data['team-data/teams.json']
@@ -224,25 +224,25 @@ describe('field-options-store', () => {
 
     it('throws if old value not found', () => {
       const storage = makeStorage({
-        'team-data/field-options/components.json': {
-          name: 'components', label: 'Components', values: ['A']
+        'team-data/field-options/component.json': {
+          name: 'component', label: 'Components', values: ['A']
         },
         'audit-log.json': { entries: [] }
       })
       expect(() => {
-        fieldOptionsStore.renameValue(storage, 'components', 'Z', 'Z-new', 'admin@test.com')
+        fieldOptionsStore.renameValue(storage, 'component', 'Z', 'Z-new', 'admin@test.com')
       }).toThrow('not found')
     })
 
     it('throws if new value already exists', () => {
       const storage = makeStorage({
-        'team-data/field-options/components.json': {
-          name: 'components', label: 'Components', values: ['A', 'B']
+        'team-data/field-options/component.json': {
+          name: 'component', label: 'Components', values: ['A', 'B']
         },
         'audit-log.json': { entries: [] }
       })
       expect(() => {
-        fieldOptionsStore.renameValue(storage, 'components', 'A', 'B', 'admin@test.com')
+        fieldOptionsStore.renameValue(storage, 'component', 'A', 'B', 'admin@test.com')
       }).toThrow('already exists')
     })
 
@@ -254,13 +254,13 @@ describe('field-options-store', () => {
 
     it('skips deleted fields when cascading', () => {
       const storage = makeStorage({
-        'team-data/field-options/components.json': {
-          name: 'components', label: 'Components', values: ['A', 'B']
+        'team-data/field-options/component.json': {
+          name: 'component', label: 'Components', values: ['A', 'B']
         },
         'team-data/field-definitions.json': {
           personFields: [
-            { id: 'field_del', type: 'constrained', optionsRef: 'components', deleted: true },
-            { id: 'field_act', type: 'constrained', optionsRef: 'components', deleted: false }
+            { id: 'field_del', type: 'constrained', optionsRef: 'component', deleted: true },
+            { id: 'field_act', type: 'constrained', optionsRef: 'component', deleted: false }
           ],
           teamFields: []
         },
@@ -272,7 +272,7 @@ describe('field-options-store', () => {
         'team-data/teams.json': { teams: {} },
         'audit-log.json': { entries: [] }
       })
-      const result = fieldOptionsStore.renameValue(storage, 'components', 'A', 'A-renamed', 'admin@test.com')
+      const result = fieldOptionsStore.renameValue(storage, 'component', 'A', 'A-renamed', 'admin@test.com')
       expect(result.updated).toBe(1)
 
       const reg = storage._data['team-data/registry.json']
@@ -285,8 +285,8 @@ describe('field-options-store', () => {
   describe('multi-option-set isolation', () => {
     it('operations on one set do not affect another', () => {
       const storage = makeStorage({
-        'team-data/field-options/components.json': {
-          name: 'components', label: 'Components', values: ['A']
+        'team-data/field-options/component.json': {
+          name: 'component', label: 'Components', values: ['A']
         },
         'team-data/field-options/tags.json': {
           name: 'tags', label: 'Tags', values: ['X']
@@ -294,9 +294,9 @@ describe('field-options-store', () => {
         'audit-log.json': { entries: [] }
       })
 
-      fieldOptionsStore.addValues(storage, 'components', ['B'], 'user@test.com')
+      fieldOptionsStore.addValues(storage, 'component', ['B'], 'user@test.com')
       expect(fieldOptionsStore.getValues(storage, 'tags')).toEqual(['X'])
-      expect(fieldOptionsStore.getValues(storage, 'components')).toEqual(['A', 'B'])
+      expect(fieldOptionsStore.getValues(storage, 'component')).toEqual(['A', 'B'])
     })
   })
 })

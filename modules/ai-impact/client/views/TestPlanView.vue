@@ -100,6 +100,6 @@ watch(() => Object.keys(testPlans.value).length, () => {
       @navigateToRFE="handleNavigateToRFE"
     />
 
-    <AIImpactGuide />
+    <AIImpactGuide defaultTab="testplans" />
   </div>
 </template>

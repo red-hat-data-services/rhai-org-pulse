@@ -414,6 +414,9 @@ export default {
       goBack() {
         history.back()
       },
+      isModuleAvailable(slug) {
+        return builtInManifests.value.some(m => m.slug === slug)
+      },
       params: readonly(routeParams),
       moduleSlug: readonly(activeModuleSlugRef)
     })

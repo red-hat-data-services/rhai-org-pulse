@@ -4,13 +4,13 @@ import { useDropDetail } from '../composables/useDrops'
 import { useArtifacts } from '../composables/useArtifacts'
 import { apiRequest } from '@shared/client/services/api'
 import { formatDate, envBadgeClass, archBadgeClass, konfluxStateBadgeClass, testStatusBadgeClass, testStatusLabel, formatDuration } from '../utils/formatting'
+import DropTimeline from '../components/DropTimeline.vue'
 
 const BASE = '/modules/product-builds'
 const nav = inject('moduleNav')
 const { drop, changelog, metrics, loading, error, loadDrop, loadChangelog, loadMetrics } = useDropDetail()
 const { artifacts, loading: artifactsLoading, error: artifactsError, loadArtifacts } = useArtifacts()
 
-const activeTab = ref('artifacts')
 const currentDropKey = computed(() => nav.params.value.key)
 const wheelsData = reactive(new Map())
 const wheelsRaw = reactive(new Map())
@@ -88,7 +88,6 @@ async function loadAll(key) {
   wheelsData.clear()
   wheelsRaw.clear()
   expandedRows.clear()
-  activeTab.value = 'artifacts'
   await loadDrop(key)
   loadArtifacts({ drop_key: key })
   loadChangelog(key)
@@ -104,6 +103,20 @@ function navigateToArtifact(artifactKey) {
 
 function navigateToDrop(key) {
   nav.navigateTo('drop-detail', { key, product: productKey.value })
+}
+
+function formatRelativeDate(dateString) {
+  if (!dateString) return ''
+  const diffMs = Date.now() - new Date(dateString)
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+  if (diffDays === 0) return 'today'
+  if (diffDays === 1) return '1 day ago'
+  if (diffDays < 30) return `${diffDays} days ago`
+  const diffMonths = Math.floor(diffDays / 30)
+  if (diffMonths === 1) return '1 month ago'
+  if (diffMonths < 12) return `${diffMonths} months ago`
+  const diffYears = Math.floor(diffDays / 365)
+  return diffYears === 1 ? '1 year ago' : `${diffYears} years ago`
 }
 
 function getQuayDirectTagUrl(key) {
@@ -286,23 +299,8 @@ const totalColumns = 7
         </div>
       </div>
 
-      <!-- Tabs -->
-      <div class="border-b border-gray-200 dark:border-gray-700">
-        <nav class="flex gap-4">
-          <button
-            v-for="tab in ['artifacts', 'changelog', 'metrics']"
-            :key="tab"
-            @click="activeTab = tab"
-            class="py-2 text-sm font-medium border-b-2 transition-colors"
-            :class="activeTab === tab
-              ? 'border-gray-900 dark:border-gray-100 text-gray-900 dark:text-gray-100'
-              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'"
-          >{{ tab.charAt(0).toUpperCase() + tab.slice(1) }}</button>
-        </nav>
-      </div>
-
-      <!-- Artifacts tab -->
-      <div v-if="activeTab === 'artifacts'">
+      <!-- Artifacts -->
+      <div>
         <div v-if="artifactsLoading" class="text-sm text-gray-500 dark:text-gray-400">Loading artifacts…</div>
         <div v-else-if="artifactsError" class="text-sm text-red-600 dark:text-red-400">{{ artifactsError }}</div>
         <div v-else-if="artifacts.length === 0" class="text-sm text-gray-500 dark:text-gray-400">No artifacts for this drop.</div>
@@ -578,28 +576,63 @@ const totalColumns = 7
         </div>
       </div>
 
-      <!-- Changelog tab -->
-      <div v-if="activeTab === 'changelog'">
-        <div v-if="!changelog || !changelog.changelogs || Object.keys(changelog.changelogs).length === 0" class="text-sm text-gray-500 dark:text-gray-400">
-          No changelog available — this may be the first drop or data is still being computed.
-        </div>
-        <div v-else class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <div v-for="(commits, repo) in changelog.changelogs" :key="repo" class="mb-4 last:mb-0">
-            <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">{{ repo }}</h4>
-            <ul class="space-y-1">
-              <li v-for="(commit, i) in commits" :key="i" class="text-sm text-gray-600 dark:text-gray-300">
-                <span class="font-mono text-xs text-gray-400 dark:text-gray-500 mr-2">{{ (commit.sha || '').slice(0, 7) }}</span>
-                {{ commit.message || commit }}
-              </li>
-            </ul>
-          </div>
-        </div>
+      <!-- Timeline -->
+      <div>
+        <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Build & Release Timeline</h3>
+        <div v-if="!metrics" class="text-sm text-gray-500 dark:text-gray-400">No timeline data available.</div>
+        <DropTimeline v-else :metrics="metrics" />
       </div>
 
-      <!-- Metrics tab -->
-      <div v-if="activeTab === 'metrics'">
-        <div v-if="!metrics" class="text-sm text-gray-500 dark:text-gray-400">No metrics available.</div>
-        <pre v-else class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-sm text-gray-700 dark:text-gray-300 overflow-x-auto">{{ JSON.stringify(metrics, null, 2) }}</pre>
+      <!-- Changelog -->
+      <div>
+        <div class="flex items-center gap-2 mb-3">
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Changelog</h3>
+          <span v-if="changelog?.changelogs?.length" class="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs font-medium px-2 py-0.5 rounded-full">
+            {{ changelog.changelogs.reduce((s, cl) => s + cl.total_commits, 0) }} commits
+          </span>
+          <span v-if="changelog?.git_branch" class="bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300 text-xs font-medium px-2 py-0.5 rounded-full">
+            branch: {{ changelog.git_branch }}
+          </span>
+        </div>
+        <div v-if="!changelog?.changelogs?.length" class="text-sm text-gray-500 dark:text-gray-400">
+          No changelog available — this may be the first drop or data is still being computed.
+        </div>
+        <div v-else class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-700">
+          <p class="px-4 py-2 text-xs text-gray-400 dark:text-gray-500">Commits between consecutive drops on the same branch.</p>
+          <div v-for="cl in changelog.changelogs" :key="cl.repository_key" class="px-4 py-3">
+            <!-- Repo header -->
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ cl.repository_key.split('/').pop() }}</span>
+              <span class="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs font-medium px-1.5 py-0.5 rounded-full">
+                {{ cl.total_commits }} {{ cl.total_commits === 1 ? 'commit' : 'commits' }}
+              </span>
+              <span v-if="cl.from_drop" class="text-xs text-gray-400 dark:text-gray-500">
+                Changes since
+                <button @click="navigateToDrop(cl.from_drop)" class="text-primary-600 dark:text-blue-400 hover:underline">{{ cl.from_drop }}</button>
+              </span>
+            </div>
+            <!-- Commit rows -->
+            <div class="space-y-0 divide-y divide-gray-100 dark:divide-gray-700/50">
+              <div
+                v-for="commit in [...cl.commits].sort((a, b) => new Date(b.committed_date) - new Date(a.committed_date))"
+                :key="commit.sha"
+                class="flex items-baseline gap-3 py-1.5 text-sm"
+              >
+                <a
+                  v-if="cl.repository_url"
+                  :href="`${cl.repository_url.replace(/\/$/, '')}/-/commit/${commit.sha}`"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="font-mono text-xs text-primary-600 dark:text-blue-400 hover:underline shrink-0"
+                >{{ commit.short_id }}</a>
+                <span v-else class="font-mono text-xs text-gray-400 dark:text-gray-500 shrink-0">{{ commit.short_id }}</span>
+                <span class="flex-1 text-gray-700 dark:text-gray-300 truncate">{{ commit.title }}</span>
+                <span class="text-xs text-gray-400 dark:text-gray-500 shrink-0">{{ commit.author_name }}</span>
+                <span class="text-xs text-gray-400 dark:text-gray-500 shrink-0">{{ formatRelativeDate(commit.committed_date) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </template>
 

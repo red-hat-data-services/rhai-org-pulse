@@ -11,6 +11,7 @@
         "summary": "Implement user authentication",
         "type": "Story",
         "status": "Done",
+        "resolution": "Done",
         "storyPoints": 5,
         "resolutionDate": "2026-03-01",
         "cycleTimeDays": 4.2
@@ -20,6 +21,7 @@
         "summary": "Fix database connection pooling",
         "type": "Bug",
         "status": "Done",
+        "resolution": "Done",
         "storyPoints": 3,
         "resolutionDate": "2026-02-15",
         "cycleTimeDays": 2.1
@@ -29,6 +31,7 @@
         "summary": "Add API rate limiting",
         "type": "Story",
         "status": "Done",
+        "resolution": "Done",
         "storyPoints": 8,
         "resolutionDate": "2026-01-20",
         "cycleTimeDays": 6.5

@@ -22,7 +22,6 @@
   "defaultEnabled": true,
   "requires": [],
   "export": {
-    "customHandler": true,
     "files": [
       { "path": "team-data/registry.json", "notes": "People registry (lifecycle, identities, enrichment)" },
       { "path": "team-data/field-definitions.json", "notes": "Custom field definitions (person and team)" },

@@ -35,9 +35,25 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      - name: Setup Socket Security
+        if: steps.changes.outputs.app == 'true'
+        uses: SocketDev/action@2d3f25590c6ed6ba11a9a14c064d962a3a04698f # v1.3.1
+        with:
+          mode: firewall-free
+
       - name: Install dependencies
         if: steps.changes.outputs.app == 'true'
-        run: npm ci
+        run: |
+          if command -v sfw &> /dev/null; then
+            sfw npm ci
+          else
+            echo "::warning::Socket firewall not available, falling back to plain npm ci"
+            npm ci
+          fi
+
+      - name: Security audit
+        if: steps.changes.outputs.app == 'true'
+        run: npm audit --omit=dev --audit-level=high
 
       - name: Validate module manifests
         if: steps.changes.outputs.app == 'true'

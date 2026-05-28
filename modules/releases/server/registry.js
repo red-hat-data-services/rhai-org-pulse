@@ -8,6 +8,7 @@
  */
 
 const { logAudit } = require('./planning/audit-log');
+const { loadRegistryConfig, saveRegistryConfig } = require('./registry-config');
 
 const REGISTRY_FILE = 'releases/registry.json';
 const SCHEMA_VERSION = 1;
@@ -76,6 +77,107 @@ function normalizeRelease(input) {
 }
 
 /**
+ * Normalize a version name for fuzzy matching.
+ * Lowercases, strips ".z" suffixes (Product Pages z-stream convention),
+ * collapses separators (hyphens, dots) to spaces, and trims.
+ * @param {string} name
+ * @returns {string}
+ */
+function normalizeVersionName(name) {
+  var s = String(name).toLowerCase();
+  // Strip ".z" suffix (but not ".z." — only terminal .z)
+  s = s.replace(/\.z(?=$|\.)/g, '');
+  // Collapse hyphens and dots to spaces
+  s = s.replace(/[-._]+/g, ' ');
+  // Collapse multiple spaces
+  s = s.replace(/\s+/g, ' ');
+  return s.trim();
+}
+
+/**
+ * Match Jira project versions against registry releases.
+ * @param {Array<{ name: string, id: string, project: string }>} jiraVersions
+ * @param {Array<{ id: string, displayName: string, fixVersions: string[], state: string }>} registryReleases
+ * @returns {{ matches: Array<{ releaseId: string, releaseName: string, currentFixVersions: string[], proposedFixVersions: string[], jiraMatches: Array<{ name: string, id: string, project: string }> }>, unmatched: Array<{ name: string, id: string, project: string }> }}
+ */
+function matchVersionsToReleases(jiraVersions, registryReleases) {
+  // Build normalized lookup for active releases
+  var releasesByNormalized = {};
+  for (var ri = 0; ri < registryReleases.length; ri++) {
+    var rel = registryReleases[ri];
+    if (rel.state === 'archived') continue;
+
+    // Normalize displayName and all existing fixVersions as candidate keys
+    var keys = [normalizeVersionName(rel.displayName)];
+    var fvs = rel.fixVersions || [];
+    for (var fi = 0; fi < fvs.length; fi++) {
+      var nfv = normalizeVersionName(fvs[fi]);
+      if (keys.indexOf(nfv) === -1) keys.push(nfv);
+    }
+
+    for (var ki = 0; ki < keys.length; ki++) {
+      if (!releasesByNormalized[keys[ki]]) {
+        releasesByNormalized[keys[ki]] = rel;
+      }
+    }
+  }
+
+  // Match each Jira version
+  var matchMap = {}; // releaseId -> { release, jiraMatches[], proposedVersionNames Set }
+  var unmatched = [];
+
+  for (var ji = 0; ji < jiraVersions.length; ji++) {
+    var jv = jiraVersions[ji];
+    var normalized = normalizeVersionName(jv.name);
+    var release = releasesByNormalized[normalized];
+
+    if (release) {
+      if (!matchMap[release.id]) {
+        matchMap[release.id] = {
+          release: release,
+          jiraMatches: [],
+          proposedNames: {}
+        };
+      }
+      matchMap[release.id].jiraMatches.push({
+        name: jv.name,
+        id: jv.id,
+        project: jv.project
+      });
+      matchMap[release.id].proposedNames[jv.name] = true;
+    } else {
+      unmatched.push({ name: jv.name, id: jv.id, project: jv.project });
+    }
+  }
+
+  // Build matches array
+  var matches = [];
+  var matchIds = Object.keys(matchMap);
+  for (var mi = 0; mi < matchIds.length; mi++) {
+    var entry = matchMap[matchIds[mi]];
+    var currentFvs = entry.release.fixVersions || [];
+    // Proposed = current + any new Jira version names not already present
+    var proposed = currentFvs.slice();
+    var proposedNames = Object.keys(entry.proposedNames);
+    for (var pi = 0; pi < proposedNames.length; pi++) {
+      if (proposed.indexOf(proposedNames[pi]) === -1) {
+        proposed.push(proposedNames[pi]);
+      }
+    }
+
+    matches.push({
+      releaseId: entry.release.id,
+      releaseName: entry.release.displayName,
+      currentFixVersions: currentFvs,
+      proposedFixVersions: proposed,
+      jiraMatches: entry.jiraMatches
+    });
+  }
+
+  return { matches: matches, unmatched: unmatched };
+}
+
+/**
  * Register release registry routes on the provided router.
  */
 function registerRegistryRoutes(router, context) {
@@ -106,6 +208,53 @@ function registerRegistryRoutes(router, context) {
   router.get('/registry', requireAuth, requireScope('releases:read'), function(req, res) {
     const registry = readRegistry(readFromStorage);
     res.json(registry);
+  });
+
+  /**
+   * @openapi
+   * /api/modules/releases/registry/config:
+   *   get:
+   *     tags: [Releases]
+   *     summary: Get registry configuration (Jira projects for version resolution)
+   *     responses:
+   *       200:
+   *         description: Registry config
+   */
+  router.get('/registry/config', requireReleaseManager, requireScope('releases:read'), function(req, res) {
+    var config = loadRegistryConfig(storage);
+    res.json(config);
+  });
+
+  /**
+   * @openapi
+   * /api/modules/releases/registry/config:
+   *   post:
+   *     tags: [Releases]
+   *     summary: Save registry configuration
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               jiraProjects:
+   *                 type: array
+   *                 items:
+   *                   type: string
+   *     responses:
+   *       200:
+   *         description: Config saved
+   *       400:
+   *         description: Validation error
+   */
+  router.post('/registry/config', requireReleaseManager, requireScope('releases:write'), function(req, res) {
+    try {
+      saveRegistryConfig(storage, req.body);
+      res.json({ status: 'saved' });
+    } catch (err) {
+      res.status(400).json({ error: err.message });
+    }
   });
 
   /**
@@ -445,6 +594,137 @@ function registerRegistryRoutes(router, context) {
       res.status(500).json({ error: 'Auto-discover failed: ' + err.message });
     }
   });
+
+  /**
+   * @openapi
+   * /api/modules/releases/registry/resolve-jira-versions:
+   *   post:
+   *     tags: [Releases]
+   *     summary: Preview Jira version resolution against registry releases
+   *     description: >
+   *       Fetches all versions from configured Jira projects and matches them
+   *       against registry releases using normalized string comparison.
+   *       Returns proposed fixVersions mappings without writing.
+   *     responses:
+   *       200:
+   *         description: Proposed version mappings
+   *       400:
+   *         description: No Jira projects configured
+   *       500:
+   *         description: Jira API error
+   */
+  router.post('/registry/resolve-jira-versions', requireReleaseManager, requireScope('releases:write'), async function(req, res) {
+    try {
+      var config = loadRegistryConfig(storage);
+      var projects = config.jiraProjects || [];
+
+      if (projects.length === 0) {
+        return res.status(400).json({
+          error: 'No Jira projects configured. Set jiraProjects in registry config first.'
+        });
+      }
+
+      var { fetchProjectVersions, jiraRequest: jiraRequestFn } = require('../../../shared/server/jira');
+
+      var jiraVersions = await fetchProjectVersions(jiraRequestFn, projects);
+      var registry = readRegistry(readFromStorage);
+      var result = matchVersionsToReleases(jiraVersions, registry.releases);
+
+      res.json({
+        status: 'ok',
+        jiraVersionCount: jiraVersions.length,
+        projects: projects,
+        matches: result.matches,
+        unmatched: result.unmatched
+      });
+    } catch (err) {
+      console.error('[releases/registry] Jira version resolution failed:', err.message);
+      res.status(500).json({ error: 'Jira version resolution failed: ' + err.message });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/modules/releases/registry/resolve-jira-versions/apply:
+   *   post:
+   *     tags: [Releases]
+   *     summary: Apply resolved Jira versions to registry releases
+   *     description: >
+   *       Accepts a list of release-to-fixVersions mappings and writes them
+   *       to the registry. Only updates releases included in the request.
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required: [mappings]
+   *             properties:
+   *               mappings:
+   *                 type: array
+   *                 items:
+   *                   type: object
+   *                   required: [releaseId, fixVersions]
+   *                   properties:
+   *                     releaseId:
+   *                       type: string
+   *                     fixVersions:
+   *                       type: array
+   *                       items:
+   *                         type: string
+   *     responses:
+   *       200:
+   *         description: Versions applied
+   *       400:
+   *         description: Invalid request
+   */
+  router.post('/registry/resolve-jira-versions/apply', requireReleaseManager, requireScope('releases:write'), function(req, res) {
+    var mappings = req.body && req.body.mappings;
+    if (!Array.isArray(mappings) || mappings.length === 0) {
+      return res.status(400).json({ error: 'mappings array is required and must not be empty' });
+    }
+
+    var registry = readRegistry(readFromStorage);
+    var updated = [];
+
+    for (var i = 0; i < mappings.length; i++) {
+      var mapping = mappings[i];
+      if (!mapping.releaseId || !Array.isArray(mapping.fixVersions)) continue;
+
+      // Filter to string values only
+      var cleanVersions = mapping.fixVersions.filter(function(v) { return typeof v === 'string' && v.trim().length > 0; });
+
+      var release = null;
+      for (var ri = 0; ri < registry.releases.length; ri++) {
+        if (registry.releases[ri].id === mapping.releaseId) {
+          release = registry.releases[ri];
+          break;
+        }
+      }
+
+      if (!release) continue;
+
+      release.fixVersions = cleanVersions;
+      release.updatedAt = new Date().toISOString();
+      updated.push({ releaseId: release.id, fixVersions: release.fixVersions });
+    }
+
+    if (updated.length > 0) {
+      writeRegistry(writeToStorage, registry);
+      logAudit(readFromStorage, writeToStorage, {
+        domain: 'registry',
+        action: 'registry_resolve_jira_versions',
+        user: req.userEmail || 'unknown',
+        summary: 'Applied Jira version mappings to ' + updated.length + ' releases',
+        details: { updated: updated }
+      });
+    }
+
+    res.json({ status: 'ok', updated: updated });
+  });
 }
 
-module.exports = { registerRegistryRoutes, readRegistry, writeRegistry, validateRelease, normalizeRelease, REGISTRY_FILE };
+module.exports = {
+  registerRegistryRoutes, readRegistry, writeRegistry, validateRelease, normalizeRelease,
+  normalizeVersionName, matchVersionsToReleases, REGISTRY_FILE
+};

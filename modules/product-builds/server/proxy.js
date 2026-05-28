@@ -1,7 +1,12 @@
+const retry = require('async-retry');
+
 const TIMEOUT_MS = 30_000;
+const RETRIES = 3;
 
 function buildUpstreamUrl(baseUrl, path, query) {
-  const url = new URL(path, baseUrl);
+  const base = baseUrl.endsWith('/') ? baseUrl : baseUrl + '/';
+  const relative = path.startsWith('/') ? path.slice(1) : path;
+  const url = new URL(relative, base);
   if (query && typeof query === 'object') {
     for (const [key, value] of Object.entries(query)) {
       if (value !== undefined && value !== null && value !== '') {
@@ -22,10 +27,20 @@ async function proxyGet(baseUrl, upstreamPath, query, res) {
   const url = buildUpstreamUrl(baseUrl, upstreamPath, query);
 
   try {
-    const upstream = await fetch(url, {
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-      headers: { 'Accept': 'application/json' }
-    });
+    const upstream = await retry(async (bail) => {
+      let r;
+      try {
+        r = await fetch(url, {
+          signal: AbortSignal.timeout(TIMEOUT_MS),
+          headers: { 'Accept': 'application/json' }
+        });
+      } catch (err) {
+        if (err.name === 'TimeoutError') bail(err);
+        throw err;
+      }
+      if (r.status >= 500) throw new Error(`HTTP ${r.status}`);
+      return r;
+    }, { retries: RETRIES, minTimeout: 500 });
 
     const body = await upstream.json();
     const totalCount = upstream.headers.get('X-Total-Count');

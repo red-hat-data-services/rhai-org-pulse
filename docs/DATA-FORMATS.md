@@ -20,6 +20,7 @@ Filename is the person's display name lowercased with non-alphanumeric chars rep
         "key": "PROJ-1234",
         "summary": "Fix login bug",
         "status": "Resolved",
+        "resolution": "Done",
         "storyPoints": 3,
         "resolutionDate": "2026-03-26T18:40:28.603+0000",
         "cycleTimeDays": 4.5
@@ -47,6 +48,7 @@ Filename is the person's display name lowercased with non-alphanumeric chars rep
 ```
 
 **Notes:**
+- `resolution` is the Jira resolution name (e.g., `"Done"`, `"Fixed"`) or `null` for unresolved issues. Issues with no-work resolutions (`"Won't Do"`, `"Obsolete"`, `"Duplicate"`, `"Cannot Reproduce"`) are excluded from resolved metrics at fetch time.
 - `resolutionDate` uses ISO 8601 with timezone offset (e.g., `"2026-02-26T08:23:28.000+0000"`), NOT simple `YYYY-MM-DD`
 - `lookbackDays` is currently 365 for most users but may vary
 - `cycleTimeDays` on individual issues can be fractional

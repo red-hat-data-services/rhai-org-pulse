@@ -197,7 +197,7 @@ describe('buildEnrichedTeams board cascade', () => {
       personFields: [],
       teamFields: [{
         id: 'field_comp01', label: 'Components', type: 'constrained',
-        multiValue: true, optionsRef: 'components', allowedValues: null,
+        multiValue: true, optionsRef: 'component', allowedValues: null,
         deleted: false, order: 0
       }]
     }

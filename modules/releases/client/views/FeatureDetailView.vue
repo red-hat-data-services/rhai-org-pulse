@@ -3,16 +3,49 @@ import { onMounted, inject, computed, ref, watch, nextTick } from 'vue'
 import { useFeatureDetail } from '../execute/composables/useFeatureTraffic'
 import { useAIReview } from '../execute/composables/useAIReview.js'
 import { useModuleLink } from '@shared/client/composables/useModuleLink.js'
+import { apiRequest } from '@shared/client/services/api.js'
 import StatusBadge from '../execute/components/StatusBadge.vue'
 import TrafficMap from '../execute/components/TrafficMap.vue'
 import EpicBreakdown from '../execute/components/EpicBreakdown.vue'
 import SignoffSection from '../execute/components/SignoffSection.vue'
 import AIReviewSection from '../execute/components/AIReviewSection.vue'
+import HygieneViolations from '../execute/components/hygiene/HygieneViolations.vue'
 
 const nav = inject('moduleNav')
 const { feature, loading, error, loadFeature } = useFeatureDetail()
 const { aiReview, aiReviewLoading, aiReviewError, loadAIReview } = useAIReview()
 const { navigateTo: crossNavigate } = useModuleLink()
+
+// --- Hygiene ---
+const hygieneLoading = ref(false)
+const hygieneViolations = ref([])
+const hygieneAvailable = ref(true)
+const hygieneExpanded = ref(false)
+
+async function loadHygiene(version) {
+  if (!version) { hygieneAvailable.value = false; return }
+  hygieneLoading.value = true
+  try {
+    const data = await apiRequest(`/modules/releases/hygiene/features?version=${encodeURIComponent(version)}`)
+    const featureResult = data?.features?.[featureKey.value]
+    if (featureResult) {
+      hygieneViolations.value = featureResult.violations || []
+      hygieneAvailable.value = true
+      // Default expanded if there are violations
+      hygieneExpanded.value = hygieneViolations.value.length > 0
+    } else {
+      hygieneViolations.value = []
+      hygieneAvailable.value = true
+      hygieneExpanded.value = false
+    }
+  } catch {
+    hygieneAvailable.value = false
+  } finally {
+    hygieneLoading.value = false
+  }
+}
+
+const hygieneCount = computed(() => hygieneViolations.value.length)
 
 const JIRA_BASE = 'https://redhat.atlassian.net/browse/'
 
@@ -114,6 +147,8 @@ const hasDeliveryInsight = computed(() => {
 const fromRfe = computed(() => nav.params.value.fromRfe)
 const fromFeatureReview = computed(() => nav.params.value.fromFeatureReview)
 const fromPlan = computed(() => nav.params.value.from === 'plan')
+const fromFeatureStatus = computed(() => nav.params.value.from === 'feature-status')
+const fromHygieneReport = computed(() => nav.params.value.from === 'hygiene-report')
 
 function goBack() {
   if (fromRfe.value) {
@@ -122,6 +157,16 @@ function goBack() {
     crossNavigate('ai-impact', 'feature-review')
   } else if (fromPlan.value) {
     nav.navigateTo('plan')
+  } else if (fromHygieneReport.value) {
+    const params = { report: 'program-hygiene' }
+    if (nav.params.value.product) params.product = nav.params.value.product
+    if (nav.params.value.version) params.version = nav.params.value.version
+    nav.navigateTo('reports', params)
+  } else if (fromFeatureStatus.value) {
+    const params = { tab: 'feature-status' }
+    if (nav.params.value.version) params.version = nav.params.value.version
+    if (nav.params.value.product) params.product = nav.params.value.product
+    nav.navigateTo('execute', params)
   } else {
     nav.navigateTo('execute')
   }
@@ -287,6 +332,18 @@ watch(() => nav.params.value?.tab, (tabParam) => {
   }
 }, { immediate: true })
 
+// Load hygiene when feature data becomes available
+// Prefer the version URL param (matches hygiene storage key), fall back to fixVersions
+watch(feature, (feat) => {
+  const versionParam = nav.params.value?.version
+  const version = versionParam || (feat?.fixVersions?.length ? feat.fixVersions[0] : null)
+  if (version) {
+    loadHygiene(version)
+  } else if (feat) {
+    hygieneAvailable.value = false
+  }
+})
+
 onMounted(() => {
   if (featureKey.value) {
     loadFeature(featureKey.value)
@@ -302,7 +359,7 @@ onMounted(() => {
       class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-1"
       @click="goBack"
     >
-      &larr; {{ fromRfe ? 'Back to RFE Review' : fromFeatureReview ? 'Back to Feature Review' : fromPlan ? 'Back to Plan' : 'Back to Execute' }}
+      &larr; {{ fromRfe ? 'Back to RFE Review' : fromFeatureReview ? 'Back to Feature Review' : fromPlan ? 'Back to Plan' : fromHygieneReport ? 'Back to Hygiene Report' : fromFeatureStatus ? 'Back to Feature Status' : 'Back to Execute' }}
     </button>
 
     <!-- Loading -->
@@ -376,6 +433,47 @@ onMounted(() => {
 
         <!-- Release signoff: summary row in header; full panel expands on click -->
         <SignoffSection v-if="signoffValidation" collapsible :validation="signoffValidation" />
+      </div>
+
+      <!-- Hygiene Section (collapsible) -->
+      <div
+        v-if="hygieneAvailable || hygieneLoading"
+        class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
+      >
+        <button
+          class="w-full flex items-center justify-between px-5 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+          @click="hygieneExpanded = !hygieneExpanded"
+        >
+          <div class="flex items-center gap-2">
+            <svg
+              class="h-4 w-4 text-gray-400 dark:text-gray-500 transition-transform"
+              :class="{ 'rotate-90': hygieneExpanded }"
+              xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+            <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">Hygiene</span>
+            <span
+              v-if="!hygieneLoading && hygieneCount > 0"
+              class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300"
+            >{{ hygieneCount }} violation{{ hygieneCount === 1 ? '' : 's' }}</span>
+            <span
+              v-else-if="!hygieneLoading && hygieneCount === 0"
+              class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300"
+            >All clear</span>
+          </div>
+        </button>
+        <div v-if="hygieneExpanded" class="px-5 pb-4">
+          <HygieneViolations :violations="hygieneViolations" :loading="hygieneLoading" />
+        </div>
+      </div>
+
+      <!-- No hygiene data message -->
+      <div
+        v-else-if="feature && !hygieneLoading"
+        class="text-xs text-gray-400 dark:text-gray-500 italic px-1"
+      >
+        No hygiene data available
       </div>
 
       <!-- Progress Summary (always visible above tabs) -->

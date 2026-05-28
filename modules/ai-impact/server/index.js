@@ -12,8 +12,9 @@ module.exports = function registerRoutes(router, context) {
   const { getConfig, saveConfig } = require('./config');
   const { computeAllMetrics } = require('./metrics');
   const { fetchAutofixData, computeAutofixMetrics, buildTrendData: buildAutofixTrend } = require('./jira/autofix-fetcher');
-  const { fetchDocData, fetchDocActivityEvents, fetchDocCumulativeStats, fetchDocCompletedData, computeDocMetrics, buildDocTrendData } = require('./jira/doc-fetcher');
+  const { fetchDocData, fetchDocActivityEvents, fetchDocCumulativeStats, fetchDocCompletedData, computeDocMetrics, buildDocTrendData, resolveMRLinksFromKpiData } = require('./jira/doc-fetcher');
   const { enrichMRStatuses } = require('./mr-status');
+  const { fetchMrKpiData } = require('./gitlab/mr-kpi-fetcher');
 
   // Assessment routes (Phase 1: Storage + Ingest API)
   const registerAssessmentRoutes = require('./assessments/routes');
@@ -167,6 +168,24 @@ module.exports = function registerRoutes(router, context) {
     });
   });
 
+  /**
+   * @openapi
+   * /modules/ai-impact/doc-mr-kpi-data:
+   *   get:
+   *     summary: MR KPI data fetched directly from GitLab
+   *     tags: [ai-impact]
+   *     responses:
+   *       200:
+   *         description: MR KPI data with merge request metrics
+   */
+  router.get('/doc-mr-kpi-data', requireScope('ai-impact:read'), function(req, res) {
+    const data = readFromStorage('ai-impact/doc-mr-kpi-data.json');
+    if (!data || !data.mergeRequests) {
+      return res.json({ fetchedAt: null, mergeRequests: [] });
+    }
+    res.json(data);
+  });
+
   router.get('/config', requireAdmin, requireScope('ai-impact:write'), function(req, res) {
     res.json(getConfig(readFromStorage));
   });
@@ -184,6 +203,7 @@ module.exports = function registerRoutes(router, context) {
     writeToStorage('ai-impact/rfe-data.json', null);
     writeToStorage('ai-impact/autofix-data.json', null);
     writeToStorage('ai-impact/doc-data.json', null);
+    writeToStorage('ai-impact/doc-mr-kpi-data.json', null);
     res.json({ status: 'cleared' });
   });
 
@@ -226,13 +246,28 @@ module.exports = function registerRoutes(router, context) {
         console.error('[ai-impact] Autofix data refresh failed:', autofixErr.message);
       }
 
-      // Fetch documentation data
+      // Fetch MR KPI data first (GitLab-direct, used by doc MR link resolution)
+      let mrKpiCount = 0;
+      let mrKpiData = null;
+      try {
+        const mrKpiResult = await fetchMrKpiData();
+        mrKpiData = {
+          fetchedAt: new Date().toISOString(),
+          mergeRequests: mrKpiResult.mergeRequests
+        };
+        writeToStorage('ai-impact/doc-mr-kpi-data.json', mrKpiData);
+        mrKpiCount = mrKpiResult.mergeRequests.length;
+      } catch (mrKpiErr) {
+        console.error('[ai-impact] MR KPI data refresh failed:', mrKpiErr.message);
+      }
+
+      // Fetch documentation data (uses mrKpiData for MR link cross-reference)
       let docCount = 0;
       try {
         const docResult = await fetchDocData(jiraRequest, config);
         let completedIssues = [];
         try {
-          completedIssues = await fetchDocCompletedData(jiraRequest, config);
+          completedIssues = await fetchDocCompletedData(jiraRequest, config, { mrKpiData });
         } catch (compErr) {
           console.error('[ai-impact] Documentation completed data fetch failed:', compErr.message);
         }
@@ -247,6 +282,10 @@ module.exports = function registerRoutes(router, context) {
           cumulativeStats = await fetchDocCumulativeStats(jiraRequest, config);
         } catch (statsErr) {
           console.error('[ai-impact] Documentation cumulative stats fetch failed:', statsErr.message);
+        }
+        // Apply MR KPI cross-reference (strategy 3) to doc issues
+        if (mrKpiData) {
+          resolveMRLinksFromKpiData(docResult.issues, mrKpiData);
         }
         try {
           await enrichMRStatuses(docResult.issues);
@@ -269,7 +308,7 @@ module.exports = function registerRoutes(router, context) {
 
       refreshState.lastResult = {
         status: 'success',
-        message: `Fetched ${withLinks.length} RFEs, ${autofixCount} autofix issues, ${docCount} doc issues`,
+        message: `Fetched ${withLinks.length} RFEs, ${autofixCount} autofix issues, ${docCount} doc issues, ${mrKpiCount} MR KPIs`,
         completedAt: new Date().toISOString()
       };
     } catch (err) {

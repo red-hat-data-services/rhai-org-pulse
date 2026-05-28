@@ -11,6 +11,7 @@
         "summary": "Build dashboard UI",
         "type": "Story",
         "status": "Done",
+        "resolution": "Done",
         "storyPoints": 8,
         "resolutionDate": "2026-03-05",
         "cycleTimeDays": 5.5
@@ -20,6 +21,7 @@
         "summary": "Fix responsive layout issues",
         "type": "Bug",
         "status": "Done",
+        "resolution": "Done",
         "storyPoints": 2,
         "resolutionDate": "2026-02-20",
         "cycleTimeDays": 1.2

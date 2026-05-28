@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { buildProjectFilter, projectKeysFingerprint, computeCycleTimeDays, findWorkStartDate, fetchPersonMetrics, resolveJiraDisplayName, namesMatch, mergeResolvedIssues, needsFullRefresh, FIELDS_VERSION } from '../person-metrics'
+import { buildProjectFilter, projectKeysFingerprint, computeCycleTimeDays, findWorkStartDate, fetchPersonMetrics, resolveJiraDisplayName, namesMatch, mergeResolvedIssues, needsFullRefresh, FIELDS_VERSION, NO_WORK_RESOLUTIONS } from '../person-metrics'
 
 function makeIssue({ created, resolutiondate, histories }) {
   return {
@@ -282,6 +282,25 @@ describe('fetchPersonMetrics', () => {
     expect(result.resolved.count).toBe(0)
   })
 
+  it('excludes no-work resolutions from resolved JQL query', async () => {
+    const capturedJqls = []
+    const mockJiraRequest = createMockJiraRequest({
+      search: (jql) => {
+        capturedJqls.push(jql)
+        return { issues: [], isLast: true }
+      },
+      userSearch: () => [{ displayName: 'Test User', accountId: 'abc123' }]
+    })
+
+    await fetchPersonMetrics(mockJiraRequest, 'Test User', { nameCache: {} })
+
+    const resolvedJql = capturedJqls.find(jql => jql.includes('resolved >='))
+    expect(resolvedJql).toContain('resolution NOT IN')
+    for (const res of NO_WORK_RESOLUTIONS) {
+      expect(resolvedJql).toContain(`"${res}"`)
+    }
+  })
+
   it('includes issues in Review status in inProgress results', async () => {
     const reviewIssue = {
       key: 'RHOAIENG-1234',
@@ -314,6 +333,38 @@ describe('fetchPersonMetrics', () => {
     expect(result.inProgress.count).toBe(1)
     expect(result.inProgress.issues[0].key).toBe('RHOAIENG-1234')
     expect(result.inProgress.issues[0].status).toBe('Review')
+  })
+
+  it('includes resolution field in mapped resolved issues', async () => {
+    const resolvedIssue = {
+      key: 'RHOAIENG-999',
+      fields: {
+        summary: 'Implement feature',
+        issuetype: { name: 'Story' },
+        status: { name: 'Closed' },
+        resolution: { name: 'Done' },
+        assignee: { displayName: 'Test User', accountId: 'acc-test' },
+        resolutiondate: '2026-02-01T00:00:00.000+0000',
+        created: '2026-01-15T00:00:00.000+0000',
+        components: [],
+        customfield_10028: 5
+      },
+      changelog: { histories: [] }
+    }
+
+    const mockJiraRequest = createMockJiraRequest({
+      search: (jql) => {
+        if (jql.includes('resolved >=')) {
+          return { issues: [resolvedIssue], isLast: true }
+        }
+        return { issues: [], isLast: true }
+      },
+      userSearch: () => [{ displayName: 'Test User', accountId: 'acc-test' }]
+    })
+
+    const result = await fetchPersonMetrics(mockJiraRequest, 'Test User', { nameCache: {} })
+
+    expect(result.resolved.issues[0].resolution).toBe('Done')
   })
 
   it('ignores stale string-format cache entries from Data Center', async () => {
@@ -660,6 +711,35 @@ describe('fetchPersonMetrics incremental mode', () => {
     expect(resolvedJql).toBeDefined()
     expect(resolvedJql).not.toContain('-365d')
     expect(resolvedJql).toMatch(/resolved >= "\d{4}-\d{2}-\d{2}"/)
+  })
+
+  it('excludes no-work resolutions in incremental resolved JQL', async () => {
+    const capturedJqls = []
+    const now = new Date()
+    const twoDaysAgo = new Date(now)
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2)
+
+    const mockJiraRequest = createMockJiraRequest({
+      search: (jql) => {
+        capturedJqls.push(jql)
+        return { issues: [], isLast: true }
+      },
+      userSearch: () => [{ displayName: 'Test User', accountId: 'abc123' }]
+    })
+
+    await fetchPersonMetrics(mockJiraRequest, 'Test User', {
+      nameCache: {},
+      existingData: {
+        fetchedAt: twoDaysAgo.toISOString(),
+        fieldsVersion: FIELDS_VERSION,
+        lastFullRefreshAt: now.toISOString(),
+        resolved: { count: 0, storyPoints: 0, issues: [] },
+        inProgress: { count: 0, storyPoints: 0, issues: [] }
+      }
+    })
+
+    const resolvedJql = capturedJqls.find(jql => jql.includes('resolved >='))
+    expect(resolvedJql).toContain('resolution NOT IN')
   })
 
   it('does full refresh when fieldsVersion does not match', async () => {

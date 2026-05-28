@@ -1,61 +1,59 @@
 <template>
   <div class="p-6">
     <div v-if="!selectedReport">
-      <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Release Reports</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div
-          v-for="report in reports"
-          :key="report.id"
-          @click="selectReport(report)"
-          class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:border-primary-500 dark:hover:border-primary-500 hover:shadow-md transition-all cursor-pointer"
-        >
-          <div class="flex items-start gap-4">
-            <div class="flex-shrink-0">
-              <component
-                :is="iconComponents[report.icon]"
-                :size="24"
-                class="text-primary-600 dark:text-primary-400"
-              />
-            </div>
-            <div class="flex-1 min-w-0">
-              <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                {{ report.label }}
-              </h3>
-              <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                {{ report.description }}
-              </p>
-              <div class="flex flex-wrap gap-2">
-                <span
-                  v-for="tag in report.tags"
-                  :key="tag"
-                  class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-                >
-                  {{ tag }}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <ReportsHub @select="selectReport" />
     </div>
-    <component v-else :is="selectedReportComponent" />
+    <div v-else>
+      <button
+        class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-1 mb-4"
+        @click="clearReport"
+      >
+        &larr; Back to Reports
+      </button>
+      <component :is="selectedReport.component" :initialProduct="initialProduct" :initialVersion="initialVersion" />
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, defineAsyncComponent } from 'vue'
-import { Target } from 'lucide-vue-next'
-import { reports } from '../reports/registry.js'
+import { ref, watch, inject, nextTick } from 'vue'
+import ReportsHub from '../reports/ReportsHub.vue'
+import { reports } from '../reports/registry'
 
-const iconComponents = {
-  Target
-}
-
+const nav = inject('moduleNav')
 const selectedReport = ref(null)
-const selectedReportComponent = ref(null)
+const initialProduct = ref(null)
+const initialVersion = ref(null)
+let updatingFromUrl = false
 
 function selectReport(report) {
   selectedReport.value = report
-  selectedReportComponent.value = defineAsyncComponent(report.component)
+  if (!updatingFromUrl) {
+    nav.updateParams({ report: report.id })
+  }
 }
+
+function clearReport() {
+  selectedReport.value = null
+  initialProduct.value = null
+  initialVersion.value = null
+  if (!updatingFromUrl) {
+    nav.updateParams({ report: undefined, product: undefined, version: undefined })
+  }
+}
+
+// Restore report from URL params (e.g. returning from feature detail)
+watch(() => nav.params.value, (params) => {
+  const reportId = params?.report
+  if (reportId && !selectedReport.value) {
+    const report = reports.find(r => r.id === reportId)
+    if (report) {
+      updatingFromUrl = true
+      initialProduct.value = params.product || null
+      initialVersion.value = params.version || null
+      selectedReport.value = report
+      nextTick(() => { updatingFromUrl = false })
+    }
+  }
+}, { immediate: true })
 </script>

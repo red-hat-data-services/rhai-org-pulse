@@ -9,7 +9,8 @@
   "client": {
     "entry": "./client/index.js",
     "navItems": [
-      { "id": "quality-analysis", "label": "Quality analysis", "icon": "clipboard-list", "default": true }
+      { "id": "quality-analysis", "label": "Quality analysis", "icon": "clipboard-list", "default": true },
+      { "id": "component-maturity", "label": "Component maturity", "icon": "layers" }
     ]
   },
   "server": {

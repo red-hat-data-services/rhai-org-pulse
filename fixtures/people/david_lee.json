@@ -11,6 +11,7 @@
         "summary": "Design microservices architecture",
         "type": "Story",
         "status": "Done",
+        "resolution": "Done",
         "storyPoints": 13,
         "resolutionDate": "2026-02-28",
         "cycleTimeDays": 8.2
@@ -20,6 +21,7 @@
         "summary": "Implement service mesh",
         "type": "Story",
         "status": "Done",
+        "resolution": "Done",
         "storyPoints": 8,
         "resolutionDate": "2026-02-10",
         "cycleTimeDays": 6.1
