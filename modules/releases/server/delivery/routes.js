@@ -1288,7 +1288,7 @@ module.exports = function registerRoutes(router, context) {
             ...feature,
             status: deliveryFeature.status,
             statusBucket: deliveryFeature.statusBucket,
-            fixVersions: deliveryFeature.fixVersions || []
+            fixVersions: deliveryFeature.fixVersion ? [deliveryFeature.fixVersion] : []
           }
 
           if (deliveryFeature.statusBucket === 'done') {
@@ -1314,7 +1314,7 @@ module.exports = function registerRoutes(router, context) {
             deliveryOwner: issue.deliveryOwner,
             status: issue.status,
             statusBucket: issue.statusBucket,
-            fixVersions: issue.fixVersions || []
+            fixVersions: issue.fixVersion ? [issue.fixVersion] : []
           })
         }
       }
