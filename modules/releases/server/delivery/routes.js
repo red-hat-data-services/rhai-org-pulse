@@ -258,12 +258,10 @@ function filterUnreleased(releases) {
 
 async function fetchIssuesFromJira(config) {
   const clause = getDefaultFixVersionJql(config)
-  // Match RHAISTRAT JQL: issuetype = Feature
-  const issueTypeFilter = 'issuetype = Feature'
 
   const jql = config.jiraAllProjects
-    ? `${clause} AND ${issueTypeFilter} ORDER BY updated DESC`
-    : `project in (${config.projectKeys.join(',')}) AND ${clause} AND ${issueTypeFilter} ORDER BY updated DESC`
+    ? `${clause} ORDER BY updated DESC`
+    : `project in (${config.projectKeys.join(',')}) AND ${clause} ORDER BY updated DESC`
 
   const fieldList = [
     'summary',
@@ -1247,13 +1245,14 @@ module.exports = function registerRoutes(router, context) {
       const versionPattern = new RegExp(`\\b${escaped}\\b`)
       const matchingReleases = analysisCache.data.releases.filter(r => versionPattern.test(r.releaseNumber))
 
-      // Collect all issues from matching releases
+      // Collect all issues from matching releases - filter to Features only for commitment tracking
       const deliveryIssues = []
       const seenKeys = new Set()
       for (const release of matchingReleases) {
         for (const issue of release.issues || []) {
           // Deduplicate by key (same issue may appear in multiple releases)
-          if (!seenKeys.has(issue.key)) {
+          // Filter to Features only (commitment tracking is for Features, not Stories/Tasks/Bugs)
+          if (!seenKeys.has(issue.key) && issue.issueType === 'Feature') {
             deliveryIssues.push(issue)
             seenKeys.add(issue.key)
           }
