@@ -274,17 +274,20 @@ function stepsDone(component) {
             </td>
             <td class="px-4 py-3">
               <div class="flex flex-wrap gap-1">
-                <a
-                  v-for="feat in (component.linkedFeatures || [])"
-                  :key="feat"
-                  :href="releasesAvailable ? linkTo('releases', 'feature-detail', { key: feat }) : undefined"
-                  :class="[
-                    'inline-flex items-center px-1.5 py-0.5 rounded text-xs font-mono bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300',
-                    releasesAvailable ? 'hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors cursor-pointer' : 'cursor-default'
-                  ]"
-                  :title="featureTitles[feat] || feat"
-                  @click.stop
-                >{{ feat }}</a>
+                <template v-for="feat in (component.linkedFeatures || [])" :key="feat">
+                  <a
+                    v-if="releasesAvailable"
+                    :href="linkTo('releases', 'feature-detail', { key: feat })"
+                    class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-mono bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
+                    :title="featureTitles[feat] || feat"
+                    @click.stop
+                  >{{ feat }}</a>
+                  <span
+                    v-else
+                    class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-mono bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300"
+                    :title="featureTitles[feat] || feat"
+                  >{{ feat }}</span>
+                </template>
                 <span v-if="!component.linkedFeatures?.length" class="text-xs text-gray-400">—</span>
               </div>
             </td>

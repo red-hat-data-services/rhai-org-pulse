@@ -125,6 +125,7 @@ module.exports = {
       },
       // Script-section string literals
       Literal(node) {
+        if (node.parent?.type === 'CallExpression' && node.parent.callee?.name === 'require' && node.parent.arguments[0] === node) return
         checkStringValue(node, node.value)
       },
       TemplateLiteral(node) {
