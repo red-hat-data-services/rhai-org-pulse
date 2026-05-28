@@ -155,6 +155,24 @@ crossNavigate('releases', 'feature-detail', { key: 'RHAISTRAT-123' })
 
 This produces a hash URL like `#/releases/feature-detail?key=RHAISTRAT-123` and updates `window.location.hash`. Use intra-module `moduleNav.navigateTo()` for navigation within your own module.
 
+**Important:** Cross-module links should always be guarded by a module-availability
+check so the UI degrades gracefully when the target module is not installed:
+
+```vue
+<script setup>
+import { inject, computed } from 'vue'
+import { useModuleLink } from '@shared/client/composables/useModuleLink.js'
+
+const moduleNav = inject('moduleNav')
+const targetAvailable = computed(() => moduleNav?.isModuleAvailable?.('other-module') ?? false)
+const { linkTo } = useModuleLink()
+</script>
+<template>
+  <a v-if="targetAvailable" :href="linkTo('other-module', 'view', { id: '123' })">View</a>
+  <span v-else>View</span>
+</template>
+```
+
 ## Backend Entry (`server/index.js`)
 
 ```javascript
@@ -218,7 +236,11 @@ import { useAuth } from '@shared/client/composables/useAuth'
 import { apiRequest, cachedRequest } from '@shared/client/services/api'
 ```
 
-**Modules cannot import from other modules** — only from `@shared`.
+**Modules cannot import from other modules** — only from `@shared`. This is enforced
+by the `org-pulse/no-cross-module-imports` ESLint rule, which flags direct imports,
+cross-module API paths (`/api/modules/<other>/...`), and cross-module hash routes
+(`#/<other>/...`). If a cross-module reference is unavoidable, guard it behind a
+module-availability check and add an `eslint-disable` comment with justification.
 
 ## Settings Component
 

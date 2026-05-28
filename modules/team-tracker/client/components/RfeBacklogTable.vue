@@ -33,12 +33,14 @@
           <tr v-for="issue in sortedIssues" :key="issue.key" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
             <td class="px-4 py-3 whitespace-nowrap">
               <div class="flex items-center gap-1">
-                <button
+                <a
+                  v-if="aiImpactAvailable"
+                  :href="linkTo('ai-impact', 'rfe-review', { select: issue.key })"
                   class="text-primary-600 hover:text-primary-800 dark:hover:text-primary-400 hover:underline font-medium"
-                  @click="navigateToAIImpact(issue.key)"
                 >
                   {{ issue.key }}
-                </button>
+                </a>
+                <span v-else class="font-medium text-gray-900 dark:text-gray-100">{{ issue.key }}</span>
                 <a
                   :href="jiraIssueUrl(issue.key)"
                   target="_blank"
@@ -75,7 +77,7 @@
             </td>
             <td class="px-4 py-3 whitespace-nowrap text-gray-600 dark:text-gray-400">{{ issue.priority }}</td>
             <td class="px-4 py-3 whitespace-nowrap text-gray-500 dark:text-gray-400">{{ formatDate(issue.created) }}</td>
-            <td class="px-4 py-3 whitespace-nowrap">
+            <td v-if="aiImpactAvailable" class="px-4 py-3 whitespace-nowrap">
               <span
                 v-if="assessments[issue.key]"
                 class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold"
@@ -108,23 +110,34 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, inject } from 'vue'
+import { useModuleLink } from '@shared/client/composables/useModuleLink.js'
 
 const props = defineProps({
   issues: { type: Array, default: () => [] },
   rfeConfig: { type: Object, default: () => ({}) },
-  assessments: { type: Object, default: () => ({}) }
+  assessments: { type: Object, default: () => ({}) },
+  showAssessments: { type: Boolean, default: true }
 })
 
-const columns = [
-  { key: 'key', label: 'Key' },
-  { key: 'summary', label: 'Summary' },
-  { key: 'components', label: 'Components' },
-  { key: 'status', label: 'Status' },
-  { key: 'priority', label: 'Priority' },
-  { key: 'created', label: 'Created' },
-  { key: 'assessment', label: 'Assessment' },
-]
+const moduleNav = inject('moduleNav')
+const aiImpactAvailable = computed(() => props.showAssessments && (moduleNav?.isModuleAvailable?.('ai-impact') ?? false))
+const { linkTo } = useModuleLink()
+
+const columns = computed(() => {
+  const cols = [
+    { key: 'key', label: 'Key' },
+    { key: 'summary', label: 'Summary' },
+    { key: 'components', label: 'Components' },
+    { key: 'status', label: 'Status' },
+    { key: 'priority', label: 'Priority' },
+    { key: 'created', label: 'Created' },
+  ]
+  if (aiImpactAvailable.value) {
+    cols.push({ key: 'assessment', label: 'Assessment' })
+  }
+  return cols
+})
 
 const PRIORITY_ORDER = { Blocker: 0, Critical: 1, Major: 2, Normal: 3, Minor: 4, Trivial: 5 }
 
@@ -181,10 +194,6 @@ function statusClass(category) {
   if (category === 'Done') return 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400'
   if (category === 'In Progress') return 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400'
   return 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-}
-
-function navigateToAIImpact(key) {
-  window.location.hash = `#/ai-impact/rfe-review?select=${encodeURIComponent(key)}`
 }
 
 function formatDate(iso) {

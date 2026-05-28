@@ -1,6 +1,7 @@
 import js from '@eslint/js'
 import pluginVue from 'eslint-plugin-vue'
 import globals from 'globals'
+import noXModuleImports from './eslint-rules/no-cross-module-imports.js'
 
 export default [
   {
@@ -31,6 +32,19 @@ export default [
       'vue/multi-word-component-names': 'off',
       'vue/require-default-prop': 'off',
       'vue/no-v-html': 'off'
+    }
+  },
+  {
+    // Prevent cross-module imports, API calls, and route references
+    files: ['modules/*/**'],
+    ignores: ['modules/**/__tests__/**'],
+    plugins: {
+      'org-pulse': {
+        rules: { 'no-cross-module-imports': noXModuleImports }
+      }
+    },
+    rules: {
+      'org-pulse/no-cross-module-imports': 'error'
     }
   },
   {
