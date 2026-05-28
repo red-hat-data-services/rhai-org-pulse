@@ -6,6 +6,7 @@
       :mobile-open="mobileMenuOpen"
       :active-module="activeModule"
       :active-view-id="activeViewId"
+      :route-params="routeParams"
       :user="authUser"
       :is-admin="authIsAdmin"
       :is-team-admin="authIsTeamAdmin"
