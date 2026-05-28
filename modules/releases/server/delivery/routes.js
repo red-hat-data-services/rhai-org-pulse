@@ -367,7 +367,7 @@ async function fetchUnreleasedJiraFixVersions(config) {
 /**
  * Cards are keyed by Product Pages or Jira Fix Version name. Names often differ only by
  * punctuation/spacing (e.g. rhoai-3.4.EA2 vs rhoai-3.4 EA2). Match exact normalized text first, then
- * alphanumeric-only key (same idea as enrichJiraReleasesWithProductPages).
+ * alphanumeric-only key.
  */
 function findReleaseForTargetVersion(releaseByText, releaseByKey, versionName) {
   const byText = releaseByText.get(normalizeText(versionName))

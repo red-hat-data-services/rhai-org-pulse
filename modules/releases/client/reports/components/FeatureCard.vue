@@ -35,10 +35,10 @@
     <!-- Metadata Grid -->
     <div class="grid grid-cols-2 gap-3 text-xs">
       <!-- Components -->
-      <div v-if="feature.components">
+      <div v-if="feature.components?.length">
         <div class="text-gray-500 dark:text-gray-400 mb-1">Components</div>
         <div class="text-gray-900 dark:text-gray-100 font-medium">
-          {{ feature.components }}
+          {{ Array.isArray(feature.components) ? feature.components.join(', ') : feature.components }}
         </div>
       </div>
 
