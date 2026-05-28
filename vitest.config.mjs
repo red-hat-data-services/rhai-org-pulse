@@ -23,6 +23,7 @@ export default defineConfig({
       '**/tests/smoke/**',        // Exclude Playwright smoke tests
       '**/tests/integration/**',  // Exclude Playwright integration tests
       'playwright-report/**',     // Exclude any Playwright output folders
+      'docs/module-template/**',  // Exclude module template (not real tests)
     ],
   },
 })

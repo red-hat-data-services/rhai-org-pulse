@@ -72,6 +72,9 @@ Core team owns `shared/` via CODEOWNERS. Changes require core team review.
 | `rosterSync` | `{ runSync, isSyncInProgress }` — barrel re-export of the consolidated sync pipeline (LDAP + Google Sheets + lifecycle tracking). `runSync` is an alias for `runConsolidatedSync` from `roster-sync/consolidated-sync`. Sub-modules: `roster-sync/consolidated-sync` (runConsolidatedSync, isSyncInProgress), `roster-sync/config` (loadConfig, saveConfig, isConfigured, getOrgDisplayNames, updateSyncStatus), `roster-sync/constants`, `roster-sync/ldap`, `roster-sync/sheets`, `roster-sync/merge`, `roster-sync/username-inference`, `roster-sync/lifecycle` (mergePerson) |
 | `jira` | `{ JIRA_HOST, getJiraAuth, jiraRequest, fetchAllJqlResults, fetchProjectVersions }` — Jira Cloud API helpers: auth (Basic via `JIRA_TOKEN`/`JIRA_EMAIL` env vars), request wrapper with 429 retry, cursor-based JQL pagination via `/rest/api/3/search/jql`, project version catalog via `/rest/api/3/project/{key}/versions` |
 | `permissions` | `{ LDAP_FIELDS, buildManagerMap, getManagedUids, getDirectReports, isManager, getPermissionTier, canEditPerson }` — RBAC logic: manager subtree computation, direct reports, permission tier detection, authorization checks |
+| `module-context` | `{ buildModuleContext, createTestContext }` — builds per-module frozen context with scoped registration hooks. `createTestContext(overrides)` provides a mock context for unit tests. |
+| `refresh-registry` | `{ createRefreshRegistry }` — ordered execution of module refresh handlers. Registry with `register`, `get`, `getAll`, `runAll` (sequential, sorted by `order`), `getStatus`. |
+| `export-registry` | `{ createExportRegistry }` — module data export hooks. Registry with `register`, `getAll`, `run` (iterates with error isolation). |
 
 ## Cross-Module Data Access
 

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, watch, nextTick, inject } from 'vue'
 import { PHASES } from '../constants.js'
-import { ArrowLeft, ChevronRight, Sparkles, User, Pencil, Eye, RefreshCw, AlertTriangle, Play, FileText, StickyNote, Code, MessageSquare, HelpCircle, BookOpen, ChevronDown, Search, Zap, ChevronsRight, Archive, Globe, Lightbulb } from 'lucide-vue-next'
+import { ArrowLeft, ChevronRight, Sparkles, User, Pencil, Eye, RefreshCw, AlertTriangle, Play, FileText, StickyNote, Code, MessageSquare, HelpCircle, BookOpen, ChevronDown, Search, Zap, ChevronsRight, Archive, Globe, Lightbulb, GitPullRequest, Timer, Terminal, Package } from 'lucide-vue-next'
 
 const moduleNav = inject('moduleNav')
 
@@ -9,6 +9,7 @@ const selectedPhase = ref(null)
 const labelsExpanded = ref(false)
 const featureLabelsExpanded = ref(false)
 const testPlanLabelsExpanded = ref(false)
+const buildReleaseLabelsExpanded = ref(false)
 
 let updatingFromUrl = false
 
@@ -54,7 +55,7 @@ const phaseInfo = {
     color: 'teal',
   },
   'build-release': {
-    desc: 'Final build, integration testing, and release to production.',
+    desc: 'Agentic CI pipeline that onboards new components into the build system by raising PRs/MRs across 6+ repos, triggered by a Jira ticket.',
     color: 'rose',
   },
 }
@@ -217,6 +218,78 @@ const docCommunityLinks = [
   { label: '#wg-rhai-document-builder', icon: MessageSquare, url: 'https://redhat.enterprise.slack.com/archives/C0APCEUR196' },
   { label: '#forum-rhai-ai-first', icon: HelpCircle, url: 'https://app.slack.com/client/E030G10V24F/C0APP9DDB2R' },
 ]
+
+// Build & Release data
+const buildReleaseSteps = [
+  { name: 'Create Jira Ticket', desc: 'Component team runs /create-component-onboarding-jira in Claude Code to collect onboarding info and create a Jira ticket with structured YAML', ai: false },
+  { name: 'CI Discovery', desc: 'GitLab CI runs every 2 hours, discovers new onboarding tickets via JQL, and triggers a child pipeline per ticket', ai: true },
+  { name: 'YAML Validation', desc: 'Pipeline validates the attached YAML against a JSON Schema, ensuring all required fields and formats are correct', ai: true },
+  { name: 'PR/MR Generation', desc: 'For each unblocked step, the pipeline raises PRs/MRs across the relevant repos (Quay, Konflux, delivery, bundle, etc.)', ai: true },
+  { name: 'Human Review', desc: 'DevOps and component teams review and merge the raised PRs/MRs — 100% HITL mandate, no changes pushed unreviewed', ai: false },
+  { name: 'Merge Detection & Advancement', desc: 'Next CI run detects merged PRs, advances pipeline state, and raises PRs for newly unblocked steps', ai: true },
+  { name: 'Auto-Resolution', desc: 'When all steps complete, the Jira ticket is automatically resolved with component-onboarding-completed label', ai: true },
+]
+
+const onboardingPipelineSteps = [
+  { name: 'Validate YAML', target: 'Jira ticket', scope: 'both' },
+  { name: 'Create Quay Repo', target: 'Quay.io', scope: 'both' },
+  { name: 'Create Delivery Repo', target: 'GitLab', scope: 'rhoai' },
+  { name: 'Konflux Release Data', target: 'konflux-release-data', scope: 'both' },
+  { name: 'Push Pipelines', target: 'odh-konflux-central', scope: 'both' },
+  { name: 'Pull Pipelines', target: 'rhoai-konflux-central', scope: 'rhoai' },
+  { name: 'ODH Onboarder Workflow', target: 'opendatahub-io/opendatahub-operator', scope: 'odh' },
+  { name: 'Operator Integration', target: 'Component repo', scope: 'conditional' },
+  { name: 'Bundle Integration', target: 'Bundle repo', scope: 'both' },
+  { name: 'Product Listing', target: 'product-listing repo', scope: 'rhoai' },
+  { name: 'Auto-Merge Setup', target: 'Component repo', scope: 'rhoai' },
+  { name: 'Renovate Setup', target: 'Renovate config', scope: 'rhoai' },
+]
+
+const buildReleaseLabels = [
+  { name: 'yaml-attached', color: 'green', desc: 'Structured YAML has been attached to the Jira ticket' },
+  { name: 'onboarding-in-review', color: 'blue', desc: 'Pipeline has picked up the ticket and onboarding is in progress' },
+  { name: 'quay-mr-raised', color: 'blue', desc: 'Quay repository creation MR raised' },
+  { name: 'krd-mr-raised', color: 'blue', desc: 'Konflux release data MR raised' },
+  { name: 'okc-pr-raised', color: 'blue', desc: 'ODH Konflux Central push pipeline PR raised' },
+  { name: 'rkc-pr-raised', color: 'blue', desc: 'RHOAI Konflux Central push pipeline PR raised' },
+  { name: 'delivery-repo-mr-raised', color: 'blue', desc: 'Delivery repository creation MR raised' },
+  { name: 'delivery-repo-mr-merged', color: 'green', desc: 'Delivery repository MR has been merged' },
+  { name: 'rkc-pull-pr-raised', color: 'blue', desc: 'RHOAI Konflux Central pull pipeline PR raised' },
+  { name: 'onboarder-workflow-triggered', color: 'blue', desc: 'ODH onboarder GitHub workflow has been triggered' },
+  { name: 'product-listing-mr-raised', color: 'blue', desc: 'Product listing MR raised' },
+  { name: 'auto-merge-pr-raised', color: 'blue', desc: 'Auto-merge configuration PR raised' },
+  { name: 'renovate-sync-triggered', color: 'blue', desc: 'Renovate sync has been triggered' },
+  { name: 'component-onboarding-completed', color: 'green', desc: 'All onboarding steps completed successfully' },
+]
+
+const buildReleaseLearnLinks = [
+  { label: 'Enablement Recording', icon: Play, url: 'javascript:void(0)' },
+  { label: 'Enablement Slides', icon: FileText, url: 'javascript:void(0)' },
+]
+
+const buildReleaseToolLinks = [
+  { label: 'aiops-skills plugin', icon: Code, url: 'https://github.com/opendatahub-io/skills-registry/blob/main/site/docs/plugins/aiops-skills/index.md' },
+  { label: 'Skills Registry', icon: BookOpen, url: 'https://github.com/opendatahub-io/skills-registry' },
+]
+
+const buildReleaseCommunityLinks = [
+  { label: '#forum-rhai-ai-first', icon: HelpCircle, url: 'https://app.slack.com/client/E030G10V24F/C0APP9DDB2R' },
+]
+
+function scopeBadgeClasses(scope) {
+  const map = {
+    both: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300',
+    odh: 'bg-blue-100 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400',
+    rhoai: 'bg-rose-100 dark:bg-rose-500/15 text-rose-700 dark:text-rose-400',
+    conditional: 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400',
+  }
+  return map[scope] || map.both
+}
+
+function scopeLabel(scope) {
+  const map = { both: 'Both', odh: 'ODH', rhoai: 'RHOAI', conditional: 'Conditional' }
+  return map[scope] || scope
+}
 
 function labelColorClasses(color) {
   const map = {
@@ -1171,6 +1244,252 @@ function labelColorClasses(color) {
           <div class="flex gap-2 flex-wrap">
             <a
               v-for="link in docCommunityLinks"
+              :key="link.label"
+              :href="link.url"
+              target="_blank"
+              rel="noopener"
+              class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-xs text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+            >
+              <component :is="link.icon" :size="14" class="text-gray-400 dark:text-gray-500" />
+              {{ link.label }}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Build & Release Detail ─── -->
+    <div v-else-if="selectedPhase.id === 'build-release'" class="flex-1 overflow-auto p-6 lg:p-8">
+      <div class="max-w-3xl mx-auto">
+        <!-- Back -->
+        <button
+          @click="closeDetail"
+          class="flex items-center gap-2 text-sm text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 mb-4 cursor-pointer"
+        >
+          <ArrowLeft :size="16" />
+          Back to Pipeline Overview
+        </button>
+
+        <!-- Header -->
+        <div class="flex items-start justify-between mb-8">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-rose-500/10 border-2 border-rose-500 flex items-center justify-center">
+              <span class="text-rose-600 dark:text-rose-400 text-sm font-bold">7</span>
+            </div>
+            <div>
+              <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Build & Release</h2>
+              <p class="text-sm text-gray-500 dark:text-gray-400">Agentic CI pipeline that onboards new components into the build system by raising PRs/MRs across 6+ repos, triggered by a Jira ticket.</p>
+            </div>
+          </div>
+          <button
+            @click="goToPage('build-release')"
+            class="flex items-center gap-1.5 px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium rounded-lg transition-colors flex-shrink-0 ml-4"
+          >
+            Go to Build & Release
+            <ChevronRight :size="16" />
+          </button>
+        </div>
+
+        <!-- How it works -->
+        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 mb-6">
+          <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">How it works</h3>
+          <div class="relative ml-1">
+            <div class="absolute left-[15px] top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
+            <div
+              v-for="(step, idx) in buildReleaseSteps"
+              :key="step.name"
+              class="flex items-start gap-4 relative"
+              :class="idx < buildReleaseSteps.length - 1 ? 'pb-5' : ''"
+            >
+              <div
+                class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-[1]"
+                :class="step.ai
+                  ? 'bg-rose-500/10 border-2 border-rose-500'
+                  : 'bg-gray-100 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600'"
+              >
+                <Sparkles v-if="step.ai" :size="16" class="text-rose-600 dark:text-rose-400" />
+                <User v-else :size="16" class="text-gray-400 dark:text-gray-500" />
+              </div>
+              <div>
+                <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ step.name }}</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ step.desc }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CI Cadence callout -->
+        <div class="bg-rose-50 dark:bg-rose-500/5 border border-rose-200 dark:border-rose-500/20 rounded-xl p-5 mb-6">
+          <div class="flex items-start gap-3">
+            <Timer :size="20" class="text-rose-600 dark:text-rose-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <div class="text-sm font-semibold text-gray-900 dark:text-white">Async 2-Hour CI Loop</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Fully idempotent — re-running is always safe. Each CI run discovers new tickets, checks for merged PRs, and advances to unblocked steps. No waiting, no duplicate PRs.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pipeline Steps Overview -->
+        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 mb-6">
+          <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Pipeline Steps Overview</h3>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">12 steps · dependencies determine execution order · idempotent</p>
+          <div class="space-y-2">
+            <div
+              v-for="(step, idx) in onboardingPipelineSteps"
+              :key="step.name"
+              class="flex items-center gap-3 p-2.5 bg-gray-50 dark:bg-gray-700/30 rounded-lg"
+            >
+              <span class="w-6 h-6 rounded-full bg-rose-500/10 flex items-center justify-center flex-shrink-0">
+                <span class="text-xs font-bold text-rose-600 dark:text-rose-400">{{ idx + 1 }}</span>
+              </span>
+              <div class="flex-1 min-w-0">
+                <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ step.name }}</span>
+                <span class="text-xs text-gray-400 dark:text-gray-500 ml-2">→ {{ step.target }}</span>
+              </div>
+              <span
+                class="text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0"
+                :class="scopeBadgeClasses(step.scope)"
+              >{{ scopeLabel(step.scope) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- How to check your onboarding status -->
+        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 mb-6">
+          <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">How to check your onboarding status</h3>
+          <div class="space-y-3">
+            <div class="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+              <Search :size="20" class="text-rose-600 dark:text-rose-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <div class="text-sm font-semibold text-gray-900 dark:text-white">Check labels in Jira</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Look for <code class="px-1.5 py-0.5 bg-green-100 dark:bg-green-500/15 text-green-700 dark:text-green-400 text-xs rounded font-mono">component-onboarding-completed</code> (done) or <code class="px-1.5 py-0.5 bg-blue-100 dark:bg-blue-500/15 text-blue-700 dark:text-blue-400 text-xs rounded font-mono">onboarding-in-review</code> (in progress) on your onboarding ticket</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+              <Eye :size="20" class="text-rose-600 dark:text-rose-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <div class="text-sm font-semibold text-gray-900 dark:text-white">View details in AI Impact</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Find your component on the <button @click="goToPage('build-release')" class="text-rose-600 dark:text-rose-400 hover:underline font-medium">Build & Release</button> page to see the full onboarding progress, step status, and PR links</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- What you need to do (dual-audience) -->
+        <div class="bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 rounded-xl p-6 mb-6">
+          <h3 class="text-sm font-semibold text-rose-700 dark:text-rose-400 uppercase tracking-wide mb-4">What you need to do</h3>
+
+          <!-- For Component Teams -->
+          <div class="mb-5">
+            <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">For Component Teams</h4>
+            <ul class="space-y-3">
+              <li class="flex items-start gap-3">
+                <Terminal :size="20" class="text-rose-600 dark:text-rose-400 flex-shrink-0 mt-0.5" />
+                <span class="text-sm text-gray-700 dark:text-gray-300">Run <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700/50 text-rose-700 dark:text-rose-400 text-xs rounded font-mono">/create-component-onboarding-jira</code> in Claude Code to create your onboarding ticket</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <Package :size="20" class="text-rose-600 dark:text-rose-400 flex-shrink-0 mt-0.5" />
+                <span class="text-sm text-gray-700 dark:text-gray-300">Ensure your Dockerfile uses <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700/50 text-rose-700 dark:text-rose-400 text-xs rounded font-mono">@sha256</code> pinned base images for RHOAI components</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <GitPullRequest :size="20" class="text-rose-600 dark:text-rose-400 flex-shrink-0 mt-0.5" />
+                <span class="text-sm text-gray-700 dark:text-gray-300">Review and merge PRs raised against your component repo by the onboarding pipeline</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <Eye :size="20" class="text-rose-600 dark:text-rose-400 flex-shrink-0 mt-0.5" />
+                <span class="text-sm text-gray-700 dark:text-gray-300">Monitor your Jira ticket for progress updates — labels are added as each step completes</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="border-t border-rose-200 dark:border-rose-500/20 my-4"></div>
+
+          <!-- For DevOps -->
+          <div>
+            <h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">For DevOps</h4>
+            <ul class="space-y-3">
+              <li class="flex items-start gap-3">
+                <GitPullRequest :size="20" class="text-rose-600 dark:text-rose-400 flex-shrink-0 mt-0.5" />
+                <span class="text-sm text-gray-700 dark:text-gray-300">Review and merge PRs/MRs raised by the onboarding pipeline across Quay, Konflux, delivery, and bundle repos</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <AlertTriangle :size="20" class="text-rose-600 dark:text-rose-400 flex-shrink-0 mt-0.5" />
+                <span class="text-sm text-gray-700 dark:text-gray-300">Monitor the GitLab CI pipeline for failures — each onboarding ticket runs in an isolated child pipeline</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <Eye :size="20" class="text-rose-600 dark:text-rose-400 flex-shrink-0 mt-0.5" />
+                <span class="text-sm text-gray-700 dark:text-gray-300">Check the <button @click="goToPage('build-release')" class="text-rose-600 dark:text-rose-400 hover:underline font-medium">Build & Release dashboard</button> for overall onboarding progress across all components</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Jira labels (collapsible) -->
+        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl mb-6">
+          <button
+            @click="buildReleaseLabelsExpanded = !buildReleaseLabelsExpanded"
+            class="flex items-center justify-between w-full p-5"
+          >
+            <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Jira Labels Reference</h3>
+            <ChevronDown
+              :size="16"
+              class="text-gray-400 dark:text-gray-500 transition-transform"
+              :class="buildReleaseLabelsExpanded ? 'rotate-180' : ''"
+            />
+          </button>
+          <div v-if="buildReleaseLabelsExpanded" class="px-5 pb-5 -mt-1">
+            <div class="space-y-2">
+              <div v-for="l in buildReleaseLabels" :key="l.name" class="flex items-center gap-3 p-2.5 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+                <code class="text-xs px-2 py-0.5 rounded whitespace-nowrap font-mono" :class="labelColorClasses(l.color)">{{ l.name }}</code>
+                <span class="text-xs text-gray-500 dark:text-gray-400">{{ l.desc }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Links -->
+        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+          <h4 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">Learn</h4>
+          <div class="flex gap-2 flex-wrap mb-5">
+            <a
+              v-for="link in buildReleaseLearnLinks"
+              :key="link.label"
+              :href="link.url"
+              :target="link.url.startsWith('http') ? '_blank' : undefined"
+              :rel="link.url.startsWith('http') ? 'noopener' : undefined"
+              class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-xs text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+            >
+              <component :is="link.icon" :size="14" class="text-gray-400 dark:text-gray-500" />
+              {{ link.label }}
+            </a>
+          </div>
+
+          <h4 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">Tools &amp; Resources</h4>
+          <div class="flex gap-2 flex-wrap mb-5">
+            <a
+              v-for="link in buildReleaseToolLinks"
+              :key="link.label"
+              :href="link.url"
+              target="_blank"
+              rel="noopener"
+              class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-xs text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+            >
+              <component :is="link.icon" :size="14" class="text-gray-400 dark:text-gray-500" />
+              {{ link.label }}
+            </a>
+            <button
+              @click="goToPage('build-release')"
+              class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-xs text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+            >
+              <Eye :size="14" class="text-gray-400 dark:text-gray-500" />
+              Build & Release Dashboard
+            </button>
+          </div>
+
+          <h4 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">Community</h4>
+          <div class="flex gap-2 flex-wrap">
+            <a
+              v-for="link in buildReleaseCommunityLinks"
               :key="link.label"
               :href="link.url"
               target="_blank"

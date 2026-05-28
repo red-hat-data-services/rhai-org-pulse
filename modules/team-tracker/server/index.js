@@ -4389,6 +4389,12 @@ module.exports = function registerRoutes(router, context) {
     });
   }
 
+  // ─── Export Hook ───
+
+  if (context.registerExport) {
+    context.registerExport(require('./export'));
+  }
+
   // ─── Absorbed routes from org-roster and team-data ───
 
   const registerIpaRegistryRoutes = require('./routes/ipa-registry');

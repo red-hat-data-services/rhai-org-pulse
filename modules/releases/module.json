@@ -24,7 +24,6 @@
     "entry": "./server/index.js"
   },
   "export": {
-    "customHandler": true,
     "files": [
       { "path": "releases/registry.json", "notes": "Canonical release registry" },
       { "path": "releases/execution/index.json", "notes": "Feature index with summary metrics" },
