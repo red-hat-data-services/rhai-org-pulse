@@ -48,10 +48,40 @@ export function useCommitmentTracking() {
         throw new Error('Failed to load releases')
       }
       const analysisData = await response.json()
+
       // Extract unique release versions from delivery analysis
-      releases.value = (analysisData.releases || []).map(r => ({
-        version: r.releaseNumber
-      }))
+      // Extract version numbers from various formats:
+      // - "3.5" (simple)
+      // - "rhoai-3.5" (product prefix)
+      // - "rhoai-3.5.EA1" (product + phase)
+      // - "RHAII-3.5 EA1" (product + space + phase)
+      const uniqueVersions = new Set()
+      const allReleases = analysisData.releases || []
+
+      for (const release of allReleases) {
+        const fullVersion = release.releaseNumber
+        if (!fullVersion) continue
+
+        // Extract X.Y version number from various formats
+        const match = fullVersion.match(/(\d+\.\d+)/)
+        if (match) {
+          const version = match[1]
+          const [major, minor] = version.split('.').map(Number)
+          // Only include 3.4 and above
+          if (major === 3 && minor >= 4) {
+            uniqueVersions.add(version)
+          }
+        }
+      }
+
+      // Convert to array and sort
+      releases.value = Array.from(uniqueVersions)
+        .sort((a, b) => {
+          const [aMajor, aMinor] = a.split('.').map(Number)
+          const [bMajor, bMinor] = b.split('.').map(Number)
+          return aMajor !== bMajor ? aMajor - bMajor : aMinor - bMinor
+        })
+        .map(version => ({ version }))
     } catch (err) {
       console.error('Failed to load releases:', err)
       releases.value = []

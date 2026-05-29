@@ -1,144 +1,46 @@
 {
-  "cachedAt": "2026-05-27T20:00:00.000Z",
+  "cachedAt": "2026-05-27T12:00:00.000Z",
   "data": {
-    "generatedAt": "2026-05-27T20:00:00.000Z",
+    "generatedAt": "2026-05-27T12:00:00.000Z",
     "releases": [
       {
-        "productName": "Red Hat OpenShift AI",
-        "releaseNumber": "rhoai-3.5.EA1",
-        "dueDate": "2026-06-18",
-        "codeFreezeDate": null,
+        "productName": "RHOAI",
+        "releaseNumber": "3.4",
+        "dueDate": "2026-05-01",
+        "codeFreezeDate": "2026-04-15",
         "teams": {},
         "issues": [
-          {"key": "RHOAIENG-1000", "summary": "Distributed Training: Ray integration", "status": "In Progress", "statusBucket": "doing", "fixVersions": ["rhoai-3.5.EA1"], "components": "Training", "deliveryOwner": "Sarah Johnson"}
-        ],
-        "totals": {"to_do": 0, "doing": 1, "done": 0, "issues_to_do": 0, "issues_doing": 1, "issues_done": 0}
-      },
-      {
-        "productName": "RHAII",
-        "releaseNumber": "RHAII-3.5 EA1",
-        "dueDate": "2026-06-17",
-        "codeFreezeDate": null,
-        "teams": {},
-        "issues": [
-          {"key": "INFERENG-3001", "summary": "vLLM: Multi-GPU tensor parallelism", "status": "In Progress", "statusBucket": "doing", "fixVersions": ["RHAII-3.5 EA1"], "components": "Inference Engine", "deliveryOwner": "Kevin Liu"},
-          {"key": "INFERENG-3002", "summary": "Performance benchmarking framework", "status": "Done", "statusBucket": "done", "fixVersions": ["RHAII-3.5 EA1"], "components": "Testing", "deliveryOwner": "Lisa Chen"}
-        ],
-        "totals": {"to_do": 0, "doing": 1, "done": 1, "issues_to_do": 0, "issues_doing": 1, "issues_done": 1}
-      },
-      {
-        "productName": "Red Hat Enterprise Linux AI",
-        "releaseNumber": "rhelai-3.5 EA1 release",
-        "dueDate": "2026-06-18",
-        "codeFreezeDate": null,
-        "teams": {},
-        "issues": [
-          {"key": "RHAIENG-2001", "summary": "vLLM: NVIDIA GPU support optimization", "status": "In Progress", "statusBucket": "doing", "fixVersions": ["rhelai-3.5 EA1 release"], "components": "Inference", "deliveryOwner": "Alex Chen"},
-          {"key": "RHAIENG-2002", "summary": "Bootc: Image signing and verification", "status": "To Do", "statusBucket": "to_do", "fixVersions": ["rhelai-3.5 EA1 release"], "components": "Platform", "deliveryOwner": "Maria Santos"}
-        ],
-        "totals": {"to_do": 1, "doing": 1, "done": 0, "issues_to_do": 1, "issues_doing": 1, "issues_done": 0}
-      },
-      {
-        "productName": "Red Hat OpenShift AI",
-        "releaseNumber": "rhoai-3.5.EA2",
-        "dueDate": "2026-07-16",
-        "codeFreezeDate": "2026-06-19",
-        "teams": {},
-        "issues": [
-          {"key": "RHOAIENG-1001", "summary": "MaaS: Multi-model serving with shared GPU", "status": "Done", "statusBucket": "done", "fixVersions": ["rhoai-3.5.EA2"], "components": "Model Serving", "deliveryOwner": "David Kim"},
-          {"key": "RHOAIENG-1002", "summary": "Model Registry: Distributed model versioning with S3", "status": "In Progress", "statusBucket": "doing", "fixVersions": ["rhoai-3.5.EA2"], "components": "Model Registry", "deliveryOwner": "Emily Rodriguez"}
-        ],
-        "totals": {"to_do": 0, "doing": 1, "done": 1, "issues_to_do": 0, "issues_doing": 1, "issues_done": 1}
-      },
-      {
-        "productName": "RHAII",
-        "releaseNumber": "RHAII-3.5 EA2",
-        "dueDate": "2026-07-16",
-        "codeFreezeDate": null,
-        "teams": {},
-        "issues": [
-          {"key": "INFERENG-3003", "summary": "Model optimization: INT8 quantization", "status": "To Do", "statusBucket": "to_do", "fixVersions": ["RHAII-3.5 EA2"], "components": "Optimization", "deliveryOwner": "James Wilson"}
-        ],
-        "totals": {"to_do": 1, "doing": 0, "done": 0, "issues_to_do": 1, "issues_doing": 0, "issues_done": 0}
-      },
-      {
-        "productName": "Red Hat Enterprise Linux AI",
-        "releaseNumber": "rhelai-3.5 EA2 release",
-        "dueDate": "2026-07-16",
-        "codeFreezeDate": null,
-        "teams": {},
-        "issues": [
-          {"key": "RHAIENG-2003", "summary": "Model quantization: INT8 support", "status": "To Do", "statusBucket": "to_do", "fixVersions": ["rhelai-3.5 EA2 release"], "components": "Optimization", "deliveryOwner": "Robert Kim"}
-        ],
-        "totals": {"to_do": 1, "doing": 0, "done": 0, "issues_to_do": 1, "issues_doing": 0, "issues_done": 0}
-      },
-      {
-        "productName": "Red Hat OpenShift AI",
-        "releaseNumber": "rhoai-3.5",
-        "dueDate": "2026-08-20",
-        "codeFreezeDate": "2026-07-17",
-        "teams": {},
-        "issues": [
-          {"key": "RHOAIENG-1004", "summary": "Data Science Pipelines: MLflow integration", "status": "In Progress", "statusBucket": "doing", "fixVersions": ["rhoai-3.5"], "components": "Pipelines", "deliveryOwner": "Jennifer Lopez"},
-          {"key": "RHOAIENG-1005", "summary": "LLM Gateway: Token usage analytics dashboard", "status": "Done", "statusBucket": "done", "fixVersions": ["rhoai-3.5"], "components": "LLM Gateway", "deliveryOwner": "Carlos Martinez"},
-          {"key": "RHOAIENG-1006", "summary": "TrustyAI: Bias detection for tabular datasets", "status": "Done", "statusBucket": "done", "fixVersions": ["rhoai-3.5"], "components": "TrustyAI", "deliveryOwner": "Amanda White"}
+          {"key": "RHOAIENG-700", "summary": "Feature 700 for version 3.4", "issueType": "Feature", "status": "Done", "statusBucket": "done", "fixVersion": "rhoai-3.4", "components": ["Component 0"], "deliveryOwner": "Owner 0"},
+          {"key": "RHOAIENG-701", "summary": "Feature 701 for version 3.4", "issueType": "Feature", "status": "Done", "statusBucket": "done", "fixVersion": "rhoai-3.4", "components": ["Component 1"], "deliveryOwner": "Owner 1"},
+          {"key": "RHOAIENG-702", "summary": "Feature 702 for version 3.4", "issueType": "Feature", "status": "In Progress", "statusBucket": "doing", "fixVersion": "rhoai-3.4", "components": ["Component 2"], "deliveryOwner": "Owner 2"}
         ],
         "totals": {"to_do": 0, "doing": 1, "done": 2, "issues_to_do": 0, "issues_doing": 1, "issues_done": 2}
       },
       {
-        "productName": "RHAII",
-        "releaseNumber": "RHAII-3.5 GA",
-        "dueDate": "2026-08-20",
-        "codeFreezeDate": null,
+        "productName": "RHOAI",
+        "releaseNumber": "3.5",
+        "dueDate": "2026-08-15",
+        "codeFreezeDate": "2026-08-01",
         "teams": {},
         "issues": [
-          {"key": "INFERENG-3004", "summary": "Batch inference optimization", "status": "To Do", "statusBucket": "to_do", "fixVersions": ["RHAII-3.5 GA"], "components": "Performance", "deliveryOwner": "Michael Torres"}
+          {"key": "RHOAIENG-900", "summary": "Feature 900 for version 3.5", "issueType": "Feature", "status": "Done", "statusBucket": "done", "fixVersion": "rhoai-3.5", "components": ["Component 0"], "deliveryOwner": "Owner 0"},
+          {"key": "RHOAIENG-901", "summary": "Feature 901 for version 3.5", "issueType": "Feature", "status": "Done", "statusBucket": "done", "fixVersion": "rhoai-3.5", "components": ["Component 1"], "deliveryOwner": "Owner 1"},
+          {"key": "RHOAIENG-902", "summary": "Feature 902 for version 3.5", "issueType": "Feature", "status": "In Progress", "statusBucket": "doing", "fixVersion": "rhoai-3.5", "components": ["Component 2"], "deliveryOwner": "Owner 2"},
+          {"key": "RHOAIENG-903", "summary": "Feature 903 for version 3.5", "issueType": "Feature", "status": "To Do", "statusBucket": "to_do", "fixVersion": "rhoai-3.5", "components": ["Component 3"], "deliveryOwner": "Owner 3"}
         ],
-        "totals": {"to_do": 1, "doing": 0, "done": 0, "issues_to_do": 1, "issues_doing": 0, "issues_done": 0}
+        "totals": {"to_do": 1, "doing": 1, "done": 2, "issues_to_do": 1, "issues_doing": 1, "issues_done": 2}
       },
       {
-        "productName": "Red Hat Enterprise Linux AI",
-        "releaseNumber": "rhelai-3.5 GA",
-        "dueDate": "2026-08-20",
-        "codeFreezeDate": null,
+        "productName": "RHOAI",
+        "releaseNumber": "3.6",
+        "dueDate": "2027-03-01",
+        "codeFreezeDate": "2027-02-15",
         "teams": {},
         "issues": [
-          {"key": "RHAIENG-2004", "summary": "AMD GPU support", "status": "To Do", "statusBucket": "to_do", "fixVersions": ["rhelai-3.5 GA"], "components": "Hardware", "deliveryOwner": "Sarah Park"}
+          {"key": "RHOAIENG-1100", "summary": "Feature 1100 for version 3.6", "issueType": "Feature", "status": "To Do", "statusBucket": "to_do", "fixVersion": "rhoai-3.6", "components": ["Component 0"], "deliveryOwner": "Owner 0"},
+          {"key": "RHOAIENG-1101", "summary": "Feature 1101 for version 3.6", "issueType": "Feature", "status": "To Do", "statusBucket": "to_do", "fixVersion": "rhoai-3.6", "components": ["Component 1"], "deliveryOwner": "Owner 1"}
         ],
-        "totals": {"to_do": 1, "doing": 0, "done": 0, "issues_to_do": 1, "issues_doing": 0, "issues_done": 0}
-      },
-      {
-        "productName": "Red Hat OpenShift AI",
-        "releaseNumber": "rhoai-3.6.EA1",
-        "dueDate": "2026-09-17",
-        "codeFreezeDate": "2026-08-21",
-        "teams": {},
-        "issues": [
-          {"key": "RHOAIENG-1100", "summary": "Workbench: GPU resource quotas", "status": "To Do", "statusBucket": "to_do", "fixVersions": ["rhoai-3.6.EA1"], "components": "Workbench", "deliveryOwner": "Owner 0"}
-        ],
-        "totals": {"to_do": 1, "doing": 0, "done": 0, "issues_to_do": 1, "issues_doing": 0, "issues_done": 0}
-      },
-      {
-        "productName": "Red Hat OpenShift AI",
-        "releaseNumber": "rhoai-3.6.EA2",
-        "dueDate": "2026-10-15",
-        "codeFreezeDate": "2026-09-18",
-        "teams": {},
-        "issues": [
-          {"key": "RHOAIENG-1102", "summary": "Distributed Training: Ray operator integration", "status": "To Do", "statusBucket": "to_do", "fixVersions": ["rhoai-3.6.EA2"], "components": "Training", "deliveryOwner": "Owner 2"}
-        ],
-        "totals": {"to_do": 1, "doing": 0, "done": 0, "issues_to_do": 1, "issues_doing": 0, "issues_done": 0}
-      },
-      {
-        "productName": "Red Hat OpenShift AI",
-        "releaseNumber": "rhoai-3.6",
-        "dueDate": "2026-11-19",
-        "codeFreezeDate": "2026-10-16",
-        "teams": {},
-        "issues": [
-          {"key": "RHOAIENG-1104", "summary": "Model Mesh: A/B testing framework", "status": "To Do", "statusBucket": "to_do", "fixVersions": ["rhoai-3.6"], "components": "Model Serving", "deliveryOwner": "Owner 4"}
-        ],
-        "totals": {"to_do": 1, "doing": 0, "done": 0, "issues_to_do": 1, "issues_doing": 0, "issues_done": 0}
+        "totals": {"to_do": 2, "doing": 0, "done": 0, "issues_to_do": 2, "issues_doing": 0, "issues_done": 0}
       }
     ]
   }

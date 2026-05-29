@@ -11,12 +11,12 @@ export const reports = [
     description: 'Track committed vs. delivered features per release phase. Monitor >90% delivery OKR.',
     icon: 'Target',
     tags: ['Planning', 'OKR'],
-    component: () => import('./CommitmentTrackingReport.vue')
+    component: defineAsyncComponent(() => import('./CommitmentTrackingReport.vue'))
   },
   {
     id: 'program-hygiene',
     label: 'Program Hygiene Report',
     description: 'Cross-version hygiene summary with violation breakdowns by rule, team, and version. Designed for program-level reporting.',
-    component: defineAsyncComponent(() => import('../reports/ProgramHygieneReport.vue'))
+    component: defineAsyncComponent(() => import('./ProgramHygieneReport.vue'))
   }
 ]
