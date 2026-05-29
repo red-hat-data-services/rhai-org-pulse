@@ -127,8 +127,12 @@ async function checkConnection() {
   }
 }
 
+// PyTorch uses GitHub repo permission levels (write/triage) as its governance model
+// instead of CODEOWNERS or maintainer files. This data is precomputed externally and
+// stored in a GitLab project file. We fetch it directly here because the upstream-pulse
+// backend is open-source and can't have this org-specific integration.
 const GITLAB_DATA_PROJECT_ID = process.env.GITLAB_TEAM_DATA_PROJECT_ID || '82624331';
-const GITLAB_DATA_FILE_PATH = 'github-access.json';
+const GITLAB_DATA_FILE_PATH = encodeURIComponent('github-access.json');
 const GITLAB_DATA_CACHE_TTL = 30 * 60 * 1000;
 let _gitlabDataCache = null;
 
@@ -152,6 +156,9 @@ async function fetchPytorchAccess() {
   }
 
   const data = await resp.json();
+  if (data.write == null || data.total == null) {
+    throw new Error('GitLab data missing required fields (write, total)');
+  }
   _gitlabDataCache = { data, ts: Date.now() };
   return data;
 }

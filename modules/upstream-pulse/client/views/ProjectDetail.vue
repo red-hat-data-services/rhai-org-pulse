@@ -594,11 +594,12 @@ async function loadData() {
   }
 
   try {
-    const [dashData, contribData, leaderData, projectsData] = await Promise.all([
+    const [dashData, contribData, leaderData, projectsData, accessData] = await Promise.all([
       apiRequest(`${MODULE_API}/dashboard?days=${selectedDays.value}&projectId=${encodeURIComponent(pid)}`),
       apiRequest(`${MODULE_API}/contributors?days=${selectedDays.value}&limit=10&projectId=${encodeURIComponent(pid)}`),
       apiRequest(`${MODULE_API}/leadership?projectId=${encodeURIComponent(pid)}`).catch(() => null),
       apiRequest(`${MODULE_API}/projects`),
+      apiRequest(`${MODULE_API}/github-access`).catch(() => null),
     ])
 
     dashboard.value = dashData
@@ -606,13 +607,10 @@ async function loadData() {
     leadership.value = leaderData
 
     const match = projectsData.projects?.find(p => p.id === pid)
-
-    const isPytorch = match?.githubOrg === 'pytorch' || match?.name?.toLowerCase().includes('pytorch')
-    if (isPytorch) {
-      githubAccess.value = await apiRequest(`${MODULE_API}/github-access`).catch(() => null)
-    } else {
-      githubAccess.value = null
-    }
+    // PyTorch governance is expressed through GitHub repo permissions, not CODEOWNERS.
+    // Only fetch access data for PyTorch projects since no other project uses this model.
+    const isPytorch = match?.githubOrg === 'pytorch'
+    githubAccess.value = isPytorch ? accessData : null
     projectInfo.value = match || null
 
     if (fromOrg.value && !orgDisplayName.value) {
