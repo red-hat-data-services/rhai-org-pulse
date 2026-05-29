@@ -251,7 +251,6 @@ async function fetchOpenReleases(storage, config) {
   }
 
   // Priority 2: product shortnames configured
-  // New path: product shortnames configured
   if (config.productPagesProductShortnames?.length) {
     try {
       const releases = await fetchProductsByShortname(config.productPagesProductShortnames, config)
