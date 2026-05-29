@@ -1,7 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import { apiRequest } from '@shared/client/services/api.js'
-import ReleasesMetadataManager from './ReleasesMetadataManager.vue'
 
 const config = ref(null)
 const editProjectKeys = ref([])
@@ -474,12 +473,7 @@ onMounted(() => {
         <span v-if="saveError" class="text-red-600 dark:text-red-400 text-sm">{{ saveError }}</span>
       </div>
 
-      <!-- Section 4: Releases Metadata -->
-      <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-        <ReleasesMetadataManager />
-      </div>
-
-      <!-- Section 5: Data Refresh -->
+      <!-- Section 4: Data Refresh -->
       <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
       <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Data Refresh</h4>
       <div class="flex items-center gap-3">

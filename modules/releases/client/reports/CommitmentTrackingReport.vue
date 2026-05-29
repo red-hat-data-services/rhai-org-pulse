@@ -15,34 +15,69 @@
       </div>
     </div>
 
-    <!-- Filter bar -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 mb-6 flex flex-wrap items-center gap-4">
-      <div class="flex items-center gap-2">
-        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Release:</label>
-        <select
-          v-model="selectedVersion"
-          @change="handleFilterChange"
-          class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+    <!-- Data refresh section -->
+    <div class="bg-gray-50 dark:bg-gray-900/50 rounded-lg border border-gray-200 dark:border-gray-700 p-3 mb-4">
+      <div class="flex items-center gap-3">
+        <button
+          @click="refreshCurrentStatus"
+          :disabled="refreshing"
+          class="px-3 py-1.5 bg-primary-600 text-white rounded-md text-sm hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <option value="">Select a release...</option>
-          <option v-for="r in releases" :key="r.version" :value="r.version">
-            {{ r.version }}
-          </option>
-        </select>
+          {{ refreshing ? 'Refreshing...' : 'Refresh Current Status' }}
+        </button>
+        <span v-if="lastRefresh" class="text-xs text-gray-500 dark:text-gray-400">
+          Updated {{ lastRefresh }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Filter bar with snapshot creation -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 mb-6">
+      <div class="flex flex-wrap items-center gap-4 mb-3">
+        <div class="flex items-center gap-2">
+          <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Release:</label>
+          <select
+            v-model="selectedVersion"
+            @change="handleFilterChange"
+            class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+          >
+            <option value="">Select a release...</option>
+            <option v-for="r in releases" :key="r.version" :value="r.version">
+              {{ r.version }}
+            </option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Phase:</label>
+          <select
+            v-model="selectedPhase"
+            @change="handleFilterChange"
+            class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+          >
+            <option value="">Select a phase...</option>
+            <option value="EA1">EA1</option>
+            <option value="EA2">EA2</option>
+            <option value="GA">GA</option>
+          </select>
+        </div>
       </div>
 
-      <div class="flex items-center gap-2">
-        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Phase:</label>
-        <select
-          v-model="selectedPhase"
-          @change="handleFilterChange"
-          class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
-        >
-          <option value="">Select a phase...</option>
-          <option value="EA1">EA1</option>
-          <option value="EA2">EA2</option>
-          <option value="GA">GA</option>
-        </select>
+      <!-- Snapshot creation (only show when version+phase selected and no data loaded yet) -->
+      <div v-if="selectedVersion && selectedPhase && !data && !loading && error?.includes('No snapshot')"
+           class="border-t border-gray-200 dark:border-gray-700 pt-3">
+        <div class="flex items-center justify-between">
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            No baseline snapshot exists for <span class="font-medium">{{ selectedVersion }} {{ selectedPhase }}</span>
+          </p>
+          <button
+            @click="createSnapshot"
+            :disabled="creatingSnapshot"
+            class="px-3 py-1.5 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {{ creatingSnapshot ? 'Creating...' : 'Create Snapshot' }}
+          </button>
+        </div>
       </div>
     </div>
 
@@ -272,6 +307,9 @@ const { data, loading, error, loadCommitment, releases, loadReleases } = useComm
 
 const selectedVersion = ref('')
 const selectedPhase = ref('')
+const refreshing = ref(false)
+const lastRefresh = ref(null)
+const creatingSnapshot = ref(false)
 const expandedSections = ref({
   delivered: false,
   added: false,
@@ -327,6 +365,41 @@ function handleFilterChange() {
 
 function goBack() {
   nav.navigateTo('reports')
+}
+
+async function refreshCurrentStatus() {
+  refreshing.value = true
+  try {
+    const response = await fetch('/api/modules/releases/delivery/refresh', { method: 'POST' })
+    if (!response.ok) throw new Error('Refresh failed')
+    lastRefresh.value = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+    // Reload current commitment data if version/phase selected
+    if (selectedVersion.value && selectedPhase.value) {
+      await loadCommitment(selectedVersion.value, selectedPhase.value)
+    }
+  } catch (err) {
+    console.error('Failed to refresh current status:', err)
+  } finally {
+    refreshing.value = false
+  }
+}
+
+async function createSnapshot() {
+  if (!selectedVersion.value || !selectedPhase.value) return
+  creatingSnapshot.value = true
+  try {
+    const response = await fetch(`/api/modules/releases/delivery/commitment/snapshot/${selectedVersion.value}/${selectedPhase.value}`, {
+      method: 'POST'
+    })
+    if (!response.ok) throw new Error('Failed to create snapshot')
+    // Reload commitment data to show the new snapshot
+    await loadCommitment(selectedVersion.value, selectedPhase.value)
+  } catch (err) {
+    console.error('Failed to create snapshot:', err)
+    alert('Failed to create snapshot: ' + err.message)
+  } finally {
+    creatingSnapshot.value = false
+  }
 }
 
 onMounted(() => {

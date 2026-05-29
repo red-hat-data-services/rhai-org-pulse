@@ -1285,7 +1285,7 @@ module.exports = function registerRoutes(router, context) {
       const snapshot = readFromStorage(snapshotPath)
 
       if (!snapshot) {
-        return res.status(404).json({ error: `No snapshot found for ${version} ${phase}` })
+        return res.status(404).json({ error: `No snapshot found for ${version} ${phase}. Use the "Create Snapshot" button above.` })
       }
 
       // Load delivery analysis
@@ -1405,6 +1405,110 @@ module.exports = function registerRoutes(router, context) {
       })
     } catch (error) {
       console.error('[releases/delivery] commitment tracking error:', error)
+      res.status(500).json({ error: error.message })
+    }
+  })
+
+  /**
+   * @openapi
+   * /api/modules/releases/delivery/commitment/snapshot/{version}/{phase}:
+   *   post:
+   *     summary: Create commitment snapshot from current delivery analysis
+   *     tags: [Releases - Delivery]
+   *     parameters:
+   *       - in: path
+   *         name: version
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Release version (e.g., "3.5")
+   *       - in: path
+   *         name: phase
+   *         required: true
+   *         schema:
+   *           type: string
+   *           enum: [EA1, EA2, GA]
+   *         description: Release phase
+   *     responses:
+   *       200:
+   *         description: Snapshot created successfully
+   *       400:
+   *         description: Invalid parameters
+   *       404:
+   *         description: No delivery analysis data available
+   */
+  router.post('/commitment/snapshot/:version/:phase', requireAdmin, requireScope('releases:write'), function(req, res) {
+    try {
+      const { version, phase } = req.params
+
+      // Validate phase
+      const validPhases = ['EA1', 'EA2', 'GA']
+      if (!validPhases.includes(phase)) {
+        return res.status(400).json({ error: `Invalid phase. Must be one of: ${validPhases.join(', ')}` })
+      }
+
+      // Validate version format
+      if (!/^\d+\.\d+$/.test(version)) {
+        return res.status(400).json({ error: 'Invalid version format. Expected X.Y (e.g., "3.5")' })
+      }
+
+      // Load delivery analysis
+      const analysisCache = readFromStorage('releases/delivery/analysis-cache.json')
+      if (!analysisCache?.data) {
+        return res.status(404).json({ error: 'Delivery analysis data not available. Run "Refresh Current Status" first.' })
+      }
+
+      // Aggregate ALL releases that match this version
+      const escaped = version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const versionPattern = new RegExp(`\\b${escaped}\\b`)
+      const matchingReleases = analysisCache.data.releases.filter(r => versionPattern.test(r.releaseNumber))
+
+      if (matchingReleases.length === 0) {
+        return res.status(404).json({ error: `No releases found matching version ${version}` })
+      }
+
+      // Collect all Features from matching releases
+      const features = []
+      const seenKeys = new Set()
+      for (const release of matchingReleases) {
+        for (const issue of release.issues || []) {
+          if (!seenKeys.has(issue.key) && issue.issueType === 'Feature') {
+            features.push({
+              key: issue.key,
+              summary: issue.summary,
+              status: issue.status,
+              components: issue.components,
+              deliveryOwner: issue.deliveryOwner
+            })
+            seenKeys.add(issue.key)
+          }
+        }
+      }
+
+      // Create snapshot
+      const snapshotData = {
+        version,
+        phase,
+        snapshotAt: new Date().toISOString(),
+        snapshotTrigger: 'manual',
+        featureKeys: Array.from(seenKeys),
+        featureCount: seenKeys.size,
+        features
+      }
+
+      // Write to storage
+      const snapshotPath = `releases/planning/committed-snapshot-${version}-${phase}.json`
+      writeToStorage(snapshotPath, snapshotData)
+
+      console.log(`[releases/delivery] Created snapshot for ${version} ${phase}: ${seenKeys.size} features`)
+
+      res.json({
+        phase,
+        featureCount: seenKeys.size,
+        snapshotAt: snapshotData.snapshotAt
+      })
+    } catch (error) {
+      console.error('[releases/delivery] snapshot creation error:', error)
       res.status(500).json({ error: error.message })
     }
   })
