@@ -7,8 +7,9 @@ export function useArtifacts() {
   const artifacts = ref([])
   const loading = ref(false)
   const error = ref(null)
+  const hasMore = ref(false)
 
-  async function loadArtifacts(filters = {}) {
+  async function loadArtifacts(filters = {}, { append = false } = {}) {
     loading.value = true
     error.value = null
 
@@ -19,9 +20,17 @@ export function useArtifacts() {
       }
     }
 
+    const limit = parseInt(filters.limit, 10) || 50
+
     try {
       const data = await apiRequest(`${BASE}/artifacts?${params}`)
-      artifacts.value = Array.isArray(data) ? data : []
+      const items = Array.isArray(data) ? data : []
+      if (append) {
+        artifacts.value = [...artifacts.value, ...items]
+      } else {
+        artifacts.value = items
+      }
+      hasMore.value = items.length >= limit
     } catch (err) {
       error.value = err.message
     } finally {
@@ -29,7 +38,13 @@ export function useArtifacts() {
     }
   }
 
-  return { artifacts, loading, error, loadArtifacts }
+  function reset() {
+    artifacts.value = []
+    hasMore.value = false
+    error.value = null
+  }
+
+  return { artifacts, hasMore, loading, error, loadArtifacts, reset }
 }
 
 export function useArtifactDetail() {

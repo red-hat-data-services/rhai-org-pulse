@@ -36,7 +36,8 @@ const chartData = computed(() => ({
     backgroundColor: (COLORS[i % COLORS.length]) + '20',
     borderWidth: 2,
     pointRadius: 2,
-    tension: 0.3
+    tension: 0.3,
+    spanGaps: false
   }))
 }));
 

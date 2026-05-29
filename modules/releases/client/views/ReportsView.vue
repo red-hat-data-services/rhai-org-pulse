@@ -1,22 +1,59 @@
 <template>
   <div class="p-6">
-    <div class="text-center py-12 text-gray-500 dark:text-gray-400">
-      <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 mb-4">
-        <svg class="w-6 h-6 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-      </div>
-      <p class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Reports coming soon</p>
-      <p class="text-sm max-w-md mx-auto">
-        Cross-release reports including health trending, feature completion velocity,
-        and blocker analysis will be available here in a future update.
-      </p>
+    <div v-if="!selectedReport">
+      <ReportsHub @select="selectReport" />
+    </div>
+    <div v-else>
+      <button
+        class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white flex items-center gap-1 mb-4"
+        @click="clearReport"
+      >
+        &larr; Back to Reports
+      </button>
+      <component :is="selectedReport.component" :initialProduct="initialProduct" :initialVersion="initialVersion" />
     </div>
   </div>
 </template>
 
 <script setup>
-// Reports placeholder view.
-// Future reports will use the hub/registry pattern
-// (see reports/ReportsHub.vue and reports/registry.js).
+import { ref, watch, inject, nextTick } from 'vue'
+import ReportsHub from '../reports/ReportsHub.vue'
+import { reports } from '../reports/registry'
+
+const nav = inject('moduleNav')
+const selectedReport = ref(null)
+const initialProduct = ref(null)
+const initialVersion = ref(null)
+let updatingFromUrl = false
+
+function selectReport(report) {
+  selectedReport.value = report
+  if (!updatingFromUrl) {
+    nav.updateParams({ report: report.id })
+  }
+}
+
+function clearReport() {
+  selectedReport.value = null
+  initialProduct.value = null
+  initialVersion.value = null
+  if (!updatingFromUrl) {
+    nav.updateParams({ report: undefined, product: undefined, version: undefined })
+  }
+}
+
+// Restore report from URL params (e.g. returning from feature detail)
+watch(() => nav.params.value, (params) => {
+  const reportId = params?.report
+  if (reportId && !selectedReport.value) {
+    const report = reports.find(r => r.id === reportId)
+    if (report) {
+      updatingFromUrl = true
+      initialProduct.value = params.product || null
+      initialVersion.value = params.version || null
+      selectedReport.value = report
+      nextTick(() => { updatingFromUrl = false })
+    }
+  }
+}, { immediate: true })
 </script>

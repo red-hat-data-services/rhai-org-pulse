@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 
 // We test the orchestrator's logic without actually requiring tar stream output
 // by testing file collection, module discovery, and error handling
@@ -69,23 +69,17 @@ describe('export orchestrator logic', () => {
     expect(Object.keys(mapping.nameToFake).length).toBe(0)
   })
 
-  it('module with export.customHandler is discovered', () => {
-    const modules = [
-      {
-        slug: 'team-tracker',
-        _dir: '/modules/team-tracker',
-        export: { customHandler: true }
-      },
-      {
-        slug: 'other',
-        _dir: '/modules/other'
-        // no export field
-      }
-    ]
+  it('export registry collects and runs registered hooks', async () => {
+    const { createExportRegistry } = require('../../shared/server/export-registry')
+    const registry = createExportRegistry()
+    const handler = vi.fn()
+    registry.register('team-tracker', handler)
 
-    const withExport = modules.filter(m => m.export && m.export.customHandler)
-    expect(withExport.length).toBe(1)
-    expect(withExport[0].slug).toBe('team-tracker')
+    const addFile = vi.fn()
+    const storage = makeStorage({})
+    const errors = await registry.run(addFile, storage, {})
+    expect(handler).toHaveBeenCalledWith(addFile, storage, {})
+    expect(errors).toEqual([])
   })
 
   it('_export-errors.json is generated on hook failure', () => {

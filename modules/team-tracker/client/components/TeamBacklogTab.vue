@@ -16,13 +16,13 @@
           </span>
         </h3>
       </div>
-      <RfeBacklogTable :issues="rfeIssues" :rfeConfig="rfeConfig" :assessments="assessments" />
+      <RfeBacklogTable :issues="rfeIssues" :rfeConfig="rfeConfig" :assessments="assessments" :showAssessments="aiImpactAvailable" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, inject } from 'vue'
 import { apiRequest } from '@shared/client/services/api.js'
 import ComponentList from './ComponentList.vue'
 import RfeBacklogTable from './RfeBacklogTable.vue'
@@ -33,10 +33,15 @@ const props = defineProps({
   rfeConfig: { type: Object, default: () => ({}) }
 })
 
+const moduleNav = inject('moduleNav')
+const aiImpactAvailable = computed(() => moduleNav?.isModuleAvailable?.('ai-impact') ?? false)
+
 const assessments = ref({})
 
 async function loadAssessments() {
+  if (!aiImpactAvailable.value) return
   try {
+    // eslint-disable-next-line org-pulse/no-cross-module-imports -- guarded by aiImpactAvailable check
     const data = await apiRequest('/modules/ai-impact/assessments')
     assessments.value = data.assessments || {}
   } catch {

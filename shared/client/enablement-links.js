@@ -45,6 +45,16 @@ export const enablementCategories = [
     ],
   },
   {
+    id: 'component-onboarding',
+    title: 'Component Onboarding',
+    section: 'ai-sdlc',
+    slackChannel: { name: '#forum-rhai-ai-first', url: 'https://app.slack.com/client/E030G10V24F/C0APP9DDB2R' },
+    links: [
+      { label: 'Enablement Recording', icon: 'Video', url: 'javascript:void(0)' },
+      { label: 'Enablement Slides', icon: 'Presentation', url: 'javascript:void(0)' },
+    ],
+  },
+  {
     id: 'jira-autofix',
     title: 'Jira Autofix',
     section: 'ai-workflows',
@@ -86,6 +96,6 @@ export const enablementSections = [
 
 export function getAIImpactEnablementCategories() {
   return enablementCategories.filter(c =>
-    ['rfe-builder', 'strat-builder', 'ai-quality', 'ai-first-documentation'].includes(c.id)
+    ['rfe-builder', 'strat-builder', 'ai-quality', 'ai-first-documentation', 'component-onboarding'].includes(c.id)
   )
 }

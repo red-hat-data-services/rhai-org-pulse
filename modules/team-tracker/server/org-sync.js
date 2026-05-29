@@ -358,7 +358,7 @@ async function runSync(storage, sheetId, config) {
   const fieldStore = require('../../../shared/server/field-store');
   const fieldDefs = fieldStore.readFieldDefinitions(storage);
   const hasInAppComponents = (fieldDefs.teamFields || []).some(
-    f => !f.deleted && f.optionsRef === 'components'
+    f => !f.deleted && f.optionsRef === 'component'
   );
 
   const keptTeamNames = new Set(rawTeams.map(t => t.name));

@@ -1396,7 +1396,7 @@ module.exports = function registerRoutes(router, context) {
 
   // --- Quality (Post-Release Defects) routes ---
 
-  const { fetchVersions: fetchQualityVersions, fetchBugs } = require('./quality/data-fetcher.js')
+  const { fetchVersions: fetchQualityVersions, fetchBugs, fetchBugCounts } = require('./quality/data-fetcher.js')
   const { computeCumulativeBugData } = require('./quality/calculations.js')
 
   // In-memory cache for loadAllBugs() with 5-minute TTL
@@ -1433,38 +1433,18 @@ module.exports = function registerRoutes(router, context) {
    * /api/modules/releases/delivery/quality/versions:
    *   get:
    *     tags: ['Releases: Quality']
-   *     summary: List release versions with bug counts
-   *     parameters:
-   *       - in: query
-   *         name: component
-   *         schema: { type: string }
-   *         description: Filter bug counts by component
+   *     summary: List release versions with pre-computed bug counts
    *     responses:
    *       200:
    *         description: Versions sorted by bug count
    */
   router.get('/quality/versions', requireAuth, requireScope('releases:read'), function(req, res) {
     try {
-      const config = getConfig(readFromStorage)
       const versions = readFromStorage('releases/delivery/quality/versions.json') || []
-      const componentFilter = req.query.component || null
 
-      const allBugs = loadAllBugs(config.projectKeys)
+      const sorted = [...versions].sort((a, b) => (b.bugCount || 0) - (a.bugCount || 0))
 
-      const filteredBugs = componentFilter
-        ? allBugs.filter(bug => bug.components.includes(componentFilter))
-        : allBugs
-
-      const versionsWithCounts = versions.map(version => {
-        const bugCount = filteredBugs.filter(bug =>
-          bug.affectedVersions.includes(version.name)
-        ).length
-        return { ...version, bugCount }
-      })
-
-      versionsWithCounts.sort((a, b) => b.bugCount - a.bugCount)
-
-      res.json(versionsWithCounts)
+      res.json(sorted)
     } catch (error) {
       console.error('[releases/quality] Read versions error:', error)
       res.status(500).json({ error: 'Internal server error' })
@@ -1577,16 +1557,99 @@ module.exports = function registerRoutes(router, context) {
     try {
       const config = getConfig(readFromStorage)
       const versions = await fetchQualityVersions(config.projectKeys)
-      writeToStorage('releases/delivery/quality/versions.json', versions)
+
+      const bugCounts = await fetchBugCounts(config.projectKeys, versions)
+      const versionsWithCounts = versions.map(v => ({
+        ...v,
+        bugCount: bugCounts.get(v.name) || 0
+      }))
+      writeToStorage('releases/delivery/quality/versions.json', versionsWithCounts)
 
       for (const project of config.projectKeys) {
         const bugs = await fetchBugs(project, versions)
         writeToStorage(`releases/delivery/quality/bugs-${project}.json`, bugs)
       }
 
+      bugsCache = { data: null, timestamp: 0, projectsKey: '' }
       res.json({ success: true, fetchedAt: new Date().toISOString() })
     } catch (error) {
       console.error('[releases/quality] Refresh error:', error)
+      res.status(500).json({ error: error.message })
+    }
+  })
+
+  /**
+   * @openapi
+   * /api/modules/releases/delivery/quality/debug:
+   *   get:
+   *     tags: ['Releases: Quality']
+   *     summary: Debug endpoint for diagnosing bug count issues (admin only)
+   *     responses:
+   *       200:
+   *         description: Diagnostic information about bug data and version matching
+   */
+  router.get('/quality/debug', requireAdmin, requireScope('releases:read'), function(req, res) {
+    try {
+      const config = getConfig(readFromStorage)
+      const versions = readFromStorage('releases/delivery/quality/versions.json') || []
+
+      const cacheSnapshot = {
+        projectsKey: bugsCache.projectsKey,
+        cached: bugsCache.data !== null,
+        cacheSize: bugsCache.data ? bugsCache.data.length : 0,
+        cacheAge: bugsCache.timestamp ? Date.now() - bugsCache.timestamp : null
+      }
+
+      const allBugs = loadAllBugs(config.projectKeys)
+
+      const bugsByProject = {}
+      for (const project of config.projectKeys) {
+        const bugs = readFromStorage(`releases/delivery/quality/bugs-${project}.json`) || []
+        bugsByProject[project] = bugs.length
+      }
+
+      const sampleBugs = allBugs.slice(0, 5).map(b => ({
+        key: b.key,
+        affectedVersions: b.affectedVersions,
+        components: b.components,
+        created: b.created,
+        releaseDate: b.releaseDate
+      }))
+
+      const sampleVersions = versions.slice(0, 10).map(v => ({
+        name: v.name,
+        releaseDate: v.releaseDate,
+        project: v.project
+      }))
+
+      // Find unique affected version names from bugs
+      const affectedVersionSet = new Set()
+      allBugs.forEach(bug => {
+        bug.affectedVersions.forEach(v => affectedVersionSet.add(v))
+      })
+      const uniqueAffectedVersions = Array.from(affectedVersionSet).sort().slice(0, 20)
+
+      // Find version names from versions.json
+      const versionNameSet = new Set(versions.map(v => v.name))
+      const versionNames = Array.from(versionNameSet).sort().slice(0, 20)
+
+      res.json({
+        config: {
+          projectKeys: config.projectKeys
+        },
+        counts: {
+          totalVersions: versions.length,
+          totalBugs: allBugs.length,
+          bugsByProject
+        },
+        sampleBugs,
+        sampleVersions,
+        uniqueAffectedVersions,
+        versionNames,
+        cacheInfo: cacheSnapshot
+      })
+    } catch (error) {
+      console.error('[releases/quality] Debug error:', error)
       res.status(500).json({ error: error.message })
     }
   })

@@ -1,5 +1,5 @@
 <template>
-  <div class="max-w-4xl mx-auto py-6 px-4">
+  <div>
     <!-- Permission guard -->
     <div v-if="!hasAccess" class="text-center py-16">
       <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Access Denied</h2>
@@ -7,6 +7,30 @@
     </div>
 
     <template v-else>
+    <!-- Tab bar -->
+    <div class="border-b border-gray-200 dark:border-gray-700">
+      <nav class="flex -mb-px px-4" aria-label="Manage sub-tabs">
+        <button
+          v-for="tab in manageTabs"
+          :key="tab.id"
+          @click="activeTab = tab.id"
+          class="px-4 py-3 text-sm font-medium border-b-2 transition-colors"
+          :class="activeTab === tab.id
+            ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+            : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'"
+        >
+          {{ tab.label }}
+        </button>
+      </nav>
+    </div>
+
+    <!-- Hygiene Rules tab -->
+    <div v-if="activeTab === 'hygiene'" class="p-6">
+      <HygieneConfigView />
+    </div>
+
+    <!-- Releases tab -->
+    <div v-else class="max-w-4xl mx-auto py-6 px-4">
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Release Registry</h1>
       <div class="flex items-center gap-3">
@@ -17,12 +41,116 @@
           class="w-64 pl-4 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
         />
         <button
+          @click="handleResolveJiraVersions"
+          :disabled="resolving"
+          class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors"
+        >
+          {{ resolving ? 'Resolving...' : 'Resolve Jira Versions' }}
+        </button>
+        <button
           @click="handleDiscover"
           :disabled="discovering"
           class="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 disabled:opacity-50 transition-colors"
         >
           {{ discovering ? 'Discovering...' : 'Discover' }}
         </button>
+      </div>
+    </div>
+
+    <!-- Resolve Jira Versions modal -->
+    <div v-if="showResolveModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50" @click.self="showResolveModal = false">
+      <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-3xl max-h-[80vh] flex flex-col mx-4">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Resolve Jira Versions</h2>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Matched {{ resolveResult?.jiraVersionCount || 0 }} Jira versions from {{ (resolveResult?.projects || []).join(', ') }}.
+            Select which mappings to apply.
+          </p>
+        </div>
+        <div class="flex-1 overflow-y-auto px-6 py-4">
+          <!-- No matches -->
+          <div v-if="!resolveResult?.matches?.length && !resolveResult?.unmatched?.length" class="text-center py-8 text-gray-500 dark:text-gray-400">
+            No Jira versions found.
+          </div>
+
+          <!-- Matches -->
+          <div v-if="resolveResult?.matches?.length">
+            <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Matched releases ({{ resolveResult.matches.length }})</h3>
+            <div class="space-y-3">
+              <label
+                v-for="match in resolveResult.matches"
+                :key="match.releaseId"
+                class="flex items-start gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  :checked="selectedResolves[match.releaseId]"
+                  @change="selectedResolves[match.releaseId] = $event.target.checked"
+                  class="mt-1 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500"
+                />
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ match.releaseName }}</p>
+                  <div class="flex flex-wrap gap-1.5 mt-1">
+                    <span
+                      v-for="jv in match.jiraMatches"
+                      :key="jv.id"
+                      class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
+                    >
+                      {{ jv.name }}
+                      <span class="ml-1 text-blue-400 dark:text-blue-500">({{ jv.project }})</span>
+                    </span>
+                  </div>
+                  <p v-if="match.currentFixVersions?.length" class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                    Current: {{ match.currentFixVersions.join(', ') }}
+                  </p>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Unmatched -->
+          <details v-if="resolveResult?.unmatched?.length" class="mt-4">
+            <summary class="text-sm font-medium text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300">
+              Unmatched Jira versions ({{ resolveResult.unmatched.length }})
+            </summary>
+            <div class="mt-2 flex flex-wrap gap-1.5">
+              <span
+                v-for="uv in resolveResult.unmatched"
+                :key="uv.id"
+                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+              >
+                {{ uv.name }} ({{ uv.project }})
+              </span>
+            </div>
+          </details>
+        </div>
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <p v-if="resolveApplyMessage" class="text-sm" :class="resolveApplyError ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'">
+            {{ resolveApplyMessage }}
+          </p>
+          <span v-else></span>
+          <div class="flex items-center gap-3">
+            <button
+              @click="handleSelectAllResolves"
+              class="px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+            >
+              {{ allResolvesSelected ? 'Deselect All' : 'Select All' }}
+            </button>
+            <button
+              @click="showResolveModal = false"
+              class="px-4 py-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
+            >
+              Close
+            </button>
+            <button
+              @click="handleApplyResolves"
+              :disabled="applyingResolves || selectedResolveCount === 0"
+              class="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium hover:bg-primary-700 disabled:opacity-50 transition-colors"
+            >
+              {{ applyingResolves ? 'Applying...' : `Apply (${selectedResolveCount})` }}
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -403,14 +531,45 @@
         </button>
       </div>
     </div>
+    </div>
     </template>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUpdate, nextTick } from 'vue'
+import { ref, computed, onMounted, onBeforeUpdate, nextTick, watch, inject } from 'vue'
 import { apiRequest } from '@shared/client/services/api.js'
 import { useAuth } from '@shared/client/composables/useAuth.js'
+import HygieneConfigView from '../components/HygieneConfigView.vue'
+
+const nav = inject('moduleNav')
+
+const manageTabs = [
+  { id: 'releases', label: 'Releases' },
+  { id: 'hygiene', label: 'Hygiene Rules' },
+]
+
+const VALID_MANAGE_TABS = manageTabs.map(t => t.id)
+const DEFAULT_MANAGE_TAB = 'releases'
+
+const activeTab = ref(DEFAULT_MANAGE_TAB)
+
+let updatingFromUrl = false
+
+watch(activeTab, (tab) => {
+  if (!updatingFromUrl) {
+    nav.updateParams({ tab: tab === DEFAULT_MANAGE_TAB ? undefined : tab })
+  }
+})
+
+watch(() => nav.params.value?.tab, (tabParam) => {
+  const tab = tabParam && VALID_MANAGE_TABS.includes(tabParam) ? tabParam : DEFAULT_MANAGE_TAB
+  if (activeTab.value !== tab) {
+    updatingFromUrl = true
+    activeTab.value = tab
+    nextTick(() => { updatingFromUrl = false })
+  }
+}, { immediate: true })
 
 const { isAdmin, roles: userRoles } = useAuth()
 const hasAccess = computed(() => isAdmin.value || userRoles.value.includes('release-manager'))
@@ -429,6 +588,13 @@ const saving = ref(false)
 const editingId = ref(null)
 const createIdError = ref('')
 const cardRefs = ref({})
+const resolving = ref(false)
+const showResolveModal = ref(false)
+const resolveResult = ref(null)
+const selectedResolves = ref({})
+const applyingResolves = ref(false)
+const resolveApplyMessage = ref('')
+const resolveApplyError = ref(false)
 
 onBeforeUpdate(() => { cardRefs.value = {} })
 
@@ -646,6 +812,76 @@ async function handleRestore(id) {
     await fetchReleases()
   } catch (e) {
     console.error('Failed to restore release:', e)
+  }
+}
+
+// ── Resolve Jira Versions ──
+
+const selectedResolveCount = computed(() => {
+  return Object.values(selectedResolves.value).filter(Boolean).length
+})
+
+const allResolvesSelected = computed(() => {
+  const matches = resolveResult.value?.matches || []
+  if (matches.length === 0) return false
+  return matches.every(m => selectedResolves.value[m.releaseId])
+})
+
+function handleSelectAllResolves() {
+  const matches = resolveResult.value?.matches || []
+  const allSelected = allResolvesSelected.value
+  for (const match of matches) {
+    selectedResolves.value[match.releaseId] = !allSelected
+  }
+}
+
+async function handleResolveJiraVersions() {
+  resolving.value = true
+  resolveApplyMessage.value = ''
+  resolveApplyError.value = false
+  try {
+    const result = await apiRequest('/modules/releases/registry/resolve-jira-versions', { method: 'POST' })
+    resolveResult.value = result
+    // Pre-select matches that have new versions to add
+    const sel = {}
+    for (const match of result.matches || []) {
+      sel[match.releaseId] = match.proposedFixVersions.length > match.currentFixVersions.length
+    }
+    selectedResolves.value = sel
+    showResolveModal.value = true
+  } catch (e) {
+    resolveApplyError.value = true
+    resolveApplyMessage.value = e.message || 'Resolution failed.'
+    showResolveModal.value = true
+    resolveResult.value = { matches: [], unmatched: [], jiraVersionCount: 0, projects: [] }
+  } finally {
+    resolving.value = false
+  }
+}
+
+async function handleApplyResolves() {
+  applyingResolves.value = true
+  resolveApplyMessage.value = ''
+  resolveApplyError.value = false
+  try {
+    const mappings = []
+    for (const match of resolveResult.value?.matches || []) {
+      if (selectedResolves.value[match.releaseId]) {
+        mappings.push({ releaseId: match.releaseId, fixVersions: match.proposedFixVersions })
+      }
+    }
+    const result = await apiRequest('/modules/releases/registry/resolve-jira-versions/apply', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mappings })
+    })
+    resolveApplyMessage.value = `Updated ${(result.updated || []).length} release(s).`
+    await fetchReleases()
+  } catch (e) {
+    resolveApplyError.value = true
+    resolveApplyMessage.value = e.message || 'Apply failed.'
+  } finally {
+    applyingResolves.value = false
   }
 }
 

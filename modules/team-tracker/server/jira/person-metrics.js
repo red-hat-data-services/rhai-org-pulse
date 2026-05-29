@@ -14,10 +14,13 @@ const { fetchAllJqlResults } = require('../../../../shared/server/jira');
 
 const STORY_POINTS_FIELD = process.env.JIRA_STORY_POINTS_FIELD || 'customfield_10028';
 
-const FIELDS = `summary,issuetype,status,assignee,resolutiondate,created,components,${STORY_POINTS_FIELD}`;
+const FIELDS = `summary,issuetype,status,assignee,resolution,resolutiondate,created,components,${STORY_POINTS_FIELD}`;
 
 // Bump this when FIELDS or computed metrics change to invalidate cached data
-const FIELDS_VERSION = 'v1';
+const FIELDS_VERSION = 'v2';
+
+const NO_WORK_RESOLUTIONS = ["Won't Do", 'Obsolete', 'Duplicate', 'Cannot Reproduce'];
+const NO_WORK_RESOLUTION_FILTER = ` AND resolution NOT IN (${NO_WORK_RESOLUTIONS.map(r => `"${r}"`).join(', ')})`;
 
 // Force a full refresh if the last full refresh was more than 7 days ago
 const FULL_REFRESH_INTERVAL_DAYS = 7;
@@ -85,6 +88,7 @@ function mapIssue(issue) {
     summary: issue.fields.summary,
     issueType: issue.fields.issuetype?.name,
     status: issue.fields.status?.name,
+    resolution: issue.fields.resolution?.name || null,
     storyPoints: getStoryPoints(issue),
     created: issue.fields.created,
     resolutionDate: issue.fields.resolutiondate,
@@ -388,7 +392,7 @@ async function fetchPersonMetrics(jiraRequest, jiraDisplayName, options = {}) {
     sinceDate.setDate(sinceDate.getDate() - 1);
     const sinceDateStr = sinceDate.toISOString().slice(0, 10);
 
-    const resolvedJql = `assignee = "${accountId}" AND resolved >= "${sinceDateStr}" AND issuetype in (Story, Bug, Task, Vulnerability, Weakness)${projectFilter}`;
+    const resolvedJql = `assignee = "${accountId}" AND resolved >= "${sinceDateStr}" AND issuetype in (Story, Bug, Task, Vulnerability, Weakness)${NO_WORK_RESOLUTION_FILTER}${projectFilter}`;
 
     const [freshResolvedIssues, inProgressIssues] = await Promise.all([
       fetchAllJqlResults(jiraRequest, resolvedJql, FIELDS, { expand: 'changelog' }),
@@ -449,7 +453,7 @@ async function fetchPersonMetrics(jiraRequest, jiraDisplayName, options = {}) {
   }
 
   // Full refresh
-  const resolvedJql = `assignee = "${accountId}" AND resolved >= -${lookbackDays}d AND issuetype in (Story, Bug, Task, Vulnerability, Weakness)${projectFilter}`;
+  const resolvedJql = `assignee = "${accountId}" AND resolved >= -${lookbackDays}d AND issuetype in (Story, Bug, Task, Vulnerability, Weakness)${NO_WORK_RESOLUTION_FILTER}${projectFilter}`;
 
   const [resolvedIssues, inProgressIssues] = await Promise.all([
     fetchAllJqlResults(jiraRequest, resolvedJql, FIELDS, { expand: 'changelog' }),
@@ -503,5 +507,6 @@ module.exports = {
   namesMatch,
   mergeResolvedIssues,
   needsFullRefresh,
-  FIELDS_VERSION
+  FIELDS_VERSION,
+  NO_WORK_RESOLUTIONS
 };

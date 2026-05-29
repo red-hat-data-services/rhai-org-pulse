@@ -1,13 +1,9 @@
 /**
  * Report definitions for the releases module.
  * Each entry defines a report card that appears in the Reports hub.
- *
- * Future reports:
- * - Release health trending
- * - Feature completion velocity
- * - Cross-release comparison
- * - Blocker analysis
  */
+import { defineAsyncComponent } from 'vue'
+
 export const reports = [
   {
     id: 'commitment-tracking',
@@ -16,5 +12,11 @@ export const reports = [
     icon: 'Target',
     tags: ['Planning', 'OKR'],
     component: () => import('./CommitmentTrackingReport.vue')
+  },
+  {
+    id: 'program-hygiene',
+    label: 'Program Hygiene Report',
+    description: 'Cross-version hygiene summary with violation breakdowns by rule, team, and version. Designed for program-level reporting.',
+    component: defineAsyncComponent(() => import('../reports/ProgramHygieneReport.vue'))
   }
 ]

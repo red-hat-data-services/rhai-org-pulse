@@ -1,6 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 const express = require('express')
+const { buildModuleContext } = require('../shared/server/module-context')
 
 const MODULES_DIR = path.join(__dirname, '..', 'modules')
 
@@ -187,7 +188,7 @@ function computeRequiredBy(allModules) {
 
 // ─── Router Creation ───
 
-function createModuleRouters(modules, context, enabledSlugs, diagnosticsRegistry, messageRegistry) {
+function createModuleRouters(modules, coreServices, enabledSlugs, registries) {
   const routers = {}
   for (const mod of modules) {
     if (!mod.server?.entry) continue
@@ -200,19 +201,13 @@ function createModuleRouters(modules, context, enabledSlugs, diagnosticsRegistry
     }
     const router = express.Router()
     try {
-      // Set up per-module diagnostics registration
-      if (diagnosticsRegistry) {
-        context.registerDiagnostics = function(fn) {
-          diagnosticsRegistry[mod.slug] = fn
-        }
+      const exported = require(entryPath)
+      if (typeof exported !== 'function') {
+        console.error(`[module-loader] Module "${mod.slug}" server entry does not export a function, skipping`)
+        continue
       }
-      // Set up per-module message provider registration
-      if (messageRegistry) {
-        context.registerMessageProvider = function(id, fn) {
-          messageRegistry.registerProvider(id, fn)
-        }
-      }
-      require(entryPath)(router, context)
+      const moduleCtx = buildModuleContext(coreServices, mod.slug, registries)
+      exported(router, moduleCtx)
       routers[mod.slug] = router
       _mountedAtStartup.add(mod.slug)
       console.log(`[module-loader] Created router for "${mod.slug}"`)
@@ -220,9 +215,6 @@ function createModuleRouters(modules, context, enabledSlugs, diagnosticsRegistry
       console.error(`[module-loader] Failed to create router for "${mod.slug}":`, err.message)
     }
   }
-  // Clean up — don't leave stale registration functions on the context
-  context.registerDiagnostics = null
-  context.registerMessageProvider = null
   return routers
 }
 
@@ -236,12 +228,19 @@ async function collectModuleDiagnostics(modules, diagnosticsRegistry, enabledSlu
     if (enabledSlugs && !enabledSlugs.has(mod.slug)) {
       return { slug: mod.slug, promise: Promise.resolve({ enabled: false }) }
     }
-    const fn = diagnosticsRegistry[mod.slug]
-    if (typeof fn !== 'function') {
+    const registered = diagnosticsRegistry[mod.slug]
+    // Support both array (new) and single function (legacy) formats
+    const fns = Array.isArray(registered) ? registered
+      : typeof registered === 'function' ? [registered]
+        : null
+    if (!fns || fns.length === 0) {
       return { slug: mod.slug, promise: Promise.resolve({ enabled: true, diagnostics: 'not implemented' }) }
     }
     const withTimeout = Promise.race([
-      fn(),
+      Promise.all(fns.map(function(fn) { return fn() })).then(function(results) {
+        // Merge all diagnostics objects into one
+        return Object.assign.apply(null, [{}].concat(results))
+      }),
       new Promise(function(_, reject) {
         setTimeout(function() { reject(new Error('diagnostics timed out after 10s')) }, TIMEOUT_MS)
       })

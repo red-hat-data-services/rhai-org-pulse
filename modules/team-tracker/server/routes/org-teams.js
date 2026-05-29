@@ -74,7 +74,7 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
     const fieldStore = require('../../../../shared/server/field-store');
     const fieldDefs = fieldStore.readFieldDefinitions(storage);
     const componentFieldDef = (fieldDefs.teamFields || []).find(
-      f => !f.deleted && f.optionsRef === 'components'
+      f => !f.deleted && f.optionsRef === 'component'
     );
     const componentFieldId = componentFieldDef?.id;
 

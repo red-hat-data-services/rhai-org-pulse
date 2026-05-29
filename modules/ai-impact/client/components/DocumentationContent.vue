@@ -13,6 +13,7 @@ import {
   Legend
 } from 'chart.js'
 import LoadingOverlay from '@shared/client/components/LoadingOverlay.vue'
+import MrKpiCharts from './MrKpiCharts.vue'
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Filler, Tooltip, Legend)
 
@@ -33,7 +34,8 @@ const gridColor = computed(() => isDark.value ? 'rgba(75, 85, 99, 0.5)' : 'rgba(
 const props = defineProps({
   loading: { type: Boolean, default: false },
   error: { type: String, default: null },
-  docData: { type: Object, default: null }
+  docData: { type: Object, default: null },
+  mrKpiData: { type: Object, default: null }
 })
 
 const emit = defineEmits(['retry'])
@@ -387,7 +389,14 @@ function mrLabel(url) {
           </div>
         </div>
 
-        <!-- Issue Table -->
+        <!-- MR Quality KPIs -->
+        <MrKpiCharts :data="mrKpiData" />
+
+        <!-- Issue Tables -->
+        <div class="px-6 flex items-center gap-2 mb-4">
+          <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Jira Issue Details</h3>
+          <span class="text-xs text-gray-400 dark:text-gray-500">{{ filteredIssues.length }} features{{ completedIssues.length ? `, ${completedIssues.length} recently completed` : '' }}</span>
+        </div>
         <div class="px-6 pb-6">
           <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             <div class="px-5 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between gap-3">

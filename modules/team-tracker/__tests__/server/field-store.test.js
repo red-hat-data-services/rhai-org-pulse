@@ -369,10 +369,10 @@ describe('field-store', () => {
     it('persists optionsRef through createFieldDefinition', () => {
       const storage = makeStorageWithFieldDefs({ personFields: [], teamFields: [] })
       const field = fieldStore.createFieldDefinition(storage, 'team', {
-        label: 'Components', type: 'constrained', multiValue: true, optionsRef: 'components'
+        label: 'Components', type: 'constrained', multiValue: true, optionsRef: 'component'
       }, 'admin@test.com')
 
-      expect(field.optionsRef).toBe('components')
+      expect(field.optionsRef).toBe('component')
       expect(field.allowedValues).toBeNull()
     })
 
@@ -387,10 +387,10 @@ describe('field-store', () => {
       })
 
       const result = fieldStore.updateFieldDefinition(storage, 'person', 'field_abc', {
-        type: 'constrained', multiValue: true, optionsRef: 'components'
+        type: 'constrained', multiValue: true, optionsRef: 'component'
       }, 'admin@test.com')
 
-      expect(result.optionsRef).toBe('components')
+      expect(result.optionsRef).toBe('component')
       expect(result.type).toBe('constrained')
     })
 
@@ -410,13 +410,13 @@ describe('field-store', () => {
         personFields: [{
           id: 'field_comp', label: 'Component', type: 'constrained', multiValue: true,
           required: false, visible: true, primaryDisplay: false, allowedValues: null,
-          optionsRef: 'components', deleted: false, order: 0
+          optionsRef: 'component', deleted: false, order: 0
         }],
         teamFields: []
       }
       const storage = makeStorageWithFieldDefs(defs)
       const resolver = (ref) => {
-        if (ref === 'components') return ['Platform Core', 'ML Models']
+        if (ref === 'component') return ['Platform Core', 'ML Models']
         return null
       }
 
@@ -434,12 +434,12 @@ describe('field-store', () => {
         personFields: [{
           id: 'field_comp', label: 'Component', type: 'constrained', multiValue: true,
           required: false, visible: true, primaryDisplay: false, allowedValues: null,
-          optionsRef: 'components', deleted: false, order: 0
+          optionsRef: 'component', deleted: false, order: 0
         }],
         teamFields: []
       }
       const storage = makeStorageWithFieldDefs(defs)
-      const resolver = (ref) => ref === 'components' ? ['Platform Core'] : null
+      const resolver = (ref) => ref === 'component' ? ['Platform Core'] : null
 
       const { warnings } = fieldStore.validateFieldValues(
         storage, 'person', { field_comp: ['Unknown Component'] }, {}, { optionsResolver: resolver }
@@ -453,7 +453,7 @@ describe('field-store', () => {
         personFields: [{
           id: 'field_comp', label: 'Component', type: 'constrained', multiValue: true,
           required: false, visible: true, primaryDisplay: false, allowedValues: null,
-          optionsRef: 'components', deleted: false, order: 0
+          optionsRef: 'component', deleted: false, order: 0
         }],
         teamFields: []
       }

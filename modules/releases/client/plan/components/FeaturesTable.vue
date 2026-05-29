@@ -3,8 +3,13 @@ import StatusBadge from './StatusBadge.vue'
 import RiskBadge from './RiskBadge.vue'
 import RiskPopover from './RiskPopover.vue'
 import TierSeparator from './TierSeparator.vue'
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
+import { useModuleLink } from '@shared/client/composables/useModuleLink.js'
 import { PRIORITY_STYLES } from '../utils/constants'
+
+const moduleNav = inject('moduleNav')
+const aiImpactAvailable = computed(() => moduleNav?.isModuleAvailable?.('ai-impact') ?? false)
+const { linkTo } = useModuleLink()
 
 const props = defineProps({
   features: { type: Array, default: () => [] },
@@ -162,9 +167,11 @@ const groupedFeatures = computed(() => {
               <td class="px-3 py-2 border border-gray-300 dark:border-gray-600">
                 <div v-if="item.data.rfe" class="flex items-center gap-1">
                   <a
-                    :href="'#/ai-impact/rfe-review?select=' + encodeURIComponent(item.data.rfe)"
+                    v-if="aiImpactAvailable"
+                    :href="linkTo('ai-impact', 'rfe-review', { select: item.data.rfe })"
                     class="text-primary-600 dark:text-blue-400 font-mono text-xs hover:underline"
                   >{{ item.data.rfe }}</a>
+                  <span v-else class="font-mono text-xs text-gray-900 dark:text-gray-100">{{ item.data.rfe }}</span>
                   <a
                     :href="`${jiraBaseUrl}/${item.data.rfe}`"
                     target="_blank"

@@ -17,7 +17,7 @@ let _exporting = false;
 /**
  * Handle GET /api/export/test-data
  */
-async function handleExport(req, res, storageModule, builtInModules) {
+async function handleExport(req, res, storageModule, exportRegistry) {
   if (_exporting) {
     return res.status(429).json({ error: 'Export already in progress' });
   }
@@ -48,19 +48,9 @@ async function handleExport(req, res, storageModule, builtInModules) {
       fs.writeFileSync(fullPath, JSON.stringify(data, null, 2), 'utf-8');
     }
 
-    // Discover and call module export hooks
-    for (const mod of builtInModules) {
-      if (!mod.export || !mod.export.customHandler) continue;
-
-      const exportPath = path.join(mod._dir, 'server', 'export.js');
-      try {
-        const exportHook = require(exportPath);
-        await exportHook(addFile, storageModule, mapping);
-      } catch (err) {
-        console.error(`[export] Module "${mod.slug}" export hook failed:`, err.message);
-        errors.push({ module: mod.slug, error: err.message });
-      }
-    }
+    // Call registered module export hooks
+    const exportErrors = await exportRegistry.run(addFile, storageModule, mapping);
+    errors.push(...exportErrors);
 
     // Platform-level files (orchestrator handles directly)
     // allowlist.json - anonymize emails
