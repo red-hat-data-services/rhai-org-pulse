@@ -291,6 +291,7 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/modules/releases/delivery/conforma/releases` — conforma releases
 - `/api/modules/releases/delivery/conforma/releases/:version` — conforma release detail
 - `/api/modules/releases/delivery/conforma/status` — conforma data status
+- `/api/modules/releases/delivery/commitment/:version/:phase` — commitment tracking snapshot comparing committed vs delivered features
 - `/api/modules/releases/delivery/quality/versions` — quality versions with bug counts
 - `/api/modules/releases/delivery/quality/bugs` — cumulative bug data for selected versions
 - `/api/modules/releases/delivery/quality/components` — components with bug counts
