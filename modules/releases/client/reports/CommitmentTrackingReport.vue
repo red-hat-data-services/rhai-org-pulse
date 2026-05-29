@@ -449,8 +449,8 @@ async function checkCacheAge() {
     const response = await fetch('/api/modules/releases/delivery/refresh/status')
     if (!response.ok) return
     const status = await response.json()
-    if (status.lastRun) {
-      const ageMs = Date.now() - new Date(status.lastRun).getTime()
+    if (status.lastResult?.completedAt) {
+      const ageMs = Date.now() - new Date(status.lastResult.completedAt).getTime()
       const ageHours = Math.floor(ageMs / (1000 * 60 * 60))
       cacheAge.value = ageHours
       cacheIsStale.value = ageHours > 24

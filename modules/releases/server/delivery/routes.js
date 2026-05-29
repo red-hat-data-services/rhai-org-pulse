@@ -917,9 +917,6 @@ async function fetchDeliverableChildrenCounts(deliverableKeys) {
 
 async function runFullAnalysis(storage, config) {
   const releases = await fetchOpenReleases(storage, config)
-  // Include ALL releases (past and future) for commitment tracking
-  // Commitment tracking needs historical data to compare against snapshots
-  const openReleases = releases
 
   let issues = []
   let fieldMeta = { id: null, name: '', schemaCustom: '' }
@@ -947,21 +944,13 @@ async function runFullAnalysis(storage, config) {
     jiraWarning = `Jira data unavailable: ${err.message}`
   }
 
-  // Always use Product Pages releases (openReleases) since we now support Target Version custom field
-  // which doesn't rely on Jira fix versions. The old approach of enriching Jira fix versions
-  // would exclude releases that don't exist in Jira's fix versions list.
-  const analysisReleases = openReleases
-  // Include ALL releases (past and future) for commitment tracking
-  // Commitment tracking needs historical data to compare against snapshots
-  const analysisOpenReleases = analysisReleases
-
-  if (!analysisOpenReleases.length) {
+  if (!releases.length) {
     throw new Error(
       'No releases found. Ensure Target Version JQL fragment is configured or Product Pages product shortnames are set in Release Analysis settings.'
     )
   }
 
-  const result = buildAnalysis(analysisOpenReleases, issues, fieldMeta, config)
+  const result = buildAnalysis(releases, issues, fieldMeta, config)
   result.sprintWindow = sprintWindow || {
     startDate: new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10),
     endDate: new Date().toISOString().slice(0, 10),
@@ -1865,7 +1854,7 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: Releases metadata object
    */
-  router.get('/releases-metadata', requireScope('releases:read'), function(req, res) {
+  router.get('/releases-metadata', requireAuth, requireScope('releases:read'), function(req, res) {
     try {
       const metadata = readFromStorage('releases/delivery/releases-metadata.json') || {}
       res.json(metadata)
