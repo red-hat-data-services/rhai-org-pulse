@@ -145,7 +145,7 @@ const error = ref(null);
 const products = computed(() => {
   const productSet = new Set();
   for (const v of versions.value) {
-    const match = v.name.match(/^(rhoai|rhelai|rhaiis)/i);
+    const match = v.name.match(/^(rhoai|rhelai|rhaiis|rhaii)/i);
     if (match) {
       productSet.add(match[1].toLowerCase());
     }
