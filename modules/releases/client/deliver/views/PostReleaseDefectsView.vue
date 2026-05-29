@@ -161,6 +161,11 @@ const filteredVersions = computed(() => {
   );
 });
 
+watch(selectedProduct, () => {
+  selectedVersions.value = [];
+  selectedComponent.value = null;
+});
+
 onMounted(async () => {
   try {
     error.value = null;
