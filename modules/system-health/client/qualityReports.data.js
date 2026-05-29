@@ -3,46 +3,102 @@
  * Each reportUrl is resolved by Vite (?url) so the browser loads a full HTML document
  * inside an iframe — no v-html.
  */
+import reportKubeflowPipelines from './generated-reports/quality-report-kubeflow-pipelines.html?url'
+import reportMlflowMlflow from './generated-reports/quality-report-mlflow-mlflow.html?url'
+import reportOpendatahubIoOpendatahubOperator from './generated-reports/quality-report-opendatahub-io-opendatahub-operator.html?url'
 import reportKserveKserve from './generated-reports/quality-report-kserve-kserve.html?url'
+import reportOpendatahubIoDataSciencePipelines from './generated-reports/quality-report-opendatahub-io-data-science-pipelines.html?url'
 import reportRedHatDataServicesKserve from './generated-reports/quality-report-red-hat-data-services-kserve.html?url'
 import reportOpendatahubIoKserve from './generated-reports/quality-report-opendatahub-io-kserve.html?url'
+import reportArgoprojArgoWorkflows from './generated-reports/quality-report-argoproj-argo-workflows.html?url'
+import reportKubeflowHub from './generated-reports/quality-report-kubeflow-hub.html?url'
+import reportOpendatahubIoArgoWorkflows from './generated-reports/quality-report-opendatahub-io-argo-workflows.html?url'
+import reportOpendatahubIoMlflow from './generated-reports/quality-report-opendatahub-io-mlflow.html?url'
+import reportOpendatahubIoModelRegistry from './generated-reports/quality-report-opendatahub-io-model-registry.html?url'
 import reportOpendatahubIoOpenvinoGenai from './generated-reports/quality-report-opendatahub-io-openvino.genai.html?url'
 import reportOpendatahubIoOpenvino from './generated-reports/quality-report-opendatahub-io-openvino.html?url'
 import reportOpenvinotoolkitOpenvino from './generated-reports/quality-report-openvinotoolkit-openvino.html?url'
+import reportRedHatDataServicesDataSciencePipelines from './generated-reports/quality-report-red-hat-data-services-data-science-pipelines.html?url'
+import reportRedHatDataServicesMlflow from './generated-reports/quality-report-red-hat-data-services-mlflow.html?url'
+import reportRedHatDataServicesMlflowOperator from './generated-reports/quality-report-red-hat-data-services-mlflow-operator.html?url'
+import reportRedHatDataServicesModelRegistry from './generated-reports/quality-report-red-hat-data-services-model-registry.html?url'
+import reportTrustyaiExplainabilityNemoGuardrails from './generated-reports/quality-report-trustyai-explainability-NeMo-Guardrails.html?url'
+import reportOpendatahubIoModelRegistryOperator from './generated-reports/quality-report-opendatahub-io-model-registry-operator.html?url'
+import reportOpendatahubIoMlflowKubernetesPlugins from './generated-reports/quality-report-opendatahub-io-mlflow-kubernetes-plugins.html?url'
 import reportRedHatDataServicesModelsAsAService from './generated-reports/quality-report-red-hat-data-services-models-as-a-service.html?url'
+import reportRedHatDataServicesOdhCli from './generated-reports/quality-report-red-hat-data-services-odh-cli.html?url'
+import reportOpendatahubIoMlflowOperator from './generated-reports/quality-report-opendatahub-io-mlflow-operator.html?url'
+import reportOpendatahubIoNemoGuardrails from './generated-reports/quality-report-opendatahub-io-NeMo-Guardrails.html?url'
+import reportOpendatahubIoOdhGitops from './generated-reports/quality-report-opendatahub-io-odh-gitops.html?url'
 import reportOpenvinotoolkitOpenvinoGenai from './generated-reports/quality-report-openvinotoolkit-openvino.genai.html?url'
+import reportRedHatDataServicesModelRegistryOperator from './generated-reports/quality-report-red-hat-data-services-model-registry-operator.html?url'
+import reportRedHatDataServicesNemoGuardrails from './generated-reports/quality-report-red-hat-data-services-NeMo-Guardrails.html?url'
+import reportRedHatDataServicesPipelinesComponents from './generated-reports/quality-report-red-hat-data-services-pipelines-components.html?url'
+import reportKubeflowPipelinesComponents from './generated-reports/quality-report-kubeflow-pipelines-components.html?url'
+import reportOpendatahubIoOdhPlatformUtilities from './generated-reports/quality-report-opendatahub-io-odh-platform-utilities.html?url'
+import reportRedHatDataServicesRhodsOperator from './generated-reports/quality-report-red-hat-data-services-rhods-operator.html?url'
 import reportOpendatahubIoModelsAsAService from './generated-reports/quality-report-opendatahub-io-models-as-a-service.html?url'
+import reportOpendatahubIoKubeAuthProxy from './generated-reports/quality-report-opendatahub-io-kube-auth-proxy.html?url'
+import reportRedHatDataServicesOdhGitops from './generated-reports/quality-report-red-hat-data-services-odh-gitops.html?url'
+import reportOpendatahubIoDataSciencePipelinesOperator from './generated-reports/quality-report-opendatahub-io-data-science-pipelines-operator.html?url'
 import reportOpendatahubIoOpenvinoTokenizers from './generated-reports/quality-report-opendatahub-io-openvino_tokenizers.html?url'
 import reportOpenvinotoolkitOpenvinoTokenizers from './generated-reports/quality-report-openvinotoolkit-openvino_tokenizers.html?url'
+import reportRedHatDataServicesArgoWorkflows from './generated-reports/quality-report-red-hat-data-services-argo-workflows.html?url'
 import reportRedHatDataServicesOpenvinoModelServer from './generated-reports/quality-report-red-hat-data-services-openvino_model_server.html?url'
+import reportOpendatahubIoPipelinesComponents from './generated-reports/quality-report-opendatahub-io-pipelines-components.html?url'
+import reportRedHatDataServicesKubeAuthProxy from './generated-reports/quality-report-red-hat-data-services-kube-auth-proxy.html?url'
+import reportRedHatDataServicesModelMetadataCollection from './generated-reports/quality-report-red-hat-data-services-model-metadata-collection.html?url'
 import reportRedHatDataServicesOpenvino from './generated-reports/quality-report-red-hat-data-services-openvino.html?url'
 import reportOpendatahubIoMlserver from './generated-reports/quality-report-opendatahub-io-MLServer.html?url'
 import reportOpenvinotoolkitModelServer from './generated-reports/quality-report-openvinotoolkit-model_server.html?url'
+import reportRedHatDataServicesDataSciencePipelinesOperator from './generated-reports/quality-report-red-hat-data-services-data-science-pipelines-operator.html?url'
 import reportRedHatDataServicesModelmeshServing from './generated-reports/quality-report-red-hat-data-services-modelmesh-serving.html?url'
+import reportRedHatDataServicesKubeRbacProxy from './generated-reports/quality-report-red-hat-data-services-kube-rbac-proxy.html?url'
 import reportOpendatahubIoModelmeshServing from './generated-reports/quality-report-opendatahub-io-modelmesh-serving.html?url'
 import reportOpendatahubIoOdhModelController from './generated-reports/quality-report-opendatahub-io-odh-model-controller.html?url'
 import reportOpendatahubIoVllmTgisAdapter from './generated-reports/quality-report-opendatahub-io-vllm-tgis-adapter.html?url'
+import reportRedHatDataServicesModelRegistryBf4Kf from './generated-reports/quality-report-red-hat-data-services-model-registry-bf4-kf.html?url'
 import reportRedHatDataServicesOdhModelController from './generated-reports/quality-report-red-hat-data-services-odh-model-controller.html?url'
+import reportOpendatahubIoMlflowGo from './generated-reports/quality-report-opendatahub-io-mlflow-go.html?url'
+import reportOpendatahubIoModelMetadataCollection from './generated-reports/quality-report-opendatahub-io-model-metadata-collection.html?url'
 import reportRedHatDataServicesMlserver from './generated-reports/quality-report-red-hat-data-services-MLServer.html?url'
+import reportOpendatahubIoGuardrailsDetectors from './generated-reports/quality-report-opendatahub-io-guardrails-detectors.html?url'
+import reportOpendatahubIoKubeRbacProxy from './generated-reports/quality-report-opendatahub-io-kube-rbac-proxy.html?url'
+import reportOpendatahubIoModelRegistryBf4Kf from './generated-reports/quality-report-opendatahub-io-model-registry-bf4-kf.html?url'
 import reportOpendatahubIoOpenvinoModelServer from './generated-reports/quality-report-opendatahub-io-openvino_model_server.html?url'
+import reportRedHatDataServicesGuardrailsDetectors from './generated-reports/quality-report-red-hat-data-services-guardrails-detectors.html?url'
+import reportTrustyaiExplainabilityFmsGuardrailsOrchestrator from './generated-reports/quality-report-trustyai-explainability-fms-guardrails-orchestrator.html?url'
+import reportEleutheraiLmEvaluationHarness from './generated-reports/quality-report-EleutherAI-lm-evaluation-harness.html?url'
+import reportRedHatDataServicesFmsGuardrailsOrchestrator from './generated-reports/quality-report-red-hat-data-services-fms-guardrails-orchestrator.html?url'
 import reportSeldonioMlserver from './generated-reports/quality-report-SeldonIO-MLServer.html?url'
 import reportKserveModelmeshServing from './generated-reports/quality-report-kserve-modelmesh-serving.html?url'
 import reportOpendatahubIoCaikitNlpClient from './generated-reports/quality-report-opendatahub-io-caikit-nlp-client.html?url'
 import reportRedHatDataServicesModelmeshRuntimeAdapter from './generated-reports/quality-report-red-hat-data-services-modelmesh-runtime-adapter.html?url'
 import reportRedHatDataServicesVllmCpu from './generated-reports/quality-report-red-hat-data-services-vllm-cpu.html?url'
+import reportOpendatahubIoFmsGuardrailsOrchestrator from './generated-reports/quality-report-opendatahub-io-fms-guardrails-orchestrator.html?url'
+import reportOpendatahubIoOdhObservability from './generated-reports/quality-report-opendatahub-io-odh-observability.html?url'
+import reportOpenshiftKubeRbacProxy from './generated-reports/quality-report-openshift-kube-rbac-proxy.html?url'
 import reportRedHatDataServicesModelmesh from './generated-reports/quality-report-red-hat-data-services-modelmesh.html?url'
 import reportCaikitCaikitNlp from './generated-reports/quality-report-caikit-caikit-nlp.html?url'
 import reportRedHatDataServicesVllmGaudi from './generated-reports/quality-report-red-hat-data-services-vllm-gaudi.html?url'
+import reportTrustyaiExplainabilityGuardrailsDetectors from './generated-reports/quality-report-trustyai-explainability-guardrails-detectors.html?url'
+import reportOpendatahubIoLmEvaluationHarness from './generated-reports/quality-report-opendatahub-io-lm-evaluation-harness.html?url'
 import reportRedHatDataServicesRestProxy from './generated-reports/quality-report-red-hat-data-services-rest-proxy.html?url'
 import reportOpendatahubIoModelmeshRuntimeAdapter from './generated-reports/quality-report-opendatahub-io-modelmesh-runtime-adapter.html?url'
+import reportGoogleMlMetadata from './generated-reports/quality-report-google-ml-metadata.html?url'
 import reportKserveModelmeshRuntimeAdapter from './generated-reports/quality-report-kserve-modelmesh-runtime-adapter.html?url'
 import reportOpenvinotoolkitOpenvinoContrib from './generated-reports/quality-report-openvinotoolkit-openvino_contrib.html?url'
 import reportKserveModelmesh from './generated-reports/quality-report-kserve-modelmesh.html?url'
 import reportOpendatahubIoCaikitNlp from './generated-reports/quality-report-opendatahub-io-caikit-nlp.html?url'
+import reportOpendatahubIoOdhCli from './generated-reports/quality-report-opendatahub-io-odh-cli.html?url'
 import reportOpendatahubIoRestProxy from './generated-reports/quality-report-opendatahub-io-rest-proxy.html?url'
 import reportRedHatDataServicesCaikitNlp from './generated-reports/quality-report-red-hat-data-services-caikit-nlp.html?url'
+import reportRedhatOpenshiftEcosystemCommunityOperatorsProd from './generated-reports/quality-report-redhat-openshift-ecosystem-community-operators-prod.html?url'
+import reportOpendatahubIoMcpServerOperator from './generated-reports/quality-report-opendatahub-io-mcp-server-operator.html?url'
 import reportOpendatahubIoModelmesh from './generated-reports/quality-report-opendatahub-io-modelmesh.html?url'
 import reportRedHatDataServicesCaikitTgisServing from './generated-reports/quality-report-red-hat-data-services-caikit-tgis-serving.html?url'
+import reportRedHatDataServicesDataSciencePipelinesTekton from './generated-reports/quality-report-red-hat-data-services-data-science-pipelines-tekton.html?url'
+import reportRedHatDataServicesLmEvaluationHarness from './generated-reports/quality-report-red-hat-data-services-lm-evaluation-harness.html?url'
 import reportOpendatahubIoOpenvinoContrib from './generated-reports/quality-report-opendatahub-io-openvino_contrib.html?url'
 import reportOpendatahubIoVllmGaudi from './generated-reports/quality-report-opendatahub-io-vllm-gaudi.html?url'
 import reportTritonInferenceServerClient from './generated-reports/quality-report-triton-inference-server-client.html?url'
@@ -51,27 +107,75 @@ import reportRedHatDataServicesTextGenerationInference from './generated-reports
 import reportTrustyaiExplainabilityVllmOrchestratorGateway from './generated-reports/quality-report-trustyai-explainability-vllm-orchestrator-gateway.html?url'
 import reportKserveRestProxy from './generated-reports/quality-report-kserve-rest-proxy.html?url'
 import reportOpendatahubIoCaikitTgisServing from './generated-reports/quality-report-opendatahub-io-caikit-tgis-serving.html?url'
+import reportRedHatDataServicesMlMetadata from './generated-reports/quality-report-red-hat-data-services-ml-metadata.html?url'
 import reportOpendatahubIoModelRuntimesAgent from './generated-reports/quality-report-opendatahub-io-model-runtimes-agent.html?url'
 import reportRedHatDataServicesVllmOrchestratorGateway from './generated-reports/quality-report-red-hat-data-services-vllm-orchestrator-gateway.html?url'
+import reportOpendatahubIoCommunityOperatorsProd from './generated-reports/quality-report-opendatahub-io-community-operators-prod.html?url'
+import reportOpendatahubIoGuardrailsRegexDetector from './generated-reports/quality-report-opendatahub-io-guardrails-regex-detector.html?url'
+import reportOpendatahubIoMlMetadata from './generated-reports/quality-report-opendatahub-io-ml-metadata.html?url'
+import reportRedHatDataServicesMustGather from './generated-reports/quality-report-red-hat-data-services-must-gather.html?url'
+import reportOpendatahubIoOpendatahubCommunity from './generated-reports/quality-report-opendatahub-io-opendatahub-community.html?url'
 import reportOpendatahubIoVllmOrchestratorGateway from './generated-reports/quality-report-opendatahub-io-vllm-orchestrator-gateway.html?url'
 import reportOpendatahubIoClient from './generated-reports/quality-report-opendatahub-io-client.html?url'
+import reportRedHatDataServicesGuardrailsRegexDetector from './generated-reports/quality-report-red-hat-data-services-guardrails-regex-detector.html?url'
 import reportRedHatDataServicesVllm from './generated-reports/quality-report-red-hat-data-services-vllm.html?url'
+import reportOpendatahubIoDspDevTools from './generated-reports/quality-report-opendatahub-io-dsp-dev-tools.html?url'
 import reportOpendatahubIoKserveRawMigration from './generated-reports/quality-report-opendatahub-io-kserve-raw-migration.html?url'
 import reportRedHatDataServicesMinioModelStorage from './generated-reports/quality-report-red-hat-data-services-minio-model-storage.html?url'
+import reportRedHatDataServicesRhoaiUpgradeHelpers from './generated-reports/quality-report-red-hat-data-services-rhoai-upgrade-helpers.html?url'
+import reportRedHatDataServicesMlmdBazelDist from './generated-reports/quality-report-red-hat-data-services-mlmd-bazel-dist.html?url'
 import reportRedHatDataServicesVllmRocm from './generated-reports/quality-report-red-hat-data-services-vllm-rocm.html?url'
+import reportTrustyaiExplainabilityGuardrailsRegexDetector from './generated-reports/quality-report-trustyai-explainability-guardrails-regex-detector.html?url'
 import reportRedHatDataServicesModelServingDevops from './generated-reports/quality-report-red-hat-data-services-model-serving-devops.html?url'
 import reportRedHatDataServicesVllmSpyre from './generated-reports/quality-report-red-hat-data-services-vllm-spyre.html?url'
 import reportOpendatahubIoKserveMigration from './generated-reports/quality-report-opendatahub-io-kserve-migration.html?url'
+import reportRedHatDataServicesDataHubPipelines from './generated-reports/quality-report-red-hat-data-services-data-hub-pipelines.html?url'
 
 export const QUALITY_SAMPLE_META = {
-  generatedAt: '2026-05-28 22:05:47',
-  averageScore: '4.9/10',
+  generatedAt: '2026-05-29 09:01:06',
+  averageScore: '5.4/10',
   blurb:
-    'Model Serving (upstream + midstream + downstream) — all tiers'
+    'Model Serving + Trusty-AI + AI Pipelines + AI Hub — 127 repositories'
 }
 
 /** @type {Array<{ id: string, label: string, githubUrl: string, score: string, gaps: string, tier: string, component: string, team: string, reportUrl: string }>} */
 export const QUALITY_REPORTS = [
+  {
+    id: 'kubeflow-pipelines',
+    label: 'kubeflow/pipelines',
+    githubUrl: 'https://github.com/kubeflow/pipelines',
+    score: '8.4/10',
+    gaps:
+      'No coverage tracking integration (Codecov/Coveralls), Trivy and CodeQL run only on weekly schedule, not on PRs',
+    tier: 'upstream',
+    component: 'AI Pipelines',
+    team: 'AI Pipelines',
+    reportUrl: reportKubeflowPipelines
+  },
+  {
+    id: 'mlflow-mlflow',
+    label: 'mlflow/mlflow',
+    githubUrl: 'https://github.com/mlflow/mlflow',
+    score: '8.4/10',
+    gaps:
+      'No code coverage tracking or enforcement, No container security scanning (Trivy/Snyk/CodeQL)',
+    tier: 'upstream',
+    component: 'MLflow',
+    team: 'AI Pipelines',
+    reportUrl: reportMlflowMlflow
+  },
+  {
+    id: 'opendatahub-io-opendatahub-operator',
+    label: 'opendatahub-io/opendatahub-operator',
+    githubUrl: 'https://github.com/opendatahub-io/opendatahub-operator',
+    score: '8.4/10',
+    gaps:
+      'No container vulnerability scanning in CI, Codecov coverage is informational only',
+    tier: 'midstream',
+    component: 'AI Core Platform',
+    team: 'AI Core Platform',
+    reportUrl: reportOpendatahubIoOpendatahubOperator
+  },
   {
     id: 'kserve-kserve',
     label: 'kserve/kserve',
@@ -83,6 +187,18 @@ export const QUALITY_REPORTS = [
     component: 'Model Serving',
     team: 'General',
     reportUrl: reportKserveKserve
+  },
+  {
+    id: 'opendatahub-io-data-science-pipelines',
+    label: 'opendatahub-io/data-science-pipelines',
+    githubUrl: 'https://github.com/opendatahub-io/data-science-pipelines',
+    score: '8.1/10',
+    gaps:
+      'No coverage tracking for Go backend or Python SDK, No container image runtime validation',
+    tier: 'midstream',
+    component: 'AI Pipelines',
+    team: 'AI Pipelines',
+    reportUrl: reportOpendatahubIoDataSciencePipelines
   },
   {
     id: 'red-hat-data-services-kserve',
@@ -107,6 +223,66 @@ export const QUALITY_REPORTS = [
     component: 'Model Serving',
     team: 'General',
     reportUrl: reportOpendatahubIoKserve
+  },
+  {
+    id: 'argoproj-argo-workflows',
+    label: 'argoproj/argo-workflows',
+    githubUrl: 'https://github.com/argoproj/argo-workflows',
+    score: '7.6/10',
+    gaps:
+      'No PR-level coverage enforcement, No container runtime validation on PRs',
+    tier: 'upstream',
+    component: 'AI Pipelines',
+    team: 'AI Pipelines',
+    reportUrl: reportArgoprojArgoWorkflows
+  },
+  {
+    id: 'kubeflow-hub',
+    label: 'kubeflow/hub',
+    githubUrl: 'https://github.com/kubeflow/hub',
+    score: '7.6/10',
+    gaps:
+      'No coverage tracking or enforcement, No dedicated SAST/CodeQL workflow',
+    tier: 'upstream',
+    component: 'AI Hub',
+    team: 'AI Core Platform',
+    reportUrl: reportKubeflowHub
+  },
+  {
+    id: 'opendatahub-io-argo-workflows',
+    label: 'opendatahub-io/argo-workflows',
+    githubUrl: 'https://github.com/opendatahub-io/argo-workflows',
+    score: '7.6/10',
+    gaps:
+      'No PR-time coverage enforcement, No container vulnerability scanning on PRs',
+    tier: 'midstream',
+    component: 'AI Pipelines',
+    team: 'AI Pipelines',
+    reportUrl: reportOpendatahubIoArgoWorkflows
+  },
+  {
+    id: 'opendatahub-io-mlflow',
+    label: 'opendatahub-io/mlflow',
+    githubUrl: 'https://github.com/opendatahub-io/mlflow',
+    score: '7.6/10',
+    gaps:
+      'No coverage tracking or enforcement, No container security scanning in CI',
+    tier: 'midstream',
+    component: 'MLflow',
+    team: 'AI Pipelines',
+    reportUrl: reportOpendatahubIoMlflow
+  },
+  {
+    id: 'opendatahub-io-model-registry',
+    label: 'opendatahub-io/model-registry',
+    githubUrl: 'https://github.com/opendatahub-io/model-registry',
+    score: '7.6/10',
+    gaps:
+      'No coverage threshold enforcement, No CodeQL or SAST analysis on PRs',
+    tier: 'midstream',
+    component: 'AI Hub',
+    team: 'AI Core Platform',
+    reportUrl: reportOpendatahubIoModelRegistry
   },
   {
     id: 'opendatahub-io-openvino.genai',
@@ -145,6 +321,90 @@ export const QUALITY_REPORTS = [
     reportUrl: reportOpenvinotoolkitOpenvino
   },
   {
+    id: 'red-hat-data-services-data-science-pipelines',
+    label: 'red-hat-data-services/data-science-pipelines',
+    githubUrl: 'https://github.com/red-hat-data-services/data-science-pipelines',
+    score: '7.6/10',
+    gaps:
+      'No coverage tracking or enforcement, No container image runtime validation',
+    tier: 'downstream',
+    component: 'AI Pipelines',
+    team: 'AI Pipelines',
+    reportUrl: reportRedHatDataServicesDataSciencePipelines
+  },
+  {
+    id: 'red-hat-data-services-mlflow',
+    label: 'red-hat-data-services/mlflow',
+    githubUrl: 'https://github.com/red-hat-data-services/mlflow',
+    score: '7.6/10',
+    gaps:
+      'No coverage tracking or enforcement, No container runtime validation',
+    tier: 'downstream',
+    component: 'MLflow',
+    team: 'AI Pipelines',
+    reportUrl: reportRedHatDataServicesMlflow
+  },
+  {
+    id: 'red-hat-data-services-mlflow-operator',
+    label: 'red-hat-data-services/mlflow-operator',
+    githubUrl: 'https://github.com/red-hat-data-services/mlflow-operator',
+    score: '7.6/10',
+    gaps:
+      'No coverage tracking or enforcement, No container vulnerability scanning in GitHub Actions',
+    tier: 'downstream',
+    component: 'MLflow',
+    team: 'AI Pipelines',
+    reportUrl: reportRedHatDataServicesMlflowOperator
+  },
+  {
+    id: 'red-hat-data-services-model-registry',
+    label: 'red-hat-data-services/model-registry',
+    githubUrl: 'https://github.com/red-hat-data-services/model-registry',
+    score: '7.6/10',
+    gaps:
+      'No PR-time Konflux build simulation, No coverage threshold enforcement',
+    tier: 'downstream',
+    component: 'AI Hub',
+    team: 'AI Core Platform',
+    reportUrl: reportRedHatDataServicesModelRegistry
+  },
+  {
+    id: 'trustyai-explainability-NeMo-Guardrails',
+    label: 'trustyai-explainability/NeMo-Guardrails',
+    githubUrl: 'https://github.com/trustyai-explainability/NeMo-Guardrails',
+    score: '7.6/10',
+    gaps:
+      'No coverage enforcement thresholds, No multi-architecture image builds',
+    tier: 'upstream',
+    component: 'AI Safety',
+    team: 'Trusty-AI',
+    reportUrl: reportTrustyaiExplainabilityNemoGuardrails
+  },
+  {
+    id: 'opendatahub-io-model-registry-operator',
+    label: 'opendatahub-io/model-registry-operator',
+    githubUrl: 'https://github.com/opendatahub-io/model-registry-operator',
+    score: '7.5/10',
+    gaps:
+      'No coverage tracking or enforcement, No container vulnerability scanning in CI',
+    tier: 'midstream',
+    component: 'AI Hub',
+    team: 'AI Core Platform',
+    reportUrl: reportOpendatahubIoModelRegistryOperator
+  },
+  {
+    id: 'opendatahub-io-mlflow-kubernetes-plugins',
+    label: 'opendatahub-io/mlflow-kubernetes-plugins',
+    githubUrl: 'https://github.com/opendatahub-io/mlflow-kubernetes-plugins',
+    score: '7.4/10',
+    gaps:
+      'No test coverage tracking or enforcement, No container image runtime validation',
+    tier: 'midstream',
+    component: 'MLflow',
+    team: 'AI Pipelines',
+    reportUrl: reportOpendatahubIoMlflowKubernetesPlugins
+  },
+  {
     id: 'red-hat-data-services-models-as-a-service',
     label: 'red-hat-data-services/models-as-a-service',
     githubUrl: 'https://github.com/red-hat-data-services/models-as-a-service',
@@ -155,6 +415,54 @@ export const QUALITY_REPORTS = [
     component: 'Model as a Service',
     team: 'Crimson',
     reportUrl: reportRedHatDataServicesModelsAsAService
+  },
+  {
+    id: 'red-hat-data-services-odh-cli',
+    label: 'red-hat-data-services/odh-cli',
+    githubUrl: 'https://github.com/red-hat-data-services/odh-cli',
+    score: '7.4/10',
+    gaps:
+      'No coverage enforcement or reporting, No E2E tests against real clusters',
+    tier: 'downstream',
+    component: 'AI Core Platform',
+    team: 'AI Core Platform',
+    reportUrl: reportRedHatDataServicesOdhCli
+  },
+  {
+    id: 'opendatahub-io-mlflow-operator',
+    label: 'opendatahub-io/mlflow-operator',
+    githubUrl: 'https://github.com/opendatahub-io/mlflow-operator',
+    score: '7.3/10',
+    gaps:
+      'No coverage tracking or enforcement, No container vulnerability scanning in GHA',
+    tier: 'midstream',
+    component: 'MLflow',
+    team: 'AI Pipelines',
+    reportUrl: reportOpendatahubIoMlflowOperator
+  },
+  {
+    id: 'opendatahub-io-NeMo-Guardrails',
+    label: 'opendatahub-io/NeMo-Guardrails',
+    githubUrl: 'https://github.com/opendatahub-io/NeMo-Guardrails',
+    score: '7.2/10',
+    gaps:
+      'No coverage enforcement or thresholds, Docker test workflow tests wrong Dockerfile',
+    tier: 'midstream',
+    component: 'AI Safety',
+    team: 'Trusty-AI',
+    reportUrl: reportOpendatahubIoNemoGuardrails
+  },
+  {
+    id: 'opendatahub-io-odh-gitops',
+    label: 'opendatahub-io/odh-gitops',
+    githubUrl: 'https://github.com/opendatahub-io/odh-gitops',
+    score: '7.2/10',
+    gaps:
+      'No coverage tracking or enforcement, No security scanning of referenced operator images',
+    tier: 'midstream',
+    component: 'AI Core Platform',
+    team: 'AI Core Platform',
+    reportUrl: reportOpendatahubIoOdhGitops
   },
   {
     id: 'openvinotoolkit-openvino.genai',
@@ -169,6 +477,78 @@ export const QUALITY_REPORTS = [
     reportUrl: reportOpenvinotoolkitOpenvinoGenai
   },
   {
+    id: 'red-hat-data-services-model-registry-operator',
+    label: 'red-hat-data-services/model-registry-operator',
+    githubUrl: 'https://github.com/red-hat-data-services/model-registry-operator',
+    score: '7.2/10',
+    gaps:
+      'No coverage tracking or enforcement, No container vulnerability scanning in CI',
+    tier: 'downstream',
+    component: 'AI Hub',
+    team: 'AI Core Platform',
+    reportUrl: reportRedHatDataServicesModelRegistryOperator
+  },
+  {
+    id: 'red-hat-data-services-NeMo-Guardrails',
+    label: 'red-hat-data-services/NeMo-Guardrails',
+    githubUrl: 'https://github.com/red-hat-data-services/NeMo-Guardrails',
+    score: '7.2/10',
+    gaps:
+      'Coverage enforcement is informational-only, No automated E2E integration testing',
+    tier: 'downstream',
+    component: 'AI Safety',
+    team: 'Trusty-AI',
+    reportUrl: reportRedHatDataServicesNemoGuardrails
+  },
+  {
+    id: 'red-hat-data-services-pipelines-components',
+    label: 'red-hat-data-services/pipelines-components',
+    githubUrl: 'https://github.com/red-hat-data-services/pipelines-components',
+    score: '7.2/10',
+    gaps:
+      'No coverage tracking or enforcement in CI, No security scanning (SAST, container, dependency)',
+    tier: 'downstream',
+    component: 'AI Pipelines',
+    team: 'AI Pipelines',
+    reportUrl: reportRedHatDataServicesPipelinesComponents
+  },
+  {
+    id: 'kubeflow-pipelines-components',
+    label: 'kubeflow/pipelines-components',
+    githubUrl: 'https://github.com/kubeflow/pipelines-components',
+    score: '7.1/10',
+    gaps:
+      'No security scanning (Trivy, Snyk, CodeQL, SBOM), No coverage enforcement in CI',
+    tier: 'upstream',
+    component: 'AI Pipelines',
+    team: 'AI Pipelines',
+    reportUrl: reportKubeflowPipelinesComponents
+  },
+  {
+    id: 'opendatahub-io-odh-platform-utilities',
+    label: 'opendatahub-io/odh-platform-utilities',
+    githubUrl: 'https://github.com/opendatahub-io/odh-platform-utilities',
+    score: '7.1/10',
+    gaps:
+      'No integration tests with envtest, Coverage thresholds are informational only',
+    tier: 'midstream',
+    component: 'AI Core Platform',
+    team: 'AI Core Platform',
+    reportUrl: reportOpendatahubIoOdhPlatformUtilities
+  },
+  {
+    id: 'red-hat-data-services-rhods-operator',
+    label: 'red-hat-data-services/rhods-operator',
+    githubUrl: 'https://github.com/red-hat-data-services/rhods-operator',
+    score: '7.1/10',
+    gaps:
+      'No container vulnerability scanning in GitHub workflows, Coverage tracking is informational only — no enforcement',
+    tier: 'downstream',
+    component: 'AI Core Platform',
+    team: 'AI Core Platform',
+    reportUrl: reportRedHatDataServicesRhodsOperator
+  },
+  {
     id: 'opendatahub-io-models-as-a-service',
     label: 'opendatahub-io/models-as-a-service',
     githubUrl: 'https://github.com/opendatahub-io/models-as-a-service',
@@ -179,6 +559,42 @@ export const QUALITY_REPORTS = [
     component: 'Model as a Service',
     team: 'Crimson',
     reportUrl: reportOpendatahubIoModelsAsAService
+  },
+  {
+    id: 'opendatahub-io-kube-auth-proxy',
+    label: 'opendatahub-io/kube-auth-proxy',
+    githubUrl: 'https://github.com/opendatahub-io/kube-auth-proxy',
+    score: '6.9/10',
+    gaps:
+      'No container vulnerability scanning, No coverage enforcement thresholds',
+    tier: 'midstream',
+    component: 'AI Core Platform',
+    team: 'AI Core Platform',
+    reportUrl: reportOpendatahubIoKubeAuthProxy
+  },
+  {
+    id: 'red-hat-data-services-odh-gitops',
+    label: 'red-hat-data-services/odh-gitops',
+    githubUrl: 'https://github.com/red-hat-data-services/odh-gitops',
+    score: '6.9/10',
+    gaps:
+      'No security scanning (Trivy, Snyk, CodeQL, Gitleaks), No coverage tracking or metrics',
+    tier: 'downstream',
+    component: 'AI Core Platform',
+    team: 'AI Core Platform',
+    reportUrl: reportRedHatDataServicesOdhGitops
+  },
+  {
+    id: 'opendatahub-io-data-science-pipelines-operator',
+    label: 'opendatahub-io/data-science-pipelines-operator',
+    githubUrl: 'https://github.com/opendatahub-io/data-science-pipelines-operator',
+    score: '6.8/10',
+    gaps:
+      'No coverage tracking or enforcement, No PR-time Konflux build simulation',
+    tier: 'midstream',
+    component: 'AI Pipelines',
+    team: 'AI Pipelines',
+    reportUrl: reportOpendatahubIoDataSciencePipelinesOperator
   },
   {
     id: 'opendatahub-io-openvino_tokenizers',
@@ -205,6 +621,18 @@ export const QUALITY_REPORTS = [
     reportUrl: reportOpenvinotoolkitOpenvinoTokenizers
   },
   {
+    id: 'red-hat-data-services-argo-workflows',
+    label: 'red-hat-data-services/argo-workflows',
+    githubUrl: 'https://github.com/red-hat-data-services/argo-workflows',
+    score: '6.8/10',
+    gaps:
+      'Downstream significantly behind upstream, No PR-time coverage reporting',
+    tier: 'downstream',
+    component: 'AI Pipelines',
+    team: 'AI Pipelines',
+    reportUrl: reportRedHatDataServicesArgoWorkflows
+  },
+  {
     id: 'red-hat-data-services-openvino_model_server',
     label: 'red-hat-data-services/openvino_model_server',
     githubUrl: 'https://github.com/red-hat-data-services/openvino_model_server',
@@ -215,6 +643,42 @@ export const QUALITY_REPORTS = [
     component: 'Model Runtimes',
     team: 'General',
     reportUrl: reportRedHatDataServicesOpenvinoModelServer
+  },
+  {
+    id: 'opendatahub-io-pipelines-components',
+    label: 'opendatahub-io/pipelines-components',
+    githubUrl: 'https://github.com/opendatahub-io/pipelines-components',
+    score: '6.6/10',
+    gaps:
+      'No coverage tracking or enforcement, No container security scanning (Trivy/Snyk/CodeQL)',
+    tier: 'midstream',
+    component: 'AI Pipelines',
+    team: 'AI Pipelines',
+    reportUrl: reportOpendatahubIoPipelinesComponents
+  },
+  {
+    id: 'red-hat-data-services-kube-auth-proxy',
+    label: 'red-hat-data-services/kube-auth-proxy',
+    githubUrl: 'https://github.com/red-hat-data-services/kube-auth-proxy',
+    score: '6.6/10',
+    gaps:
+      'No container image vulnerability scanning in CI, No coverage enforcement or thresholds',
+    tier: 'downstream',
+    component: 'AI Core Platform',
+    team: 'AI Core Platform',
+    reportUrl: reportRedHatDataServicesKubeAuthProxy
+  },
+  {
+    id: 'red-hat-data-services-model-metadata-collection',
+    label: 'red-hat-data-services/model-metadata-collection',
+    githubUrl: 'https://github.com/red-hat-data-services/model-metadata-collection',
+    score: '6.5/10',
+    gaps:
+      'No CI coverage tracking or enforcement, No container image runtime validation',
+    tier: 'downstream',
+    component: 'AI Hub',
+    team: 'AI Core Platform',
+    reportUrl: reportRedHatDataServicesModelMetadataCollection
   },
   {
     id: 'red-hat-data-services-openvino',
@@ -252,6 +716,18 @@ export const QUALITY_REPORTS = [
     reportUrl: reportOpenvinotoolkitModelServer
   },
   {
+    id: 'red-hat-data-services-data-science-pipelines-operator',
+    label: 'red-hat-data-services/data-science-pipelines-operator',
+    githubUrl: 'https://github.com/red-hat-data-services/data-science-pipelines-operator',
+    score: '6.4/10',
+    gaps:
+      'No coverage tracking or enforcement, No security scanning in CI (Trivy, CodeQL, Snyk)',
+    tier: 'downstream',
+    component: 'AI Pipelines',
+    team: 'AI Pipelines',
+    reportUrl: reportRedHatDataServicesDataSciencePipelinesOperator
+  },
+  {
     id: 'red-hat-data-services-modelmesh-serving',
     label: 'red-hat-data-services/modelmesh-serving',
     githubUrl: 'https://github.com/red-hat-data-services/modelmesh-serving',
@@ -262,6 +738,18 @@ export const QUALITY_REPORTS = [
     component: 'Model Serving',
     team: 'General',
     reportUrl: reportRedHatDataServicesModelmeshServing
+  },
+  {
+    id: 'red-hat-data-services-kube-rbac-proxy',
+    label: 'red-hat-data-services/kube-rbac-proxy',
+    githubUrl: 'https://github.com/red-hat-data-services/kube-rbac-proxy',
+    score: '6.3/10',
+    gaps:
+      'No test coverage tracking or enforcement, E2E tests not automated in CI',
+    tier: 'downstream',
+    component: 'AI Core Platform',
+    team: 'AI Core Platform',
+    reportUrl: reportRedHatDataServicesKubeRbacProxy
   },
   {
     id: 'opendatahub-io-modelmesh-serving',
@@ -300,6 +788,18 @@ export const QUALITY_REPORTS = [
     reportUrl: reportOpendatahubIoVllmTgisAdapter
   },
   {
+    id: 'red-hat-data-services-model-registry-bf4-kf',
+    label: 'red-hat-data-services/model-registry-bf4-kf',
+    githubUrl: 'https://github.com/red-hat-data-services/model-registry-bf4-kf',
+    score: '6.2/10',
+    gaps:
+      'No container vulnerability scanning, No coverage enforcement thresholds',
+    tier: 'downstream',
+    component: 'AI Hub',
+    team: 'AI Core Platform',
+    reportUrl: reportRedHatDataServicesModelRegistryBf4Kf
+  },
+  {
     id: 'red-hat-data-services-odh-model-controller',
     label: 'red-hat-data-services/odh-model-controller',
     githubUrl: 'https://github.com/red-hat-data-services/odh-model-controller',
@@ -310,6 +810,30 @@ export const QUALITY_REPORTS = [
     component: 'Model Serving',
     team: 'General',
     reportUrl: reportRedHatDataServicesOdhModelController
+  },
+  {
+    id: 'opendatahub-io-mlflow-go',
+    label: 'opendatahub-io/mlflow-go',
+    githubUrl: 'https://github.com/opendatahub-io/mlflow-go',
+    score: '6.1/10',
+    gaps:
+      'No test coverage tracking or enforcement, No security scanning in CI',
+    tier: 'midstream',
+    component: 'MLflow',
+    team: 'AI Pipelines',
+    reportUrl: reportOpendatahubIoMlflowGo
+  },
+  {
+    id: 'opendatahub-io-model-metadata-collection',
+    label: 'opendatahub-io/model-metadata-collection',
+    githubUrl: 'https://github.com/opendatahub-io/model-metadata-collection',
+    score: '6.1/10',
+    gaps:
+      'No coverage enforcement in CI, No security scanning (Trivy, CodeQL, gosec, Dependabot)',
+    tier: 'midstream',
+    component: 'AI Hub',
+    team: 'AI Core Platform',
+    reportUrl: reportOpendatahubIoModelMetadataCollection
   },
   {
     id: 'red-hat-data-services-MLServer',
@@ -324,6 +848,42 @@ export const QUALITY_REPORTS = [
     reportUrl: reportRedHatDataServicesMlserver
   },
   {
+    id: 'opendatahub-io-guardrails-detectors',
+    label: 'opendatahub-io/guardrails-detectors',
+    githubUrl: 'https://github.com/opendatahub-io/guardrails-detectors',
+    score: '5.9/10',
+    gaps:
+      'No integration or E2E testing, No PR-time container image builds or validation',
+    tier: 'midstream',
+    component: 'AI Safety',
+    team: 'Trusty-AI',
+    reportUrl: reportOpendatahubIoGuardrailsDetectors
+  },
+  {
+    id: 'opendatahub-io-kube-rbac-proxy',
+    label: 'opendatahub-io/kube-rbac-proxy',
+    githubUrl: 'https://github.com/opendatahub-io/kube-rbac-proxy',
+    score: '5.9/10',
+    gaps:
+      'No test coverage tracking or enforcement, No container image security scanning',
+    tier: 'midstream',
+    component: 'AI Core Platform',
+    team: 'AI Core Platform',
+    reportUrl: reportOpendatahubIoKubeRbacProxy
+  },
+  {
+    id: 'opendatahub-io-model-registry-bf4-kf',
+    label: 'opendatahub-io/model-registry-bf4-kf',
+    githubUrl: 'https://github.com/opendatahub-io/model-registry-bf4-kf',
+    score: '5.9/10',
+    gaps:
+      'No security scanning (Trivy, CodeQL, Snyk, SAST), Very low Go unit test coverage (4 test files for 89 source files)',
+    tier: 'midstream',
+    component: 'AI Hub',
+    team: 'AI Core Platform',
+    reportUrl: reportOpendatahubIoModelRegistryBf4Kf
+  },
+  {
     id: 'opendatahub-io-openvino_model_server',
     label: 'opendatahub-io/openvino_model_server',
     githubUrl: 'https://github.com/opendatahub-io/openvino_model_server',
@@ -334,6 +894,54 @@ export const QUALITY_REPORTS = [
     component: 'Model Runtimes',
     team: 'General',
     reportUrl: reportOpendatahubIoOpenvinoModelServer
+  },
+  {
+    id: 'red-hat-data-services-guardrails-detectors',
+    label: 'red-hat-data-services/guardrails-detectors',
+    githubUrl: 'https://github.com/red-hat-data-services/guardrails-detectors',
+    score: '5.9/10',
+    gaps:
+      'No container image runtime validation in CI, No coverage tracking or enforcement',
+    tier: 'downstream',
+    component: 'AI Safety',
+    team: 'Trusty-AI',
+    reportUrl: reportRedHatDataServicesGuardrailsDetectors
+  },
+  {
+    id: 'trustyai-explainability-fms-guardrails-orchestrator',
+    label: 'trustyai-explainability/fms-guardrails-orchestrator',
+    githubUrl: 'https://github.com/trustyai-explainability/fms-guardrails-orchestrator',
+    score: '5.9/10',
+    gaps:
+      'No test coverage tracking or enforcement, No security scanning in CI (no Trivy, Snyk, CodeQL, or dependabot)',
+    tier: 'upstream',
+    component: 'AI Safety',
+    team: 'Trusty-AI',
+    reportUrl: reportTrustyaiExplainabilityFmsGuardrailsOrchestrator
+  },
+  {
+    id: 'EleutherAI-lm-evaluation-harness',
+    label: 'EleutherAI/lm-evaluation-harness',
+    githubUrl: 'https://github.com/EleutherAI/lm-evaluation-harness',
+    score: '5.8/10',
+    gaps:
+      'No coverage tracking or enforcement, No container image or deployment testing',
+    tier: 'upstream',
+    component: 'AI Safety',
+    team: 'Trusty-AI',
+    reportUrl: reportEleutheraiLmEvaluationHarness
+  },
+  {
+    id: 'red-hat-data-services-fms-guardrails-orchestrator',
+    label: 'red-hat-data-services/fms-guardrails-orchestrator',
+    githubUrl: 'https://github.com/red-hat-data-services/fms-guardrails-orchestrator',
+    score: '5.8/10',
+    gaps:
+      'No test coverage tracking or enforcement, No security scanning in CI',
+    tier: 'downstream',
+    component: 'AI Safety',
+    team: 'Trusty-AI',
+    reportUrl: reportRedHatDataServicesFmsGuardrailsOrchestrator
   },
   {
     id: 'SeldonIO-MLServer',
@@ -396,6 +1004,40 @@ export const QUALITY_REPORTS = [
     reportUrl: reportRedHatDataServicesVllmCpu
   },
   {
+    id: 'opendatahub-io-fms-guardrails-orchestrator',
+    label: 'opendatahub-io/fms-guardrails-orchestrator',
+    githubUrl: 'https://github.com/opendatahub-io/fms-guardrails-orchestrator',
+    score: '5.5/10',
+    gaps: 'No code coverage tracking, No security scanning in CI',
+    tier: 'midstream',
+    component: 'AI Safety',
+    team: 'Trusty-AI',
+    reportUrl: reportOpendatahubIoFmsGuardrailsOrchestrator
+  },
+  {
+    id: 'opendatahub-io-odh-observability',
+    label: 'opendatahub-io/odh-observability',
+    githubUrl: 'https://github.com/opendatahub-io/odh-observability',
+    score: '5.5/10',
+    gaps: 'No GitHub Actions CI workflows, No integration or E2E tests',
+    tier: 'midstream',
+    component: 'AI Core Platform',
+    team: 'AI Core Platform',
+    reportUrl: reportOpendatahubIoOdhObservability
+  },
+  {
+    id: 'openshift-kube-rbac-proxy',
+    label: 'openshift/kube-rbac-proxy',
+    githubUrl: 'https://github.com/openshift/kube-rbac-proxy',
+    score: '5.5/10',
+    gaps:
+      'No code coverage tracking or enforcement, No security scanning (CVE, SAST, dependency, secret detection)',
+    tier: 'upstream',
+    component: 'AI Core Platform',
+    team: 'AI Core Platform',
+    reportUrl: reportOpenshiftKubeRbacProxy
+  },
+  {
     id: 'red-hat-data-services-modelmesh',
     label: 'red-hat-data-services/modelmesh',
     githubUrl: 'https://github.com/red-hat-data-services/modelmesh',
@@ -432,6 +1074,30 @@ export const QUALITY_REPORTS = [
     reportUrl: reportRedHatDataServicesVllmGaudi
   },
   {
+    id: 'trustyai-explainability-guardrails-detectors',
+    label: 'trustyai-explainability/guardrails-detectors',
+    githubUrl: 'https://github.com/trustyai-explainability/guardrails-detectors',
+    score: '5.2/10',
+    gaps:
+      'No container image build or test in CI, No coverage tracking or enforcement',
+    tier: 'upstream',
+    component: 'AI Safety',
+    team: 'Trusty-AI',
+    reportUrl: reportTrustyaiExplainabilityGuardrailsDetectors
+  },
+  {
+    id: 'opendatahub-io-lm-evaluation-harness',
+    label: 'opendatahub-io/lm-evaluation-harness',
+    githubUrl: 'https://github.com/opendatahub-io/lm-evaluation-harness',
+    score: '5.1/10',
+    gaps:
+      'No coverage tracking or enforcement, No container image testing or scanning',
+    tier: 'midstream',
+    component: 'AI Safety',
+    team: 'Trusty-AI',
+    reportUrl: reportOpendatahubIoLmEvaluationHarness
+  },
+  {
     id: 'red-hat-data-services-rest-proxy',
     label: 'red-hat-data-services/rest-proxy',
     githubUrl: 'https://github.com/red-hat-data-services/rest-proxy',
@@ -454,6 +1120,18 @@ export const QUALITY_REPORTS = [
     component: 'Model Serving',
     team: 'General',
     reportUrl: reportOpendatahubIoModelmeshRuntimeAdapter
+  },
+  {
+    id: 'google-ml-metadata',
+    label: 'google/ml-metadata',
+    githubUrl: 'https://github.com/google/ml-metadata',
+    score: '4.8/10',
+    gaps:
+      'No code coverage tracking or enforcement, No container image security scanning',
+    tier: 'upstream',
+    component: 'AI Pipelines',
+    team: 'AI Pipelines',
+    reportUrl: reportGoogleMlMetadata
   },
   {
     id: 'kserve-modelmesh-runtime-adapter',
@@ -504,6 +1182,18 @@ export const QUALITY_REPORTS = [
     reportUrl: reportOpendatahubIoCaikitNlp
   },
   {
+    id: 'opendatahub-io-odh-cli',
+    label: 'opendatahub-io/odh-cli',
+    githubUrl: 'https://github.com/opendatahub-io/odh-cli',
+    score: '4.6/10',
+    gaps:
+      'No integration or E2E test coverage for CLI commands, No coverage tracking or enforcement',
+    tier: 'midstream',
+    component: 'AI Core Platform',
+    team: 'AI Core Platform',
+    reportUrl: reportOpendatahubIoOdhCli
+  },
+  {
     id: 'opendatahub-io-rest-proxy',
     label: 'opendatahub-io/rest-proxy',
     githubUrl: 'https://github.com/opendatahub-io/rest-proxy',
@@ -528,6 +1218,30 @@ export const QUALITY_REPORTS = [
     reportUrl: reportRedHatDataServicesCaikitNlp
   },
   {
+    id: 'redhat-openshift-ecosystem-community-operators-prod',
+    label: 'redhat-openshift-ecosystem/community-operators-prod',
+    githubUrl: 'https://github.com/redhat-openshift-ecosystem/community-operators-prod',
+    score: '4.6/10',
+    gaps:
+      'No in-repo CI/CD for PR validation, No schema validation in-repo workflows',
+    tier: 'upstream',
+    component: 'AI Core Platform',
+    team: 'AI Core Platform',
+    reportUrl: reportRedhatOpenshiftEcosystemCommunityOperatorsProd
+  },
+  {
+    id: 'opendatahub-io-mcp-server-operator',
+    label: 'opendatahub-io/mcp-server-operator',
+    githubUrl: 'https://github.com/opendatahub-io/mcp-server-operator',
+    score: '4.5/10',
+    gaps:
+      'E2E tests exist but are not run in CI, No container image scanning or SBOM generation',
+    tier: 'midstream',
+    component: 'AI Core Platform',
+    team: 'AI Core Platform',
+    reportUrl: reportOpendatahubIoMcpServerOperator
+  },
+  {
     id: 'opendatahub-io-modelmesh',
     label: 'opendatahub-io/modelmesh',
     githubUrl: 'https://github.com/opendatahub-io/modelmesh',
@@ -549,6 +1263,29 @@ export const QUALITY_REPORTS = [
     component: 'Model Runtimes',
     team: 'General',
     reportUrl: reportRedHatDataServicesCaikitTgisServing
+  },
+  {
+    id: 'red-hat-data-services-data-science-pipelines-tekton',
+    label: 'red-hat-data-services/data-science-pipelines-tekton',
+    githubUrl: 'https://github.com/red-hat-data-services/data-science-pipelines-tekton',
+    score: '4.5/10',
+    gaps:
+      'No code coverage tracking or enforcement, No container vulnerability scanning in CI',
+    tier: 'downstream',
+    component: 'AI Pipelines',
+    team: 'AI Pipelines',
+    reportUrl: reportRedHatDataServicesDataSciencePipelinesTekton
+  },
+  {
+    id: 'red-hat-data-services-lm-evaluation-harness',
+    label: 'red-hat-data-services/lm-evaluation-harness',
+    githubUrl: 'https://github.com/red-hat-data-services/lm-evaluation-harness',
+    score: '4.5/10',
+    gaps: 'Linter job disabled in CI, No coverage tracking in CI',
+    tier: 'downstream',
+    component: 'AI Safety',
+    team: 'Trusty-AI',
+    reportUrl: reportRedHatDataServicesLmEvaluationHarness
   },
   {
     id: 'opendatahub-io-openvino_contrib',
@@ -646,6 +1383,18 @@ export const QUALITY_REPORTS = [
     reportUrl: reportOpendatahubIoCaikitTgisServing
   },
   {
+    id: 'red-hat-data-services-ml-metadata',
+    label: 'red-hat-data-services/ml-metadata',
+    githubUrl: 'https://github.com/red-hat-data-services/ml-metadata',
+    score: '3.3/10',
+    gaps:
+      'No tests execute in CI — PR or push, No coverage tracking or enforcement',
+    tier: 'downstream',
+    component: 'AI Pipelines',
+    team: 'AI Pipelines',
+    reportUrl: reportRedHatDataServicesMlMetadata
+  },
+  {
     id: 'opendatahub-io-model-runtimes-agent',
     label: 'opendatahub-io/model-runtimes-agent',
     githubUrl: 'https://github.com/opendatahub-io/model-runtimes-agent',
@@ -668,6 +1417,66 @@ export const QUALITY_REPORTS = [
     component: 'Model Serving',
     team: 'General',
     reportUrl: reportRedHatDataServicesVllmOrchestratorGateway
+  },
+  {
+    id: 'opendatahub-io-community-operators-prod',
+    label: 'opendatahub-io/community-operators-prod',
+    githubUrl: 'https://github.com/opendatahub-io/community-operators-prod',
+    score: '2.8/10',
+    gaps:
+      'No in-repo CI/CD pipeline for PR validation, No automated manifest validation on PRs',
+    tier: 'midstream',
+    component: 'AI Core Platform',
+    team: 'AI Core Platform',
+    reportUrl: reportOpendatahubIoCommunityOperatorsProd
+  },
+  {
+    id: 'opendatahub-io-guardrails-regex-detector',
+    label: 'opendatahub-io/guardrails-regex-detector',
+    githubUrl: 'https://github.com/opendatahub-io/guardrails-regex-detector',
+    score: '2.8/10',
+    gaps:
+      'No CI/CD pipeline, Minimal test coverage (1 test for 212 LOC)',
+    tier: 'midstream',
+    component: 'AI Safety',
+    team: 'Trusty-AI',
+    reportUrl: reportOpendatahubIoGuardrailsRegexDetector
+  },
+  {
+    id: 'opendatahub-io-ml-metadata',
+    label: 'opendatahub-io/ml-metadata',
+    githubUrl: 'https://github.com/opendatahub-io/ml-metadata',
+    score: '2.8/10',
+    gaps:
+      'No tests execute in CI — zero automated quality gates, No coverage tracking or enforcement',
+    tier: 'midstream',
+    component: 'AI Pipelines',
+    team: 'AI Pipelines',
+    reportUrl: reportOpendatahubIoMlMetadata
+  },
+  {
+    id: 'red-hat-data-services-must-gather',
+    label: 'red-hat-data-services/must-gather',
+    githubUrl: 'https://github.com/red-hat-data-services/must-gather',
+    score: '2.7/10',
+    gaps:
+      'Zero test coverage — no unit, integration, or E2E tests, No image runtime validation',
+    tier: 'downstream',
+    component: 'AI Core Platform',
+    team: 'AI Core Platform',
+    reportUrl: reportRedHatDataServicesMustGather
+  },
+  {
+    id: 'opendatahub-io-opendatahub-community',
+    label: 'opendatahub-io/opendatahub-community',
+    githubUrl: 'https://github.com/opendatahub-io/opendatahub-community',
+    score: '2.5/10',
+    gaps:
+      'No CI/CD workflows at all, No markdown linting or link validation',
+    tier: 'midstream',
+    component: 'AI Core Platform',
+    team: 'AI Core Platform',
+    reportUrl: reportOpendatahubIoOpendatahubCommunity
   },
   {
     id: 'opendatahub-io-vllm-orchestrator-gateway',
@@ -693,6 +1502,17 @@ export const QUALITY_REPORTS = [
     reportUrl: reportOpendatahubIoClient
   },
   {
+    id: 'red-hat-data-services-guardrails-regex-detector',
+    label: 'red-hat-data-services/guardrails-regex-detector',
+    githubUrl: 'https://github.com/red-hat-data-services/guardrails-regex-detector',
+    score: '1.4/10',
+    gaps: 'No CI/CD pipeline exists, Near-zero test coverage',
+    tier: 'downstream',
+    component: 'AI Safety',
+    team: 'Trusty-AI',
+    reportUrl: reportRedHatDataServicesGuardrailsRegexDetector
+  },
+  {
     id: 'red-hat-data-services-vllm',
     label: 'red-hat-data-services/vllm',
     githubUrl: 'https://github.com/red-hat-data-services/vllm',
@@ -703,6 +1523,18 @@ export const QUALITY_REPORTS = [
     component: 'Model Runtimes',
     team: 'General',
     reportUrl: reportRedHatDataServicesVllm
+  },
+  {
+    id: 'opendatahub-io-dsp-dev-tools',
+    label: 'opendatahub-io/dsp-dev-tools',
+    githubUrl: 'https://github.com/opendatahub-io/dsp-dev-tools',
+    score: '1.2/10',
+    gaps:
+      'No CI/CD pipeline of any kind, Zero test coverage across all dimensions',
+    tier: 'midstream',
+    component: 'AI Pipelines',
+    team: 'AI Pipelines',
+    reportUrl: reportOpendatahubIoDspDevTools
   },
   {
     id: 'opendatahub-io-kserve-raw-migration',
@@ -727,6 +1559,29 @@ export const QUALITY_REPORTS = [
     reportUrl: reportRedHatDataServicesMinioModelStorage
   },
   {
+    id: 'red-hat-data-services-rhoai-upgrade-helpers',
+    label: 'red-hat-data-services/rhoai-upgrade-helpers',
+    githubUrl: 'https://github.com/red-hat-data-services/rhoai-upgrade-helpers',
+    score: '1.2/10',
+    gaps:
+      'Zero automated tests for scripts that perform destructive production operations, No CI/CD pipeline whatsoever',
+    tier: 'downstream',
+    component: 'AI Core Platform',
+    team: 'AI Core Platform',
+    reportUrl: reportRedHatDataServicesRhoaiUpgradeHelpers
+  },
+  {
+    id: 'red-hat-data-services-mlmd-bazel-dist',
+    label: 'red-hat-data-services/mlmd-bazel-dist',
+    githubUrl: 'https://github.com/red-hat-data-services/mlmd-bazel-dist',
+    score: '1.0/10',
+    gaps: 'No CI/CD pipeline at all, No tests of any kind',
+    tier: 'downstream',
+    component: 'AI Pipelines',
+    team: 'AI Pipelines',
+    reportUrl: reportRedHatDataServicesMlmdBazelDist
+  },
+  {
     id: 'red-hat-data-services-vllm-rocm',
     label: 'red-hat-data-services/vllm-rocm',
     githubUrl: 'https://github.com/red-hat-data-services/vllm-rocm',
@@ -737,6 +1592,17 @@ export const QUALITY_REPORTS = [
     component: 'Model Runtimes',
     team: 'General',
     reportUrl: reportRedHatDataServicesVllmRocm
+  },
+  {
+    id: 'trustyai-explainability-guardrails-regex-detector',
+    label: 'trustyai-explainability/guardrails-regex-detector',
+    githubUrl: 'https://github.com/trustyai-explainability/guardrails-regex-detector',
+    score: '1.0/10',
+    gaps: 'No CI/CD pipeline exists, Near-zero test coverage',
+    tier: 'upstream',
+    component: 'AI Safety',
+    team: 'Trusty-AI',
+    reportUrl: reportTrustyaiExplainabilityGuardrailsRegexDetector
   },
   {
     id: 'red-hat-data-services-model-serving-devops',
@@ -772,6 +1638,17 @@ export const QUALITY_REPORTS = [
     component: 'Model Serving',
     team: 'General',
     reportUrl: reportOpendatahubIoKserveMigration
+  },
+  {
+    id: 'red-hat-data-services-data-hub-pipelines',
+    label: 'red-hat-data-services/data-hub-pipelines',
+    githubUrl: 'https://github.com/red-hat-data-services/data-hub-pipelines',
+    score: '0.3/10',
+    gaps: 'Repository is an empty skeleton, No CI/CD pipeline',
+    tier: 'downstream',
+    component: 'AI Pipelines',
+    team: 'AI Pipelines',
+    reportUrl: reportRedHatDataServicesDataHubPipelines
   },
 ]
 
