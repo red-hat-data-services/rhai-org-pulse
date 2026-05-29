@@ -168,7 +168,8 @@ async function saveMetadata() {
 
     await apiRequest('/modules/releases/delivery/releases-metadata', {
       method: 'POST',
-      body: cleanMetadata
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(cleanMetadata)
     })
     success.value = true
     setTimeout(() => { success.value = false }, 3000)
