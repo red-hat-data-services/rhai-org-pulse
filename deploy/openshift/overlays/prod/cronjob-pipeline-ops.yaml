@@ -1,0 +1,83 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: pipeline-ops-collector
+  labels:
+    app: team-tracker
+    component: pipeline-ops
+spec:
+  schedule: "*/30 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      activeDeadlineSeconds: 300
+      backoffLimit: 1
+      template:
+        metadata:
+          labels:
+            app: team-tracker
+            component: pipeline-ops
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: pipeline-ops-collector
+              image: registry.access.redhat.com/ubi9/ubi-minimal:latest
+              env:
+                - name: PROXY_AUTH_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: proxy-auth-secret
+                      key: secret
+                      optional: true
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  BACKEND="http://backend:3001"
+                  AUTH_HEADER="X-Forwarded-Email: acorvin@redhat.com"
+                  PROXY_SECRET_HEADER="X-Proxy-Secret: ${PROXY_AUTH_SECRET}"
+
+                  echo "=== Triggering pipeline-ops data collection ==="
+                  RESP=$(curl -sf -X POST "$BACKEND/api/modules/pipeline-ops/refresh" \
+                    -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" --max-time 30)
+                  echo "Response: $RESP"
+
+                  STATUS=$(echo "$RESP" | grep -o '"status":"[^"]*"' | head -1 | cut -d'"' -f4)
+                  if [ "$STATUS" = "already_running" ]; then
+                    echo "Collection already in progress, exiting"
+                    exit 0
+                  fi
+
+                  # Poll until complete
+                  ATTEMPTS=0
+                  MAX_ATTEMPTS=20
+                  while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
+                    sleep 10
+                    ATTEMPTS=$((ATTEMPTS + 1))
+                    REFRESH_STATUS=$(curl -sf "$BACKEND/api/modules/pipeline-ops/refresh/status" \
+                      -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER")
+                    RUNNING=$(echo "$REFRESH_STATUS" | grep -oE '"running"\s*:\s*true' || true)
+                    if [ -z "$RUNNING" ]; then
+                      echo "Collection complete after $ATTEMPTS checks"
+                      echo "Result: $REFRESH_STATUS"
+                      break
+                    fi
+                    echo "Still collecting... (attempt $ATTEMPTS/$MAX_ATTEMPTS)"
+                  done
+
+                  if [ $ATTEMPTS -ge $MAX_ATTEMPTS ]; then
+                    echo "WARNING: Collection timed out"
+                    exit 1
+                  fi
+
+                  echo "=== Pipeline-ops collection completed ==="
+              resources:
+                requests:
+                  memory: "32Mi"
+                  cpu: "10m"
+                limits:
+                  memory: "64Mi"
+                  cpu: "50m"

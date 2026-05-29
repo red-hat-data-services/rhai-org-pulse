@@ -1,0 +1,206 @@
+{
+  "retentionDays": 30,
+  "pipelines": [
+    {
+      "slug": "rfe-autofixer",
+      "name": "RFE Review Pipeline",
+      "group": "Autofix",
+      "description": "Discovers RHAIRFE Jira issues, scores against rubric, auto-revises descriptions",
+      "owner": "jforrester",
+      "repo": {
+        "url": "https://gitlab.com/redhat/rhel-ai/agentic-ci/rfe-autofixer",
+        "platform": "gitlab"
+      },
+      "schedule": {
+        "cron": "0 */12 * * *",
+        "expectedIntervalMinutes": 720,
+        "timeoutMinutes": 240
+      },
+      "jobs": ["autofix-rfe"],
+      "jiraContract": {
+        "projects": ["RHAIRFE"],
+        "labelsApplied": [
+          "rfe-creator-autofix-rubric-pass",
+          "rfe-creator-autofix-rubric-fail",
+          "rfe-creator-feasibility-pass",
+          "rfe-creator-feasibility-fail"
+        ]
+      },
+      "images": [
+        {
+          "name": "CI runner base",
+          "ref": "registry.access.redhat.com/ubi9/ubi-minimal:latest"
+        }
+      ],
+      "skillRepos": [
+        {
+          "repo": "https://github.com/opendatahub-io/rfe-creator",
+          "branch": "ci-prod",
+          "purpose": "RFE review, split, auto-fix skills"
+        }
+      ],
+      "sharedLibs": [
+        {
+          "repo": "https://gitlab.com/redhat/rhel-ai/agentic-ci/ai-agentic-lib",
+          "purpose": "Claude Code container runner, Jira CLI ops"
+        }
+      ],
+      "telemetry": {
+        "otelCollector": "local",
+        "otelEndpoint": "http://127.0.0.1:4318",
+        "summaryScript": "otel-summary.py",
+        "status": "active"
+      },
+      "artifacts": {
+        "resultsRepo": "https://gitlab.com/redhat/rhel-ai/agentic-ci/rfe-autofixer-results",
+        "status": "active"
+      },
+      "status": "production",
+      "addedAt": "2026-05-28T00:00:00Z"
+    },
+    {
+      "slug": "feature-review",
+      "name": "Feature Review Pipeline",
+      "group": "Autofix",
+      "description": "Reviews RHAI feature issues against completeness rubric",
+      "owner": "jforrester",
+      "repo": {
+        "url": "https://gitlab.com/redhat/rhel-ai/agentic-ci/feature-review",
+        "platform": "gitlab"
+      },
+      "schedule": {
+        "cron": "0 */8 * * *",
+        "expectedIntervalMinutes": 480,
+        "timeoutMinutes": 180
+      },
+      "jobs": ["review-features"],
+      "jiraContract": {
+        "projects": ["RHAI"],
+        "labelsApplied": [
+          "feature-review-pass",
+          "feature-review-fail"
+        ]
+      },
+      "images": [
+        {
+          "name": "CI runner base",
+          "ref": "registry.access.redhat.com/ubi9/ubi-minimal:latest"
+        }
+      ],
+      "skillRepos": [
+        {
+          "repo": "https://github.com/opendatahub-io/rfe-creator",
+          "branch": "ci-prod",
+          "purpose": "Feature review skills"
+        }
+      ],
+      "sharedLibs": [
+        {
+          "repo": "https://gitlab.com/redhat/rhel-ai/agentic-ci/ai-agentic-lib",
+          "purpose": "Claude Code container runner, Jira CLI ops"
+        }
+      ],
+      "telemetry": {
+        "otelCollector": "local",
+        "otelEndpoint": "http://127.0.0.1:4318",
+        "status": "active"
+      },
+      "artifacts": {
+        "resultsRepo": "https://gitlab.com/redhat/rhel-ai/agentic-ci/feature-review-results",
+        "status": "active"
+      },
+      "status": "production",
+      "addedAt": "2026-05-28T00:00:00Z"
+    },
+    {
+      "slug": "test-plan-review",
+      "name": "Test Plan Review Pipeline",
+      "group": "Autofix",
+      "description": "Reviews test plan Jira issues for completeness and quality",
+      "owner": "jforrester",
+      "repo": {
+        "url": "https://gitlab.com/redhat/rhel-ai/agentic-ci/test-plan-review",
+        "platform": "gitlab"
+      },
+      "schedule": {
+        "cron": "0 */12 * * *",
+        "expectedIntervalMinutes": 720,
+        "timeoutMinutes": 180
+      },
+      "jobs": ["review-test-plans"],
+      "jiraContract": {
+        "projects": ["RHAI"],
+        "labelsApplied": [
+          "test-plan-review-pass",
+          "test-plan-review-fail"
+        ]
+      },
+      "images": [
+        {
+          "name": "CI runner base",
+          "ref": "registry.access.redhat.com/ubi9/ubi-minimal:latest"
+        }
+      ],
+      "skillRepos": [
+        {
+          "repo": "https://github.com/opendatahub-io/rfe-creator",
+          "branch": "ci-prod",
+          "purpose": "Test plan review skills"
+        }
+      ],
+      "sharedLibs": [
+        {
+          "repo": "https://gitlab.com/redhat/rhel-ai/agentic-ci/ai-agentic-lib",
+          "purpose": "Claude Code container runner, Jira CLI ops"
+        }
+      ],
+      "telemetry": {
+        "otelCollector": "local",
+        "otelEndpoint": "http://127.0.0.1:4318",
+        "status": "active"
+      },
+      "artifacts": {
+        "resultsRepo": "https://gitlab.com/redhat/rhel-ai/agentic-ci/test-plan-review-results",
+        "status": "active"
+      },
+      "status": "production",
+      "addedAt": "2026-05-28T00:00:00Z"
+    },
+    {
+      "slug": "fips-compliance",
+      "name": "FIPS Compliance Pipeline",
+      "group": "Security",
+      "description": "Scans container images for FIPS 140-3 compliance violations",
+      "owner": "jtanner",
+      "repo": {
+        "url": "https://github.com/red-hat-data-services/fips-compliance",
+        "platform": "github"
+      },
+      "schedule": {
+        "cron": "0 6 * * *",
+        "expectedIntervalMinutes": 1440,
+        "timeoutMinutes": 120
+      },
+      "jobs": ["fips-scan"],
+      "jiraContract": null,
+      "images": [
+        {
+          "name": "Scanner image",
+          "ref": "registry.access.redhat.com/ubi9/ubi:latest"
+        }
+      ],
+      "skillRepos": [],
+      "sharedLibs": [],
+      "telemetry": {
+        "otelCollector": "none",
+        "status": "inactive"
+      },
+      "artifacts": {
+        "resultsRepo": "https://github.com/red-hat-data-services/fips-compliance",
+        "status": "active"
+      },
+      "status": "production",
+      "addedAt": "2026-05-28T00:00:00Z"
+    }
+  ]
+}
