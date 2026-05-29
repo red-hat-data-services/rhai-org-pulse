@@ -418,14 +418,9 @@ async function fetchProductsByShortname(shortnames, config) {
     }
   }
 
-  // Filter to future releases only (dueDate >= today)
-  const now = new Date()
-  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
-  return releases.filter(r => {
-    const due = new Date(`${r.dueDate}T00:00:00Z`)
-    if (Number.isNaN(due.getTime())) return false
-    return due >= today
-  })
+  // Include ALL releases (past and future) for commitment tracking
+  // Commitment tracking needs historical data to compare against snapshots
+  return releases
 }
 
 /**

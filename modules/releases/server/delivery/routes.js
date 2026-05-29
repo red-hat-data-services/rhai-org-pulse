@@ -245,21 +245,6 @@ async function fetchOpenReleases(storage, config) {
   return []
 }
 
-/**
- * Future / in-flight releases only (due date on or after today).
- * Past-due GA rows are intentionally excluded from the analysis set — overdue “risk” in buildAnalysis
- * applies to releases that are still in the catalog with remaining open work, not to historical GAs.
- */
-function filterUnreleased(releases) {
-  const now = new Date()
-  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
-  return releases.filter(r => {
-    const due = new Date(`${r.dueDate}T00:00:00Z`)
-    if (Number.isNaN(due.getTime())) return false
-    return due >= today
-  })
-}
-
 async function fetchIssuesFromJira(config) {
   const clause = getDefaultFixVersionJql(config)
 
@@ -870,7 +855,9 @@ async function fetchDeliverableChildrenCounts(deliverableKeys) {
 
 async function runFullAnalysis(storage, config) {
   const releases = await fetchOpenReleases(storage, config)
-  const openReleases = filterUnreleased(releases)
+  // Include ALL releases (past and future) for commitment tracking
+  // Commitment tracking needs historical data to compare against snapshots
+  const openReleases = releases
 
   let issues = []
   let fieldMeta = { id: null, name: '', schemaCustom: '' }
@@ -902,12 +889,13 @@ async function runFullAnalysis(storage, config) {
   // which doesn't rely on Jira fix versions. The old approach of enriching Jira fix versions
   // would exclude releases that don't exist in Jira's fix versions list.
   const analysisReleases = openReleases
-  const analysisOpenReleases = filterUnreleased(analysisReleases)
+  // Include ALL releases (past and future) for commitment tracking
+  // Commitment tracking needs historical data to compare against snapshots
+  const analysisOpenReleases = analysisReleases
 
   if (!analysisOpenReleases.length) {
     throw new Error(
-      'No unreleased open releases found. Ensure Jira Fix Versions exist for your projects, ' +
-      'or configure Product Pages product shortnames in Release Analysis settings.'
+      'No releases found. Ensure Target Version JQL fragment is configured or Product Pages product shortnames are set in Release Analysis settings.'
     )
   }
 
