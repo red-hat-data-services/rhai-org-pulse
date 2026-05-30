@@ -312,7 +312,7 @@ describe('buildExport', () => {
       { release: 'rhoai-3.5', category: 'aligned', key: 'X-1', url: '', summary: '', status: '', color_status: '', product_manager: '', assignee: '', team: '', components: [], component: '', target_version: '', fix_versions: '' },
       { release: 'rhoai-3.5', category: 'tv_only', key: 'X-2', url: '', summary: '', status: '', color_status: '', product_manager: '', assignee: '', team: '', components: [], component: '', target_version: '', fix_versions: '' },
     ];
-    const result = buildExport(classifications, ['rhoai-3.5'], '2026-01-01T00:00:00Z', []);
+    const result = buildExport(classifications, ['rhoai-3.5'], '2026-01-01T00:00:00Z', [], 'RHAISTRAT');
 
     expect(result.metadata.releases).toEqual(['rhoai-3.5']);
     expect(result.metadata.total_features).toBe(2);
@@ -330,7 +330,7 @@ describe('buildExport', () => {
     const classifications = [
       { release: 'rhoai-3.5', category: 'tv_only', key: 'X-1', url: '', summary: '', status: '', color_status: '', product_manager: '', assignee: '', team: '', components: [], component: '', target_version: '', fix_versions: '' },
     ];
-    const result = buildExport(classifications, ['rhoai-3.5'], '2026-01-01T00:00:00Z', []);
+    const result = buildExport(classifications, ['rhoai-3.5'], '2026-01-01T00:00:00Z', [], 'RHAISTRAT');
     const jql = decodeURIComponent(result.executive_summary[0].tv_only_jql);
     // Must NOT contain "OR fixVersion not in" — that was the bug
     expect(jql).not.toContain('OR fixVersion not in');
@@ -341,7 +341,7 @@ describe('buildExport', () => {
     const classifications = [
       { release: 'rhoai-3.5', category: 'fv_only', key: 'X-1', url: '', summary: '', status: '', color_status: '', product_manager: '', assignee: '', team: '', components: [], component: '', target_version: '', fix_versions: '' },
     ];
-    const result = buildExport(classifications, ['rhoai-3.5'], '2026-01-01T00:00:00Z', []);
+    const result = buildExport(classifications, ['rhoai-3.5'], '2026-01-01T00:00:00Z', [], 'RHAISTRAT');
     const jql = decodeURIComponent(result.executive_summary[0].fv_only_jql);
     expect(jql).not.toContain('OR "Target Version" not in');
     expect(jql).toContain('"Target Version" is EMPTY');
@@ -352,7 +352,7 @@ describe('buildExport', () => {
       { release: 'rhoai-3.5', category: 'aligned', key: 'X-1', url: '', summary: 's', status: '', color_status: '', product_manager: '', assignee: '', team: '', components: [], component: '', target_version: '', fix_versions: '' },
       { release: 'rhoai-3.5', category: 'mismatched', key: 'X-2', url: '', summary: 's', status: '', color_status: '', product_manager: '', assignee: '', team: '', components: [], component: '', target_version: '', fix_versions: '' },
     ];
-    const result = buildExport(classifications, ['rhoai-3.5'], '2026-01-01T00:00:00Z', []);
+    const result = buildExport(classifications, ['rhoai-3.5'], '2026-01-01T00:00:00Z', [], 'RHAISTRAT');
     expect(result.releases['rhoai-3.5'].aligned).toHaveLength(1);
     expect(result.releases['rhoai-3.5'].mismatched).toHaveLength(1);
     expect(result.releases['rhoai-3.5'].tv_only).toHaveLength(0);
@@ -363,7 +363,7 @@ describe('buildExport', () => {
       { release: 'rhoai-3.5', category: 'aligned', key: 'X-1', url: '', summary: '', status: '', color_status: '', product_manager: '', assignee: '', team: '', components: ['Dashboard'], component: 'Dashboard', target_version: '', fix_versions: '' },
       { release: 'rhoai-3.5', category: 'tv_only', key: 'X-2', url: '', summary: '', status: '', color_status: '', product_manager: '', assignee: '', team: '', components: ['Dashboard'], component: 'Dashboard', target_version: '', fix_versions: '' },
     ];
-    const result = buildExport(classifications, ['rhoai-3.5'], '2026-01-01T00:00:00Z', ['Dashboard', 'Notebooks']);
+    const result = buildExport(classifications, ['rhoai-3.5'], '2026-01-01T00:00:00Z', ['Dashboard', 'Notebooks'], 'RHAISTRAT');
     expect(result.component_breakdown).toHaveLength(2);
 
     const dash = result.component_breakdown.find(c => c.component === 'Dashboard');
@@ -381,12 +381,12 @@ describe('buildExport', () => {
       { release: 'v1', category: 'aligned', key: 'X-2', url: '', summary: '', status: '', color_status: '', product_manager: '', assignee: '', team: '', components: [], component: '', target_version: '', fix_versions: '' },
       { release: 'v1', category: 'tv_only', key: 'X-3', url: '', summary: '', status: '', color_status: '', product_manager: '', assignee: '', team: '', components: [], component: '', target_version: '', fix_versions: '' },
     ];
-    const result = buildExport(classifications, ['v1'], '2026-01-01T00:00:00Z', []);
+    const result = buildExport(classifications, ['v1'], '2026-01-01T00:00:00Z', [], 'RHAISTRAT');
     expect(result.executive_summary[0].alignment_pct).toBe(66.7);
   });
 
   it('handles empty classifications gracefully', () => {
-    const result = buildExport([], ['rhoai-3.5'], '2026-01-01T00:00:00Z', []);
+    const result = buildExport([], ['rhoai-3.5'], '2026-01-01T00:00:00Z', [], 'RHAISTRAT');
     expect(result.executive_summary[0].total).toBe(0);
     expect(result.executive_summary[0].alignment_pct).toBe(0);
     expect(result.releases['rhoai-3.5']).toBeDefined();

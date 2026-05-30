@@ -129,6 +129,7 @@ export function useTvFvData() {
         }
       }, 3000)
     } catch (e) {
+      console.warn('[useTvFvData] triggerRefresh failed:', e.message)
       refreshing.value = false
       // Only show error if no data to display (avoid hiding valid data on 403)
       if (!data.value) error.value = e.message
