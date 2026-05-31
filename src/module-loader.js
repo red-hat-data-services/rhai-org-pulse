@@ -3,6 +3,7 @@ import { defineAsyncComponent } from 'vue'
 const manifestModules = import.meta.glob('/modules/*/module.json', { eager: true })
 const clientEntries = import.meta.glob('/modules/*/client/index.js')
 const settingsComponents = import.meta.glob('/modules/*/client/components/*Settings.vue')
+const widgetComponents = import.meta.glob('/modules/*/client/components/*Widget.vue')
 
 export function loadModuleManifests() {
   const modules = []
@@ -18,6 +19,21 @@ export async function loadModuleClient(slug) {
   const loader = clientEntries[`/modules/${slug}/client/index.js`]
   if (!loader) return null
   return loader()
+}
+
+const _widgetCache = new Map()
+
+export function loadModuleWidgetComponent(slug, widgetPath) {
+  if (!widgetPath || widgetPath.includes('..')) return null
+  const cacheKey = `${slug}:${widgetPath}`
+  if (_widgetCache.has(cacheKey)) return _widgetCache.get(cacheKey)
+  const normalized = widgetPath.replace(/^\.\//, '')
+  const globKey = `/modules/${slug}/${normalized}`
+  const loader = widgetComponents[globKey]
+  if (!loader) return null
+  const component = defineAsyncComponent(loader)
+  _widgetCache.set(cacheKey, component)
+  return component
 }
 
 export function loadModuleSettingsComponent(slug, settingsPath) {

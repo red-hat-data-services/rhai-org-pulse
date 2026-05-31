@@ -17,6 +17,15 @@
       </p>
     </div>
 
+    <!-- Module Widgets -->
+    <div v-if="widgetModules.length > 0" class="mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <component
+        v-for="wm in widgetModules"
+        :key="wm.slug"
+        :is="wm.component"
+      />
+    </div>
+
     <!-- Built-in Modules (from manifests) -->
     <div v-if="builtInManifests.length > 0" class="mb-8">
       <p class="px-1 mb-3 text-[10px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500">
@@ -99,6 +108,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { loadModuleWidgetComponent } from '../module-loader'
 import {
   BarChart3,
   Search,
@@ -116,7 +126,8 @@ import {
   Network,
   ChartCandlestick,
   Sparkles,
-  Hospital
+  Hospital,
+  Megaphone
 } from 'lucide-vue-next'
 
 const props = defineProps({
@@ -130,6 +141,19 @@ defineEmits(['navigate'])
 const externalModules = computed(() =>
   props.modules.filter(m => m.type === 'git-static').sort((a, b) => (a.order || 0) - (b.order || 0))
 )
+
+const widgetModules = computed(() => {
+  const result = []
+  for (const manifest of props.builtInManifests) {
+    const widgetPath = manifest.client?.landingWidget
+    if (!widgetPath) continue
+    const component = loadModuleWidgetComponent(manifest.slug, widgetPath)
+    if (component) {
+      result.push({ slug: manifest.slug, component })
+    }
+  }
+  return result
+})
 
 const iconMap = {
   'bar-chart': BarChart3,
@@ -146,7 +170,8 @@ const iconMap = {
   'network': Network,
   'chart-candlestick': ChartCandlestick,
   'sparkles': Sparkles,
-  'hospital': Hospital
+  'hospital': Hospital,
+  'megaphone': Megaphone
 }
 
 function getIcon(iconName) {

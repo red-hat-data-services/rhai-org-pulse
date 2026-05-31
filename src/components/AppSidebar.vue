@@ -270,7 +270,9 @@ import {
   History,
   Hospital,
   LayoutDashboard,
-  Rocket
+  Megaphone,
+  Rocket,
+  Rss
 } from 'lucide-vue-next'
 import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 
@@ -319,8 +321,12 @@ const ICON_MAP = {
   Hospital,
   'hospital': Hospital,
   LayoutDashboard,
+  Megaphone,
+  'megaphone': Megaphone,
   Rocket,
-  'rocket': Rocket
+  'rocket': Rocket,
+  Rss,
+  'rss': Rss
 }
 
 const props = defineProps({

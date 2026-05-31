@@ -1,0 +1,22 @@
+{
+  "name": "Pulse Social",
+  "slug": "pulse-social",
+  "description": "Share updates, wins, learnings, and shoutouts with your team",
+  "icon": "megaphone",
+  "order": 5,
+  "defaultEnabled": false,
+  "client": {
+    "entry": "./client/index.js",
+    "navItems": [
+      { "id": "feed", "label": "Feed", "icon": "Rss", "default": true },
+      { "id": "my-posts", "label": "My Posts", "icon": "User" }
+    ],
+    "hiddenRoutes": {
+      "post-detail": "feed"
+    },
+    "landingWidget": "./client/components/FeedWidget.vue"
+  },
+  "server": {
+    "entry": "./server/index.js"
+  }
+}
