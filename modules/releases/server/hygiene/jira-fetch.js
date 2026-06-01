@@ -21,6 +21,7 @@ const CUSTOM_FIELDS = {
   colorStatus: 'customfield_10712',
   docsRequired: 'customfield_10665',
   targetEnd: 'customfield_10023',
+  productManager: 'customfield_10469',
   reach: 'customfield_10862',
   impact: 'customfield_10836',
   confidence: 'customfield_10838',
@@ -38,6 +39,7 @@ const PASS1_FIELDS = [
   CUSTOM_FIELDS.colorStatus,
   CUSTOM_FIELDS.docsRequired,
   CUSTOM_FIELDS.targetEnd,
+  CUSTOM_FIELDS.productManager,
   CUSTOM_FIELDS.reach,
   CUSTOM_FIELDS.impact,
   CUSTOM_FIELDS.confidence,
@@ -238,6 +240,30 @@ function transformIssue(rawIssue, rfeMap) {
     }
   }
 
+  // Blocked: check for unresolved inward "Blocks" links
+  const CLOSED_LINK_STATUSES = ['Closed', 'Resolved', 'Done']
+  let isBlocked = false
+  const issueLinks = fields.issuelinks
+  if (Array.isArray(issueLinks)) {
+    for (let bli = 0; bli < issueLinks.length; bli++) {
+      const link = issueLinks[bli]
+      if (!link.inwardIssue) continue
+      const type = link.type || {}
+      if (type.name !== 'Blocks' && type.inward !== 'is blocked by') continue
+      const linkedStatus = link.inwardIssue.fields &&
+        link.inwardIssue.fields.status &&
+        link.inwardIssue.fields.status.name
+      if (CLOSED_LINK_STATUSES.indexOf(linkedStatus) === -1) {
+        isBlocked = true
+        break
+      }
+    }
+  }
+
+  // PM Owner from Product Manager custom field
+  const pmOwnerField = fields[CUSTOM_FIELDS.productManager]
+  const pmOwner = pmOwnerField ? (pmOwnerField.displayName || null) : null
+
   return {
     key: rawIssue.key,
     summary: fields.summary || '',
@@ -260,6 +286,8 @@ function transformIssue(rawIssue, rfeMap) {
     targetEnd: fields[CUSTOM_FIELDS.targetEnd] || null,
     riceStatus: computeRiceStatus(fields),
     riceScore: fields[CUSTOM_FIELDS.riceScore] || null,
+    isBlocked,
+    pmOwner,
     linkedRfeKey,
     linkedRfeApproved,
     // Populated in Pass 2

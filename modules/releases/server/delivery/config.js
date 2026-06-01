@@ -11,7 +11,8 @@ const DEFAULT_CONFIG = {
   productPagesBaseUrl: 'https://productpages.redhat.com',
   productPagesTokenUrl: 'https://auth.redhat.com/auth/realms/EmployeeIDP/protocol/openid-connect/token',
   jiraAllProjects: false,
-  targetVersionJqlFragment: ''
+  targetVersionJqlFragment: '',
+  commitmentTrackingJql: 'cf[10855] is not EMPTY'
 };
 
 const PROJECT_KEY_PATTERN = /^[A-Z][A-Z0-9_]+$/;
@@ -243,6 +244,24 @@ function saveConfig(writeToStorage, config) {
       throw new Error('targetVersionJqlFragment contains invalid characters');
     }
     merged.targetVersionJqlFragment = fragment;
+  }
+
+  // commitmentTrackingJql — string, security-checked (separate from targetVersionJqlFragment)
+  if (config.commitmentTrackingJql !== undefined) {
+    if (typeof config.commitmentTrackingJql !== 'string') {
+      throw new Error('commitmentTrackingJql must be a string');
+    }
+    const fragment = config.commitmentTrackingJql.trim();
+    if (fragment.length > 500) {
+      throw new Error('commitmentTrackingJql must be 500 characters or fewer');
+    }
+    if (/ORDER\s+BY/i.test(fragment)) {
+      throw new Error('commitmentTrackingJql must not contain ORDER BY');
+    }
+    if (fragment.includes(';') || fragment.includes('--')) {
+      throw new Error('commitmentTrackingJql contains invalid characters');
+    }
+    merged.commitmentTrackingJql = fragment;
   }
 
   writeToStorage('releases/delivery/config.json', merged);
