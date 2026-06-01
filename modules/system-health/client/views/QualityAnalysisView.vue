@@ -1,10 +1,23 @@
 <script setup>
-import { computed, inject, watch } from 'vue'
+import { computed, inject, ref, watch } from 'vue'
 import { QUALITY_REPORTS, QUALITY_SAMPLE_META } from '../qualityReports.data.js'
 
 const VIEW_ID = 'quality-analysis'
 
 const nav = inject('moduleNav', null)
+
+const tierFilter = ref('all')
+const componentFilter = ref('all')
+
+const tiers = computed(() => [...new Set(QUALITY_REPORTS.map(r => r.tier).filter(Boolean))].sort())
+const components = computed(() => [...new Set(QUALITY_REPORTS.map(r => r.component).filter(Boolean))].sort())
+
+const filteredReports = computed(() =>
+  QUALITY_REPORTS.filter(r =>
+    (tierFilter.value === 'all' || r.tier === tierFilter.value) &&
+    (componentFilter.value === 'all' || r.component === componentFilter.value)
+  )
+)
 
 const selectedId = computed({
   get() {
@@ -26,6 +39,13 @@ const selected = computed(() =>
   selectedId.value ? QUALITY_REPORTS.find(r => r.id === selectedId.value) : null
 )
 
+function scoreClass(score) {
+  const n = parseFloat(score)
+  if (n >= 7) return 'text-green-600 dark:text-green-400'
+  if (n >= 4) return 'text-amber-600 dark:text-amber-400'
+  return 'text-red-600 dark:text-red-400'
+}
+
 function openReport(id) {
   selectedId.value = id
 }
@@ -34,7 +54,6 @@ function clearSelection() {
   selectedId.value = null
 }
 
-// Drop unknown ?report= values from the URL so the shell stays consistent
 watch(
   () => nav?.params?.value?.report,
   (report) => {
@@ -53,11 +72,6 @@ watch(
         <h1 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
           Quality analysis
         </h1>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-2xl">
-          Reports are standalone HTML assets. They are bundled with
-          <code class="text-xs px-1 py-0.5 rounded bg-gray-100 dark:bg-gray-800">?url</code>
-          imports and shown in an iframe so their styles stay isolated from Org Pulse.
-        </p>
       </div>
       <button
         v-if="selected"
@@ -74,27 +88,47 @@ watch(
       class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden shadow-sm"
     >
       <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/40">
-        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
-          Sample reports ({{ QUALITY_REPORTS.length }} repos)
-        </p>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          Generated {{ QUALITY_SAMPLE_META.generatedAt }} · Average
-          {{ QUALITY_SAMPLE_META.averageScore }} — {{ QUALITY_SAMPLE_META.blurb }}
-        </p>
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
+              Showing {{ filteredReports.length }} of {{ QUALITY_REPORTS.length }} repos
+            </p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+              Generated {{ QUALITY_SAMPLE_META.generatedAt }}
+            </p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <select
+              v-model="tierFilter"
+              class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-gray-300"
+            >
+              <option value="all">All tiers</option>
+              <option v-for="t in tiers" :key="t" :value="t">{{ t }}</option>
+            </select>
+            <select
+              v-model="componentFilter"
+              class="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm bg-white dark:bg-gray-800 dark:text-gray-300"
+            >
+              <option value="all">All components</option>
+              <option v-for="c in components" :key="c" :value="c">{{ c }}</option>
+            </select>
+          </div>
+        </div>
       </div>
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead>
             <tr class="text-left text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400 border-b border-gray-100 dark:border-gray-700">
               <th class="px-4 py-3 font-medium">Repository</th>
-              <th class="px-4 py-3 font-medium">Source</th>
-              <th class="px-4 py-3 font-medium">Overall score</th>
+              <th class="px-4 py-3 font-medium">Tier</th>
+              <th class="px-4 py-3 font-medium">Component</th>
+              <th class="px-4 py-3 font-medium">Score</th>
               <th class="px-4 py-3 font-medium">Top gaps</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
             <tr
-              v-for="row in QUALITY_REPORTS"
+              v-for="row in filteredReports"
               :key="row.id"
               class="hover:bg-gray-50/80 dark:hover:bg-gray-900/30"
             >
@@ -107,16 +141,28 @@ watch(
                   {{ row.label }}
                 </button>
               </td>
-              <td class="px-4 py-3">
-                <a
-                  :href="row.githubUrl"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="text-primary-600 dark:text-primary-400 hover:underline"
-                >GitHub</a>
+              <td class="px-4 py-3 whitespace-nowrap">
+                <span
+                  class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                  :class="{
+                    'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300': row.tier === 'upstream',
+                    'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300': row.tier === 'midstream',
+                    'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300': row.tier === 'downstream',
+                  }"
+                >
+                  {{ row.tier }}
+                </span>
               </td>
-              <td class="px-4 py-3 text-gray-800 dark:text-gray-200 whitespace-nowrap">
-                {{ row.score }}
+              <td class="px-4 py-3 text-gray-600 dark:text-gray-300 whitespace-nowrap">
+                {{ row.component }}
+              </td>
+              <td class="px-4 py-3 whitespace-nowrap">
+                <span
+                  class="font-medium"
+                  :class="scoreClass(row.score)"
+                >
+                  {{ row.score }}
+                </span>
               </td>
               <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
                 {{ row.gaps }}

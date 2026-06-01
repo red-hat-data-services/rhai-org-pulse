@@ -332,7 +332,7 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on May 07, 2026 at 10:59 AM</p>
+            <p class="timestamp">Generated on May 29, 2026 at 08:11 AM</p>
             <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/argo-workflows</h2>
         </header>
 
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#28a745"
+                                stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="101.78751600000001"
+                                stroke-dashoffset="135.71668799999998"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">8.2</div>
+                        <div class="score-value">7.6</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Strong quality signals</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">286 Go test files, 22 UI tests, Go testing + Jest, coverage generation on CI</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Strong quality signals</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">37 E2E test files, 16-matrix K3S-based E2E, multi-DB (MySQL/Postgres), multi-K8s version (v1.33-v1.35)</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
                             <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Adequate baseline with gaps</div>
+                            <div class="scorecard-status">PR-time Docker image builds (argoexec, argocli), binary compilation, manifest validation, but no Konflux simulation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Strong quality signals</div>
+                            <div class="scorecard-score" style="color: #ffc107;">6.5/10</div>
+                            <div class="scorecard-status">Multi-stage Dockerfile with distroless base, PR-time image builds with cache, Windows support, but no runtime image validation or Trivy scanning on PRs</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #28a745;">10.0/10</div>
-                            <div class="scorecard-status">Strong quality signals</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Codecov integration on main branch only, 2% threshold, patch coverage disabled, no PR enforcement</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">10.0/10</div>
-                            <div class="scorecard-status">Strong quality signals</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">Comprehensive CI with smart change detection, concurrency control, SHA-pinned actions, automated cherry-picks, semantic PR checks</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">Critical gap area</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory - zero AI agent guidance for test creation</div>
                         </div>
                     </div>
                 </div>
@@ -411,11 +411,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">Agent guidance for testing is minimal</div>
-                            <p>AI-generated contributions may drift from project test practices.</p>
+                            <div class="item-description">No PR-time coverage enforcement</div>
+                            <p>Coverage can drop without any PR gate; codecov only runs on main, patch coverage is disabled</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">4-8 hours</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No container vulnerability scanning on PRs</div>
+                            <p>Security vulnerabilities in dependencies or base images not caught until Snyk daily scan</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No CodeQL/SAST analysis</div>
+                            <p>No automated static security analysis beyond golangci-lint&#x27;s gosec linter</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No agent rules for AI-assisted development</div>
+                            <p>AI agents (Claude, Copilot) have no project-specific guidance for test creation patterns</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">3-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No image runtime validation</div>
+                            <p>Built images are not smoke-tested for startup or health in CI</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -432,8 +464,32 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Create `.claude/rules` coverage for unit/integration/e2e test patterns</div>
-                            <p>Improves consistency of AI-assisted test contributions.</p>
+                            <div class="item-description">Enable codecov PR coverage checks</div>
+                            <p>Prevent test coverage regression on every PR</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add Trivy scanning to PR workflow</div>
+                            <p>Catch container vulnerabilities before merge</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add CodeQL workflow</div>
+                            <p>Automated SAST analysis for Go and JavaScript</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create basic CLAUDE.md with test patterns</div>
+                            <p>Guide AI agents to produce consistent, project-compliant tests</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
@@ -453,15 +509,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Agent guidance for testing is minimal</li></ul>
+                            <ul><li>Enable codecov coverage checks on PRs (patch and project) instead of main-only</li><li>Add container image vulnerability scanning (Trivy) to PR workflow</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Create `.claude/rules` coverage for unit/integration/e2e test patterns</li></ul>
+                            <ul><li>Add CodeQL SAST workflow for Go and JavaScript</li><li>Add image startup smoke test after PR-time image build</li><li>Create comprehensive agent rules (.claude/rules/) for test patterns</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Track quality score trends monthly and baseline improvements.</li><li>Add targeted performance or resilience checks for critical flows.</li></ul>
+                            <ul><li>Add pre-commit hooks for consistent local development</li><li>Enable SBOM generation for PR-time image builds</li><li>Add accessibility testing for UI components</li></ul>
                         </div>
                     </div>
                 </div>

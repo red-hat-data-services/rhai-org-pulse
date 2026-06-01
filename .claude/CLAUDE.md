@@ -284,6 +284,8 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/modules/releases/execution/versions` — unique fix versions
 - `/api/modules/releases/execution/status` — data freshness
 - `/api/modules/releases/execution/config` — fetch config (admin)
+- `/api/modules/releases/execution/tracking/data` — feature tracking data by fixVersion query
+- `/api/modules/releases/execution/tracking/versions` — available portfolio versions for feature tracking
 - `/api/modules/releases/delivery/config` — delivery config (admin)
 - `/api/modules/releases/delivery/product-pages/products` — Product Pages products (admin)
 - `/api/modules/releases/delivery/refresh/status` — delivery refresh status
@@ -296,6 +298,7 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/modules/releases/delivery/quality/components` — components with bug counts
 - `/api/modules/releases/delivery/quality/debug` — debug diagnostics for bug count issues (admin)
 - `/api/modules/releases/delivery/commitment/:version/:phase` — commitment tracking data for a release phase
+- `/api/modules/releases/delivery/releases-metadata` — releases metadata (product names, dates)
 - `/api/modules/releases/hygiene/features` — hygiene features for a version
 - `/api/modules/releases/hygiene/summary` — aggregate violation summary for a version
 - `/api/modules/releases/hygiene/refresh/status` — current hygiene refresh state
@@ -403,6 +406,9 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/modules/releases/delivery/admin/releases` — upload releases (admin)
 - `/api/modules/releases/delivery/conforma/bulk` — full replace conforma data (admin)
 - `/api/modules/releases/delivery/quality/refresh` — refresh quality data from Jira (admin)
+- `/api/modules/releases/delivery/discover-releases` — discover releases from Jira Target Version field (admin)
+- `/api/modules/releases/delivery/releases-metadata` — save releases metadata (admin)
+- `/api/modules/releases/delivery/commitment/snapshot/:version/:phase` — create commitment snapshot by querying Jira directly with commitmentTrackingJql (admin)
 - `/api/modules/releases/hygiene/refresh` — trigger hygiene data refresh (release-manager)
 - `/api/modules/releases/hygiene/refresh-all` — refresh hygiene data for all stored versions (release-manager)
 - `/api/modules/releases/hygiene/config` — save hygiene rule configuration (release-manager)

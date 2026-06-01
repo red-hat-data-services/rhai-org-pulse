@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quality Analysis Sample Landing</title>
+  <title>Quality Analysis Reports</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -44,10 +44,10 @@
 </head>
 <body>
   <div class="card">
-    <h1>Quality Analysis Sample (5 Repos)</h1>
-    <p><strong>Generated:</strong> 2026-05-07 10:59:58</p>
-    <p><strong>Average score:</strong> 4.24/10</p>
-    <p>This is a lightweight static-scan sample meant to validate the master/detail reporting flow.</p>
+    <h1>Quality Analysis (127 Repos)</h1>
+    <p><strong>Generated:</strong> 2026-05-29 09:01:06</p>
+    <p><strong>Average score:</strong> 5.4/10</p>
+    <p>Model Serving + Trusty-AI + AI Pipelines + AI Hub — 127 repositories</p>
   </div>
 
   <div class="card">
@@ -57,49 +57,1032 @@
         <tr>
           <th>Repository (detail page)</th>
           <th>Source</th>
+          <th>Tier</th>
+          <th>Component</th>
           <th>Overall score</th>
           <th>Top gaps</th>
         </tr>
       </thead>
       <tbody>
-        
+            <tr>
+              <td><a href="quality-report-kubeflow-pipelines.html">kubeflow/pipelines</a></td>
+              <td><a href="https://github.com/kubeflow/pipelines" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>AI Pipelines</td>
+              <td>8.4/10</td>
+              <td>No coverage tracking integration (Codecov/Coveralls), Trivy and CodeQL run only on weekly schedule, not on PRs</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-mlflow-mlflow.html">mlflow/mlflow</a></td>
+              <td><a href="https://github.com/mlflow/mlflow" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>MLflow</td>
+              <td>8.4/10</td>
+              <td>No code coverage tracking or enforcement, No container security scanning (Trivy/Snyk/CodeQL)</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-opendatahub-operator.html">opendatahub-io/opendatahub-operator</a></td>
+              <td><a href="https://github.com/opendatahub-io/opendatahub-operator" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>AI Core Platform</td>
+              <td>8.4/10</td>
+              <td>No container vulnerability scanning in CI, Codecov coverage is informational only</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-kserve-kserve.html">kserve/kserve</a></td>
+              <td><a href="https://github.com/kserve/kserve" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Model Serving</td>
+              <td>8.2/10</td>
+              <td>No AI agent rules for test automation, No PR-time container vulnerability scanning</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-data-science-pipelines.html">opendatahub-io/data-science-pipelines</a></td>
+              <td><a href="https://github.com/opendatahub-io/data-science-pipelines" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>AI Pipelines</td>
+              <td>8.1/10</td>
+              <td>No coverage tracking for Go backend or Python SDK, No container image runtime validation</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-kserve.html">red-hat-data-services/kserve</a></td>
+              <td><a href="https://github.com/red-hat-data-services/kserve" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>Model Serving</td>
+              <td>8.1/10</td>
+              <td>No container vulnerability scanning in CI, No agent rules for AI-assisted development</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-kserve.html">opendatahub-io/kserve</a></td>
+              <td><a href="https://github.com/opendatahub-io/kserve" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>Model Serving</td>
+              <td>7.9/10</td>
+              <td>No container vulnerability scanning (Trivy/Grype/Snyk), No SBOM generation or image signing</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-argoproj-argo-workflows.html">argoproj/argo-workflows</a></td>
+              <td><a href="https://github.com/argoproj/argo-workflows" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>AI Pipelines</td>
+              <td>7.6/10</td>
+              <td>No PR-level coverage enforcement, No container runtime validation on PRs</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-kubeflow-hub.html">kubeflow/hub</a></td>
+              <td><a href="https://github.com/kubeflow/hub" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>AI Hub</td>
+              <td>7.6/10</td>
+              <td>No coverage tracking or enforcement, No dedicated SAST/CodeQL workflow</td>
+            </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-argo-workflows.html">opendatahub-io/argo-workflows</a></td>
               <td><a href="https://github.com/opendatahub-io/argo-workflows" target="_blank">GitHub</a></td>
-              <td>8.2/10</td>
-              <td>Agent guidance for testing is minimal</td>
+              <td>midstream</td>
+              <td>AI Pipelines</td>
+              <td>7.6/10</td>
+              <td>No PR-time coverage enforcement, No container vulnerability scanning on PRs</td>
             </tr>
-            
             <tr>
-              <td><a href="quality-report-opendatahub-io-autogluon.html">opendatahub-io/autogluon</a></td>
-              <td><a href="https://github.com/opendatahub-io/autogluon" target="_blank">GitHub</a></td>
+              <td><a href="quality-report-opendatahub-io-mlflow.html">opendatahub-io/mlflow</a></td>
+              <td><a href="https://github.com/opendatahub-io/mlflow" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>MLflow</td>
+              <td>7.6/10</td>
+              <td>No coverage tracking or enforcement, No container security scanning in CI</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-model-registry.html">opendatahub-io/model-registry</a></td>
+              <td><a href="https://github.com/opendatahub-io/model-registry" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>AI Hub</td>
+              <td>7.6/10</td>
+              <td>No coverage threshold enforcement, No CodeQL or SAST analysis on PRs</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-openvino.genai.html">opendatahub-io/openvino.genai</a></td>
+              <td><a href="https://github.com/opendatahub-io/openvino.genai" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>Model Runtimes</td>
+              <td>7.6/10</td>
+              <td>No code coverage tracking or enforcement, No agent rules or AI-assisted development guidance</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-openvino.html">opendatahub-io/openvino</a></td>
+              <td><a href="https://github.com/opendatahub-io/openvino" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>Model Runtimes</td>
+              <td>7.6/10</td>
+              <td>No coverage enforcement on PRs, No container security scanning (Trivy/Snyk)</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-openvinotoolkit-openvino.html">openvinotoolkit/openvino</a></td>
+              <td><a href="https://github.com/openvinotoolkit/openvino" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Model Runtimes</td>
+              <td>7.6/10</td>
+              <td>No container vulnerability scanning, No PR-level coverage enforcement</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-data-science-pipelines.html">red-hat-data-services/data-science-pipelines</a></td>
+              <td><a href="https://github.com/red-hat-data-services/data-science-pipelines" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>AI Pipelines</td>
+              <td>7.6/10</td>
+              <td>No coverage tracking or enforcement, No container image runtime validation</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-mlflow.html">red-hat-data-services/mlflow</a></td>
+              <td><a href="https://github.com/red-hat-data-services/mlflow" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>MLflow</td>
+              <td>7.6/10</td>
+              <td>No coverage tracking or enforcement, No container runtime validation</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-mlflow-operator.html">red-hat-data-services/mlflow-operator</a></td>
+              <td><a href="https://github.com/red-hat-data-services/mlflow-operator" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>MLflow</td>
+              <td>7.6/10</td>
+              <td>No coverage tracking or enforcement, No container vulnerability scanning in GitHub Actions</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-model-registry.html">red-hat-data-services/model-registry</a></td>
+              <td><a href="https://github.com/red-hat-data-services/model-registry" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>AI Hub</td>
+              <td>7.6/10</td>
+              <td>No PR-time Konflux build simulation, No coverage threshold enforcement</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-trustyai-explainability-NeMo-Guardrails.html">trustyai-explainability/NeMo-Guardrails</a></td>
+              <td><a href="https://github.com/trustyai-explainability/NeMo-Guardrails" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>AI Safety</td>
+              <td>7.6/10</td>
+              <td>No coverage enforcement thresholds, No multi-architecture image builds</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-model-registry-operator.html">opendatahub-io/model-registry-operator</a></td>
+              <td><a href="https://github.com/opendatahub-io/model-registry-operator" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>AI Hub</td>
+              <td>7.5/10</td>
+              <td>No coverage tracking or enforcement, No container vulnerability scanning in CI</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-mlflow-kubernetes-plugins.html">opendatahub-io/mlflow-kubernetes-plugins</a></td>
+              <td><a href="https://github.com/opendatahub-io/mlflow-kubernetes-plugins" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>MLflow</td>
+              <td>7.4/10</td>
+              <td>No test coverage tracking or enforcement, No container image runtime validation</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-models-as-a-service.html">red-hat-data-services/models-as-a-service</a></td>
+              <td><a href="https://github.com/red-hat-data-services/models-as-a-service" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>Model as a Service</td>
+              <td>7.4/10</td>
+              <td>No PR-time Docker image build validation, No coverage enforcement or threshold</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-odh-cli.html">red-hat-data-services/odh-cli</a></td>
+              <td><a href="https://github.com/red-hat-data-services/odh-cli" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>AI Core Platform</td>
+              <td>7.4/10</td>
+              <td>No coverage enforcement or reporting, No E2E tests against real clusters</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-mlflow-operator.html">opendatahub-io/mlflow-operator</a></td>
+              <td><a href="https://github.com/opendatahub-io/mlflow-operator" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>MLflow</td>
+              <td>7.3/10</td>
+              <td>No coverage tracking or enforcement, No container vulnerability scanning in GHA</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-NeMo-Guardrails.html">opendatahub-io/NeMo-Guardrails</a></td>
+              <td><a href="https://github.com/opendatahub-io/NeMo-Guardrails" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>AI Safety</td>
+              <td>7.2/10</td>
+              <td>No coverage enforcement or thresholds, Docker test workflow tests wrong Dockerfile</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-odh-gitops.html">opendatahub-io/odh-gitops</a></td>
+              <td><a href="https://github.com/opendatahub-io/odh-gitops" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>AI Core Platform</td>
+              <td>7.2/10</td>
+              <td>No coverage tracking or enforcement, No security scanning of referenced operator images</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-openvinotoolkit-openvino.genai.html">openvinotoolkit/openvino.genai</a></td>
+              <td><a href="https://github.com/openvinotoolkit/openvino.genai" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Model Runtimes</td>
+              <td>7.2/10</td>
+              <td>No code coverage tracking or enforcement, No container image testing</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-model-registry-operator.html">red-hat-data-services/model-registry-operator</a></td>
+              <td><a href="https://github.com/red-hat-data-services/model-registry-operator" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>AI Hub</td>
+              <td>7.2/10</td>
+              <td>No coverage tracking or enforcement, No container vulnerability scanning in CI</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-NeMo-Guardrails.html">red-hat-data-services/NeMo-Guardrails</a></td>
+              <td><a href="https://github.com/red-hat-data-services/NeMo-Guardrails" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>AI Safety</td>
+              <td>7.2/10</td>
+              <td>Coverage enforcement is informational-only, No automated E2E integration testing</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-pipelines-components.html">red-hat-data-services/pipelines-components</a></td>
+              <td><a href="https://github.com/red-hat-data-services/pipelines-components" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>AI Pipelines</td>
+              <td>7.2/10</td>
+              <td>No coverage tracking or enforcement in CI, No security scanning (SAST, container, dependency)</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-kubeflow-pipelines-components.html">kubeflow/pipelines-components</a></td>
+              <td><a href="https://github.com/kubeflow/pipelines-components" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>AI Pipelines</td>
+              <td>7.1/10</td>
+              <td>No security scanning (Trivy, Snyk, CodeQL, SBOM), No coverage enforcement in CI</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-odh-platform-utilities.html">opendatahub-io/odh-platform-utilities</a></td>
+              <td><a href="https://github.com/opendatahub-io/odh-platform-utilities" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>AI Core Platform</td>
+              <td>7.1/10</td>
+              <td>No integration tests with envtest, Coverage thresholds are informational only</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-rhods-operator.html">red-hat-data-services/rhods-operator</a></td>
+              <td><a href="https://github.com/red-hat-data-services/rhods-operator" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>AI Core Platform</td>
+              <td>7.1/10</td>
+              <td>No container vulnerability scanning in GitHub workflows, Coverage tracking is informational only — no enforcement</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-models-as-a-service.html">opendatahub-io/models-as-a-service</a></td>
+              <td><a href="https://github.com/opendatahub-io/models-as-a-service" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>Model as a Service</td>
+              <td>7.0/10</td>
+              <td>No coverage enforcement or threshold tracking, No container image security scanning</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-kube-auth-proxy.html">opendatahub-io/kube-auth-proxy</a></td>
+              <td><a href="https://github.com/opendatahub-io/kube-auth-proxy" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>AI Core Platform</td>
+              <td>6.9/10</td>
+              <td>No container vulnerability scanning, No coverage enforcement thresholds</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-odh-gitops.html">red-hat-data-services/odh-gitops</a></td>
+              <td><a href="https://github.com/red-hat-data-services/odh-gitops" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>AI Core Platform</td>
+              <td>6.9/10</td>
+              <td>No security scanning (Trivy, Snyk, CodeQL, Gitleaks), No coverage tracking or metrics</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-data-science-pipelines-operator.html">opendatahub-io/data-science-pipelines-operator</a></td>
+              <td><a href="https://github.com/opendatahub-io/data-science-pipelines-operator" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>AI Pipelines</td>
+              <td>6.8/10</td>
+              <td>No coverage tracking or enforcement, No PR-time Konflux build simulation</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-openvino_tokenizers.html">opendatahub-io/openvino_tokenizers</a></td>
+              <td><a href="https://github.com/opendatahub-io/openvino_tokenizers" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>Model Runtimes</td>
+              <td>6.8/10</td>
+              <td>No container image testing or Dockerfile, No code coverage tracking or enforcement</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-openvinotoolkit-openvino_tokenizers.html">openvinotoolkit/openvino_tokenizers</a></td>
+              <td><a href="https://github.com/openvinotoolkit/openvino_tokenizers" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Model Runtimes</td>
+              <td>6.8/10</td>
+              <td>No code coverage instrumentation or reporting, No container image testing infrastructure</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-argo-workflows.html">red-hat-data-services/argo-workflows</a></td>
+              <td><a href="https://github.com/red-hat-data-services/argo-workflows" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>AI Pipelines</td>
+              <td>6.8/10</td>
+              <td>Downstream significantly behind upstream, No PR-time coverage reporting</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-openvino_model_server.html">red-hat-data-services/openvino_model_server</a></td>
+              <td><a href="https://github.com/red-hat-data-services/openvino_model_server" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>Model Runtimes</td>
+              <td>6.8/10</td>
+              <td>No PR-time unit test execution in GitHub Actions, No codecov/coveralls integration for PR coverage reporting</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-pipelines-components.html">opendatahub-io/pipelines-components</a></td>
+              <td><a href="https://github.com/opendatahub-io/pipelines-components" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>AI Pipelines</td>
+              <td>6.6/10</td>
+              <td>No coverage tracking or enforcement, No container security scanning (Trivy/Snyk/CodeQL)</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-kube-auth-proxy.html">red-hat-data-services/kube-auth-proxy</a></td>
+              <td><a href="https://github.com/red-hat-data-services/kube-auth-proxy" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>AI Core Platform</td>
+              <td>6.6/10</td>
+              <td>No container image vulnerability scanning in CI, No coverage enforcement or thresholds</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-model-metadata-collection.html">red-hat-data-services/model-metadata-collection</a></td>
+              <td><a href="https://github.com/red-hat-data-services/model-metadata-collection" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>AI Hub</td>
+              <td>6.5/10</td>
+              <td>No CI coverage tracking or enforcement, No container image runtime validation</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-openvino.html">red-hat-data-services/openvino</a></td>
+              <td><a href="https://github.com/red-hat-data-services/openvino" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>Model Runtimes</td>
+              <td>6.5/10</td>
+              <td>No downstream/Red Hat-specific CI or testing, No container image builds or Dockerfiles</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-MLServer.html">opendatahub-io/MLServer</a></td>
+              <td><a href="https://github.com/opendatahub-io/MLServer" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>Model Runtimes</td>
+              <td>6.4/10</td>
+              <td>Zero test coverage tracking, No image runtime validation</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-openvinotoolkit-model_server.html">openvinotoolkit/model_server</a></td>
+              <td><a href="https://github.com/openvinotoolkit/model_server" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Model Runtimes</td>
+              <td>6.4/10</td>
+              <td>No public CI/CD - all Jenkins pipelines are internal-only, No container vulnerability scanning (Trivy/Snyk/Grype)</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-data-science-pipelines-operator.html">red-hat-data-services/data-science-pipelines-operator</a></td>
+              <td><a href="https://github.com/red-hat-data-services/data-science-pipelines-operator" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>AI Pipelines</td>
+              <td>6.4/10</td>
+              <td>No coverage tracking or enforcement, No security scanning in CI (Trivy, CodeQL, Snyk)</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-modelmesh-serving.html">red-hat-data-services/modelmesh-serving</a></td>
+              <td><a href="https://github.com/red-hat-data-services/modelmesh-serving" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>Model Serving</td>
+              <td>6.4/10</td>
+              <td>No coverage tracking or enforcement, No container vulnerability scanning in CI</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-kube-rbac-proxy.html">red-hat-data-services/kube-rbac-proxy</a></td>
+              <td><a href="https://github.com/red-hat-data-services/kube-rbac-proxy" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>AI Core Platform</td>
+              <td>6.3/10</td>
+              <td>No test coverage tracking or enforcement, E2E tests not automated in CI</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-modelmesh-serving.html">opendatahub-io/modelmesh-serving</a></td>
+              <td><a href="https://github.com/opendatahub-io/modelmesh-serving" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>Model Serving</td>
+              <td>6.2/10</td>
+              <td>No coverage tracking or enforcement, No container image security scanning</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-odh-model-controller.html">opendatahub-io/odh-model-controller</a></td>
+              <td><a href="https://github.com/opendatahub-io/odh-model-controller" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>Model Serving</td>
+              <td>6.2/10</td>
+              <td>E2E tests are not automated on PRs, No security scanning (Trivy, Snyk, CodeQL, gosec)</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-vllm-tgis-adapter.html">opendatahub-io/vllm-tgis-adapter</a></td>
+              <td><a href="https://github.com/opendatahub-io/vllm-tgis-adapter" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>Model Runtimes</td>
+              <td>6.2/10</td>
+              <td>No container image build or test in this repository, No security scanning (SAST, dependency, container)</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-model-registry-bf4-kf.html">red-hat-data-services/model-registry-bf4-kf</a></td>
+              <td><a href="https://github.com/red-hat-data-services/model-registry-bf4-kf" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>AI Hub</td>
+              <td>6.2/10</td>
+              <td>No container vulnerability scanning, No coverage enforcement thresholds</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-odh-model-controller.html">red-hat-data-services/odh-model-controller</a></td>
+              <td><a href="https://github.com/red-hat-data-services/odh-model-controller" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>Model Serving</td>
+              <td>6.2/10</td>
+              <td>E2E tests are manual-only (workflow_dispatch), No coverage tracking or enforcement</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-mlflow-go.html">opendatahub-io/mlflow-go</a></td>
+              <td><a href="https://github.com/opendatahub-io/mlflow-go" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>MLflow</td>
+              <td>6.1/10</td>
+              <td>No test coverage tracking or enforcement, No security scanning in CI</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-model-metadata-collection.html">opendatahub-io/model-metadata-collection</a></td>
+              <td><a href="https://github.com/opendatahub-io/model-metadata-collection" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>AI Hub</td>
+              <td>6.1/10</td>
+              <td>No coverage enforcement in CI, No security scanning (Trivy, CodeQL, gosec, Dependabot)</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-MLServer.html">red-hat-data-services/MLServer</a></td>
+              <td><a href="https://github.com/red-hat-data-services/MLServer" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>Model Runtimes</td>
+              <td>6.1/10</td>
+              <td>No code coverage tracking or enforcement, No PR-time Docker image build validation</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-guardrails-detectors.html">opendatahub-io/guardrails-detectors</a></td>
+              <td><a href="https://github.com/opendatahub-io/guardrails-detectors" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>AI Safety</td>
+              <td>5.9/10</td>
+              <td>No integration or E2E testing, No PR-time container image builds or validation</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-kube-rbac-proxy.html">opendatahub-io/kube-rbac-proxy</a></td>
+              <td><a href="https://github.com/opendatahub-io/kube-rbac-proxy" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>AI Core Platform</td>
+              <td>5.9/10</td>
+              <td>No test coverage tracking or enforcement, No container image security scanning</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-model-registry-bf4-kf.html">opendatahub-io/model-registry-bf4-kf</a></td>
+              <td><a href="https://github.com/opendatahub-io/model-registry-bf4-kf" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>AI Hub</td>
+              <td>5.9/10</td>
+              <td>No security scanning (Trivy, CodeQL, Snyk, SAST), Very low Go unit test coverage (4 test files for 89 source files)</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-openvino_model_server.html">opendatahub-io/openvino_model_server</a></td>
+              <td><a href="https://github.com/opendatahub-io/openvino_model_server" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>Model Runtimes</td>
+              <td>5.9/10</td>
+              <td>No PR-time unit test or build validation in GitHub Actions, No container vulnerability scanning (Trivy/Snyk) in CI</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-guardrails-detectors.html">red-hat-data-services/guardrails-detectors</a></td>
+              <td><a href="https://github.com/red-hat-data-services/guardrails-detectors" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>AI Safety</td>
+              <td>5.9/10</td>
+              <td>No container image runtime validation in CI, No coverage tracking or enforcement</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-trustyai-explainability-fms-guardrails-orchestrator.html">trustyai-explainability/fms-guardrails-orchestrator</a></td>
+              <td><a href="https://github.com/trustyai-explainability/fms-guardrails-orchestrator" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>AI Safety</td>
+              <td>5.9/10</td>
+              <td>No test coverage tracking or enforcement, No security scanning in CI (no Trivy, Snyk, CodeQL, or dependabot)</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-EleutherAI-lm-evaluation-harness.html">EleutherAI/lm-evaluation-harness</a></td>
+              <td><a href="https://github.com/EleutherAI/lm-evaluation-harness" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>AI Safety</td>
+              <td>5.8/10</td>
+              <td>No coverage tracking or enforcement, No container image or deployment testing</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-fms-guardrails-orchestrator.html">red-hat-data-services/fms-guardrails-orchestrator</a></td>
+              <td><a href="https://github.com/red-hat-data-services/fms-guardrails-orchestrator" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>AI Safety</td>
+              <td>5.8/10</td>
+              <td>No test coverage tracking or enforcement, No security scanning in CI</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-SeldonIO-MLServer.html">SeldonIO/MLServer</a></td>
+              <td><a href="https://github.com/SeldonIO/MLServer" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Model Runtimes</td>
+              <td>5.7/10</td>
+              <td>Zero test coverage tracking, No PR-time Docker build validation</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-kserve-modelmesh-serving.html">kserve/modelmesh-serving</a></td>
+              <td><a href="https://github.com/kserve/modelmesh-serving" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Model Serving</td>
+              <td>5.6/10</td>
+              <td>No coverage tracking or enforcement, No container vulnerability scanning</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-caikit-nlp-client.html">opendatahub-io/caikit-nlp-client</a></td>
+              <td><a href="https://github.com/opendatahub-io/caikit-nlp-client" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>Model Runtimes</td>
+              <td>5.6/10</td>
+              <td>Repository appears abandoned — zero commits in 2025, No security scanning in CI (CodeQL, Trivy, Dependabot)</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-modelmesh-runtime-adapter.html">red-hat-data-services/modelmesh-runtime-adapter</a></td>
+              <td><a href="https://github.com/red-hat-data-services/modelmesh-runtime-adapter" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>Model Serving</td>
+              <td>5.6/10</td>
+              <td>No test coverage tracking or enforcement, No integration or E2E tests</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-vllm-cpu.html">red-hat-data-services/vllm-cpu</a></td>
+              <td><a href="https://github.com/red-hat-data-services/vllm-cpu" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>Model Runtimes</td>
+              <td>5.6/10</td>
+              <td>No automated test execution in CI for this fork, No PR-time container image build validation</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-fms-guardrails-orchestrator.html">opendatahub-io/fms-guardrails-orchestrator</a></td>
+              <td><a href="https://github.com/opendatahub-io/fms-guardrails-orchestrator" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>AI Safety</td>
+              <td>5.5/10</td>
+              <td>No code coverage tracking, No security scanning in CI</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-odh-observability.html">opendatahub-io/odh-observability</a></td>
+              <td><a href="https://github.com/opendatahub-io/odh-observability" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>AI Core Platform</td>
+              <td>5.5/10</td>
+              <td>No GitHub Actions CI workflows, No integration or E2E tests</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-openshift-kube-rbac-proxy.html">openshift/kube-rbac-proxy</a></td>
+              <td><a href="https://github.com/openshift/kube-rbac-proxy" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>AI Core Platform</td>
+              <td>5.5/10</td>
+              <td>No code coverage tracking or enforcement, No security scanning (CVE, SAST, dependency, secret detection)</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-modelmesh.html">red-hat-data-services/modelmesh</a></td>
+              <td><a href="https://github.com/red-hat-data-services/modelmesh" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>Model Serving</td>
+              <td>5.4/10</td>
+              <td>No test coverage tracking or enforcement, No PR-time Konflux build validation</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-caikit-caikit-nlp.html">caikit/caikit-nlp</a></td>
+              <td><a href="https://github.com/caikit/caikit-nlp" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Model Runtimes</td>
               <td>5.2/10</td>
-              <td>Agent guidance for testing is minimal, Coverage tracking and enforcement are missing</td>
+              <td>No integration or E2E test suite, No coverage enforcement or PR reporting</td>
             </tr>
-            
             <tr>
-              <td><a href="quality-report-opendatahub-io-ai-helpers.html">opendatahub-io/ai-helpers</a></td>
-              <td><a href="https://github.com/opendatahub-io/ai-helpers" target="_blank">GitHub</a></td>
-              <td>4.4/10</td>
-              <td>Coverage tracking and enforcement are missing, Limited integration and end-to-end coverage</td>
+              <td><a href="quality-report-red-hat-data-services-vllm-gaudi.html">red-hat-data-services/vllm-gaudi</a></td>
+              <td><a href="https://github.com/red-hat-data-services/vllm-gaudi" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>Model Runtimes</td>
+              <td>5.2/10</td>
+              <td>No coverage tracking or enforcement, No automated PR-time test execution</td>
             </tr>
-            
             <tr>
-              <td><a href="quality-report-opendatahub-io-agents.html">opendatahub-io/agents</a></td>
-              <td><a href="https://github.com/opendatahub-io/agents" target="_blank">GitHub</a></td>
-              <td>2.1/10</td>
-              <td>PR-time build validation is incomplete, Container image validation is weak</td>
+              <td><a href="quality-report-trustyai-explainability-guardrails-detectors.html">trustyai-explainability/guardrails-detectors</a></td>
+              <td><a href="https://github.com/trustyai-explainability/guardrails-detectors" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>AI Safety</td>
+              <td>5.2/10</td>
+              <td>No container image build or test in CI, No coverage tracking or enforcement</td>
             </tr>
-            
             <tr>
-              <td><a href="quality-report-opendatahub-io-agent-ops.html">opendatahub-io/agent-ops</a></td>
-              <td><a href="https://github.com/opendatahub-io/agent-ops" target="_blank">GitHub</a></td>
-              <td>1.3/10</td>
-              <td>Agent guidance for testing is minimal, PR-time build validation is incomplete</td>
+              <td><a href="quality-report-opendatahub-io-lm-evaluation-harness.html">opendatahub-io/lm-evaluation-harness</a></td>
+              <td><a href="https://github.com/opendatahub-io/lm-evaluation-harness" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>AI Safety</td>
+              <td>5.1/10</td>
+              <td>No coverage tracking or enforcement, No container image testing or scanning</td>
             </tr>
-            
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-rest-proxy.html">red-hat-data-services/rest-proxy</a></td>
+              <td><a href="https://github.com/red-hat-data-services/rest-proxy" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>Model Serving</td>
+              <td>5.1/10</td>
+              <td>No integration or E2E tests, No coverage tracking or enforcement</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-modelmesh-runtime-adapter.html">opendatahub-io/modelmesh-runtime-adapter</a></td>
+              <td><a href="https://github.com/opendatahub-io/modelmesh-runtime-adapter" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>Model Serving</td>
+              <td>4.9/10</td>
+              <td>No test coverage tracking or enforcement, No container image runtime validation</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-google-ml-metadata.html">google/ml-metadata</a></td>
+              <td><a href="https://github.com/google/ml-metadata" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>AI Pipelines</td>
+              <td>4.8/10</td>
+              <td>No code coverage tracking or enforcement, No container image security scanning</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-kserve-modelmesh-runtime-adapter.html">kserve/modelmesh-runtime-adapter</a></td>
+              <td><a href="https://github.com/kserve/modelmesh-runtime-adapter" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Model Serving</td>
+              <td>4.8/10</td>
+              <td>Repository archived — no active development, Zero coverage tracking or enforcement</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-openvinotoolkit-openvino_contrib.html">openvinotoolkit/openvino_contrib</a></td>
+              <td><a href="https://github.com/openvinotoolkit/openvino_contrib" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Model Runtimes</td>
+              <td>4.8/10</td>
+              <td>Zero test coverage tracking or enforcement, OpenVINO Code extension has 0 test files for 54 source files</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-kserve-modelmesh.html">kserve/modelmesh</a></td>
+              <td><a href="https://github.com/kserve/modelmesh" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Model Serving</td>
+              <td>4.6/10</td>
+              <td>No code coverage tracking, No container image security scanning</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-caikit-nlp.html">opendatahub-io/caikit-nlp</a></td>
+              <td><a href="https://github.com/opendatahub-io/caikit-nlp" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>Model Runtimes</td>
+              <td>4.6/10</td>
+              <td>No integration or E2E tests, No coverage enforcement or codecov integration</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-odh-cli.html">opendatahub-io/odh-cli</a></td>
+              <td><a href="https://github.com/opendatahub-io/odh-cli" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>AI Core Platform</td>
+              <td>4.6/10</td>
+              <td>No integration or E2E test coverage for CLI commands, No coverage tracking or enforcement</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-rest-proxy.html">opendatahub-io/rest-proxy</a></td>
+              <td><a href="https://github.com/opendatahub-io/rest-proxy" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>Model Serving</td>
+              <td>4.6/10</td>
+              <td>No integration or E2E tests, No container vulnerability scanning</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-caikit-nlp.html">red-hat-data-services/caikit-nlp</a></td>
+              <td><a href="https://github.com/red-hat-data-services/caikit-nlp" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>Model Runtimes</td>
+              <td>4.6/10</td>
+              <td>No codecov or coverage enforcement in CI, No integration or E2E test suites</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-redhat-openshift-ecosystem-community-operators-prod.html">redhat-openshift-ecosystem/community-operators-prod</a></td>
+              <td><a href="https://github.com/redhat-openshift-ecosystem/community-operators-prod" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>AI Core Platform</td>
+              <td>4.6/10</td>
+              <td>No in-repo CI/CD for PR validation, No schema validation in-repo workflows</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-mcp-server-operator.html">opendatahub-io/mcp-server-operator</a></td>
+              <td><a href="https://github.com/opendatahub-io/mcp-server-operator" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>AI Core Platform</td>
+              <td>4.5/10</td>
+              <td>E2E tests exist but are not run in CI, No container image scanning or SBOM generation</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-modelmesh.html">opendatahub-io/modelmesh</a></td>
+              <td><a href="https://github.com/opendatahub-io/modelmesh" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>Model Serving</td>
+              <td>4.5/10</td>
+              <td>PRs to main branch have NO CI checks, No code coverage tracking</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-caikit-tgis-serving.html">red-hat-data-services/caikit-tgis-serving</a></td>
+              <td><a href="https://github.com/red-hat-data-services/caikit-tgis-serving" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>Model Runtimes</td>
+              <td>4.5/10</td>
+              <td>No unit tests at all, No coverage tracking or enforcement</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-data-science-pipelines-tekton.html">red-hat-data-services/data-science-pipelines-tekton</a></td>
+              <td><a href="https://github.com/red-hat-data-services/data-science-pipelines-tekton" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>AI Pipelines</td>
+              <td>4.5/10</td>
+              <td>No code coverage tracking or enforcement, No container vulnerability scanning in CI</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-lm-evaluation-harness.html">red-hat-data-services/lm-evaluation-harness</a></td>
+              <td><a href="https://github.com/red-hat-data-services/lm-evaluation-harness" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>AI Safety</td>
+              <td>4.5/10</td>
+              <td>Linter job disabled in CI, No coverage tracking in CI</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-openvino_contrib.html">opendatahub-io/openvino_contrib</a></td>
+              <td><a href="https://github.com/opendatahub-io/openvino_contrib" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>Model Runtimes</td>
+              <td>4.2/10</td>
+              <td>No code coverage tracking or enforcement, No container image security scanning</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-vllm-gaudi.html">opendatahub-io/vllm-gaudi</a></td>
+              <td><a href="https://github.com/opendatahub-io/vllm-gaudi" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>Model Runtimes</td>
+              <td>4.2/10</td>
+              <td>No test execution in GitHub Actions CI, No code coverage tracking</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-triton-inference-server-client.html">triton-inference-server/client</a></td>
+              <td><a href="https://github.com/triton-inference-server/client" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Model Runtimes</td>
+              <td>4.2/10</td>
+              <td>No tests execute in CI/CD, No coverage tracking or enforcement</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-openvino_contrib.html">red-hat-data-services/openvino_contrib</a></td>
+              <td><a href="https://github.com/red-hat-data-services/openvino_contrib" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>Model Runtimes</td>
+              <td>4.1/10</td>
+              <td>No code coverage tracking or enforcement, No container image security scanning</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-text-generation-inference.html">red-hat-data-services/text-generation-inference</a></td>
+              <td><a href="https://github.com/red-hat-data-services/text-generation-inference" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>Model Runtimes</td>
+              <td>3.8/10</td>
+              <td>Zero Rust test coverage, No code coverage tracking or enforcement</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-trustyai-explainability-vllm-orchestrator-gateway.html">trustyai-explainability/vllm-orchestrator-gateway</a></td>
+              <td><a href="https://github.com/trustyai-explainability/vllm-orchestrator-gateway" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Model Serving</td>
+              <td>3.5/10</td>
+              <td>Minimal unit test coverage — only config validation tested, No integration or E2E tests</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-kserve-rest-proxy.html">kserve/rest-proxy</a></td>
+              <td><a href="https://github.com/kserve/rest-proxy" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Model Serving</td>
+              <td>3.4/10</td>
+              <td>No integration or E2E tests, No coverage tracking or enforcement</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-caikit-tgis-serving.html">opendatahub-io/caikit-tgis-serving</a></td>
+              <td><a href="https://github.com/opendatahub-io/caikit-tgis-serving" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>Model Runtimes</td>
+              <td>3.4/10</td>
+              <td>Zero unit tests, No code coverage tracking</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-ml-metadata.html">red-hat-data-services/ml-metadata</a></td>
+              <td><a href="https://github.com/red-hat-data-services/ml-metadata" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>AI Pipelines</td>
+              <td>3.3/10</td>
+              <td>No tests execute in CI — PR or push, No coverage tracking or enforcement</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-model-runtimes-agent.html">opendatahub-io/model-runtimes-agent</a></td>
+              <td><a href="https://github.com/opendatahub-io/model-runtimes-agent" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>Model Runtimes</td>
+              <td>3.2/10</td>
+              <td>No CI/CD pipeline of any kind, No coverage tracking or enforcement</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-vllm-orchestrator-gateway.html">red-hat-data-services/vllm-orchestrator-gateway</a></td>
+              <td><a href="https://github.com/red-hat-data-services/vllm-orchestrator-gateway" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>Model Serving</td>
+              <td>2.9/10</td>
+              <td>Minimal unit test coverage — core request handling untested, Zero integration or E2E tests</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-community-operators-prod.html">opendatahub-io/community-operators-prod</a></td>
+              <td><a href="https://github.com/opendatahub-io/community-operators-prod" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>AI Core Platform</td>
+              <td>2.8/10</td>
+              <td>No in-repo CI/CD pipeline for PR validation, No automated manifest validation on PRs</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-guardrails-regex-detector.html">opendatahub-io/guardrails-regex-detector</a></td>
+              <td><a href="https://github.com/opendatahub-io/guardrails-regex-detector" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>AI Safety</td>
+              <td>2.8/10</td>
+              <td>No CI/CD pipeline, Minimal test coverage (1 test for 212 LOC)</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-ml-metadata.html">opendatahub-io/ml-metadata</a></td>
+              <td><a href="https://github.com/opendatahub-io/ml-metadata" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>AI Pipelines</td>
+              <td>2.8/10</td>
+              <td>No tests execute in CI — zero automated quality gates, No coverage tracking or enforcement</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-must-gather.html">red-hat-data-services/must-gather</a></td>
+              <td><a href="https://github.com/red-hat-data-services/must-gather" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>AI Core Platform</td>
+              <td>2.7/10</td>
+              <td>Zero test coverage — no unit, integration, or E2E tests, No image runtime validation</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-opendatahub-community.html">opendatahub-io/opendatahub-community</a></td>
+              <td><a href="https://github.com/opendatahub-io/opendatahub-community" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>AI Core Platform</td>
+              <td>2.5/10</td>
+              <td>No CI/CD workflows at all, No markdown linting or link validation</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-vllm-orchestrator-gateway.html">opendatahub-io/vllm-orchestrator-gateway</a></td>
+              <td><a href="https://github.com/opendatahub-io/vllm-orchestrator-gateway" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>Model Serving</td>
+              <td>2.2/10</td>
+              <td>No tests for core request handling logic (main.rs), No integration or E2E tests</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-client.html">opendatahub-io/client</a></td>
+              <td><a href="https://github.com/opendatahub-io/client" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>Model Runtimes</td>
+              <td>1.9/10</td>
+              <td>No test execution in CI, Zero coverage tracking</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-guardrails-regex-detector.html">red-hat-data-services/guardrails-regex-detector</a></td>
+              <td><a href="https://github.com/red-hat-data-services/guardrails-regex-detector" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>AI Safety</td>
+              <td>1.4/10</td>
+              <td>No CI/CD pipeline exists, Near-zero test coverage</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-vllm.html">red-hat-data-services/vllm</a></td>
+              <td><a href="https://github.com/red-hat-data-services/vllm" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>Model Runtimes</td>
+              <td>1.4/10</td>
+              <td>No container image runtime validation, skip-checks=true in Tekton pipeline</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-dsp-dev-tools.html">opendatahub-io/dsp-dev-tools</a></td>
+              <td><a href="https://github.com/opendatahub-io/dsp-dev-tools" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>AI Pipelines</td>
+              <td>1.2/10</td>
+              <td>No CI/CD pipeline of any kind, Zero test coverage across all dimensions</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-kserve-raw-migration.html">opendatahub-io/kserve-raw-migration</a></td>
+              <td><a href="https://github.com/opendatahub-io/kserve-raw-migration" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>Model Serving</td>
+              <td>1.2/10</td>
+              <td>Zero test coverage - no tests of any kind, No CI/CD pipeline</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-minio-model-storage.html">red-hat-data-services/minio-model-storage</a></td>
+              <td><a href="https://github.com/red-hat-data-services/minio-model-storage" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>Model Serving</td>
+              <td>1.2/10</td>
+              <td>No CI/CD pipeline of any kind, Zero test coverage</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-rhoai-upgrade-helpers.html">red-hat-data-services/rhoai-upgrade-helpers</a></td>
+              <td><a href="https://github.com/red-hat-data-services/rhoai-upgrade-helpers" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>AI Core Platform</td>
+              <td>1.2/10</td>
+              <td>Zero automated tests for scripts that perform destructive production operations, No CI/CD pipeline whatsoever</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-mlmd-bazel-dist.html">red-hat-data-services/mlmd-bazel-dist</a></td>
+              <td><a href="https://github.com/red-hat-data-services/mlmd-bazel-dist" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>AI Pipelines</td>
+              <td>1.0/10</td>
+              <td>No CI/CD pipeline at all, No tests of any kind</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-vllm-rocm.html">red-hat-data-services/vllm-rocm</a></td>
+              <td><a href="https://github.com/red-hat-data-services/vllm-rocm" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>Model Runtimes</td>
+              <td>1.0/10</td>
+              <td>No runtime validation of built container image, No automated tests of any kind</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-trustyai-explainability-guardrails-regex-detector.html">trustyai-explainability/guardrails-regex-detector</a></td>
+              <td><a href="https://github.com/trustyai-explainability/guardrails-regex-detector" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>AI Safety</td>
+              <td>1.0/10</td>
+              <td>No CI/CD pipeline exists, Near-zero test coverage</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-model-serving-devops.html">red-hat-data-services/model-serving-devops</a></td>
+              <td><a href="https://github.com/red-hat-data-services/model-serving-devops" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>Model Serving</td>
+              <td>0.8/10</td>
+              <td>Zero test coverage for automation scripts, No PR-triggered CI workflow</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-vllm-spyre.html">red-hat-data-services/vllm-spyre</a></td>
+              <td><a href="https://github.com/red-hat-data-services/vllm-spyre" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>Model Runtimes</td>
+              <td>0.8/10</td>
+              <td>No CI/CD pipeline at all, No image build validation on PR</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-kserve-migration.html">opendatahub-io/kserve-migration</a></td>
+              <td><a href="https://github.com/opendatahub-io/kserve-migration" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>Model Serving</td>
+              <td>0.5/10</td>
+              <td>Repository is an empty placeholder — no source code, No CI/CD workflows</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-red-hat-data-services-data-hub-pipelines.html">red-hat-data-services/data-hub-pipelines</a></td>
+              <td><a href="https://github.com/red-hat-data-services/data-hub-pipelines" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>AI Pipelines</td>
+              <td>0.3/10</td>
+              <td>Repository is an empty skeleton, No CI/CD pipeline</td>
+            </tr>
       </tbody>
     </table>
   </div>
 </body>
 </html>
+

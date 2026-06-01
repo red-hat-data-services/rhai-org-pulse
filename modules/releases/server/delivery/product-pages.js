@@ -141,6 +141,51 @@ function extractGaDate(release) {
 }
 
 /**
+ * Extracts the due date for any Product Pages release — GA or EA.
+ *
+ * RHOAI publishes separate Product Pages rows per phase (rhoai-3.5.EA1,
+ * rhoai-3.5.EA2, rhoai-3.5), unlike RHELAI/RHAII which bundle phases as
+ * milestones in one row and go through expandReleaseMilestones().
+ *
+ * For EA-specific releases (shortname contains EA1, EA2, etc.), searches
+ * milestones matching that EA tag first, since extractGaDate() intentionally
+ * skips EA milestones.  Falls back to extractGaDate() for GA releases.
+ */
+function extractReleaseDueDate(release) {
+  const shortname = release.shortname || release.name || ''
+  const eaMatch = shortname.match(/\b(EA\d?)\b/i)
+
+  if (eaMatch) {
+    const eaTag = eaMatch[1]
+    const eaPattern = new RegExp(`\\b${eaTag}\\b`, 'i')
+
+    const milestones = release.major_milestones
+    if (Array.isArray(milestones)) {
+      for (const m of milestones) {
+        if (m.draft) continue
+        if (eaPattern.test(m.name || '') && m.date_finish) {
+          return m.date_finish
+        }
+      }
+    }
+
+    const tasks = release.all_ga_tasks
+    if (Array.isArray(tasks)) {
+      for (const t of tasks) {
+        if (eaPattern.test(t.name || '') && t.date_finish) {
+          return t.date_finish
+        }
+      }
+    }
+
+    // ga_date on EA releases often holds the EA target date
+    if (release.ga_date) return release.ga_date
+  }
+
+  return extractGaDate(release)
+}
+
+/**
  * Extracts the code freeze date from a Product Pages release object.
  * Searches major_milestones and all_ga_tasks for entries matching
  * "code freeze" (case-insensitive, with optional hyphen/space).
@@ -150,6 +195,49 @@ function extractGaDate(release) {
  */
 function extractCodeFreezeDate(release, eaTag) {
   const freezePattern = /code[.\-_\s]*freeze/i
+
+  const milestones = release.major_milestones
+  if (Array.isArray(milestones) && milestones.length > 0) {
+    let bestMatch = null
+    for (const m of milestones) {
+      if (m.draft) continue
+      const name = m.name || ''
+      if (!freezePattern.test(name)) continue
+      if (eaTag && new RegExp(`\\b${eaTag}\\b`, 'i').test(name)) {
+        return m.date_finish || null
+      }
+      bestMatch = m
+    }
+    if (bestMatch?.date_finish) return bestMatch.date_finish
+  }
+
+  const tasks = release.all_ga_tasks
+  if (Array.isArray(tasks) && tasks.length > 0) {
+    let bestMatch = null
+    for (const t of tasks) {
+      const name = t.name || ''
+      if (!freezePattern.test(name)) continue
+      if (eaTag && new RegExp(`\\b${eaTag}\\b`, 'i').test(name)) {
+        return t.date_finish || null
+      }
+      bestMatch = t
+    }
+    if (bestMatch?.date_finish) return bestMatch.date_finish
+  }
+
+  return null
+}
+
+/**
+ * Extracts the feature freeze date from a Product Pages release object.
+ * Searches major_milestones and all_ga_tasks for entries matching
+ * "feature freeze" (case-insensitive, with optional hyphen/space).
+ *
+ * For EA-specific releases, pass an optional eaTag (e.g. "EA1") to prefer
+ * a milestone scoped to that EA over a generic one.
+ */
+function extractFeatureFreezeDate(release, eaTag) {
+  const freezePattern = /feature[.\-_\s]*freeze/i
 
   const milestones = release.major_milestones
   if (Array.isArray(milestones) && milestones.length > 0) {
@@ -224,9 +312,15 @@ function expandReleaseMilestones(r, productName) {
     if (!RELEASE_MILESTONE_PATTERN.test(name)) return false
     // Must be an EA release or a standalone GA milestone
     const isEaRelease = /\bEA\d?\b/i.test(name) && /release|GA\b/i.test(name)
-    // GA milestone: short name ending in "GA" (e.g. "rhelai-3.4 GA", "rhaiis-3.4 GA")
-    // Exclude long descriptive milestones that just happen to mention GA
-    const isGa = /\bGA\s*$/i.test(name) && !/\bEA\d?\b/i.test(name) && name.split(/\s+/).length <= 4
+    // GA milestone: name ending in "GA" or "GA Release" without EA tag.
+    // Matches "rhelai-3.4 GA", "RHAI-3.5 GA Release", but not
+    // "rpms release 1 month before the 3.4 GA" (too long) or
+    // "RHAII-3.5 GA final RC available" (doesn't end in GA/Release).
+    const hasNoEa = !/\bEA\d?\b/i.test(name)
+    const isGa = hasNoEa && (
+      (/\bGA\s*$/i.test(name) && name.split(/\s+/).length <= 4) ||
+      /\bGA\s+Release\s*$/i.test(name)
+    )
     return isEaRelease || isGa
   })
 
@@ -250,7 +344,8 @@ function expandReleaseMilestones(r, productName) {
       productName,
       releaseNumber,
       dueDate: m.date_finish,
-      codeFreezeDate: extractCodeFreezeDate(r, eaTag) || null
+      codeFreezeDate: extractCodeFreezeDate(r, eaTag) || null,
+      featureFreezeDate: extractFeatureFreezeDate(r, eaTag) || null
     }
   })
 }
@@ -343,15 +438,19 @@ async function fetchProductsByShortname(shortnames, config) {
           continue
         }
 
-        // Single-milestone or no-milestone release — use extractGaDate
-        const gaDate = extractGaDate(r)
-        if (!gaDate) continue
+        // Single-milestone or no-milestone release (e.g. RHOAI per-phase rows)
+        const dueDate = extractReleaseDueDate(r)
+        if (!dueDate) continue
 
+        const releaseNumber = r.shortname || r.name || ''
+        const eaMatch = releaseNumber.match(/\b(EA\d?)\b/i)
+        const eaTag = eaMatch ? eaMatch[1] : null
         releases.push({
           productName,
-          releaseNumber: r.shortname || r.name || '',
-          dueDate: gaDate,
-          codeFreezeDate: extractCodeFreezeDate(r) || null
+          releaseNumber,
+          dueDate,
+          codeFreezeDate: extractCodeFreezeDate(r, eaTag) || null,
+          featureFreezeDate: extractFeatureFreezeDate(r, eaTag) || null
         })
       }
     } catch (err) {
@@ -364,14 +463,9 @@ async function fetchProductsByShortname(shortnames, config) {
     }
   }
 
-  // Filter to future releases only (dueDate >= today)
-  const now = new Date()
-  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
-  return releases.filter(r => {
-    const due = new Date(`${r.dueDate}T00:00:00Z`)
-    if (Number.isNaN(due.getTime())) return false
-    return due >= today
-  })
+  // Include ALL releases (past and future) for commitment tracking
+  // Commitment tracking needs historical data to compare against snapshots
+  return releases
 }
 
 /**
@@ -434,7 +528,10 @@ module.exports = {
   fetchAllProducts,
   getAuthStatus,
   extractGaDate,
+  extractReleaseDueDate,
   extractCodeFreezeDate,
+  extractFeatureFreezeDate,
+  expandReleaseMilestones,
   milestoneToReleaseNumber,
   _resetForTesting
 }

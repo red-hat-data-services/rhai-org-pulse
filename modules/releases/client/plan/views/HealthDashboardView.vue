@@ -39,6 +39,9 @@ var riskLevelFilter = ref('')
 // Refresh polling
 var refreshPollTimer = null
 
+// Snapshot creation state
+var creatingSnapshot = ref(false)
+
 // ─── Permissions ───
 
 var canEdit = computed(function() {
@@ -149,6 +152,18 @@ var removedFeatures = computed(function() {
   var currentKeys = new Set(phasedFeatures.value.map(function(f) { return f.key }))
   return snap.features.filter(function(f) { return !currentKeys.has(f.key) })
 })
+
+function handleCreateSnapshot() {
+  if (!selectedVersion.value || !activePhase.value) return
+  creatingSnapshot.value = true
+  createSnapshot(selectedVersion.value, activePhase.value).then(function() {
+    loadHealth(selectedVersion.value)
+  }).catch(function(err) {
+    healthError.value = err.message || 'Failed to create snapshot'
+  }).finally(function() {
+    creatingSnapshot.value = false
+  })
+}
 
 function handleResnapshot() {
   if (!selectedVersion.value || !activePhase.value) return
@@ -429,6 +444,23 @@ onUnmounted(function() {
             </button>
           </div>
         </div>
+      </div>
+
+      <!-- Create snapshot prompt (when no snapshot exists) -->
+      <div v-if="!committedSnapshot && isPhaseCommitted(activePhase) && canEdit"
+           class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+        <p class="text-sm text-gray-700 dark:text-gray-300 mb-2">
+          No snapshot exists for {{ selectedVersion }} {{ activePhase }}
+        </p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+          Create a snapshot to capture committed features for this phase.
+          This enables commitment tracking in Reports.
+        </p>
+        <button @click="handleCreateSnapshot"
+                class="px-3 py-1.5 bg-primary-600 text-white rounded-md text-sm hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                :disabled="creatingSnapshot">
+          {{ creatingSnapshot ? 'Creating...' : 'Create Snapshot' }}
+        </button>
       </div>
 
       <!-- Committed snapshot info -->
