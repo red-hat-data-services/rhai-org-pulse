@@ -18,6 +18,34 @@ spec:
         component: frontend
     spec:
       serviceAccountName: frontend-proxy
+      initContainers:
+        - name: render-config
+          image: registry.access.redhat.com/ubi9/ubi-minimal
+          command: ["sh", "-c"]
+          args:
+            - |
+              sed "s|\${PROXY_AUTH_SECRET}|${PROXY_AUTH_SECRET}|g" \
+                /template/app.conf.template > /rendered/default.conf
+          env:
+            - name: PROXY_AUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: proxy-auth-secret
+                  key: secret
+                  optional: true
+          volumeMounts:
+            - name: config-template
+              mountPath: /template
+              readOnly: true
+            - name: rendered-config
+              mountPath: /rendered
+          resources:
+            requests:
+              memory: "16Mi"
+              cpu: "10m"
+            limits:
+              memory: "32Mi"
+              cpu: "50m"
       containers:
         - name: oauth-proxy
           image: quay.io/openshift/origin-oauth-proxy:4.16
@@ -53,16 +81,13 @@ spec:
               cpu: "200m"
         - name: nginx
           image: quay.io/org-pulse/team-tracker-frontend:latest
-          env:
-            - name: PROXY_AUTH_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: proxy-auth-secret
-                  key: secret
-                  optional: true
           ports:
             - containerPort: 8080
               protocol: TCP
+          volumeMounts:
+            - name: rendered-config
+              mountPath: /etc/nginx/conf.d
+              readOnly: true
           readinessProbe:
             httpGet:
               path: /healthz
@@ -89,3 +114,8 @@ spec:
         - name: cookie-secret
           secret:
             secretName: frontend-proxy-cookie
+        - name: config-template
+          configMap:
+            name: nginx-config-template
+        - name: rendered-config
+          emptyDir: {}
