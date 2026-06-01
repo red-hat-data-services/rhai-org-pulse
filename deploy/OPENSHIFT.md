@@ -83,12 +83,9 @@ npm run build
 
 # Create a minimal Dockerfile for the pre-built assets
 cat > /tmp/frontend-amd64.Dockerfile <<'EOF'
-FROM registry.access.redhat.com/ubi9/nginx-124
-COPY deploy/nginx.conf /opt/app-root/etc/nginx.default.d/app.conf
-COPY dist/ /opt/app-root/src/
-USER 1001
+FROM registry.access.redhat.com/hi/nginx:latest
+COPY dist/ /usr/share/nginx/html
 EXPOSE 8080
-CMD ["/usr/libexec/s2i/run"]
 EOF
 
 # Build using a temp context (dist/ is in .dockerignore)
