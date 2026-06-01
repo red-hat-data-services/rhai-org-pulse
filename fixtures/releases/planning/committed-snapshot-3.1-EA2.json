@@ -1,0 +1,39 @@
+{
+  "version": "3.1",
+  "phase": "EA2",
+  "snapshotAt": "2025-04-15T00:00:00.000Z",
+  "snapshotTrigger": "auto",
+  "featureKeys": ["RHOAIENG-601", "RHOAIENG-602", "RHOAIENG-603", "RHOAIENG-604", "RHOAIENG-605"],
+  "features": [
+    {
+      "key": "RHOAIENG-601",
+      "summary": "KServe: InferenceGraph support",
+      "components": "Model Serving",
+      "deliveryOwner": "Ian Rodriguez"
+    },
+    {
+      "key": "RHOAIENG-602",
+      "summary": "Distributed Training: PyTorch FSDP integration",
+      "components": "Distributed Training",
+      "deliveryOwner": "Julia Adams"
+    },
+    {
+      "key": "RHOAIENG-603",
+      "summary": "Data Science Pipelines: Vertex AI compatibility",
+      "components": "Pipelines",
+      "deliveryOwner": "Kevin Park"
+    },
+    {
+      "key": "RHOAIENG-604",
+      "summary": "LLM Gateway: Streaming response support",
+      "components": "LLM Gateway",
+      "deliveryOwner": "Laura Green"
+    },
+    {
+      "key": "RHOAIENG-605",
+      "summary": "Admin Dashboard: Cost allocation tracking",
+      "components": "Dashboard",
+      "deliveryOwner": "Mike Turner"
+    }
+  ]
+}

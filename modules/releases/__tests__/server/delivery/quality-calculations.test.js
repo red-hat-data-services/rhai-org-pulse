@@ -200,4 +200,39 @@ describe('computeCumulativeBugData', () => {
     // Cumulative count stays at 1 for days 1-4, then increments to 2 on day 5
     expect(result.datasets[0].data).toEqual([0, 1, 1, 1, 1, 2])
   })
+
+  it('truncates data at actual elapsed days per version', () => {
+    const bugs = [
+      {
+        key: 'BUG-1',
+        affectedVersions: ['v-old', 'v-new'],
+        created: '2026-01-19T10:00:00.000Z'
+      },
+      {
+        key: 'BUG-2',
+        affectedVersions: ['v-old'],
+        created: '2026-01-20T10:00:00.000Z'
+      }
+    ]
+    const versions = ['v-old', 'v-new']
+    const versionReleaseMap = new Map([
+      ['v-old', '2026-01-15'],
+      ['v-new', '2026-01-18']
+    ])
+
+    // Jan 21 = 6 days after v-old release, 3 days after v-new release
+    const now = new Date('2026-01-21T00:00:00.000Z').getTime()
+    const result = computeCumulativeBugData(bugs, versions, versionReleaseMap, { now })
+
+    const vOld = result.datasets.find(d => d.label === 'v-old')
+    const vNew = result.datasets.find(d => d.label === 'v-new')
+
+    // v-old: released Jan 15, elapsed=6, maxDays=5 → cap=5, all points filled
+    // BUG-1 at day 4 (Jan 19 - Jan 15), BUG-2 at day 5 (Jan 20 - Jan 15)
+    expect(vOld.data).toEqual([0, 0, 0, 0, 1, 2])
+
+    // v-new: released Jan 18, elapsed=3, maxDays=5 → cap=3
+    // BUG-1 at day 1 (Jan 19 - Jan 18), days 4-5 should be null
+    expect(vNew.data).toEqual([0, 1, 1, 1, null, null])
+  })
 })

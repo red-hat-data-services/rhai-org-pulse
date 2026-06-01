@@ -1,0 +1,47 @@
+{
+  "cachedAt": "2026-05-27T12:00:00.000Z",
+  "data": {
+    "generatedAt": "2026-05-27T12:00:00.000Z",
+    "releases": [
+      {
+        "productName": "RHOAI",
+        "releaseNumber": "3.4",
+        "dueDate": "2026-05-01",
+        "codeFreezeDate": "2026-04-15",
+        "teams": {},
+        "issues": [
+          {"key": "RHOAIENG-700", "summary": "Feature 700 for version 3.4", "issueType": "Feature", "status": "Done", "statusBucket": "done", "fixVersion": "rhoai-3.4", "components": ["Component 0"], "deliveryOwner": "Owner 0"},
+          {"key": "RHOAIENG-701", "summary": "Feature 701 for version 3.4", "issueType": "Feature", "status": "Done", "statusBucket": "done", "fixVersion": "rhoai-3.4", "components": ["Component 1"], "deliveryOwner": "Owner 1"},
+          {"key": "RHOAIENG-702", "summary": "Feature 702 for version 3.4", "issueType": "Feature", "status": "In Progress", "statusBucket": "doing", "fixVersion": "rhoai-3.4", "components": ["Component 2"], "deliveryOwner": "Owner 2"}
+        ],
+        "totals": {"to_do": 0, "doing": 1, "done": 2, "issues_to_do": 0, "issues_doing": 1, "issues_done": 2}
+      },
+      {
+        "productName": "RHOAI",
+        "releaseNumber": "3.5",
+        "dueDate": "2026-08-15",
+        "codeFreezeDate": "2026-08-01",
+        "teams": {},
+        "issues": [
+          {"key": "RHOAIENG-900", "summary": "Feature 900 for version 3.5", "issueType": "Feature", "status": "Done", "statusBucket": "done", "fixVersion": "rhoai-3.5", "components": ["Component 0"], "deliveryOwner": "Owner 0"},
+          {"key": "RHOAIENG-901", "summary": "Feature 901 for version 3.5", "issueType": "Feature", "status": "Done", "statusBucket": "done", "fixVersion": "rhoai-3.5", "components": ["Component 1"], "deliveryOwner": "Owner 1"},
+          {"key": "RHOAIENG-902", "summary": "Feature 902 for version 3.5", "issueType": "Feature", "status": "In Progress", "statusBucket": "doing", "fixVersion": "rhoai-3.5", "components": ["Component 2"], "deliveryOwner": "Owner 2"},
+          {"key": "RHOAIENG-903", "summary": "Feature 903 for version 3.5", "issueType": "Feature", "status": "To Do", "statusBucket": "to_do", "fixVersion": "rhoai-3.5", "components": ["Component 3"], "deliveryOwner": "Owner 3"}
+        ],
+        "totals": {"to_do": 1, "doing": 1, "done": 2, "issues_to_do": 1, "issues_doing": 1, "issues_done": 2}
+      },
+      {
+        "productName": "RHOAI",
+        "releaseNumber": "3.6",
+        "dueDate": "2027-03-01",
+        "codeFreezeDate": "2027-02-15",
+        "teams": {},
+        "issues": [
+          {"key": "RHOAIENG-1100", "summary": "Feature 1100 for version 3.6", "issueType": "Feature", "status": "To Do", "statusBucket": "to_do", "fixVersion": "rhoai-3.6", "components": ["Component 0"], "deliveryOwner": "Owner 0"},
+          {"key": "RHOAIENG-1101", "summary": "Feature 1101 for version 3.6", "issueType": "Feature", "status": "To Do", "statusBucket": "to_do", "fixVersion": "rhoai-3.6", "components": ["Component 1"], "deliveryOwner": "Owner 1"}
+        ],
+        "totals": {"to_do": 2, "doing": 0, "done": 0, "issues_to_do": 2, "issues_doing": 0, "issues_done": 0}
+      }
+    ]
+  }
+}

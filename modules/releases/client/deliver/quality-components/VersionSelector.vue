@@ -1,18 +1,16 @@
 <template>
-  <div class="w-full max-w-2xl">
-    <label class="block text-sm font-medium mb-2">Select Versions (max {{ maxSelections }})</label>
-
+  <div class="w-full">
     <!-- Selected versions as removable chips -->
-    <div v-if="modelValue.length > 0" class="flex flex-wrap gap-2 mb-2">
+    <div v-if="modelValue.length > 0" class="flex flex-wrap gap-1.5 mb-2">
       <span
         v-for="versionName in modelValue"
         :key="versionName"
-        class="inline-flex items-center px-3 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 rounded-full text-sm"
+        class="inline-flex items-center px-2 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 rounded-full text-xs font-medium"
       >
         {{ versionName }}
         <button
           @click="removeVersion(versionName)"
-          class="ml-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 font-bold"
+          class="ml-1.5 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 font-bold text-base leading-none"
           aria-label="Remove"
         >
           ×
@@ -28,7 +26,7 @@
         @blur="handleBlur"
         type="text"
         placeholder="Search versions..."
-        class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        class="w-full px-3 py-2 text-sm border-2 rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900"
         :disabled="modelValue.length >= maxSelections"
       />
 

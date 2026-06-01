@@ -1,0 +1,27 @@
+{
+  "version": "3.2",
+  "phase": "EA1",
+  "snapshotAt": "2025-07-01T00:00:00.000Z",
+  "snapshotTrigger": "auto",
+  "featureKeys": ["RHOAIENG-701", "RHOAIENG-702", "RHOAIENG-703"],
+  "features": [
+    {
+      "key": "RHOAIENG-701",
+      "summary": "Model Serving: Multi-model endpoint support",
+      "components": "Model Serving",
+      "deliveryOwner": "Rachel Kim"
+    },
+    {
+      "key": "RHOAIENG-702",
+      "summary": "Pipelines: DAG visualization improvements",
+      "components": "Pipelines",
+      "deliveryOwner": "Steve Johnson"
+    },
+    {
+      "key": "RHOAIENG-703",
+      "summary": "Monitoring: Custom alerting rules",
+      "components": "Monitoring",
+      "deliveryOwner": "Tina Martinez"
+    }
+  ]
+}

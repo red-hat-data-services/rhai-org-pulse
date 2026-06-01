@@ -1,8 +1,10 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, inject } from 'vue'
 import { useModuleLink } from '@shared/client/composables/useModuleLink'
 
 const { linkTo } = useModuleLink()
+const moduleNav = inject('moduleNav')
+const releasesAvailable = computed(() => moduleNav?.isModuleAvailable?.('releases') ?? false)
 
 const props = defineProps({
   components: { type: Object, default: () => ({}) },
@@ -272,14 +274,20 @@ function stepsDone(component) {
             </td>
             <td class="px-4 py-3">
               <div class="flex flex-wrap gap-1">
-                <a
-                  v-for="feat in (component.linkedFeatures || [])"
-                  :key="feat"
-                  :href="linkTo('releases', 'feature-detail', { key: feat })"
-                  class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-mono bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
-                  :title="featureTitles[feat] || feat"
-                  @click.stop
-                >{{ feat }}</a>
+                <template v-for="feat in (component.linkedFeatures || [])" :key="feat">
+                  <a
+                    v-if="releasesAvailable"
+                    :href="linkTo('releases', 'feature-detail', { key: feat })"
+                    class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-mono bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
+                    :title="featureTitles[feat] || feat"
+                    @click.stop
+                  >{{ feat }}</a>
+                  <span
+                    v-else
+                    class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-mono bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300"
+                    :title="featureTitles[feat] || feat"
+                  >{{ feat }}</span>
+                </template>
                 <span v-if="!component.linkedFeatures?.length" class="text-xs text-gray-400">—</span>
               </div>
             </td>

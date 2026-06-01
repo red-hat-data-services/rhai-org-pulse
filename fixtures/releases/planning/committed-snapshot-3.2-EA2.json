@@ -1,0 +1,45 @@
+{
+  "version": "3.2",
+  "phase": "EA2",
+  "snapshotAt": "2025-08-15T00:00:00.000Z",
+  "snapshotTrigger": "auto",
+  "featureKeys": ["RHOAIENG-701", "RHOAIENG-702", "RHOAIENG-703", "RHOAIENG-704", "RHOAIENG-705", "RHOAIENG-706"],
+  "features": [
+    {
+      "key": "RHOAIENG-701",
+      "summary": "Model Serving: Multi-model endpoint support",
+      "components": "Model Serving",
+      "deliveryOwner": "Rachel Kim"
+    },
+    {
+      "key": "RHOAIENG-702",
+      "summary": "Pipelines: DAG visualization improvements",
+      "components": "Pipelines",
+      "deliveryOwner": "Steve Johnson"
+    },
+    {
+      "key": "RHOAIENG-703",
+      "summary": "Monitoring: Custom alerting rules",
+      "components": "Monitoring",
+      "deliveryOwner": "Tina Martinez"
+    },
+    {
+      "key": "RHOAIENG-704",
+      "summary": "Dashboard: Multi-cluster support",
+      "components": "Dashboard",
+      "deliveryOwner": "Uma Patel"
+    },
+    {
+      "key": "RHOAIENG-705",
+      "summary": "Workbench: VS Code integration",
+      "components": "Workbench",
+      "deliveryOwner": "Victor Chen"
+    },
+    {
+      "key": "RHOAIENG-706",
+      "summary": "LLM Gateway: Rate limiting per user",
+      "components": "LLM Gateway",
+      "deliveryOwner": "Wendy Lopez"
+    }
+  ]
+}

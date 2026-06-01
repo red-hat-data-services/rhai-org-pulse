@@ -1,0 +1,63 @@
+{
+  "version": "3.1",
+  "phase": "GA",
+  "snapshotAt": "2025-05-20T00:00:00.000Z",
+  "snapshotTrigger": "auto",
+  "featureKeys": ["RHOAIENG-601", "RHOAIENG-602", "RHOAIENG-603", "RHOAIENG-604", "RHOAIENG-605", "RHOAIENG-606", "RHOAIENG-607", "RHOAIENG-608", "RHOAIENG-609"],
+  "features": [
+    {
+      "key": "RHOAIENG-601",
+      "summary": "KServe: InferenceGraph support",
+      "components": "Model Serving",
+      "deliveryOwner": "Ian Rodriguez"
+    },
+    {
+      "key": "RHOAIENG-602",
+      "summary": "Distributed Training: PyTorch FSDP integration",
+      "components": "Distributed Training",
+      "deliveryOwner": "Julia Adams"
+    },
+    {
+      "key": "RHOAIENG-603",
+      "summary": "Data Science Pipelines: Vertex AI compatibility",
+      "components": "Pipelines",
+      "deliveryOwner": "Kevin Park"
+    },
+    {
+      "key": "RHOAIENG-604",
+      "summary": "LLM Gateway: Streaming response support",
+      "components": "LLM Gateway",
+      "deliveryOwner": "Laura Green"
+    },
+    {
+      "key": "RHOAIENG-605",
+      "summary": "Admin Dashboard: Cost allocation tracking",
+      "components": "Dashboard",
+      "deliveryOwner": "Mike Turner"
+    },
+    {
+      "key": "RHOAIENG-606",
+      "summary": "Workbench: Remote development support",
+      "components": "Workbench",
+      "deliveryOwner": "Nina Scott"
+    },
+    {
+      "key": "RHOAIENG-607",
+      "summary": "Model Registry: Version comparison UI",
+      "components": "Model Registry",
+      "deliveryOwner": "Oscar Lin"
+    },
+    {
+      "key": "RHOAIENG-608",
+      "summary": "TrustyAI: Model drift detection",
+      "components": "TrustyAI",
+      "deliveryOwner": "Paula White"
+    },
+    {
+      "key": "RHOAIENG-609",
+      "summary": "Security: Secret rotation automation",
+      "components": "Security",
+      "deliveryOwner": "Quinn Davis"
+    }
+  ]
+}

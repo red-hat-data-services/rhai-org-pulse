@@ -321,7 +321,10 @@ const productLabel = computed(() => extractProduct(props.release.releaseNumber).
 
 const releaseTeamsList = computed(() => {
   if (!props.release?.teams) return []
-  return Object.values(props.release.teams).sort((a, b) => a.projectKey.localeCompare(b.projectKey))
+  // teams is { "Team Name": { to_do, doing, done, ... } }
+  return Object.entries(props.release.teams)
+    .map(([name, stats]) => ({ name, ...stats }))
+    .sort((a, b) => a.name.localeCompare(b.name))
 })
 
 function daysUntilDeadline() {

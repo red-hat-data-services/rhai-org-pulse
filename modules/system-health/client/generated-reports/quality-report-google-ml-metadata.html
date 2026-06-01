@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quality Analysis: google/ml-metadata</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        header .timestamp {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .content {
+            padding: 2rem;
+        }
+
+        .score-overview {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .score-circle {
+            position: relative;
+            width: 200px;
+            height: 200px;
+        }
+
+        .score-circle svg {
+            transform: rotate(-90deg);
+        }
+
+        .score-circle circle {
+            fill: none;
+            stroke-width: 12;
+        }
+
+        .score-circle .bg-circle {
+            stroke: #e0e0e0;
+        }
+
+        .score-circle .score-arc {
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s ease;
+        }
+
+        .score-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .score-value {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .score-label {
+            font-size: 0.9rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title:hover {
+            color: #764ba2;
+        }
+
+        .toggle-icon {
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .section-content {
+            padding-top: 1rem;
+        }
+
+        .section-content.collapsed {
+            display: none;
+        }
+
+        .scorecard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .scorecard-item {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .scorecard-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            border-color: #667eea;
+        }
+
+        .scorecard-item h3 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .scorecard-score {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .scorecard-status {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .items-list {
+            list-style: none;
+        }
+
+        .item-card {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .item-card:hover {
+            background: #e9ecef;
+            border-left-width: 6px;
+        }
+
+        .item-card.high {
+            border-left-color: #dc3545;
+        }
+
+        .item-card.medium {
+            border-left-color: #ffc107;
+        }
+
+        .item-card.low {
+            border-left-color: #28a745;
+        }
+
+        .item-description {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .item-meta {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .meta-tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .severity-high {
+            background: #dc3545;
+            color: white;
+        }
+
+        .severity-medium {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .severity-low {
+            background: #28a745;
+            color: white;
+        }
+
+        .effort-tag {
+            background: #667eea;
+            color: white;
+        }
+
+        .recommendations {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .rec-priority {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .rec-priority h3 {
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .rec-priority.p0 {
+            border-color: #dc3545;
+        }
+
+        .rec-priority.p0 h3 {
+            color: #dc3545;
+        }
+
+        .rec-priority.p1 {
+            border-color: #ffc107;
+        }
+
+        .rec-priority.p1 h3 {
+            color: #f57c00;
+        }
+
+        .rec-priority.p2 {
+            border-color: #28a745;
+        }
+
+        .rec-priority.p2 h3 {
+            color: #28a745;
+        }
+
+        .rec-priority ul {
+            list-style: none;
+        }
+
+        .rec-priority li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .rec-priority li:last-child {
+            border-bottom: none;
+        }
+
+        .rec-priority li:before {
+            content: "→ ";
+            font-weight: 700;
+            margin-right: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .content {
+                padding: 1rem;
+            }
+
+            header h1 {
+                font-size: 1.75rem;
+            }
+
+            .scorecard {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Quality Analysis Report</h1>
+            <p class="timestamp">Generated on May 29, 2026 at 08:05 AM</p>
+            <h2 style="margin-top: 1rem; font-weight: 400;">google/ml-metadata</h2>
+        </header>
+
+        <div class="content">
+            <div class="score-overview">
+                <div class="score-circle">
+                    <svg width="200" height="200">
+                        <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
+                        <circle class="score-arc" cx="100" cy="100" r="90"
+                                stroke="#fd7e14"
+                                stroke-dasharray="565.4861999999999"
+                                stroke-dashoffset="294.052824"
+                                id="scoreArc"></circle>
+                    </svg>
+                    <div class="score-text">
+                        <div class="score-value">4.8</div>
+                        <div class="score-label">Overall Score</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title" onclick="toggleSection(this)">
+                    Quality Scorecard
+                    <span class="toggle-icon">▼</span>
+                </h2>
+                <div class="section-content">
+                    <div class="scorecard">
+                        
+                        <div class="scorecard-item">
+                            <h3>Unit Tests</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">Strong C++ test suite via Bazel with gtest/gmock; Python tests use pytest + absltest</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Integration/E2E</h3>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">Multi-backend database tests (SQLite, MySQL, PostgreSQL) but no E2E deployment testing</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Build Integration</h3>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">Conda-based PR builds for multiple OS/Python versions; no container image validation at PR time</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Image Testing</h3>
+                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
+                            <div class="scorecard-status">Dockerfiles exist for server and manylinux builds, but no image runtime validation or scanning</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Coverage Tracking</h3>
+                            <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
+                            <div class="scorecard-status">pytest-cov listed in conda environment but no codecov integration, thresholds, or PR reporting</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>CI/CD Automation</h3>
+                            <div class="scorecard-score" style="color: #fd7e14;">5.0/10</div>
+                            <div class="scorecard-status">4 GitHub workflows with matrix builds but no concurrency control or test result caching</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Agent Rules</h3>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory present</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="section">
+                <h2 class="section-title" onclick="toggleSection(this)">
+                    Critical Gaps
+                    <span class="toggle-icon">▼</span>
+                </h2>
+                <div class="section-content">
+                    <ul class="items-list">
+                        
+                        <li class="item-card high">
+                            <div class="item-description">No code coverage tracking or enforcement</div>
+                            <p>Cannot measure test effectiveness or detect coverage regressions on PRs</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No container image security scanning</div>
+                            <p>Vulnerability exposure in published Docker images; base image ubuntu:20.04 is EOL</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No SAST/CodeQL or dependency scanning</div>
+                            <p>Security vulnerabilities in C++/Python code and dependencies go undetected</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">2-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No image runtime validation</div>
+                            <p>Docker server image startup issues not caught until production deployment</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">Outdated base images (ubuntu:20.04 EOL)</div>
+                            <p>Missing security patches and potential supply chain risks</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            
+            <div class="section">
+                <h2 class="section-title" onclick="toggleSection(this)">
+                    Quick Wins
+                    <span class="toggle-icon">▼</span>
+                </h2>
+                <div class="section-content">
+                    <ul class="items-list">
+                        
+                        <li class="item-card ">
+                            <div class="item-description">Add codecov integration to conda-test workflow</div>
+                            <p>Instant visibility into Python test coverage with PR reporting</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add Trivy scanning GitHub Action</div>
+                            <p>Catch known CVEs in Docker images and dependencies before release</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add CodeQL workflow for C++ and Python</div>
+                            <p>Automated SAST detecting security vulnerabilities and code quality issues</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add workflow concurrency control</div>
+                            <p>Prevent redundant CI runs on rapid pushes, save CI minutes</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">30 minutes</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title" onclick="toggleSection(this)">
+                    Recommendations
+                    <span class="toggle-icon">▼</span>
+                </h2>
+                <div class="section-content">
+                    <div class="recommendations">
+                        
+                        <div class="rec-priority p0">
+                            <h3>Priority 0: Critical</h3>
+                            <ul><li>Add codecov/coveralls integration with minimum coverage thresholds and PR gate</li><li>Add container image vulnerability scanning (Trivy) for all Dockerfiles</li><li>Enable GitHub CodeQL for C++ and Python static analysis</li><li>Upgrade base images from ubuntu:20.04 (EOL) to ubuntu:22.04 or 24.04</li></ul>
+                        </div>
+                        <div class="rec-priority p1">
+                            <h3>Priority 1: High Value</h3>
+                            <ul><li>Add Docker server image startup/smoke tests in CI</li><li>Add dependency scanning (Dependabot or Renovate) for Bazel WORKSPACE and pip dependencies</li><li>Add concurrency control to all GitHub workflows</li><li>Create agent rules (.claude/rules/) for test automation guidance</li></ul>
+                        </div>
+                        <div class="rec-priority p2">
+                            <h3>Priority 2: Nice-to-Have</h3>
+                            <ul><li>Add integration tests that deploy metadata_store_server in a container and run gRPC client tests</li><li>Add multi-architecture Docker image builds (arm64 support)</li><li>Add SBOM generation for published images</li><li>Add performance regression testing for metadata store operations</li></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSection(element) {
+            const content = element.nextElementSibling;
+            const icon = element.querySelector('.toggle-icon');
+
+            content.classList.toggle('collapsed');
+            icon.style.transform = content.classList.contains('collapsed') ? 'rotate(-90deg)' : 'rotate(0deg)';
+        }
+
+        // Animate score circle on load
+        window.addEventListener('load', function() {
+            const scoreArc = document.getElementById('scoreArc');
+            const targetOffset = scoreArc.getAttribute('stroke-dashoffset');
+            const fullCircle = 2 * Math.PI * 90;
+
+            scoreArc.style.strokeDashoffset = fullCircle;
+
+            setTimeout(() => {
+                scoreArc.style.strokeDashoffset = targetOffset;
+            }, 100);
+        });
+    </script>
+</body>
+</html>

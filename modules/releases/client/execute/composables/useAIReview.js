@@ -12,9 +12,11 @@ export function useAIReview() {
     aiReview.value = null
 
     try {
+      /* eslint-disable org-pulse/no-cross-module-imports -- graceful degradation: 404 when ai-impact is absent */
       aiReview.value = await apiRequest(
         `/modules/ai-impact/features/${encodeURIComponent(featureKey)}`
       )
+      /* eslint-enable org-pulse/no-cross-module-imports */
     } catch (e) {
       // 404 = no AI Impact data for this feature (expected).
       // Also handles the case where the AI Impact module is disabled —

@@ -220,7 +220,18 @@ async function resolveChildCcsEpics(jiraRequest, issues) {
   }
 }
 
-async function resolveMRLinks(jiraRequest, issues, config) {
+// MR link resolution uses three strategies (best-effort heuristic, deduped):
+//   1. CCS tree: RHAISTRAT → CCS epic → child tasks → customfield_10875
+//   2. Direct field: issues with ai1st-doc-invoked → customfield_10875 on the issue itself
+//   3. MR title cross-reference: match Jira keys parsed from GitLab MR titles
+
+function addMrLink(issue, url) {
+  if (url && !issue.mrLinks.includes(url)) {
+    issue.mrLinks.push(url);
+  }
+}
+
+async function resolveMRLinksFromCcsTree(jiraRequest, issues, config) {
   const issuesWithEpic = issues.filter(i => i.ccsEpic);
   if (issuesWithEpic.length === 0) return;
 
@@ -249,25 +260,67 @@ async function resolveMRLinks(jiraRequest, issues, config) {
         const parentKey = epicToParent[epicKey];
         if (!parentKey) continue;
 
-        const mrField = task.fields[mrFieldId];
-        if (!mrField) continue;
-
-        const mrUrl = extractMrUrlFromAdf(mrField);
+        const mrUrl = extractMrUrlFromAdf(task.fields[mrFieldId]);
         if (!mrUrl) continue;
 
         const issue = issues.find(i => i.key === parentKey);
-        if (issue && !issue.mrLinks.includes(mrUrl)) {
-          issue.mrLinks.push(mrUrl);
-        }
+        if (issue) addMrLink(issue, mrUrl);
       }
     } catch (err) {
-      console.error(`[ai-impact/doc] MR link resolution failed for batch: ${err.message}`);
+      console.error(`[ai-impact/doc] MR link resolution (CCS tree) failed for batch: ${err.message}`);
     }
 
     if (i + batchSize < epicKeys.length) {
       await new Promise(resolve => setTimeout(resolve, 200));
     }
   }
+}
+
+function resolveMRLinksFromInvokedField(issues, rawIssues, config) {
+  const mrFieldId = config.docMrFieldId || 'customfield_10875';
+  const invokedLabel = config.docInvokedLabel || 'ai1st-doc-invoked';
+
+  for (const raw of rawIssues) {
+    const labels = (raw.fields.labels || []);
+    if (!labels.includes(invokedLabel)) continue;
+
+    const mrField = raw.fields[mrFieldId];
+    if (!mrField) continue;
+
+    const mrUrl = extractMrUrlFromAdf(mrField);
+    if (!mrUrl) continue;
+
+    const issue = issues.find(i => i.key === raw.key);
+    if (issue) addMrLink(issue, mrUrl);
+  }
+}
+
+const JIRA_KEY_RE = /\b(RHAISTRAT|RHOAIENG)-\d+\b/gi;
+
+function resolveMRLinksFromKpiData(issues, mrKpiData) {
+  if (!mrKpiData?.mergeRequests) return;
+
+  const issueMap = {};
+  for (const issue of issues) {
+    issueMap[issue.key.toUpperCase()] = issue;
+  }
+
+  for (const mr of mrKpiData.mergeRequests) {
+    if (!mr.webUrl) continue;
+    const matches = (mr.title || '').match(JIRA_KEY_RE);
+    if (!matches) continue;
+
+    for (const key of matches) {
+      const issue = issueMap[key.toUpperCase()];
+      if (issue) addMrLink(issue, mr.webUrl);
+    }
+  }
+}
+
+async function resolveMRLinks(jiraRequest, issues, config, { rawIssues, mrKpiData } = {}) {
+  await resolveMRLinksFromCcsTree(jiraRequest, issues, config);
+  if (rawIssues) resolveMRLinksFromInvokedField(issues, rawIssues, config);
+  if (mrKpiData) resolveMRLinksFromKpiData(issues, mrKpiData);
 }
 
 async function fetchDocData(jiraRequest, config) {
@@ -284,8 +337,9 @@ async function fetchDocData(jiraRequest, config) {
   }
 
   const statusClause = docRequiredStatuses.map(s => `"${s}"`).join(', ');
+  const mrFieldId = config.docMrFieldId || 'customfield_10875';
   const jql = `project = "${docProject}" AND status IN (${statusClause}) AND "Product Documentation Required" = "Yes" ORDER BY created DESC`;
-  const fields = 'summary,status,created,updated,labels';
+  const fields = `summary,status,created,updated,labels,${mrFieldId}`;
 
   const rawIssues = await fetchAllJqlResults(jiraRequest, jql, fields, { expand: 'changelog' });
 
@@ -299,9 +353,9 @@ async function fetchDocData(jiraRequest, config) {
   }
 
   await resolveChildCcsEpics(jiraRequest, issues);
-  await resolveMRLinks(jiraRequest, issues, config);
+  await resolveMRLinks(jiraRequest, issues, config, { rawIssues });
 
-  return { issues, labelEvents };
+  return { issues, labelEvents, rawIssues };
 }
 
 async function fetchDocActivityEvents(jiraRequest, config) {
@@ -362,21 +416,22 @@ async function fetchDocCumulativeStats(jiraRequest, config) {
   };
 }
 
-async function fetchDocCompletedData(jiraRequest, config) {
+async function fetchDocCompletedData(jiraRequest, config, { mrKpiData } = {}) {
   const { docProject, docContributedLabel } = config;
 
   validateJqlSafeString(docProject, 'docProject');
   validateJqlSafeString(docContributedLabel, 'docContributedLabel');
 
+  const mrFieldId = config.docMrFieldId || 'customfield_10875';
   const jql = `project = "${docProject}" AND status IN ("Resolved", "Closed") AND "Product Documentation Required" = "Yes" AND labels = "${docContributedLabel}" AND updated >= -30d ORDER BY updated DESC`;
-  const fields = 'summary,status,created,updated,labels';
+  const fields = `summary,status,created,updated,labels,${mrFieldId}`;
 
   const rawIssues = await fetchAllJqlResults(jiraRequest, jql, fields);
 
   const issues = rawIssues.map(issue => processIssue(issue, config));
 
   await resolveChildCcsEpics(jiraRequest, issues);
-  await resolveMRLinks(jiraRequest, issues, config);
+  await resolveMRLinks(jiraRequest, issues, config, { rawIssues, mrKpiData });
 
   return issues;
 }
@@ -393,5 +448,8 @@ module.exports = {
   buildDocTrendData,
   resolveChildCcsEpics,
   resolveMRLinks,
+  resolveMRLinksFromCcsTree,
+  resolveMRLinksFromInvokedField,
+  resolveMRLinksFromKpiData,
   DOC_LABELS
 };

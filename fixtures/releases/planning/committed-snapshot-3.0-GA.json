@@ -1,0 +1,57 @@
+{
+  "version": "3.0",
+  "phase": "GA",
+  "snapshotAt": "2025-01-20T00:00:00.000Z",
+  "snapshotTrigger": "auto",
+  "featureKeys": ["RHOAIENG-501", "RHOAIENG-502", "RHOAIENG-503", "RHOAIENG-504", "RHOAIENG-505", "RHOAIENG-506", "RHOAIENG-507", "RHOAIENG-508"],
+  "features": [
+    {
+      "key": "RHOAIENG-501",
+      "summary": "Model Serving: vLLM runtime support",
+      "components": "Model Serving",
+      "deliveryOwner": "Alice Chen"
+    },
+    {
+      "key": "RHOAIENG-502",
+      "summary": "Dashboard: Resource quota visualization",
+      "components": "Dashboard",
+      "deliveryOwner": "Bob Martinez"
+    },
+    {
+      "key": "RHOAIENG-503",
+      "summary": "Pipelines: Kubeflow Pipelines v2 SDK",
+      "components": "Pipelines",
+      "deliveryOwner": "Carol Davis"
+    },
+    {
+      "key": "RHOAIENG-504",
+      "summary": "Workbench: JupyterLab 4.0 upgrade",
+      "components": "Workbench",
+      "deliveryOwner": "David Lee"
+    },
+    {
+      "key": "RHOAIENG-505",
+      "summary": "Model Registry: Model metadata search",
+      "components": "Model Registry",
+      "deliveryOwner": "Emily Wong"
+    },
+    {
+      "key": "RHOAIENG-506",
+      "summary": "TrustyAI: Explainability dashboard",
+      "components": "TrustyAI",
+      "deliveryOwner": "Frank Johnson"
+    },
+    {
+      "key": "RHOAIENG-507",
+      "summary": "Security: RBAC for model serving",
+      "components": "Security",
+      "deliveryOwner": "Grace Kim"
+    },
+    {
+      "key": "RHOAIENG-508",
+      "summary": "Monitoring: GPU metrics collection",
+      "components": "Monitoring",
+      "deliveryOwner": "Henry Brown"
+    }
+  ]
+}

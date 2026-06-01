@@ -23,6 +23,16 @@ export const enablementCategories = [
     ],
   },
   {
+    id: 'ai-first-build-release',
+    title: 'AI First Build & Release',
+    section: 'ai-sdlc',
+    links: [
+      { label: 'Enablement Recording', icon: 'Video', url: 'https://drive.google.com/file/d/1sY1waCkq516tAy5RqmYUSsZyUaXNwPCY/view' },
+      { label: 'Enablement Slides', icon: 'Presentation', url: 'https://docs.google.com/presentation/d/1SMYTQ-nE2NSh7tRdKhKdUkJnIlblbh1_NB3en97dwdA/edit?slide=id.g3d48d3b5671_0_5160#slide=id.g3d48d3b5671_0_5160' },
+      { label: 'Enablement Notes', icon: 'StickyNote', url: 'https://docs.google.com/document/d/1U2n3HMBvTm79qSyxLmG_M2dZ_DaGltaIPUSSJcpibEc/edit?tab=t.g4ru03c6tqzb' },
+    ],
+  },
+  {
     id: 'ai-quality',
     title: 'AI Quality',
     section: 'ai-sdlc',
