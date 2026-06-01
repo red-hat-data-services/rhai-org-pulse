@@ -40,190 +40,53 @@ spec:
                   AUTH_HEADER="X-Forwarded-Email: acorvin@redhat.com"
                   PROXY_SECRET_HEADER="X-Proxy-Secret: ${PROXY_AUTH_SECRET}"
 
-                  # Step 0: Trigger module content sync
+                  # Step 0: Trigger module content sync (git-static modules)
                   echo "=== Triggering module sync ==="
-                  curl -sf -X POST "$BACKEND/api/admin/modules/sync" -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" || echo "Module sync skipped (no modules configured)"
+                  curl -sf -X POST "$BACKEND/api/admin/modules/sync" \
+                    -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" || echo "Module sync skipped (no modules configured)"
 
-                  # Step 1: Trigger roster sync
-                  echo "=== Triggering roster sync ==="
-                  RESP=$(curl -sf -X POST "$BACKEND/api/admin/roster-sync/trigger" \
-                    -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" -H "Content-Type: application/json")
-                  echo "Response: $RESP"
-
-                  STATUS=$(echo "$RESP" | grep -o '"status":"[^"]*"' | head -1 | cut -d'"' -f4)
-                  if [ "$STATUS" != "started" ] && [ "$STATUS" != "already_running" ]; then
-                    echo "ERROR: Unexpected roster sync response"
+                  # Step 1: Trigger unified refresh (all registered handlers, ordered)
+                  echo "=== Triggering unified refresh-all ==="
+                  RESP=$(curl -sf -o /dev/null -w "%{http_code}" -X POST "$BACKEND/api/admin/refresh-all" \
+                    -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER")
+                  if [ "$RESP" = "409" ]; then
+                    echo "ERROR: A refresh is already running"
                     exit 1
                   fi
-
-                  # Poll roster sync status until complete
-                  echo "=== Waiting for roster sync to complete ==="
-                  ATTEMPTS=0
-                  MAX_ATTEMPTS=60
-                  while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
-                    sleep 15
-                    ATTEMPTS=$((ATTEMPTS + 1))
-                    SYNC_STATUS=$(curl -sf "$BACKEND/api/admin/roster-sync/status" -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER")
-                    SYNCING=$(echo "$SYNC_STATUS" | grep -o '"syncing":true' || true)
-                    if [ -z "$SYNCING" ]; then
-                      echo "Roster sync complete after $ATTEMPTS checks"
-                      SYNC_ERR=$(echo "$SYNC_STATUS" | grep -o '"lastSyncStatus":"[^"]*"' | cut -d'"' -f4)
-                      echo "Last sync status: $SYNC_ERR"
-                      break
-                    fi
-                    echo "Still syncing... (attempt $ATTEMPTS/$MAX_ATTEMPTS)"
-                  done
-
-                  if [ $ATTEMPTS -ge $MAX_ATTEMPTS ]; then
-                    echo "ERROR: Roster sync timed out"
+                  if [ "$RESP" != "202" ]; then
+                    echo "ERROR: Unexpected response code: $RESP"
                     exit 1
                   fi
-
-                  # Step 2: Trigger full metrics refresh
-                  echo "=== Triggering full metrics refresh ==="
-                  RESP=$(curl -sf -X POST "$BACKEND/api/refresh" \
-                    -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" -H "Content-Type: application/json" \
-                    -d '{"scope":"all","force":true}')
-                  echo "Response: $RESP"
+                  echo "Refresh started (HTTP $RESP)"
 
                   # Poll refresh status until complete
-                  echo "=== Waiting for metrics refresh to complete ==="
+                  echo "=== Waiting for refresh to complete ==="
                   ATTEMPTS=0
                   MAX_ATTEMPTS=120
                   while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
                     sleep 15
                     ATTEMPTS=$((ATTEMPTS + 1))
-                    REFRESH_STATUS=$(curl -sf "$BACKEND/api/refresh/status" -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER")
-                    RUNNING=$(echo "$REFRESH_STATUS" | grep -o '"running":true' || true)
+                    STATUS=$(curl -sf "$BACKEND/api/admin/refresh/status" \
+                      -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER")
+                    RUNNING=$(echo "$STATUS" | grep -o '"running":true' || true)
                     if [ -z "$RUNNING" ]; then
-                      echo "Metrics refresh complete after $ATTEMPTS checks"
+                      echo "Refresh complete after $ATTEMPTS checks"
+                      # Check for failures
+                      FAILED=$(echo "$STATUS" | grep -o '"state":"failed"' | wc -l | tr -d ' ')
+                      if [ "$FAILED" -gt 0 ]; then
+                        echo "WARNING: $FAILED handler(s) failed (see admin UI for details)"
+                      fi
                       break
                     fi
                     echo "Still refreshing... (attempt $ATTEMPTS/$MAX_ATTEMPTS)"
                   done
 
                   if [ $ATTEMPTS -ge $MAX_ATTEMPTS ]; then
-                    echo "ERROR: Metrics refresh timed out"
+                    echo "ERROR: Refresh timed out after $MAX_ATTEMPTS checks"
                     exit 1
                   fi
 
-                  # Step 3: Trigger AI Impact refresh
-                  echo "=== Triggering AI Impact refresh ==="
-                  curl -sf -X POST "$BACKEND/api/modules/ai-impact/refresh" \
-                    -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" || echo "AI Impact refresh skipped"
-
-                  # Poll until complete
-                  ATTEMPTS=0
-                  MAX_ATTEMPTS=20
-                  while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
-                    sleep 10
-                    ATTEMPTS=$((ATTEMPTS + 1))
-                    STATUS=$(curl -sf "$BACKEND/api/modules/ai-impact/refresh/status" \
-                      -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER")
-                    RUNNING=$(echo "$STATUS" | grep -oE '"running"\s*:\s*true' || true)
-                    if [ -z "$RUNNING" ]; then
-                      echo "AI Impact refresh complete after $ATTEMPTS checks"
-                      break
-                    fi
-                    echo "Still refreshing... (attempt $ATTEMPTS/$MAX_ATTEMPTS)"
-                  done
-
-                  if [ $ATTEMPTS -ge $MAX_ATTEMPTS ]; then
-                    echo "WARNING: AI Impact refresh timed out (non-fatal, continuing)"
-                  fi
-
-                  # Step 4: Trigger Allocation refresh (all teams)
-                  echo "=== Triggering Allocation refresh ==="
-                  curl -sf -X POST "$BACKEND/api/modules/team-tracker/allocation/refresh" \
-                    -H "Content-Type: application/json" \
-                    -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" \
-                    -d '{}' || echo "Allocation refresh failed (non-fatal)"
-                  sleep 5
-                  ATTEMPTS=0
-                  MAX_ATTEMPTS=60
-                  while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
-                    sleep 10
-                    ATTEMPTS=$((ATTEMPTS + 1))
-                    STATUS=$(curl -sf "$BACKEND/api/modules/team-tracker/allocation/refresh/status" \
-                      -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" 2>/dev/null)
-                    echo "  Allocation refresh status: $STATUS"
-                    RUNNING=$(echo "$STATUS" | grep -oE '"running"\s*:\s*true' || true)
-                    if [ -z "$RUNNING" ]; then
-                      echo "Allocation refresh complete after $ATTEMPTS checks"
-                      break
-                    fi
-                    echo "Still refreshing... (attempt $ATTEMPTS/$MAX_ATTEMPTS)"
-                  done
-
-                  if [ $ATTEMPTS -ge $MAX_ATTEMPTS ]; then
-                    echo "WARNING: Allocation refresh timed out (non-fatal, continuing)"
-                  fi
-
-                  # Step 4b: Sync feature labels from Jira
-                  echo "=== Triggering Feature Jira Sync ==="
-                  curl -sf -X POST "$BACKEND/api/modules/ai-impact/features/sync" \
-                    -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" || echo "Feature Jira sync skipped"
-
-                  ATTEMPTS=0
-                  MAX_ATTEMPTS=30
-                  while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
-                    sleep 10
-                    ATTEMPTS=$((ATTEMPTS + 1))
-                    STATUS=$(curl -sf "$BACKEND/api/modules/ai-impact/features/sync/status" \
-                      -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER")
-                    RUNNING=$(echo "$STATUS" | grep -oE '"running"\s*:\s*true' || true)
-                    if [ -z "$RUNNING" ]; then
-                      echo "Feature Jira sync complete after $ATTEMPTS checks"
-                      break
-                    fi
-                    echo "Still syncing... (attempt $ATTEMPTS/$MAX_ATTEMPTS)"
-                  done
-
-                  if [ $ATTEMPTS -ge $MAX_ATTEMPTS ]; then
-                    echo "WARNING: Feature Jira sync timed out (non-fatal, continuing)"
-                  fi
-
-                  # Step 4c: Generate metric snapshots (refresh current month)
-                  echo "=== Generating metric snapshots ==="
-                  curl -sf -X POST "$BACKEND/api/modules/team-tracker/snapshots/generate" \
-                    -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" -H "Content-Type: application/json" \
-                    -d '{"refreshCurrent":true}' || echo "WARNING: Snapshot generation failed (non-fatal)"
-
-                  # Step 5: Sync Release Registry with Product Pages
-                  echo "=== Syncing Release Registry with Product Pages ==="
-                  curl -sf -X POST "$BACKEND/api/modules/releases/registry/discover" \
-                    -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" || echo "Registry sync skipped (no PP config)"
-
-                  # Step 6: Trigger Releases Execution refresh
-                  echo "=== Triggering Releases Execution refresh ==="
-                  curl -sf -X POST "$BACKEND/api/modules/releases/execution/refresh" \
-                    -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" || echo "Releases Execution refresh skipped"
-
-                  # Step 7: Trigger Feature Hygiene refresh for all stored versions
-                  echo "=== Triggering Feature Hygiene refresh (all versions) ==="
-                  curl -sf -X POST "$BACKEND/api/modules/releases/hygiene/refresh-all" \
-                    -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" || echo "Hygiene refresh-all skipped (no data yet)"
-
-                  ATTEMPTS=0
-                  MAX_ATTEMPTS=60
-                  while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
-                    sleep 10
-                    ATTEMPTS=$((ATTEMPTS + 1))
-                    STATUS=$(curl -sf "$BACKEND/api/modules/releases/hygiene/refresh/status" \
-                      -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER")
-                    RUNNING=$(echo "$STATUS" | grep -oE '"running"\s*:\s*true' || true)
-                    if [ -z "$RUNNING" ]; then
-                      echo "Hygiene refresh complete after $ATTEMPTS checks"
-                      break
-                    fi
-                    echo "Still refreshing hygiene... (attempt $ATTEMPTS/$MAX_ATTEMPTS)"
-                  done
-
-                  if [ $ATTEMPTS -ge $MAX_ATTEMPTS ]; then
-                    echo "WARNING: Hygiene refresh timed out (non-fatal, continuing)"
-                  fi
-
-                  # Step 8: Trigger data backup to S3
+                  # Step 2: Trigger data backup to S3
                   echo "=== Triggering data backup ==="
                   BACKUP_RESP=$(curl -sf -X POST "$BACKEND/api/admin/backup" \
                     -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" -H "Content-Type: application/json" \

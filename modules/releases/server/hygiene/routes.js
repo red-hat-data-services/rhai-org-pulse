@@ -128,6 +128,130 @@ module.exports = function registerHygieneRoutes(router, context) {
     return DATA_PREFIX + '/features-' + version + '.json';
   }
 
+  async function runHygieneRefreshAll(options) {
+    options = options || {};
+    if (refreshState.running) return { status: 'already_running' };
+
+    if (!options.skipCooldown && refreshState.lastSuccessAt &&
+        Date.now() - new Date(refreshState.lastSuccessAt).getTime() < COOLDOWN_MS) {
+      return { status: 'cooldown' };
+    }
+
+    var registry = readRegistry(storage.readFromStorage);
+    var registryReleases = registry.releases || [];
+    var seen = {};
+    var activeVersions = [];
+    for (var rri = 0; rri < registryReleases.length; rri++) {
+      var rel = registryReleases[rri];
+      if (rel.state === 'archived' || !rel.displayName) continue;
+      if (seen[rel.displayName]) continue;
+      seen[rel.displayName] = true;
+      activeVersions.push(rel.displayName);
+    }
+    activeVersions.sort();
+
+    if (activeVersions.length === 0) {
+      return { status: 'success', message: 'No active versions to refresh', versions: [] };
+    }
+
+    refreshState.running = true;
+    refreshState.startedAt = new Date().toISOString();
+    refreshState.completedAt = null;
+    refreshState.lastResult = null;
+    refreshState.progress = { stage: 'starting', message: 'Refreshing all versions (' + activeVersions.length + ')' };
+
+    var config = loadConfig(storage);
+    var jira = require('../../../../shared/server/jira');
+    var jiraRequest = jira.jiraRequest;
+    var fetchAllJqlResults = jira.fetchAllJqlResults;
+    var results = [];
+
+    try {
+      for (var vi = 0; vi < activeVersions.length; vi++) {
+        var version = activeVersions[vi];
+        refreshState.progress = {
+          stage: 'refreshing',
+          message: 'Refreshing ' + version + ' (' + (vi + 1) + '/' + activeVersions.length + ')'
+        };
+
+        var relForVersion = null;
+        for (var rli = 0; rli < registryReleases.length; rli++) {
+          var rr = registryReleases[rli];
+          if (rr.id === version || rr.displayName === version) {
+            relForVersion = rr;
+            break;
+          }
+        }
+        var jqlVersions = (relForVersion && relForVersion.fixVersions && relForVersion.fixVersions.length > 0)
+          ? relForVersion.fixVersions
+          : null;
+
+        function onProgress(stage, detail) {
+          refreshState.progress = {
+            stage: stage,
+            message: version + ': ' + (detail.message || stage) + ' (' + (vi + 1) + '/' + activeVersions.length + ')'
+          };
+        }
+
+        try {
+          var result = await fetchHygieneFeatures(jiraRequest, fetchAllJqlResults, version, config, onProgress, { jqlVersions: jqlVersions });
+          var gaDate = relForVersion && relForVersion.milestones && (relForVersion.milestones.gaDate || relForVersion.milestones.ga);
+          var versionReleased = false;
+          var versionGaDate = null;
+
+          if (gaDate) {
+            var gaTime = new Date(gaDate + 'T00:00:00Z').getTime();
+            if (!isNaN(gaTime) && Date.now() > gaTime) {
+              versionReleased = true;
+              versionGaDate = gaDate;
+            }
+          }
+
+          var rulesConfig = config.rules || {};
+          var featureKeys = Object.keys(result.features);
+          for (var fi = 0; fi < featureKeys.length; fi++) {
+            var feature = result.features[featureKeys[fi]];
+            feature.versionReleased = versionReleased;
+            feature.versionGaDate = versionGaDate;
+            feature.violations = evaluateHygiene(feature, rulesConfig);
+          }
+
+          storage.writeToStorage(storageKey(version), result);
+          results.push({ version: version, status: 'success', featureCount: featureKeys.length });
+        } catch (err) {
+          console.error('[hygiene] Refresh-all failed for ' + version + ':', err.message);
+          results.push({ version: version, status: 'error', message: err.message });
+        }
+      }
+
+      refreshState.running = false;
+      refreshState.completedAt = new Date().toISOString();
+      refreshState.lastSuccessAt = refreshState.completedAt;
+      refreshState.lastResult = {
+        status: 'success',
+        totalVersions: activeVersions.length,
+        versions: results
+      };
+      refreshState.progress = null;
+
+      logAudit(storage.readFromStorage, storage.writeToStorage, {
+        domain: 'hygiene',
+        action: 'hygiene_refresh_all',
+        user: (options && options.user) || 'system',
+        summary: 'Hygiene data refreshed for ' + activeVersions.length + ' versions',
+        details: { versions: results }
+      });
+
+      return refreshState.lastResult;
+    } catch (err) {
+      refreshState.running = false;
+      refreshState.completedAt = new Date().toISOString();
+      refreshState.lastResult = { status: 'error', message: err.message };
+      refreshState.progress = null;
+      throw err;
+    }
+  }
+
   // GET /features — hygiene features for a release version
   router.get('/features', requireAuth, requireScope('releases:read'), function(req, res) {
     var version = req.query.version;
@@ -213,7 +337,7 @@ module.exports = function registerHygieneRoutes(router, context) {
       return res.status(400).json({ error: 'version query parameter is required' });
     }
 
-    if (refreshState.running) {
+    if (refreshState.running || (context.isRefreshRunning && context.isRefreshRunning())) {
       return res.json({ status: 'already_running' });
     }
 
@@ -338,13 +462,10 @@ module.exports = function registerHygieneRoutes(router, context) {
    *         description: Refresh started, already running, or no versions
    */
   router.post('/refresh-all', requireReleaseManager, requireScope('releases:write'), function(req, res) {
-    if (refreshState.running) {
+    if (refreshState.running || (context.isRefreshRunning && context.isRefreshRunning())) {
       return res.json({ status: 'already_running' });
     }
 
-    // Build version list from active registry releases.
-    // Use displayName (not id) — displayName is the Jira "Target Version" string
-    // used in JQL queries and as the storage key (e.g. "RHOAI 2.14").
     var registry = readRegistry(storage.readFromStorage);
     var registryReleases = registry.releases || [];
     var seen = {};
@@ -362,112 +483,10 @@ module.exports = function registerHygieneRoutes(router, context) {
       return res.json({ status: 'success', message: 'No active versions to refresh', versions: [] });
     }
 
-    refreshState.running = true;
-    refreshState.startedAt = new Date().toISOString();
-    refreshState.completedAt = null;
-    refreshState.lastResult = null;
-    refreshState.progress = { stage: 'starting', message: 'Refreshing all versions (' + activeVersions.length + ')' };
-
     res.json({ status: 'started', versions: activeVersions });
 
     var userEmail = req.userEmail || 'unknown';
-
-    setImmediate(function() {
-      var config = loadConfig(storage);
-      var jira = require('../../../../shared/server/jira');
-      var jiraRequest = jira.jiraRequest;
-      var fetchAllJqlResults = jira.fetchAllJqlResults;
-      var registry = readRegistry(storage.readFromStorage);
-      var registryReleases = registry.releases || [];
-      var results = [];
-      var versionIndex = 0;
-
-      function processNext() {
-        if (versionIndex >= activeVersions.length) {
-          refreshState.running = false;
-          refreshState.completedAt = new Date().toISOString();
-          refreshState.lastSuccessAt = refreshState.completedAt;
-          refreshState.lastResult = {
-            status: 'success',
-            totalVersions: activeVersions.length,
-            versions: results
-          };
-          refreshState.progress = null;
-
-          logAudit(storage.readFromStorage, storage.writeToStorage, {
-            domain: 'hygiene',
-            action: 'hygiene_refresh_all',
-            user: userEmail,
-            summary: 'Hygiene data refreshed for ' + activeVersions.length + ' versions',
-            details: { versions: results }
-          });
-          return;
-        }
-
-        var version = activeVersions[versionIndex];
-        refreshState.progress = {
-          stage: 'refreshing',
-          message: 'Refreshing ' + version + ' (' + (versionIndex + 1) + '/' + activeVersions.length + ')'
-        };
-
-        // Look up registry release for fixVersions and version-released enrichment
-        var rel = null;
-        for (var rri = 0; rri < registryReleases.length; rri++) {
-          var rr = registryReleases[rri];
-          if (rr.id === version || rr.displayName === version) {
-            rel = rr;
-            break;
-          }
-        }
-        var jqlVersions = (rel && rel.fixVersions && rel.fixVersions.length > 0)
-          ? rel.fixVersions
-          : null;
-
-        function onProgress(stage, detail) {
-          refreshState.progress = {
-            stage: stage,
-            message: version + ': ' + (detail.message || stage) + ' (' + (versionIndex + 1) + '/' + activeVersions.length + ')'
-          };
-        }
-
-        fetchHygieneFeatures(jiraRequest, fetchAllJqlResults, version, config, onProgress, { jqlVersions: jqlVersions })
-          .then(function(result) {
-            var gaDate = rel && rel.milestones && (rel.milestones.gaDate || rel.milestones.ga);
-            var versionReleased = false;
-            var versionGaDate = null;
-
-            if (gaDate) {
-              var gaTime = new Date(gaDate + 'T00:00:00Z').getTime();
-              if (!isNaN(gaTime) && Date.now() > gaTime) {
-                versionReleased = true;
-                versionGaDate = gaDate;
-              }
-            }
-
-            var rulesConfig = config.rules || {};
-            var featureKeys = Object.keys(result.features);
-            for (var i = 0; i < featureKeys.length; i++) {
-              var feature = result.features[featureKeys[i]];
-              feature.versionReleased = versionReleased;
-              feature.versionGaDate = versionGaDate;
-              feature.violations = evaluateHygiene(feature, rulesConfig);
-            }
-
-            storage.writeToStorage(storageKey(version), result);
-            results.push({ version: version, status: 'success', featureCount: featureKeys.length });
-            versionIndex++;
-            processNext();
-          })
-          .catch(function(err) {
-            console.error('[hygiene] Refresh-all failed for ' + version + ':', err.message);
-            results.push({ version: version, status: 'error', message: err.message });
-            versionIndex++;
-            processNext();
-          });
-      }
-
-      processNext();
-    });
+    runHygieneRefreshAll({ skipCooldown: true, user: userEmail }).catch(function() {});
   });
 
   // GET /refresh/status — current refresh state
@@ -679,6 +698,16 @@ module.exports = function registerHygieneRoutes(router, context) {
       return {
         refreshState: { running: refreshState.running, lastResult: refreshState.lastResult }
       };
+    });
+  }
+
+  if (context.registerRefresh) {
+    context.registerRefresh('hygiene', {
+      order: 70,
+      timeout: 600000,
+      handler: async function() {
+        return runHygieneRefreshAll({ skipCooldown: true, user: 'system' });
+      }
     });
   }
 };

@@ -560,6 +560,85 @@ app.post('/api/admin/backup/restore', requireAdmin, requireScope('admin:manage')
   }
 });
 
+/**
+ * @openapi
+ * /api/admin/refresh-all:
+ *   post:
+ *     tags: [Admin]
+ *     summary: Trigger a full refresh of all registered handlers (admin only)
+ *     responses:
+ *       202:
+ *         description: Refresh started
+ *       409:
+ *         description: Refresh already in progress
+ */
+app.post('/api/admin/refresh-all', requireAdmin, requireScope('admin:manage'), function(req, res) {
+  if (refreshRegistry.isRunning()) {
+    return res.status(409).json({ error: 'Refresh is already running' });
+  }
+  refreshRegistry.runAll({ skipCooldown: true }).catch(function(err) {
+    console.error('[refresh-all] runAll error:', err.message);
+  });
+  res.status(202).json({ status: 'started' });
+});
+
+/**
+ * @openapi
+ * /api/admin/refresh/{module}:
+ *   post:
+ *     tags: [Admin]
+ *     summary: Trigger refresh for a single module's handlers (admin only)
+ *     parameters:
+ *       - name: module
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       202:
+ *         description: Refresh started
+ *       404:
+ *         description: No handlers registered for module
+ *       409:
+ *         description: Refresh already in progress
+ */
+app.post('/api/admin/refresh/:module', requireAdmin, requireScope('admin:manage'), function(req, res) {
+  if (refreshRegistry.isRunning()) {
+    return res.status(409).json({ error: 'Refresh is already running' });
+  }
+  const slug = req.params.module;
+  const allHandlers = refreshRegistry.getAll();
+  const prefix = slug + ':';
+  const hasHandlers = Object.keys(allHandlers).some(function(id) { return id.startsWith(prefix); });
+  if (!hasHandlers) {
+    return res.status(404).json({ error: 'No handlers registered for module "' + slug + '"' });
+  }
+  refreshRegistry.runModule(slug, { skipCooldown: true }).catch(function(err) {
+    console.error('[refresh-module] runModule error for %s:', slug, err.message);
+  });
+  res.status(202).json({ status: 'started', module: slug });
+});
+
+/**
+ * @openapi
+ * /api/admin/refresh/status:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Get refresh registry status (admin only)
+ *     responses:
+ *       200:
+ *         description: Current refresh status
+ */
+app.get('/api/admin/refresh/status', requireAdmin, requireScope('admin:manage'), async function(req, res) {
+  try {
+    const status = await refreshRegistry.getStatus();
+    res.json(status);
+  } catch (error) {
+    console.error('[refresh-status] Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ─── Routes: Token Scopes Catalog ───
 
 /**
@@ -1245,7 +1324,7 @@ const diagnosticsRegistry = {};
 const messageRegistry = require('../shared/server/message-registry');
 const { createRefreshRegistry } = require('../shared/server/refresh-registry');
 const { createExportRegistry } = require('../shared/server/export-registry');
-const refreshRegistry = createRefreshRegistry();
+const refreshRegistry = createRefreshRegistry(storageModule);
 const exportRegistry = createExportRegistry();
 
 // Register backup staleness message provider (admin-only warning when latest backup > 48h old)

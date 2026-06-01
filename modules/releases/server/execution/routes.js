@@ -266,6 +266,9 @@ module.exports = function registerExecutionRoutes(router, context) {
 
   // POST /refresh — trigger manual data refresh (admin only)
   router.post('/refresh', context.requireAdmin, requireScope('releases:write'), async function(req, res) {
+    if (context.isRefreshRunning && context.isRefreshRunning()) {
+      return res.status(409).json({ status: 'error', message: 'A global refresh is already in progress' });
+    }
     try {
       const result = await manualRefresh(storage);
       if (result.httpStatus === 429) {
@@ -327,6 +330,21 @@ module.exports = function registerExecutionRoutes(router, context) {
         lastFetchStatus: lastFetch?.status || null,
         configured: loadConfig(storage).enabled && !!getToken()
       };
+    });
+  }
+
+  if (context.registerRefresh) {
+    context.registerRefresh('execution', {
+      order: 70,
+      timeout: 600000,
+      handler: async function(options) {
+        options = options || {};
+        if (options.skipCooldown) {
+          const { runFetch } = require('./scheduler');
+          return runFetch(storage);
+        }
+        return manualRefresh(storage);
+      }
     });
   }
 };

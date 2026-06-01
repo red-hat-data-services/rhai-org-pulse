@@ -211,11 +211,99 @@ module.exports = function registerRoutes(router, context) {
     res.json(refreshState);
   });
 
+  async function runAiImpactRefresh() {
+    if (DEMO_MODE) return;
+
+    const config = getConfig(readFromStorage);
+
+    const issues = await fetchRFEData(jiraRequest, config);
+    const withLinks = await resolveLinkedFeatures(jiraRequest, issues, config);
+    writeToStorage('ai-impact/rfe-data.json', {
+      fetchedAt: new Date().toISOString(),
+      issues: withLinks
+    });
+
+    let autofixCount = 0;
+    try {
+      const autofixIssues = await fetchAutofixData(jiraRequest, config);
+      writeToStorage('ai-impact/autofix-data.json', {
+        fetchedAt: new Date().toISOString(),
+        issues: autofixIssues
+      });
+      autofixCount = autofixIssues.length;
+    } catch (autofixErr) {
+      console.error('[ai-impact] Autofix data refresh failed:', autofixErr.message);
+    }
+
+    let mrKpiCount = 0;
+    let mrKpiData = null;
+    try {
+      const mrKpiResult = await fetchMrKpiData();
+      mrKpiData = {
+        fetchedAt: new Date().toISOString(),
+        mergeRequests: mrKpiResult.mergeRequests
+      };
+      writeToStorage('ai-impact/doc-mr-kpi-data.json', mrKpiData);
+      mrKpiCount = mrKpiResult.mergeRequests.length;
+    } catch (mrKpiErr) {
+      console.error('[ai-impact] MR KPI data refresh failed:', mrKpiErr.message);
+    }
+
+    let docCount = 0;
+    try {
+      const docResult = await fetchDocData(jiraRequest, config);
+      let completedIssues = [];
+      try {
+        completedIssues = await fetchDocCompletedData(jiraRequest, config, { mrKpiData });
+      } catch (compErr) {
+        console.error('[ai-impact] Documentation completed data fetch failed:', compErr.message);
+      }
+      let activityEvents = [];
+      try {
+        activityEvents = await fetchDocActivityEvents(jiraRequest, config);
+      } catch (actErr) {
+        console.error('[ai-impact] Documentation activity events fetch failed:', actErr.message);
+      }
+      let cumulativeStats = null;
+      try {
+        cumulativeStats = await fetchDocCumulativeStats(jiraRequest, config);
+      } catch (statsErr) {
+        console.error('[ai-impact] Documentation cumulative stats fetch failed:', statsErr.message);
+      }
+      if (mrKpiData) {
+        resolveMRLinksFromKpiData(docResult.issues, mrKpiData);
+      }
+      try {
+        await enrichMRStatuses(docResult.issues);
+        await enrichMRStatuses(completedIssues);
+      } catch (mrErr) {
+        console.error('[ai-impact] MR status enrichment failed:', mrErr.message);
+      }
+      writeToStorage('ai-impact/doc-data.json', {
+        fetchedAt: new Date().toISOString(),
+        issues: docResult.issues,
+        labelEvents: docResult.labelEvents,
+        activityEvents,
+        completedIssues,
+        cumulativeStats
+      });
+      docCount = docResult.issues.length;
+    } catch (docErr) {
+      console.error('[ai-impact] Documentation data refresh failed:', docErr.message);
+    }
+
+    refreshState.lastResult = {
+      status: 'success',
+      message: `Fetched ${withLinks.length} RFEs, ${autofixCount} autofix issues, ${docCount} doc issues, ${mrKpiCount} MR KPIs`,
+      completedAt: new Date().toISOString()
+    };
+  }
+
   router.post('/refresh', requireAdmin, requireScope('ai-impact:write'), async function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Refresh disabled in demo mode' });
     }
-    if (refreshState.running) {
+    if (refreshState.running || context.isRefreshRunning()) {
       return res.json({ status: 'already_running' });
     }
     refreshState.running = true;
@@ -223,94 +311,7 @@ module.exports = function registerRoutes(router, context) {
     res.json({ status: 'started' });
 
     try {
-      const config = getConfig(readFromStorage);
-
-      // Fetch RFE data
-      const issues = await fetchRFEData(jiraRequest, config);
-      const withLinks = await resolveLinkedFeatures(jiraRequest, issues, config);
-      writeToStorage('ai-impact/rfe-data.json', {
-        fetchedAt: new Date().toISOString(),
-        issues: withLinks
-      });
-
-      // Fetch autofix data
-      let autofixCount = 0;
-      try {
-        const autofixIssues = await fetchAutofixData(jiraRequest, config);
-        writeToStorage('ai-impact/autofix-data.json', {
-          fetchedAt: new Date().toISOString(),
-          issues: autofixIssues
-        });
-        autofixCount = autofixIssues.length;
-      } catch (autofixErr) {
-        console.error('[ai-impact] Autofix data refresh failed:', autofixErr.message);
-      }
-
-      // Fetch MR KPI data first (GitLab-direct, used by doc MR link resolution)
-      let mrKpiCount = 0;
-      let mrKpiData = null;
-      try {
-        const mrKpiResult = await fetchMrKpiData();
-        mrKpiData = {
-          fetchedAt: new Date().toISOString(),
-          mergeRequests: mrKpiResult.mergeRequests
-        };
-        writeToStorage('ai-impact/doc-mr-kpi-data.json', mrKpiData);
-        mrKpiCount = mrKpiResult.mergeRequests.length;
-      } catch (mrKpiErr) {
-        console.error('[ai-impact] MR KPI data refresh failed:', mrKpiErr.message);
-      }
-
-      // Fetch documentation data (uses mrKpiData for MR link cross-reference)
-      let docCount = 0;
-      try {
-        const docResult = await fetchDocData(jiraRequest, config);
-        let completedIssues = [];
-        try {
-          completedIssues = await fetchDocCompletedData(jiraRequest, config, { mrKpiData });
-        } catch (compErr) {
-          console.error('[ai-impact] Documentation completed data fetch failed:', compErr.message);
-        }
-        let activityEvents = [];
-        try {
-          activityEvents = await fetchDocActivityEvents(jiraRequest, config);
-        } catch (actErr) {
-          console.error('[ai-impact] Documentation activity events fetch failed:', actErr.message);
-        }
-        let cumulativeStats = null;
-        try {
-          cumulativeStats = await fetchDocCumulativeStats(jiraRequest, config);
-        } catch (statsErr) {
-          console.error('[ai-impact] Documentation cumulative stats fetch failed:', statsErr.message);
-        }
-        // Apply MR KPI cross-reference (strategy 3) to doc issues
-        if (mrKpiData) {
-          resolveMRLinksFromKpiData(docResult.issues, mrKpiData);
-        }
-        try {
-          await enrichMRStatuses(docResult.issues);
-          await enrichMRStatuses(completedIssues);
-        } catch (mrErr) {
-          console.error('[ai-impact] MR status enrichment failed:', mrErr.message);
-        }
-        writeToStorage('ai-impact/doc-data.json', {
-          fetchedAt: new Date().toISOString(),
-          issues: docResult.issues,
-          labelEvents: docResult.labelEvents,
-          activityEvents,
-          completedIssues,
-          cumulativeStats
-        });
-        docCount = docResult.issues.length;
-      } catch (docErr) {
-        console.error('[ai-impact] Documentation data refresh failed:', docErr.message);
-      }
-
-      refreshState.lastResult = {
-        status: 'success',
-        message: `Fetched ${withLinks.length} RFEs, ${autofixCount} autofix issues, ${docCount} doc issues, ${mrKpiCount} MR KPIs`,
-        completedAt: new Date().toISOString()
-      };
+      await runAiImpactRefresh();
     } catch (err) {
       console.error('[ai-impact] Refresh failed:', err);
       refreshState.lastResult = {
@@ -324,6 +325,16 @@ module.exports = function registerRoutes(router, context) {
   });
 
   // ─── Diagnostics ───
+
+  if (context.registerRefresh) {
+    context.registerRefresh('refresh', {
+      order: 50,
+      timeout: 600000,
+      handler: async function() {
+        await runAiImpactRefresh();
+      }
+    });
+  }
 
   if (context.registerDiagnostics) {
     context.registerDiagnostics(async function() {

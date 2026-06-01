@@ -235,6 +235,7 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/allowlist` — authorized email list
 - `/api/roles/me` — current user's roles
 - `/api/roles` — all role assignments (admin)
+- `/api/admin/refresh/status` — refresh registry status (admin)
 - `/api/admin/roster-sync/config` — roster sync config
 - `/api/admin/roster-sync/status` — sync status
 - `/api/modules/team-tracker/sheets/discover` — discover sheet names (admin)
@@ -365,6 +366,8 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/trends/jira/refresh` — refresh Jira trends
 - `/api/trends/github/refresh` — refresh GitHub history
 - `/api/trends/gitlab/refresh` — refresh GitLab history
+- `/api/admin/refresh-all` — trigger full refresh of all handlers (admin)
+- `/api/admin/refresh/:module` — trigger refresh for a single module (admin)
 - `/api/admin/roster-sync/config` — save sync config
 - `/api/admin/roster-sync/trigger` — trigger manual sync
 - `/api/admin/roster-sync/unified` — unified roster + metadata sync (admin)

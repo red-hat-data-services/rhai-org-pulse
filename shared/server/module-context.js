@@ -24,6 +24,7 @@
  * @property {Function} handler - Async function to execute the refresh
  * @property {Function} [status] - Async function returning current status
  * @property {number} [order=100] - Execution order (lower runs first)
+ * @property {number} [timeout] - Per-handler timeout in ms (overrides global runAll timeout)
  */
 
 /**
@@ -41,6 +42,7 @@
  * @property {Function} registerMessageProvider - Register a message provider (id, fn)
  * @property {Function} registerRefresh - Register a refresh handler (id, config)
  * @property {Function} registerExport - Register a data export hook (fn)
+ * @property {Function} isRefreshRunning - Check if a global refresh-all is in progress
  */
 
 /**
@@ -90,7 +92,11 @@ function buildModuleContext(coreServices, slug, registries = {}) {
 
     registerExport: exportRegistry
       ? function (fn) { exportRegistry.register(slug, fn) }
-      : function () {}
+      : function () {},
+
+    isRefreshRunning: refresh
+      ? function () { return refresh.isRunning() }
+      : function () { return false }
   }
 
   return Object.freeze(ctx)
@@ -127,7 +133,8 @@ function createTestContext(overrides = {}) {
     registerDiagnostics: noop,
     registerMessageProvider: noop,
     registerRefresh: noop,
-    registerExport: noop
+    registerExport: noop,
+    isRefreshRunning: function () { return false }
   }
 
   return { ...defaults, ...overrides }

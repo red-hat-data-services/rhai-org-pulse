@@ -174,6 +174,75 @@ module.exports = function registerAllocationRoutes(router, context) {
     res.json(sanitized);
   });
 
+  // ─── Refresh Registry Handler ───
+
+  async function runAllocationRefresh(options = {}) {
+    if (DEMO_MODE) return;
+    if (refreshState.running) return;
+
+    if (!options.skipCooldown && refreshState.completedAt) {
+      const elapsed = Date.now() - new Date(refreshState.completedAt).getTime();
+      if (elapsed < REFRESH_COOLDOWN_MS) return;
+    }
+
+    refreshState.running = true;
+    refreshState.startedAt = new Date().toISOString();
+
+    try {
+      const teamData = readTeams(storage);
+      let teams = Object.values(teamData.teams || {});
+
+      for (const t of teams) {
+        if (Array.isArray(t.boards)) {
+          t.boards = t.boards.map(b => b.boardId != null ? b : { ...b, boardId: extractBoardId(b.url) });
+        }
+      }
+      teams = teams.filter(t => (t.boards || []).some(b => b.boardId));
+
+      console.log(`\n[allocation] Starting refresh: ${teams.length} teams with allocation boards`);
+
+      const result = await performRefresh({
+        teams,
+        hardRefresh: false,
+        fetchSprints: jiraClient.fetchSprints,
+        fetchSprintIssues: jiraClient.fetchSprintIssues,
+        fetchBoardConfiguration: jiraClient.fetchBoardConfiguration,
+        fetchFilterJql: jiraClient.fetchFilterJql,
+        fetchIssuesByJql: jiraClient.fetchIssuesByJql,
+        fetchBoardType: jiraClient.fetchBoardType,
+        readStorage: allocRead,
+        writeStorage: allocWrite
+      });
+
+      const completedAt = new Date().toISOString();
+      refreshState.lastResult = {
+        status: 'success',
+        message: `Processed ${result.teamCount} teams`,
+        completedAt
+      };
+      refreshState.completedAt = completedAt;
+      console.log(`[allocation] Refresh complete: ${result.teamCount} teams processed`);
+    } catch (error) {
+      console.error('[allocation] Refresh error:', error);
+      const completedAt = new Date().toISOString();
+      refreshState.lastResult = { status: 'error', message: 'Refresh failed', completedAt };
+      refreshState.completedAt = completedAt;
+    } finally {
+      refreshState.running = false;
+    }
+  }
+
+  if (context.registerRefresh) context.registerRefresh('allocation', {
+    order: 40,
+    timeout: 600000,
+    handler: async function(options) {
+      await runAllocationRefresh(options);
+    },
+    status: async function() {
+      return { ...refreshState };
+    }
+  });
+
   // ─── Summary routes ───
 
   /**

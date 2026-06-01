@@ -178,6 +178,121 @@ function matchVersionsToReleases(jiraVersions, registryReleases) {
 }
 
 /**
+ * Run Product Pages registry sync (discover + update).
+ * Extracted from the POST /registry/discover route handler for reuse
+ * by the refresh registry.
+ *
+ * @param {object} storage - Storage module
+ * @param {object} [options={}] - Options
+ * @param {string} [options.user='system'] - User for audit log
+ * @returns {Promise<object>} Discovery results
+ */
+async function runRegistrySync(storage, options) {
+  options = options || {};
+  const { readFromStorage, writeToStorage } = storage;
+  const { getConfig } = require('./delivery/config');
+  const { fetchProductsByShortname, getAuthStatus } = require('./delivery/product-pages');
+
+  const authStatus = getAuthStatus();
+  if (authStatus === 'none') {
+    return { status: 'skipped', message: 'Product Pages auth not configured' };
+  }
+
+  const deliveryConfig = getConfig(readFromStorage);
+  const shortnames = deliveryConfig.productPagesProductShortnames || [];
+  if (shortnames.length === 0) {
+    return { status: 'skipped', message: 'No product shortnames configured' };
+  }
+
+  const ppReleases = await fetchProductsByShortname(shortnames, deliveryConfig);
+  if (ppReleases.length === 0) {
+    return { status: 'empty', discovered: 0, created: 0, message: 'No releases found from Product Pages' };
+  }
+
+  const registry = readRegistry(readFromStorage);
+  const existingById = new Map(registry.releases.map(r => [r.id, r]));
+  let created = 0;
+  let updated = 0;
+  let archived = 0;
+  const discovered = [];
+  const discoveredIds = new Set();
+
+  for (const ppRelease of ppReleases) {
+    const releaseNumber = ppRelease.releaseNumber || '';
+    if (!releaseNumber) continue;
+
+    const id = releaseNumber.toLowerCase().replace(/\s+/g, '-');
+    if (!/^[a-z0-9][a-z0-9._-]*$/.test(id)) continue;
+
+    discoveredIds.add(id);
+    discovered.push({
+      id,
+      displayName: releaseNumber,
+      productName: ppRelease.productName,
+      dueDate: ppRelease.dueDate,
+      codeFreezeDate: ppRelease.codeFreezeDate
+    });
+
+    const existing = existingById.get(id);
+
+    if (existing) {
+      if (existing.state === 'archived') continue;
+
+      if (existing.source === 'product-pages') {
+        existing.displayName = releaseNumber;
+        existing.productPagesShortname = releaseNumber.split('-')[0] || existing.productPagesShortname;
+        existing.productPagesVersion = releaseNumber;
+        existing.milestones = {
+          ...(existing.milestones || {}),
+          ga: ppRelease.dueDate || existing.milestones?.ga || null,
+          codeFreeze: ppRelease.codeFreezeDate || existing.milestones?.codeFreeze || null
+        };
+        existing.updatedAt = new Date().toISOString();
+        updated++;
+      }
+    } else {
+      const release = normalizeRelease({
+        id,
+        displayName: releaseNumber,
+        productPagesShortname: releaseNumber.split('-')[0] || null,
+        productPagesVersion: releaseNumber,
+        milestones: {
+          ga: ppRelease.dueDate || null,
+          codeFreeze: ppRelease.codeFreezeDate || null
+        },
+        source: 'product-pages',
+        state: 'active'
+      });
+
+      registry.releases.push(release);
+      existingById.set(id, release);
+      created++;
+    }
+  }
+
+  for (const release of registry.releases) {
+    if (release.source === 'product-pages' && release.state === 'active' && !discoveredIds.has(release.id)) {
+      release.state = 'archived';
+      release.updatedAt = new Date().toISOString();
+      archived++;
+    }
+  }
+
+  if (created > 0 || updated > 0 || archived > 0) {
+    writeRegistry(writeToStorage, registry);
+    logAudit(readFromStorage, writeToStorage, {
+      domain: 'registry',
+      action: 'registry_discover',
+      user: options.user || 'system',
+      summary: `Synced with Product Pages: ${created} created, ${updated} updated, ${archived} archived`,
+      details: { discovered: discovered.length, created, updated, archived, shortnames }
+    });
+  }
+
+  return { status: 'ok', discovered: discovered.length, created, updated, archived, releases: discovered };
+}
+
+/**
  * Register release registry routes on the provided router.
  */
 function registerRegistryRoutes(router, context) {
@@ -478,117 +593,13 @@ function registerRegistryRoutes(router, context) {
    */
   router.post('/registry/discover', requireReleaseManager, requireScope('releases:write'), async function(req, res) {
     try {
-      const { getConfig } = require('./delivery/config');
-      const { fetchProductsByShortname, getAuthStatus } = require('./delivery/product-pages');
+      const result = await runRegistrySync(storage, { user: req.userEmail || 'unknown' });
 
-      const deliveryConfig = getConfig(readFromStorage);
-      const authStatus = getAuthStatus();
-
-      if (authStatus === 'none') {
-        return res.status(400).json({
-          error: 'Product Pages auth is not configured. Set PRODUCT_PAGES_CLIENT_ID/SECRET or PRODUCT_PAGES_TOKEN.'
-        });
+      if (result.status === 'skipped') {
+        return res.status(400).json({ error: result.message });
       }
 
-      const shortnames = deliveryConfig.productPagesProductShortnames || [];
-      if (shortnames.length === 0) {
-        return res.status(400).json({
-          error: 'No product shortnames configured. Configure them in Delivery settings first.'
-        });
-      }
-
-      const ppReleases = await fetchProductsByShortname(shortnames, deliveryConfig);
-      if (ppReleases.length === 0) {
-        return res.json({ status: 'empty', discovered: 0, created: 0, message: 'No releases found from Product Pages' });
-      }
-
-      // Map Product Pages releases to registry format
-      const registry = readRegistry(readFromStorage);
-      const existingById = new Map(registry.releases.map(r => [r.id, r]));
-      let created = 0;
-      let updated = 0;
-      let archived = 0;
-      const discovered = [];
-      const discoveredIds = new Set();
-
-      for (const ppRelease of ppReleases) {
-        const releaseNumber = ppRelease.releaseNumber || '';
-        if (!releaseNumber) continue;
-
-        const id = releaseNumber.toLowerCase().replace(/\s+/g, '-');
-        if (!/^[a-z0-9][a-z0-9._-]*$/.test(id)) continue;
-
-        discoveredIds.add(id);
-        discovered.push({
-          id,
-          displayName: releaseNumber,
-          productName: ppRelease.productName,
-          dueDate: ppRelease.dueDate,
-          codeFreezeDate: ppRelease.codeFreezeDate
-        });
-
-        const existing = existingById.get(id);
-
-        if (existing) {
-          // Skip archived releases — respect the user's archive decision
-          if (existing.state === 'archived') continue;
-
-          // Update PP-managed fields on existing PP-sourced releases
-          if (existing.source === 'product-pages') {
-            existing.displayName = releaseNumber;
-            existing.productPagesShortname = releaseNumber.split('-')[0] || existing.productPagesShortname;
-            existing.productPagesVersion = releaseNumber;
-            existing.milestones = {
-              ...(existing.milestones || {}),
-              ga: ppRelease.dueDate || existing.milestones?.ga || null,
-              codeFreeze: ppRelease.codeFreezeDate || existing.milestones?.codeFreeze || null
-            };
-            existing.updatedAt = new Date().toISOString();
-            updated++;
-          }
-          // Manual releases with matching ID are left untouched
-        } else {
-          // Create new PP-sourced release
-          const release = normalizeRelease({
-            id,
-            displayName: releaseNumber,
-            productPagesShortname: releaseNumber.split('-')[0] || null,
-            productPagesVersion: releaseNumber,
-            milestones: {
-              ga: ppRelease.dueDate || null,
-              codeFreeze: ppRelease.codeFreezeDate || null
-            },
-            source: 'product-pages',
-            state: 'active'
-          });
-
-          registry.releases.push(release);
-          existingById.set(id, release);
-          created++;
-        }
-      }
-
-      // Auto-archive PP-sourced releases that are no longer in Product Pages
-      for (const release of registry.releases) {
-        if (release.source === 'product-pages' && release.state === 'active' && !discoveredIds.has(release.id)) {
-          release.state = 'archived';
-          release.updatedAt = new Date().toISOString();
-          archived++;
-        }
-      }
-
-      if (created > 0 || updated > 0 || archived > 0) {
-        writeRegistry(writeToStorage, registry);
-        logAudit(readFromStorage, writeToStorage, {
-          domain: 'registry',
-          action: 'registry_discover',
-          user: req.userEmail || 'unknown',
-          summary: `Synced with Product Pages: ${created} created, ${updated} updated, ${archived} archived`,
-          details: { discovered: discovered.length, created, updated, archived, shortnames }
-        });
-      }
-
-      res.json({ status: 'ok', discovered: discovered.length, created, updated, archived, releases: discovered });
+      res.json(result);
     } catch (err) {
       console.error('[releases/registry] Auto-discover failed:', err.message);
       res.status(500).json({ error: 'Auto-discover failed: ' + err.message });
@@ -722,9 +733,19 @@ function registerRegistryRoutes(router, context) {
 
     res.json({ status: 'ok', updated: updated });
   });
+
+  if (context.registerRefresh) {
+    context.registerRefresh('registry-sync', {
+      order: 65,
+      timeout: 300000,
+      handler: async function() {
+        return runRegistrySync(storage);
+      }
+    });
+  }
 }
 
 module.exports = {
   registerRegistryRoutes, readRegistry, writeRegistry, validateRelease, normalizeRelease,
-  normalizeVersionName, matchVersionsToReleases, REGISTRY_FILE
+  normalizeVersionName, matchVersionsToReleases, runRegistrySync, REGISTRY_FILE
 };

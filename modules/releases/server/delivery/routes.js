@@ -1039,31 +1039,38 @@ module.exports = function registerRoutes(router, context) {
 
   let refreshState = { running: false, lastResult: null }
 
+  async function runDeliveryRefresh() {
+    if (refreshState.running) return { status: 'already_running' }
+    refreshState = { running: true, startedAt: new Date().toISOString(), lastResult: refreshState.lastResult }
+    try {
+      const config = getConfig(readFromStorage)
+      const result = await runFullAnalysis(storage, config)
+      writeToStorage('releases/delivery/analysis-cache.json', {
+        cachedAt: new Date().toISOString(),
+        data: result
+      })
+      refreshState.lastResult = {
+        status: 'success',
+        message: `Analysis generated with ${result.releases?.length || 0} release(s)`,
+        completedAt: new Date().toISOString()
+      }
+      return refreshState.lastResult
+    } catch (err) {
+      console.error('[releases/delivery] Background refresh failed:', err)
+      refreshState.lastResult = {
+        status: 'error',
+        message: err.message,
+        completedAt: new Date().toISOString()
+      }
+      throw err
+    } finally {
+      refreshState.running = false
+    }
+  }
+
   function triggerBackgroundRefresh() {
     if (refreshState.running) return
-    refreshState = { running: true, startedAt: new Date().toISOString(), lastResult: refreshState.lastResult }
-    const config = getConfig(readFromStorage)
-    runFullAnalysis(storage, config)
-      .then(result => {
-        writeToStorage('releases/delivery/analysis-cache.json', {
-          cachedAt: new Date().toISOString(),
-          data: result
-        })
-        refreshState.lastResult = {
-          status: 'success',
-          message: `Analysis generated with ${result.releases?.length || 0} release(s)`,
-          completedAt: new Date().toISOString()
-        }
-      })
-      .catch(err => {
-        console.error('[releases/delivery] Background refresh failed:', err)
-        refreshState.lastResult = {
-          status: 'error',
-          message: err.message,
-          completedAt: new Date().toISOString()
-        }
-      })
-      .finally(() => { refreshState.running = false })
+    runDeliveryRefresh().catch(function() {})
   }
 
   // --- Config routes ---
@@ -1185,7 +1192,7 @@ module.exports = function registerRoutes(router, context) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Refresh disabled in demo mode' })
     }
-    if (refreshState.running) {
+    if (refreshState.running || (context.isRefreshRunning && context.isRefreshRunning())) {
       return res.json({ status: 'already_running' })
     }
     logAudit(readFromStorage, writeToStorage, {
@@ -2055,4 +2062,15 @@ module.exports = function registerRoutes(router, context) {
       res.status(500).json({ error: error.message })
     }
   })
+
+  if (context.registerRefresh) {
+    context.registerRefresh('delivery', {
+      order: 70,
+      timeout: 600000,
+      handler: async function() {
+        if (DEMO_MODE) return { status: 'skipped', message: 'Refresh disabled in demo mode' }
+        return runDeliveryRefresh()
+      }
+    })
+  }
 }

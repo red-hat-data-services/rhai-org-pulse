@@ -113,7 +113,7 @@ module.exports = function registerTestPlanRoutes(router, context) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Sync disabled in demo mode' });
     }
-    if (syncState.running) {
+    if (syncState.running || context.isRefreshRunning()) {
       return res.json({ status: 'already_running' });
     }
 
@@ -309,4 +309,15 @@ module.exports = function registerTestPlanRoutes(router, context) {
     writeTestPlansAtomic(writeToStorageAtomic, data);
     res.json({ status });
   });
+
+  if (context.registerRefresh) {
+    context.registerRefresh('test-plan-sync', {
+      order: 60,
+      timeout: 600000,
+      handler: async function() {
+        if (DEMO_MODE) return;
+        await runSync(readFromStorage, writeToStorageAtomic);
+      }
+    });
+  }
 };

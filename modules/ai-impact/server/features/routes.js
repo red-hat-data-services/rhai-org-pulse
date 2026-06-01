@@ -92,7 +92,7 @@ module.exports = function registerFeatureRoutes(router, context) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Sync disabled in demo mode' });
     }
-    if (syncState.running) {
+    if (syncState.running || context.isRefreshRunning()) {
       return res.json({ status: 'already_running' });
     }
 
@@ -186,6 +186,18 @@ module.exports = function registerFeatureRoutes(router, context) {
       history: entry.history
     });
   });
+
+  // ─── Refresh registry ───
+
+  if (context.registerRefresh) {
+    context.registerRefresh('feature-sync', {
+      order: 60,
+      timeout: 600000,
+      handler: async function() {
+        await runSync(readFromStorage, writeToStorageAtomic);
+      }
+    });
+  }
 
   // PUT /features/:key (Admin) — upsert single feature
   router.put('/features/:key', requireAdmin, requireScope('ai-impact:write'), jsonLimit, function(req, res) {
