@@ -93,6 +93,15 @@ function addedCountForGroup(group) {
   return count
 }
 
+function blockedCountForGroup(group) {
+  var count = 0
+  var features = group.features || []
+  for (var i = 0; i < features.length; i++) {
+    if (features[i].isBlocked && features[i].scopeChange !== 'dropped') count++
+  }
+  return count
+}
+
 function formatDate(dateStr) {
   if (!dateStr) return ''
   var d = new Date(dateStr + (dateStr.includes('T') ? '' : 'T00:00:00'))
@@ -197,6 +206,12 @@ defineExpose({ expandAll, collapseAll })
                       ? 'bg-amber-100 dark:bg-amber-800/40 text-amber-700 dark:text-amber-300'
                       : 'bg-gray-100 dark:bg-gray-700/60 text-gray-400 dark:text-gray-500'"
                   >{{ droppedCountForGroup(group) }} dropped</span>
+                  <span
+                    class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold"
+                    :class="blockedCountForGroup(group) > 0
+                      ? 'bg-red-100 dark:bg-red-800/40 text-red-700 dark:text-red-300'
+                      : 'bg-gray-100 dark:bg-gray-700/60 text-gray-400 dark:text-gray-500'"
+                  >{{ blockedCountForGroup(group) }} blocked</span>
                 </div>
               </td>
             </tr>
