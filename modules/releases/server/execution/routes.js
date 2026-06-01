@@ -17,6 +17,11 @@ const { logAudit } = require('../planning/audit-log');
 
 const DATA_PREFIX = 'releases/execution';
 
+function stripZStream(value) {
+  if (!value) return value
+  return String(value).replace(/\.z\b/gi, '')
+}
+
 /**
  * @openapi
  * /api/modules/releases/execution/features:
@@ -149,8 +154,9 @@ module.exports = function registerExecutionRoutes(router, context) {
 
     const versionFilter = req.query.version;
     if (versionFilter) {
+      const normalizedFilter = stripZStream(versionFilter);
       features = features.filter(f =>
-        f.fixVersions && f.fixVersions.includes(versionFilter)
+        f.fixVersions && f.fixVersions.some(v => stripZStream(v) === normalizedFilter)
       );
     }
 
@@ -251,7 +257,7 @@ module.exports = function registerExecutionRoutes(router, context) {
     const versions = new Set();
     for (const f of index.features) {
       for (const v of (f.fixVersions || [])) {
-        versions.add(v);
+        versions.add(stripZStream(v));
       }
     }
 

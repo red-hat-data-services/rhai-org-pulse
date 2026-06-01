@@ -244,6 +244,7 @@ async function discoverReleasesFromJira(storage, config) {
       releaseNumber: version,
       dueDate: meta.dueDate || null,
       codeFreezeDate: meta.codeFreezeDate || null,
+      featureFreezeDate: meta.featureFreezeDate || null,
       featureCount: featureCounts.get(version) || 0
     })
   }
@@ -302,7 +303,8 @@ async function fetchOpenReleases(storage, config) {
         productName: r.productName || r.product_name || r.product || r.product_shortname || '',
         releaseNumber: r.releaseNumber || r.release_number || r.name || '',
         dueDate: toIsoDate(r.dueDate || r.due_date || r.gaDate || r.ga_date || r.date_finish || r.date_start),
-        codeFreezeDate: toIsoDate(r.codeFreezeDate || r.code_freeze_date || r.codeFreeze || r.code_freeze) || null
+        codeFreezeDate: toIsoDate(r.codeFreezeDate || r.code_freeze_date || r.codeFreeze || r.code_freeze) || null,
+        featureFreezeDate: toIsoDate(r.featureFreezeDate || r.feature_freeze_date || r.featureFreeze || r.feature_freeze) || null
       }))
       .filter(r => r.productName && r.releaseNumber && r.dueDate)
     storage.writeToStorage('releases/delivery/product-pages-releases-cache.json', {
@@ -1689,7 +1691,8 @@ module.exports = function registerRoutes(router, context) {
         productName: r.productName,
         releaseNumber: r.releaseNumber,
         dueDate: toIsoDate(r.dueDate),
-        codeFreezeDate: toIsoDate(r.codeFreezeDate) || null
+        codeFreezeDate: toIsoDate(r.codeFreezeDate) || null,
+        featureFreezeDate: toIsoDate(r.featureFreezeDate) || null
       })).filter(r => r.productName && r.releaseNumber && r.dueDate)
 
       if (normalized.length === 0) {
