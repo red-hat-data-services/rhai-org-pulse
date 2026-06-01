@@ -4,7 +4,7 @@ USER 0
 
 WORKDIR /app
 
-RUN microdnf install -y git ca-certificates && microdnf clean all
+RUN microdnf install -y git ca-certificates python3 make gcc gcc-c++ && microdnf clean all
 
 # Trust internal CA for git and Node.js HTTPS connections
 COPY deploy/certs/internal-root-ca.pem /etc/pki/ca-trust/source/anchors/internal-root-ca.pem
