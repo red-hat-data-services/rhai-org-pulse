@@ -15,6 +15,11 @@
       { "id": "builder-images", "label": "Builder Images", "icon": "PackageOpen" },
       { "id": "wheel-collections", "label": "Wheel Collections", "icon": "PackageOpen" }
     ],
+    "hiddenRoutes": {
+      "series-detail": "$product",
+      "drop-detail": "$product",
+      "artifact-detail": "$product"
+    },
     "settingsComponent": "./client/components/ProductBuildsSettings.vue"
   },
   "server": {
