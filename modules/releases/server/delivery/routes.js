@@ -1271,7 +1271,7 @@ module.exports = function registerRoutes(router, context) {
    *       404:
    *         description: No snapshot found for this version/phase
    */
-  router.get('/commitment/:version/:phase', requireAuth, requireScope('releases:read'), function(req, res) {
+  router.get('/commitment/:version/:phase', requireAuth, requireScope('releases:read'), async function(req, res) {
     try {
       const { version, phase } = req.params
 
@@ -1294,28 +1294,55 @@ module.exports = function registerRoutes(router, context) {
         return res.status(404).json({ error: `No snapshot found for ${version} ${phase}. Use the "Create Snapshot" button above.` })
       }
 
-      // Load delivery analysis
-      const analysisCache = readFromStorage('releases/delivery/analysis-cache.json')
-      if (!analysisCache?.data) {
-        return res.status(500).json({ error: 'Delivery analysis data not available' })
-      }
+      // Query Jira directly for current state (independent of delivery analysis cache)
+      const config = getConfig(readFromStorage)
+      const commitmentJql = config.commitmentTrackingJql || 'cf[10855] is not EMPTY'
 
-      // Aggregate ALL releases that match this version (e.g., "3.5" matches "rhoai-3.5", "rhoai-3.5.EA1", "RHAII-3.5", etc.)
+      const projectsFilter = config.jiraAllProjects
+        ? ''
+        : `project in (${config.projectKeys.map(k => `"${k}"`).join(', ')}) AND `
+
+      const jql = `${projectsFilter}issuetype = Feature AND ${commitmentJql} ORDER BY key ASC`
+
+      console.log(`[releases/delivery] Fetching current feature status for commitment tracking comparison`)
+
+      const allFeatures = await fetchAllJqlResults(
+        jiraRequest,
+        jql,
+        'summary,status,components,customfield_10855,customfield_18834',
+        { maxResults: 100 }
+      )
+
+      // Filter to features matching this version
       const escaped = version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
       const versionPattern = new RegExp(`\\b${escaped}\\b`)
-      const matchingReleases = analysisCache.data.releases.filter(r => versionPattern.test(r.releaseNumber))
 
-      // Collect all issues from matching releases - filter to Features only for commitment tracking
       const deliveryIssues = []
       const seenKeys = new Set()
-      for (const release of matchingReleases) {
-        for (const issue of release.issues || []) {
-          // Deduplicate by key (same issue may appear in multiple releases)
-          // Filter to Features only (commitment tracking is for Features, not Stories/Tasks/Bugs)
-          if (!seenKeys.has(issue.key) && issue.issueType === 'Feature') {
-            deliveryIssues.push(issue)
-            seenKeys.add(issue.key)
-          }
+
+      for (const issue of allFeatures) {
+        const targetVersions = issue.fields?.customfield_10855 || []
+        const hasMatchingVersion = targetVersions.some(v => {
+          const val = v?.name || v?.value || ''
+          return versionPattern.test(val)
+        })
+
+        if (hasMatchingVersion && !seenKeys.has(issue.key)) {
+          const components = (issue.fields?.components || []).map(c => c.name).filter(Boolean)
+          const deliveryOwner = issue.fields?.customfield_18834?.displayName || null
+          const status = issue.fields?.status?.name || 'Unknown'
+          const statusBucket = statusCategoryBucket(issue.fields?.status)
+
+          deliveryIssues.push({
+            key: issue.key,
+            summary: issue.fields?.summary || '',
+            status,
+            statusBucket,
+            components,
+            deliveryOwner,
+            fixVersion: targetVersions[0]?.name || targetVersions[0]?.value || null
+          })
+          seenKeys.add(issue.key)
         }
       }
 
