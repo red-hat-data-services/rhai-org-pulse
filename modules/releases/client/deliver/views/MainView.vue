@@ -92,7 +92,19 @@ const filter = inject('releaseFilter')
 const analysisState = inject('analysisState')
 const { loading, refreshing, error, analysis, refreshAnalysis } = analysisState
 
-const allReleases = computed(() => filter.filteredReleases.value)
+const allReleases = computed(() => {
+  const releases = filter.filteredReleases.value
+
+  // Filter to current/future releases only (hide past-due releases like 3.4)
+  const now = new Date()
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
+
+  return releases.filter(r => {
+    const due = new Date(`${r.dueDate}T00:00:00Z`)
+    if (Number.isNaN(due.getTime())) return true // Keep if no date
+    return due >= today // Hide if due date passed
+  })
+})
 
 const groupedByVersion = computed(() => {
   const map = new Map()

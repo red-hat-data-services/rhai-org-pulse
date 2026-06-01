@@ -19,11 +19,26 @@ function normalizeText(value) {
   return String(value || '').trim().toLowerCase()
 }
 
+/**
+ * Normalizes release/fix version names by removing z-stream notation.
+ * Z-stream releases (async/minor updates) should group with parent version.
+ * Examples:
+ *   "rhoai-3.5.z" → "rhoai-3.5"
+ *   "rhoai-3.5.z.EA1" → "rhoai-3.5.EA1"
+ *   "RHAI 3.5.z" → "RHAI 3.5"
+ */
+function normalizeReleaseNumber(value) {
+  if (!value) return value
+  // Remove .z notation (z-stream releases)
+  return String(value).replace(/\.z\b/gi, '')
+}
+
 function normalizeKey(value) {
   // Remove common suffixes like " release", " GA", etc. before normalizing
   let normalized = normalizeText(value);
   normalized = normalized.replace(/\s+release$/i, ''); // "rhelai-3.5 EA1 release" → "rhelai-3.5 ea1"
   normalized = normalized.replace(/\s+ga$/i, '');      // "RHAII-3.5 GA" → "rhaii-3.5"
+  normalized = normalized.replace(/\.z\b/gi, '');      // "rhoai-3.5.z.EA1" → "rhoai-3.5.ea1"
   return normalized.replace(/[^a-z0-9]/g, '');
 }
 
@@ -427,9 +442,12 @@ function buildAnalysis(releases, issues, fieldMeta, config) {
   const releaseByText = new Map()
   const releaseByKey = new Map()
   for (const r of releases) {
+    // Normalize release number to remove z-stream notation
+    const normalizedReleaseNumber = normalizeReleaseNumber(r.releaseNumber)
+
     const entry = {
       productName: r.productName,
-      releaseNumber: r.releaseNumber,
+      releaseNumber: normalizedReleaseNumber,
       dueDate: r.dueDate,
       codeFreezeDate: r.codeFreezeDate || null,
       teams: {},
@@ -451,8 +469,8 @@ function buildAnalysis(releases, issues, fieldMeta, config) {
       },
       risk: 'green'
     }
-    releaseByText.set(normalizeText(r.releaseNumber), entry)
-    const k = normalizeKey(r.releaseNumber)
+    releaseByText.set(normalizeText(normalizedReleaseNumber), entry)
+    const k = normalizeKey(normalizedReleaseNumber)
     if (!releaseByKey.has(k)) releaseByKey.set(k, entry)
   }
 
