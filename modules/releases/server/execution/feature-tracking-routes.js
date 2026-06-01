@@ -357,7 +357,12 @@ function getFeatureFreezeDatesFromCache(portfolioVersion, readFromStorage) {
     const rel = ppReleases[i]
     const relVersion = normalizeVersionName(rel.releaseNumber).replace(/^[a-z]+-/, '')
     if (relVersion === normalizedPortfolio && rel.featureFreezeDate) {
-      byProduct[normalizeVersionName(rel.releaseNumber)] = rel.featureFreezeDate
+      const key = normalizeVersionName(rel.releaseNumber)
+      // Prefer the earliest date per product to avoid parent GA dates
+      // overriding EA-specific dates from expanded entries
+      if (!byProduct[key] || rel.featureFreezeDate < byProduct[key]) {
+        byProduct[key] = rel.featureFreezeDate
+      }
       if (!earliest || rel.featureFreezeDate < earliest) {
         earliest = rel.featureFreezeDate
       }
@@ -500,12 +505,15 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
             productPagesProductShortnames: DEFAULT_PRODUCTS
           }
           const livePPReleases = await fetchProductsByShortname(ppConfig.productPagesProductShortnames, ppConfig)
-          const normalizedPV = version.replace(/\s+/g, '.').toLowerCase()
+          const normalizedPV = normalizeVersionName(version)
           for (let pri = 0; pri < livePPReleases.length; pri++) {
             const pr = livePPReleases[pri]
-            const prVersion = (pr.releaseNumber || '').replace(/^[a-z]+-/i, '').toLowerCase()
+            const prVersion = normalizeVersionName(pr.releaseNumber || '').replace(/^[a-z]+-/, '')
             if (prVersion === normalizedPV && pr.featureFreezeDate) {
-              freezeDates.byProduct[(pr.releaseNumber || '').toLowerCase()] = pr.featureFreezeDate
+              const key = normalizeVersionName(pr.releaseNumber || '')
+              if (!freezeDates.byProduct[key] || pr.featureFreezeDate < freezeDates.byProduct[key]) {
+                freezeDates.byProduct[key] = pr.featureFreezeDate
+              }
               if (!freezeDates.earliest || pr.featureFreezeDate < freezeDates.earliest) {
                 freezeDates.earliest = pr.featureFreezeDate
               }

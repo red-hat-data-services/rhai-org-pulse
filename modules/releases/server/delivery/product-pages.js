@@ -433,7 +433,10 @@ async function fetchProductsByShortname(shortnames, config) {
         const expanded = expandReleaseMilestones(r, productName)
         if (expanded) {
           for (const entry of expanded) {
-            if (entry.dueDate) releases.push(entry)
+            if (entry.dueDate) {
+              entry._expanded = true
+              releases.push(entry)
+            }
           }
           continue
         }
@@ -463,9 +466,34 @@ async function fetchProductsByShortname(shortnames, config) {
     }
   }
 
-  // Include ALL releases (past and future) for commitment tracking
-  // Commitment tracking needs historical data to compare against snapshots
-  return releases
+  // De-duplicate: when a product has both a parent release (rhoai-3.5) that
+  // gets expanded into EA entries AND individual EA releases (rhoai-3.5.EA1),
+  // the expanded entries inherit the parent's generic Feature Freeze date
+  // which is wrong for EA milestones. Prefer individual releases over expanded.
+  const deduped = new Map()
+  for (const entry of releases) {
+    const key = (entry.releaseNumber || '').toLowerCase().replace(/[\s._-]+/g, '')
+    const existing = deduped.get(key)
+    if (!existing) {
+      deduped.set(key, entry)
+      continue
+    }
+    // Individual (non-expanded) entries always win over expanded ones
+    if (existing._expanded && !entry._expanded) {
+      deduped.set(key, entry)
+    } else if (!existing._expanded && entry._expanded) {
+      // Keep existing individual entry
+    } else if (entry.featureFreezeDate && (!existing.featureFreezeDate || entry.featureFreezeDate < existing.featureFreezeDate)) {
+      deduped.set(key, entry)
+    }
+  }
+
+  // Strip the internal flag before returning
+  const result = [...deduped.values()]
+  for (const entry of result) {
+    delete entry._expanded
+  }
+  return result
 }
 
 /**
