@@ -229,6 +229,49 @@ function extractCodeFreezeDate(release, eaTag) {
 }
 
 /**
+ * Extracts the feature freeze date from a Product Pages release object.
+ * Searches major_milestones and all_ga_tasks for entries matching
+ * "feature freeze" (case-insensitive, with optional hyphen/space).
+ *
+ * For EA-specific releases, pass an optional eaTag (e.g. "EA1") to prefer
+ * a milestone scoped to that EA over a generic one.
+ */
+function extractFeatureFreezeDate(release, eaTag) {
+  const freezePattern = /feature[.\-_\s]*freeze/i
+
+  const milestones = release.major_milestones
+  if (Array.isArray(milestones) && milestones.length > 0) {
+    let bestMatch = null
+    for (const m of milestones) {
+      if (m.draft) continue
+      const name = m.name || ''
+      if (!freezePattern.test(name)) continue
+      if (eaTag && new RegExp(`\\b${eaTag}\\b`, 'i').test(name)) {
+        return m.date_finish || null
+      }
+      bestMatch = m
+    }
+    if (bestMatch?.date_finish) return bestMatch.date_finish
+  }
+
+  const tasks = release.all_ga_tasks
+  if (Array.isArray(tasks) && tasks.length > 0) {
+    let bestMatch = null
+    for (const t of tasks) {
+      const name = t.name || ''
+      if (!freezePattern.test(name)) continue
+      if (eaTag && new RegExp(`\\b${eaTag}\\b`, 'i').test(name)) {
+        return t.date_finish || null
+      }
+      bestMatch = t
+    }
+    if (bestMatch?.date_finish) return bestMatch.date_finish
+  }
+
+  return null
+}
+
+/**
  * Returns the auth status string for the settings UI badge.
  */
 function getAuthStatus() {
@@ -301,7 +344,8 @@ function expandReleaseMilestones(r, productName) {
       productName,
       releaseNumber,
       dueDate: m.date_finish,
-      codeFreezeDate: extractCodeFreezeDate(r, eaTag) || null
+      codeFreezeDate: extractCodeFreezeDate(r, eaTag) || null,
+      featureFreezeDate: extractFeatureFreezeDate(r, eaTag) || null
     }
   })
 }
@@ -405,7 +449,8 @@ async function fetchProductsByShortname(shortnames, config) {
           productName,
           releaseNumber,
           dueDate,
-          codeFreezeDate: extractCodeFreezeDate(r, eaTag) || null
+          codeFreezeDate: extractCodeFreezeDate(r, eaTag) || null,
+          featureFreezeDate: extractFeatureFreezeDate(r, eaTag) || null
         })
       }
     } catch (err) {
@@ -485,6 +530,7 @@ module.exports = {
   extractGaDate,
   extractReleaseDueDate,
   extractCodeFreezeDate,
+  extractFeatureFreezeDate,
   expandReleaseMilestones,
   milestoneToReleaseNumber,
   _resetForTesting

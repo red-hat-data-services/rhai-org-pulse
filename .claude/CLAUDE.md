@@ -284,6 +284,8 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/modules/releases/execution/versions` — unique fix versions
 - `/api/modules/releases/execution/status` — data freshness
 - `/api/modules/releases/execution/config` — fetch config (admin)
+- `/api/modules/releases/execution/tracking/data` — feature tracking data by fixVersion query
+- `/api/modules/releases/execution/tracking/versions` — available portfolio versions for feature tracking
 - `/api/modules/releases/delivery/config` — delivery config (admin)
 - `/api/modules/releases/delivery/product-pages/products` — Product Pages products (admin)
 - `/api/modules/releases/delivery/refresh/status` — delivery refresh status
