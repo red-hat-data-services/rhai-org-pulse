@@ -10,6 +10,7 @@ const express = require('express');
 const { registerRegistryRoutes } = require('./registry');
 const registerPlanningRoutes = require('./planning/routes');
 const registerExecutionRoutes = require('./execution/routes');
+const registerFeatureTrackingRoutes = require('./execution/feature-tracking-routes');
 const registerDeliveryRoutes = require('./delivery/routes');
 const registerHygieneRoutes = require('./hygiene/routes');
 const { getAuditLog } = require('./planning/audit-log');
@@ -145,6 +146,12 @@ module.exports = function registerRoutes(router, context) {
     requireAdmin,
     requireScope,
     registerDiagnostics: context.registerDiagnostics || null
+  });
+  registerFeatureTrackingRoutes(executionRouter, {
+    storage,
+    requireAuth,
+    requireReleaseManager,
+    requireScope
   });
   router.use('/execution', executionRouter);
 
