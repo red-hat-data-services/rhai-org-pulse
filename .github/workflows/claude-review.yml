@@ -114,7 +114,7 @@ jobs:
 
       - name: Set up Node.js
         if: steps.check-paths.outputs.needs_review == 'true' && steps.context.outputs.is_fork != 'true' && steps.fork-guard.outputs.is_fork != 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20
           cache: 'npm'
@@ -271,6 +271,7 @@ jobs:
         with:
           use_vertex: "true"
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          allowed_non_write_users: "*"
           track_progress: true
           display_report: "true"
           allowed_bots: "claude"

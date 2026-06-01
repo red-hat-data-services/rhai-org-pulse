@@ -92,6 +92,13 @@ watch(activeTab, (tab) => {
   }
 })
 
+const hasSeriesTimeline = computed(() => productConfig.value.artifactType === 'containers')
+
+function navigateToSeries(seriesName) {
+  if (!hasSeriesTimeline.value) return
+  nav.navigateTo('series-detail', { series: seriesName, product: productKey.value })
+}
+
 function navigateToDrop(dropKey) {
   nav.navigateTo('drop-detail', { key: dropKey, product: productKey.value })
 }
@@ -174,8 +181,15 @@ const groupedDrops = computed(() => {
         <!-- All series: grouped tables with series name as header -->
         <template v-if="!selectedSeries">
           <div v-for="group in groupedDrops" :key="group.series" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div class="px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
-              <h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ group.series }}</h3>
+            <div
+              class="px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700 transition-colors"
+              :class="hasSeriesTimeline ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800' : ''"
+              @click="navigateToSeries(group.series)"
+            >
+              <h3
+                class="text-sm font-semibold"
+                :class="hasSeriesTimeline ? 'text-primary-600 dark:text-blue-400 hover:underline' : 'text-gray-900 dark:text-gray-100'"
+              >{{ group.series }}</h3>
             </div>
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead class="bg-gray-50 dark:bg-gray-900/30">
