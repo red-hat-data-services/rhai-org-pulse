@@ -1453,7 +1453,7 @@ module.exports = function registerRoutes(router, context) {
    *       200:
    *         description: List of available versions
    */
-  router.get('/commitment/versions', async function(req, res) {
+  router.get('/commitment/versions', requireAuth, requireScope('releases:read'), async function(req, res) {
     try {
       const config = getConfig(readFromStorage)
       const commitmentJql = config.commitmentTrackingJql || 'cf[10855] is not EMPTY'
