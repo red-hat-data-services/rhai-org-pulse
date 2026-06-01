@@ -406,7 +406,7 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/modules/releases/delivery/quality/refresh` — refresh quality data from Jira (admin)
 - `/api/modules/releases/delivery/discover-releases` — discover releases from Jira Target Version field (admin)
 - `/api/modules/releases/delivery/releases-metadata` — save releases metadata (admin)
-- `/api/modules/releases/delivery/commitment/snapshot/:version/:phase` — create commitment snapshot from current analysis (admin)
+- `/api/modules/releases/delivery/commitment/snapshot/:version/:phase` — create commitment snapshot by querying Jira directly with commitmentTrackingJql (admin)
 - `/api/modules/releases/hygiene/refresh` — trigger hygiene data refresh (release-manager)
 - `/api/modules/releases/hygiene/refresh-all` — refresh hygiene data for all stored versions (release-manager)
 - `/api/modules/releases/hygiene/config` — save hygiene rule configuration (release-manager)
