@@ -271,6 +271,7 @@ jobs:
         with:
           use_vertex: "true"
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          allowed_non_write_users: "*"
           track_progress: true
           display_report: "true"
           allowed_bots: "claude"
