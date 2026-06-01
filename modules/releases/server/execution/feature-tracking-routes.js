@@ -510,9 +510,15 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
         var dropped = await fetchDroppedFeatures(pv.fixVersions, jiraRequest, fetchAllJqlResults, currentKeys)
         features = features.concat(dropped)
 
+        var STATUS_ORDER = { red: 0, yellow: 1, green: 2 }
         features.sort(function (a, b) {
           if (a.scopeChange === 'dropped' && b.scopeChange !== 'dropped') return 1
           if (a.scopeChange !== 'dropped' && b.scopeChange === 'dropped') return -1
+          var aColor = STATUS_ORDER[(a.colorStatus || '').toLowerCase()]
+          var bColor = STATUS_ORDER[(b.colorStatus || '').toLowerCase()]
+          var aRank = aColor !== undefined ? aColor : 3
+          var bRank = bColor !== undefined ? bColor : 3
+          if (aRank !== bRank) return aRank - bRank
           return a.key.localeCompare(b.key)
         })
 

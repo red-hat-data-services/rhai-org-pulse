@@ -186,12 +186,16 @@ defineExpose({ expandAll, collapseAll })
                     {{ group.featureCount }}
                   </span>
                   <span
-                    v-if="addedCountForGroup(group) > 0"
-                    class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 dark:bg-blue-800/40 text-blue-700 dark:text-blue-300"
-                  >+{{ addedCountForGroup(group) }} late</span>
+                    class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold"
+                    :class="addedCountForGroup(group) > 0
+                      ? 'bg-blue-100 dark:bg-blue-800/40 text-blue-700 dark:text-blue-300'
+                      : 'bg-gray-100 dark:bg-gray-700/60 text-gray-400 dark:text-gray-500'"
+                  >{{ addedCountForGroup(group) > 0 ? '+' : '' }}{{ addedCountForGroup(group) }} late</span>
                   <span
-                    v-if="droppedCountForGroup(group) > 0"
-                    class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 dark:bg-amber-800/40 text-amber-700 dark:text-amber-300"
+                    class="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold"
+                    :class="droppedCountForGroup(group) > 0
+                      ? 'bg-amber-100 dark:bg-amber-800/40 text-amber-700 dark:text-amber-300'
+                      : 'bg-gray-100 dark:bg-gray-700/60 text-gray-400 dark:text-gray-500'"
                   >{{ droppedCountForGroup(group) }} dropped</span>
                 </div>
               </td>
