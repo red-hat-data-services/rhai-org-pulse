@@ -43,47 +43,15 @@ export function useCommitmentTracking() {
   async function loadReleases() {
     releasesLoading.value = true
     try {
-      const response = await fetch(`${API_BASE}/analysis`)
+      // Use commitment tracking versions endpoint (independent of delivery analysis)
+      const response = await fetch(`${API_BASE}/commitment/versions`)
       if (!response.ok) {
-        throw new Error('Failed to load releases')
+        throw new Error('Failed to load versions for commitment tracking')
       }
-      const analysisData = await response.json()
-
-      // Extract unique release versions from delivery analysis
-      // Extract version numbers from various formats:
-      // - "3.5" (simple)
-      // - "rhoai-3.5" (product prefix)
-      // - "rhoai-3.5.EA1" (product + phase)
-      // - "RHAII-3.5 EA1" (product + space + phase)
-      const uniqueVersions = new Set()
-      const allReleases = analysisData.releases || []
-
-      for (const release of allReleases) {
-        const fullVersion = release.releaseNumber
-        if (!fullVersion) continue
-
-        // Extract X.Y version number from various formats
-        const match = fullVersion.match(/(\d+\.\d+)/)
-        if (match) {
-          const version = match[1]
-          const [major, minor] = version.split('.').map(Number)
-          // Only include 3.4 and above (auto-discovers future versions)
-          if (major > 3 || (major === 3 && minor >= 4)) {
-            uniqueVersions.add(version)
-          }
-        }
-      }
-
-      // Convert to array and sort
-      releases.value = Array.from(uniqueVersions)
-        .sort((a, b) => {
-          const [aMajor, aMinor] = a.split('.').map(Number)
-          const [bMajor, bMinor] = b.split('.').map(Number)
-          return aMajor !== bMajor ? aMajor - bMajor : aMinor - bMinor
-        })
-        .map(version => ({ version }))
+      const data = await response.json()
+      releases.value = data.versions || []
     } catch (err) {
-      console.error('Failed to load releases:', err)
+      console.error('Failed to load commitment tracking versions:', err)
       releases.value = []
     } finally {
       releasesLoading.value = false

@@ -1417,6 +1417,81 @@ module.exports = function registerRoutes(router, context) {
 
   /**
    * @openapi
+   * /api/modules/releases/delivery/commitment/versions:
+   *   get:
+   *     summary: Get available versions for commitment tracking
+   *     description: Discovers versions from Jira using commitmentTrackingJql (independent of delivery analysis)
+   *     tags: [Releases - Delivery]
+   *     responses:
+   *       200:
+   *         description: List of available versions
+   */
+  router.get('/commitment/versions', async function(req, res) {
+    try {
+      const config = getConfig(readFromStorage)
+      const commitmentJql = config.commitmentTrackingJql || 'cf[10855] is not EMPTY'
+
+      // Build project filter
+      const projectsFilter = config.jiraAllProjects
+        ? ''
+        : `project in (${config.projectKeys.map(k => `"${k}"`).join(', ')}) AND `
+
+      // Query Jira for all Features with Target Version
+      const jql = `${projectsFilter}issuetype = Feature AND ${commitmentJql} ORDER BY key ASC`
+
+      console.log(`[releases/delivery] Discovering versions with commitment tracking JQL: ${commitmentJql}`)
+
+      const allFeatures = await fetchAllJqlResults(
+        jiraRequest,
+        jql,
+        'key,customfield_10855',
+        { maxResults: 100 }
+      )
+
+      console.log(`[releases/delivery] Fetched ${allFeatures.length} features from Jira`)
+
+      // Extract unique version numbers (X.Y format)
+      const uniqueVersions = new Set()
+
+      for (const issue of allFeatures) {
+        const targetVersions = issue.fields?.customfield_10855 || []
+
+        for (const v of targetVersions) {
+          // Target Version field returns Jira version objects with 'name' property
+          const val = v?.name || v?.value || ''
+          // Extract X.Y version number
+          const match = val.match(/(\d+\.\d+)/)
+          if (match) {
+            const version = match[1]
+            const [major, minor] = version.split('.').map(Number)
+            // Only include 3.4 and above
+            if (major > 3 || (major === 3 && minor >= 4)) {
+              uniqueVersions.add(version)
+            }
+          }
+        }
+      }
+
+      // Convert to sorted array
+      const versions = Array.from(uniqueVersions)
+        .sort((a, b) => {
+          const [aMajor, aMinor] = a.split('.').map(Number)
+          const [bMajor, bMinor] = b.split('.').map(Number)
+          return aMajor !== bMajor ? aMajor - bMajor : aMinor - bMinor
+        })
+        .map(version => ({ version }))
+
+      console.log(`[releases/delivery] Found ${versions.length} versions for commitment tracking: ${versions.map(v => v.version).join(', ')}`)
+
+      res.json({ versions })
+    } catch (error) {
+      console.error('[releases/delivery] commitment versions discovery error:', error)
+      res.status(500).json({ error: error.message })
+    }
+  })
+
+  /**
+   * @openapi
    * /api/modules/releases/delivery/commitment/snapshot/{version}/{phase}:
    *   post:
    *     summary: Create commitment snapshot by querying Jira directly
@@ -1500,7 +1575,8 @@ module.exports = function registerRoutes(router, context) {
       for (const issue of allFeatures) {
         const targetVersions = issue.fields?.customfield_10855 || []
         const hasMatchingVersion = targetVersions.some(v => {
-          const val = v?.value || ''
+          // Target Version field returns Jira version objects with 'name' property
+          const val = v?.name || v?.value || ''
           return versionPattern.test(val)
         })
 
