@@ -1441,7 +1441,7 @@ module.exports = function registerRoutes(router, context) {
    *       400:
    *         description: Invalid parameters
    *       404:
-   *         description: No delivery analysis data available
+   *         description: No features found for the given version
    */
   router.post('/commitment/snapshot/:version/:phase', requireAdmin, requireScope('releases:write'), async function(req, res) {
     try {
