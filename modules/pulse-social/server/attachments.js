@@ -117,19 +117,6 @@ function isImageFile(filename) {
   return IMAGE_EXTENSIONS.has(getExtension(filename))
 }
 
-function deleteAttachmentFiles(postId) {
-  const db = getDb()
-  const attachments = db.prepare('SELECT filename FROM attachments WHERE post_id = ?').all(postId)
-  for (const a of attachments) {
-    const filePath = path.join(ATTACHMENTS_DIR, a.filename)
-    try {
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
-    } catch (err) {
-      console.warn(`[pulse-social] Failed to delete attachment file: ${a.filename}`, err.message)
-    }
-  }
-}
-
 function getAttachmentFilenames(postId) {
   const db = getDb()
   return db.prepare('SELECT filename FROM attachments WHERE post_id = ?').all(postId).map(a => a.filename)
@@ -152,7 +139,6 @@ module.exports = {
   getAttachmentPath,
   isImageFile,
   checkStorageQuota,
-  deleteAttachmentFiles,
   getAttachmentFilenames,
   deleteAttachmentFilesByName,
   ATTACHMENTS_DIR
