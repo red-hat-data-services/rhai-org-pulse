@@ -10,9 +10,9 @@ const FIX_VERSION_FIELD_KEY = 'fixVersions'
 
 function getDefaultFixVersionJql(config) {
   if (config.targetVersionJqlFragment) return config.targetVersionJqlFragment
-  // Include both fixVersion and Target Version custom field
-  // Using the exact JQL syntax from the example
-  return '(fixVersion is not EMPTY OR "Target Version[Version Picker (multiple versions)]" is not EMPTY)'
+  // Fallback: match any Target Version that looks like a version number (3.x, 4.x, etc.)
+  // This auto-discovers future versions without manual config updates
+  return 'cf[10855] is not EMPTY'
 }
 
 function normalizeText(value) {
@@ -188,8 +188,69 @@ function safeDaysBetween(fromDate, toDate) {
   return Math.max(0, days)
 }
 
+/**
+ * Discovers releases by querying Jira and extracting unique Target Version values.
+ * Enriches with metadata from storage (product names, dates).
+ * Returns releases in the same format as Product Pages.
+ */
+async function discoverReleasesFromJira(storage, config) {
+  // Query Jira using the configured Target Version JQL
+  const jqlClause = getDefaultFixVersionJql(config)
+  if (!jqlClause) return []
+
+  const projectsFilter = config.jiraAllProjects
+    ? ''
+    : `project in (${config.projectKeys.map(k => `"${k}"`).join(', ')}) AND `
+  const jql = `${projectsFilter}issuetype = Feature AND ${jqlClause} ORDER BY updated DESC`
+
+  const issues = await fetchAllJqlResults(jiraRequest, jql, FIX_VERSION_FIELD_KEY, { maxResults: 100 })
+
+  // Extract unique Target Version values
+  const releaseVersions = new Set()
+  const featureCounts = new Map()
+
+  for (const issue of issues) {
+    const fixVersions = extractFixVersions(issue)
+    for (const version of fixVersions) {
+      releaseVersions.add(version)
+      featureCounts.set(version, (featureCounts.get(version) || 0) + 1)
+    }
+  }
+
+  // Load metadata from storage
+  const metadata = storage.readFromStorage('releases/delivery/releases-metadata.json') || {}
+
+  // Build releases array with metadata
+  const releases = []
+  for (const version of releaseVersions) {
+    const meta = metadata[version] || {}
+    releases.push({
+      productName: meta.productName || version.split('-')[0] || 'Unknown',
+      releaseNumber: version,
+      dueDate: meta.dueDate || null,
+      codeFreezeDate: meta.codeFreezeDate || null,
+      featureCount: featureCounts.get(version) || 0
+    })
+  }
+
+  return releases
+}
+
 async function fetchOpenReleases(storage, config) {
-  // New path: product shortnames configured
+  // Priority 1: Jira-discovered releases with metadata
+  if (config.targetVersionJqlFragment) {
+    try {
+      const releases = await discoverReleasesFromJira(storage, config)
+      if (releases.length > 0) {
+        return releases
+      }
+    } catch (err) {
+      console.error('[releases/delivery] Jira release discovery failed:', err.message)
+    }
+    // Fall through to other methods on failure
+  }
+
+  // Priority 2: product shortnames configured
   if (config.productPagesProductShortnames?.length) {
     try {
       const releases = await fetchProductsByShortname(config.productPagesProductShortnames, config)
@@ -243,21 +304,6 @@ async function fetchOpenReleases(storage, config) {
     return cached.releases
   }
   return []
-}
-
-/**
- * Future / in-flight releases only (due date on or after today).
- * Past-due GA rows are intentionally excluded from the analysis set — overdue “risk” in buildAnalysis
- * applies to releases that are still in the catalog with remaining open work, not to historical GAs.
- */
-function filterUnreleased(releases) {
-  const now = new Date()
-  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
-  return releases.filter(r => {
-    const due = new Date(`${r.dueDate}T00:00:00Z`)
-    if (Number.isNaN(due.getTime())) return false
-    return due >= today
-  })
 }
 
 async function fetchIssuesFromJira(config) {
@@ -870,7 +916,6 @@ async function fetchDeliverableChildrenCounts(deliverableKeys) {
 
 async function runFullAnalysis(storage, config) {
   const releases = await fetchOpenReleases(storage, config)
-  const openReleases = filterUnreleased(releases)
 
   let issues = []
   let fieldMeta = { id: null, name: '', schemaCustom: '' }
@@ -898,20 +943,13 @@ async function runFullAnalysis(storage, config) {
     jiraWarning = `Jira data unavailable: ${err.message}`
   }
 
-  // Always use Product Pages releases (openReleases) since we now support Target Version custom field
-  // which doesn't rely on Jira fix versions. The old approach of enriching Jira fix versions
-  // would exclude releases that don't exist in Jira's fix versions list.
-  const analysisReleases = openReleases
-  const analysisOpenReleases = filterUnreleased(analysisReleases)
-
-  if (!analysisOpenReleases.length) {
+  if (!releases.length) {
     throw new Error(
-      'No unreleased open releases found. Ensure Jira Fix Versions exist for your projects, ' +
-      'or configure Product Pages product shortnames in Release Analysis settings.'
+      'No releases found. Ensure Target Version JQL fragment is configured or Product Pages product shortnames are set in Release Analysis settings.'
     )
   }
 
-  const result = buildAnalysis(analysisOpenReleases, issues, fieldMeta, config)
+  const result = buildAnalysis(releases, issues, fieldMeta, config)
   result.sprintWindow = sprintWindow || {
     startDate: new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10),
     endDate: new Date().toISOString().slice(0, 10),
@@ -1235,7 +1273,7 @@ module.exports = function registerRoutes(router, context) {
       const snapshot = readFromStorage(snapshotPath)
 
       if (!snapshot) {
-        return res.status(404).json({ error: `No snapshot found for ${version} ${phase}` })
+        return res.status(404).json({ error: `No snapshot found for ${version} ${phase}. Use the "Create Snapshot" button above.` })
       }
 
       // Load delivery analysis
@@ -1355,6 +1393,118 @@ module.exports = function registerRoutes(router, context) {
       })
     } catch (error) {
       console.error('[releases/delivery] commitment tracking error:', error)
+      res.status(500).json({ error: error.message })
+    }
+  })
+
+  /**
+   * @openapi
+   * /api/modules/releases/delivery/commitment/snapshot/{version}/{phase}:
+   *   post:
+   *     summary: Create commitment snapshot from current delivery analysis
+   *     tags: [Releases - Delivery]
+   *     parameters:
+   *       - in: path
+   *         name: version
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Release version (e.g., "3.5")
+   *       - in: path
+   *         name: phase
+   *         required: true
+   *         schema:
+   *           type: string
+   *           enum: [EA1, EA2, GA]
+   *         description: Release phase
+   *     responses:
+   *       200:
+   *         description: Snapshot created successfully
+   *       400:
+   *         description: Invalid parameters
+   *       404:
+   *         description: No delivery analysis data available
+   */
+  router.post('/commitment/snapshot/:version/:phase', requireAdmin, requireScope('releases:write'), function(req, res) {
+    try {
+      const { version, phase } = req.params
+
+      console.log(`[releases/delivery] Creating snapshot for ${version} ${phase}`)
+
+      // Validate phase
+      const validPhases = ['EA1', 'EA2', 'GA']
+      if (!validPhases.includes(phase)) {
+        console.warn(`[releases/delivery] Invalid phase: ${phase}`)
+        return res.status(400).json({ error: `Invalid phase. Must be one of: ${validPhases.join(', ')}` })
+      }
+
+      // Validate version format
+      if (!/^\d+\.\d+$/.test(version)) {
+        console.warn(`[releases/delivery] Invalid version format: ${version}`)
+        return res.status(400).json({ error: 'Invalid version format. Expected X.Y (e.g., "3.5")' })
+      }
+
+      // Load delivery analysis
+      const analysisCache = readFromStorage('releases/delivery/analysis-cache.json')
+      if (!analysisCache?.data) {
+        console.error('[releases/delivery] No delivery analysis cache found')
+        return res.status(404).json({ error: 'Delivery analysis data not available. Run "Refresh Current Status" first.' })
+      }
+
+      // Aggregate ALL releases that match this version
+      const escaped = version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const versionPattern = new RegExp(`\\b${escaped}\\b`)
+      const matchingReleases = analysisCache.data.releases.filter(r => versionPattern.test(r.releaseNumber))
+
+      if (matchingReleases.length === 0) {
+        console.warn(`[releases/delivery] No releases found matching version ${version}`)
+        return res.status(404).json({ error: `No releases found matching version ${version}. Run "Refresh Current Status" to load latest Jira data.` })
+      }
+
+      console.log(`[releases/delivery] Found ${matchingReleases.length} releases matching ${version}: ${matchingReleases.map(r => r.releaseNumber).join(', ')}`)
+
+      // Collect all Features from matching releases
+      const features = []
+      const seenKeys = new Set()
+      for (const release of matchingReleases) {
+        for (const issue of release.issues || []) {
+          if (!seenKeys.has(issue.key) && issue.issueType === 'Feature') {
+            features.push({
+              key: issue.key,
+              summary: issue.summary,
+              status: issue.status,
+              components: issue.components,
+              deliveryOwner: issue.deliveryOwner
+            })
+            seenKeys.add(issue.key)
+          }
+        }
+      }
+
+      // Create snapshot
+      const snapshotData = {
+        version,
+        phase,
+        snapshotAt: new Date().toISOString(),
+        snapshotTrigger: 'manual',
+        featureKeys: Array.from(seenKeys),
+        featureCount: seenKeys.size,
+        features
+      }
+
+      // Write to storage
+      const snapshotPath = `releases/planning/committed-snapshot-${version}-${phase}.json`
+      writeToStorage(snapshotPath, snapshotData)
+
+      console.log(`[releases/delivery] Created snapshot for ${version} ${phase}: ${seenKeys.size} features`)
+
+      res.json({
+        phase,
+        featureCount: seenKeys.size,
+        snapshotAt: snapshotData.snapshotAt
+      })
+    } catch (error) {
+      console.error('[releases/delivery] snapshot creation error:', error)
       res.status(500).json({ error: error.message })
     }
   })
@@ -1666,6 +1816,91 @@ module.exports = function registerRoutes(router, context) {
       })
     } catch (error) {
       console.error('[releases/quality] Debug error:', error)
+      res.status(500).json({ error: error.message })
+    }
+  })
+
+  /**
+   * @openapi
+   * /api/modules/releases/delivery/discover-releases:
+   *   post:
+   *     tags: ['Releases: Delivery']
+   *     summary: Discover releases from Jira Target Version field
+   *     description: Queries Jira using configured Target Version JQL and returns unique release versions with feature counts
+   *     responses:
+   *       200:
+   *         description: List of discovered releases
+   */
+  router.post('/discover-releases', requireAdmin, requireScope('releases:write'), async function(req, res) {
+    try {
+      const config = getConfig(readFromStorage)
+      const releases = await discoverReleasesFromJira(storage, config)
+      res.json({ releases })
+    } catch (error) {
+      console.error('[releases/delivery] Discover releases error:', error)
+      res.status(500).json({ error: error.message })
+    }
+  })
+
+  /**
+   * @openapi
+   * /api/modules/releases/delivery/releases-metadata:
+   *   get:
+   *     tags: ['Releases: Delivery']
+   *     summary: Get releases metadata
+   *     description: Returns stored metadata for releases (product names, dates)
+   *     responses:
+   *       200:
+   *         description: Releases metadata object
+   */
+  router.get('/releases-metadata', requireAuth, requireScope('releases:read'), function(req, res) {
+    try {
+      const metadata = readFromStorage('releases/delivery/releases-metadata.json') || {}
+      res.json(metadata)
+    } catch (error) {
+      console.error('[releases/delivery] Get metadata error:', error)
+      res.status(500).json({ error: error.message })
+    }
+  })
+
+  /**
+   * @openapi
+   * /api/modules/releases/delivery/releases-metadata:
+   *   post:
+   *     tags: ['Releases: Delivery']
+   *     summary: Save releases metadata
+   *     description: Stores metadata for releases (product names, dates)
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             additionalProperties:
+   *               type: object
+   *               properties:
+   *                 productName:
+   *                   type: string
+   *                 dueDate:
+   *                   type: string
+   *                   format: date
+   *                 codeFreezeDate:
+   *                   type: string
+   *                   format: date
+   *     responses:
+   *       200:
+   *         description: Metadata saved successfully
+   */
+  router.post('/releases-metadata', requireAdmin, requireScope('releases:write'), function(req, res) {
+    try {
+      const metadata = req.body
+      if (typeof metadata !== 'object' || Array.isArray(metadata)) {
+        return res.status(400).json({ error: 'Metadata must be an object' })
+      }
+      writeToStorage('releases/delivery/releases-metadata.json', metadata)
+      res.json({ success: true })
+    } catch (error) {
+      console.error('[releases/delivery] Save metadata error:', error)
       res.status(500).json({ error: error.message })
     }
   })

@@ -67,8 +67,8 @@ export function useCommitmentTracking() {
         if (match) {
           const version = match[1]
           const [major, minor] = version.split('.').map(Number)
-          // Only include 3.4 and above
-          if (major === 3 && minor >= 4) {
+          // Only include 3.4 and above (auto-discovers future versions)
+          if (major > 3 || (major === 3 && minor >= 4)) {
             uniqueVersions.add(version)
           }
         }
