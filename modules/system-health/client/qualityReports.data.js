@@ -136,7 +136,7 @@ export const QUALITY_SAMPLE_META = {
   generatedAt: '2026-05-29 09:01:06',
   averageScore: '5.4/10',
   blurb:
-    'Model Serving + Trusty-AI + AI Pipelines + AI Hub — 128 repositories'
+    'Model Serving + Trusty-AI + AI Pipelines + AI Hub + PyTorch — 128 repositories'
 }
 
 /** @type {Array<{ id: string, label: string, githubUrl: string, score: string, gaps: string, tier: string, component: string, team: string, reportUrl: string }>} */
