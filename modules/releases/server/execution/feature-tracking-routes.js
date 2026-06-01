@@ -59,13 +59,36 @@ function extractProduct(releaseNumber) {
  *   "RHELAI-3.4 EA-1"          → "rhelai-3.4ea1"
  */
 function normalizeVersionName(name) {
-  var s = (name || '').toLowerCase().trimEnd()
-  if (s.endsWith('release') && s.length > 7 && s.charAt(s.length - 8) <= ' ') {
-    s = s.slice(0, s.length - 7).trimEnd()
+  let s = (name || '').toLowerCase()
+  if (s.endsWith(' release')) s = s.slice(0, -8)
+  s = s.trimEnd()
+
+  const SEPS = ' ._-'
+  let result = ''
+  let i = 0
+  while (i < s.length) {
+    const ch = s[i]
+
+    if (SEPS.includes(ch) && i > 0 && s.charCodeAt(i - 1) >= 48 && s.charCodeAt(i - 1) <= 57) {
+      let j = i
+      while (j < s.length && SEPS.includes(s[j])) j++
+      const tag = s.slice(j, j + 2)
+      if (tag === 'ea' || tag === 'ga') {
+        i = j
+        continue
+      }
+    }
+
+    if (ch === 'e' && i + 3 < s.length && s[i + 1] === 'a' && s[i + 2] === '-' && s.charCodeAt(i + 3) >= 48 && s.charCodeAt(i + 3) <= 57) {
+      result += 'ea'
+      i += 3
+      continue
+    }
+
+    result += s[i]
+    i++
   }
-  s = s.replace(/(\d)[\s._-]+(?=ea|ga)/gi, '$1')
-  s = s.replace(/(ea)-?(\d)/gi, 'ea$2')
-  return s
+  return result
 }
 
 const jiraVersionsCache = { versions: null, fetchedAt: 0 }
