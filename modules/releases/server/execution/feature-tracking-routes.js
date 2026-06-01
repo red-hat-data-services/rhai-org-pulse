@@ -59,8 +59,10 @@ function extractProduct(releaseNumber) {
  *   "RHELAI-3.4 EA-1"          → "rhelai-3.4ea1"
  */
 function normalizeVersionName(name) {
-  let s = (name || '').toLowerCase()
-  s = s.replace(/\s+release$/i, '').trimEnd()
+  var s = (name || '').toLowerCase().trimEnd()
+  if (s.endsWith('release') && s.length > 7 && s.charAt(s.length - 8) <= ' ') {
+    s = s.slice(0, s.length - 7).trimEnd()
+  }
   s = s.replace(/(\d)[\s._-]+(?=ea|ga)/gi, '$1')
   s = s.replace(/(ea)-?(\d)/gi, 'ea$2')
   return s
