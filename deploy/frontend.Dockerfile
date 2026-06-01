@@ -6,7 +6,7 @@ USER 0
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci --ignore-scripts && npm rebuild esbuild
+RUN npm ci
 
 COPY index.html vite.config.mjs tailwind.config.mjs postcss.config.mjs ./
 COPY src/ ./src/
