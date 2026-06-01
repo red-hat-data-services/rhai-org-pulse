@@ -181,7 +181,7 @@ test.describe('System Health Views @system-health', () => {
     await expect(table).toBeVisible();
 
     // Check that all expected columns are present
-    const expectedColumns = ['REPOSITORY', 'SOURCE', 'OVERALL SCORE', 'TOP GAPS'];
+    const expectedColumns = ['REPOSITORY', 'TIER', 'COMPONENT', 'SCORE', 'TOP GAPS'];
     for (const columnName of expectedColumns) {
       // Look for the column header in table headers (th) or column cells
       const columnHeader = table.locator('th, thead td, [role="columnheader"]').filter({ hasText: columnName });
