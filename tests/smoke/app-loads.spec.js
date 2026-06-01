@@ -24,14 +24,12 @@ test.describe('Frontend Smoke Tests', () => {
       });
     });
 
-    // Listen for console errors (ignore expected 404s from missing backend in container tests)
+    // Listen for console errors
     page.on('console', msg => {
       if (msg.type() === 'error') {
-        const text = msg.text()
-        if (text.includes('Failed to load resource') && text.includes('404')) return
         page.errors.push({
           type: 'console.error',
-          message: text
+          message: msg.text()
         });
       }
     });
