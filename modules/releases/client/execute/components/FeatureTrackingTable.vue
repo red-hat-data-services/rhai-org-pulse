@@ -108,6 +108,10 @@ function formatDate(dateStr) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+function stripHtml(html) {
+  return (html || '').replace(/<[^>]*>/g, '')
+}
+
 function colorStatusClass(colorStatus) {
   var s = (colorStatus || '').toLowerCase()
   if (s === 'green') return 'bg-emerald-500'
@@ -296,12 +300,11 @@ defineExpose({ expandAll, collapseAll })
 
                 <!-- Status Summary -->
                 <td class="px-3 py-2.5">
-                  <div
+                  <span
                     v-if="feature.statusSummary"
-                    class="text-xs text-gray-600 dark:text-gray-300 max-w-[200px] truncate"
-                    :title="feature.statusSummary?.replace(/<[^>]*>/g, '')"
-                    v-html="feature.statusSummary"
-                  />
+                    class="text-xs text-gray-600 dark:text-gray-300 max-w-[200px] truncate block"
+                    :title="stripHtml(feature.statusSummary)"
+                  >{{ stripHtml(feature.statusSummary) }}</span>
                   <span v-else class="text-gray-300 dark:text-gray-600 text-xs">--</span>
                 </td>
 

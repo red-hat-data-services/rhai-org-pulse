@@ -23,9 +23,9 @@ const DEFAULT_PRODUCTS = ['rhoai', 'rhelai', 'RHAII']
 const DEFAULT_PROJECTS = ['RHAISTRAT', 'RHOAIENG', 'AIPCC', 'RHAIENG', 'INFERENG']
 const DEFAULT_ISSUE_TYPES = ['Feature', 'Initiative']
 
-var EXCLUDE_VERSION_RE = /^\d+\.\d+\.\d+$/
+const EXCLUDE_VERSION_RE = /^\d+\.\d+\.\d+$/
 
-var FIELDS_TO_FETCH = [
+const FIELDS_TO_FETCH = [
   'summary', 'status', 'issuetype', 'assignee', 'fixVersions', 'versions',
   'components', 'labels', 'issuelinks',
   CUSTOM_FIELDS.team,
@@ -43,8 +43,8 @@ function cacheKey(portfolioVersion) {
  * e.g. "rhoai-3.5.EA1" → "rhoai", "RHAII-3.5" → "rhaii"
  */
 function extractProduct(releaseNumber) {
-  var s = (releaseNumber || '').toLowerCase()
-  var dash = s.indexOf('-')
+  const s = (releaseNumber || '').toLowerCase()
+  const dash = s.indexOf('-')
   return dash > 0 ? s.slice(0, dash) : s
 }
 
@@ -59,15 +59,15 @@ function extractProduct(releaseNumber) {
  *   "RHELAI-3.4 EA-1"          → "rhelai-3.4ea1"
  */
 function normalizeVersionName(name) {
-  var s = (name || '').toLowerCase()
-  s = s.replace(/\s+release\s*$/i, '')
+  let s = (name || '').toLowerCase()
+  s = s.replace(/\s+release$/i, '').trimEnd()
   s = s.replace(/(\d)[\s._-]+(?=ea|ga)/gi, '$1')
   s = s.replace(/(ea)-?(\d)/gi, 'ea$2')
   return s
 }
 
-var jiraVersionsCache = { versions: null, fetchedAt: 0 }
-var VERSIONS_CACHE_TTL_MS = 15 * 60 * 1000
+const jiraVersionsCache = { versions: null, fetchedAt: 0 }
+const VERSIONS_CACHE_TTL_MS = 15 * 60 * 1000
 
 /**
  * Resolve a portfolio version (e.g. "3.5.EA1") to actual Jira fixVersion
@@ -76,25 +76,25 @@ var VERSIONS_CACHE_TTL_MS = 15 * 60 * 1000
  * (e.g. both "rhelai-3.5EA2" and "rhelai-3.5 EA2 release" for rhelai).
  */
 async function resolveProductVersionsFromJira(portfolioVersion, jiraRequestFn) {
-  var { fetchProjectVersions } = require('../../../../shared/server/jira')
+  const { fetchProjectVersions } = require('../../../../shared/server/jira')
 
   if (!jiraVersionsCache.versions || Date.now() - jiraVersionsCache.fetchedAt > VERSIONS_CACHE_TTL_MS) {
     jiraVersionsCache.versions = await fetchProjectVersions(jiraRequestFn, DEFAULT_PROJECTS)
     jiraVersionsCache.fetchedAt = Date.now()
   }
 
-  var allVersions = jiraVersionsCache.versions
-  var normalizedPortfolio = normalizeVersionName(portfolioVersion)
+  const allVersions = jiraVersionsCache.versions
+  const normalizedPortfolio = normalizeVersionName(portfolioVersion)
 
-  var productMap = {}
+  const productMap = {}
 
-  for (var i = 0; i < allVersions.length; i++) {
-    var v = allVersions[i]
-    var product = extractProduct(v.name)
+  for (let i = 0; i < allVersions.length; i++) {
+    const v = allVersions[i]
+    const product = extractProduct(v.name)
     if (!product) continue
 
-    var normalizedName = normalizeVersionName(v.name)
-    var versionPart = normalizedName.replace(/^[a-z]+-/, '')
+    const normalizedName = normalizeVersionName(v.name)
+    const versionPart = normalizedName.replace(/^[a-z]+-/, '')
 
     if (versionPart === normalizedPortfolio) {
       if (!productMap[product]) {
@@ -109,10 +109,10 @@ async function resolveProductVersionsFromJira(portfolioVersion, jiraRequestFn) {
     }
   }
 
-  var matched = []
-  var keys = Object.keys(productMap)
-  for (var ki = 0; ki < keys.length; ki++) {
-    var entry = productMap[keys[ki]]
+  const matched = []
+  const keys = Object.keys(productMap)
+  for (let ki = 0; ki < keys.length; ki++) {
+    const entry = productMap[keys[ki]]
     matched.push({
       product: entry.product,
       releaseNumber: entry.fixVersions[0],
@@ -122,10 +122,10 @@ async function resolveProductVersionsFromJira(portfolioVersion, jiraRequestFn) {
 
   if (matched.length > 0) return matched
 
-  var products = DEFAULT_PRODUCTS
-  var result = []
-  for (var pi = 0; pi < products.length; pi++) {
-    var fv = products[pi] + '-' + portfolioVersion
+  const products = DEFAULT_PRODUCTS
+  const result = []
+  for (let pi = 0; pi < products.length; pi++) {
+    const fv = products[pi] + '-' + portfolioVersion
     result.push({
       product: products[pi].toLowerCase(),
       releaseNumber: fv,
@@ -142,33 +142,33 @@ async function resolveProductVersionsFromJira(portfolioVersion, jiraRequestFn) {
  * Deduplicates by issue key. Returns transformed feature objects.
  */
 async function fetchFeaturesByFixVersion(fixVersions, jiraRequestFn, fetchAllJqlResultsFn) {
-  var versions = Array.isArray(fixVersions) ? fixVersions : [fixVersions]
-  var projects = DEFAULT_PROJECTS
-  var issueTypes = DEFAULT_ISSUE_TYPES
+  const versions = Array.isArray(fixVersions) ? fixVersions : [fixVersions]
+  const projects = DEFAULT_PROJECTS
+  const issueTypes = DEFAULT_ISSUE_TYPES
 
-  var sanitized = versions.map(function (v) {
+  const sanitized = versions.map(function (v) {
     return '"' + v.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"'
   })
 
-  var fixVersionFilter = sanitized.length === 1
+  const fixVersionFilter = sanitized.length === 1
     ? 'fixVersion = ' + sanitized[0]
     : 'fixVersion IN (' + sanitized.join(', ') + ')'
 
-  var jql = 'project IN (' + projects.join(', ') + ')' +
+  const jql = 'project IN (' + projects.join(', ') + ')' +
     ' AND issuetype IN (' + issueTypes.join(', ') + ')' +
     ' AND ' + fixVersionFilter
 
-  var rawIssues = await fetchAllJqlResultsFn(jiraRequestFn, jql, FIELDS_TO_FETCH, {
+  const rawIssues = await fetchAllJqlResultsFn(jiraRequestFn, jql, FIELDS_TO_FETCH, {
     expand: 'renderedFields,changelog'
   })
 
-  var seen = {}
-  var features = []
-  for (var i = 0; i < rawIssues.length; i++) {
-    var raw = rawIssues[i]
+  const seen = {}
+  const features = []
+  for (let i = 0; i < rawIssues.length; i++) {
+    const raw = rawIssues[i]
     if (seen[raw.key]) continue
     seen[raw.key] = true
-    var transformed = transformIssue(raw, {})
+    const transformed = transformIssue(raw, {})
     transformed.fixVersionAddedAt = findFixVersionAddedDate(raw.changelog, versions)
     features.push(transformed)
   }
@@ -185,20 +185,20 @@ async function fetchFeaturesByFixVersion(fixVersions, jiraRequestFn, fetchAllJql
 function findFixVersionAddedDate(changelog, fixVersionNames) {
   if (!changelog || !Array.isArray(changelog.histories)) return null
 
-  var targets = Array.isArray(fixVersionNames) ? fixVersionNames : [fixVersionNames]
-  var normalizedTargets = {}
-  for (var ti = 0; ti < targets.length; ti++) {
+  const targets = Array.isArray(fixVersionNames) ? fixVersionNames : [fixVersionNames]
+  const normalizedTargets = {}
+  for (let ti = 0; ti < targets.length; ti++) {
     normalizedTargets[targets[ti].toLowerCase()] = true
   }
 
-  for (var i = 0; i < changelog.histories.length; i++) {
-    var history = changelog.histories[i]
-    var items = history.items || []
+  for (let i = 0; i < changelog.histories.length; i++) {
+    const history = changelog.histories[i]
+    const items = history.items || []
 
-    for (var j = 0; j < items.length; j++) {
-      var item = items[j]
+    for (let j = 0; j < items.length; j++) {
+      const item = items[j]
       if (item.field !== 'Fix Version' && item.fieldId !== 'fixVersions') continue
-      var toString = (item.toString || '').toLowerCase()
+      const toString = (item.toString || '').toLowerCase()
       if (normalizedTargets[toString]) {
         return history.created
       }
@@ -215,7 +215,7 @@ function classifyFeature(feature, featureFreezeDate) {
   if (!featureFreezeDate) return null
 
   if (feature.fixVersionAddedAt) {
-    var addedDate = feature.fixVersionAddedAt.split('T')[0]
+    const addedDate = feature.fixVersionAddedAt.split('T')[0]
     if (addedDate > featureFreezeDate) {
       return 'added'
     }
@@ -231,39 +231,37 @@ function classifyFeature(feature, featureFreezeDate) {
  * the fixVersion was removed (fixVersionRemovedAt).
  */
 async function fetchDroppedFeatures(fixVersions, jiraRequestFn, fetchAllJqlResultsFn, currentKeys) {
-  var versions = Array.isArray(fixVersions) ? fixVersions : [fixVersions]
-  var projects = DEFAULT_PROJECTS
+  const versions = Array.isArray(fixVersions) ? fixVersions : [fixVersions]
+  const projects = DEFAULT_PROJECTS
 
-  var sanitized = versions.map(function (v) {
+  const sanitized = versions.map(function (v) {
     return '"' + v.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"'
   })
 
-  // Build WAS clause: (fixVersion WAS "v1" OR fixVersion WAS "v2")
-  var wasClauses = sanitized.map(function (v) { return 'fixVersion WAS ' + v })
-  var wasFilter = wasClauses.length === 1
+  const wasClauses = sanitized.map(function (v) { return 'fixVersion WAS ' + v })
+  const wasFilter = wasClauses.length === 1
     ? wasClauses[0]
     : '(' + wasClauses.join(' OR ') + ')'
 
-  // Build NOT IN clause to exclude issues that still have the fixVersion
-  var notInFilter = sanitized.length === 1
+  const notInFilter = sanitized.length === 1
     ? 'fixVersion != ' + sanitized[0]
     : 'fixVersion NOT IN (' + sanitized.join(', ') + ')'
 
-  var jql = wasFilter +
+  const jql = wasFilter +
     ' AND ' + notInFilter +
     ' AND issuetype = Feature' +
     ' AND project IN (' + projects.join(', ') + ')'
 
   try {
-    var rawIssues = await fetchAllJqlResultsFn(jiraRequestFn, jql, FIELDS_TO_FETCH, {
+    const rawIssues = await fetchAllJqlResultsFn(jiraRequestFn, jql, FIELDS_TO_FETCH, {
       expand: 'renderedFields,changelog'
     })
 
-    var dropped = []
-    for (var i = 0; i < rawIssues.length; i++) {
-      var raw = rawIssues[i]
+    const dropped = []
+    for (let i = 0; i < rawIssues.length; i++) {
+      const raw = rawIssues[i]
       if (currentKeys[raw.key]) continue
-      var transformed = transformIssue(raw, {})
+      const transformed = transformIssue(raw, {})
       transformed.scopeChange = 'dropped'
       transformed.fixVersionRemovedAt = findFixVersionRemovedDate(raw.changelog, versions)
       dropped.push(transformed)
@@ -284,22 +282,22 @@ async function fetchDroppedFeatures(fixVersions, jiraRequestFn, fetchAllJqlResul
 function findFixVersionRemovedDate(changelog, fixVersionNames) {
   if (!changelog || !Array.isArray(changelog.histories)) return null
 
-  var targets = Array.isArray(fixVersionNames) ? fixVersionNames : [fixVersionNames]
-  var normalizedTargets = {}
-  for (var ti = 0; ti < targets.length; ti++) {
+  const targets = Array.isArray(fixVersionNames) ? fixVersionNames : [fixVersionNames]
+  const normalizedTargets = {}
+  for (let ti = 0; ti < targets.length; ti++) {
     normalizedTargets[targets[ti].toLowerCase()] = true
   }
 
-  var mostRecent = null
+  let mostRecent = null
 
-  for (var i = 0; i < changelog.histories.length; i++) {
-    var history = changelog.histories[i]
-    var items = history.items || []
+  for (let i = 0; i < changelog.histories.length; i++) {
+    const history = changelog.histories[i]
+    const items = history.items || []
 
-    for (var j = 0; j < items.length; j++) {
-      var item = items[j]
+    for (let j = 0; j < items.length; j++) {
+      const item = items[j]
       if (item.field !== 'Fix Version' && item.fieldId !== 'fixVersions') continue
-      var fromString = (item.fromString || '').toLowerCase()
+      const fromString = (item.fromString || '').toLowerCase()
       if (normalizedTargets[fromString]) {
         if (!mostRecent || history.created > mostRecent) {
           mostRecent = history.created
@@ -317,16 +315,16 @@ function findFixVersionRemovedDate(changelog, fixVersionNames) {
  * Also returns the earliest date across products as a portfolio-level fallback.
  */
 function getFeatureFreezeDatesFromCache(portfolioVersion, readFromStorage) {
-  var ppCache = readFromStorage(PP_CACHE_FILE)
-  var ppReleases = Array.isArray(ppCache) ? ppCache : (ppCache && ppCache.releases) || []
+  const ppCache = readFromStorage(PP_CACHE_FILE)
+  const ppReleases = Array.isArray(ppCache) ? ppCache : (ppCache && ppCache.releases) || []
 
-  var normalizedPortfolio = normalizeVersionName(portfolioVersion)
-  var byProduct = {}
-  var earliest = null
+  const normalizedPortfolio = normalizeVersionName(portfolioVersion)
+  const byProduct = {}
+  let earliest = null
 
-  for (var i = 0; i < ppReleases.length; i++) {
-    var rel = ppReleases[i]
-    var relVersion = normalizeVersionName(rel.releaseNumber).replace(/^[a-z]+-/, '')
+  for (let i = 0; i < ppReleases.length; i++) {
+    const rel = ppReleases[i]
+    const relVersion = normalizeVersionName(rel.releaseNumber).replace(/^[a-z]+-/, '')
     if (relVersion === normalizedPortfolio && rel.featureFreezeDate) {
       byProduct[normalizeVersionName(rel.releaseNumber)] = rel.featureFreezeDate
       if (!earliest || rel.featureFreezeDate < earliest) {
@@ -373,17 +371,17 @@ function getFeatureFreezeDatesFromCache(portfolioVersion, readFromStorage) {
  */
 
 module.exports = function registerFeatureTrackingRoutes(router, context) {
-  var storage = context.storage
-  var requireAuth = context.requireAuth
-  var requireScope = context.requireScope
+  const storage = context.storage
+  const requireAuth = context.requireAuth
+  const requireScope = context.requireScope
 
   // GET /tracking/versions
   router.get('/tracking/versions', requireAuth, requireScope('releases:read'), function (req, res) {
-    var versionMap = {}
+    const versionMap = {}
 
     function addVersion(releaseNumber) {
-      var product = extractProduct(releaseNumber)
-      var versionPart = (releaseNumber || '').replace(/^[a-z]+-/i, '')
+      const product = extractProduct(releaseNumber)
+      const versionPart = (releaseNumber || '').replace(/^[a-z]+-/i, '')
       if (!versionPart || !product) return
       if (EXCLUDE_VERSION_RE.test(versionPart)) return
       if (!versionMap[versionPart]) {
@@ -394,40 +392,38 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
       }
     }
 
-    var registry = readRegistry(storage.readFromStorage)
-    var registryReleases = registry.releases || []
-    for (var ri = 0; ri < registryReleases.length; ri++) {
-      var rel = registryReleases[ri]
+    const registry = readRegistry(storage.readFromStorage)
+    const registryReleases = registry.releases || []
+    for (let ri = 0; ri < registryReleases.length; ri++) {
+      const rel = registryReleases[ri]
       if (rel.state === 'archived') continue
       addVersion(rel.displayName || rel.id || '')
     }
 
-    var ppCache = storage.readFromStorage(PP_CACHE_FILE)
-    var ppReleases = Array.isArray(ppCache) ? ppCache : (ppCache && ppCache.releases) || []
-    for (var pi = 0; pi < ppReleases.length; pi++) {
+    const ppCache = storage.readFromStorage(PP_CACHE_FILE)
+    const ppReleases = Array.isArray(ppCache) ? ppCache : (ppCache && ppCache.releases) || []
+    for (let pi = 0; pi < ppReleases.length; pi++) {
       if (ppReleases[pi].releaseNumber) addVersion(ppReleases[pi].releaseNumber)
     }
 
-    var planningConfig = storage.readFromStorage(PLANNING_CONFIG_FILE)
+    const planningConfig = storage.readFromStorage(PLANNING_CONFIG_FILE)
     if (planningConfig && planningConfig.releases) {
-      var configVersions = Object.keys(planningConfig.releases)
-      for (var ci = 0; ci < configVersions.length; ci++) {
-        var cv = configVersions[ci]
+      const configVersions = Object.keys(planningConfig.releases)
+      for (let ci = 0; ci < configVersions.length; ci++) {
+        const cv = configVersions[ci]
         if (!versionMap[cv] && !EXCLUDE_VERSION_RE.test(cv)) {
           versionMap[cv] = { version: cv, products: [] }
         }
       }
     }
 
-    var versions = Object.keys(versionMap).map(function (k) { return versionMap[k] })
+    const versions = Object.keys(versionMap).map(function (k) { return versionMap[k] })
 
-    // Enrich with earliest feature freeze date per portfolio version
-    for (var vi = 0; vi < versions.length; vi++) {
-      var fd = getFeatureFreezeDatesFromCache(versions[vi].version, storage.readFromStorage)
+    for (let vi = 0; vi < versions.length; vi++) {
+      const fd = getFeatureFreezeDatesFromCache(versions[vi].version, storage.readFromStorage)
       versions[vi].featureFreezeDate = fd.earliest || null
     }
 
-    // Sort by feature freeze date (earliest first); versions without a date go last
     versions.sort(function (a, b) {
       if (a.featureFreezeDate && b.featureFreezeDate) return a.featureFreezeDate.localeCompare(b.featureFreezeDate)
       if (a.featureFreezeDate && !b.featureFreezeDate) return -1
@@ -440,44 +436,42 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
 
   // GET /tracking/data — query Jira by fixVersion
   router.get('/tracking/data', requireAuth, requireScope('releases:read'), async function (req, res) {
-    var version = req.query.version
+    const version = req.query.version
     if (!version) {
       return res.status(400).json({ error: 'version query parameter is required' })
     }
 
-    var forceRefresh = req.query.refresh === 'true'
+    const forceRefresh = req.query.refresh === 'true'
 
     try {
-      // Check server-side cache
       if (!forceRefresh) {
-        var cached = storage.readFromStorage(cacheKey(version))
+        const cached = storage.readFromStorage(cacheKey(version))
         if (cached && cached.fetchedAt) {
-          var age = Date.now() - new Date(cached.fetchedAt).getTime()
+          const age = Date.now() - new Date(cached.fetchedAt).getTime()
           if (age < CACHE_TTL_MS) {
             return res.json(cached)
           }
         }
       }
 
-      var jira = require('../../../../shared/server/jira')
-      var jiraRequest = jira.jiraRequest
-      var fetchAllJqlResults = jira.fetchAllJqlResults
+      const jira = require('../../../../shared/server/jira')
+      const jiraRequest = jira.jiraRequest
+      const fetchAllJqlResults = jira.fetchAllJqlResults
 
-      var productVersions = await resolveProductVersionsFromJira(version, jiraRequest)
-      var freezeDates = getFeatureFreezeDatesFromCache(version, storage.readFromStorage)
+      const productVersions = await resolveProductVersionsFromJira(version, jiraRequest)
+      const freezeDates = getFeatureFreezeDatesFromCache(version, storage.readFromStorage)
 
-      // Try live PP API if cache doesn't have any freeze dates
       if (!freezeDates.earliest) {
         try {
-          var ppConfig = {
+          const ppConfig = {
             productPagesBaseUrl: process.env.PRODUCT_PAGES_BASE_URL || 'https://productpages.redhat.com',
             productPagesProductShortnames: DEFAULT_PRODUCTS
           }
-          var livePPReleases = await fetchProductsByShortname(ppConfig.productPagesProductShortnames, ppConfig)
-          var normalizedPV = version.replace(/\s+/g, '.').toLowerCase()
-          for (var pri = 0; pri < livePPReleases.length; pri++) {
-            var pr = livePPReleases[pri]
-            var prVersion = (pr.releaseNumber || '').replace(/^[a-z]+-/i, '').toLowerCase()
+          const livePPReleases = await fetchProductsByShortname(ppConfig.productPagesProductShortnames, ppConfig)
+          const normalizedPV = version.replace(/\s+/g, '.').toLowerCase()
+          for (let pri = 0; pri < livePPReleases.length; pri++) {
+            const pr = livePPReleases[pri]
+            const prVersion = (pr.releaseNumber || '').replace(/^[a-z]+-/i, '').toLowerCase()
             if (prVersion === normalizedPV && pr.featureFreezeDate) {
               freezeDates.byProduct[(pr.releaseNumber || '').toLowerCase()] = pr.featureFreezeDate
               if (!freezeDates.earliest || pr.featureFreezeDate < freezeDates.earliest) {
@@ -490,34 +484,32 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
         }
       }
 
-      var groups = []
-      for (var i = 0; i < productVersions.length; i++) {
-        var pv = productVersions[i]
+      const groups = []
+      for (let i = 0; i < productVersions.length; i++) {
+        const pv = productVersions[i]
 
-        var features = await fetchFeaturesByFixVersion(pv.fixVersions, jiraRequest, fetchAllJqlResults)
+        let features = await fetchFeaturesByFixVersion(pv.fixVersions, jiraRequest, fetchAllJqlResults)
 
-        // Classify late additions using per-product freeze date
-        var productFreezeDate = freezeDates.byProduct[normalizeVersionName(pv.fixVersions[0])] || null
-        for (var fi = 0; fi < features.length; fi++) {
+        const productFreezeDate = freezeDates.byProduct[normalizeVersionName(pv.fixVersions[0])] || null
+        for (let fi = 0; fi < features.length; fi++) {
           features[fi].scopeChange = classifyFeature(features[fi], productFreezeDate)
         }
 
-        // Detect dropped features via JQL WAS operator
-        var currentKeys = {}
-        for (var ki = 0; ki < features.length; ki++) {
+        const currentKeys = {}
+        for (let ki = 0; ki < features.length; ki++) {
           currentKeys[features[ki].key] = true
         }
-        var dropped = await fetchDroppedFeatures(pv.fixVersions, jiraRequest, fetchAllJqlResults, currentKeys)
+        const dropped = await fetchDroppedFeatures(pv.fixVersions, jiraRequest, fetchAllJqlResults, currentKeys)
         features = features.concat(dropped)
 
-        var STATUS_ORDER = { red: 0, yellow: 1, green: 2 }
+        const STATUS_ORDER = { red: 0, yellow: 1, green: 2 }
         features.sort(function (a, b) {
           if (a.scopeChange === 'dropped' && b.scopeChange !== 'dropped') return 1
           if (a.scopeChange !== 'dropped' && b.scopeChange === 'dropped') return -1
-          var aColor = STATUS_ORDER[(a.colorStatus || '').toLowerCase()]
-          var bColor = STATUS_ORDER[(b.colorStatus || '').toLowerCase()]
-          var aRank = aColor !== undefined ? aColor : 3
-          var bRank = bColor !== undefined ? bColor : 3
+          const aColor = STATUS_ORDER[(a.colorStatus || '').toLowerCase()]
+          const bColor = STATUS_ORDER[(b.colorStatus || '').toLowerCase()]
+          const aRank = aColor !== undefined ? aColor : 3
+          const bRank = bColor !== undefined ? bColor : 3
           if (aRank !== bRank) return aRank - bRank
           return a.key.localeCompare(b.key)
         })
@@ -547,14 +539,13 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
         })
       }
 
-      var responseData = {
+      const responseData = {
         portfolioVersion: version,
         featureFreezeDate: freezeDates.earliest,
         fetchedAt: new Date().toISOString(),
         groups: groups
       }
 
-      // Cache the response
       storage.writeToStorage(cacheKey(version), responseData)
 
       res.json(responseData)
