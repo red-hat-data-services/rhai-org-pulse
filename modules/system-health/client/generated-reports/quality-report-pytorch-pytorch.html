@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quality Analysis: pytorch/pytorch</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 2rem;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        header .timestamp {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .content {
+            padding: 2rem;
+        }
+
+        .score-overview {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .score-circle {
+            position: relative;
+            width: 200px;
+            height: 200px;
+        }
+
+        .score-circle svg {
+            transform: rotate(-90deg);
+        }
+
+        .score-circle circle {
+            fill: none;
+            stroke-width: 12;
+        }
+
+        .score-circle .bg-circle {
+            stroke: #e0e0e0;
+        }
+
+        .score-circle .score-arc {
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s ease;
+        }
+
+        .score-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .score-value {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .score-label {
+            font-size: 0.9rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title:hover {
+            color: #764ba2;
+        }
+
+        .toggle-icon {
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .section-content {
+            padding-top: 1rem;
+        }
+
+        .section-content.collapsed {
+            display: none;
+        }
+
+        .scorecard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .scorecard-item {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .scorecard-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            border-color: #667eea;
+        }
+
+        .scorecard-item h3 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .scorecard-score {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .scorecard-status {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .items-list {
+            list-style: none;
+        }
+
+        .item-card {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .item-card:hover {
+            background: #e9ecef;
+            border-left-width: 6px;
+        }
+
+        .item-card.high {
+            border-left-color: #dc3545;
+        }
+
+        .item-card.medium {
+            border-left-color: #ffc107;
+        }
+
+        .item-card.low {
+            border-left-color: #28a745;
+        }
+
+        .item-description {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .item-meta {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .meta-tag {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .severity-high {
+            background: #dc3545;
+            color: white;
+        }
+
+        .severity-medium {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .severity-low {
+            background: #28a745;
+            color: white;
+        }
+
+        .effort-tag {
+            background: #667eea;
+            color: white;
+        }
+
+        .recommendations {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .rec-priority {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .rec-priority h3 {
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .rec-priority.p0 {
+            border-color: #dc3545;
+        }
+
+        .rec-priority.p0 h3 {
+            color: #dc3545;
+        }
+
+        .rec-priority.p1 {
+            border-color: #ffc107;
+        }
+
+        .rec-priority.p1 h3 {
+            color: #f57c00;
+        }
+
+        .rec-priority.p2 {
+            border-color: #28a745;
+        }
+
+        .rec-priority.p2 h3 {
+            color: #28a745;
+        }
+
+        .rec-priority ul {
+            list-style: none;
+        }
+
+        .rec-priority li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .rec-priority li:last-child {
+            border-bottom: none;
+        }
+
+        .rec-priority li:before {
+            content: "→ ";
+            font-weight: 700;
+            margin-right: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            .content {
+                padding: 1rem;
+            }
+
+            header h1 {
+                font-size: 1.75rem;
+            }
+
+            .scorecard {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Quality Analysis Report</h1>
+            <p class="timestamp">Generated on May 27, 2026 at 10:00 PM</p>
+            <h2 style="margin-top: 1rem; font-weight: 400;">pytorch/pytorch</h2>
+        </header>
+
+        <div class="content">
+            <div class="score-overview">
+                <div class="score-circle">
+                    <svg width="200" height="200">
+                        <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
+                        <circle class="score-arc" cx="100" cy="100" r="90"
+                                stroke="#28a745"
+                                stroke-dasharray="565.4861999999999"
+                                stroke-dashoffset="101.78751600000001"
+                                id="scoreArc"></circle>
+                    </svg>
+                    <div class="score-text">
+                        <div class="score-value">8.2</div>
+                        <div class="score-label">Overall Score</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title" onclick="toggleSection(this)">
+                    Quality Scorecard
+                    <span class="toggle-icon">▼</span>
+                </h2>
+                <div class="section-content">
+                    <div class="scorecard">
+                        
+                        <div class="scorecard-item">
+                            <h3>Testability</h3>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">~1,188 Python + ~278 C++ test files; 509 OpInfo definitions; 163 files with device-agnostic tests; 142 CI workflows with LLM target determination</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Correctness</h3>
+                            <div class="scorecard-score" style="color: #ffc107;">7.5/10</div>
+                            <div class="scorecard-status">Centralized tolerance-aware assertEqual; gradcheck in 37 files; 210+ files with explicit rtol; assert_close adoption at 11% of files</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Completeness</h3>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">~501 OpInfo operators; 686 autograd formulas; 287 Dynamo/Inductor test files; 313 distributed test files</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Maintainability</h3>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Substantive CLAUDE.md + 15 .claude/skills/; industrial lintrunner stack; dual mypy + pyrefly; 1,400-line CONTRIBUTING.md</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Compatibility</h3>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">PR BC linter on every PR; 5 BC test suites; Python 3.10-3.14; Linux/macOS/Windows/aarch64/s390x/RISC-V CI</div>
+                        </div>
+                        <div class="scorecard-item">
+                            <h3>Performance</h3>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">TorchBench + operator benchmarks; PR-time microbenchmarks; 14-file profiler test suite; memory tracking</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="section">
+                <h2 class="section-title" onclick="toggleSection(this)">
+                    Critical Gaps
+                    <span class="toggle-icon">▼</span>
+                </h2>
+                <div class="section-content">
+                    <ul class="items-list">
+                        
+                        <li class="item-card high">
+                            <div class="item-description">No PR-level coverage enforcement</div>
+                            <p>Coverage regressions can merge undetected; .coveragerc exists but no Codecov or fail_under threshold</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">assert_close adoption only 11% of test files</div>
+                            <p>Stylistic inconsistency; legacy assertEqual dominates despite functional equivalence</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">No .claude/rules/ for test automation</div>
+                            <p>AI agents lack structured file-scoped guidance on test patterns</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card low">
+                            <div class="item-description">48 unimplemented autograd formulas (~7%)</div>
+                            <p>Gradient computation unavailable for some ops (chunk, geqrf, zeta, in-place hyperbolic)</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-low">LOW</span>
+                                <span class="meta-tag effort-tag">16-24 hours</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            
+            <div class="section">
+                <h2 class="section-title" onclick="toggleSection(this)">
+                    Quick Wins
+                    <span class="toggle-icon">▼</span>
+                </h2>
+                <div class="section-content">
+                    <ul class="items-list">
+                        
+                        <li class="item-card ">
+                            <div class="item-description">Add .claude/rules/ for test patterns</div>
+                            <p>Structured AI agent guidance for OpInfo, device-agnostic, gradcheck test patterns</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Integrate Codecov with PR coverage gates</div>
+                            <p>Automated coverage regression detection on every PR</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add AGENTS.md for broader agent compatibility</div>
+                            <p>Support non-Claude AI agents with project-level guidance</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Migrate assertEqual to assert_close in 5 core test files</div>
+                            <p>Set migration pattern for the rest of the test suite</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-title" onclick="toggleSection(this)">
+                    Recommendations
+                    <span class="toggle-icon">▼</span>
+                </h2>
+                <div class="section-content">
+                    <div class="recommendations">
+                        
+                        <div class="rec-priority p0">
+                            <h3>Priority 0: Critical</h3>
+                            <ul><li>Integrate Codecov with PR coverage gates and minimum thresholds</li><li>Create .claude/rules/ with test type rules (unit-tests.md, correctness-tests.md)</li></ul>
+                        </div>
+                        <div class="rec-priority p1">
+                            <h3>Priority 1: High Value</h3>
+                            <ul><li>Migrate core test files (test_reductions, test_binary_ufuncs, test_linalg) to assert_close</li><li>Add AGENTS.md and optionally .cursor/rules/ for broader AI agent support</li><li>Expand PR-triggered TorchBench perf regression subset beyond path-filtered nightly</li></ul>
+                        </div>
+                        <div class="rec-priority p2">
+                            <h3>Priority 2: Nice-to-Have</h3>
+                            <ul><li>Accelerate torch.accelerator migration in torch/testing/_internal</li><li>Add .pre-commit-config.yaml or document git-hook-only preference</li><li>Consolidate Flake8 + Ruff into Ruff-only to reduce maintenance</li></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSection(element) {
+            const content = element.nextElementSibling;
+            const icon = element.querySelector('.toggle-icon');
+
+            content.classList.toggle('collapsed');
+            icon.style.transform = content.classList.contains('collapsed') ? 'rotate(-90deg)' : 'rotate(0deg)';
+        }
+
+        // Animate score circle on load
+        window.addEventListener('load', function() {
+            const scoreArc = document.getElementById('scoreArc');
+            const targetOffset = scoreArc.getAttribute('stroke-dashoffset');
+            const fullCircle = 2 * Math.PI * 90;
+
+            scoreArc.style.strokeDashoffset = fullCircle;
+
+            setTimeout(() => {
+                scoreArc.style.strokeDashoffset = targetOffset;
+            }, 100);
+        });
+    </script>
+</body>
+</html>

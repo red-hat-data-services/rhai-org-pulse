@@ -130,6 +130,7 @@ import reportRedHatDataServicesModelServingDevops from './generated-reports/qual
 import reportRedHatDataServicesVllmSpyre from './generated-reports/quality-report-red-hat-data-services-vllm-spyre.html?url'
 import reportOpendatahubIoKserveMigration from './generated-reports/quality-report-opendatahub-io-kserve-migration.html?url'
 import reportRedHatDataServicesDataHubPipelines from './generated-reports/quality-report-red-hat-data-services-data-hub-pipelines.html?url'
+import reportPytorchPytorch from './generated-reports/quality-report-pytorch-pytorch.html?url
 
 export const QUALITY_SAMPLE_META = {
   generatedAt: '2026-05-29 09:01:06',
@@ -1649,6 +1650,18 @@ export const QUALITY_REPORTS = [
     component: 'AI Pipelines',
     team: 'AI Pipelines',
     reportUrl: reportRedHatDataServicesDataHubPipelines
+  },
+  {
+    id: 'pytorch-pytorch',
+    label: 'pytorch/pytorch',
+    githubUrl: 'https://github.com/pytorch/pytorch',
+    score: '8.2/10',
+    gaps:
+      'No PR-level coverage enforcement, Mixed assertEqual/assert_close usage, No .claude/rules/ for test automation',
+    tier: 'upstream',
+    component: 'PyTorch',
+    team: 'PyTorch',
+    reportUrl: reportPytorchPytorch
   },
 ]
 
