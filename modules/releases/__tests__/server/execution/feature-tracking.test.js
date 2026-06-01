@@ -381,6 +381,13 @@ describe('normalizeVersionName', function () {
     expect(normalizeVersionName('RHAII-3.5 ga')).toBe('rhaii-3.5ga')
   })
 
+  it('strips .z notation from z-stream releases', function () {
+    expect(normalizeVersionName('rhoai-3.5.z')).toBe('rhoai-3.5')
+    expect(normalizeVersionName('rhoai-3.5.z.EA1')).toBe('rhoai-3.5ea1')
+    expect(normalizeVersionName('RHAI-3.6.z.EA2')).toBe('rhai-3.6ea2')
+    expect(normalizeVersionName('rhelai-3.5.z EA2 release')).toBe('rhelai-3.5ea2')
+  })
+
   it('handles null/empty gracefully', function () {
     expect(normalizeVersionName(null)).toBe('')
     expect(normalizeVersionName('')).toBe('')

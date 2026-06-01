@@ -58,8 +58,14 @@ function extractProduct(releaseNumber) {
  *   "rhelai-3.5 EA2 release"   → "rhelai-3.5ea2"
  *   "RHELAI-3.4 EA-1"          → "rhelai-3.4ea1"
  */
+function stripZStream(value) {
+  if (!value) return value
+  return String(value).replace(/\.z\b/gi, '')
+}
+
 function normalizeVersionName(name) {
   let s = (name || '').toLowerCase()
+  s = stripZStream(s)
   if (s.endsWith(' release')) s = s.slice(0, -8)
   s = s.trimEnd()
 
@@ -405,8 +411,9 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
     const versionMap = {}
 
     function addVersion(releaseNumber) {
-      const product = extractProduct(releaseNumber)
-      const versionPart = (releaseNumber || '').replace(/^[a-z]+-/i, '')
+      const normalized = stripZStream(releaseNumber)
+      const product = extractProduct(normalized)
+      const versionPart = stripZStream((normalized || '').replace(/^[a-z]+-/i, ''))
       if (!versionPart || !product) return
       if (EXCLUDE_VERSION_RE.test(versionPart)) return
       if (!versionMap[versionPart]) {
