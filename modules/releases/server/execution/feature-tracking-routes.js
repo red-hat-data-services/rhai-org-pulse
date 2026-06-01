@@ -413,7 +413,7 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
     function addVersion(releaseNumber) {
       const normalized = stripZStream(releaseNumber)
       const product = extractProduct(normalized)
-      const versionPart = stripZStream((normalized || '').replace(/^[a-z]+-/i, ''))
+      const versionPart = (normalized || '').replace(/^[a-z]+-/i, '')
       if (!versionPart || !product) return
       if (EXCLUDE_VERSION_RE.test(versionPart)) return
       if (!versionMap[versionPart]) {
