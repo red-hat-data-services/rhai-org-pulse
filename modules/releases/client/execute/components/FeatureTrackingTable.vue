@@ -109,7 +109,13 @@ function formatDate(dateStr) {
 }
 
 function stripHtml(html) {
-  return (html || '').replace(/<[^>]*>/g, '')
+  var input = html || ''
+  var previous
+  do {
+    previous = input
+    input = input.replace(/<[^>]*>/g, '')
+  } while (input !== previous)
+  return input
 }
 
 function colorStatusClass(colorStatus) {
