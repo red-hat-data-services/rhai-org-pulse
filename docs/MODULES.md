@@ -68,6 +68,7 @@ modules/your-module/
 | `client.entry` | No | Path to frontend entry point |
 | `client.navItems` | No | Sidebar navigation items |
 | `client.settingsComponent` | No | Vue component for the Settings page |
+| `client.landingWidget` | No | Vue component rendered on the home/landing page |
 | `server.entry` | No | Path to backend entry point |
 
 ### navItem Fields
@@ -255,6 +256,20 @@ To add a settings tab for your module, create a Vue component and reference it i
 ```
 
 The component will be rendered as a tab in the shell's Settings page.
+
+## Landing Widget
+
+To show a summary widget on the home page, create a Vue component and reference it in `module.json`:
+
+```json
+{
+  "client": {
+    "landingWidget": "./client/components/MyWidget.vue"
+  }
+}
+```
+
+The component is rendered in the landing page's widget grid alongside other modules' widgets. Keep it self-contained — it should fetch its own data and handle loading/error states internally.
 
 ## Testing
 
