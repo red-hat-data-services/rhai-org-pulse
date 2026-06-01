@@ -1419,7 +1419,7 @@ module.exports = function registerRoutes(router, context) {
    * @openapi
    * /api/modules/releases/delivery/commitment/snapshot/{version}/{phase}:
    *   post:
-   *     summary: Create commitment snapshot from current delivery analysis
+   *     summary: Create commitment snapshot by querying Jira directly
    *     tags: [Releases - Delivery]
    *     parameters:
    *       - in: path
@@ -1463,7 +1463,7 @@ module.exports = function registerRoutes(router, context) {
       }
 
       // Load config for commitment tracking JQL (separate from delivery analysis)
-      const config = getConfig()
+      const config = getConfig(readFromStorage)
       const commitmentJql = config.commitmentTrackingJql || 'cf[10855] is not EMPTY'
 
       // Build project filter
