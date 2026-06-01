@@ -1437,11 +1437,11 @@ module.exports = function registerRoutes(router, context) {
    *       404:
    *         description: No delivery analysis data available
    */
-  router.post('/commitment/snapshot/:version/:phase', requireAdmin, requireScope('releases:write'), function(req, res) {
+  router.post('/commitment/snapshot/:version/:phase', requireAdmin, requireScope('releases:write'), async function(req, res) {
     try {
       const { version, phase } = req.params
 
-      console.log(`[releases/delivery] Creating snapshot for ${version} ${phase}`)
+      console.log(`[releases/delivery] Creating commitment tracking snapshot for ${version} ${phase}`)
 
       // Validate phase
       const validPhases = ['EA1', 'EA2', 'GA']
@@ -1456,42 +1456,69 @@ module.exports = function registerRoutes(router, context) {
         return res.status(400).json({ error: 'Invalid version format. Expected X.Y (e.g., "3.5")' })
       }
 
-      // Load delivery analysis
-      const analysisCache = readFromStorage('releases/delivery/analysis-cache.json')
-      if (!analysisCache?.data) {
-        console.error('[releases/delivery] No delivery analysis cache found')
-        return res.status(404).json({ error: 'Delivery analysis data not available. Run "Refresh Current Status" first.' })
+      // Load config for commitment tracking JQL (separate from delivery analysis)
+      const config = getConfig()
+      const commitmentJql = config.commitmentTrackingJql || 'cf[10855] is not EMPTY'
+
+      // Build project filter
+      const projectsFilter = config.jiraAllProjects
+        ? ''
+        : `project in (${config.projectKeys.map(k => `"${k}"`).join(', ')}) AND `
+
+      // Query Jira directly for Features (commitment tracking has its own JQL, independent of delivery analysis)
+      const jql = `${projectsFilter}issuetype = Feature AND ${commitmentJql} ORDER BY key ASC`
+
+      console.log(`[releases/delivery] Querying Jira with commitment tracking JQL: ${commitmentJql}`)
+
+      const allFeatures = await fetchAllJqlResults(
+        jiraRequest,
+        jql,
+        'summary,status,components,customfield_10855,customfield_18834',
+        { maxResults: 100 }
+      )
+
+      if (!allFeatures || allFeatures.length === 0) {
+        console.warn(`[releases/delivery] No features found with commitment tracking JQL`)
+        return res.status(404).json({ error: 'No features found. Check commitment tracking JQL in config.' })
       }
 
-      // Aggregate ALL releases that match this version
+      console.log(`[releases/delivery] Found ${allFeatures.length} total features`)
+
+      // Filter to features matching this version (via Target Version field cf[10855])
       const escaped = version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
       const versionPattern = new RegExp(`\\b${escaped}\\b`)
-      const matchingReleases = analysisCache.data.releases.filter(r => versionPattern.test(r.releaseNumber))
 
-      if (matchingReleases.length === 0) {
-        console.warn(`[releases/delivery] No releases found matching version ${version}`)
-        return res.status(404).json({ error: `No releases found matching version ${version}. Run "Refresh Current Status" to load latest Jira data.` })
-      }
-
-      console.log(`[releases/delivery] Found ${matchingReleases.length} releases matching ${version}: ${matchingReleases.map(r => r.releaseNumber).join(', ')}`)
-
-      // Collect all Features from matching releases
       const features = []
       const seenKeys = new Set()
-      for (const release of matchingReleases) {
-        for (const issue of release.issues || []) {
-          if (!seenKeys.has(issue.key) && issue.issueType === 'Feature') {
-            features.push({
-              key: issue.key,
-              summary: issue.summary,
-              status: issue.status,
-              components: issue.components,
-              deliveryOwner: issue.deliveryOwner
-            })
-            seenKeys.add(issue.key)
-          }
+
+      for (const issue of allFeatures) {
+        const targetVersions = issue.fields?.customfield_10855 || []
+        const hasMatchingVersion = targetVersions.some(v => {
+          const val = v?.value || ''
+          return versionPattern.test(val)
+        })
+
+        if (hasMatchingVersion && !seenKeys.has(issue.key)) {
+          const components = (issue.fields?.components || []).map(c => c.name).filter(Boolean)
+          const deliveryOwner = issue.fields?.customfield_18834?.displayName || null
+
+          features.push({
+            key: issue.key,
+            summary: issue.fields?.summary || '',
+            status: issue.fields?.status?.name || 'Unknown',
+            components,
+            deliveryOwner
+          })
+          seenKeys.add(issue.key)
         }
       }
+
+      if (features.length === 0) {
+        console.warn(`[releases/delivery] No features found matching version ${version}`)
+        return res.status(404).json({ error: `No features found for version ${version}. Check that features are tagged with Target Version containing "${version}".` })
+      }
+
+      console.log(`[releases/delivery] Found ${features.length} features for version ${version}`)
 
       // Create snapshot
       const snapshotData = {
