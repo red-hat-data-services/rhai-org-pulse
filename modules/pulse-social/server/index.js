@@ -3,7 +3,7 @@ const { initDb } = require('./db')
 const { createPost, getPostById, listPosts, updatePost, deletePost, pinPost, resolvePost, getStats, getRecentPosts } = require('./posts')
 const { addComment, updateComment, deleteComment } = require('./comments')
 const { togglePostReaction, toggleCommentReaction, getPostReactions } = require('./reactions')
-const { validateFile, saveAttachment, getAttachmentPath, isImageFile, deleteAttachmentFiles } = require('./attachments')
+const { validateFile, saveAttachment, getAttachmentPath, isImageFile, getAttachmentFilenames, deleteAttachmentFilesByName } = require('./attachments')
 const { validatePostBody, validateCommentBody, validateLabel, validateEmoji } = require('./validation')
 const { rateLimitMiddleware } = require('./rate-limiter')
 
@@ -268,10 +268,11 @@ module.exports = function registerRoutes(router, context) {
     try {
       const userUid = req.userUid || req.userEmail
       const isAdmin = req.isAdmin === true
+      const filenames = getAttachmentFilenames(req.params.id)
       const result = deletePost(req.params.id, userUid, isAdmin)
 
       if (result.error) return res.status(result.status).json({ error: result.error })
-      deleteAttachmentFiles(req.params.id)
+      deleteAttachmentFilesByName(filenames)
       res.json(result)
     } catch (err) {
       console.error('[pulse-social] DELETE /posts/:id error:', err.message)

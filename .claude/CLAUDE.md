@@ -335,6 +335,12 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/health-metrics/config` — config (admin)
 - `/api/health-metrics/viewers` — authorized viewers (admin)
 - `/api/health-metrics/field-definitions` — field definitions for settings (admin)
+- `/api/modules/pulse-social/posts` — paginated feed (cursor-based, supports label/team/author/search filters)
+- `/api/modules/pulse-social/posts/recent` — 5 most recent posts (home widget)
+- `/api/modules/pulse-social/posts/:id` — single post with comments, reactions, attachments
+- `/api/modules/pulse-social/posts/:id/reactions` — reaction details (who reacted with what)
+- `/api/modules/pulse-social/attachments/:filename` — serve uploaded file
+- `/api/modules/pulse-social/stats` — feed usage statistics
 
 **PUT:**
 - `/api/modules/team-tracker/field-options/:name` — replace option set values (admin)
@@ -346,6 +352,8 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/modules/ai-impact/assessments/:key` — upsert assessment (admin)
 - `/api/modules/ai-impact/features/:key` — upsert feature (admin)
 - `/api/modules/ai-impact/test-plans/:key` — upsert test plan (admin)
+- `/api/modules/pulse-social/posts/:id` — edit own post
+- `/api/modules/pulse-social/posts/:id/comments/:commentId` — edit own comment
 
 **POST:**
 - `/api/tokens` — create API token
@@ -417,6 +425,13 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/health-metrics/config` — update config (admin)
 - `/api/health-metrics/aggregate` — force re-aggregate (admin)
 - `/api/health-metrics/viewers` — add viewer (admin)
+- `/api/modules/pulse-social/posts` — create post
+- `/api/modules/pulse-social/posts/:id/reactions` — toggle reaction
+- `/api/modules/pulse-social/posts/:id/comments` — add comment
+- `/api/modules/pulse-social/posts/:id/comments/:commentId/reactions` — toggle comment reaction
+- `/api/modules/pulse-social/posts/:id/pin` — pin/unpin post (admin)
+- `/api/modules/pulse-social/posts/:id/resolve` — mark question resolved (author)
+- `/api/modules/pulse-social/attachments` — upload file attachment
 
 **PATCH:**
 - `/api/tokens/:id/scopes` — update own token scopes
@@ -454,6 +469,8 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/health-metrics/tracking/opt-out` — opt back in (authenticated)
 - `/api/health-metrics/events` — purge raw events (admin)
 - `/api/health-metrics/viewers/:email` — remove viewer (admin)
+- `/api/modules/pulse-social/posts/:id` — delete post (author or admin)
+- `/api/modules/pulse-social/posts/:id/comments/:commentId` — delete comment (author or admin)
 
 ## Journal Plugin
 

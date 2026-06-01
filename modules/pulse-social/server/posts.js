@@ -159,7 +159,8 @@ function appendFilterConditions(conditions, params, { label, team, author, menti
     params.push(mentioning)
   }
   if (search) {
-    const sanitized = search.replace(/['"]/g, '').split(/\s+/).filter(Boolean).map(t => `"${t}"`).join(' ')
+    const FTS_KEYWORDS = new Set(['AND', 'OR', 'NOT', 'NEAR'])
+    const sanitized = search.replace(/['"]/g, '').split(/\s+/).filter(t => t && !FTS_KEYWORDS.has(t.toUpperCase())).map(t => `"${t}"`).join(' ')
     if (sanitized) {
       conditions.push('p.rowid IN (SELECT rowid FROM posts_fts WHERE posts_fts MATCH ?)')
       params.push(sanitized)

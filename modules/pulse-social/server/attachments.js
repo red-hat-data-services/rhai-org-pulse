@@ -130,6 +130,22 @@ function deleteAttachmentFiles(postId) {
   }
 }
 
+function getAttachmentFilenames(postId) {
+  const db = getDb()
+  return db.prepare('SELECT filename FROM attachments WHERE post_id = ?').all(postId).map(a => a.filename)
+}
+
+function deleteAttachmentFilesByName(filenames) {
+  for (const filename of filenames) {
+    const filePath = path.join(ATTACHMENTS_DIR, filename)
+    try {
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath)
+    } catch (err) {
+      console.warn(`[pulse-social] Failed to delete attachment file: ${filename}`, err.message)
+    }
+  }
+}
+
 module.exports = {
   validateFile,
   saveAttachment,
@@ -137,5 +153,7 @@ module.exports = {
   isImageFile,
   checkStorageQuota,
   deleteAttachmentFiles,
+  getAttachmentFilenames,
+  deleteAttachmentFilesByName,
   ATTACHMENTS_DIR
 }

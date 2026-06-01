@@ -3,6 +3,10 @@ import { apiRequest } from '@shared/client/services/api'
 
 const API_BASE = '/modules/pulse-social'
 
+// Singleton state: shared across all callers so the feed, composer, and
+// sidebar all read/write the same reactive arrays. This is intentional for
+// a single-page feed module. Do not refactor to per-instance state without
+// updating all consumers.
 const pinnedPosts = ref([])
 const posts = ref([])
 const nextCursor = ref(null)

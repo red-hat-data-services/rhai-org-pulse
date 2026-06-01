@@ -4,21 +4,18 @@
 
 <script setup>
 import { computed } from 'vue'
-import { marked } from 'marked'
+import { Marked } from 'marked'
 import DOMPurify from 'dompurify'
 
 const props = defineProps({
   content: { type: String, default: '' }
 })
 
-marked.setOptions({
-  breaks: true,
-  gfm: true
-})
+const md = new Marked({ breaks: true, gfm: true })
 
 const rendered = computed(() => {
   if (!props.content) return ''
-  const raw = marked.parse(props.content)
+  const raw = md.parse(props.content)
   return DOMPurify.sanitize(raw, {
     ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'a', 'ul', 'ol', 'li', 'code', 'pre', 'h1', 'h2', 'h3', 'blockquote', 'hr'],
     ALLOWED_ATTR: ['href', 'target', 'rel']
