@@ -571,7 +571,6 @@ module.exports = function registerRoutes(router, context) {
 ```
 
 Available factories: `createJiraClient`, `createGoogleSheetsClient`, `createSmartsheetClient`, `createIpaClient`, `createBackupClient`. See `shared/API.md` for full signatures.
-```
 
 ### ESLint Enforcement
 
