@@ -78,7 +78,8 @@ module.exports = function registerRoutes(router, context) {
         team: req.query.team,
         author: req.query.author,
         mentioning: req.query.mentioning,
-        search: req.query.search
+        search: req.query.search,
+        currentUserUid: req.userUid || req.userEmail
       })
       res.json(result)
     } catch (err) {

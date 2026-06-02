@@ -12,7 +12,9 @@
         class="relative flex items-center gap-1 px-2.5 py-1 rounded-full text-xs transition-all cursor-pointer hover:scale-105 active:scale-95 border"
         :class="poppingEmoji === emoji
           ? 'reaction-burst border-primary-300 dark:border-primary-600 bg-primary-50 dark:bg-primary-900/30'
-          : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700/50 hover:border-gray-300 dark:hover:border-gray-500'"
+          : isMyReaction(emoji)
+            ? 'border-primary-300 dark:border-primary-600 bg-primary-50 dark:bg-primary-900/20'
+            : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700/50 hover:border-gray-300 dark:hover:border-gray-500'"
       >
         <span class="text-sm leading-none">{{ emojiIcons[emoji] }}</span>
         <span class="font-medium text-gray-700 dark:text-gray-300 tabular-nums" :class="{ 'count-bump': bumpingEmoji === emoji }">{{ count }}</span>
@@ -92,6 +94,7 @@ import { apiRequest } from '@shared/client/services/api'
 
 const props = defineProps({
   reactions: { type: Object, default: () => ({}) },
+  myReactions: { type: Array, default: () => [] },
   commentCount: { type: Number, default: 0 },
   postId: { type: String, default: '' }
 })
@@ -168,6 +171,10 @@ function handleClickOutsidePicker(e) {
 
 function isEmojiActive(emoji) {
   return (props.reactions[emoji] || 0) > 0
+}
+
+function isMyReaction(emoji) {
+  return props.myReactions.includes(emoji)
 }
 
 function animateAndEmit(emoji) {

@@ -78,16 +78,16 @@ function getPostById(id) {
   }
 }
 
-function listPosts({ before, limit = 20, label, team, author, mentioning, search }) {
+function listPosts({ before, limit = 20, label, team, author, mentioning, search, currentUserUid }) {
   limit = Math.min(Math.max(1, parseInt(limit) || 20), 50)
 
-  const pinnedPosts = buildPinnedQuery({ label, team, author, mentioning, search })
-  const { posts, nextCursor } = buildFeedQuery({ before, limit, label, team, author, mentioning, search })
+  const pinnedPosts = buildPinnedQuery({ label, team, author, mentioning, search, currentUserUid })
+  const { posts, nextCursor } = buildFeedQuery({ before, limit, label, team, author, mentioning, search, currentUserUid })
 
   return { pinned: pinnedPosts, posts, nextCursor }
 }
 
-function buildPinnedQuery({ label, team, author, mentioning, search }) {
+function buildPinnedQuery({ label, team, author, mentioning, search, currentUserUid }) {
   const db = getDb()
   const conditions = ['p.pinned = 1']
   const params = []
@@ -106,10 +106,10 @@ function buildPinnedQuery({ label, team, author, mentioning, search }) {
   `
 
   const posts = db.prepare(sql).all(...params)
-  return posts.map(enrichListPost)
+  return posts.map(row => enrichListPost(row, currentUserUid))
 }
 
-function buildFeedQuery({ before, limit, label, team, author, mentioning, search }) {
+function buildFeedQuery({ before, limit, label, team, author, mentioning, search, currentUserUid }) {
   const db = getDb()
   const conditions = ['p.pinned = 0']
   const params = []
@@ -135,7 +135,7 @@ function buildFeedQuery({ before, limit, label, team, author, mentioning, search
 
   const rows = db.prepare(sql).all(...params)
   const hasMore = rows.length > limit
-  const posts = (hasMore ? rows.slice(0, limit) : rows).map(enrichListPost)
+  const posts = (hasMore ? rows.slice(0, limit) : rows).map(row => enrichListPost(row, currentUserUid))
   const nextCursor = hasMore ? posts[posts.length - 1].created_at : null
 
   return { posts, nextCursor }
@@ -168,7 +168,7 @@ function appendFilterConditions(conditions, params, { label, team, author, menti
   }
 }
 
-function enrichListPost(row) {
+function enrichListPost(row, currentUserUid) {
   const db = getDb()
   const reactions = db.prepare(`
     SELECT emoji, COUNT(*) as count FROM reactions
@@ -178,6 +178,13 @@ function enrichListPost(row) {
   const reactionSummary = {}
   for (const r of reactions) {
     reactionSummary[r.emoji] = r.count
+  }
+
+  let myReactions = []
+  if (currentUserUid) {
+    myReactions = db.prepare(`
+      SELECT emoji FROM reactions WHERE post_id = ? AND comment_id IS NULL AND user_uid = ?
+    `).all(row.id, currentUserUid).map(r => r.emoji)
   }
 
   const recentComments = db.prepare(`
@@ -203,6 +210,7 @@ function enrichListPost(row) {
     comment_count: row.comment_count,
     reaction_count: row.reaction_count,
     reactions: reactionSummary,
+    my_reactions: myReactions,
     recent_comments: recentComments,
     attachments
   }
@@ -322,7 +330,7 @@ function getRecentPosts(limit = 5) {
     LIMIT ?
   `).all(limit)
 
-  return posts.map(enrichListPost)
+  return posts.map(row => enrichListPost(row, null))
 }
 
 module.exports = {

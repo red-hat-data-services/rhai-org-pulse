@@ -87,6 +87,7 @@
         <!-- Action bar (Twitter-style, always visible) -->
         <ReactionBar
           :reactions="post.reactions || {}"
+          :my-reactions="post.my_reactions || []"
           :comment-count="post.comment_count"
           :post-id="post.id"
           @toggle="handleReaction"
