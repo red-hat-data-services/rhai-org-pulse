@@ -22,14 +22,21 @@ function parseMrUrl(url) {
   return null;
 }
 
+// Module-level secrets, set once via init()
+let _secrets = {};
+
+function init(secrets) {
+  _secrets = secrets || {};
+}
+
 function resolveGitlabToken(host) {
   try {
     const hostname = new URL(host).hostname;
     if (hostname === 'gitlab.cee.redhat.com') {
-      return process.env.GITLAB_CEE_REDHAT_DOCS_TOKEN || null;
+      return _secrets.GITLAB_CEE_REDHAT_DOCS_TOKEN || null;
     }
   } catch { /* invalid host URL */ }
-  return process.env.GITLAB_TOKEN || null;
+  return _secrets.GITLAB_TOKEN || null;
 }
 
 async function fetchGitlabMrState(host, projectPath, iid, token) {
@@ -121,7 +128,7 @@ async function enrichMRStatuses(issues) {
           .then(state => ({ url, state }));
       }
       if (info.type === 'github') {
-        const token = process.env.GITHUB_TOKEN || null;
+        const token = _secrets.GITHUB_TOKEN || null;
         return fetchGithubPrState(info.owner, info.repo, info.number, token)
           .then(state => ({ url, state }));
       }
@@ -152,6 +159,7 @@ async function enrichMRStatuses(issues) {
 }
 
 module.exports = {
+  init,
   enrichMRStatuses,
   parseMrUrl,
   resolveGitlabToken,

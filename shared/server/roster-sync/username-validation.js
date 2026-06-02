@@ -26,8 +26,8 @@ function delay(ms) {
  * @param {string[]} candidates - GitHub login candidates
  * @returns {string|null} The first candidate that is a User, or null
  */
-async function validateGithubCandidates(candidates) {
-  var token = process.env.GITHUB_TOKEN;
+async function validateGithubCandidates(candidates, options) {
+  var token = (options && options.githubToken) || null;
   var headers = {
     'Accept': 'application/vnd.github+json',
     'User-Agent': 'team-tracker'
@@ -64,8 +64,8 @@ async function validateGithubCandidates(candidates) {
  * @returns {string|null} The first candidate that is a user, or null
  */
 async function validateGitlabCandidates(candidates, options) {
-  var token = process.env.GITLAB_TOKEN;
-  var baseUrl = (options && options.baseUrl) || process.env.GITLAB_BASE_URL || 'https://gitlab.com';
+  var token = (options && options.gitlabToken) || null;
+  var baseUrl = (options && options.baseUrl) || 'https://gitlab.com';
   var headers = { 'Accept': 'application/json' };
   if (token) {
     headers['PRIVATE-TOKEN'] = token;
@@ -95,9 +95,10 @@ async function validateGitlabCandidates(candidates, options) {
  * Validate ambiguous usernames for all people who have _usernameValidation metadata.
  *
  * @param {object[]} people - Array of person objects from entryToPerson
+ * @param {{ githubToken?: string, gitlabToken?: string }} [tokens] - API tokens for validation
  * @returns {{ githubValidated: number, gitlabValidated: number, githubCleared: number, gitlabCleared: number }}
  */
-async function validateAmbiguousUsernames(people) {
+async function validateAmbiguousUsernames(people, tokens) {
   var stats = { githubValidated: 0, gitlabValidated: 0, githubCleared: 0, gitlabCleared: 0 };
 
   var needsValidation = people.filter(function(p) { return p._usernameValidation; });
@@ -110,7 +111,7 @@ async function validateAmbiguousUsernames(people) {
     var validation = person._usernameValidation;
 
     if (validation.github) {
-      var ghUser = await validateGithubCandidates(validation.github);
+      var ghUser = await validateGithubCandidates(validation.github, tokens);
       if (ghUser) {
         person.githubUsername = ghUser;
         stats.githubValidated++;
@@ -123,7 +124,7 @@ async function validateAmbiguousUsernames(people) {
     }
 
     if (validation.gitlab) {
-      var glUser = await validateGitlabCandidates(validation.gitlab);
+      var glUser = await validateGitlabCandidates(validation.gitlab, tokens);
       if (glUser) {
         person.gitlabUsername = glUser;
         stats.gitlabValidated++;

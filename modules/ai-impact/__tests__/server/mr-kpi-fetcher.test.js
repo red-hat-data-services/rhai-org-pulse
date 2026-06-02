@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 
 const { fetchMrKpiData, MR_KPI_SOURCES, _setFetch } = require('../../server/gitlab/mr-kpi-fetcher')
+const { init: initMrStatus } = require('../../server/mr-status')
 
 describe('mr-kpi-fetcher', () => {
   let mockFetch
@@ -16,15 +17,14 @@ describe('mr-kpi-fetcher', () => {
   }
 
   beforeEach(() => {
-    process.env.GITLAB_CEE_REDHAT_DOCS_TOKEN = 'test-token'
+    initMrStatus({ GITLAB_CEE_REDHAT_DOCS_TOKEN: 'test-token' })
     mockFetch = () => Promise.resolve({ ok: false, status: 404 })
     _setFetch((...args) => mockFetch(...args))
   })
 
   afterEach(() => {
     _setFetch(require('node-fetch'))
-    delete process.env.GITLAB_CEE_REDHAT_DOCS_TOKEN
-    delete process.env.GITLAB_TOKEN
+    initMrStatus({})
   })
 
   it('has expected source config', () => {
@@ -189,8 +189,7 @@ describe('mr-kpi-fetcher', () => {
   })
 
   it('returns empty when no token is available', async () => {
-    delete process.env.GITLAB_CEE_REDHAT_DOCS_TOKEN
-    delete process.env.GITLAB_TOKEN
+    initMrStatus({})
 
     const result = await fetchMrKpiData()
     expect(result.mergeRequests).toHaveLength(0)

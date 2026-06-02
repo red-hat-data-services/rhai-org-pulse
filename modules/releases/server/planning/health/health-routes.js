@@ -12,9 +12,8 @@
 const { getConfig } = require('../config')
 const { CACHE_MAX_AGE_MS, VALID_PHASES } = require('../constants')
 const { runHealthPipeline, loadMilestones, backfillFreezeDatesFromSmartsheet, deriveFreezeDates } = require('./health-pipeline')
-const smartsheetClient = require('../../../../../shared/server/smartsheet')
 const { logAudit } = require('../audit-log')
-const { jiraRequest, fetchAllJqlResults } = require('../../../../../shared/server/jira')
+var sharedJira = require('../../../../../shared/server/jira')
 
 var DATA_PREFIX = 'releases/planning'
 var VERSION_RE = /^[a-zA-Z0-9._-]{1,50}$/
@@ -73,6 +72,10 @@ function healthRoutes(router, context) {
   var refreshStates = context.refreshStates
   var MAX_CONCURRENT_REFRESHES = context.MAX_CONCURRENT_REFRESHES
   var sendJsonWithETag = context.sendJsonWithETag
+  var smartsheetClient = context.smartsheet || require('../../../../../shared/server/smartsheet')
+  var jiraClient = context.jira || null
+  var jiraRequest = jiraClient ? jiraClient.jiraRequest : sharedJira.jiraRequest
+  var fetchAllJqlResults = jiraClient ? jiraClient.fetchAllJqlResults : sharedJira.fetchAllJqlResults
 
   function isValidVersion(version) {
     return VERSION_RE.test(version) && ['__proto__', 'constructor', 'prototype'].indexOf(version) === -1

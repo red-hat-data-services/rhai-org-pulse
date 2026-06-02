@@ -9,7 +9,13 @@ module.exports = function registerRoutes(router, context) {
   ]);
 
   const DEMO_MODE = process.env.DEMO_MODE === 'true';
-  const { JIRA_HOST, jiraRequest } = require('../../../shared/server/jira');
+  const { createJiraClient } = require('../../../shared/server/jira');
+  const jira = createJiraClient({
+    email: (context.secrets && context.secrets.JIRA_EMAIL) || '',
+    token: (context.secrets && context.secrets.JIRA_TOKEN) || '',
+    host: process.env.JIRA_HOST
+  });
+  const { jiraRequest, JIRA_HOST } = jira;
 
   // Module-specific server imports
   const { fetchPersonMetrics } = require('./jira/person-metrics');
@@ -2268,6 +2274,7 @@ module.exports = function registerRoutes(router, context) {
       try {
         const existingCache = force ? {} : readGithubCache().users;
         const results = await fetchGithubData(usernames, {
+          token: context.secrets.GITHUB_TOKEN,
           existingData: existingCache,
           ttlMs: force ? 0 : undefined
         });
@@ -2284,7 +2291,7 @@ module.exports = function registerRoutes(router, context) {
       try {
         const syncConfig = rosterSyncConfig.loadConfig({ readFromStorage, writeToStorage }) || {};
         const gitlabInstances = syncConfig.gitlabInstances || [];
-        const results = await fetchGitlabData(usernames, { gitlabInstances });
+        const results = await fetchGitlabData(usernames, { gitlabInstances, resolveSecret: context.resolveSecret });
         writeSinglePassResults(results, GITLAB_CACHE_PATH, GITLAB_HISTORY_CACHE_PATH);
         console.log(`[refresh] GitLab: ${Object.keys(results).length} users processed`);
       } catch (err) {
@@ -2325,6 +2332,7 @@ module.exports = function registerRoutes(router, context) {
           promises.push((async () => {
             const existingCache = force ? {} : readGithubCache().users;
             const ghResults = await fetchGithubData([member.githubUsername], {
+              token: context.secrets.GITHUB_TOKEN,
               existingData: existingCache,
               ttlMs: force ? 0 : undefined
             });
@@ -2339,7 +2347,7 @@ module.exports = function registerRoutes(router, context) {
           promises.push((async () => {
             const syncConfig = rosterSyncConfig.loadConfig({ readFromStorage, writeToStorage }) || {};
             const gitlabInstances = syncConfig.gitlabInstances || [];
-            const glResults = await fetchGitlabData([member.gitlabUsername], { gitlabInstances });
+            const glResults = await fetchGitlabData([member.gitlabUsername], { gitlabInstances, resolveSecret: context.resolveSecret });
             if (glResults[member.gitlabUsername]) {
               writeSinglePassResults(glResults, GITLAB_CACHE_PATH, GITLAB_HISTORY_CACHE_PATH);
               result.gitlab = glResults[member.gitlabUsername];
@@ -3772,7 +3780,7 @@ module.exports = function registerRoutes(router, context) {
         return res.status(400).json({ error: 'Roster sync is not configured' });
       }
 
-      consolidatedSync.runConsolidatedSync(storage).then(function(result) {
+      consolidatedSync.runConsolidatedSync(storage, { ...context.secrets, resolveSecret: context.resolveSecret }).then(function(result) {
         console.log('[consolidated-sync] On-demand sync result:', result.status);
       }).catch(function(err) {
         console.error('[consolidated-sync] On-demand sync error:', err);
@@ -4215,7 +4223,7 @@ module.exports = function registerRoutes(router, context) {
     if (usernames.length === 0) return;
     try {
       const existingCache = readGithubCache().users;
-      const results = await fetchGithubData(usernames, { existingData: existingCache });
+      const results = await fetchGithubData(usernames, { token: context.secrets.GITHUB_TOKEN, existingData: existingCache });
       writeSinglePassResults(results, GITHUB_CACHE_PATH, GITHUB_HISTORY_CACHE_PATH);
       console.log(`[refresh] GitHub: ${Object.keys(results).length} users processed`);
     } catch (err) {
@@ -4290,7 +4298,7 @@ module.exports = function registerRoutes(router, context) {
       timeout: 600000,
       handler: async function() {
         if (DEMO_MODE) return;
-        await consolidatedSync.runConsolidatedSync(storage);
+        await consolidatedSync.runConsolidatedSync(storage, { ...context.secrets, resolveSecret: context.resolveSecret });
       },
       status: async function() {
         return { inProgress: consolidatedSync.isSyncInProgress() };
@@ -4351,10 +4359,10 @@ module.exports = function registerRoutes(router, context) {
       const resolvedEntries = nameCacheEntries.filter(function(e) { return e[1]?.accountId });
       const unresolvedEntries = nameCacheEntries.filter(function(e) { return !e[1]?.accountId });
       const jira = {
-        configured: !!(process.env.JIRA_TOKEN && process.env.JIRA_EMAIL),
+        configured: !!(context.secrets.JIRA_TOKEN && context.secrets.JIRA_EMAIL),
         host: JIRA_HOST,
-        emailSet: !!process.env.JIRA_EMAIL,
-        tokenSet: !!process.env.JIRA_TOKEN,
+        emailSet: !!context.secrets.JIRA_EMAIL,
+        tokenSet: !!context.secrets.JIRA_TOKEN,
         storyPointsField: 'customfield_10028',
         projectKeys: jiraProjectKeys,
         projectKeysFingerprint: jiraProjectKeys.sort().join(','),
@@ -4452,7 +4460,7 @@ module.exports = function registerRoutes(router, context) {
       const githubCache = readGithubCache();
       const githubHistoryCache = readGithubHistoryCache();
       const github = {
-        configured: !!process.env.GITHUB_TOKEN,
+        configured: !!context.secrets.GITHUB_TOKEN,
         cacheExists: !!(githubCache.fetchedAt),
         userCount: Object.keys(githubCache.users || {}).length,
         fetchedAt: githubCache.fetchedAt || null,
@@ -4464,9 +4472,9 @@ module.exports = function registerRoutes(router, context) {
       // Data health: GitLab
       const gitlabCache = readGitlabCache();
       const gitlabHistoryCache = readGitlabHistoryCache();
-      const gitlabInstancesConfigured = (syncConfig.gitlabInstances || []).some(i => !!process.env[i.tokenEnvVar]);
+      const gitlabInstancesConfigured = (syncConfig.gitlabInstances || []).some(i => !!context.resolveSecret(i.tokenEnvVar));
       const gitlab = {
-        configured: gitlabInstancesConfigured || !!process.env.GITLAB_TOKEN,
+        configured: gitlabInstancesConfigured || !!context.secrets.GITLAB_TOKEN,
         cacheExists: !!(gitlabCache.fetchedAt),
         userCount: Object.keys(gitlabCache.users || {}).length,
         fetchedAt: gitlabCache.fetchedAt || null,
@@ -4660,7 +4668,7 @@ module.exports = function registerRoutes(router, context) {
     (async function() {
       try {
         // Phase 1: Consolidated sync (LDAP + Sheets + lifecycle)
-        const syncResult = await consolidatedSync.runConsolidatedSync(storage);
+        const syncResult = await consolidatedSync.runConsolidatedSync(storage, { ...context.secrets, resolveSecret: context.resolveSecret });
         if (syncResult.status === 'skipped' || syncResult.status === 'error') {
           console.warn('[unified-sync] Consolidated sync did not succeed:', syncResult.status, syncResult.message || '');
           return;

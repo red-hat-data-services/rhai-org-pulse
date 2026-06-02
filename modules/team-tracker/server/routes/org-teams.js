@@ -5,7 +5,8 @@
  */
 
 const { runSync, calculateHeadcountByRole, parseTeamBoardsTab } = require('../org-sync');
-const { fetchAllRfeBacklog } = require('../rfe');
+const rfeModule = require('../rfe');
+const { fetchAllRfeBacklog } = rfeModule;
 const { getAllPeople, getTeamRollup, collectRoleNames } = require('../../../../shared/server/roster');
 const { getOrgDisplayNames, loadConfig: loadRosterSyncConfig } = require('../../../../shared/server/roster-sync/config');
 const { fetchRawSheet } = require('../../../../shared/server/google-sheets');
@@ -25,6 +26,9 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
   const { storage, requireAdmin, requireScope } = context;
   const { readFromStorage, writeToStorage } = storage;
   const DEMO_MODE = process.env.DEMO_MODE === 'true';
+
+  // Initialize rfe module with secrets
+  rfeModule.init(context.secrets);
 
   function getSheetId() {
     const rosterSyncConfig = require('../../../../shared/server/roster-sync/config');
@@ -684,7 +688,7 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
     const config = getOrgConfig();
 
     try {
-      await runSync(storage, sheetId, config);
+      await runSync(storage, sheetId, config, context.secrets);
       try {
         const { teams } = buildEnrichedTeams();
         const allComponents = [...new Set(teams.flatMap(t => t.components || []))];

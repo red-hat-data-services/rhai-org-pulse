@@ -67,6 +67,15 @@ modules (`import`) for frontend code.
 Every new or modified Express route handler must have an `@openapi` JSDoc
 annotation. CI enforces a minimum operation count via `validate:openapi`.
 
+### 8. Module code must not read secrets from `process.env`
+
+Declare secrets in `module.json` under `secrets` and read them from
+`context.secrets` or `context.resolveSecret()`. Use shared client factories
+(`createJiraClient`, etc.) with credentials from `context.secrets`. An ESLint
+rule (`no-module-process-env`) enforces this — CI will reject violations.
+Non-secret config (e.g. `JIRA_HOST`, `DEMO_MODE`) is exempt. See
+`docs/MODULES.md` for the secrets guide.
+
 ### 7. Keep documentation in sync
 
 Documentation changes must land in the same PR as the code they describe:

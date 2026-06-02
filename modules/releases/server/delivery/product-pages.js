@@ -12,14 +12,21 @@ let pendingTokenRequest = null
 
 let productsCache = { products: null, expiresAt: 0 }
 
+// Module-level secrets, set once via init()
+let _secrets = {}
+
+function init(secrets) {
+  _secrets = secrets || {}
+}
+
 /**
  * Returns a Bearer token string, or null if no auth is configured.
  * Caches OAuth tokens in memory and deduplicates concurrent requests.
  */
 async function getProductPagesToken(config) {
-  const clientId = process.env.PRODUCT_PAGES_CLIENT_ID || ''
-  const clientSecret = process.env.PRODUCT_PAGES_CLIENT_SECRET || ''
-  const personalToken = process.env.PRODUCT_PAGES_TOKEN || ''
+  const clientId = _secrets.PRODUCT_PAGES_CLIENT_ID || ''
+  const clientSecret = _secrets.PRODUCT_PAGES_CLIENT_SECRET || ''
+  const personalToken = _secrets.PRODUCT_PAGES_TOKEN || ''
 
   // OAuth client credentials flow
   if (clientId && clientSecret) {
@@ -275,9 +282,9 @@ function extractFeatureFreezeDate(release, eaTag) {
  * Returns the auth status string for the settings UI badge.
  */
 function getAuthStatus() {
-  const clientId = process.env.PRODUCT_PAGES_CLIENT_ID || ''
-  const clientSecret = process.env.PRODUCT_PAGES_CLIENT_SECRET || ''
-  const personalToken = process.env.PRODUCT_PAGES_TOKEN || ''
+  const clientId = _secrets.PRODUCT_PAGES_CLIENT_ID || ''
+  const clientSecret = _secrets.PRODUCT_PAGES_CLIENT_SECRET || ''
+  const personalToken = _secrets.PRODUCT_PAGES_TOKEN || ''
 
   if (clientId && clientSecret) return 'oauth'
   if (personalToken) return 'token'
@@ -551,6 +558,7 @@ function _resetForTesting() {
 }
 
 module.exports = {
+  init,
   getProductPagesToken,
   fetchProductsByShortname,
   fetchAllProducts,

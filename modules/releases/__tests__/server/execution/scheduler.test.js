@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
+const scheduler = require('../../../server/execution/scheduler')
 const {
   DEFAULT_CONFIG,
   validateConfig,
@@ -12,7 +13,7 @@ const {
   stopScheduler,
   onConfigSave,
   _setFetchFn
-} = require('../../../server/execution/scheduler')
+} = scheduler
 
 const mockFetchArtifacts = vi.fn()
 
@@ -35,8 +36,7 @@ describe('scheduler', () => {
     vi.useFakeTimers()
     stopScheduler()
     _setFetchFn(mockFetchArtifacts)
-    delete process.env.FEATURE_TRAFFIC_GITLAB_TOKEN
-    delete process.env.GITLAB_TOKEN
+    scheduler.init({})
   })
 
   afterEach(() => {
@@ -46,14 +46,13 @@ describe('scheduler', () => {
 
   describe('getToken / getTokenSource', () => {
     it('prefers FEATURE_TRAFFIC_GITLAB_TOKEN', () => {
-      process.env.FEATURE_TRAFFIC_GITLAB_TOKEN = 'ft-token'
-      process.env.GITLAB_TOKEN = 'gl-token'
+      scheduler.init({ FEATURE_TRAFFIC_GITLAB_TOKEN: 'ft-token', GITLAB_TOKEN: 'gl-token' })
       expect(getToken()).toBe('ft-token')
       expect(getTokenSource()).toBe('FEATURE_TRAFFIC_GITLAB_TOKEN')
     })
 
     it('falls back to GITLAB_TOKEN', () => {
-      process.env.GITLAB_TOKEN = 'gl-token'
+      scheduler.init({ GITLAB_TOKEN: 'gl-token' })
       expect(getToken()).toBe('gl-token')
       expect(getTokenSource()).toBe('GITLAB_TOKEN')
     })
@@ -93,7 +92,7 @@ describe('scheduler', () => {
     })
 
     it('skips when disabled', async () => {
-      process.env.GITLAB_TOKEN = 'token'
+      scheduler.init({ GITLAB_TOKEN: 'token' })
       const storage = makeStorage({
         'releases/execution/config.json': { enabled: false }
       })
@@ -102,7 +101,7 @@ describe('scheduler', () => {
     })
 
     it('calls fetchArtifacts when enabled with token', async () => {
-      process.env.GITLAB_TOKEN = 'token'
+      scheduler.init({ GITLAB_TOKEN: 'token' })
       mockFetchArtifacts.mockResolvedValue({ status: 'success', timestamp: new Date().toISOString() })
       const storage = makeStorage({
         'releases/execution/config.json': { enabled: true }
@@ -113,7 +112,7 @@ describe('scheduler', () => {
     })
 
     it('handles fetchArtifacts errors', async () => {
-      process.env.GITLAB_TOKEN = 'token'
+      scheduler.init({ GITLAB_TOKEN: 'token' })
       mockFetchArtifacts.mockRejectedValue(new Error('network error'))
       const storage = makeStorage({
         'releases/execution/config.json': { enabled: true }
@@ -125,7 +124,7 @@ describe('scheduler', () => {
     })
 
     it('writes artifact_expired to last-fetch.json', async () => {
-      process.env.GITLAB_TOKEN = 'token'
+      scheduler.init({ GITLAB_TOKEN: 'token' })
       mockFetchArtifacts.mockResolvedValue({ status: 'artifact_expired', message: 'Not found' })
       const storage = makeStorage({
         'releases/execution/config.json': { enabled: true }
@@ -137,7 +136,7 @@ describe('scheduler', () => {
 
   describe('manualRefresh', () => {
     it('enforces cooldown after successful fetch', async () => {
-      process.env.GITLAB_TOKEN = 'token'
+      scheduler.init({ GITLAB_TOKEN: 'token' })
       mockFetchArtifacts.mockResolvedValue({ status: 'success', timestamp: new Date().toISOString() })
 
       const storage = makeStorage({
@@ -155,7 +154,7 @@ describe('scheduler', () => {
 
   describe('startScheduler / stopScheduler', () => {
     it('runs fetch on interval', async () => {
-      process.env.GITLAB_TOKEN = 'token'
+      scheduler.init({ GITLAB_TOKEN: 'token' })
       mockFetchArtifacts.mockResolvedValue({ status: 'success' })
 
       const storage = makeStorage({
@@ -172,7 +171,7 @@ describe('scheduler', () => {
     })
 
     it('stopScheduler clears interval', async () => {
-      process.env.GITLAB_TOKEN = 'token'
+      scheduler.init({ GITLAB_TOKEN: 'token' })
       mockFetchArtifacts.mockResolvedValue({ status: 'success' })
 
       const storage = makeStorage({
@@ -189,7 +188,7 @@ describe('scheduler', () => {
 
   describe('onConfigSave', () => {
     it('saves config and starts scheduler when enabled', async () => {
-      process.env.GITLAB_TOKEN = 'token'
+      scheduler.init({ GITLAB_TOKEN: 'token' })
       const storage = makeStorage()
 
       await onConfigSave(storage, { enabled: true, refreshIntervalHours: 6 })
@@ -202,7 +201,7 @@ describe('scheduler', () => {
     })
 
     it('triggers immediate fetch when newly enabled', async () => {
-      process.env.GITLAB_TOKEN = 'token'
+      scheduler.init({ GITLAB_TOKEN: 'token' })
       mockFetchArtifacts.mockResolvedValue({ status: 'success', timestamp: new Date().toISOString() })
 
       const storage = makeStorage({
@@ -217,7 +216,7 @@ describe('scheduler', () => {
     })
 
     it('stops scheduler when disabled', async () => {
-      process.env.GITLAB_TOKEN = 'token'
+      scheduler.init({ GITLAB_TOKEN: 'token' })
       const storage = makeStorage({
         'releases/execution/config.json': { enabled: true }
       })

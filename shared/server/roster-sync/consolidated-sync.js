@@ -9,6 +9,7 @@
 
 const { loadConfig, updateSyncStatus } = require('./config');
 const ipaClient = require('./ipa-client');
+const { createIpaClient } = require('./ipa-client');
 const { fetchSheetData } = require('./sheets');
 const { enrichPerson } = require('./merge');
 const { inferUsernames } = require('./username-inference');
@@ -36,7 +37,7 @@ const ENRICHMENT_FIELDS = [
  * @param {object} storage - Storage module with readFromStorage/writeToStorage
  * @returns {object} Sync log with status, summary, coverage
  */
-async function runConsolidatedSync(storage) {
+async function runConsolidatedSync(storage, credentials) {
   if (syncInProgress) {
     return { status: 'skipped', message: 'Sync already in progress' };
   }
@@ -53,7 +54,11 @@ async function runConsolidatedSync(storage) {
   try {
     // ─── Phase 1: LDAP traversal ───
     console.log('[consolidated-sync] Connecting to IPA LDAP...');
-    var conn = ipaClient.createClient();
+    var creds = credentials || {};
+    var ipa = (creds.IPA_BIND_DN || creds.IPA_BIND_PASSWORD)
+      ? createIpaClient({ bindDn: creds.IPA_BIND_DN, bindPassword: creds.IPA_BIND_PASSWORD })
+      : null;
+    var conn = ipa ? ipa.createConnection() : ipaClient.createClient();
     var ldapOrgs = {};
     var freshPeopleMap = {};
     var vpInfo = null;
@@ -115,7 +120,10 @@ async function runConsolidatedSync(storage) {
 
     var validationStats = { githubValidated: 0, gitlabValidated: 0, githubCleared: 0, gitlabCleared: 0 };
     try {
-      validationStats = await validateAmbiguousUsernames(allLdapPeople);
+      validationStats = await validateAmbiguousUsernames(allLdapPeople, {
+        githubToken: creds.GITHUB_TOKEN,
+        gitlabToken: creds.GITLAB_TOKEN
+      });
     } catch (err) {
       console.warn('[consolidated-sync] Username validation failed (continuing): ' + err.message);
     }
@@ -155,7 +163,11 @@ async function runConsolidatedSync(storage) {
       try {
         // inferUsernames expects { orgs: { key: { leader, members } } }
         var tempRoster = { orgs: ldapOrgs };
-        usernamesInferred = await inferUsernames(tempRoster, config);
+        usernamesInferred = await inferUsernames(tempRoster, config, {
+          githubToken: creds.GITHUB_TOKEN,
+          gitlabToken: creds.GITLAB_TOKEN,
+          resolveSecret: creds.resolveSecret
+        });
       } catch (err) {
         console.warn('[consolidated-sync] Username inference failed (continuing without): ' + err.message);
       }
@@ -287,7 +299,7 @@ async function runConsolidatedSync(storage) {
           var teamsModified = false;
 
           try {
-            auxConn = ipaClient.createClient();
+            auxConn = ipa ? ipa.createConnection() : ipaClient.createClient();
             await ipaClient.bindClient(auxConn.client, auxConn.config.bindDn, auxConn.config.bindPassword);
 
             async function cachedLookup(uid) {

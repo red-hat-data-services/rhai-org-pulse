@@ -237,6 +237,7 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/roles` — all role assignments (admin)
 - `/api/roles/available` — all registered roles from the role registry
 - `/api/admin/refresh/status` — refresh registry status (admin)
+- `/api/admin/secrets/status` — secret registry status: configured/missing per module (admin)
 - `/api/admin/roster-sync/config` — roster sync config
 - `/api/admin/roster-sync/status` — sync status
 - `/api/modules/team-tracker/sheets/discover` — discover sheet names (admin)
@@ -371,6 +372,7 @@ All routes prefixed with `/api`. Authenticated via OAuth proxy in production.
 - `/api/admin/refresh/:module` — trigger refresh for a single module (admin)
 - `/api/admin/roster-sync/config` — save sync config
 - `/api/admin/roster-sync/trigger` — trigger manual sync
+- `/api/admin/secrets/validate` — run secret validators and return results (admin). Optional body `{ keys: string[] }` to validate specific keys only.
 - `/api/admin/roster-sync/unified` — unified roster + metadata sync (admin)
 - `/api/allowlist` — update email list
 - `/api/roles/assign` — assign role (admin)

@@ -109,8 +109,21 @@ function migrateStoragePaths(storage) {
 }
 
 module.exports = function registerRoutes(router, context) {
-  const { storage, requireAuth, requireAdmin, requireRole, requireScope, roleStore } = context;
+  const { storage, requireAuth, requireAdmin, requireRole, requireScope, roleStore, secrets } = context;
   const requireReleaseManager = requireRole('release-manager');
+
+  // Create shared clients from context.secrets
+  const { createJiraClient } = require('../../../shared/server/jira');
+  const jira = createJiraClient({
+    email: (secrets && secrets.JIRA_EMAIL) || '',
+    token: (secrets && secrets.JIRA_TOKEN) || '',
+    host: process.env.JIRA_HOST
+  });
+  const { createSmartsheetClient } = require('../../../shared/server/smartsheet');
+  const smartsheet = createSmartsheetClient({
+    apiToken: secrets && secrets.SMARTSHEET_API_TOKEN,
+    sheetId: process.env.SMARTSHEET_SHEET_ID
+  });
 
   // Register release-manager role
   context.registerRole('release-manager', {
@@ -147,6 +160,9 @@ module.exports = function registerRoutes(router, context) {
     requireReleaseManager,
     requireScope,
     roleStore,
+    secrets,
+    jira,
+    smartsheet,
     registerDiagnostics: context.registerDiagnostics || null
   });
   router.use('/planning', planningRouter);
@@ -158,6 +174,8 @@ module.exports = function registerRoutes(router, context) {
     requireAuth,
     requireAdmin,
     requireScope,
+    secrets,
+    jira,
     registerDiagnostics: context.registerDiagnostics || null,
     registerRefresh: context.registerRefresh || null,
     isRefreshRunning: context.isRefreshRunning || null
@@ -177,6 +195,8 @@ module.exports = function registerRoutes(router, context) {
     requireAuth,
     requireAdmin,
     requireScope,
+    secrets,
+    jira,
     registerDiagnostics: context.registerDiagnostics || null,
     registerRefresh: context.registerRefresh || null,
     isRefreshRunning: context.isRefreshRunning || null

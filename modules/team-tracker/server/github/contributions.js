@@ -5,7 +5,7 @@
  * deriving both total counts and monthly history from one query.
  * Supports TTL-based skip for recently-fetched users.
  *
- * Uses GITHUB_TOKEN env var for authentication.
+ * Requires a GITHUB_TOKEN for authentication, passed via options.token.
  * Batches users into groups to minimize API calls.
  */
 
@@ -20,19 +20,11 @@ function delay(ms) {
   return new Promise(function(resolve) { setTimeout(resolve, ms); });
 }
 
-function getToken() {
-  const token = process.env.GITHUB_TOKEN;
-  if (!token) {
-    throw new Error('GITHUB_TOKEN environment variable is not set');
-  }
-  return token;
-}
-
-async function graphqlRequest(query) {
+async function graphqlRequest(query, token) {
   const response = await fetch(GITHUB_GRAPHQL_URL, {
     method: 'POST',
     headers: {
-      'Authorization': `bearer ${getToken()}`,
+      'Authorization': `bearer ${token}`,
       'Content-Type': 'application/json',
       'User-Agent': 'team-tracker'
     },
@@ -53,12 +45,17 @@ async function graphqlRequest(query) {
  *
  * @param {string[]} usernames - GitHub usernames to query
  * @param {object} [options]
+ * @param {string} options.token - GitHub API token
  * @param {object} [options.existingData] - Map of username -> { totalContributions, months, fetchedAt }
  *   Users with fetchedAt within the TTL are skipped (their existing data is returned as-is).
  * @param {number} [options.ttlMs] - TTL in milliseconds for skip logic (default: 12 hours)
  * @returns {Object} Map of username -> { totalContributions, months, fetchedAt } or null
  */
 async function fetchGithubData(usernames, options = {}) {
+  const token = options.token;
+  if (!token) {
+    throw new Error('GITHUB_TOKEN is not configured');
+  }
   const existingData = options.existingData || {};
   const ttlMs = options.ttlMs != null ? options.ttlMs : DEFAULT_TTL_MS;
   const now = Date.now();
@@ -103,7 +100,7 @@ async function fetchGithubData(usernames, options = {}) {
     const query = `query { ${aliases.join(' ')} }`;
 
     try {
-      const response = await graphqlRequest(query);
+      const response = await graphqlRequest(query, token);
       const fetchedAt = new Date().toISOString();
 
       for (let i = 0; i < batch.length; i++) {

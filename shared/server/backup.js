@@ -41,6 +41,7 @@ function isSunday(dateStr) {
 
 /**
  * Create a tar.gz of the data directory and upload to S3.
+ * @deprecated Use createBackupClient() instead
  * @returns {{ key: string, sizeBytes: number }} S3 key and archive size
  */
 async function createBackup() {
@@ -80,6 +81,7 @@ async function createBackup() {
 
 /**
  * List all backups in S3, sorted newest-first.
+ * @deprecated Use createBackupClient() instead
  * @returns {Array<{ key: string, date: string, sizeBytes: number }>}
  */
 async function listBackups() {
@@ -114,6 +116,7 @@ async function listBackups() {
 
 /**
  * Apply tiered retention policy: keep 7 most recent daily + Sundays for 28 days.
+ * @deprecated Use createBackupClient() instead
  * @returns {{ deleted: string[] }} keys that were deleted
  */
 async function applyRetention() {
@@ -159,6 +162,7 @@ async function applyRetention() {
 
 /**
  * Download a backup from S3 and extract it over the data directory.
+ * @deprecated Use createBackupClient() instead
  * @param {string} key - The S3 key to restore from
  * @returns {{ key: string, restoredAt: string }}
  */
@@ -189,9 +193,146 @@ async function restoreBackup(key) {
   }
 }
 
+/**
+ * Create a backup client with bound AWS config.
+ * @param {{ region?: string, bucket: string }} config
+ * @returns {{ createBackup: Function, listBackups: Function, applyRetention: Function, restoreBackup: Function }}
+ */
+function createBackupClient({ region, bucket }) {
+  if (!bucket) throw new Error('AWS_BACKUP_BUCKET is required');
+  const client = new S3Client({ region: region || 'us-east-1' });
+
+  async function boundCreateBackup() {
+    const timestamp = formatDate(new Date());
+    const filename = `backup-${timestamp}.tar.gz`;
+    const s3Key = `${BACKUP_PREFIX}${filename}`;
+    const tmpFile = path.join(os.tmpdir(), filename);
+
+    try {
+      execFileSync('tar', [
+        'czf', tmpFile,
+        '-C', path.dirname(DATA_DIR),
+        path.basename(DATA_DIR),
+      ]);
+
+      const stats = fs.statSync(tmpFile);
+      console.log(`[backup] Created archive: ${filename} (${(stats.size / 1024 / 1024).toFixed(1)} MB)`);
+
+      const body = fs.createReadStream(tmpFile);
+      await client.send(new PutObjectCommand({
+        Bucket: bucket,
+        Key: s3Key,
+        Body: body,
+        ContentType: 'application/gzip',
+      }));
+
+      console.log(`[backup] Uploaded to s3://${bucket}/${s3Key}`);
+      return { key: s3Key, sizeBytes: stats.size };
+    } finally {
+      try { fs.unlinkSync(tmpFile); } catch { /* ignore */ }
+    }
+  }
+
+  async function boundListBackups() {
+    const backups = [];
+    let continuationToken;
+
+    do {
+      const resp = await client.send(new ListObjectsV2Command({
+        Bucket: bucket,
+        Prefix: BACKUP_PREFIX,
+        ContinuationToken: continuationToken,
+      }));
+
+      for (const obj of (resp.Contents || [])) {
+        const match = obj.Key.match(/backup-(\d{4}-\d{2}-\d{2})T/);
+        if (match) {
+          backups.push({
+            key: obj.Key,
+            date: match[1],
+            sizeBytes: obj.Size,
+            lastModified: obj.LastModified,
+          });
+        }
+      }
+      continuationToken = resp.NextContinuationToken;
+    } while (continuationToken);
+
+    backups.sort((a, b) => b.key.localeCompare(a.key));
+    return backups;
+  }
+
+  async function boundApplyRetention() {
+    const backups = await boundListBackups();
+    if (backups.length === 0) return { deleted: [] };
+
+    const cutoffDate = new Date();
+    cutoffDate.setUTCDate(cutoffDate.getUTCDate() - RETENTION.weeklyDays);
+
+    const toKeep = new Set();
+    for (let i = 0; i < Math.min(RETENTION.dailyCount, backups.length); i++) {
+      toKeep.add(backups[i].key);
+    }
+    for (const b of backups) {
+      if (new Date(b.date) >= cutoffDate && isSunday(b.date)) {
+        toKeep.add(b.key);
+      }
+    }
+
+    const toDelete = backups.filter(b => !toKeep.has(b.key));
+    if (toDelete.length === 0) return { deleted: [] };
+
+    const batchSize = 1000;
+    const deletedKeys = [];
+    for (let i = 0; i < toDelete.length; i += batchSize) {
+      const batch = toDelete.slice(i, i + batchSize);
+      await client.send(new DeleteObjectsCommand({
+        Bucket: bucket,
+        Delete: { Objects: batch.map(b => ({ Key: b.key })) },
+      }));
+      deletedKeys.push(...batch.map(b => b.key));
+    }
+
+    console.log(`[backup] Retention applied: deleted ${deletedKeys.length} old backups`);
+    return { deleted: deletedKeys };
+  }
+
+  async function boundRestoreBackup(key) {
+    const tmpFile = path.join(os.tmpdir(), 'restore.tar.gz');
+
+    try {
+      const resp = await client.send(new GetObjectCommand({
+        Bucket: bucket,
+        Key: key,
+      }));
+
+      await pipeline(resp.Body, fs.createWriteStream(tmpFile));
+      console.log(`[backup] Downloaded s3://${bucket}/${key}`);
+
+      execFileSync('tar', [
+        'xzf', tmpFile,
+        '-C', path.dirname(DATA_DIR),
+      ]);
+
+      console.log(`[backup] Restored data directory from ${key}`);
+      return { key, restoredAt: new Date().toISOString() };
+    } finally {
+      try { fs.unlinkSync(tmpFile); } catch { /* ignore */ }
+    }
+  }
+
+  return {
+    createBackup: boundCreateBackup,
+    listBackups: boundListBackups,
+    applyRetention: boundApplyRetention,
+    restoreBackup: boundRestoreBackup,
+  };
+}
+
 module.exports = {
   createBackup,
   listBackups,
   applyRetention,
   restoreBackup,
+  createBackupClient,
 };

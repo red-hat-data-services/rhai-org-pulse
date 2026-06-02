@@ -22,6 +22,16 @@
   "server": {
     "entry": "./server/index.js"
   },
+  "secrets": {
+    "platform": ["jira", "github", "gitlab"],
+    "module": [
+      {
+        "key": "GITLAB_CEE_REDHAT_DOCS_TOKEN",
+        "description": "GitLab token for internal docs MR quality KPI",
+        "required": false
+      }
+    ]
+  },
   "defaultEnabled": true,
   "requires": []
 }

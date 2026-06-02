@@ -22,13 +22,20 @@ const DEFAULT_CONFIG = {
   enabled: false
 };
 
+// Module-level secrets, set once via init()
+let _secrets = {};
+
+function init(secrets) {
+  _secrets = secrets || {};
+}
+
 function getToken() {
-  return process.env.FEATURE_TRAFFIC_GITLAB_TOKEN || process.env.GITLAB_TOKEN || null;
+  return _secrets.FEATURE_TRAFFIC_GITLAB_TOKEN || _secrets.GITLAB_TOKEN || null;
 }
 
 function getTokenSource() {
-  if (process.env.FEATURE_TRAFFIC_GITLAB_TOKEN) return 'FEATURE_TRAFFIC_GITLAB_TOKEN';
-  if (process.env.GITLAB_TOKEN) return 'GITLAB_TOKEN';
+  if (_secrets.FEATURE_TRAFFIC_GITLAB_TOKEN) return 'FEATURE_TRAFFIC_GITLAB_TOKEN';
+  if (_secrets.GITLAB_TOKEN) return 'GITLAB_TOKEN';
   return null;
 }
 
@@ -209,6 +216,7 @@ function isFetchInProgress() {
 }
 
 module.exports = {
+  init,
   DEFAULT_CONFIG,
   validateConfig,
   getToken,

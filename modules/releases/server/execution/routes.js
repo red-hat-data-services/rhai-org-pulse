@@ -5,6 +5,7 @@
  * Storage paths migrated to releases/execution/ (Phase 5).
  */
 
+const scheduler = require('./scheduler');
 const {
   getToken,
   getTokenSource,
@@ -12,7 +13,7 @@ const {
   manualRefresh,
   onConfigSave,
   initScheduler
-} = require('./scheduler');
+} = scheduler;
 const { logAudit } = require('../planning/audit-log');
 
 const DATA_PREFIX = 'releases/execution';
@@ -122,6 +123,9 @@ function stripZStream(value) {
  */
 
 module.exports = function registerExecutionRoutes(router, context) {
+  // Initialize scheduler with secrets
+  if (context.secrets) scheduler.init(context.secrets);
+
   const { storage, requireAuth, requireScope } = context;
 
   function readDataFile(relativePath) {

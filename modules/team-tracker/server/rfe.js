@@ -5,11 +5,18 @@
 
 const fetch = require('node-fetch');
 
+// Module-level credentials, set once via init()
+let _secrets = {};
+
+function init(secrets) {
+  _secrets = secrets || {};
+}
+
 function getJiraAuth() {
-  const token = process.env.JIRA_TOKEN;
-  const email = process.env.JIRA_EMAIL;
+  const token = _secrets.JIRA_TOKEN;
+  const email = _secrets.JIRA_EMAIL;
   if (!token || !email) {
-    throw new Error('JIRA_TOKEN and JIRA_EMAIL environment variables must be set.');
+    throw new Error('JIRA_TOKEN and JIRA_EMAIL must be configured.');
   }
   return Buffer.from(`${email}:${token}`).toString('base64');
 }
@@ -179,6 +186,7 @@ async function fetchAllRfeBacklog(components, teams, options = {}) {
 }
 
 module.exports = {
+  init,
   fetchRfeForComponent,
   fetchAllRfeBacklog
 };

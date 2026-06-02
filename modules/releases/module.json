@@ -23,6 +23,40 @@
   "server": {
     "entry": "./server/index.js"
   },
+  "secrets": {
+    "platform": ["jira"],
+    "module": [
+      {
+        "key": "PRODUCT_PAGES_CLIENT_ID",
+        "description": "OAuth client ID for Product Pages (production)",
+        "required": false,
+        "group": "product-pages-auth"
+      },
+      {
+        "key": "PRODUCT_PAGES_CLIENT_SECRET",
+        "description": "OAuth client secret for Product Pages",
+        "required": false,
+        "group": "product-pages-auth"
+      },
+      {
+        "key": "PRODUCT_PAGES_TOKEN",
+        "description": "Personal bearer token for Product Pages (local dev fallback)",
+        "required": false,
+        "group": "product-pages-auth",
+        "exclusive": true
+      },
+      {
+        "key": "FEATURE_TRAFFIC_GITLAB_TOKEN",
+        "description": "GitLab PAT for CI artifact fetching (overrides GITLAB_TOKEN)",
+        "required": false
+      },
+      {
+        "key": "SMARTSHEET_API_TOKEN",
+        "description": "SmartSheet API token for release discovery",
+        "required": false
+      }
+    ]
+  },
   "export": {
     "files": [
       { "path": "releases/registry.json", "notes": "Canonical release registry" },

@@ -207,10 +207,10 @@ function extractBoardId(url) {
  * Fetch board names from Jira Agile API for all unique board URLs across teams.
  * Returns a map of boardUrl -> boardName.
  */
-async function resolveBoardNames(teams) {
+async function resolveBoardNames(teams, secrets) {
   const fetch = require('node-fetch');
-  const token = process.env.JIRA_TOKEN;
-  const email = process.env.JIRA_EMAIL;
+  const token = secrets.JIRA_TOKEN;
+  const email = secrets.JIRA_EMAIL;
   if (!token || !email) {
     console.warn('[org-roster sync] JIRA_TOKEN or JIRA_EMAIL not set, skipping board name resolution');
     return {};
@@ -301,7 +301,7 @@ function deriveTeamsFromPeople(storage) {
  * Does NOT sync people (those come from team-tracker's roster-sync via shared/server/roster.js).
  * sheetId may be null — in that case, teams are derived from people data.
  */
-async function runSync(storage, sheetId, config) {
+async function runSync(storage, sheetId, config, secrets) {
   const teamBoardsTab = config?.teamBoardsTab || null;
   const componentsTab = config?.componentsTab || null;
   const orgNameMapping = config?.orgNameMapping || {};
@@ -386,7 +386,7 @@ async function runSync(storage, sheetId, config) {
   if (rawTeams.some(t => t.boardUrls.length > 0)) {
     try {
       console.log('[org-roster sync] Resolving Jira board names...');
-      boardNames = await resolveBoardNames(rawTeams);
+      boardNames = await resolveBoardNames(rawTeams, secrets || {});
       console.log(`[org-roster sync] Resolved ${Object.keys(boardNames).length} board names`);
     } catch (err) {
       console.warn(`[org-roster sync] Failed to resolve board names: ${err.message}`);
