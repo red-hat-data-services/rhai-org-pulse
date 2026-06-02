@@ -74,7 +74,7 @@
           </div>
           <button
             v-if="truncated && !expanded"
-            @click="expanded = true"
+            @click.stop="expanded = true"
             class="text-primary-600 dark:text-primary-400 text-sm font-medium hover:underline mt-0.5 cursor-pointer"
           >
             Show more

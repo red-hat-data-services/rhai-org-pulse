@@ -258,7 +258,7 @@ async function handleReaction({ postId, emoji }) {
 
   const result = await toggleReaction(postId, emoji, post.reactions || {})
   if (result.success) {
-    feed.updatePostReactions(postId, result.reactions)
+    feed.updatePostReactions(postId, result.reactions, emoji)
   }
 }
 
@@ -285,7 +285,7 @@ function focusComposer() {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-async function handleDeletePost(postId) {
+function handleDeletePost(postId) {
   deletingPostId.value = postId
 }
 

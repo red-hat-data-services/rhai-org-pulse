@@ -71,10 +71,17 @@ export function useFeed() {
     posts.value = posts.value.filter(p => p.id !== postId)
   }
 
-  function updatePostReactions(postId, reactions) {
-    const update = (list) => list.map(p =>
-      p.id === postId ? { ...p, reactions, reaction_count: Object.values(reactions).reduce((s, c) => s + c, 0) } : p
-    )
+  function updatePostReactions(postId, reactions, toggledEmoji) {
+    const update = (list) => list.map(p => {
+      if (p.id !== postId) return p
+      let myReactions = [...(p.my_reactions || [])]
+      if (toggledEmoji) {
+        const idx = myReactions.indexOf(toggledEmoji)
+        if (idx >= 0) myReactions.splice(idx, 1)
+        else myReactions.push(toggledEmoji)
+      }
+      return { ...p, reactions, my_reactions: myReactions, reaction_count: Object.values(reactions).reduce((s, c) => s + c, 0) }
+    })
     pinnedPosts.value = update(pinnedPosts.value)
     posts.value = update(posts.value)
   }
