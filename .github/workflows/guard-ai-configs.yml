@@ -89,7 +89,6 @@ jobs:
               break
             fi
           done
-          done
 
           if [ "$APPROVED" = false ]; then
             echo "❌ CRITICAL: Modifications to CLAUDE.md, AGENTS.md, or this workflow require a manual review and approval from one of the following users: $ALLOWED_APPROVERS"
