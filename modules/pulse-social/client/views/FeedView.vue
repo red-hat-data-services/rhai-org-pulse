@@ -42,6 +42,7 @@
               @open-post="navigateToPost"
               @react="handleReaction"
               @comment="handleComment"
+              @delete-post="handleDeletePost"
             />
           </div>
 
@@ -57,6 +58,7 @@
                 @open-post="navigateToPost"
                 @react="handleReaction"
                 @comment="handleComment"
+                @delete-post="handleDeletePost"
               />
             </div>
           </template>
@@ -269,5 +271,16 @@ function loadMore() {
 
 function focusComposer() {
   window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+async function handleDeletePost(postId) {
+  if (!confirm('Delete this post? This cannot be undone.')) return
+  try {
+    const { apiRequest } = await import('@shared/client/services/api')
+    await apiRequest(`/modules/pulse-social/posts/${postId}`, { method: 'DELETE' })
+    feed.removePost(postId)
+  } catch (err) {
+    console.error('[pulse-social] Delete error:', err)
+  }
 }
 </script>

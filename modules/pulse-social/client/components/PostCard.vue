@@ -26,14 +26,34 @@
           <span v-if="post.pinned" class="text-xs" title="Pinned">📌</span>
           <span v-if="post.edited_at" class="text-xs text-gray-400">(edited)</span>
           <span class="flex-1"></span>
-          <!-- Open detail -->
-          <button
-            @click="$emit('open-post', post.id)"
-            class="text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
-            title="Open post"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-          </button>
+          <!-- 3-dot overflow menu (LinkedIn-style) -->
+          <div class="relative">
+            <button
+              @click.stop="menuOpen = !menuOpen"
+              class="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300 transition-all cursor-pointer opacity-0 group-hover:opacity-100"
+              :class="{ '!opacity-100': menuOpen }"
+              aria-label="Post options"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+            </button>
+            <div
+              v-if="menuOpen"
+              class="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg py-1 w-36 z-20"
+            >
+              <button
+                @click.stop="$emit('open-post', post.id); menuOpen = false"
+                class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
+              >
+                Open post
+              </button>
+              <button
+                @click.stop="$emit('delete-post', post.id); menuOpen = false"
+                class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer"
+              >
+                Delete post
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Body (clickable to open detail) -->
@@ -102,7 +122,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import PersonAvatar from './PersonAvatar.vue'
 import LabelBadge from './LabelBadge.vue'
 import MarkdownRenderer from './MarkdownRenderer.vue'
@@ -115,11 +135,26 @@ const props = defineProps({
   highlight: { type: Boolean, default: false }
 })
 
-const emit = defineEmits(['open-post', 'react', 'comment'])
+const emit = defineEmits(['open-post', 'react', 'comment', 'delete-post'])
 
 const expanded = ref(false)
 const showComments = ref(false)
 const localComments = ref([])
+const menuOpen = ref(false)
+
+function handleMenuClickOutside(e) {
+  if (menuOpen.value && !e.target.closest('[aria-label="Post options"]') && !e.target.closest('[aria-label="Post options"] + div')) {
+    menuOpen.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleMenuClickOutside)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleMenuClickOutside)
+})
 
 const truncated = computed(() => {
   if (!props.post.body) return false
