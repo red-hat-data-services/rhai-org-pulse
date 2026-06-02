@@ -20,8 +20,8 @@ on:
       - 'tailwind.config.mjs'
       - 'postcss.config.mjs'
       - 'deploy/frontend.Dockerfile'
-      - 'deploy/nginx.conf'
-      - 'deploy/nginx-entrypoint.sh'
+      - 'deploy/nginx-default.conf'
+      - 'deploy/openshift/base/nginx-app.conf.template'
       # Shared
       - 'modules/*/module.json'
       - 'package*.json'
@@ -65,7 +65,7 @@ jobs:
           fi
 
           # Check frontend paths
-          if echo "$CHANGED" | grep -qE '^(src/|public/|modules/[^/]+/client/|modules/[^/]+/module\.json|shared/client/|index\.html|vite\.config|tailwind\.config|postcss\.config|deploy/frontend\.Dockerfile|deploy/nginx\.conf|deploy/nginx-entrypoint\.sh|tests/smoke/|playwright\.config|package)'; then
+          if echo "$CHANGED" | grep -qE '^(src/|public/|modules/[^/]+/client/|modules/[^/]+/module\.json|shared/client/|index\.html|vite\.config|tailwind\.config|postcss\.config|deploy/frontend\.Dockerfile|deploy/nginx-default\.conf|deploy/openshift/base/nginx-app\.conf\.template|tests/smoke/|playwright\.config|package)'; then
             FRONTEND=true
           fi
 
