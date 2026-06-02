@@ -26,6 +26,7 @@ var cache = { data: null, fetchedAt: 0 }
 var SMARTSHEET_SHEET_ID = process.env.SMARTSHEET_SHEET_ID || '3025228340193156'
 var SMARTSHEET_API_TOKEN = process.env.SMARTSHEET_API_TOKEN || ''
 
+/** @deprecated Use createSmartsheetClient() instead */
 function isConfigured() {
   return !!SMARTSHEET_API_TOKEN
 }
@@ -144,6 +145,7 @@ async function parseSmartsheetReleases(filterFn) {
  * required milestones (ea1_freeze, ea1_target, ea2_freeze, ea2_target,
  * ga_freeze, ga_target), matching the Python client's completeness check.
  *
+ * @deprecated Use createSmartsheetClient() instead
  * @returns {Array<{ version: string, ea1Target: string|null, ea2Target: string|null, gaTarget: string|null }>}
  */
 async function discoverReleases() {
@@ -193,6 +195,7 @@ function httpGet(url, headers) {
  *
  * The existing discoverReleases() is left unchanged for backward compatibility.
  *
+ * @deprecated Use createSmartsheetClient() instead
  * @returns {Array<{ version: string, ea1Freeze: string|null, ea1Target: string|null, ea2Freeze: string|null, ea2Target: string|null, gaFreeze: string|null, gaTarget: string|null }>}
  */
 async function discoverReleasesWithFreezes() {
@@ -207,6 +210,7 @@ async function discoverReleasesWithFreezes() {
  * backfill flow, where upcoming releases may not yet have all 6 dates
  * in Smartsheet (e.g., GA dates not set while EA1 is being planned).
  *
+ * @deprecated Use createSmartsheetClient() instead
  * @returns {Array<{ version: string, ea1Freeze: string|null, ea1Target: string|null, ea2Freeze: string|null, ea2Target: string|null, gaFreeze: string|null, gaTarget: string|null }>}
  */
 async function discoverReleasesPartial() {
@@ -215,10 +219,154 @@ async function discoverReleasesPartial() {
   })
 }
 
+/**
+ * Create a SmartSheet client with bound credentials.
+ * @param {{ apiToken: string, sheetId?: string }} config
+ * @returns {{ discoverReleases: Function, discoverReleasesWithFreezes: Function, discoverReleasesPartial: Function, isConfigured: Function, SMARTSHEET_SHEET_ID: string }}
+ */
+function createSmartsheetClient(config) {
+  var token = (config && config.apiToken) || ''
+  var resolvedSheetId = (config && config.sheetId) || '3025228340193156'
+  var instanceCache = { data: null, fetchedAt: 0 }
+
+  function instanceIsConfigured() {
+    return !!token
+  }
+
+  async function instanceFetchSheet() {
+    if (!token) {
+      throw Object.assign(
+        new Error('SmartSheet integration is not available. SMARTSHEET_API_TOKEN is not configured.'),
+        { statusCode: 503 }
+      )
+    }
+
+    var now = Date.now()
+    if (instanceCache.data && (now - instanceCache.fetchedAt) < CACHE_TTL) {
+      return instanceCache.data
+    }
+
+    var url = 'https://api.smartsheet.com/2.0/sheets/' + resolvedSheetId
+    var data = await httpGet(url, {
+      'Authorization': 'Bearer ' + token
+    })
+
+    instanceCache = { data: data, fetchedAt: now }
+    return data
+  }
+
+  async function instanceParseReleases(filterFn) {
+    var sheet = await instanceFetchSheet()
+
+    var colMap = {}
+    for (var c = 0; c < sheet.columns.length; c++) {
+      colMap[sheet.columns[c].title] = sheet.columns[c].id
+    }
+    var taskCol = colMap['Task Name']
+    var startCol = colMap['Start']
+
+    var milestones = {}
+
+    for (var r = 0; r < sheet.rows.length; r++) {
+      var row = sheet.rows[r]
+      var cells = {}
+      for (var ci = 0; ci < row.cells.length; ci++) {
+        cells[row.cells[ci].columnId] = row.cells[ci].value
+      }
+      var task = cells[taskCol]
+      var startVal = cells[startCol]
+      if (!task || !startVal) continue
+
+      var dateStr = String(startVal).split('T')[0]
+      var m
+
+      m = task.match(/^(\d+\.\d+)\.(EA[12])\s+(?:RHOAI\s+)?Code\s+Freeze/i)
+      if (m) {
+        if (!milestones[m[1]]) milestones[m[1]] = {}
+        milestones[m[1]][m[2].toLowerCase() + '_freeze'] = dateStr
+        continue
+      }
+      m = task.match(/^(\d+\.\d+)\.(EA[12])\s+(?:RHOAI\s+)?RELEASE/i)
+      if (m) {
+        if (!milestones[m[1]]) milestones[m[1]] = {}
+        milestones[m[1]][m[2].toLowerCase() + '_target'] = dateStr
+        continue
+      }
+      m = task.match(/^(\d+\.\d+)\s+(?:RHOAI\s+)?Code\s+Freeze$/i)
+      if (m) {
+        if (!milestones[m[1]]) milestones[m[1]] = {}
+        milestones[m[1]].ga_freeze = dateStr
+        continue
+      }
+      m = task.match(/^(\d+\.\d+)\s+(?:RHOAI\s+)?GA$/i)
+      if (m) {
+        if (!milestones[m[1]]) milestones[m[1]] = {}
+        milestones[m[1]].ga_target = dateStr
+        continue
+      }
+    }
+
+    return Object.keys(milestones)
+      .filter(function(version) { return filterFn(milestones[version]) })
+      .sort(function(a, b) {
+        var ap = a.split('.').map(Number)
+        var bp = b.split('.').map(Number)
+        return ap[0] - bp[0] || ap[1] - bp[1]
+      })
+      .map(function(version) {
+        var ms = milestones[version]
+        return {
+          version: version,
+          ea1Freeze: ms.ea1_freeze || null,
+          ea1Target: ms.ea1_target || null,
+          ea2Freeze: ms.ea2_freeze || null,
+          ea2Target: ms.ea2_target || null,
+          gaFreeze: ms.ga_freeze || null,
+          gaTarget: ms.ga_target || null
+        }
+      })
+  }
+
+  async function instanceDiscoverReleases() {
+    var releases = await instanceParseReleases(function(ms) {
+      return REQUIRED_MILESTONES.every(function(key) { return !!ms[key] })
+    })
+    return releases.map(function(r) {
+      return {
+        version: r.version,
+        ea1Target: r.ea1Target,
+        ea2Target: r.ea2Target,
+        gaTarget: r.gaTarget
+      }
+    })
+  }
+
+  async function instanceDiscoverReleasesWithFreezes() {
+    return instanceParseReleases(function(ms) {
+      return REQUIRED_MILESTONES.every(function(key) { return !!ms[key] })
+    })
+  }
+
+  async function instanceDiscoverReleasesPartial() {
+    return instanceParseReleases(function(ms) {
+      return Object.keys(ms).length > 0
+    })
+  }
+
+  return {
+    discoverReleases: instanceDiscoverReleases,
+    discoverReleasesWithFreezes: instanceDiscoverReleasesWithFreezes,
+    discoverReleasesPartial: instanceDiscoverReleasesPartial,
+    isConfigured: instanceIsConfigured,
+    SMARTSHEET_SHEET_ID: resolvedSheetId
+  }
+}
+
 module.exports = {
   discoverReleases: discoverReleases,
   discoverReleasesWithFreezes: discoverReleasesWithFreezes,
   discoverReleasesPartial: discoverReleasesPartial,
   isConfigured: isConfigured,
-  SMARTSHEET_SHEET_ID: SMARTSHEET_SHEET_ID
+  SMARTSHEET_SHEET_ID: SMARTSHEET_SHEET_ID,
+  createSmartsheetClient: createSmartsheetClient
 }

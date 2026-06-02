@@ -23,6 +23,7 @@ const { buildMapping } = require('../shared/server/anonymize')
  * @param {Function} options.collectModuleDiagnostics - from module-loader
  * @param {object} options.diagnosticsRegistry - slug -> async fn
  * @param {object} options.gitSync - git-sync module for static module status
+ * @param {object} [options.secretRegistry] - Secret registry for status reporting
  * @param {string} options.redact - 'minimal' or 'aggressive'
  */
 async function collect(options) {
@@ -33,6 +34,7 @@ async function collect(options) {
     collectModuleDiagnostics,
     diagnosticsRegistry,
     gitSync,
+    secretRegistry,
     redact = 'minimal'
   } = options
 
@@ -63,6 +65,11 @@ async function collect(options) {
   // 8. Module diagnostics
   if (collectModuleDiagnostics) {
     bundle.modules = await collectModuleDiagnostics(builtInModules, diagnosticsRegistry, enabledSlugs)
+  }
+
+  // 8b. Secrets status
+  if (secretRegistry) {
+    bundle.secrets = secretRegistry.getStatus()
   }
 
   // 9. Request stats
@@ -105,7 +112,8 @@ function collectSystemInfo() {
       GOOGLE_SERVICE_ACCOUNT_KEY_FILE: process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE || '/etc/secrets/google-sa-key.json',
       GOOGLE_SA_KEY_EXISTS: checkFileExists(process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE || '/etc/secrets/google-sa-key.json'),
       NODE_ENV: process.env.NODE_ENV || 'development',
-      API_PORT: process.env.API_PORT || '3001'
+      API_PORT: process.env.API_PORT || '3001',
+      _note: 'See bundle.secrets for detailed per-module secret status'
     }
   }
 }

@@ -24,7 +24,6 @@ const { validateBigRock } = require('./validation')
 const { getOutcomeSummaries } = require('./outcome-fetch')
 const { previewDocImport, executeDocImport } = require('./doc-import')
 const { logAudit, getAuditLog } = require('./audit-log')
-const smartsheetClient = require('../../../../shared/server/smartsheet')
 const healthRoutes = require('./health/health-routes')
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true'
@@ -43,6 +42,9 @@ function isValidVersion(version) {
  * @param {object} context - { storage, requireAuth, requireAdmin, requireReleaseManager, requireScope, roleStore, registerDiagnostics }
  */
 module.exports = function registerPlanningRoutes(router, context) {
+  var smartsheetClient = context.smartsheet || require('../../../../shared/server/smartsheet')
+  var jiraClient = context.jira || null
+
   const { storage, requireAuth, requireAdmin, requireReleaseManager, requireScope } = context
   const { readFromStorage, writeToStorage } = storage
   const listStorageFiles = storage.listStorageFiles || null
@@ -162,7 +164,7 @@ module.exports = function registerPlanningRoutes(router, context) {
           // Jira fallback: fetch missing outcome summaries asynchronously
           var fallback
           if (result.missingOutcomes && result.missingOutcomes.length > 0) {
-            fallback = getOutcomeSummaries(result.missingOutcomes, version, readFromStorage, writeToStorage)
+            fallback = getOutcomeSummaries(jiraClient ? jiraClient.jiraRequest : null, result.missingOutcomes, version, readFromStorage, writeToStorage)
               .then(function(fetched) {
                 // Merge fetched summaries into the pipeline result
                 for (var key in fetched) {
@@ -234,7 +236,9 @@ module.exports = function registerPlanningRoutes(router, context) {
     requireScope: requireScope,
     refreshStates: refreshStates,
     MAX_CONCURRENT_REFRESHES: MAX_CONCURRENT_REFRESHES,
-    sendJsonWithETag: sendJsonWithETag
+    sendJsonWithETag: sendJsonWithETag,
+    smartsheet: smartsheetClient,
+    jira: jiraClient
   })
 
   /**

@@ -70,19 +70,16 @@ describe('validateGithubCandidates', () => {
     expect(result).toBeNull()
   })
 
-  it('uses GITHUB_TOKEN when available', async () => {
-    process.env.GITHUB_TOKEN = 'test-token'
+  it('uses githubToken when provided via options', async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ login: 'jdoe', type: 'User' })
     })
 
-    await validateGithubCandidates(['jdoe'])
+    await validateGithubCandidates(['jdoe'], { githubToken: 'test-token' })
 
     var headers = mockFetch.mock.calls[0][1].headers
     expect(headers.Authorization).toBe('token test-token')
-
-    delete process.env.GITHUB_TOKEN
   })
 })
 

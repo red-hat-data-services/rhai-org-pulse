@@ -16,10 +16,11 @@ const { parseTshirtSize } = require('./tshirt-parser')
 
 /**
  * Check whether Jira credentials are configured.
+ * @param {Function} jiraRequest - Bound jiraRequest function (truthy if credentials exist)
  * @returns {boolean}
  */
-function hasJiraCredentials() {
-  return !!(process.env.JIRA_TOKEN && process.env.JIRA_EMAIL)
+function hasJiraCredentials(jiraRequest) {
+  return !!jiraRequest
 }
 
 /**
@@ -348,7 +349,7 @@ async function enrichFeatures(jiraRequest, fetchAllJqlResults, features, config)
   var emptyMap = new Map()
 
   // Check Jira credentials
-  if (!hasJiraCredentials()) {
+  if (!hasJiraCredentials(jiraRequest)) {
     warnings.push('Jira credentials not configured -- enrichment skipped')
     return { enrichments: emptyMap, riceData: emptyMap, warnings: warnings, stats: { pass1: 0, pass2: 0, rice: 0 } }
   }

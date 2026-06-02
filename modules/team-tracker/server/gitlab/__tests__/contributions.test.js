@@ -248,6 +248,13 @@ describe('fetchGitlabData integration', () => {
     }
   }
 
+  // Test secrets map — resolveSecret reads from here instead of process.env
+  const testSecrets = { GITLAB_TOKEN: 'test-token' }
+
+  function testResolveSecret(name) {
+    return testSecrets[name] || undefined
+  }
+
   function setup() {
     mockFetch = vi.fn()
 
@@ -256,14 +263,18 @@ describe('fetchGitlabData integration', () => {
     const originalModule = require.cache[fetchModulePath]
     require.cache[fetchModulePath] = { id: fetchModulePath, exports: mockFetch }
 
-    // Set env vars before loading
-    process.env.GITLAB_TOKEN = 'test-token'
-
     // Clear contributions module cache and reload
     const contribPath = require.resolve('../../gitlab/contributions')
     delete require.cache[contribPath]
     const mod = require('../../gitlab/contributions')
-    fetchGitlabData = mod.fetchGitlabData
+    const originalFetchGitlabData = mod.fetchGitlabData
+    // Wrap to inject resolveSecret by default
+    fetchGitlabData = (usernames, options = {}) => {
+      return originalFetchGitlabData(usernames, { resolveSecret: testResolveSecret, ...options })
+    }
+
+    // Reset test secrets
+    testSecrets.GITLAB_TOKEN = 'test-token'
 
     // Restore original fetch module for cleanup
     return { fetchModulePath, originalModule, contribPath }
@@ -274,7 +285,6 @@ describe('fetchGitlabData integration', () => {
       require.cache[refs.fetchModulePath] = refs.originalModule
     }
     delete require.cache[refs.contribPath]
-    delete process.env.GITLAB_TOKEN
   }
 
   it('fetches contributions from instances and returns correct shape', async () => {
@@ -494,7 +504,7 @@ describe('fetchGitlabData integration', () => {
   it('merges contributions across multiple instances', async () => {
     const refs = setup()
     try {
-      process.env.GITLAB_TOKEN_2 = 'token-2'
+      testSecrets.GITLAB_TOKEN_2 = 'token-2'
 
       mockFetch.mockImplementation(async (url) => {
         if (url.startsWith('https://gitlab.test/')) {
@@ -526,7 +536,7 @@ describe('fetchGitlabData integration', () => {
       expect(inst1.totalContributions).toBe(120)
       expect(inst2.totalContributions).toBe(60)
     } finally {
-      delete process.env.GITLAB_TOKEN_2
+      delete testSecrets.GITLAB_TOKEN_2
       cleanup(refs)
     }
   })

@@ -2,6 +2,7 @@ const fetch = require('node-fetch');
 
 const JIRA_HOST = process.env.JIRA_HOST || 'https://redhat.atlassian.net';
 
+/** @deprecated Use createJiraClient() instead */
 function getJiraAuth() {
   const token = process.env.JIRA_TOKEN;
   const email = process.env.JIRA_EMAIL;
@@ -15,6 +16,7 @@ function getJiraAuth() {
   return Buffer.from(`${email}:${token}`).toString('base64');
 }
 
+/** @deprecated Use createJiraClient() instead */
 async function jiraRequest(path, { method = 'GET', body } = {}) {
   const auth = getJiraAuth();
   const MAX_RETRIES = 3;
@@ -127,4 +129,60 @@ async function fetchProjectVersions(jiraRequestFn, projects) {
   return versions;
 }
 
-module.exports = { JIRA_HOST, getJiraAuth, jiraRequest, fetchAllJqlResults, fetchProjectVersions };
+/**
+ * Create a Jira API client with bound credentials.
+ * @param {{ email: string, token: string, host?: string }} config
+ * @returns {{ jiraRequest: Function, fetchAllJqlResults: Function, fetchProjectVersions: Function, JIRA_HOST: string }}
+ */
+function createJiraClient({ email, token, host }) {
+  const jiraHost = host || 'https://redhat.atlassian.net';
+  const auth = Buffer.from(`${email}:${token}`).toString('base64');
+
+  async function boundJiraRequest(path, { method = 'GET', body } = {}) {
+    const MAX_RETRIES = 3;
+
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      const options = {
+        method,
+        headers: {
+          'Authorization': `Basic ${auth}`,
+          'Accept': 'application/json'
+        }
+      };
+      if (body) {
+        options.headers['Content-Type'] = 'application/json';
+        options.body = JSON.stringify(body);
+      }
+      const response = await fetch(`${jiraHost}${path}`, options);
+
+      if (response.status === 429 && attempt < MAX_RETRIES) {
+        const retryAfter = parseInt(response.headers.get('retry-after'), 10);
+        const delay = (!isNaN(retryAfter) && retryAfter > 0) ? retryAfter * 1000 : Math.pow(2, attempt + 1) * 1000;
+        console.warn(`[Jira API] Rate limited (429), retrying in ${delay / 1000}s (attempt ${attempt + 1}/${MAX_RETRIES})`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+
+      if (!response.ok) {
+        const text = await response.text();
+        let msg = `Jira API error (${response.status}): ${text}`;
+        if (response.status === 401) {
+          msg +=
+            ' Auth: use a Jira Cloud API token + JIRA_EMAIL in .env (see https://id.atlassian.com/manage-profile/security/api-tokens), then restart the API.';
+        }
+        throw new Error(msg);
+      }
+
+      return response.json();
+    }
+  }
+
+  return {
+    jiraRequest: boundJiraRequest,
+    JIRA_HOST: jiraHost,
+    fetchAllJqlResults: (jql, fields, opts) => fetchAllJqlResults(boundJiraRequest, jql, fields, opts),
+    fetchProjectVersions: (projects) => fetchProjectVersions(boundJiraRequest, projects)
+  };
+}
+
+module.exports = { JIRA_HOST, getJiraAuth, jiraRequest, fetchAllJqlResults, fetchProjectVersions, createJiraClient };

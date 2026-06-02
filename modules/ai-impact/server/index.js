@@ -11,7 +11,13 @@ module.exports = function registerRoutes(router, context) {
   const DEMO_MODE = process.env.DEMO_MODE === 'true';
 
   // Jira helpers from shared package (no duplication)
-  const { JIRA_HOST, jiraRequest } = require('../../../shared/server/jira');
+  const { createJiraClient } = require('../../../shared/server/jira');
+  const jira = createJiraClient({
+    email: (context.secrets && context.secrets.JIRA_EMAIL) || '',
+    token: (context.secrets && context.secrets.JIRA_TOKEN) || '',
+    host: process.env.JIRA_HOST
+  });
+  const { jiraRequest, JIRA_HOST } = jira;
 
   const { fetchRFEData } = require('./jira/rfe-fetcher');
   const { resolveLinkedFeatures } = require('./jira/link-resolver');
@@ -19,7 +25,11 @@ module.exports = function registerRoutes(router, context) {
   const { computeAllMetrics } = require('./metrics');
   const { fetchAutofixData, computeAutofixMetrics, buildTrendData: buildAutofixTrend } = require('./jira/autofix-fetcher');
   const { fetchDocData, fetchDocActivityEvents, fetchDocCumulativeStats, fetchDocCompletedData, computeDocMetrics, buildDocTrendData, resolveMRLinksFromKpiData } = require('./jira/doc-fetcher');
-  const { enrichMRStatuses } = require('./mr-status');
+  const mrStatus = require('./mr-status');
+  const { enrichMRStatuses } = mrStatus;
+
+  // Initialize sub-modules with secrets
+  mrStatus.init(context.secrets);
   const { fetchMrKpiData } = require('./gitlab/mr-kpi-fetcher');
 
   // Assessment routes (Phase 1: Storage + Ingest API)

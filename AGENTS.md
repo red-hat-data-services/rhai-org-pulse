@@ -78,6 +78,15 @@ Documentation changes must land in the same PR as the code they describe:
 - **npm scripts or Makefile commands** (additions, removals, or changes) → update Commands section in `README.md`
 - **Testing stack changes** (test frameworks added/removed from `package.json` devDependencies, test types added/removed from `tests/`, or test-related scripts/Makefile targets added/removed/changed) → update `README.md` (Tech Stack), `docs/MODULES.md` (Testing), and `CONTRIBUTING.md` (Testing)
 
+### 8. Module code must not read secrets from `process.env`
+
+Declare secrets in `module.json` under `secrets` and read them from
+`context.secrets` or `context.resolveSecret()`. Use shared client factories
+(`createJiraClient`, etc.) with credentials from `context.secrets`. An ESLint
+rule (`no-module-process-env`) enforces this — CI will reject violations.
+Non-secret config (e.g. `JIRA_HOST`, `DEMO_MODE`) is exempt. See
+`docs/MODULES.md` for the secrets guide.
+
 ## Code Style
 
 - `<script setup>` for Vue components

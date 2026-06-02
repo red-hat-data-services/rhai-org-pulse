@@ -47,7 +47,84 @@ const {
   wasMountedAtStartup
 } = require('./module-loader');
 
+const { SecretRegistry } = require('../shared/server/secret-registry');
+const platformSecretGroups = require('../shared/server/platform-secrets');
+
 const builtInModules = getDiscoveredModules();
+
+// ─── Secret Registry ───
+
+const secretRegistry = new SecretRegistry(platformSecretGroups);
+for (const mod of builtInModules) {
+  if (mod.secrets) {
+    secretRegistry.registerModuleSecrets(mod.slug, mod.secrets);
+  }
+}
+secretRegistry.resolve();
+
+// ─── Platform Secret Validators ───
+
+const nodeFetch = require('node-fetch');
+
+secretRegistry.registerValidator('JIRA_TOKEN', async () => {
+  const email = process.env.JIRA_EMAIL;
+  const token = process.env.JIRA_TOKEN;
+  if (!email || !token) return { valid: false, message: 'JIRA_EMAIL or JIRA_TOKEN not configured' };
+  const host = process.env.JIRA_HOST || 'https://redhat.atlassian.net';
+  const auth = Buffer.from(`${email}:${token}`).toString('base64');
+  const res = await nodeFetch(`${host}/rest/api/2/myself`, {
+    headers: { Authorization: `Basic ${auth}`, Accept: 'application/json' }
+  });
+  if (!res.ok) return { valid: false, message: `Jira auth failed (${res.status})` };
+  const data = await res.json();
+  return { valid: true, message: `Authenticated as ${data.displayName || data.emailAddress}` };
+});
+
+secretRegistry.registerValidator('GITHUB_TOKEN', async () => {
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) return { valid: false, message: 'GITHUB_TOKEN not configured' };
+  const res = await nodeFetch('https://api.github.com/user', {
+    headers: { Authorization: `token ${token}`, Accept: 'application/json' }
+  });
+  if (!res.ok) return { valid: false, message: `GitHub auth failed (${res.status})` };
+  const data = await res.json();
+  return { valid: true, message: `Authenticated as ${data.login}` };
+});
+
+secretRegistry.registerValidator('GITLAB_TOKEN', async () => {
+  const token = process.env.GITLAB_TOKEN;
+  if (!token) return { valid: false, message: 'GITLAB_TOKEN not configured' };
+  const host = process.env.GITLAB_BASE_URL || 'https://gitlab.com';
+  const res = await nodeFetch(`${host}/api/v4/user`, {
+    headers: { 'PRIVATE-TOKEN': token, Accept: 'application/json' }
+  });
+  if (!res.ok) return { valid: false, message: `GitLab auth failed (${res.status})` };
+  const data = await res.json();
+  return { valid: true, message: `Authenticated as ${data.username}` };
+});
+
+secretRegistry.registerValidator('IPA_BIND_DN', async () => {
+  const bindDn = process.env.IPA_BIND_DN;
+  const bindPassword = process.env.IPA_BIND_PASSWORD;
+  if (!bindDn || !bindPassword) return { valid: false, message: 'IPA_BIND_DN or IPA_BIND_PASSWORD not configured' };
+  const { createIpaClient } = require('../shared/server/roster-sync/ipa-client');
+  const ipa = createIpaClient({ bindDn, bindPassword });
+  const result = await ipa.testConnection();
+  return { valid: result.ok, message: result.message };
+});
+
+secretRegistry.registerValidator('GOOGLE_SERVICE_ACCOUNT_KEY_FILE', async () => {
+  const keyFile = process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE || '/etc/secrets/google-sa-key.json';
+  const fs = require('fs');
+  if (!fs.existsSync(keyFile)) return { valid: false, message: `Key file not found at ${keyFile}` };
+  try {
+    const { createGoogleSheetsClient } = require('../shared/server/google-sheets');
+    createGoogleSheetsClient({ keyFile });
+    return { valid: true, message: `Key file found at ${keyFile}` };
+  } catch (err) {
+    return { valid: false, message: err.message };
+  }
+});
 
 if (DEMO_MODE) {
   console.log('Running in DEMO MODE - using fixture data, Jira/GitHub APIs disabled');
@@ -1428,7 +1505,7 @@ messageRegistry.registerProvider('backup-staleness', async function(userContext)
     return [];
   }
 });
-const coreServices = { storage: storageModule, requireAuth: authMiddleware, requireAdmin, requireTeamAdmin, requireRole, requireScope, roleStore, roleRegistry, scopeRegistry };
+const coreServices = { storage: storageModule, requireAuth: authMiddleware, requireAdmin, requireTeamAdmin, requireRole, requireScope, roleStore, roleRegistry, scopeRegistry, secretRegistry };
 const registries = { diagnostics: diagnosticsRegistry, messages: messageRegistry, refresh: refreshRegistry, exports: exportRegistry };
 
 const persistedState = loadModuleState(storageModule);
@@ -1885,6 +1962,60 @@ app.get('/api/export/test-data', requireAdmin, requireScope('admin:manage'), exp
   handleExport(req, res, storageModule, exportRegistry);
 });
 
+// ─── Secrets Admin Routes ───
+
+/**
+ * @openapi
+ * /api/admin/secrets/status:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Get secrets configuration status across all modules
+ *     responses:
+ *       200:
+ *         description: Secrets status (never includes actual values)
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ */
+app.get('/api/admin/secrets/status', requireAdmin, requireScope('admin:manage'), function(_req, res) {
+  res.json(secretRegistry.getStatus());
+});
+
+/**
+ * @openapi
+ * /api/admin/secrets/validate:
+ *   post:
+ *     tags: [Admin]
+ *     summary: Run registered secret validators
+ *     description: Runs all validators, or a subset if keys are specified in the request body.
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               keys:
+ *                 type: array
+ *                 items: { type: string }
+ *                 description: Optional list of secret keys to validate. Omit to run all validators.
+ *     responses:
+ *       200:
+ *         description: Validation results (never includes actual values)
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ */
+app.post('/api/admin/secrets/validate', requireAdmin, requireScope('admin:manage'), async function(req, res) {
+  try {
+    const keys = req.body && Array.isArray(req.body.keys) ? req.body.keys : null;
+    const results = keys && keys.length > 0
+      ? await secretRegistry.validateKeys(keys)
+      : await secretRegistry.validateAll();
+    res.json({ results });
+  } catch (err) {
+    res.status(500).json({ error: 'Validation failed: ' + err.message });
+  }
+});
+
 // ─── Must-Gather: Diagnostic data download ───
 
 const mustGather = require('./must-gather');
@@ -1927,6 +2058,7 @@ app.get('/api/must-gather', requireAdmin, requireScope('admin:manage'), exportRa
       collectModuleDiagnostics,
       diagnosticsRegistry,
       gitSync,
+      secretRegistry,
       redact
     });
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -2226,7 +2358,5 @@ if (!DEMO_MODE) {
 app.listen(PORT, function() {
   console.log(`\nPeople & Teams dev server running at http://localhost:${PORT}`);
   console.log(`Jira host: ${process.env.JIRA_HOST || 'https://redhat.atlassian.net'}`);
-  console.log(`Local storage: ./data/`);
-  console.log(`JIRA_TOKEN: ${process.env.JIRA_TOKEN ? 'set' : 'NOT SET (refresh will fail)'}`);
-  console.log(`JIRA_EMAIL: ${process.env.JIRA_EMAIL ? 'set' : 'NOT SET (refresh will fail)'}\n`);
+  console.log(`Local storage: ./data/\n`);
 });

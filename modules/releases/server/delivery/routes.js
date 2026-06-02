@@ -1,6 +1,8 @@
-const { jiraRequest, JIRA_HOST, fetchAllJqlResults } = require('../../../../shared/server/jira')
+const sharedJira = require('../../../../shared/server/jira')
+var { jiraRequest, JIRA_HOST, fetchAllJqlResults } = sharedJira
 const { getConfig, saveConfig, deleteConfig } = require('./config')
-const { fetchProductsByShortname, fetchAllProducts, getProductPagesToken, getAuthStatus } = require('./product-pages')
+const productPages = require('./product-pages')
+const { fetchProductsByShortname, fetchAllProducts, getProductPagesToken, getAuthStatus } = productPages
 const registerConformaRoutes = require('./conforma')
 const { logAudit } = require('../planning/audit-log')
 
@@ -1032,6 +1034,15 @@ async function runFullAnalysis(storage, config) {
 const CACHE_MAX_AGE_MS = 60 * 60 * 1000 // 1 hour
 
 module.exports = function registerRoutes(router, context) {
+  // Initialize product-pages with secrets
+  if (context.secrets) productPages.init(context.secrets)
+
+  // Override module-level jira vars with factory client when available
+  if (context.jira) {
+    jiraRequest = context.jira.jiraRequest
+    JIRA_HOST = context.jira.JIRA_HOST
+  }
+
   registerConformaRoutes(router, context)
 
   const { storage, requireAuth, requireAdmin, requireScope } = context

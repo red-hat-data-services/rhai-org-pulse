@@ -96,6 +96,69 @@ function validate() {
       }
     }
 
+    // Secrets field validation
+    if (manifest.secrets !== undefined) {
+      if (typeof manifest.secrets !== 'object' || Array.isArray(manifest.secrets)) {
+        error(`secrets must be an object`)
+      } else {
+        const s = manifest.secrets
+        // secrets.platform
+        if (s.platform !== undefined) {
+          if (!Array.isArray(s.platform)) {
+            error(`secrets.platform must be an array of strings`)
+          } else {
+            for (const groupId of s.platform) {
+              if (typeof groupId !== 'string') {
+                error(`secrets.platform entries must be strings`)
+              }
+            }
+          }
+        }
+        // secrets.module
+        if (s.module !== undefined) {
+          if (!Array.isArray(s.module)) {
+            error(`secrets.module must be an array of objects`)
+          } else {
+            for (const entry of s.module) {
+              if (!entry.key || typeof entry.key !== 'string') {
+                error(`secrets.module entry missing required "key" string`)
+              }
+              if (!entry.description || typeof entry.description !== 'string') {
+                error(`secrets.module entry missing required "description" string`)
+              }
+              if (entry.required !== undefined && typeof entry.required !== 'boolean') {
+                error(`secrets.module entry "required" must be a boolean`)
+              }
+              if (entry.group !== undefined && (typeof entry.group !== 'string' || !entry.group)) {
+                error(`secrets.module entry "group" must be a non-empty string`)
+              }
+              if (entry.exclusive !== undefined) {
+                if (typeof entry.exclusive !== 'boolean') {
+                  error(`secrets.module entry "exclusive" must be a boolean`)
+                }
+                if (entry.exclusive && !entry.group) {
+                  error(`secrets.module entry with "exclusive: true" must also have "group" set`)
+                }
+              }
+            }
+          }
+        }
+        // secrets.dynamic
+        if (s.dynamic !== undefined) {
+          if (typeof s.dynamic !== 'object' || Array.isArray(s.dynamic)) {
+            error(`secrets.dynamic must be an object`)
+          } else {
+            if (!s.dynamic.pattern || typeof s.dynamic.pattern !== 'string') {
+              error(`secrets.dynamic requires a "pattern" string`)
+            }
+            if (s.dynamic.description !== undefined && typeof s.dynamic.description !== 'string') {
+              error(`secrets.dynamic "description" must be a string`)
+            }
+          }
+        }
+      }
+    }
+
     // Export field validation
     if (manifest.export) {
       if (manifest.export.files !== undefined && !Array.isArray(manifest.export.files)) {

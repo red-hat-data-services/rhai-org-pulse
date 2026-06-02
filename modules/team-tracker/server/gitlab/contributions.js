@@ -222,9 +222,11 @@ async function fetchInstanceContributions(instance, credentials, usernameSet, wi
  * @param {string[]} usernames - GitLab usernames to include in results
  * @param {object} [options]
  * @param {Array<{label, baseUrl, tokenEnvVar, groups}>} [options.gitlabInstances] - Instance configs
+ * @param {Function} [options.resolveSecret] - Dynamic secret resolver for per-instance tokens
  * @returns {Object} Map of username -> { totalContributions, months, fetchedAt, source, instances } or null
  */
 async function fetchGitlabData(usernames, options = {}) {
+  const resolveSecret = options.resolveSecret || function() { return undefined; };
   const instances = validateInstances(options.gitlabInstances || []);
 
   if (instances.length === 0) {
@@ -240,7 +242,7 @@ async function fetchGitlabData(usernames, options = {}) {
 
   // Launch all instances in parallel
   const instancePromises = instances.map(instance => {
-    const token = process.env[instance.tokenEnvVar];
+    const token = resolveSecret(instance.tokenEnvVar);
     if (!token) {
       console.warn(`[gitlab] Token env var ${instance.tokenEnvVar} not set, skipping ${instance.label}`);
       return Promise.resolve({ counts: {}, instanceInfo: { baseUrl: instance.baseUrl, label: instance.label } });

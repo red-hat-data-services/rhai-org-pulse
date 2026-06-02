@@ -71,10 +71,10 @@ function tryMatch(person, members) {
  * Fetch all members of a GitHub org via REST API.
  * Returns array of { login, name, email }.
  */
-async function fetchGithubOrgMembers(orgName) {
-  const token = process.env.GITHUB_TOKEN;
+async function fetchGithubOrgMembers(orgName, githubToken) {
+  const token = githubToken || null;
   if (!token) {
-    console.warn('[username-inference] GITHUB_TOKEN not set, skipping GitHub inference');
+    console.warn('[username-inference] No GitHub token provided, skipping GitHub inference');
     return null;
   }
 
@@ -188,7 +188,12 @@ async function fetchGitlabGroupMembers(groupPath, credentials) {
  * @param {Object} config - Sync config (may contain githubOrg, gitlabGroup)
  * @returns {Object} Summary of inferences made
  */
-async function inferUsernames(roster, config) {
+/**
+ * @param {Object} roster - The full roster object (with orgs)
+ * @param {Object} config - Sync config (may contain githubOrg, gitlabGroup)
+ * @param {{ githubToken?: string, gitlabToken?: string, resolveSecret?: Function }} [tokens]
+ */
+async function inferUsernames(roster, config, tokens) {
   const githubOrgs = normalizeToArray(config.githubOrgs || config.githubOrg);
 
   // Resolve GitLab groups: prefer gitlabInstances, fall back to legacy gitlabGroups
@@ -216,7 +221,7 @@ async function inferUsernames(roster, config) {
   if (githubOrgs.length > 0) {
     const allGithubMembers = [];
     for (const orgName of githubOrgs) {
-      const members = await fetchGithubOrgMembers(orgName);
+      const members = await fetchGithubOrgMembers(orgName, tokens && tokens.githubToken);
       if (members) allGithubMembers.push(...members);
     }
     if (allGithubMembers.length > 0) {
@@ -241,20 +246,22 @@ async function inferUsernames(roster, config) {
     if (gitlabInstances.length > 0) {
       // New path: per-instance credentials
       for (const instance of gitlabInstances) {
-        const token = process.env[instance.tokenEnvVar];
-        if (!token) {
+        const instanceToken = tokens && tokens.resolveSecret
+          ? tokens.resolveSecret(instance.tokenEnvVar)
+          : process.env[instance.tokenEnvVar];
+        if (!instanceToken) {
           console.warn(`[username-inference] Token env var ${instance.tokenEnvVar} not set, skipping ${instance.label}`);
           continue;
         }
         for (const groupPath of (instance.groups || [])) {
-          const members = await fetchGitlabGroupMembers(groupPath, { baseUrl: instance.baseUrl, token });
+          const members = await fetchGitlabGroupMembers(groupPath, { baseUrl: instance.baseUrl, token: instanceToken });
           if (members) allGitlabMembers.push(...members);
         }
       }
     } else {
       // Legacy fallback: flat gitlabGroups with env vars
       for (const groupPath of legacyGitlabGroups) {
-        const members = await fetchGitlabGroupMembers(groupPath);
+        const members = await fetchGitlabGroupMembers(groupPath, { token: tokens && tokens.gitlabToken });
         if (members) allGitlabMembers.push(...members);
       }
     }

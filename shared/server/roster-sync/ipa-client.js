@@ -363,6 +363,91 @@ async function searchPeople(client, baseDn, query, limit) {
   return entries.map(entryToPerson);
 }
 
+/**
+ * Create an IPA client with bound credentials.
+ * Connection lifecycle is caller-managed: call createConnection() to get a raw
+ * LDAP client, use it with traverseOrg/lookupPerson/searchPeople (which take
+ * client + baseDn params), then unbind in a finally block.
+ *
+ * @param {{ bindDn: string, bindPassword: string, host?: string, baseDn?: string, caCertPath?: string }} config
+ * @returns {{ createConnection: Function, bindClient: Function, traverseOrg: Function, lookupPerson: Function, searchPeople: Function, testConnection: Function, getIpaStatus: Function, getConfig: Function }}
+ */
+function createIpaClient(config) {
+  var resolvedConfig = {
+    host: (config && config.host) || DEFAULT_HOST,
+    baseDn: (config && config.baseDn) || DEFAULT_BASE_DN,
+    bindDn: (config && config.bindDn) || '',
+    bindPassword: (config && config.bindPassword) || '',
+    caCertPath: (config && config.caCertPath) || ''
+  };
+
+  function instanceCreateConnection() {
+    if (!resolvedConfig.bindDn || !resolvedConfig.bindPassword) {
+      throw new Error('IPA_BIND_DN and IPA_BIND_PASSWORD must be set');
+    }
+
+    var tlsOptions = buildTlsOptions(resolvedConfig.caCertPath);
+    var client = ldap.createClient({
+      url: resolvedConfig.host,
+      connectTimeout: 10000,
+      timeout: 30000,
+      tlsOptions: tlsOptions,
+      reconnect: false
+    });
+
+    client.on('error', function(err) {
+      console.error('[ipa-client] LDAP client error:', err.message);
+    });
+
+    return { client: client, config: resolvedConfig };
+  }
+
+  function instanceGetIpaStatus() {
+    return {
+      bindDnSet: !!resolvedConfig.bindDn,
+      passwordSet: !!resolvedConfig.bindPassword,
+      host: resolvedConfig.host,
+      baseDn: resolvedConfig.baseDn,
+      caCertSet: !!resolvedConfig.caCertPath,
+      ready: !!(resolvedConfig.bindDn && resolvedConfig.bindPassword)
+    };
+  }
+
+  async function instanceTestConnection() {
+    var conn;
+    try {
+      conn = instanceCreateConnection();
+      await bindClient(conn.client, conn.config.bindDn, conn.config.bindPassword);
+      return { ok: true, message: 'Connected and authenticated successfully' };
+    } catch (err) {
+      return { ok: false, message: err.message };
+    } finally {
+      if (conn && conn.client) {
+        conn.client.unbind(function() {});
+      }
+    }
+  }
+
+  return {
+    createConnection: instanceCreateConnection,
+    bindClient: bindClient,
+    traverseOrg: traverseOrg,
+    lookupPerson: lookupPerson,
+    searchPeople: searchPeople,
+    testConnection: instanceTestConnection,
+    getIpaStatus: instanceGetIpaStatus,
+    getConfig: function() {
+      return {
+        host: resolvedConfig.host,
+        baseDn: resolvedConfig.baseDn,
+        bindDn: resolvedConfig.bindDn,
+        bindPassword: resolvedConfig.bindPassword ? '***' : '',
+        caCertPath: resolvedConfig.caCertPath
+      };
+    }
+  };
+}
+
 module.exports = {
   createClient,
   bindClient,
@@ -378,5 +463,6 @@ module.exports = {
   extractGitlabUsername,
   extractAllGithubCandidates,
   extractAllGitlabCandidates,
-  pickBestCandidate
+  pickBestCandidate,
+  createIpaClient
 };

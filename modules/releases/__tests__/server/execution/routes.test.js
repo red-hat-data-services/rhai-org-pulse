@@ -47,8 +47,6 @@ describe('execution routes', () => {
     vi.clearAllMocks()
     _setFetchFn(mockFetchArtifacts)
     stopScheduler()
-    delete process.env.FEATURE_TRAFFIC_GITLAB_TOKEN
-    delete process.env.GITLAB_TOKEN
 
     storage = makeStorage()
     router = makeRouter()
@@ -57,7 +55,8 @@ describe('execution routes', () => {
       storage,
       requireAdmin,
       requireScope: () => (req, res, next) => next(),
-      registerDiagnostics: vi.fn()
+      registerDiagnostics: vi.fn(),
+      secrets: {}
     }
     registerExecutionRoutes(router, context)
   })
@@ -128,14 +127,15 @@ describe('execution routes', () => {
 
   describe('POST /refresh', () => {
     it('returns 429 on cooldown', async () => {
-      process.env.GITLAB_TOKEN = 'token'
+      const { init } = require('../../../server/execution/scheduler')
+      init({ GITLAB_TOKEN: 'token' })
       mockFetchArtifacts.mockResolvedValue({ status: 'success', timestamp: new Date().toISOString() })
 
       const storageWithConfig = makeStorage({
         'releases/execution/config.json': { enabled: true }
       })
       const r = makeRouter()
-      registerExecutionRoutes(r, { storage: storageWithConfig, requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn() })
+      registerExecutionRoutes(r, { storage: storageWithConfig, requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn(), secrets: { GITLAB_TOKEN: 'token' } })
 
       const handler = r._routes.post['/refresh'].at(-1)
 

@@ -218,6 +218,9 @@ The authoritative typedef for the context object is in `shared/server/module-con
 | `registerMessageProvider(id, fn)` | function | Register message provider (see below) |
 | `registerRefresh(id, config)` | function | Register refresh handler (see below) |
 | `registerExport(fn)` | function | Register data export hook (see below) |
+| `secrets` | object | Frozen object containing resolved secret values declared by this module |
+| `resolveSecret(name)` | function | Read a dynamic secret from `process.env` at call time |
+| `registerSecretValidator(key, fn)` | function | Register a connectivity validator for a secret key |
 
 ### Testing
 
@@ -471,6 +474,113 @@ module.exports = function registerRoutes(router, context) {
 - Provider results are merged with admin-stored messages from `data/messages.json`
 - The client fetches messages once on app load (non-blocking) and renders them as sticky banners inside the header
 - Users can dismiss messages per session (sessionStorage)
+
+## Secrets Declaration
+
+Modules declare their secret requirements in `module.json`. This enables startup validation, admin diagnostics, and ESLint enforcement preventing direct `process.env` access in module server code.
+
+### module.json
+
+```json
+{
+  "secrets": {
+    "platform": ["jira", "github"],
+    "module": [
+      {
+        "key": "MY_API_TOKEN",
+        "description": "API token for My Service",
+        "required": true
+      }
+    ],
+    "dynamic": {
+      "pattern": "MY_SERVICE_*_TOKEN",
+      "description": "Per-instance tokens for My Service"
+    }
+  }
+}
+```
+
+### Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `secrets.platform` | string[] | Platform secret group IDs to consume (`jira`, `github`, `gitlab`, `ipa`, `google`) |
+| `secrets.module` | object[] | Module-specific secrets with `key`, `description`, optional `required` (boolean), `group` (string), `exclusive` (boolean) |
+| `secrets.dynamic` | object | Dynamic secret pattern with `pattern` (string) and optional `description` |
+
+### Exclusive Groups
+
+When multiple secrets serve the same purpose (e.g., OAuth credentials vs. personal token), mark them as exclusive within a group:
+
+```json
+{
+  "secrets": {
+    "module": [
+      { "key": "OAUTH_CLIENT_ID", "description": "OAuth client ID", "group": "auth" },
+      { "key": "OAUTH_CLIENT_SECRET", "description": "OAuth secret", "group": "auth" },
+      { "key": "PERSONAL_TOKEN", "description": "Personal token fallback", "group": "auth", "exclusive": true }
+    ]
+  }
+}
+```
+
+### Accessing Secrets in Server Code
+
+Module server code accesses secrets via the context object, never via `process.env`:
+
+```javascript
+module.exports = function registerRoutes(router, context) {
+  // Static secrets (resolved once at startup)
+  const token = context.secrets.MY_API_TOKEN
+
+  // Dynamic secrets (resolved at call time from process.env)
+  const instanceToken = context.resolveSecret('MY_SERVICE_US_TOKEN')
+
+  // Register a validator for connectivity checks
+  // Important: never include secret values in messages — they appear in admin API responses
+  context.registerSecretValidator('MY_API_TOKEN', async function(value) {
+    // Return { valid: true } or { valid: false, message: 'reason' }
+    const ok = await testConnection(value)
+    return { valid: ok, message: ok ? 'Connected' : 'Connection failed' }
+  })
+}
+```
+
+### Using Shared Client Factories
+
+Shared server utilities provide `createX(config)` factories that bind credentials at creation time. Modules should use these instead of the legacy global functions:
+
+```javascript
+const { createJiraClient } = require('../../../shared/server/jira')
+
+module.exports = function registerRoutes(router, context) {
+  // Create a Jira client with credentials from context.secrets
+  const jira = createJiraClient({
+    email: (context.secrets && context.secrets.JIRA_EMAIL) || '',
+    token: (context.secrets && context.secrets.JIRA_TOKEN) || '',
+    host: process.env.JIRA_HOST  // Config, not secret — in ESLint ALLOWED set
+  })
+  const { jiraRequest, JIRA_HOST } = jira
+
+  // Use jiraRequest as before — same API, credentials bound in closure
+  router.get('/data', async (req, res) => {
+    const data = await jiraRequest('/rest/api/3/issue/KEY-1')
+    res.json(data)
+  })
+}
+```
+
+Available factories: `createJiraClient`, `createGoogleSheetsClient`, `createSmartsheetClient`, `createIpaClient`, `createBackupClient`. See `shared/API.md` for full signatures.
+
+### ESLint Enforcement
+
+The `org-pulse/no-module-process-env` ESLint rule prevents `process.env` access for secrets in `modules/**/server/**/*.js`. Non-secret configuration variables (`DEMO_MODE`, `NODE_ENV`, `JIRA_HOST`, etc.) are allowed. Test files are excluded.
+
+### Admin Diagnostics
+
+- `GET /api/admin/secrets/status` — returns configured/missing status for all secrets (never actual values)
+- `POST /api/admin/secrets/validate` — runs registered validators
+- Must-gather bundle includes `bundle.secrets` with full status
 
 ## PR Checklist
 

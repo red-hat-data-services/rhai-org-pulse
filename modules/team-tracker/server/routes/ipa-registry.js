@@ -578,7 +578,7 @@ function registerIpaRegistryRoutes(router, context) {
       return res.status(503).json({ error: 'LDAP not available in demo mode', code: 'LDAP_UNAVAILABLE' });
     }
 
-    if (!process.env.IPA_BIND_DN || !process.env.IPA_BIND_PASSWORD) {
+    if (!context.secrets.IPA_BIND_DN || !context.secrets.IPA_BIND_PASSWORD) {
       return res.status(503).json({ error: 'LDAP not configured', code: 'LDAP_UNAVAILABLE' });
     }
 
@@ -670,7 +670,7 @@ function registerIpaRegistryRoutes(router, context) {
       return res.status(503).json({ error: 'LDAP not available in demo mode', code: 'LDAP_UNAVAILABLE' });
     }
 
-    if (!process.env.IPA_BIND_DN || !process.env.IPA_BIND_PASSWORD) {
+    if (!context.secrets.IPA_BIND_DN || !context.secrets.IPA_BIND_PASSWORD) {
       return res.status(503).json({ error: 'LDAP not configured', code: 'LDAP_UNAVAILABLE' });
     }
 

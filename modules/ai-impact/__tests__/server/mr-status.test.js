@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 
-const { parseMrUrl, resolveGitlabToken, enrichMRStatuses, _setFetch } = require('../../server/mr-status')
+const { parseMrUrl, resolveGitlabToken, enrichMRStatuses, _setFetch, init } = require('../../server/mr-status')
 
 describe('parseMrUrl', () => {
   it('parses GitLab MR URL with /-/ separator', () => {
@@ -55,26 +55,26 @@ describe('parseMrUrl', () => {
 
 describe('resolveGitlabToken', () => {
   afterEach(() => {
-    delete process.env.GITLAB_CEE_REDHAT_DOCS_TOKEN
-    delete process.env.GITLAB_TOKEN
+    init({})
   })
 
   it('returns GITLAB_CEE_REDHAT_DOCS_TOKEN for gitlab.cee.redhat.com', () => {
-    process.env.GITLAB_CEE_REDHAT_DOCS_TOKEN = 'cee-token'
+    init({ GITLAB_CEE_REDHAT_DOCS_TOKEN: 'cee-token' })
     expect(resolveGitlabToken('https://gitlab.cee.redhat.com')).toBe('cee-token')
   })
 
   it('returns GITLAB_TOKEN for gitlab.com', () => {
-    process.env.GITLAB_TOKEN = 'gl-token'
+    init({ GITLAB_TOKEN: 'gl-token' })
     expect(resolveGitlabToken('https://gitlab.com')).toBe('gl-token')
   })
 
   it('returns GITLAB_TOKEN for other GitLab hosts', () => {
-    process.env.GITLAB_TOKEN = 'gl-token'
+    init({ GITLAB_TOKEN: 'gl-token' })
     expect(resolveGitlabToken('https://gitlab.example.com')).toBe('gl-token')
   })
 
   it('returns null when no token is set', () => {
+    init({})
     expect(resolveGitlabToken('https://gitlab.com')).toBeNull()
   })
 })
@@ -85,16 +85,12 @@ describe('enrichMRStatuses', () => {
   beforeEach(() => {
     mockFetch = () => Promise.resolve({ ok: false, status: 404 })
     _setFetch((...args) => mockFetch(...args))
-    delete process.env.GITLAB_TOKEN
-    delete process.env.GITLAB_CEE_REDHAT_DOCS_TOKEN
-    delete process.env.GITHUB_TOKEN
+    init({})
   })
 
   afterEach(() => {
     _setFetch(require('node-fetch'))
-    delete process.env.GITLAB_TOKEN
-    delete process.env.GITLAB_CEE_REDHAT_DOCS_TOKEN
-    delete process.env.GITHUB_TOKEN
+    init({})
   })
 
   it('does nothing for empty issues', async () => {
@@ -117,7 +113,7 @@ describe('enrichMRStatuses', () => {
   })
 
   it('fetches GitLab MR state and attaches to issue', async () => {
-    process.env.GITLAB_TOKEN = 'test-token'
+    init({ GITLAB_TOKEN: 'test-token' })
     mockFetch = (url, opts) => {
       expect(url).toContain('/api/v4/projects/')
       expect(opts.headers.Authorization).toBe('Bearer test-token')
@@ -138,7 +134,7 @@ describe('enrichMRStatuses', () => {
   })
 
   it('uses GITLAB_CEE_REDHAT_DOCS_TOKEN for gitlab.cee.redhat.com', async () => {
-    process.env.GITLAB_CEE_REDHAT_DOCS_TOKEN = 'cee-token'
+    init({ GITLAB_CEE_REDHAT_DOCS_TOKEN: 'cee-token' })
     mockFetch = (url, opts) => {
       expect(opts.headers.Authorization).toBe('Bearer cee-token')
       return Promise.resolve({
@@ -158,7 +154,7 @@ describe('enrichMRStatuses', () => {
   })
 
   it('fetches GitHub PR state — merged', async () => {
-    process.env.GITHUB_TOKEN = 'gh-token'
+    init({ GITHUB_TOKEN: 'gh-token' })
     mockFetch = (url, opts) => {
       expect(url).toContain('/repos/openshift/docs/pulls/10')
       expect(opts.headers.Authorization).toBe('Bearer gh-token')
@@ -179,7 +175,7 @@ describe('enrichMRStatuses', () => {
   })
 
   it('fetches GitHub PR state — open', async () => {
-    process.env.GITHUB_TOKEN = 'gh-token'
+    init({ GITHUB_TOKEN: 'gh-token' })
     mockFetch = () => Promise.resolve({
       ok: true,
       json: () => Promise.resolve({ state: 'open', merged: false })
@@ -196,7 +192,7 @@ describe('enrichMRStatuses', () => {
   })
 
   it('handles API errors gracefully', async () => {
-    process.env.GITLAB_TOKEN = 'test-token'
+    init({ GITLAB_TOKEN: 'test-token' })
     mockFetch = () => Promise.resolve({ ok: false, status: 404 })
 
     const issues = [{
@@ -208,7 +204,7 @@ describe('enrichMRStatuses', () => {
   })
 
   it('handles network errors gracefully', async () => {
-    process.env.GITLAB_TOKEN = 'test-token'
+    init({ GITLAB_TOKEN: 'test-token' })
     mockFetch = () => Promise.reject(new Error('ECONNREFUSED'))
 
     const issues = [{
@@ -220,7 +216,7 @@ describe('enrichMRStatuses', () => {
   })
 
   it('deduplicates URLs across multiple issues', async () => {
-    process.env.GITLAB_TOKEN = 'test-token'
+    init({ GITLAB_TOKEN: 'test-token' })
     let callCount = 0
     mockFetch = () => {
       callCount++
@@ -242,8 +238,7 @@ describe('enrichMRStatuses', () => {
   })
 
   it('handles mixed GitLab and GitHub URLs', async () => {
-    process.env.GITLAB_TOKEN = 'gl-token'
-    process.env.GITHUB_TOKEN = 'gh-token'
+    init({ GITLAB_TOKEN: 'gl-token', GITHUB_TOKEN: 'gh-token' })
     mockFetch = (url) => {
       if (url.includes('api.github.com')) {
         return Promise.resolve({

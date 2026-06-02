@@ -6,30 +6,21 @@
  * Results are cached to data/releases/planning/outcome-summaries-cache-{version}.json.
  */
 
-const { jiraRequest } = require('../../../../shared/server/jira')
-
 const DATA_PREFIX = 'releases/planning'
-
-/**
- * Check whether Jira credentials are configured.
- * @returns {boolean}
- */
-function hasJiraCredentials() {
-  return !!(process.env.JIRA_TOKEN && process.env.JIRA_EMAIL)
-}
 
 /**
  * Fetch summaries for the given issue keys from Jira.
  * Uses a single JQL query: key in (KEY-1, KEY-2, ...) with fields=summary.
  *
+ * @param {Function} jiraRequest - Bound jiraRequest function from jira client
  * @param {string[]} keys - Issue keys to look up
  * @returns {Promise<Object>} Map of key -> summary string
  */
 const ISSUE_KEY_PATTERN = /^[A-Z][A-Z0-9]+-\d+$/
 
-async function fetchOutcomeSummaries(keys) {
+async function fetchOutcomeSummaries(jiraRequest, keys) {
   if (!keys || keys.length === 0) return {}
-  if (!hasJiraCredentials()) {
+  if (!jiraRequest) {
     console.log('[release-planning] Jira credentials not configured, skipping outcome summary fetch')
     return {}
   }
@@ -55,13 +46,14 @@ async function fetchOutcomeSummaries(keys) {
 /**
  * Load cached outcome summaries for a version, or fetch from Jira if not cached.
  *
+ * @param {Function} jiraRequest - Bound jiraRequest function from jira client
  * @param {string[]} keys - Missing outcome keys
  * @param {string} version - Release version (for cache scoping)
  * @param {Function} readFromStorage
  * @param {Function} writeToStorage
  * @returns {Promise<Object>} Map of key -> summary string
  */
-async function getOutcomeSummaries(keys, version, readFromStorage, writeToStorage) {
+async function getOutcomeSummaries(jiraRequest, keys, version, readFromStorage, writeToStorage) {
   if (!keys || keys.length === 0) return {}
 
   var cachePath = DATA_PREFIX + '/outcome-summaries-cache-' + version + '.json'
@@ -86,7 +78,7 @@ async function getOutcomeSummaries(keys, version, readFromStorage, writeToStorag
   }
 
   // Fetch from Jira
-  var fetched = await fetchOutcomeSummaries(keys)
+  var fetched = await fetchOutcomeSummaries(jiraRequest, keys)
 
   if (Object.keys(fetched).length > 0) {
     // Merge into cache
@@ -101,4 +93,4 @@ async function getOutcomeSummaries(keys, version, readFromStorage, writeToStorag
   return fetched
 }
 
-module.exports = { fetchOutcomeSummaries: fetchOutcomeSummaries, getOutcomeSummaries: getOutcomeSummaries, hasJiraCredentials: hasJiraCredentials }
+module.exports = { fetchOutcomeSummaries: fetchOutcomeSummaries, getOutcomeSummaries: getOutcomeSummaries }

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 
 const {
   parseIssueLinks,
@@ -318,31 +318,13 @@ describe('runPass2', function() {
 })
 
 describe('enrichFeatures', function() {
-  var origToken, origEmail
-
-  beforeEach(function() {
-    origToken = process.env.JIRA_TOKEN
-    origEmail = process.env.JIRA_EMAIL
-  })
-
-  afterEach(function() {
-    if (origToken !== undefined) process.env.JIRA_TOKEN = origToken
-    else delete process.env.JIRA_TOKEN
-    if (origEmail !== undefined) process.env.JIRA_EMAIL = origEmail
-    else delete process.env.JIRA_EMAIL
-  })
-
-  it('returns warning when Jira credentials not configured', async function() {
-    delete process.env.JIRA_TOKEN
-    delete process.env.JIRA_EMAIL
-    var result = await enrichFeatures(vi.fn(), vi.fn(), [], {})
+  it('returns warning when jiraRequest is null (no credentials)', async function() {
+    var result = await enrichFeatures(null, vi.fn(), [], {})
     expect(result.warnings).toContain('Jira credentials not configured -- enrichment skipped')
     expect(result.enrichments.size).toBe(0)
   })
 
   it('returns warning when enrichment disabled in config', async function() {
-    process.env.JIRA_TOKEN = 'test'
-    process.env.JIRA_EMAIL = 'test@test.com'
     var result = await enrichFeatures(vi.fn(), vi.fn(), [], {
       healthConfig: { enableJiraEnrichment: false }
     })
@@ -350,8 +332,6 @@ describe('enrichFeatures', function() {
   })
 
   it('runs pass1 and pass2 when configured', async function() {
-    process.env.JIRA_TOKEN = 'test'
-    process.env.JIRA_EMAIL = 'test@test.com'
     var features = [{ key: 'T-1', status: 'New', targetVersions: [] }]
     var mockFetch = vi.fn().mockResolvedValue([{
       key: 'T-1',
@@ -365,8 +345,6 @@ describe('enrichFeatures', function() {
   })
 
   it('fetches RICE from parents when enabled and configured', async function() {
-    process.env.JIRA_TOKEN = 'test'
-    process.env.JIRA_EMAIL = 'test@test.com'
     var features = [{ key: 'T-1', status: 'In Progress', targetVersions: ['3.5'], parentKey: 'STRAT-1' }]
     var mockFetch = vi.fn().mockImplementation(function(jiraReq, jql) {
       if (jql.indexOf('STRAT-1') !== -1) {
