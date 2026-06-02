@@ -53,7 +53,7 @@
                 @click="showDeleteConfirm = true; menuOpen = false"
                 class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer"
               >
-                Delete post
+                {{ isOwnPost ? 'Delete my post' : 'Remove (admin)' }}
               </button>
             </div>
           </div>
@@ -201,9 +201,10 @@ const userUid = ref('')
 
 const currentUserUid = computed(() => user.value?.uid || user.value?.email || '')
 const isAdmin = computed(() => authIsAdmin.value)
+const isOwnPost = computed(() => post.value?.author_uid === currentUserUid.value)
 const canDelete = computed(() => {
   if (!post.value) return false
-  return post.value.author_uid === currentUserUid.value || isAdmin.value
+  return isOwnPost.value || isAdmin.value
 })
 
 const fullDate = computed(() => {

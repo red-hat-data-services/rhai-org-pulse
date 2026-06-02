@@ -2,7 +2,7 @@
   <article
     role="article"
     :aria-labelledby="'post-author-' + post.id"
-    class="px-5 py-5 transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-800/30"
+    class="px-5 py-5 transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-800/30 group"
     :class="[highlightClass]"
     :data-post-id="post.id"
   >
@@ -25,10 +25,47 @@
           <time :datetime="post.created_at" :title="fullDate" class="text-xs text-gray-400 dark:text-gray-500 shrink-0">{{ relativeTime }}</time>
           <span v-if="post.pinned" class="text-xs" title="Pinned">📌</span>
           <span v-if="post.edited_at" class="text-xs text-gray-400">(edited)</span>
+          <span class="flex-1"></span>
+          <!-- 3-dot overflow menu (LinkedIn-style) -->
+          <div class="relative">
+            <button
+              @click.stop="menuOpen = !menuOpen"
+              class="w-7 h-7 flex items-center justify-center rounded-full text-gray-400 dark:text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-600 dark:hover:text-gray-300 transition-all cursor-pointer opacity-0 group-hover:opacity-100"
+              :class="{ '!opacity-100': menuOpen }"
+              aria-label="Post options"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+            </button>
+            <div
+              v-if="menuOpen"
+              class="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg py-1 w-44 z-20"
+            >
+              <button
+                @click.stop="$emit('open-post', post.id); menuOpen = false"
+                class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
+              >
+                Open post
+              </button>
+              <button
+                v-if="isOwnPost"
+                @click.stop="$emit('delete-post', post.id); menuOpen = false"
+                class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer"
+              >
+                Delete my post
+              </button>
+              <button
+                v-else-if="isAdmin"
+                @click.stop="$emit('delete-post', post.id); menuOpen = false"
+                class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer"
+              >
+                Remove (admin)
+              </button>
+            </div>
+          </div>
         </div>
 
-        <!-- Body -->
-        <div class="text-[15px] text-gray-800 dark:text-gray-200 leading-relaxed mt-1.5">
+        <!-- Body (clickable to open detail) -->
+        <div @click="$emit('open-post', post.id)" class="text-[15px] text-gray-800 dark:text-gray-200 leading-relaxed mt-1.5 cursor-pointer">
           <div v-if="truncated && !expanded" class="line-clamp-4 post-fade">
             <MarkdownRenderer :content="post.body" />
           </div>
@@ -37,7 +74,7 @@
           </div>
           <button
             v-if="truncated && !expanded"
-            @click="expanded = true"
+            @click.stop="expanded = true"
             class="text-primary-600 dark:text-primary-400 text-sm font-medium hover:underline mt-0.5 cursor-pointer"
           >
             Show more
@@ -50,6 +87,7 @@
         <!-- Action bar (Twitter-style, always visible) -->
         <ReactionBar
           :reactions="post.reactions || {}"
+          :my-reactions="post.my_reactions || []"
           :comment-count="post.comment_count"
           :post-id="post.id"
           @toggle="handleReaction"
@@ -93,24 +131,49 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import PersonAvatar from './PersonAvatar.vue'
 import LabelBadge from './LabelBadge.vue'
 import MarkdownRenderer from './MarkdownRenderer.vue'
 import AttachmentPreview from './AttachmentPreview.vue'
 import ReactionBar from './ReactionBar.vue'
 import InlineComment from './InlineComment.vue'
+import { useAuth } from '@shared/client/composables/useAuth'
 
 const props = defineProps({
   post: { type: Object, required: true },
   highlight: { type: Boolean, default: false }
 })
 
-const emit = defineEmits(['open-post', 'react', 'comment'])
+const emit = defineEmits(['open-post', 'react', 'comment', 'delete-post'])
+
+const { user, isAdmin: authIsAdmin } = useAuth()
 
 const expanded = ref(false)
 const showComments = ref(false)
 const localComments = ref([])
+const menuOpen = ref(false)
+
+const isOwnPost = computed(() => {
+  const uid = user.value?.uid || user.value?.email || ''
+  return props.post.author_uid === uid
+})
+
+const isAdmin = computed(() => authIsAdmin.value)
+
+function handleMenuClickOutside(e) {
+  if (menuOpen.value && !e.target.closest('[aria-label="Post options"]') && !e.target.closest('[aria-label="Post options"] + div')) {
+    menuOpen.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleMenuClickOutside)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleMenuClickOutside)
+})
 
 const truncated = computed(() => {
   if (!props.post.body) return false
