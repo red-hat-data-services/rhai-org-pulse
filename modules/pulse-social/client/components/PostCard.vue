@@ -38,7 +38,7 @@
             </button>
             <div
               v-if="menuOpen"
-              class="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg py-1 w-36 z-20"
+              class="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg py-1 w-44 z-20"
             >
               <button
                 @click.stop="$emit('open-post', post.id); menuOpen = false"
@@ -47,10 +47,18 @@
                 Open post
               </button>
               <button
+                v-if="isOwnPost"
                 @click.stop="$emit('delete-post', post.id); menuOpen = false"
                 class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer"
               >
-                Delete post
+                Delete my post
+              </button>
+              <button
+                v-else-if="isAdmin"
+                @click.stop="$emit('delete-post', post.id); menuOpen = false"
+                class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer"
+              >
+                Remove (admin)
               </button>
             </div>
           </div>
@@ -129,6 +137,7 @@ import MarkdownRenderer from './MarkdownRenderer.vue'
 import AttachmentPreview from './AttachmentPreview.vue'
 import ReactionBar from './ReactionBar.vue'
 import InlineComment from './InlineComment.vue'
+import { useAuth } from '@shared/client/composables/useAuth'
 
 const props = defineProps({
   post: { type: Object, required: true },
@@ -137,10 +146,19 @@ const props = defineProps({
 
 const emit = defineEmits(['open-post', 'react', 'comment', 'delete-post'])
 
+const { user, isAdmin: authIsAdmin } = useAuth()
+
 const expanded = ref(false)
 const showComments = ref(false)
 const localComments = ref([])
 const menuOpen = ref(false)
+
+const isOwnPost = computed(() => {
+  const uid = user.value?.uid || user.value?.email || ''
+  return props.post.author_uid === uid
+})
+
+const isAdmin = computed(() => authIsAdmin.value)
 
 function handleMenuClickOutside(e) {
   if (menuOpen.value && !e.target.closest('[aria-label="Post options"]') && !e.target.closest('[aria-label="Post options"] + div')) {
