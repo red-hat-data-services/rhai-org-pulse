@@ -2,7 +2,7 @@
   <article
     role="article"
     :aria-labelledby="'post-author-' + post.id"
-    class="px-5 py-5 transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-800/30"
+    class="px-5 py-5 transition-colors hover:bg-gray-50/50 dark:hover:bg-gray-800/30 group"
     :class="[highlightClass]"
     :data-post-id="post.id"
   >
@@ -25,10 +25,19 @@
           <time :datetime="post.created_at" :title="fullDate" class="text-xs text-gray-400 dark:text-gray-500 shrink-0">{{ relativeTime }}</time>
           <span v-if="post.pinned" class="text-xs" title="Pinned">📌</span>
           <span v-if="post.edited_at" class="text-xs text-gray-400">(edited)</span>
+          <span class="flex-1"></span>
+          <!-- Open detail -->
+          <button
+            @click="$emit('open-post', post.id)"
+            class="text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
+            title="Open post"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+          </button>
         </div>
 
-        <!-- Body -->
-        <div class="text-[15px] text-gray-800 dark:text-gray-200 leading-relaxed mt-1.5">
+        <!-- Body (clickable to open detail) -->
+        <div @click="$emit('open-post', post.id)" class="text-[15px] text-gray-800 dark:text-gray-200 leading-relaxed mt-1.5 cursor-pointer">
           <div v-if="truncated && !expanded" class="line-clamp-4 post-fade">
             <MarkdownRenderer :content="post.body" />
           </div>
