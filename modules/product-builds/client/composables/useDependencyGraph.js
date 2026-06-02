@@ -49,7 +49,7 @@ export function useDependencyGraph(dependencyGraphJson) {
   }
 
   watch([() => selectedPackage.value, () => showBuildDeps.value], () => {
-    if (!selectedPackage.value || !fullGraphData) {
+    if (selectedPackage.value === null || !fullGraphData) {
       nodes.value = []
       edges.value = []
       incomingDeps.value = []

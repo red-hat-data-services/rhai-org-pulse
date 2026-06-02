@@ -3,6 +3,7 @@ import { ref, reactive, computed, watch, onMounted, onUnmounted, inject } from '
 import { useWheelBrowse, useWheelPackageSearch, useWheelFilters } from '../composables/useWheelCollections'
 import { formatDate, envBadgeClass, archBadgeClass } from '../utils/formatting'
 import { apiRequest, getApiBase } from '@shared/client/services/api'
+import { impersonatingUid } from '@shared/client/state/impersonation'
 
 const nav = inject('moduleNav')
 
@@ -34,23 +35,24 @@ function getSortIndicatorClass(column) {
   return browse.sortColumn.value === column ? 'text-primary-600 dark:text-blue-400' : 'text-gray-300 dark:text-gray-600'
 }
 
-function parseBuildSequence(key) {
-  const json = browse.buildSequences.value[key]
-  if (!json) return null
-  try {
-    const entries = JSON.parse(json)
-    if (!Array.isArray(entries)) return null
-    const newBuilds = []
-    const prebuilt = []
-    const skipped = []
-    for (const e of entries) {
-      if (e.skipped) skipped.push(e)
-      else if (e.prebuilt) prebuilt.push(e)
-      else newBuilds.push(e)
-    }
-    return { total: entries.length, newBuilds, prebuilt, skipped }
-  } catch { return null }
-}
+const parsedBuildSequences = computed(() => {
+  const map = {}
+  for (const [key, json] of Object.entries(browse.buildSequences.value)) {
+    if (!json) continue
+    try {
+      const entries = JSON.parse(json)
+      if (!Array.isArray(entries)) continue
+      const newBuilds = [], prebuilt = [], skipped = []
+      for (const e of entries) {
+        if (e.skipped) skipped.push(e)
+        else if (e.prebuilt) prebuilt.push(e)
+        else newBuilds.push(e)
+      }
+      map[key] = { total: entries.length, newBuilds, prebuilt, skipped }
+    } catch { /* skip */ }
+  }
+  return map
+})
 
 const openPopover = ref(null)
 
@@ -107,19 +109,18 @@ function downloadBuildSequence(key) {
 }
 
 function getCommitUrl(artifact) {
-  const commit = artifact?.commit || artifact?.labels?.['git.commit']
+  const commit = artifact?.commit || artifact?.labels?.['git.commit'] || artifact?.labels?.['org.opencontainers.image.revision'] || artifact?.labels?.['vcs-ref']
   if (!commit) return null
 
   let repoUrl = null
   if (artifact.git_repository) {
-    repoUrl = typeof artifact.git_repository === 'string'
-      ? artifact.git_repository
-      : artifact.git_repository.url
+    repoUrl = typeof artifact.git_repository === 'string' ? artifact.git_repository : artifact.git_repository?.url
   }
   if (!repoUrl) {
-    repoUrl = artifact.labels?.['vcs-ref'] ? null : artifact.labels?.['io.openshift.build.source-location']
+    const labels = artifact.labels || {}
+    repoUrl = labels['git.url'] || labels['org.opencontainers.image.source'] || labels['url'] || null
   }
-  if (!repoUrl) return null
+  if (!repoUrl || typeof repoUrl !== 'string') return null
 
   const baseUrl = repoUrl.replace(/\.git$/, '').replace(/\/$/, '')
   return `${baseUrl}/-/commit/${commit}`
@@ -238,7 +239,9 @@ async function loadArtifactsData() {
         expandedGroups.value = new Set(Object.keys(data.groups))
       }
     } else {
-      const response = await fetch(`${getApiBase()}/modules/product-builds/artifacts?${qs}`)
+      const fetchHeaders = {}
+      if (impersonatingUid.value) fetchHeaders['X-Impersonate-Uid'] = impersonatingUid.value
+      const response = await fetch(`${getApiBase()}/modules/product-builds/artifacts?${qs}`, { headers: fetchHeaders })
       if (!response.ok) throw new Error(`HTTP ${response.status}`)
       const data = await response.json()
       const items = Array.isArray(data) ? data : []
@@ -307,11 +310,14 @@ function toggleArtifactGroup(key) {
 function getDropName(artifact) {
   const dropKey = artifact.drop_keys?.[0]
   if (!dropKey) return null
-  return dropKey.replace('rhai-', '')
+  const productKey = artifact.product_key || 'rhai'
+  return dropKey.replace(`${productKey}-`, '')
 }
 
-function navigateToDropFromArtifact(dropKey) {
-  nav.navigateTo('drop-detail', { key: dropKey, product: 'rhai' })
+function navigateToDropFromArtifact(artifact) {
+  const dropKey = artifact.drop_keys?.[0]
+  if (!dropKey) return
+  nav.navigateTo('drop-detail', { key: dropKey, product: artifact.product_key || 'rhai' })
 }
 
 watch([artifactsGroupBy, artifactsArchFilter, artifactsAccelFilter, artifactsDateFilter], () => {
@@ -319,8 +325,8 @@ watch([artifactsGroupBy, artifactsArchFilter, artifactsAccelFilter, artifactsDat
   loadArtifactsData()
 })
 
-function navigateToArtifact(artifactKey) {
-  nav.navigateTo('artifact-detail', { key: artifactKey, product: 'rhai' })
+function navigateToArtifact(artifactKey, productKey) {
+  nav.navigateTo('artifact-detail', { key: artifactKey, product: productKey || 'rhai' })
 }
 
 watch(activeTab, (tab) => {
@@ -334,7 +340,7 @@ onMounted(() => {
   browse.load()
 })
 
-onUnmounted(() => clearTimeout(searchTimeout))
+onUnmounted(() => { clearTimeout(searchTimeout); clearTimeout(containerHoverTimer) })
 </script>
 
 <template>
@@ -441,14 +447,14 @@ onUnmounted(() => clearTimeout(searchTimeout))
                   </div>
                 </td>
                 <td class="px-4 py-3 text-sm" @click.stop>
-                  <template v-if="parseBuildSequence(art.key)">
+                  <template v-if="parsedBuildSequences[art.key]">
                     <div class="relative inline-flex items-center gap-1">
                       <button
                         @click="togglePopover(art.key)"
                         class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50 cursor-pointer transition-colors"
                       >
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
-                        {{ parseBuildSequence(art.key).total }} packages
+                        {{ parsedBuildSequences[art.key].total }} packages
                       </button>
                       <button
                         @click="downloadBuildSequence(art.key)"
@@ -467,22 +473,22 @@ onUnmounted(() => clearTimeout(searchTimeout))
                           <button @click="closePopover" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">&times;</button>
                         </div>
                         <div class="px-3 py-2 max-h-80 overflow-y-auto space-y-3">
-                          <div v-if="parseBuildSequence(art.key).newBuilds.length">
-                            <div class="text-xs font-semibold text-gray-900 dark:text-gray-100 mb-1">New Builds ({{ parseBuildSequence(art.key).newBuilds.length }})</div>
+                          <div v-if="parsedBuildSequences[art.key].newBuilds.length">
+                            <div class="text-xs font-semibold text-gray-900 dark:text-gray-100 mb-1">New Builds ({{ parsedBuildSequences[art.key].newBuilds.length }})</div>
                             <div class="flex flex-wrap gap-1">
-                              <span v-for="e in parseBuildSequence(art.key).newBuilds" :key="e.name" class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">{{ e.name }}=={{ e.version }}</span>
+                              <span v-for="e in parsedBuildSequences[art.key].newBuilds" :key="e.name" class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">{{ e.name }}=={{ e.version }}</span>
                             </div>
                           </div>
-                          <div v-if="parseBuildSequence(art.key).prebuilt.length">
-                            <div class="text-xs font-semibold text-gray-900 dark:text-gray-100 mb-1">Pre-built ({{ parseBuildSequence(art.key).prebuilt.length }})</div>
+                          <div v-if="parsedBuildSequences[art.key].prebuilt.length">
+                            <div class="text-xs font-semibold text-gray-900 dark:text-gray-100 mb-1">Pre-built ({{ parsedBuildSequences[art.key].prebuilt.length }})</div>
                             <div class="flex flex-wrap gap-1">
-                              <span v-for="e in parseBuildSequence(art.key).prebuilt" :key="e.name" class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">{{ e.name }}=={{ e.version }}</span>
+                              <span v-for="e in parsedBuildSequences[art.key].prebuilt" :key="e.name" class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">{{ e.name }}=={{ e.version }}</span>
                             </div>
                           </div>
-                          <div v-if="parseBuildSequence(art.key).skipped.length">
-                            <div class="text-xs font-semibold text-gray-900 dark:text-gray-100 mb-1">Skipped ({{ parseBuildSequence(art.key).skipped.length }})</div>
+                          <div v-if="parsedBuildSequences[art.key].skipped.length">
+                            <div class="text-xs font-semibold text-gray-900 dark:text-gray-100 mb-1">Skipped ({{ parsedBuildSequences[art.key].skipped.length }})</div>
                             <div class="flex flex-wrap gap-1">
-                              <span v-for="e in parseBuildSequence(art.key).skipped" :key="e.name" class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">{{ e.name }}=={{ e.version }}</span>
+                              <span v-for="e in parsedBuildSequences[art.key].skipped" :key="e.name" class="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">{{ e.name }}=={{ e.version }}</span>
                             </div>
                           </div>
                         </div>
@@ -805,11 +811,11 @@ onUnmounted(() => clearTimeout(searchTimeout))
                   <tr
                     v-for="art in artifactsData.groups[groupKey].artifacts"
                     :key="art.key"
-                    @click="navigateToArtifact(art.key)"
+                    @click="navigateToArtifact(art.key, art.product_key)"
                     class="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
                   >
                     <td class="px-4 py-3 text-sm font-medium text-primary-600 dark:text-blue-400 break-all font-mono">
-                      <span @click.stop="navigateToArtifact(art.key)" class="hover:underline cursor-pointer">{{ art.key }}</span>
+                      <span @click.stop="navigateToArtifact(art.key, art.product_key)" class="hover:underline cursor-pointer">{{ art.key }}</span>
                     </td>
                     <td v-if="artifactsData.groups[groupKey].artifacts.some(a => a.series)" class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ art.series || '—' }}</td>
                     <td v-if="artifactsData.groups[groupKey].artifacts.some(a => a.environments?.length)" class="px-4 py-3" @click.stop>
@@ -831,7 +837,7 @@ onUnmounted(() => clearTimeout(searchTimeout))
                     </td>
                     <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ formatDate(art.created_at) }}</td>
                     <td class="px-4 py-3 text-sm" @click.stop>
-                      <span v-if="getDropName(art)" @click="navigateToDropFromArtifact(art.drop_keys[0])" class="text-primary-600 dark:text-blue-400 hover:underline cursor-pointer">{{ getDropName(art) }}</span>
+                      <span v-if="getDropName(art)" @click="navigateToDropFromArtifact(art)" class="text-primary-600 dark:text-blue-400 hover:underline cursor-pointer">{{ getDropName(art) }}</span>
                       <span v-else class="text-gray-400 dark:text-gray-500">—</span>
                     </td>
                   </tr>
@@ -869,11 +875,11 @@ onUnmounted(() => clearTimeout(searchTimeout))
               <tr
                 v-for="art in artifactsData"
                 :key="art.key"
-                @click="navigateToArtifact(art.key)"
+                @click="navigateToArtifact(art.key, art.product_key)"
                 class="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer transition-colors"
               >
                 <td class="px-4 py-3 text-sm font-medium text-primary-600 dark:text-blue-400 break-all font-mono">
-                  <span @click.stop="navigateToArtifact(art.key)" class="hover:underline cursor-pointer">{{ art.key }}</span>
+                  <span @click.stop="navigateToArtifact(art.key, art.product_key)" class="hover:underline cursor-pointer">{{ art.key }}</span>
                 </td>
                 <td v-if="artifactsData.some(a => a.series)" class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ art.series || '—' }}</td>
                 <td v-if="artifactsData.some(a => a.environments?.length)" class="px-4 py-3" @click.stop>
@@ -895,7 +901,7 @@ onUnmounted(() => clearTimeout(searchTimeout))
                 </td>
                 <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ formatDate(art.created_at) }}</td>
                 <td class="px-4 py-3 text-sm" @click.stop>
-                  <span v-if="getDropName(art)" @click="navigateToDropFromArtifact(art.drop_keys[0])" class="text-primary-600 dark:text-blue-400 hover:underline cursor-pointer">{{ getDropName(art) }}</span>
+                  <span v-if="getDropName(art)" @click="navigateToDropFromArtifact(art)" class="text-primary-600 dark:text-blue-400 hover:underline cursor-pointer">{{ getDropName(art) }}</span>
                   <span v-else class="text-gray-400 dark:text-gray-500">—</span>
                 </td>
               </tr>

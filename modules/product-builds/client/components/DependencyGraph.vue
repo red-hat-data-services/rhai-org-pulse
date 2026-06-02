@@ -1,6 +1,6 @@
 <script setup>
-import { watch, nextTick, markRaw } from 'vue'
-import { VueFlow, useVueFlow } from '@vue-flow/core'
+import { ref, watch, nextTick, markRaw } from 'vue'
+import { VueFlow } from '@vue-flow/core'
 import { MiniMap } from '@vue-flow/minimap'
 import { Controls } from '@vue-flow/controls'
 import { Background } from '@vue-flow/background'
@@ -30,12 +30,16 @@ const {
 
 const nodeTypes = { package: markRaw(GraphPackageNode) }
 
-const { fitView } = useVueFlow({ id: 'dependency-graph' })
+const vueFlowInstance = ref(null)
+
+function onPaneReady(instance) {
+  vueFlowInstance.value = instance
+}
 
 watch(nodes, () => {
-  if (nodes.value.length > 0) {
+  if (nodes.value.length > 0 && vueFlowInstance.value) {
     nextTick(() => {
-      setTimeout(() => fitView({ padding: 0.2, duration: 0 }), 100)
+      setTimeout(() => vueFlowInstance.value.fitView({ padding: 0.2, duration: 0 }), 100)
     })
   }
 })
@@ -118,13 +122,13 @@ function miniMapColor(node) {
     <template v-else>
       <div class="h-[600px] w-full rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
         <VueFlow
-          id="dependency-graph"
           :nodes="nodes"
           :edges="edges"
           :node-types="nodeTypes"
           :min-zoom="0.1"
           :max-zoom="2"
           fit-view-on-init
+          @pane-ready="onPaneReady"
           @node-click="onNodeClick"
         >
           <Background />
