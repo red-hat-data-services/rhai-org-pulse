@@ -43,33 +43,31 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           PR_NUMBER_PR: ${{ github.event.pull_request.number }}
           PR_NUMBER_REVIEW: ${{ github.event.review.pull_request.number }}
-          BASE_REF_PR: ${{ github.event.pull_request.base.ref }}
-          BASE_REF_REVIEW: ${{ github.event.review.pull_request.base.ref }}
-          HEAD_REF_PR: ${{ github.event.pull_request.head.ref }}
-          HEAD_REF_REVIEW: ${{ github.event.review.pull_request.head.ref }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.event.review.pull_request.head.sha }}
+          BASE_SHA_PR: ${{ github.event.pull_request.base.sha }}
+          BASE_SHA_REVIEW: ${{ github.event.review.pull_request.base.sha }}
+          HEAD_SHA_PR: ${{ github.event.pull_request.head.sha }}
+          HEAD_SHA_REVIEW: ${{ github.event.review.pull_request.head.sha }}
         run: |
           if [ "$EVENT_NAME" = "pull_request_review" ]; then
             echo "pr_number=${PR_NUMBER_PR:-$PR_NUMBER_REVIEW}" >> $GITHUB_OUTPUT
-            echo "base_ref=origin/${BASE_REF_PR:-$BASE_REF_REVIEW}" >> $GITHUB_OUTPUT
-            echo "head_ref=origin/${HEAD_REF_PR:-$HEAD_REF_REVIEW}" >> $GITHUB_OUTPUT
+            echo "base_sha=${BASE_SHA_PR:-$BASE_SHA_REVIEW}" >> $GITHUB_OUTPUT
+            echo "head_sha=${HEAD_SHA_PR:-$HEAD_SHA_REVIEW}" >> $GITHUB_OUTPUT
           else
             echo "pr_number=$PR_NUMBER_PR" >> $GITHUB_OUTPUT
-            echo "base_ref=origin/$BASE_REF_PR" >> $GITHUB_OUTPUT
-            echo "head_ref=origin/$HEAD_REF_PR" >> $GITHUB_OUTPUT
+            echo "base_sha=$BASE_SHA_PR" >> $GITHUB_OUTPUT
+            echo "head_sha=$HEAD_SHA_PR" >> $GITHUB_OUTPUT
           fi
-          echo "head_sha=$HEAD_SHA" >> $GITHUB_OUTPUT
 
       - name: Check if sensitive AI configs or workflows changed
         id: check_sensitive_files
         env:
-          BASE_REF: ${{ steps.metadata.outputs.base_ref }}
-          HEAD_REF: ${{ steps.metadata.outputs.head_ref }}
+          BASE_SHA: ${{ steps.metadata.outputs.base_sha }}
+          HEAD_SHA: ${{ steps.metadata.outputs.head_sha }}
         run: |
           SENSITIVE_FILES_UPDATED=false
           MODIFIED_FILES=""
 
-          CHANGED_FILES=$(git diff --name-only "${BASE_REF}...${HEAD_REF}")
+          CHANGED_FILES=$(git diff --name-only "${BASE_SHA}...${HEAD_SHA}")
 
           for file in $SENSITIVE_FILES; do
             if echo "$CHANGED_FILES" | grep -q "^$file"; then
@@ -116,7 +114,7 @@ jobs:
       - name: Generate GitHub App token
         id: app-token
         if: steps.check_sensitive_files.outputs.detected == 'true'
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
