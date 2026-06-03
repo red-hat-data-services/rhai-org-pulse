@@ -1,0 +1,168 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: rhai-org-pulse-frontend
+labels:
+  app: team-tracker
+  component: frontend
+parameters:
+  - name: FRONTEND_IMAGE
+    value: quay.io/redhat-services-prod/hcm-eng-prod-tenant/rhai-org-pulse-frontend
+  - name: FRONTEND_IMAGE_TAG
+    required: true
+    value: latest
+  - name: OAUTH_PROXY_IMAGE
+    value: quay.io/openshift/origin-oauth-proxy:4.16
+  - name: FRONTEND_REPLICAS
+    value: "1"
+  - name: ROUTE_HOST
+    value: ""
+  - name: ROUTE_SHARD_LABEL
+    value: ""
+  - name: ROUTE_APPCODE_LABEL
+    value: HPOP-0001
+  - name: NGINX_MEMORY_REQUEST
+    value: 32Mi
+  - name: NGINX_MEMORY_LIMIT
+    value: 64Mi
+  - name: NGINX_CPU_REQUEST
+    value: 25m
+  - name: NGINX_CPU_LIMIT
+    value: 50m
+  - name: OAUTH_PROXY_MEMORY_REQUEST
+    value: 64Mi
+  - name: OAUTH_PROXY_MEMORY_LIMIT
+    value: 128Mi
+  - name: OAUTH_PROXY_CPU_REQUEST
+    value: 100m
+  - name: OAUTH_PROXY_CPU_LIMIT
+    value: 200m
+objects:
+  - apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      name: frontend-proxy
+      annotations:
+        serviceaccounts.openshift.io/oauth-redirectreference.primary: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"team-tracker"}}'
+
+  - apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: frontend
+    spec:
+      replicas: ${{FRONTEND_REPLICAS}}
+      selector:
+        matchLabels:
+          app: team-tracker
+          component: frontend
+      template:
+        metadata:
+          labels:
+            app: team-tracker
+            component: frontend
+        spec:
+          serviceAccountName: frontend-proxy
+          containers:
+            - name: oauth-proxy
+              image: ${OAUTH_PROXY_IMAGE}
+              ports:
+                - containerPort: 4180
+                  name: proxy
+                  protocol: TCP
+              args:
+                - --https-address=:4180
+                - --http-address=
+                - --provider=openshift
+                - --openshift-service-account=frontend-proxy
+                - --upstream=http://localhost:8080
+                - --tls-cert=/etc/tls/private/tls.crt
+                - --tls-key=/etc/tls/private/tls.key
+                - --cookie-secret-file=/etc/proxy/cookie-secret/session_secret
+                - --pass-user-headers=true
+                - --email-domain=*
+                - --skip-auth-regex=^/api/docs
+              volumeMounts:
+                - name: proxy-tls
+                  mountPath: /etc/tls/private
+                  readOnly: true
+                - name: cookie-secret
+                  mountPath: /etc/proxy/cookie-secret
+                  readOnly: true
+              resources:
+                requests:
+                  memory: ${OAUTH_PROXY_MEMORY_REQUEST}
+                  cpu: ${OAUTH_PROXY_CPU_REQUEST}
+                limits:
+                  memory: ${OAUTH_PROXY_MEMORY_LIMIT}
+                  cpu: ${OAUTH_PROXY_CPU_LIMIT}
+            - name: nginx
+              image: ${FRONTEND_IMAGE}:${FRONTEND_IMAGE_TAG}
+              env:
+                - name: PROXY_AUTH_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: proxy-auth-secret
+                      key: secret
+                      optional: true
+              ports:
+                - containerPort: 8080
+                  protocol: TCP
+              readinessProbe:
+                httpGet:
+                  path: /healthz
+                  port: 8080
+                initialDelaySeconds: 3
+                periodSeconds: 10
+              livenessProbe:
+                httpGet:
+                  path: /healthz
+                  port: 8080
+                initialDelaySeconds: 5
+                periodSeconds: 30
+              resources:
+                requests:
+                  memory: ${NGINX_MEMORY_REQUEST}
+                  cpu: ${NGINX_CPU_REQUEST}
+                limits:
+                  memory: ${NGINX_MEMORY_LIMIT}
+                  cpu: ${NGINX_CPU_LIMIT}
+          volumes:
+            - name: proxy-tls
+              secret:
+                secretName: frontend-proxy-tls
+            - name: cookie-secret
+              secret:
+                secretName: frontend-proxy-cookie
+
+  - apiVersion: v1
+    kind: Service
+    metadata:
+      name: team-tracker
+      annotations:
+        service.beta.openshift.io/serving-cert-secret-name: frontend-proxy-tls
+    spec:
+      selector:
+        app: team-tracker
+        component: frontend
+      ports:
+        - port: 4180
+          targetPort: 4180
+          name: proxy
+          protocol: TCP
+
+  - apiVersion: route.openshift.io/v1
+    kind: Route
+    metadata:
+      name: team-tracker
+      labels:
+        shard: ${ROUTE_SHARD_LABEL}
+        paas.redhat.com/appcode: ${ROUTE_APPCODE_LABEL}
+    spec:
+      host: ${ROUTE_HOST}
+      to:
+        kind: Service
+        name: team-tracker
+      port:
+        targetPort: proxy
+      tls:
+        termination: reencrypt
