@@ -15,6 +15,10 @@ let productsCache = { products: null, expiresAt: 0 }
 // Module-level secrets, set once via init()
 let _secrets = {}
 
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 function init(secrets) {
   _secrets = secrets || {}
 }
@@ -642,7 +646,7 @@ async function fetchFeatureFreezeDatesFromSchedule(portfolioVersion, productShor
 
         if (eaTag && !matchedExactEa) {
           // Parent release: look for EA-specific freeze tasks
-          if (new RegExp(`\\b${eaTag}\\b`, 'i').test(name)) {
+          if (new RegExp(`\\b${escapeRegExp(eaTag)}\\b`, 'i').test(name)) {
             bestDate = task.date_finish || null
             break
           }
