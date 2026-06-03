@@ -15,10 +15,6 @@ let productsCache = { products: null, expiresAt: 0 }
 // Module-level secrets, set once via init()
 let _secrets = {}
 
-function escapeRegExp(value) {
-  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
-
 function init(secrets) {
   _secrets = secrets || {}
 }
@@ -581,7 +577,12 @@ async function fetchFeatureFreezeDatesFromSchedule(portfolioVersion, productShor
 
   const eaMatch = portfolioVersion.match(/\b(EA\d?)\b/i)
   const eaTag = eaMatch ? eaMatch[1].toUpperCase() : null
-  const baseVersion = portfolioVersion.replace(/[\s._-]*EA\d?\s*/gi, '').replace(/^[\s.]+|[\s.]+$/g, '')
+  let baseVersion = portfolioVersion
+  if (eaMatch) {
+    baseVersion = portfolioVersion.slice(0, eaMatch.index).replace(/[\s._-]+$/, '') +
+      portfolioVersion.slice(eaMatch.index + eaMatch[0].length).replace(/^[\s._-]+/, '')
+  }
+  baseVersion = baseVersion.replace(/^[\s.]+|[\s.]+$/g, '')
 
   const byProduct = {}
   let earliest = null
@@ -646,9 +647,15 @@ async function fetchFeatureFreezeDatesFromSchedule(portfolioVersion, productShor
 
         if (eaTag && !matchedExactEa) {
           // Parent release: look for EA-specific freeze tasks
-          if (new RegExp(`\\b${escapeRegExp(eaTag)}\\b`, 'i').test(name)) {
-            bestDate = task.date_finish || null
-            break
+          const nameUpper = name.toUpperCase()
+          const eaIdx = nameUpper.indexOf(eaTag)
+          if (eaIdx !== -1) {
+            const before = eaIdx === 0 || /\W/.test(name[eaIdx - 1])
+            const after = eaIdx + eaTag.length >= name.length || /\W/.test(name[eaIdx + eaTag.length])
+            if (before && after) {
+              bestDate = task.date_finish || null
+              break
+            }
           }
         }
         // For exact EA releases, or as a generic fallback
