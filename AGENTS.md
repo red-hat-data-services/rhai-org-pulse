@@ -103,6 +103,8 @@ Non-secret config (e.g. `JIRA_HOST`, `DEMO_MODE`) is exempt. See
 - **Validation**: `npm run validate:modules` for module manifests
 - Run `npm test` before committing
 
+**Integration test enforcement:** PRs that modify files in `modules/` (views, components, server routes, server logic) **require** corresponding integration test updates. This is enforced during code review. See `.github/instructions/review.instructions.md` for the full policy and exceptions.
+
 ## Code Review
 
 Review criteria are defined in

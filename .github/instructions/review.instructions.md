@@ -39,6 +39,41 @@ You have full Edit and Write access to all files in the repo.
    enforces a minimum operation count; adding a route without its annotation
    will cause the build to fail.
 
+## Integration Test Coverage Validation
+
+As part of the pull request review, you must actively assess whether the developer has introduced module changes that mandate integration test verification.
+
+### 1. Integration Testing Triggers
+
+Evaluate the file diff paths. A pull request **requires an integration test** if changes are made to files within the `modules/` directory:
+
+- **Module Views:** Structural changes within `modules/*/views/` or `modules/*/components/` that combine multiple data sources, implement multi-step workflows, or render complex interactive UI (charts, tables with filtering/sorting, forms with validation).
+
+- **Module Server Routes:** Any new or modified route files within `modules/*/server/` (e.g., `modules/releases/server/planning/routes.js`, `modules/ai-impact/server/assessments/routes.js`) that implement non-trivial business logic, data aggregation, or stateful operations.
+
+- **Module Server Logic:** Changes to module-specific server files that fetch/transform data from external services (Jira Cloud API, GitHub GraphQL, GitLab GraphQL), implement domain calculations, or orchestrate multi-step operations.
+
+### 2. Validation & Enforcement Workflow
+
+1. **Locate matching tests:** Verify if the PR diff updates or supplements appropriate test modules under `tests/integration/<module>.spec.js` that cover integrated workflow journeys for the modified module.
+
+2. **Flag Non-Compliance:** If any files within `modules/` were changed but **no matching integration test** is detected in the diff:
+   - Generate a critical alert banner in the review output: **`⚠️ Missing Integration Test Warning`**.
+   - Explicitly highlight which module files were modified without verification (e.g., *"You modified data fetching logic inside `modules/releases/server/planning/routes.js` without corresponding integration assertions"* or *"You added a new view in `modules/ai-impact/views/` without integration test coverage"*).
+   - Instruct the developer to add integration test in `tests/integration/<module>.spec.js` that verifies:
+     - Module is visible and clickable in sidebar
+     - Module views load correctly without errors
+     - Module content renders (buttons, inputs, tables, cards)
+     - API endpoints return expected data structure
+     - Interactive workflows complete successfully
+   - Provide a minimal Playwright test snippet when possible (e.g., basic navigation test, API response validation).
+
+3. **Exceptions:** Do not require integration tests for module changes that are:
+   - Pure UI/styling changes (CSS, Tailwind classes) with no logic modifications
+   - Documentation-only updates (comments, JSDoc, README)
+   - Simple configuration changes (module.json metadata updates with no behavioral impact)
+   - Trivial refactorings that don't change behavior (renaming variables, extracting constants)
+
 ## Verdict rules
 
 When used in CI, the reviewer populates a structured JSON output with two fields:

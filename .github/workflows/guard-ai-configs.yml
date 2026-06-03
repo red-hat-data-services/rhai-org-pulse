@@ -1,13 +1,16 @@
-# The workflow prevents unauthorized changes to AGENTS.md, CLAUDE.md, and this workflow file itself. It will only
-# pass when an authorized user reviews and approves.
+# Prevents unauthorized changes to AI agent configs (AGENTS.md, .claude/, etc.)
+# and this workflow file itself. Uses the commit status API so that multiple
+# workflow runs (pull_request + pull_request_review) update a single status
+# rather than creating separate check runs. Add "AI Config Guard" as a required
+# status check in branch protection to enforce.
 
 name: Guard AI Configurations
 
 on:
   pull_request_review:
     types:
-      - submitted  # Causes the workflow to trigger when an approver approves. (Users don't have to manually trigger.)
-      - dismissed  # This safety mechanism will cause the job to *fail* when an approver's review is dismissed.
+      - submitted  # Re-evaluate when a reviewer approves
+      - dismissed  # Re-evaluate when an approval is dismissed
   pull_request:
     types:
       - opened
@@ -20,11 +23,14 @@ jobs:
     permissions:
       contents: read        # To checkout code
       pull-requests: write  # To post comments and read reviews
+      statuses: write       # To set commit status via the API
     env:
       # GitHub team allowed to approve AI config changes (format: org/team-slug)
       ALLOWED_APPROVER_TEAM: "red-hat-data-services/org-pulse-maintainers"
-      # Space-separated list of files/directories requiring owner approval. Keep THIS workflow file in the list so someone can't merge and update this OR the AI configs w/o approval.
+      # Space-separated list of files/directories requiring owner approval.
+      # Keep THIS workflow file in the list so it can't be changed without approval.
       SENSITIVE_FILES: ".claude/ AGENTS.md .github/workflows/guard-ai-configs.yml .github/instructions/review.instructions.md"
+      STATUS_CONTEXT: "AI Config Guard"
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -41,8 +47,8 @@ jobs:
           BASE_REF_REVIEW: ${{ github.event.review.pull_request.base.ref }}
           HEAD_REF_PR: ${{ github.event.pull_request.head.ref }}
           HEAD_REF_REVIEW: ${{ github.event.review.pull_request.head.ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.event.review.pull_request.head.sha }}
         run: |
-          # Safely calculate PR Number, Base Branch, and Head Branch depending on whether a PR or Review event triggered this
           if [ "$EVENT_NAME" = "pull_request_review" ]; then
             echo "pr_number=${PR_NUMBER_PR:-$PR_NUMBER_REVIEW}" >> $GITHUB_OUTPUT
             echo "base_ref=origin/${BASE_REF_PR:-$BASE_REF_REVIEW}" >> $GITHUB_OUTPUT
@@ -52,6 +58,7 @@ jobs:
             echo "base_ref=origin/$BASE_REF_PR" >> $GITHUB_OUTPUT
             echo "head_ref=origin/$HEAD_REF_PR" >> $GITHUB_OUTPUT
           fi
+          echo "head_sha=$HEAD_SHA" >> $GITHUB_OUTPUT
 
       - name: Check if sensitive AI configs or workflows changed
         id: check_sensitive_files
@@ -61,14 +68,12 @@ jobs:
         run: |
           SENSITIVE_FILES_UPDATED=false
           MODIFIED_FILES=""
-          
-          # Get list of all files changed in this PR branch comparison
+
           CHANGED_FILES=$(git diff --name-only "${BASE_REF}...${HEAD_REF}")
 
           for file in $SENSITIVE_FILES; do
-            # Handle directory trailing slashes (like .claude/) smoothly via prefix checking
             if echo "$CHANGED_FILES" | grep -q "^$file"; then
-              echo "⚠️ Sensitive file detected: $file"
+              echo "Sensitive file detected: $file"
               SENSITIVE_FILES_UPDATED=true
               MODIFIED_FILES="${MODIFIED_FILES}- \`${file}\`"$'\n'
             fi
@@ -79,8 +84,19 @@ jobs:
             echo "modified_files<<EOF" >> $GITHUB_OUTPUT
             echo "$MODIFIED_FILES" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
-            echo "⚠️ Sensitive AI configs or CI/CD workflow definitions have been altered, and requires owner approval before merge."
           fi
+
+      - name: Set status — no sensitive files changed
+        if: steps.check_sensitive_files.outputs.detected != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_SHA: ${{ steps.metadata.outputs.head_sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh api "repos/${REPO}/statuses/${HEAD_SHA}" \
+            -f state=success \
+            -f context="${STATUS_CONTEXT}" \
+            -f description="No sensitive AI config files changed"
 
       - name: Post PR comment for sensitive files
         if: steps.check_sensitive_files.outputs.detected == 'true'
@@ -89,13 +105,12 @@ jobs:
           PR_NUMBER: ${{ steps.metadata.outputs.pr_number }}
           MODIFIED_FILES_LIST: ${{ steps.check_sensitive_files.outputs.modified_files }}
         run: |
-          # Check if we've already commented on this PR to avoid spam
           COMMENT_EXISTS=$(gh pr view "$PR_NUMBER" --json comments -q '.comments[] | select(.author.login=="github-actions") | select(.body | contains("AI Configuration Guard")) | .id' | head -1)
           if [ -z "$COMMENT_EXISTS" ]; then
-            COMMENT_BODY=$(printf "⚠️ **AI Configuration Guard**\n\nThis PR modifies sensitive AI configuration files or workflows that require approval from a member of: **@%s**\n\nThe following sensitive files were detected:\n%s\nAn approval from an authorized team member is required before this PR can be merged." "${ALLOWED_APPROVER_TEAM}" "${MODIFIED_FILES_LIST}")
+            COMMENT_BODY=$(printf "**AI Configuration Guard**\n\nThis PR modifies sensitive AI configuration files or workflows that require approval from a member of: **@%s**\n\nThe following sensitive files were detected:\n%s\nAn approval from an authorized team member is required before this PR can be merged." "${ALLOWED_APPROVER_TEAM}" "${MODIFIED_FILES_LIST}")
             gh pr comment "$PR_NUMBER" --body "$COMMENT_BODY"
           else
-            echo "ℹ️ Comment already exists (ID: $COMMENT_EXISTS), skipping duplicate comment."
+            echo "Comment already exists (ID: $COMMENT_EXISTS), skipping duplicate."
           fi
 
       - name: Generate GitHub App token
@@ -105,44 +120,57 @@ jobs:
         with:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
-        continue-on-error: true  # Secrets unavailable on fork PRs — approval step handles this
+        continue-on-error: true  # Secrets unavailable on fork PRs
 
-      - name: Verify Core Owner Approval
+      - name: Check for team approval and set status
         if: steps.check_sensitive_files.outputs.detected == 'true'
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
           PR_NUMBER: ${{ steps.metadata.outputs.pr_number }}
+          HEAD_SHA: ${{ steps.metadata.outputs.head_sha }}
+          REPO: ${{ github.repository }}
         run: |
-          # On fork PRs, the app token is unavailable (secrets aren't exposed).
-          # Fail with a clear message — the check will pass once a team member
-          # approves, which triggers pull_request_review in the base repo context.
-          if [ -z "$GH_TOKEN" ]; then
-            echo "⏳ Waiting for approval from a member of ${ALLOWED_APPROVER_TEAM}."
-            echo "(App token unavailable — this is expected for fork PRs.)"
-            exit 1
+          # On fork PRs the app token is unavailable (secrets aren't exposed).
+          # Set a pending status — the check will pass once a team member approves,
+          # which triggers pull_request_review in the base repo context with secrets.
+          if [ -z "$APP_TOKEN" ]; then
+            echo "App token unavailable (expected for fork PRs)."
+            gh api "repos/${REPO}/statuses/${HEAD_SHA}" \
+              -f state=pending \
+              -f context="${STATUS_CONTEXT}" \
+              -f description="Awaiting approval from ${ALLOWED_APPROVER_TEAM}"
+            exit 0
           fi
 
-          # Use `gh` CLI to see who approved the PR
+          # Use app token to query team membership (requires org members:read)
           REVIEWS=$(gh pr view "$PR_NUMBER" --json reviews -q '.reviews[] | select(.state=="APPROVED") | .author.login')
 
-          # Get team members from the allowed approver team
-          # Convert "org/team-slug" format to API path "/orgs/org/teams/team-slug/members"
           ORG=$(echo "${ALLOWED_APPROVER_TEAM}" | cut -d'/' -f1)
           TEAM_SLUG=$(echo "${ALLOWED_APPROVER_TEAM}" | cut -d'/' -f2)
-          TEAM_MEMBERS=$(gh api "/orgs/${ORG}/teams/${TEAM_SLUG}/members" -q '.[].login')
+          TEAM_MEMBERS=$(GH_TOKEN="$APP_TOKEN" gh api "/orgs/${ORG}/teams/${TEAM_SLUG}/members" -q '.[].login')
 
           APPROVED=false
-          while IFS= read -r approver; do
-            # Skip empty lines (edge case when no approvals exist)
-            [ -z "$approver" ] && continue
-            if echo "$TEAM_MEMBERS" | grep -qx "$approver"; then
-              echo "✅ Approved by @$approver (member of ${ALLOWED_APPROVER_TEAM}). This PR can be merged to main."
+          APPROVER=""
+          while IFS= read -r reviewer; do
+            [ -z "$reviewer" ] && continue
+            if echo "$TEAM_MEMBERS" | grep -qx "$reviewer"; then
               APPROVED=true
+              APPROVER="$reviewer"
               break
             fi
           done <<< "$REVIEWS"
 
-          if [ "$APPROVED" = false ]; then
-            echo "❌ CRITICAL: Modifications to sensitive AI config files require a manual review and approval from a member of the ${ALLOWED_APPROVER_TEAM} team."
-            exit 1
+          if [ "$APPROVED" = true ]; then
+            echo "Approved by @$APPROVER (member of ${ALLOWED_APPROVER_TEAM})."
+            gh api "repos/${REPO}/statuses/${HEAD_SHA}" \
+              -f state=success \
+              -f context="${STATUS_CONTEXT}" \
+              -f description="Approved by @${APPROVER}"
+          else
+            echo "No approval from ${ALLOWED_APPROVER_TEAM} yet."
+            gh api "repos/${REPO}/statuses/${HEAD_SHA}" \
+              -f state=failure \
+              -f context="${STATUS_CONTEXT}" \
+              -f description="Requires approval from ${ALLOWED_APPROVER_TEAM}"
           fi

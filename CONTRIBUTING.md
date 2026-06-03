@@ -170,6 +170,9 @@ Smoke tests run Playwright in a container, so no local browser installation is n
 
 #### Integration tests
 
+> [!IMPORTANT]
+> PRs that modify files in `modules/` (views, components, server routes, server logic) **require** corresponding integration test updates. This is enforced during code review. See [`.github/instructions/review.instructions.md`](.github/instructions/review.instructions.md) for the full policy and exceptions.
+
 Integration tests are run using **Playwright**. They validate that:
 1. Modules are visible _and_ clickable from the sidebar
 1. Modules load in Org Pulse when clicked
