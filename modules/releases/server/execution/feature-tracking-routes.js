@@ -515,9 +515,12 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
           for (const [key, date] of schedEntries) {
             const normKey = normalizeVersionName(key)
             freezeDates.byProduct[normKey] = date
-            if (!freezeDates.earliest || date < freezeDates.earliest) {
-              freezeDates.earliest = date
-            }
+          }
+          // Recalculate earliest from final merged dates — unconditional
+          // overrides may have replaced the entry that was previously earliest
+          freezeDates.earliest = null
+          for (const d of Object.values(freezeDates.byProduct)) {
+            if (!freezeDates.earliest || d < freezeDates.earliest) freezeDates.earliest = d
           }
         } else {
           scheduleSource = 'cache-only (schedule returned empty)'
