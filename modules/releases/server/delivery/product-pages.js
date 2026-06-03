@@ -570,19 +570,23 @@ async function fetchAllProducts(config) {
  * @returns {Promise<{ byProduct: Object<string,string>, earliest: string|null }>}
  */
 async function fetchFeatureFreezeDatesFromSchedule(portfolioVersion, productShortnames, config) {
+  const version = Array.isArray(portfolioVersion) ? portfolioVersion[0] : portfolioVersion
+  const versionStr = String(version || '')
+  if (!versionStr) return { byProduct: {}, earliest: null }
+
   const token = await getProductPagesToken(config)
   if (!token) return { byProduct: {}, earliest: null }
 
   const baseUrl = (config.productPagesBaseUrl || 'https://productpages.redhat.com').replace(/\/+$/, '')
 
-  const eaMatch = portfolioVersion.match(/\b(EA\d?)\b/i)
+  const eaMatch = versionStr.match(/\b(EA\d?)\b/i)
   const eaTag = eaMatch ? eaMatch[1].toUpperCase() : null
-  let baseVersion = portfolioVersion
+  let baseVersion = versionStr
   if (eaMatch) {
-    baseVersion = portfolioVersion.slice(0, eaMatch.index).replace(/[\s._-]+$/, '') +
-      portfolioVersion.slice(eaMatch.index + eaMatch[0].length).replace(/^[\s._-]+/, '')
+    baseVersion = versionStr.slice(0, eaMatch.index).replace(/[\s._-]+$/, '') +
+      versionStr.slice(eaMatch.index + eaMatch[0].length).replace(/^[\s._-]+/, '')
   }
-  baseVersion = baseVersion.replace(/^[\s.]+|[\s.]+$/g, '')
+  baseVersion = baseVersion.replace(/^[\s.]+/, '').replace(/[\s.]+$/, '')
 
   const byProduct = {}
   let earliest = null
