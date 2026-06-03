@@ -498,24 +498,24 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
       const productVersions = await resolveProductVersionsFromJira(version, jiraRequest)
       const freezeDates = getFeatureFreezeDatesFromCache(version, storage.readFromStorage)
 
-      if (!freezeDates.earliest) {
-        try {
-          const ppConfig = {
-            productPagesBaseUrl: process.env.PRODUCT_PAGES_BASE_URL || 'https://productpages.redhat.com'
-          }
-          const scheduleDates = await fetchFeatureFreezeDatesFromSchedule(version, DEFAULT_PRODUCTS, ppConfig)
-          for (const [key, date] of Object.entries(scheduleDates.byProduct)) {
-            const normKey = normalizeVersionName(key)
-            if (!freezeDates.byProduct[normKey] || date < freezeDates.byProduct[normKey]) {
-              freezeDates.byProduct[normKey] = date
-            }
-            if (!freezeDates.earliest || date < freezeDates.earliest) {
-              freezeDates.earliest = date
-            }
-          }
-        } catch {
-          // PP schedule API not available — continue without freeze dates
+      // Always try the schedule API — it returns EA-specific freeze dates
+      // that the releases list endpoint and cache often lack.
+      try {
+        const ppConfig = {
+          productPagesBaseUrl: process.env.PRODUCT_PAGES_BASE_URL || 'https://productpages.redhat.com'
         }
+        const scheduleDates = await fetchFeatureFreezeDatesFromSchedule(version, DEFAULT_PRODUCTS, ppConfig)
+        for (const [key, date] of Object.entries(scheduleDates.byProduct)) {
+          const normKey = normalizeVersionName(key)
+          if (!freezeDates.byProduct[normKey] || date < freezeDates.byProduct[normKey]) {
+            freezeDates.byProduct[normKey] = date
+          }
+          if (!freezeDates.earliest || date < freezeDates.earliest) {
+            freezeDates.earliest = date
+          }
+        }
+      } catch {
+        // PP schedule API not available — fall back to cache dates
       }
 
       const groups = []
