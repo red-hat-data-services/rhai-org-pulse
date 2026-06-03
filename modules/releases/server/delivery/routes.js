@@ -127,6 +127,23 @@ function extractVersionNamesFromField(fields, fieldId) {
   return n ? [n] : []
 }
 
+/**
+ * Build regex patterns for phase-aware version matching.
+ * Match base version OR phase-specific version, but NOT other phases or z-stream.
+ * Examples for "3.4 EA1":
+ *   MATCH: rhoai-3.4, rhoai-3.4.EA1, RHAII-3.4 EA1
+ *   NO MATCH: rhoai-3.4.EA2, rhoai-3.4.1, RHAII-3.4 EA2
+ */
+function buildPhaseVersionPatterns(version, phase) {
+  const escaped = version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const escapedPhase = phase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  return [
+    new RegExp(`-${escaped}$`),                    // Pattern 1: base version (e.g., "rhoai-3.4")
+    new RegExp(`-${escaped}\\.${escapedPhase}$`),  // Pattern 2: dot-separated phase (e.g., "rhoai-3.4.EA1")
+    new RegExp(`-${escaped}\\s+${escapedPhase}$`)  // Pattern 3: space-separated phase (e.g., "RHAII-3.4 EA1")
+  ]
+}
+
 function extractFixVersions(issue) {
   const versions = extractVersionNamesFromField(issue.fields || {}, FIX_VERSION_FIELD_KEY)
   // Also check Target Version custom field (customfield_10855) - used by RHAISTRAT Features
@@ -1334,18 +1351,7 @@ module.exports = function registerRoutes(router, context) {
       )
 
       // Filter to features matching this version + phase
-      // Match base version OR phase-specific version, but NOT other phases or z-stream
-      // Examples for "3.4 EA1":
-      //   MATCH: rhoai-3.4, rhoai-3.4.EA1, RHAII-3.4 EA1
-      //   NO MATCH: rhoai-3.4.EA2, rhoai-3.4.1, RHAII-3.4 EA2
-      const escaped = version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-      const escapedPhase = phase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-      // Pattern 1: base version (e.g., "rhoai-3.4")
-      const basePattern = new RegExp(`-${escaped}$`)
-      // Pattern 2: dot-separated phase (e.g., "rhoai-3.4.EA1")
-      const dotPhasePattern = new RegExp(`-${escaped}\\.${escapedPhase}$`)
-      // Pattern 3: space-separated phase (e.g., "RHAII-3.4 EA1")
-      const spacePhasePattern = new RegExp(`-${escaped}\\s+${escapedPhase}$`)
+      const [basePattern, dotPhasePattern, spacePhasePattern] = buildPhaseVersionPatterns(version, phase)
 
       const deliveryIssues = []
       const seenKeys = new Set()
@@ -1623,18 +1629,7 @@ module.exports = function registerRoutes(router, context) {
       console.log(`[releases/delivery] Found ${allFeatures.length} total features`)
 
       // Filter to features matching this version + phase (via Target Version field cf[10855])
-      // Match base version OR phase-specific version, but NOT other phases or z-stream
-      // Examples for "3.4 EA1":
-      //   MATCH: rhoai-3.4, rhoai-3.4.EA1, RHAII-3.4 EA1
-      //   NO MATCH: rhoai-3.4.EA2, rhoai-3.4.1, RHAII-3.4 EA2
-      const escaped = version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-      const escapedPhase = phase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-      // Pattern 1: base version (e.g., "rhoai-3.4")
-      const basePattern = new RegExp(`-${escaped}$`)
-      // Pattern 2: dot-separated phase (e.g., "rhoai-3.4.EA1")
-      const dotPhasePattern = new RegExp(`-${escaped}\\.${escapedPhase}$`)
-      // Pattern 3: space-separated phase (e.g., "RHAII-3.4 EA1")
-      const spacePhasePattern = new RegExp(`-${escaped}\\s+${escapedPhase}$`)
+      const [basePattern, dotPhasePattern, spacePhasePattern] = buildPhaseVersionPatterns(version, phase)
 
       const features = []
       const seenKeys = new Set()
