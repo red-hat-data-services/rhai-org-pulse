@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useFeatureTracking } from '../composables/useFeatureTracking.js'
 import FeatureTrackingTable from '../components/FeatureTrackingTable.vue'
 
@@ -16,6 +16,7 @@ const {
 const selectedVersion = ref(null)
 const refreshing = ref(false)
 const tableRef = ref(null)
+const activeFilter = ref(null)
 
 const portfolioVersions = computed(() => {
   return (versions.value || []).map(v => v.version)
@@ -71,6 +72,34 @@ const blockedCount = computed(() => {
   return count
 })
 
+function setFilter(type) {
+  if (type === null || activeFilter.value === type) {
+    activeFilter.value = null
+  } else {
+    activeFilter.value = type
+    nextTick(() => {
+      if (tableRef.value) tableRef.value.expandAll()
+    })
+  }
+}
+
+const filteredGroups = computed(() => {
+  if (!activeFilter.value) return groups.value
+  return groups.value.map(g => {
+    const filtered = (g.features || []).filter(f => {
+      if (activeFilter.value === 'added') return f.scopeChange === 'added'
+      if (activeFilter.value === 'dropped') return f.scopeChange === 'dropped'
+      if (activeFilter.value === 'blocked') return f.isBlocked && f.scopeChange !== 'dropped'
+      return true
+    })
+    return {
+      ...g,
+      features: filtered,
+      featureCount: filtered.filter(f => f.scopeChange !== 'dropped').length
+    }
+  }).filter(g => g.features.length > 0)
+})
+
 function formatDate(dateStr) {
   if (!dateStr) return ''
   var d = new Date(dateStr + (dateStr.includes('T') ? '' : 'T00:00:00'))
@@ -100,6 +129,7 @@ function handleCollapseAll() {
 }
 
 watch(selectedVersion, async (v) => {
+  activeFilter.value = null
   if (v) await loadTrackingData(v)
 })
 
@@ -176,8 +206,14 @@ onMounted(async () => {
 
     <!-- Summary cards -->
     <div v-if="currentData && !loading" class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-5">
-      <!-- Total features -->
-      <div class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3.5 group hover:shadow-md transition-shadow">
+      <!-- Total features (click = clear filter) -->
+      <div
+        @click="setFilter(null)"
+        class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border px-4 py-3.5 cursor-pointer transition-all duration-150 hover:shadow-md"
+        :class="!activeFilter
+          ? 'border-indigo-400 dark:border-indigo-500 ring-2 ring-indigo-200 dark:ring-indigo-800 shadow-sm'
+          : 'border-gray-200 dark:border-gray-700 hover:border-indigo-300 dark:hover:border-indigo-600'"
+      >
         <div class="absolute top-0 left-0 w-1 h-full bg-indigo-500 rounded-l-xl" />
         <div class="flex items-center gap-2 mb-1.5">
           <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-indigo-100 dark:bg-indigo-900/40">
@@ -186,6 +222,7 @@ onMounted(async () => {
             </svg>
           </span>
           <span class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Features</span>
+          <span v-if="activeFilter" class="ml-auto text-[10px] text-indigo-500 dark:text-indigo-400 font-medium">Show all</span>
         </div>
         <div class="text-2xl font-bold text-gray-900 dark:text-gray-100 ml-7">{{ totalFeatures }}</div>
       </div>
@@ -207,7 +244,18 @@ onMounted(async () => {
       </div>
 
       <!-- Late additions -->
-      <div class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3.5">
+      <div
+        @click="addedCount > 0 ? setFilter('added') : undefined"
+        class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border px-4 py-3.5 transition-all duration-150"
+        :class="[
+          activeFilter === 'added'
+            ? 'border-blue-400 dark:border-blue-500 ring-2 ring-blue-200 dark:ring-blue-800 shadow-sm'
+            : 'border-gray-200 dark:border-gray-700',
+          addedCount > 0
+            ? 'cursor-pointer hover:shadow-md hover:border-blue-300 dark:hover:border-blue-600'
+            : ''
+        ]"
+      >
         <div class="absolute top-0 left-0 w-1 h-full bg-blue-500 rounded-l-xl" />
         <div class="flex items-center gap-2 mb-1.5">
           <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-blue-100 dark:bg-blue-900/40">
@@ -216,12 +264,26 @@ onMounted(async () => {
             </svg>
           </span>
           <span class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Late Added</span>
+          <svg v-if="activeFilter === 'added'" class="ml-auto w-3.5 h-3.5 text-blue-500 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </div>
         <div class="text-2xl font-bold ml-7" :class="addedCount > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-gray-900 dark:text-gray-100'">{{ addedCount }}</div>
       </div>
 
       <!-- Dropped -->
-      <div class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3.5">
+      <div
+        @click="droppedCount > 0 ? setFilter('dropped') : undefined"
+        class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border px-4 py-3.5 transition-all duration-150"
+        :class="[
+          activeFilter === 'dropped'
+            ? 'border-amber-400 dark:border-amber-500 ring-2 ring-amber-200 dark:ring-amber-800 shadow-sm'
+            : 'border-gray-200 dark:border-gray-700',
+          droppedCount > 0
+            ? 'cursor-pointer hover:shadow-md hover:border-amber-300 dark:hover:border-amber-600'
+            : ''
+        ]"
+      >
         <div class="absolute top-0 left-0 w-1 h-full bg-amber-500 rounded-l-xl" />
         <div class="flex items-center gap-2 mb-1.5">
           <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-amber-100 dark:bg-amber-900/40">
@@ -230,12 +292,26 @@ onMounted(async () => {
             </svg>
           </span>
           <span class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Dropped</span>
+          <svg v-if="activeFilter === 'dropped'" class="ml-auto w-3.5 h-3.5 text-amber-500 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </div>
         <div class="text-2xl font-bold ml-7" :class="droppedCount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-900 dark:text-gray-100'">{{ droppedCount }}</div>
       </div>
 
       <!-- Blocked -->
-      <div class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 px-4 py-3.5">
+      <div
+        @click="blockedCount > 0 ? setFilter('blocked') : undefined"
+        class="relative overflow-hidden bg-white dark:bg-gray-800 rounded-xl border px-4 py-3.5 transition-all duration-150"
+        :class="[
+          activeFilter === 'blocked'
+            ? 'border-red-400 dark:border-red-500 ring-2 ring-red-200 dark:ring-red-800 shadow-sm'
+            : 'border-gray-200 dark:border-gray-700',
+          blockedCount > 0
+            ? 'cursor-pointer hover:shadow-md hover:border-red-300 dark:hover:border-red-600'
+            : ''
+        ]"
+      >
         <div class="absolute top-0 left-0 w-1 h-full bg-red-500 rounded-l-xl" />
         <div class="flex items-center gap-2 mb-1.5">
           <span class="inline-flex items-center justify-center w-5 h-5 rounded bg-red-100 dark:bg-red-900/40">
@@ -244,6 +320,9 @@ onMounted(async () => {
             </svg>
           </span>
           <span class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Blocked</span>
+          <svg v-if="activeFilter === 'blocked'" class="ml-auto w-3.5 h-3.5 text-red-500 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </div>
         <div class="text-2xl font-bold ml-7" :class="blockedCount > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'">{{ blockedCount }}</div>
       </div>
@@ -283,13 +362,37 @@ onMounted(async () => {
       <p class="text-xs mt-1">Use the Refresh button to fetch data from Jira.</p>
     </div>
 
-    <!-- Data table -->
-    <FeatureTrackingTable
-      v-else-if="currentData"
-      ref="tableRef"
-      :groups="groups"
-      :portfolioVersion="selectedVersion"
-      :featureFreezeDate="featureFreezeDate"
-    />
+    <!-- Data table (with optional filter indicator) -->
+    <template v-else-if="currentData">
+      <div
+        v-if="activeFilter"
+        class="mb-3 flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium"
+        :class="{
+          'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300': activeFilter === 'added',
+          'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300': activeFilter === 'dropped',
+          'bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300': activeFilter === 'blocked'
+        }"
+      >
+        <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+        </svg>
+        <span>Showing {{ activeFilter === 'added' ? 'late added' : activeFilter }} features only</span>
+        <button
+          @click="setFilter(null)"
+          class="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold hover:bg-white/50 dark:hover:bg-gray-800/50 transition-colors"
+        >
+          Clear filter
+          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <FeatureTrackingTable
+        ref="tableRef"
+        :groups="filteredGroups"
+        :portfolioVersion="selectedVersion"
+        :featureFreezeDate="featureFreezeDate"
+      />
+    </template>
   </div>
 </template>
