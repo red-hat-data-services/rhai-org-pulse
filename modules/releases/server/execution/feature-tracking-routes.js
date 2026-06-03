@@ -474,8 +474,8 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
   // GET /tracking/data — query Jira by fixVersion
   router.get('/tracking/data', requireAuth, requireScope('releases:read'), async function (req, res) {
     const version = req.query.version
-    if (!version) {
-      return res.status(400).json({ error: 'version query parameter is required' })
+    if (typeof version !== 'string' || !version.trim()) {
+      return res.status(400).json({ error: 'version query parameter must be a non-empty string' })
     }
 
     const forceRefresh = req.query.refresh === 'true'
