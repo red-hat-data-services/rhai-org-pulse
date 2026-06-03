@@ -58,6 +58,24 @@ export function formatDuration(start, end) {
   return `${s}s`
 }
 
+export function getCommitUrl(artifact) {
+  const commit = artifact?.commit || artifact?.labels?.['git.commit'] || artifact?.labels?.['org.opencontainers.image.revision'] || artifact?.labels?.['vcs-ref']
+  if (!commit) return null
+
+  let repoUrl = null
+  if (artifact.git_repository) {
+    repoUrl = typeof artifact.git_repository === 'string' ? artifact.git_repository : artifact.git_repository?.url
+  }
+  if (!repoUrl) {
+    const labels = artifact.labels || {}
+    repoUrl = labels['git.url'] || labels['org.opencontainers.image.source'] || labels['url'] || null
+  }
+  if (!repoUrl || typeof repoUrl !== 'string') return null
+
+  const baseUrl = repoUrl.replace(/\.git$/, '').replace(/\/$/, '')
+  return `${baseUrl}/-/commit/${commit}`
+}
+
 export function getAcceleratorInfo(art) {
   const labels = art?.labels || {}
   let accel = art?.variant ? art.variant.split('-')[0] : null

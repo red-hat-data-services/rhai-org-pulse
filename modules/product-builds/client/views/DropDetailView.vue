@@ -3,7 +3,7 @@ import { onMounted, inject, ref, computed, reactive, watch } from 'vue'
 import { useDropDetail } from '../composables/useDrops'
 import { useArtifacts } from '../composables/useArtifacts'
 import { apiRequest } from '@shared/client/services/api'
-import { formatDate, envBadgeClass, archBadgeClass, konfluxStateBadgeClass, testStatusBadgeClass, testStatusLabel, formatDuration } from '../utils/formatting'
+import { formatDate, envBadgeClass, archBadgeClass, konfluxStateBadgeClass, testStatusBadgeClass, testStatusLabel, formatDuration, getCommitUrl } from '../utils/formatting'
 import DropTimeline from '../components/DropTimeline.vue'
 
 const BASE = '/modules/product-builds'
@@ -146,15 +146,6 @@ function getRegistryUrl(key) {
     return `https://catalog.redhat.com/en/search?searchType=All&q=${encodeURIComponent(path)}&p=1`
   }
   return null
-}
-
-function getCommitUrl(artifact) {
-  if (!artifact?.commit) return null
-  const labels = artifact.labels || {}
-  const repoUrl = labels['git.url'] || labels['org.opencontainers.image.source'] || labels['vcs-url']
-  if (!repoUrl) return null
-  const clean = repoUrl.replace(/\.git$/, '')
-  return `${clean}/commit/${artifact.commit}`
 }
 
 function downloadPackagesAsJson(artifactKey) {

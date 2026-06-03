@@ -1,7 +1,7 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted, onUnmounted, inject } from 'vue'
 import { useWheelBrowse, useWheelPackageSearch, useWheelFilters } from '../composables/useWheelCollections'
-import { formatDate, envBadgeClass, archBadgeClass } from '../utils/formatting'
+import { formatDate, envBadgeClass, archBadgeClass, getCommitUrl } from '../utils/formatting'
 import { apiRequest, getApiBase } from '@shared/client/services/api'
 import { impersonatingUid } from '@shared/client/state/impersonation'
 
@@ -106,24 +106,6 @@ function downloadBuildSequence(key) {
   a.download = `${safeName}-build-sequence.json`
   a.click()
   URL.revokeObjectURL(url)
-}
-
-function getCommitUrl(artifact) {
-  const commit = artifact?.commit || artifact?.labels?.['git.commit'] || artifact?.labels?.['org.opencontainers.image.revision'] || artifact?.labels?.['vcs-ref']
-  if (!commit) return null
-
-  let repoUrl = null
-  if (artifact.git_repository) {
-    repoUrl = typeof artifact.git_repository === 'string' ? artifact.git_repository : artifact.git_repository?.url
-  }
-  if (!repoUrl) {
-    const labels = artifact.labels || {}
-    repoUrl = labels['git.url'] || labels['org.opencontainers.image.source'] || labels['url'] || null
-  }
-  if (!repoUrl || typeof repoUrl !== 'string') return null
-
-  const baseUrl = repoUrl.replace(/\.git$/, '').replace(/\/$/, '')
-  return `${baseUrl}/-/commit/${commit}`
 }
 
 function formatCommit(commit) {

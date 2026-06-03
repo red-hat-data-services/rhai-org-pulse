@@ -1,7 +1,7 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted, inject, defineAsyncComponent } from 'vue'
 import { useArtifactDetail } from '../composables/useArtifacts'
-import { formatDate, envBadgeClass, archBadgeClass, konfluxStateBadgeClass, testStatusBadgeClass, testStatusLabel, formatDuration, getAcceleratorInfo } from '../utils/formatting'
+import { formatDate, envBadgeClass, archBadgeClass, konfluxStateBadgeClass, testStatusBadgeClass, testStatusLabel, formatDuration, getAcceleratorInfo, getCommitUrl } from '../utils/formatting'
 
 const DependencyGraph = defineAsyncComponent(() => import('../components/DependencyGraph.vue'))
 
@@ -165,23 +165,6 @@ function copyToClipboard(value) {
   navigator.clipboard.writeText(value)
   copiedValue.value = value
   setTimeout(() => { copiedValue.value = null }, 1500)
-}
-
-function getCommitUrl(art) {
-  const commit = art?.commit || art?.labels?.['git.commit'] || art?.labels?.['org.opencontainers.image.revision'] || art?.labels?.['vcs-ref']
-  if (!commit) return null
-
-  let repoUrl = null
-  if (art.git_repository) {
-    repoUrl = typeof art.git_repository === 'string' ? art.git_repository : art.git_repository?.url
-  }
-  if (!repoUrl) {
-    const labels = art.labels || {}
-    repoUrl = labels['git.url'] || labels['org.opencontainers.image.source'] || labels['url'] || null
-  }
-  if (!repoUrl || typeof repoUrl !== 'string') return null
-  const baseUrl = repoUrl.replace(/\.git$/, '').replace(/\/$/, '')
-  return `${baseUrl}/-/commit/${commit}`
 }
 
 function getDigestUrl(art) {
