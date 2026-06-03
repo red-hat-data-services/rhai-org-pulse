@@ -551,6 +551,121 @@ async function fetchAllProducts(config) {
   }
 }
 
+/**
+ * Fetches accurate feature freeze dates from Product Pages schedule tasks.
+ *
+ * The releases list endpoint provides only major_milestones which lack
+ * EA-specific feature freeze entries. This function fetches the detailed
+ * schedule for each release entity to find granular freeze dates per EA.
+ *
+ * Strategy per product:
+ *  1. Try to find an exact EA release (e.g. rhoai-3.5.EA1) — its schedule
+ *     should contain a generic "Feature Freeze" task.
+ *  2. Fall back to the parent release (e.g. rhelai-3.5) — its schedule
+ *     should contain EA-scoped tasks like "EA1 Feature Freeze".
+ *
+ * @param {string} portfolioVersion  e.g. "3.5.EA1", "3.5"
+ * @param {string[]} productShortnames  e.g. ['rhoai', 'rhelai', 'RHAII']
+ * @param {object}  config  { productPagesBaseUrl }
+ * @returns {Promise<{ byProduct: Object<string,string>, earliest: string|null }>}
+ */
+async function fetchFeatureFreezeDatesFromSchedule(portfolioVersion, productShortnames, config) {
+  const token = await getProductPagesToken(config)
+  if (!token) return { byProduct: {}, earliest: null }
+
+  const baseUrl = (config.productPagesBaseUrl || 'https://productpages.redhat.com').replace(/\/+$/, '')
+
+  const eaMatch = portfolioVersion.match(/\b(EA\d?)\b/i)
+  const eaTag = eaMatch ? eaMatch[1].toUpperCase() : null
+  const baseVersion = portfolioVersion.replace(/[\s._-]*EA\d?\s*/gi, '').replace(/^[\s.]+|[\s.]+$/g, '')
+
+  const byProduct = {}
+  let earliest = null
+  const headers = { Accept: 'application/json', Authorization: `Bearer ${token}` }
+
+  for (const shortname of productShortnames) {
+    try {
+      const releasesUrl = `${baseUrl}/api/v7/releases/?product__shortname=${encodeURIComponent(shortname)}`
+      const relResponse = await fetch(releasesUrl, { headers, signal: AbortSignal.timeout(15000) })
+      if (!relResponse.ok) continue
+
+      const relPayload = await relResponse.json()
+      const rows = Array.isArray(relPayload) ? relPayload : (relPayload.releases || relPayload.items || [])
+
+      // Build search candidates in priority order: exact EA release, then parent
+      const candidates = []
+      if (eaTag) {
+        candidates.push(`${shortname}-${baseVersion}.${eaTag}`)
+        candidates.push(`${shortname}-${baseVersion}${eaTag}`)
+        candidates.push(`${shortname}-${baseVersion} ${eaTag}`)
+      }
+      candidates.push(`${shortname}-${baseVersion}`)
+
+      let releaseId = null
+      let matchedShortname = null
+      let matchedExactEa = false
+
+      for (const candidate of candidates) {
+        const norm = candidate.toLowerCase().replace(/[\s._-]+/g, '')
+        for (const r of rows) {
+          if (!r.id) continue
+          const rn = (r.shortname || '').toLowerCase().replace(/[\s._-]+/g, '')
+          if (rn === norm) {
+            releaseId = r.id
+            matchedShortname = r.shortname || candidate
+            matchedExactEa = eaTag ? /ea\d?/i.test(r.shortname || '') : false
+            break
+          }
+        }
+        if (releaseId) break
+      }
+
+      if (!releaseId) continue
+
+      // Fetch schedule tasks filtered to "feature freeze"
+      const schedUrl = `${baseUrl}/api/v7/schedule-tasks/?entity_id=${releaseId}&q=${encodeURIComponent('feature freeze')}`
+      const schedResponse = await fetch(schedUrl, { headers, signal: AbortSignal.timeout(15000) })
+      if (!schedResponse.ok) continue
+
+      const schedPayload = await schedResponse.json()
+      const tasks = Array.isArray(schedPayload)
+        ? schedPayload
+        : (schedPayload.data || schedPayload.results || schedPayload.result || [])
+
+      const freezePattern = /feature[.\-_\s]*freeze/i
+      let bestDate = null
+
+      for (const task of tasks) {
+        if (task.draft) continue
+        const name = task.name || ''
+        if (!freezePattern.test(name)) continue
+
+        if (eaTag && !matchedExactEa) {
+          // Parent release: look for EA-specific freeze tasks
+          if (new RegExp(`\\b${eaTag}\\b`, 'i').test(name)) {
+            bestDate = task.date_finish || null
+            break
+          }
+        }
+        // For exact EA releases, or as a generic fallback
+        if (!bestDate && task.date_finish) {
+          bestDate = task.date_finish
+        }
+      }
+
+      if (bestDate) {
+        const key = (matchedExactEa ? matchedShortname : `${shortname}-${baseVersion}${eaTag ? '.' + eaTag : ''}`).toLowerCase()
+        byProduct[key] = bestDate
+        if (!earliest || bestDate < earliest) earliest = bestDate
+      }
+    } catch (err) {
+      console.error(`[product-pages] Schedule fetch failed for "${shortname}":`, err.message)
+    }
+  }
+
+  return { byProduct, earliest }
+}
+
 function _resetForTesting() {
   cachedToken = { token: null, expiresAt: 0 }
   pendingTokenRequest = null
@@ -561,6 +676,7 @@ module.exports = {
   init,
   getProductPagesToken,
   fetchProductsByShortname,
+  fetchFeatureFreezeDatesFromSchedule,
   fetchAllProducts,
   getAuthStatus,
   extractGaDate,

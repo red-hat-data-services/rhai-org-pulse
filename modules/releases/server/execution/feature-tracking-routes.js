@@ -12,7 +12,7 @@
  */
 
 const { readRegistry } = require('../registry')
-const { fetchProductsByShortname } = require('../delivery/product-pages')
+const { fetchFeatureFreezeDatesFromSchedule } = require('../delivery/product-pages')
 const { CUSTOM_FIELDS, transformIssue } = require('../hygiene/jira-fetch')
 
 const PP_CACHE_FILE = 'releases/delivery/product-pages-releases-cache.json'
@@ -501,26 +501,20 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
       if (!freezeDates.earliest) {
         try {
           const ppConfig = {
-            productPagesBaseUrl: process.env.PRODUCT_PAGES_BASE_URL || 'https://productpages.redhat.com',
-            productPagesProductShortnames: DEFAULT_PRODUCTS
+            productPagesBaseUrl: process.env.PRODUCT_PAGES_BASE_URL || 'https://productpages.redhat.com'
           }
-          const livePPReleases = await fetchProductsByShortname(ppConfig.productPagesProductShortnames, ppConfig)
-          const normalizedPV = normalizeVersionName(version)
-          for (let pri = 0; pri < livePPReleases.length; pri++) {
-            const pr = livePPReleases[pri]
-            const prVersion = normalizeVersionName(pr.releaseNumber || '').replace(/^[a-z]+-/, '')
-            if (prVersion === normalizedPV && pr.featureFreezeDate) {
-              const key = normalizeVersionName(pr.releaseNumber || '')
-              if (!freezeDates.byProduct[key] || pr.featureFreezeDate < freezeDates.byProduct[key]) {
-                freezeDates.byProduct[key] = pr.featureFreezeDate
-              }
-              if (!freezeDates.earliest || pr.featureFreezeDate < freezeDates.earliest) {
-                freezeDates.earliest = pr.featureFreezeDate
-              }
+          const scheduleDates = await fetchFeatureFreezeDatesFromSchedule(version, DEFAULT_PRODUCTS, ppConfig)
+          for (const [key, date] of Object.entries(scheduleDates.byProduct)) {
+            const normKey = normalizeVersionName(key)
+            if (!freezeDates.byProduct[normKey] || date < freezeDates.byProduct[normKey]) {
+              freezeDates.byProduct[normKey] = date
+            }
+            if (!freezeDates.earliest || date < freezeDates.earliest) {
+              freezeDates.earliest = date
             }
           }
         } catch {
-          // PP API not available — continue without freeze dates
+          // PP schedule API not available — continue without freeze dates
         }
       }
 
