@@ -575,7 +575,10 @@ async function fetchFeatureFreezeDatesFromSchedule(portfolioVersion, productShor
   if (!versionStr) return { byProduct: {}, earliest: null }
 
   const token = await getProductPagesToken(config)
-  if (!token) return { byProduct: {}, earliest: null }
+  if (!token) {
+    console.warn('[product-pages] fetchFeatureFreezeDatesFromSchedule: no auth token available')
+    return { byProduct: {}, earliest: null }
+  }
 
   const baseUrl = (config.productPagesBaseUrl || 'https://productpages.redhat.com').replace(/\/+$/, '')
 
@@ -595,11 +598,25 @@ async function fetchFeatureFreezeDatesFromSchedule(portfolioVersion, productShor
   for (const shortname of productShortnames) {
     try {
       const releasesUrl = `${baseUrl}/api/v7/releases/?product__shortname=${encodeURIComponent(shortname)}`
-      const relResponse = await fetch(releasesUrl, { headers, signal: AbortSignal.timeout(15000) })
-      if (!relResponse.ok) continue
+      let relResponse = await fetch(releasesUrl, { headers, signal: AbortSignal.timeout(15000) })
+
+      // Retry once on 401 — token may have expired
+      if (relResponse.status === 401) {
+        cachedToken = { token: null, expiresAt: 0 }
+        const newToken = await getProductPagesToken(config)
+        if (newToken) {
+          headers.Authorization = `Bearer ${newToken}`
+          relResponse = await fetch(releasesUrl, { headers, signal: AbortSignal.timeout(15000) })
+        }
+      }
+
+      if (!relResponse.ok) {
+        console.warn(`[product-pages] Releases API returned HTTP ${relResponse.status} for "${shortname}"`)
+        continue
+      }
 
       const relPayload = await relResponse.json()
-      const rows = Array.isArray(relPayload) ? relPayload : (relPayload.releases || relPayload.items || [])
+      const rows = Array.isArray(relPayload) ? relPayload : (relPayload.results || relPayload.releases || relPayload.items || [])
 
       // Build search candidates in priority order: exact EA release, then parent
       const candidates = []
@@ -629,12 +646,20 @@ async function fetchFeatureFreezeDatesFromSchedule(portfolioVersion, productShor
         if (releaseId) break
       }
 
-      if (!releaseId) continue
+      if (!releaseId) {
+        console.warn(`[product-pages] No release entity found for "${shortname}" matching version "${versionStr}"`)
+        continue
+      }
+
+      console.log(`[product-pages] Found release entity ${releaseId} ("${matchedShortname}") for "${shortname}", exactEa=${matchedExactEa}`)
 
       // Fetch schedule tasks filtered to "feature freeze"
       const schedUrl = `${baseUrl}/api/v7/schedule-tasks/?entity_id=${releaseId}&q=${encodeURIComponent('feature freeze')}`
       const schedResponse = await fetch(schedUrl, { headers, signal: AbortSignal.timeout(15000) })
-      if (!schedResponse.ok) continue
+      if (!schedResponse.ok) {
+        console.warn(`[product-pages] Schedule tasks API returned HTTP ${schedResponse.status} for entity ${releaseId}`)
+        continue
+      }
 
       const schedPayload = await schedResponse.json()
       const tasks = Array.isArray(schedPayload)
@@ -672,6 +697,12 @@ async function fetchFeatureFreezeDatesFromSchedule(portfolioVersion, productShor
         const key = (matchedExactEa ? matchedShortname : `${shortname}-${baseVersion}${eaTag ? '.' + eaTag : ''}`).toLowerCase()
         byProduct[key] = bestDate
         if (!earliest || bestDate < earliest) earliest = bestDate
+        console.log(`[product-pages] Freeze date for "${key}": ${bestDate}`)
+      } else {
+        console.warn(`[product-pages] No "feature freeze" task found in ${tasks.length} schedule tasks for entity ${releaseId} ("${matchedShortname}")`)
+        if (tasks.length > 0) {
+          console.warn(`[product-pages] Task names: ${tasks.slice(0, 5).map(t => t.name).join(', ')}`)
+        }
       }
     } catch (err) {
       console.error(`[product-pages] Schedule fetch failed for "${shortname}":`, err.message)

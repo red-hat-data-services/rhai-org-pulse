@@ -497,25 +497,35 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
 
       const productVersions = await resolveProductVersionsFromJira(version, jiraRequest)
       const freezeDates = getFeatureFreezeDatesFromCache(version, storage.readFromStorage)
+      const cacheDates = Object.assign({}, freezeDates.byProduct)
 
       // Always try the schedule API — it returns EA-specific freeze dates
       // that the releases list endpoint and cache often lack.
+      // Schedule API dates unconditionally override cache dates (more granular).
+      let scheduleSource = 'none'
       try {
         const ppConfig = {
           productPagesBaseUrl: process.env.PRODUCT_PAGES_BASE_URL || 'https://productpages.redhat.com'
         }
         const scheduleDates = await fetchFeatureFreezeDatesFromSchedule(version, DEFAULT_PRODUCTS, ppConfig)
-        for (const [key, date] of Object.entries(scheduleDates.byProduct)) {
-          const normKey = normalizeVersionName(key)
-          if (!freezeDates.byProduct[normKey] || date < freezeDates.byProduct[normKey]) {
+        const schedEntries = Object.entries(scheduleDates.byProduct)
+        if (schedEntries.length > 0) {
+          scheduleSource = 'schedule-api'
+          console.log('[feature-tracking] Schedule API returned freeze dates:', JSON.stringify(scheduleDates.byProduct))
+          for (const [key, date] of schedEntries) {
+            const normKey = normalizeVersionName(key)
             freezeDates.byProduct[normKey] = date
+            if (!freezeDates.earliest || date < freezeDates.earliest) {
+              freezeDates.earliest = date
+            }
           }
-          if (!freezeDates.earliest || date < freezeDates.earliest) {
-            freezeDates.earliest = date
-          }
+        } else {
+          scheduleSource = 'cache-only (schedule returned empty)'
+          console.warn('[feature-tracking] Schedule API returned no freeze dates for version:', version)
         }
-      } catch {
-        // PP schedule API not available — fall back to cache dates
+      } catch (schedErr) {
+        scheduleSource = 'cache-only (' + schedErr.message + ')'
+        console.error('[feature-tracking] Schedule API failed for version:', version, schedErr.message)
       }
 
       const groups = []
@@ -577,7 +587,10 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
         portfolioVersion: version,
         featureFreezeDate: freezeDates.earliest,
         fetchedAt: new Date().toISOString(),
-        groups: groups
+        groups: groups,
+        _freezeDateSource: scheduleSource,
+        _freezeDatesCache: cacheDates,
+        _freezeDatesFinal: Object.assign({}, freezeDates.byProduct)
       }
 
       storage.writeToStorage(cacheKey(version), responseData)
