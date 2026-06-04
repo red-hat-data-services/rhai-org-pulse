@@ -14,6 +14,11 @@ const REGISTRY_FILE = 'releases/registry.json';
 const SCHEMA_VERSION = 1;
 
 const VALID_STATES = ['active', 'archived'];
+
+function stripZStream(value) {
+  if (!value) return value
+  return String(value).replace(/\.z\b/gi, '')
+}
 // Fields controlled by Product Pages — cannot be edited locally on PP-sourced releases
 const PP_MANAGED_FIELDS = ['displayName', 'productPagesShortname', 'productPagesVersion', 'milestones'];
 
@@ -63,8 +68,8 @@ function validateRelease(release) {
 function normalizeRelease(input) {
   const now = new Date().toISOString();
   return {
-    id: input.id.trim().toLowerCase(),
-    displayName: input.displayName.trim(),
+    id: stripZStream(input.id.trim()).toLowerCase(),
+    displayName: stripZStream(input.displayName.trim()),
     fixVersions: Array.isArray(input.fixVersions) ? input.fixVersions : [],
     productPagesShortname: input.productPagesShortname || null,
     productPagesVersion: input.productPagesVersion || null,
@@ -221,13 +226,13 @@ async function runRegistrySync(storage, options) {
     const releaseNumber = ppRelease.releaseNumber || '';
     if (!releaseNumber) continue;
 
-    const id = releaseNumber.toLowerCase().replace(/\s+/g, '-');
+    const id = stripZStream(releaseNumber).toLowerCase().replace(/\s+/g, '-');
     if (!/^[a-z0-9][a-z0-9._-]*$/.test(id)) continue;
 
     discoveredIds.add(id);
     discovered.push({
       id,
-      displayName: releaseNumber,
+      displayName: stripZStream(releaseNumber),
       productName: ppRelease.productName,
       dueDate: ppRelease.dueDate,
       codeFreezeDate: ppRelease.codeFreezeDate
@@ -239,7 +244,7 @@ async function runRegistrySync(storage, options) {
       if (existing.state === 'archived') continue;
 
       if (existing.source === 'product-pages') {
-        existing.displayName = releaseNumber;
+        existing.displayName = stripZStream(releaseNumber);
         existing.productPagesShortname = releaseNumber.split('-')[0] || existing.productPagesShortname;
         existing.productPagesVersion = releaseNumber;
         existing.milestones = {
