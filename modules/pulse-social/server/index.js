@@ -71,15 +71,16 @@ module.exports = function registerRoutes(router, context) {
    */
   router.get('/posts', ...readAuth, function(req, res) {
     try {
+      const currentUserUid = req.userUid || req.userEmail
       const result = listPosts({
         before: req.query.before,
         limit: req.query.limit,
         label: req.query.label,
         team: req.query.team,
-        author: req.query.author,
+        author: req.query.mine === 'true' ? currentUserUid : req.query.author,
         mentioning: req.query.mentioning,
         search: req.query.search,
-        currentUserUid: req.userUid || req.userEmail
+        currentUserUid
       })
       res.json(result)
     } catch (err) {

@@ -116,8 +116,7 @@ async function loadPosts(append = false) {
   error.value = null
 
   try {
-    const uid = user.value?.uid || user.value?.email || ''
-    const params = new URLSearchParams({ author: uid })
+    const params = new URLSearchParams({ mine: 'true' })
     if (append && nextCursor.value) params.set('before', nextCursor.value)
 
     const data = await apiRequest(`${API_BASE}/posts?${params}`)
