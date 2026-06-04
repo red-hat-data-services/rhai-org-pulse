@@ -9,6 +9,7 @@ const {
   classifyFeatures,
   buildExport,
   DEFAULT_RELEASES,
+  jqlSafePattern,
 } = require('../../../server/tv-fv-delta/routes');
 
 // ---------------------------------------------------------------------------
@@ -400,5 +401,112 @@ describe('buildExport', () => {
 describe('DEFAULT_RELEASES', () => {
   it('contains EA1, EA2, and GA in that order', () => {
     expect(DEFAULT_RELEASES).toEqual(['rhoai-3.5.EA1', 'rhoai-3.5.EA2', 'rhoai-3.5']);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// jqlSafePattern — version name validation
+// ---------------------------------------------------------------------------
+
+describe('jqlSafePattern', () => {
+  it('accepts standard rhoai version names', () => {
+    expect(jqlSafePattern.test('rhoai-3.5')).toBe(true);
+    expect(jqlSafePattern.test('rhoai-3.5.EA1')).toBe(true);
+    expect(jqlSafePattern.test('rhoai-3.5.EA2')).toBe(true);
+    expect(jqlSafePattern.test('rhelai-3.5')).toBe(true);
+  });
+
+  it('accepts version names with spaces (e.g. RHAII-3.5 EA1)', () => {
+    expect(jqlSafePattern.test('RHAII-3.5 EA1')).toBe(true);
+    expect(jqlSafePattern.test('RHAII-3.5 EA2')).toBe(true);
+    expect(jqlSafePattern.test('Some Product 2.0')).toBe(true);
+  });
+
+  it('accepts underscores', () => {
+    expect(jqlSafePattern.test('RHOAI_3_5')).toBe(true);
+  });
+
+  it('rejects JQL injection attempts', () => {
+    expect(jqlSafePattern.test('rhoai-3.5" OR 1=1--')).toBe(false);
+    expect(jqlSafePattern.test('rhoai-3.5; DROP TABLE')).toBe(false);
+    expect(jqlSafePattern.test('rhoai-3.5\' OR')).toBe(false);
+    expect(jqlSafePattern.test('rhoai-3.5)')).toBe(false);
+    expect(jqlSafePattern.test('(rhoai-3.5')).toBe(false);
+  });
+
+  it('rejects empty strings', () => {
+    expect(jqlSafePattern.test('')).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// RHAII version handling (space-separated milestone names)
+// ---------------------------------------------------------------------------
+
+describe('RHAII version handling', () => {
+  it('normVer lowercases RHAII versions with spaces', () => {
+    expect(normVer('RHAII-3.5 EA1')).toBe('rhaii-3.5 ea1');
+    expect(normVer('RHAII-3.5 EA2')).toBe('rhaii-3.5 ea2');
+  });
+
+  it('parseVersions handles RHAII versions', () => {
+    const result = parseVersions('RHAII-3.5 EA1');
+    expect(result.size).toBe(1);
+    expect(result.has('rhaii-3.5 ea1')).toBe(true);
+  });
+
+  it('classifyFeatures matches RHAII releases correctly', () => {
+    const feat = {
+      key: 'RHAISTRAT-200',
+      url: '',
+      summary: 'RHAII feature',
+      status: 'In Progress',
+      target_version: 'RHAII-3.5 EA1',
+      fix_versions: 'RHAII-3.5 EA1',
+      tv_set: parseVersions('RHAII-3.5 EA1'),
+      fv_set: parseVersions('RHAII-3.5 EA1'),
+      color_status: '',
+      product_manager: '',
+      assignee: '',
+      components: [],
+      component: '',
+    };
+    const result = classifyFeatures([feat], ['RHAII-3.5 EA1']);
+    expect(result).toHaveLength(1);
+    expect(result[0].category).toBe('aligned');
+  });
+
+  it('classifyFeatures detects tv_only for RHAII releases', () => {
+    const feat = {
+      key: 'RHAISTRAT-201',
+      url: '',
+      summary: 'RHAII feature no FV',
+      status: 'New',
+      target_version: 'RHAII-3.5 EA1',
+      fix_versions: '',
+      tv_set: parseVersions('RHAII-3.5 EA1'),
+      fv_set: parseVersions(''),
+      color_status: '',
+      product_manager: '',
+      assignee: '',
+      components: [],
+      component: '',
+    };
+    const result = classifyFeatures([feat], ['RHAII-3.5 EA1']);
+    expect(result).toHaveLength(1);
+    expect(result[0].category).toBe('tv_only');
+  });
+
+  it('buildExport generates valid JQL links for RHAII releases with spaces', () => {
+    const classifications = [
+      { release: 'RHAII-3.5 EA1', category: 'aligned', key: 'X-1', url: '', summary: '', status: '', color_status: '', product_manager: '', assignee: '', team: '', components: [], component: '', target_version: '', fix_versions: '' },
+    ];
+    const result = buildExport(classifications, ['RHAII-3.5 EA1'], '2026-01-01T00:00:00Z', [], 'RHAISTRAT');
+    const summary = result.executive_summary[0];
+    expect(summary.release).toBe('RHAII-3.5 EA1');
+    expect(summary.total).toBe(1);
+    // JQL links should contain the quoted release name
+    const totalJql = decodeURIComponent(summary.total_jql);
+    expect(totalJql).toContain('"RHAII-3.5 EA1"');
   });
 });

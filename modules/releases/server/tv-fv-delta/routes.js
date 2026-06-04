@@ -12,6 +12,10 @@ const VERSIONS_CACHE_MAX_AGE_MS = 4 * 60 * 60 * 1000 // 4 hours
 const DEFAULT_RELEASES = ['rhoai-3.5.EA1', 'rhoai-3.5.EA2', 'rhoai-3.5']
 const DEFAULT_JIRA_PROJECT = 'RHAISTRAT'
 
+// JQL-safe release name pattern — allows spaces for version names like "RHAII-3.5 EA1"
+// Injection is prevented by quoteRelease() wrapping names in double quotes for JQL
+const jqlSafePattern = /^[a-zA-Z0-9._ -]+$/
+
 // ---------------------------------------------------------------------------
 // Fetch releases from planning module (Smartsheet SSOT)
 // ---------------------------------------------------------------------------
@@ -29,8 +33,7 @@ function fetchReleasesFromPlanning(storage) {
       return { releases: DEFAULT_RELEASES, source: 'default' }
     }
 
-    const jqlSafe = /^[a-zA-Z0-9._-]+$/
-    const baseVersions = Object.keys(planningData.releases).filter(function(v) { return jqlSafe.test(v) }).sort()
+    const baseVersions = Object.keys(planningData.releases).filter(function(v) { return jqlSafePattern.test(v) }).sort()
     if (baseVersions.length === 0) {
       console.warn('[releases/tv-fv-delta] No releases configured — falling back to DEFAULT_RELEASES. Update the constant if the current release has changed.')
       return { releases: DEFAULT_RELEASES, source: 'default' }
@@ -43,9 +46,9 @@ function fetchReleasesFromPlanning(storage) {
     for (const v of baseVersions) expanded.push(v)
 
     // Filter out any expanded versions that don't pass JQL safety validation
-    const safeExpanded = expanded.filter(function(v) { return jqlSafe.test(v) })
+    const safeExpanded = expanded.filter(function(v) { return jqlSafePattern.test(v) })
     if (safeExpanded.length < expanded.length) {
-      const dropped = expanded.filter(function(v) { return !jqlSafe.test(v) })
+      const dropped = expanded.filter(function(v) { return !jqlSafePattern.test(v) })
       console.warn('[releases/tv-fv-delta] Dropped ' + dropped.length + ' expanded releases that failed JQL safety validation: ' + dropped.join(', '))
     }
 
@@ -441,6 +444,7 @@ module.exports.classifyFeatures = classifyFeatures
 module.exports.buildExport = buildExport
 module.exports.DEFAULT_RELEASES = DEFAULT_RELEASES
 module.exports.DEFAULT_JIRA_PROJECT = DEFAULT_JIRA_PROJECT
+module.exports.jqlSafePattern = jqlSafePattern
 
 function registerRoutes(router, context) {
   const storage = context.storage
@@ -452,8 +456,6 @@ function registerRoutes(router, context) {
   // Refresh state tracking
   const REFRESH_COOLDOWN_MS = 5 * 60 * 1000 // 5 minutes
   const refreshState = { running: false, lastResult: null, startedAt: null, completedAt: null }
-
-  const jqlSafePattern = /^[a-zA-Z0-9._-]+$/
 
   function triggerBackgroundRefresh(releases, force) {
     if (refreshState.running) return
@@ -519,7 +521,7 @@ function registerRoutes(router, context) {
         const age = Date.now() - new Date(cachedAt).getTime()
         if (age >= CACHE_MAX_AGE_MS) {
           const cachedReleases = (data.metadata.releases || DEFAULT_RELEASES)
-            .filter(function(r) { return typeof r === 'string' && /^[a-zA-Z0-9._-]+$/.test(r) })
+            .filter(function(r) { return typeof r === 'string' && jqlSafePattern.test(r) })
           triggerBackgroundRefresh(cachedReleases.length ? cachedReleases : DEFAULT_RELEASES)
         }
       }
@@ -584,7 +586,7 @@ function registerRoutes(router, context) {
       if (typeof releases[i] !== 'string' || !jqlSafePattern.test(releases[i])) {
         return res.status(400).json({
           error: 'Invalid release name: ' + releases[i],
-          detail: 'Release names must contain only alphanumeric characters, dots, underscores, and hyphens'
+          detail: 'Release names must contain only alphanumeric characters, dots, underscores, hyphens, and spaces'
         })
       }
     }
