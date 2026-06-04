@@ -96,14 +96,25 @@ vi.mock('@shared/client/composables/useModuleLink', () => ({
   useModuleLink: () => ({ linkTo: () => '#' })
 }))
 
+vi.mock('../../../../src/composables/useModules', () => ({
+  useModules: () => ({
+    enabledBuiltInSlugs: ref(['ai-impact', 'team-tracker'])
+  })
+}))
+
+vi.mock('../../client/services/autofix-api.js', () => ({
+  fetchAutofixData: vi.fn().mockResolvedValue({ issues: [], fetchedAt: null })
+}))
+
 // Mock chart dependencies
 vi.mock('vue-chartjs', () => ({
   Doughnut: { template: '<div></div>', props: ['data', 'options'] },
+  Bar: { template: '<div></div>', props: ['data', 'options'] },
   Line: { template: '<div></div>', props: ['data', 'options'] }
 }))
 vi.mock('chart.js', () => ({
   Chart: { register: vi.fn() },
-  ArcElement: {}, Tooltip: {}, Legend: {},
+  ArcElement: {}, Tooltip: {}, Legend: {}, BarElement: {}, BarController: {},
   CategoryScale: {}, LinearScale: {}, PointElement: {}, LineElement: {}, Filler: {}, Title: {}
 }))
 
@@ -166,11 +177,11 @@ describe('TeamRosterView', () => {
     expect(tabLabels).toContain('RFE Backlog')
   })
 
-  it('always shows all 4 tabs', async () => {
+  it('always shows all 5 tabs', async () => {
     const wrapper = mountView()
     await flushPromises()
     const tabLabels = wrapper.findAll('nav button').map(b => b.text())
-    expect(tabLabels).toHaveLength(4)
+    expect(tabLabels).toHaveLength(5)
   })
 
   it('switches tabs when tab buttons are clicked', async () => {

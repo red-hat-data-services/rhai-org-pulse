@@ -186,6 +186,44 @@ test.describe('People & Teams Views @people-teams', () => {
 });
 
 /**
+ * Team Detail — Autofix Tab
+ *
+ * Verify the Autofix tab on a team detail page loads without errors.
+ * In demo mode, the tab shows an empty state (fixture components don't
+ * overlap with autofix fixture data), which is the expected behavior.
+ */
+test.describe('People & Teams Autofix Tab @people-teams', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('should load Autofix tab on team detail page', async ({ page }) => {
+    // Navigate to a team detail page (Platform team from fixtures)
+    await page.goto('/#/team-tracker/team-detail?teamKey=achen::Platform');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Click the Autofix tab
+    const autofixTab = page.locator('nav button').filter({ hasText: 'Autofix' });
+    await expect(autofixTab).toBeVisible();
+    await autofixTab.click();
+    await page.waitForTimeout(1000);
+
+    // Verify the tab loaded — expect an empty state in demo mode
+    // (team components don't overlap with autofix fixture components)
+    const mainContentVisible = await mainContentIsVisible(page);
+    expect(mainContentVisible).toBe(true);
+
+    // Verify no JavaScript errors occurred
+    expect(page.errors).toHaveLength(0);
+  });
+});
+
+/**
  * People Directory
  *
  * Verify the People Directory view shows roster data from fixtures

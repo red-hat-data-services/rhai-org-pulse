@@ -4,7 +4,7 @@
   "defaultEnabled": true,
   "description": "Unified release lifecycle: planning, execution tracking, and delivery readiness",
   "icon": "rocket",
-  "order": 10,
+  "order": 3,
   "client": {
     "entry": "./client/index.js",
     "navItems": [
