@@ -16,9 +16,10 @@ const SCHEMA_VERSION = 1;
 const VALID_STATES = ['active', 'archived'];
 
 function stripZStream(value) {
-  if (!value) return value
-  return String(value).replace(/\.z\b/gi, '')
+  if (!value) return value;
+  return String(value).replace(/\.z\b/gi, '');
 }
+
 // Fields controlled by Product Pages — cannot be edited locally on PP-sourced releases
 const PP_MANAGED_FIELDS = ['displayName', 'productPagesShortname', 'productPagesVersion', 'milestones'];
 
@@ -448,7 +449,7 @@ function registerRegistryRoutes(router, context) {
     }
 
     const registry = readRegistry(readFromStorage);
-    const normalizedId = req.body.id.trim().toLowerCase();
+    const normalizedId = stripZStream(req.body.id.trim()).toLowerCase();
 
     if (registry.releases.some(r => r.id === normalizedId)) {
       return res.status(400).json({ error: `Release with id "${normalizedId}" already exists` });
