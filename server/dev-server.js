@@ -1924,9 +1924,20 @@ const EXPORT_RATE_MAX = 5;
 const EXPORT_RATE_WINDOW_MS = 10 * 60_000;
 const exportRateCounts = new Map();
 
+// Periodic cleanup of expired rate limit entries (every 60s)
+setInterval(function() {
+  const now = Date.now();
+  for (const [key, value] of exportRateCounts.entries()) {
+    if (now - value.windowStart >= EXPORT_RATE_WINDOW_MS) {
+      exportRateCounts.delete(key);
+    }
+  }
+}, 60_000).unref();
+
 function exportRateLimit(req, res, next) {
   const email = req.userEmail;
   const now = Date.now();
+
   const entry = exportRateCounts.get(email);
   if (!entry || now - entry.windowStart >= EXPORT_RATE_WINDOW_MS) {
     exportRateCounts.set(email, { windowStart: now, count: 1 });

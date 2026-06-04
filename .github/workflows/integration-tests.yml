@@ -46,13 +46,23 @@ jobs:
             upstream-pulse:
               - 'modules/upstream-pulse/**'
               - 'tests/integration/upstream-pulse.spec.js'
+            tv-fv-delta:
+              - 'modules/releases/server/tv-fv-delta/**'
+              - 'modules/releases/server/index.js'
+              - 'modules/releases/client/views/TvFvDeltaView.vue'
+              - 'modules/releases/client/composables/use*TvFv*'
+              - 'modules/releases/client/composables/useReleasePicker.js'
+              - 'modules/releases/client/composables/useComponentBreakdown.js'
+              - 'modules/releases/client/components/FeatureTable.vue'
+              - 'modules/releases/client/components/ClickableCount.vue'
+              - 'tests/integration/tv-fv-delta.spec.js'
 
       - name: Build module matrix
         id: build-matrix
         run: |
           # If shared test files changed, then test all modules
           if [ "${{ steps.filter.outputs.shared-test-files }}" == "true" ]; then
-            MODULES='["ai-impact", "system-health", "people-teams", "upstream-pulse"]'
+            MODULES='["ai-impact", "system-health", "people-teams", "upstream-pulse", "tv-fv-delta"]'
           else
             # Otherwise, use the modules that have direct changes
             MODULES='${{ steps.filter.outputs.changes }}'
