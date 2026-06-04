@@ -1,15 +1,18 @@
-# Stage 1: Install system deps and node_modules
+# Stage 1: Install dependencies
+# Use the same Node.js image as runtime so prebuild-install downloads
+# the correct prebuilt binary for native modules (better-sqlite3).
 FROM registry.access.redhat.com/hi/nodejs:latest AS build
 
 USER 0
 
 WORKDIR /app
 
-RUN microdnf install -y git-core ca-certificates python3 make gcc gcc-c++ && microdnf clean all
+# Install git for any git-based deps (hi/nodejs is minimal but has npm)
+# No gcc/python needed — better-sqlite3 ships prebuilt binaries for Node 26
 
 # Trust internal CA
 COPY deploy/certs/internal-root-ca.pem /etc/pki/ca-trust/source/anchors/internal-root-ca.pem
-RUN update-ca-trust
+ENV NODE_EXTRA_CA_CERTS=/etc/pki/ca-trust/source/anchors/internal-root-ca.pem
 
 # Install production dependencies only
 COPY package.json package-lock.json ./
@@ -22,16 +25,11 @@ USER 0
 
 WORKDIR /app
 
-# Copy git binary and libexec helpers from build stage
-COPY --from=build /usr/bin/git /usr/bin/git
-COPY --from=build /usr/libexec/git-core /usr/libexec/git-core
-
-# Copy CA trust bundle (internal CA baked in via update-ca-trust)
-COPY --from=build /etc/pki/ca-trust/extracted /etc/pki/ca-trust/extracted
-COPY --from=build /etc/pki/ca-trust/source/anchors/internal-root-ca.pem /etc/pki/ca-trust/source/anchors/internal-root-ca.pem
+# Copy CA trust bundle
+COPY deploy/certs/internal-root-ca.pem /etc/pki/ca-trust/source/anchors/internal-root-ca.pem
 ENV NODE_EXTRA_CA_CERTS=/etc/pki/ca-trust/source/anchors/internal-root-ca.pem
 
-# Copy node_modules from build stage
+# Copy node_modules from build stage (native modules have correct ABI)
 COPY --from=build /app/node_modules ./node_modules
 
 # Copy server code, shared modules, built-in modules, and fixtures
