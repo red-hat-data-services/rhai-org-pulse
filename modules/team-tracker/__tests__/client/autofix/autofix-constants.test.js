@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { computeTeamMetrics, buildTeamTrendData, STATE_OPTIONS } from '../../../client/components/autofix/autofix-constants.js'
 
 describe('autofix-constants', () => {
