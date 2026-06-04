@@ -47,9 +47,9 @@ oc process -f deploy/templates/backend.yaml \
 | `ROUTE_SHARD_LABEL` | *(empty)* | Route `shard` label (e.g. `internal`) |
 | `ROUTE_APPCODE_LABEL` | `HPOP-0001` | Route `paas.redhat.com/appcode` label |
 | `PVC_STORAGE_SIZE` | `1Gi` | Data volume size |
-| `BACKEND_MEMORY_REQUEST` | `128Mi` | Backend memory request |
+| `BACKEND_MEMORY_REQUEST` | `256Mi` | Backend memory request |
 | `BACKEND_MEMORY_LIMIT` | `512Mi` | Backend memory limit |
-| `BACKEND_CPU_REQUEST` | `100m` | Backend CPU request |
+| `BACKEND_CPU_REQUEST` | `250m` | Backend CPU request |
 | `BACKEND_CPU_LIMIT` | `500m` | Backend CPU limit |
 | `CRONJOB_SCHEDULE` | `0 6 * * *` | Daily sync cron schedule |
 | `CRONJOB_SUSPEND` | `false` | Set `true` to disable the CronJob (e.g. on stage) |
@@ -84,11 +84,11 @@ resources in the namespace YAML.
 
 | Secret Name | Keys | Required? | Used By |
 |-------------|------|-----------|---------|
-| `team-tracker-secrets` | `JIRA_EMAIL`, `JIRA_TOKEN` (required); `GITHUB_TOKEN`, `GITLAB_TOKEN`, `PRODUCT_PAGES_CLIENT_ID`, `PRODUCT_PAGES_CLIENT_SECRET`, `FEATURE_TRAFFIC_GITLAB_TOKEN`, `GITLAB_CEE_REDHAT_DOCS_TOKEN`, `SMARTSHEET_API_TOKEN` (optional) | Yes | Backend |
+| `jira-api-token` | `JIRA_EMAIL`, `JIRA_TOKEN` | Yes | Backend |
+| `github-token` | `GITHUB_TOKEN` | Optional | Backend |
+| `gitlab-token` | `GITLAB_TOKEN` | Optional | Backend |
 | `ipa-credentials` | `IPA_BIND_DN`, `IPA_BIND_PASSWORD` | Optional | Backend |
 | `proxy-auth-secret` | `secret` | Optional | Backend, Frontend, CronJob |
-| `aws-backup-credentials` | `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_BACKUP_BUCKET` | Optional | Backend |
-| `google-sa-key` | Google SA JSON key file | Yes | Backend (volume at `/etc/secrets`) |
 | `frontend-proxy-tls` | `tls.crt`, `tls.key` | Auto-generated | Frontend (via serving-cert annotation) |
 | `frontend-proxy-cookie` | `session_secret` | Yes | Frontend (OAuth cookie encryption) |
 

@@ -100,48 +100,24 @@ objects:
                 - name: JIRA_EMAIL
                   valueFrom:
                     secretKeyRef:
-                      name: team-tracker-secrets
+                      name: jira-api-token
                       key: JIRA_EMAIL
                 - name: JIRA_TOKEN
                   valueFrom:
                     secretKeyRef:
-                      name: team-tracker-secrets
+                      name: jira-api-token
                       key: JIRA_TOKEN
                 - name: GITHUB_TOKEN
                   valueFrom:
                     secretKeyRef:
-                      name: team-tracker-secrets
+                      name: github-token
                       key: GITHUB_TOKEN
                       optional: true
                 - name: GITLAB_TOKEN
                   valueFrom:
                     secretKeyRef:
-                      name: team-tracker-secrets
+                      name: gitlab-token
                       key: GITLAB_TOKEN
-                      optional: true
-                - name: PRODUCT_PAGES_CLIENT_ID
-                  valueFrom:
-                    secretKeyRef:
-                      name: team-tracker-secrets
-                      key: PRODUCT_PAGES_CLIENT_ID
-                      optional: true
-                - name: PRODUCT_PAGES_CLIENT_SECRET
-                  valueFrom:
-                    secretKeyRef:
-                      name: team-tracker-secrets
-                      key: PRODUCT_PAGES_CLIENT_SECRET
-                      optional: true
-                - name: FEATURE_TRAFFIC_GITLAB_TOKEN
-                  valueFrom:
-                    secretKeyRef:
-                      name: team-tracker-secrets
-                      key: FEATURE_TRAFFIC_GITLAB_TOKEN
-                      optional: true
-                - name: GITLAB_CEE_REDHAT_DOCS_TOKEN
-                  valueFrom:
-                    secretKeyRef:
-                      name: team-tracker-secrets
-                      key: GITLAB_CEE_REDHAT_DOCS_TOKEN
                       optional: true
                 - name: PROXY_AUTH_SECRET
                   valueFrom:
@@ -161,36 +137,9 @@ objects:
                       name: ipa-credentials
                       key: IPA_BIND_PASSWORD
                       optional: true
-                - name: SMARTSHEET_API_TOKEN
-                  valueFrom:
-                    secretKeyRef:
-                      name: team-tracker-secrets
-                      key: SMARTSHEET_API_TOKEN
-                      optional: true
-                - name: AWS_ACCESS_KEY_ID
-                  valueFrom:
-                    secretKeyRef:
-                      name: aws-backup-credentials
-                      key: AWS_ACCESS_KEY_ID
-                      optional: true
-                - name: AWS_SECRET_ACCESS_KEY
-                  valueFrom:
-                    secretKeyRef:
-                      name: aws-backup-credentials
-                      key: AWS_SECRET_ACCESS_KEY
-                      optional: true
-                - name: AWS_BACKUP_BUCKET
-                  valueFrom:
-                    secretKeyRef:
-                      name: aws-backup-credentials
-                      key: AWS_BACKUP_BUCKET
-                      optional: true
               volumeMounts:
                 - name: data
                   mountPath: /app/data
-                - name: google-sa-key
-                  mountPath: /etc/secrets
-                  readOnly: true
               readinessProbe:
                 httpGet:
                   path: /healthz
@@ -214,9 +163,6 @@ objects:
             - name: data
               persistentVolumeClaim:
                 claimName: team-tracker-data
-            - name: google-sa-key
-              secret:
-                secretName: google-sa-key
 
   - apiVersion: v1
     kind: Service
@@ -361,32 +307,7 @@ objects:
                         exit 1
                       fi
 
-                      # Step 3: Trigger AI Impact refresh
-                      echo "=== Triggering AI Impact refresh ==="
-                      curl -sf -X POST "$BACKEND/api/modules/ai-impact/refresh" \
-                        -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" || echo "AI Impact refresh skipped"
-
-                      # Poll until complete
-                      ATTEMPTS=0
-                      MAX_ATTEMPTS=20
-                      while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
-                        sleep 10
-                        ATTEMPTS=$((ATTEMPTS + 1))
-                        STATUS=$(curl -sf "$BACKEND/api/modules/ai-impact/refresh/status" \
-                          -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER")
-                        RUNNING=$(echo "$STATUS" | grep -oE '"running"\s*:\s*true' || true)
-                        if [ -z "$RUNNING" ]; then
-                          echo "AI Impact refresh complete after $ATTEMPTS checks"
-                          break
-                        fi
-                        echo "Still refreshing... (attempt $ATTEMPTS/$MAX_ATTEMPTS)"
-                      done
-
-                      if [ $ATTEMPTS -ge $MAX_ATTEMPTS ]; then
-                        echo "WARNING: AI Impact refresh timed out (non-fatal, continuing)"
-                      fi
-
-                      # Step 4: Trigger Allocation refresh (all teams)
+                      # Step 3: Trigger Allocation refresh (all teams)
                       echo "=== Triggering Allocation refresh ==="
                       curl -sf -X POST "$BACKEND/api/modules/team-tracker/allocation/refresh" \
                         -H "Content-Type: application/json" \
@@ -413,76 +334,11 @@ objects:
                         echo "WARNING: Allocation refresh timed out (non-fatal, continuing)"
                       fi
 
-                      # Step 4b: Sync feature labels from Jira
-                      echo "=== Triggering Feature Jira Sync ==="
-                      curl -sf -X POST "$BACKEND/api/modules/ai-impact/features/sync" \
-                        -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" || echo "Feature Jira sync skipped"
-
-                      ATTEMPTS=0
-                      MAX_ATTEMPTS=30
-                      while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
-                        sleep 10
-                        ATTEMPTS=$((ATTEMPTS + 1))
-                        STATUS=$(curl -sf "$BACKEND/api/modules/ai-impact/features/sync/status" \
-                          -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER")
-                        RUNNING=$(echo "$STATUS" | grep -oE '"running"\s*:\s*true' || true)
-                        if [ -z "$RUNNING" ]; then
-                          echo "Feature Jira sync complete after $ATTEMPTS checks"
-                          break
-                        fi
-                        echo "Still syncing... (attempt $ATTEMPTS/$MAX_ATTEMPTS)"
-                      done
-
-                      if [ $ATTEMPTS -ge $MAX_ATTEMPTS ]; then
-                        echo "WARNING: Feature Jira sync timed out (non-fatal, continuing)"
-                      fi
-
-                      # Step 4c: Generate metric snapshots (refresh current month)
+                      # Step 4: Generate metric snapshots (refresh current month)
                       echo "=== Generating metric snapshots ==="
                       curl -sf -X POST "$BACKEND/api/modules/team-tracker/snapshots/generate" \
                         -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" -H "Content-Type: application/json" \
                         -d '{"refreshCurrent":true}' || echo "WARNING: Snapshot generation failed (non-fatal)"
-
-                      # Step 5: Sync Release Registry with Product Pages
-                      echo "=== Syncing Release Registry with Product Pages ==="
-                      curl -sf -X POST "$BACKEND/api/modules/releases/registry/discover" \
-                        -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" || echo "Registry sync skipped (no PP config)"
-
-                      # Step 6: Trigger Releases Execution refresh
-                      echo "=== Triggering Releases Execution refresh ==="
-                      curl -sf -X POST "$BACKEND/api/modules/releases/execution/refresh" \
-                        -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" || echo "Releases Execution refresh skipped"
-
-                      # Step 7: Trigger Feature Hygiene refresh for all stored versions
-                      echo "=== Triggering Feature Hygiene refresh (all versions) ==="
-                      curl -sf -X POST "$BACKEND/api/modules/releases/hygiene/refresh-all" \
-                        -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" || echo "Hygiene refresh-all skipped (no data yet)"
-
-                      ATTEMPTS=0
-                      MAX_ATTEMPTS=60
-                      while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
-                        sleep 10
-                        ATTEMPTS=$((ATTEMPTS + 1))
-                        STATUS=$(curl -sf "$BACKEND/api/modules/releases/hygiene/refresh/status" \
-                          -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER")
-                        RUNNING=$(echo "$STATUS" | grep -oE '"running"\s*:\s*true' || true)
-                        if [ -z "$RUNNING" ]; then
-                          echo "Hygiene refresh complete after $ATTEMPTS checks"
-                          break
-                        fi
-                        echo "Still refreshing hygiene... (attempt $ATTEMPTS/$MAX_ATTEMPTS)"
-                      done
-
-                      if [ $ATTEMPTS -ge $MAX_ATTEMPTS ]; then
-                        echo "WARNING: Hygiene refresh timed out (non-fatal, continuing)"
-                      fi
-
-                      # Step 8: Trigger data backup to S3
-                      echo "=== Triggering data backup ==="
-                      BACKUP_RESP=$(curl -sf -X POST "$BACKEND/api/admin/backup" \
-                        -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" -H "Content-Type: application/json" \
-                        --max-time 120) || echo "WARNING: Backup failed (non-fatal)"
-                      echo "Backup response: $BACKUP_RESP"
 
                       echo "=== Sync and refresh completed successfully ==="
                   resources:
