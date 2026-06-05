@@ -25,16 +25,17 @@ RUN update-ca-trust
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
-# Stage 2: Red Hat Hardened Node.js runtime (distroless-like, minimal CVE surface)
-FROM registry.access.redhat.com/hi/nodejs:latest
+# Stage 2: Minimal runtime with only the system packages the app needs at runtime.
+# Uses ubi9-minimal (microdnf) so we can install git-core + tar properly with all
+# their shared-library dependencies — the distroless hi/nodejs image doesn't have
+# a package manager, and copying bare binaries misses transitive .so deps like libcurl.
+FROM registry.access.redhat.com/ubi9/nodejs-20-minimal
 
 USER 0
 
 WORKDIR /app
 
-# Copy git binary and libexec helpers from build stage
-COPY --from=build /usr/bin/git /usr/bin/git
-COPY --from=build /usr/libexec/git-core /usr/libexec/git-core
+RUN microdnf install -y git-core tar ca-certificates && microdnf clean all
 
 # Copy CA trust bundle (internal CA baked in via update-ca-trust)
 COPY --from=build /etc/pki/ca-trust/extracted /etc/pki/ca-trust/extracted
