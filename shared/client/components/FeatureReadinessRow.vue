@@ -189,6 +189,11 @@ const priorityDisplay = computed(() => {
       </div>
     </td>
 
+    <!-- Team -->
+    <td class="px-3 py-2.5 whitespace-nowrap">
+      <span class="text-xs text-gray-700 dark:text-gray-300">{{ feature.team || '—' }}</span>
+    </td>
+
     <!-- Rubric -->
     <td class="px-3 py-2.5">
       <RubricScoreBadge :scores="feature.scores" :show-total="false" />
@@ -258,7 +263,7 @@ const priorityDisplay = computed(() => {
     role="row"
     class="bg-amber-50/40 dark:bg-amber-900/10 border-b border-gray-100 dark:border-gray-800"
   >
-    <td colspan="17" class="px-6 py-3">
+    <td colspan="18" class="px-6 py-3">
       <p class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
         What needs to change
       </p>

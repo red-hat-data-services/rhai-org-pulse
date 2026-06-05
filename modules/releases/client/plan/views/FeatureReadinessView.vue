@@ -43,7 +43,7 @@ function matchesFilters(feature) {
   if (f.fixVersion && feature.fixVersion !== f.fixVersion) return false
   if (f.component && !(feature.components || []).includes(f.component)) return false
   if (f.priority && feature.priority !== f.priority) return false
-  if (f.team && feature.deliveryOwner !== f.team) return false
+  if (f.team && feature.team !== f.team) return false
   if (f.needsAttention && !feature.needsAttention) return false
   return true
 }
@@ -61,6 +61,7 @@ const headers = [
   { id: 'h-target',     label: 'Target Version',  scope: 'col' },
   { id: 'h-fixver',     label: 'Fix Version',     scope: 'col' },
   { id: 'h-comp',       label: 'Components',      scope: 'col' },
+  { id: 'h-team',       label: 'Team',            scope: 'col' },
   { id: 'h-rubric',     label: 'Rubric',          scope: 'col' },
   { id: 'h-rec',        label: 'Recommendation',  scope: 'col' },
   { id: 'h-status',     label: 'Status',          scope: 'col' },
