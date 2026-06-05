@@ -55,6 +55,44 @@ test.describe('Releases Module @releases', () => {
 });
 
 /**
+ * RICE Config API
+ *
+ * Verify the single-field RICE config round-trip works end-to-end:
+ * save riceScoreField → retrieve config → field is persisted.
+ * Does not require a Jira connection.
+ */
+test.describe('Releases RICE Config API @releases', () => {
+  test('saves and retrieves riceScoreField via health-admin/config', async ({ request }) => {
+    const base = '/api/modules/releases/planning'
+
+    const putRes = await request.put(`${base}/releases/health-admin/config`, {
+      data: { riceScoreField: 'customfield_10864', enableRice: true }
+    })
+    expect(putRes.ok()).toBe(true)
+    const putBody = await putRes.json()
+    expect(putBody.saved).toBe(true)
+    expect(putBody.customFieldIds.riceScoreField).toBe('customfield_10864')
+    expect(putBody.enableRice).toBe(true)
+
+    const getRes = await request.get(`${base}/releases/health-admin/config`)
+    expect(getRes.ok()).toBe(true)
+    const getBody = await getRes.json()
+    expect(getBody.customFieldIds.riceScoreField).toBe('customfield_10864')
+    expect(getBody.enableRice).toBe(true)
+  })
+
+  test('rejects riceScoreField with invalid characters', async ({ request }) => {
+    const base = '/api/modules/releases/planning'
+    const res = await request.put(`${base}/releases/health-admin/config`, {
+      data: { riceScoreField: 'bad field!' }
+    })
+    expect(res.status()).toBe(400)
+    const body = await res.json()
+    expect(body.error).toContain('Invalid riceScoreField')
+  })
+})
+
+/**
  * Active Components
  *
  * Verify each major view (aka menu item) in the Releases module loads with

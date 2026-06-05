@@ -186,7 +186,9 @@ async function runPass1(jiraRequest, fetchAllJqlResults, featureKeys, opts) {
   if (!featureKeys.length) return enrichmentMap
 
   var batches = batch(featureKeys, batchSize)
-  var fieldsStr = ENRICHMENT_FIELDS + (riceScoreField ? ',' + riceScoreField : '')
+  var fieldsList = ENRICHMENT_FIELDS.split(',')
+  if (riceScoreField) fieldsList.push(riceScoreField)
+  var fieldsStr = fieldsList.join(',')
 
   for (var bi = 0; bi < batches.length; bi++) {
     if (bi > 0) await sleep(throttleMs)

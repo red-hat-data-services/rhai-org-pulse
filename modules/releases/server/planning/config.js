@@ -29,6 +29,8 @@ const DEFAULT_CONFIG = {
   }
 }
 
+var _riceWarnedOnce = false
+
 /**
  * Auto-detect old 4-field RICE config and disable RICE scoring
  * until the admin configures the new single riceScoreField.
@@ -38,7 +40,10 @@ function migrateRiceConfig(config) {
   var ids = config.customFieldIds || {}
   var hasOldKeys = ids.riceReach || ids.riceImpact || ids.riceConfidence || ids.riceEffort
   if (hasOldKeys && !ids.riceScoreField) {
-    console.warn('[releases/planning] Old 4-field RICE config detected. RICE scoring disabled until riceScoreField is configured via Settings.')
+    if (!_riceWarnedOnce) {
+      console.warn('[releases/planning] Old 4-field RICE config detected. RICE scoring disabled until riceScoreField is configured via Settings.')
+      _riceWarnedOnce = true
+    }
     config.healthConfig = config.healthConfig || {}
     config.healthConfig.enableRice = false
   }
