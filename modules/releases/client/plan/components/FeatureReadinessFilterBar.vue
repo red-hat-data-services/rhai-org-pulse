@@ -119,7 +119,7 @@ const teams = computed(() => props.filterMeta.teams || [])
     </div>
 
     <!-- Team / Delivery Owner -->
-    <div v-if="teams.length > 0" class="flex flex-col gap-0.5">
+    <div class="flex flex-col gap-0.5">
       <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Team</label>
       <select
         :value="modelValue.team || ''"
