@@ -282,10 +282,10 @@ describe('computeDoR', function() {
   describe('enableRice = true', function() {
     var opts = { enableStratCreator: false, enableRice: true }
 
-    it('B2 passes with complete RICE', function() {
+    it('B2 passes with RICE score present', function() {
       var result = computeDoR(
         makeFeature(),
-        makeEnrichment({ rice: { reach: 10, impact: 5, confidence: 0.8, effort: 3 } }),
+        makeEnrichment({ rice: { score: 400 } }),
         opts
       )
       expect(result.blockers[1].passed).toBe(true)
@@ -298,20 +298,20 @@ describe('computeDoR', function() {
       expect(result.blockers[1].detail).toBe('missing')
     })
 
-    it('B2 fails with partial RICE (missing effort)', function() {
+    it('B2 fails with RICE object but null score', function() {
       var result = computeDoR(
         makeFeature(),
-        makeEnrichment({ rice: { reach: 10, impact: 5, confidence: 0.8, effort: null } }),
+        makeEnrichment({ rice: { score: null } }),
         opts
       )
       expect(result.blockers[1].passed).toBe(false)
       expect(result.blockers[1].detail).toBe('missing')
     })
 
-    it('B2 passes with RICE values that are zero', function() {
+    it('B2 passes with RICE score of zero', function() {
       var result = computeDoR(
         makeFeature(),
-        makeEnrichment({ rice: { reach: 0, impact: 0, confidence: 0, effort: 0 } }),
+        makeEnrichment({ rice: { score: 0 } }),
         opts
       )
       expect(result.blockers[1].passed).toBe(true)
@@ -326,7 +326,7 @@ describe('computeDoR', function() {
     it('passes when both are satisfied', function() {
       var result = computeDoR(
         makeFeature({ labels: ['strat-creator-human-sign-off'] }),
-        makeEnrichment({ rice: { reach: 10, impact: 5, confidence: 0.8, effort: 3 } }),
+        makeEnrichment({ rice: { score: 400 } }),
         opts
       )
       expect(result.passed).toBe(true)
@@ -346,7 +346,7 @@ describe('computeDoR', function() {
     it('fails when only B2 is satisfied', function() {
       var result = computeDoR(
         makeFeature({ labels: [] }),
-        makeEnrichment({ rice: { reach: 10, impact: 5, confidence: 0.8, effort: 3 } }),
+        makeEnrichment({ rice: { score: 400 } }),
         opts
       )
       expect(result.passed).toBe(false)
