@@ -1,12 +1,28 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useFeatureReadiness } from '../composables/useFeatureReadiness'
+import { useReleases } from '../composables/useReleasePlanning'
+import ReleaseSelector from '../components/ReleaseSelector.vue'
 import FeatureReadinessFilterBar from '../components/FeatureReadinessFilterBar.vue'
 import FeatureReadinessRow from '@shared/client/components/FeatureReadinessRow.vue'
 
 const jiraBaseUrl = 'https://issues.redhat.com/browse'
 
 const { pendingReview, approved, filterMeta, meta, loading, error, loadFeatureReadiness } = useFeatureReadiness()
+const { releases, loadReleases } = useReleases()
+
+const selectedVersion = ref('')
+
+watch(selectedVersion, function(newVersion) {
+  if (newVersion) loadFeatureReadiness(newVersion)
+})
+
+onMounted(async function() {
+  await loadReleases()
+  if (releases.value.length > 0) {
+    selectedVersion.value = releases.value[0].version
+  }
+})
 
 const activeTab = ref('approved')
 
@@ -62,15 +78,19 @@ function formatSyncDate(dateStr) {
   }
 }
 
-onMounted(function() {
-  loadFeatureReadiness()
-})
 </script>
 
 <template>
   <div class="space-y-0">
 
-    <!-- Filter bar -->
+    <!-- Version selector + filter bar -->
+    <div class="flex items-center gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+      <ReleaseSelector
+        v-if="releases.length > 0"
+        :releases="releases"
+        v-model="selectedVersion"
+      />
+    </div>
     <FeatureReadinessFilterBar
       :filterMeta="filterMeta"
       v-model="filters"
