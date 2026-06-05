@@ -344,31 +344,31 @@ describe('enrichFeatures', function() {
     expect(result.stats.pass1).toBe(1)
   })
 
-  it('fetches RICE from parents when enabled and configured', async function() {
-    var features = [{ key: 'T-1', status: 'In Progress', targetVersions: ['3.5'], parentKey: 'STRAT-1' }]
-    var mockFetch = vi.fn().mockImplementation(function(jiraReq, jql) {
-      if (jql.indexOf('STRAT-1') !== -1) {
-        return Promise.resolve([{
-          key: 'STRAT-1',
-          fields: { cf_reach: 1000, cf_impact: 2, cf_conf: 80, cf_effort: 4 }
-        }])
-      }
-      return Promise.resolve([{
-        key: 'T-1',
-        fields: { description: 'desc', customfield_10028: 3, issuelinks: [] }
-      }])
-    })
+  it('fetches RICE score from feature field when enabled and configured', async function() {
+    var features = [{ key: 'T-1', status: 'In Progress', targetVersions: ['3.5'] }]
+    var mockFetch = vi.fn().mockResolvedValue([{
+      key: 'T-1',
+      fields: { description: 'desc', customfield_10028: 3, issuelinks: [], customfield_10864: 1690 }
+    }])
     var result = await enrichFeatures(vi.fn(), mockFetch, features, {
       healthConfig: { enableRice: true, enrichmentThrottleMs: 0 },
-      customFieldIds: {
-        riceReach: 'cf_reach',
-        riceImpact: 'cf_impact',
-        riceConfidence: 'cf_conf',
-        riceEffort: 'cf_effort'
-      }
+      customFieldIds: { riceScoreField: 'customfield_10864' }
     })
     var enrichment = result.enrichments.get('T-1')
     expect(enrichment.rice).toBeDefined()
-    expect(enrichment.rice.reach).toBe(1000)
+    expect(enrichment.rice.score).toBe(1690)
+  })
+
+  it('adds warning when RICE enabled but riceScoreField not configured', async function() {
+    var features = [{ key: 'T-1', status: 'In Progress', targetVersions: ['3.5'] }]
+    var mockFetch = vi.fn().mockResolvedValue([{
+      key: 'T-1',
+      fields: { description: 'desc', customfield_10028: 3, issuelinks: [] }
+    }])
+    var result = await enrichFeatures(vi.fn(), mockFetch, features, {
+      healthConfig: { enableRice: true, enrichmentThrottleMs: 0 },
+      customFieldIds: {}
+    })
+    expect(result.warnings.some(function(w) { return w.includes('riceScoreField') })).toBe(true)
   })
 })

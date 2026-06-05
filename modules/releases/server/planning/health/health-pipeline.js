@@ -20,7 +20,6 @@ const { JIRA_BROWSE_URL, CLOSED_STATUSES, PLANNING_DEADLINE_OFFSET_DAYS, VALID_P
 const { enrichFeatures } = require('./jira-enrichment')
 const { computeDoR, computeDoD, derivePlanningStatus, applyBlockerEscalation, parseStratCreatorStatus } = require('./planning-gates')
 const { computeFeatureRisk } = require('./risk-engine')
-const { buildRiceResult } = require('./rice-scorer')
 const { computePriorityScores } = require('./priority-scorer')
 const smartsheetClient = require('../../../../../shared/server/smartsheet')
 
@@ -621,7 +620,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
   var prevGaFreeze = await loadPreviousGaFreeze(readFromStorage, version)
 
   // Step 3: Run Jira enrichment
-  var enrichResult = { enrichments: new Map(), riceData: new Map(), warnings: [], stats: { pass1: 0, pass2: 0, rice: 0 } }
+  var enrichResult = { enrichments: new Map(), warnings: [], stats: { pass1: 0, pass2: 0 } }
   try {
     enrichResult = await enrichFeatures(jiraRequest, fetchAllJqlResults, features, config)
     warnings = warnings.concat(enrichResult.warnings)
@@ -690,12 +689,10 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
 
     // RICE score
     var riceResult = null
-    if (enrichment && enrichment.rice) {
-      riceResult = buildRiceResult(enrichment.rice)
-      if (riceResult && riceResult.score !== null) {
-        totalRiceScore += riceResult.score
-        riceCount++
-      }
+    if (enrichment && enrichment.rice && enrichment.rice.score != null) {
+      riceResult = enrichment.rice
+      totalRiceScore += riceResult.score
+      riceCount++
     }
 
     // Build health feature entry
