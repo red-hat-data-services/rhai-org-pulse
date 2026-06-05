@@ -254,6 +254,123 @@ describe('execution routes', () => {
     })
   })
 
+  describe('ownerStatusColor derivation', () => {
+    it('derives ownerStatusColor from confidence-green label in feature detail', () => {
+      const storageWithFeature = makeStorage({
+        'releases/execution/features/TEST1-100.json': {
+          key: 'TEST1-100',
+          summary: 'Test feature',
+          labels: ['3.5-candidate', 'confidence-green']
+        }
+      })
+      const r = makeRouter()
+      registerExecutionRoutes(r, { storage: storageWithFeature, requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn() })
+
+      const handler = r._routes.get['/features/:key'].at(-1)
+      const res = makeRes()
+      handler({ params: { key: 'TEST1-100' } }, res)
+
+      expect(res._json.ownerStatusColor).toBe('Green')
+    })
+
+    it('derives ownerStatusColor from confidence-yellow label', () => {
+      const storageWithFeature = makeStorage({
+        'releases/execution/features/TEST1-101.json': {
+          key: 'TEST1-101',
+          summary: 'Test feature',
+          labels: ['confidence-yellow']
+        }
+      })
+      const r = makeRouter()
+      registerExecutionRoutes(r, { storage: storageWithFeature, requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn() })
+
+      const handler = r._routes.get['/features/:key'].at(-1)
+      const res = makeRes()
+      handler({ params: { key: 'TEST1-101' } }, res)
+
+      expect(res._json.ownerStatusColor).toBe('Yellow')
+    })
+
+    it('derives ownerStatusColor from confidence-red label', () => {
+      const storageWithFeature = makeStorage({
+        'releases/execution/features/TEST1-102.json': {
+          key: 'TEST1-102',
+          summary: 'Test feature',
+          labels: ['confidence-red']
+        }
+      })
+      const r = makeRouter()
+      registerExecutionRoutes(r, { storage: storageWithFeature, requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn() })
+
+      const handler = r._routes.get['/features/:key'].at(-1)
+      const res = makeRes()
+      handler({ params: { key: 'TEST1-102' } }, res)
+
+      expect(res._json.ownerStatusColor).toBe('Red')
+    })
+
+    it('preserves existing ownerStatusColor from pipeline data', () => {
+      const storageWithFeature = makeStorage({
+        'releases/execution/features/TEST1-103.json': {
+          key: 'TEST1-103',
+          summary: 'Test feature',
+          ownerStatusColor: 'GREEN',
+          labels: ['confidence-red']
+        }
+      })
+      const r = makeRouter()
+      registerExecutionRoutes(r, { storage: storageWithFeature, requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn() })
+
+      const handler = r._routes.get['/features/:key'].at(-1)
+      const res = makeRes()
+      handler({ params: { key: 'TEST1-103' } }, res)
+
+      expect(res._json.ownerStatusColor).toBe('GREEN')
+    })
+
+    it('falls back to colorStatus field', () => {
+      const storageWithFeature = makeStorage({
+        'releases/execution/features/TEST1-104.json': {
+          key: 'TEST1-104',
+          summary: 'Test feature',
+          colorStatus: 'Green',
+          labels: []
+        }
+      })
+      const r = makeRouter()
+      registerExecutionRoutes(r, { storage: storageWithFeature, requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn() })
+
+      const handler = r._routes.get['/features/:key'].at(-1)
+      const res = makeRes()
+      handler({ params: { key: 'TEST1-104' } }, res)
+
+      expect(res._json.ownerStatusColor).toBe('Green')
+    })
+
+    it('enriches index features with ownerStatusColor from labels', () => {
+      const storageWithIndex = makeStorage({
+        'releases/execution/index.json': {
+          fetchedAt: '2026-04-10T06:00:00Z',
+          features: [
+            { key: 'TEST1-200', summary: 'A', labels: ['confidence-green'] },
+            { key: 'TEST1-201', summary: 'B', labels: [] },
+            { key: 'TEST1-202', summary: 'C', ownerStatusColor: 'RED', labels: ['confidence-green'] }
+          ]
+        }
+      })
+      const r = makeRouter()
+      registerExecutionRoutes(r, { storage: storageWithIndex, requireAdmin: vi.fn(), requireScope: () => (req, res, next) => next(), registerDiagnostics: vi.fn() })
+
+      const handler = r._routes.get['/features'].at(-1)
+      const res = makeRes()
+      handler({ query: {} }, res)
+
+      expect(res._json.features[0].ownerStatusColor).toBe('Green')
+      expect(res._json.features[1].ownerStatusColor).toBeUndefined()
+      expect(res._json.features[2].ownerStatusColor).toBe('RED')
+    })
+  })
+
   describe('diagnostics', () => {
     it('registers diagnostics hook', () => {
       expect(context.registerDiagnostics).toHaveBeenCalledWith(expect.any(Function))

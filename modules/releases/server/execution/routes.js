@@ -23,6 +23,20 @@ function stripZStream(value) {
   return String(value).replace(/\.z\b/gi, '')
 }
 
+function deriveOwnerStatusColor(feature) {
+  if (feature.ownerStatusColor) return feature.ownerStatusColor;
+  if (feature.colorStatus) return feature.colorStatus;
+  if (Array.isArray(feature.labels)) {
+    for (var i = 0; i < feature.labels.length; i++) {
+      var lower = feature.labels[i].toLowerCase();
+      if (lower === 'confidence-green') return 'Green';
+      if (lower === 'confidence-yellow') return 'Yellow';
+      if (lower === 'confidence-red') return 'Red';
+    }
+  }
+  return null;
+}
+
 /**
  * @openapi
  * /api/modules/releases/execution/features:
@@ -147,6 +161,15 @@ module.exports = function registerExecutionRoutes(router, context) {
       });
     }
 
+    // Enrich features with derived ownerStatusColor from labels
+    for (var ei = 0; ei < index.features.length; ei++) {
+      var f = index.features[ei];
+      if (!f.ownerStatusColor) {
+        var derived = deriveOwnerStatusColor(f);
+        if (derived) f.ownerStatusColor = derived;
+      }
+    }
+
     // Optional filters
     let features = index.features;
 
@@ -202,6 +225,11 @@ module.exports = function registerExecutionRoutes(router, context) {
     const feature = readDataFile(`features/${key}.json`);
     if (!feature) {
       return res.status(404).json({ error: `Feature ${key} not found` });
+    }
+
+    if (!feature.ownerStatusColor) {
+      var derived = deriveOwnerStatusColor(feature);
+      if (derived) feature.ownerStatusColor = derived;
     }
 
     res.json(feature);
