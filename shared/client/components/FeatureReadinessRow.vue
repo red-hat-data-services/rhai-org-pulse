@@ -1,17 +1,14 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 import RubricScoreBadge from './RubricScoreBadge.vue'
 
 const props = defineProps({
   feature: { type: Object, required: true },
-  jiraBaseUrl: { type: String, default: 'https://issues.redhat.com/browse' }
+  jiraBaseUrl: { type: String, default: 'https://issues.redhat.com/browse' },
+  index: { type: Number, default: null }
 })
 
 const emit = defineEmits(['select'])
-
-const expanded = ref(false)
-
-// ── Badge helpers ─────────────────────────────────────────────────────────────
 
 function recommendationClass(rec) {
   switch (rec) {
@@ -58,35 +55,6 @@ function tierClass(tier) {
   }
 }
 
-function relativeDate(dateStr) {
-  if (!dateStr) return '—'
-  const then = new Date(dateStr)
-  if (isNaN(then.getTime())) return '—'
-  const days = Math.floor((Date.now() - then.getTime()) / 86400000)
-  if (days === 0) return 'today'
-  if (days === 1) return '1 day ago'
-  if (days < 30) return `${days} days ago`
-  const months = Math.floor(days / 30)
-  if (months === 1) return '1 month ago'
-  return `${months} months ago`
-}
-
-function blockingLabel(dim) {
-  const name = dim.dimension
-    ? dim.dimension.charAt(0).toUpperCase() + dim.dimension.slice(1)
-    : '?'
-  const score = dim.score !== undefined ? dim.score : '?'
-  const severity = dim.verdict === 'reject' ? 'critical revision' : 'needs revision'
-  return `${name} (${score}/2) — ${severity}`
-}
-
-// ── Derived values ────────────────────────────────────────────────────────────
-
-const hasExpandable = computed(() =>
-  (props.feature.blockingDimensions && props.feature.blockingDimensions.length > 0) ||
-  !!props.feature.actionRequired
-)
-
 const priorityDisplay = computed(() => {
   const score = props.feature.effectivePriorityScore
   if (score == null) return '—'
@@ -100,10 +68,15 @@ const priorityDisplay = computed(() => {
     class="border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 transition-colors cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50"
     @click="emit('select', feature)"
   >
+    <!-- Row number -->
+    <td class="px-2 py-2.5 text-center text-xs tabular-nums text-gray-400 dark:text-gray-600 select-none w-8 shrink-0">
+      {{ index != null ? index : '' }}
+    </td>
+
     <!-- Score -->
     <td class="px-3 py-2.5 whitespace-nowrap text-center">
       <span
-        class="text-xs font-semibold"
+        class="text-xs font-semibold tabular-nums"
         :class="feature.priorityScoreFallback
           ? 'text-amber-600 dark:text-amber-400'
           : 'text-gray-800 dark:text-gray-200'"
@@ -124,25 +97,11 @@ const priorityDisplay = computed(() => {
     </td>
 
     <!-- Title -->
-    <td class="px-3 py-2.5 max-w-[24rem]">
+    <td class="px-3 py-2.5 max-w-xs">
       <span
         class="text-xs text-gray-900 dark:text-gray-100 block truncate"
         :title="feature.title"
       >{{ feature.title || '—' }}</span>
-    </td>
-
-    <!-- Source RFE -->
-    <td class="px-3 py-2.5 whitespace-nowrap">
-      <a
-        v-if="feature.sourceRfe"
-        :href="`${jiraBaseUrl}/${feature.sourceRfe}`"
-        target="_blank"
-        rel="noopener noreferrer"
-        :aria-label="`Open source RFE ${feature.sourceRfe} in new tab`"
-        class="font-mono text-xs text-primary-600 dark:text-blue-400 hover:underline transition-colors"
-        @click.stop
-      >{{ feature.sourceRfe }}</a>
-      <span v-else class="text-xs text-gray-400 dark:text-gray-600">—</span>
     </td>
 
     <!-- Tier -->
@@ -165,26 +124,27 @@ const priorityDisplay = computed(() => {
 
     <!-- Target Version -->
     <td class="px-3 py-2.5 whitespace-nowrap">
-      <span class="text-xs text-gray-700 dark:text-gray-300 font-mono">{{ feature.targetRelease || '—' }}</span>
+      <span class="font-mono text-xs text-gray-700 dark:text-gray-300">{{ feature.targetRelease || '—' }}</span>
     </td>
 
     <!-- Fix Version -->
     <td class="px-3 py-2.5 whitespace-nowrap">
-      <span class="text-xs text-gray-700 dark:text-gray-300 font-mono">{{ feature.fixVersion || '—' }}</span>
+      <span class="font-mono text-xs text-gray-700 dark:text-gray-300">{{ feature.fixVersion || '—' }}</span>
     </td>
 
     <!-- Components -->
     <td class="px-3 py-2.5">
       <div class="flex flex-wrap gap-1">
         <span
-          v-for="comp in (feature.components || []).slice(0, 3)"
+          v-for="comp in (feature.components || []).slice(0, 2)"
           :key="comp"
           class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700/80 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600"
         >{{ comp }}</span>
         <span
-          v-if="(feature.components || []).length > 3"
+          v-if="(feature.components || []).length > 2"
           class="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800"
-        >+{{ feature.components.length - 3 }}</span>
+          :title="feature.components.slice(2).join(', ')"
+        >+{{ feature.components.length - 2 }}</span>
         <span v-if="!(feature.components || []).length" class="text-xs text-gray-400 dark:text-gray-600">—</span>
       </div>
     </td>
@@ -194,7 +154,7 @@ const priorityDisplay = computed(() => {
       <span class="text-xs text-gray-700 dark:text-gray-300">{{ feature.team || '—' }}</span>
     </td>
 
-    <!-- Rubric -->
+    <!-- Rubric (compact dots) -->
     <td class="px-3 py-2.5">
       <RubricScoreBadge :scores="feature.scores" :show-total="false" />
     </td>
@@ -220,16 +180,6 @@ const priorityDisplay = computed(() => {
       <span class="text-xs text-gray-700 dark:text-gray-300">{{ feature.priority || '—' }}</span>
     </td>
 
-    <!-- Approved By -->
-    <td class="px-3 py-2.5 whitespace-nowrap">
-      <span class="text-xs text-gray-700 dark:text-gray-300">{{ feature.approvedBy || '—' }}</span>
-    </td>
-
-    <!-- Approved At -->
-    <td class="px-3 py-2.5 whitespace-nowrap">
-      <span class="text-xs text-gray-500 dark:text-gray-400">{{ relativeDate(feature.approvedAt) }}</span>
-    </td>
-
     <!-- Needs Attention -->
     <td class="px-3 py-2.5 text-center">
       <span
@@ -238,52 +188,6 @@ const priorityDisplay = computed(() => {
         title="Needs attention"
         aria-label="Needs attention"
       >⚠</span>
-    </td>
-
-    <!-- Expand chevron -->
-    <td class="px-2 py-2.5 text-center w-6">
-      <button
-        v-if="hasExpandable"
-        type="button"
-        class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-transform duration-150 focus:outline-none"
-        :class="{ 'rotate-90': expanded }"
-        :aria-label="expanded ? 'Collapse details' : 'Expand details'"
-        @click.stop="expanded = !expanded"
-      >
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-        </svg>
-      </button>
-    </td>
-  </tr>
-
-  <!-- Collapsible "What needs to change" row -->
-  <tr
-    v-if="hasExpandable && expanded"
-    role="row"
-    class="bg-amber-50/40 dark:bg-amber-900/10 border-b border-gray-100 dark:border-gray-800"
-  >
-    <td colspan="18" class="px-6 py-3">
-      <p class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
-        What needs to change
-      </p>
-      <ul class="space-y-1">
-        <li
-          v-for="dim in (feature.blockingDimensions || [])"
-          :key="dim.dimension"
-          class="flex items-center gap-2 text-xs text-gray-700 dark:text-gray-300"
-        >
-          <span class="text-amber-500 dark:text-amber-400 leading-none">●</span>
-          <span>{{ blockingLabel(dim) }}</span>
-        </li>
-        <li
-          v-if="feature.actionRequired"
-          class="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400"
-        >
-          <span class="text-amber-500 dark:text-amber-400 leading-none mt-0.5">●</span>
-          <em>{{ feature.actionRequired }}</em>
-        </li>
-      </ul>
     </td>
   </tr>
 </template>

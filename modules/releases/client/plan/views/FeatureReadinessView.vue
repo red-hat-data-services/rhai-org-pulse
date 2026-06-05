@@ -5,6 +5,7 @@ import { useReleases } from '../composables/useReleasePlanning'
 import ReleaseSelector from '../components/ReleaseSelector.vue'
 import FeatureReadinessFilterBar from '../components/FeatureReadinessFilterBar.vue'
 import FeatureReadinessRow from '@shared/client/components/FeatureReadinessRow.vue'
+import FeatureReadinessDrawer from '@shared/client/components/FeatureReadinessDrawer.vue'
 
 const jiraBaseUrl = 'https://issues.redhat.com/browse'
 
@@ -25,6 +26,7 @@ onMounted(async function() {
 })
 
 const activeTab = ref('approved')
+const selectedFeature = ref(null)
 
 const filters = ref({
   outcome: null,
@@ -52,10 +54,10 @@ const filteredPending = computed(() => pendingReview.value.filter(matchesFilters
 const filteredApproved = computed(() => approved.value.filter(matchesFilters))
 
 const headers = [
-  { id: 'h-score',      label: 'Score',          scope: 'col' },
+  { id: 'h-num',        label: '#',               scope: 'col' },
+  { id: 'h-score',      label: 'Score',           scope: 'col' },
   { id: 'h-key',        label: 'Key',             scope: 'col' },
   { id: 'h-title',      label: 'Title',           scope: 'col' },
-  { id: 'h-rfe',        label: 'Source RFE',      scope: 'col' },
   { id: 'h-tier',       label: 'Tier',            scope: 'col' },
   { id: 'h-outcome',    label: 'Outcome',         scope: 'col' },
   { id: 'h-target',     label: 'Target Version',  scope: 'col' },
@@ -66,10 +68,7 @@ const headers = [
   { id: 'h-rec',        label: 'Recommendation',  scope: 'col' },
   { id: 'h-status',     label: 'Status',          scope: 'col' },
   { id: 'h-priority',   label: 'Priority',        scope: 'col' },
-  { id: 'h-by',         label: 'Approved By',     scope: 'col' },
-  { id: 'h-at',         label: 'Approved At',     scope: 'col' },
   { id: 'h-attention',  label: '',                scope: 'col' },
-  { id: 'h-expand',     label: '',                scope: 'col' }
 ]
 
 function formatSyncDate(dateStr) {
@@ -171,7 +170,7 @@ function formatSyncDate(dateStr) {
               :key="header.id"
               role="columnheader"
               :scope="header.scope"
-              class="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide whitespace-nowrap"
+              class="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide leading-tight"
             >{{ header.label }}</th>
           </tr>
         </thead>
@@ -187,10 +186,12 @@ function formatSyncDate(dateStr) {
 
           <!-- Rows -->
           <FeatureReadinessRow
-            v-for="feature in filteredPending"
+            v-for="(feature, i) in filteredPending"
             :key="feature.key"
             :feature="feature"
+            :index="i + 1"
             :jiraBaseUrl="jiraBaseUrl"
+            @select="selectedFeature = $event"
           />
 
           <!-- Empty state -->
@@ -218,7 +219,7 @@ function formatSyncDate(dateStr) {
               :key="header.id"
               role="columnheader"
               :scope="header.scope"
-              class="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide whitespace-nowrap"
+              class="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide leading-tight"
             >{{ header.label }}</th>
           </tr>
         </thead>
@@ -234,10 +235,12 @@ function formatSyncDate(dateStr) {
 
           <!-- Rows -->
           <FeatureReadinessRow
-            v-for="feature in filteredApproved"
+            v-for="(feature, i) in filteredApproved"
             :key="feature.key"
             :feature="feature"
+            :index="i + 1"
             :jiraBaseUrl="jiraBaseUrl"
+            @select="selectedFeature = $event"
           />
 
           <!-- Empty state -->
@@ -260,4 +263,10 @@ function formatSyncDate(dateStr) {
     </div>
 
   </div>
+
+  <FeatureReadinessDrawer
+    :feature="selectedFeature"
+    :jiraBaseUrl="jiraBaseUrl"
+    @close="selectedFeature = null"
+  />
 </template>
