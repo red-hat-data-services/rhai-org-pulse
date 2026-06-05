@@ -18,6 +18,7 @@
     <div class="p-6">
       <DashboardView v-if="activeTab === 'outcomes'" />
       <HealthDashboardView v-else-if="activeTab === 'health'" />
+      <FeatureReadinessView v-else-if="activeTab === 'feature-readiness'" />
     </div>
   </div>
 </template>
@@ -26,10 +27,12 @@
 import { ref } from 'vue'
 import DashboardView from '../plan/views/DashboardView.vue'
 import HealthDashboardView from '../plan/views/HealthDashboardView.vue'
+import FeatureReadinessView from '../plan/views/FeatureReadinessView.vue'
 
 const tabs = [
   { id: 'outcomes', label: 'Outcomes' },
   { id: 'health', label: 'Health' },
+  { id: 'feature-readiness', label: 'Feature Readiness (Prioritized)' },
 ]
 
 const activeTab = ref('outcomes')
