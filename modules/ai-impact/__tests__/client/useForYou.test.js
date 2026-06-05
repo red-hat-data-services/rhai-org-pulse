@@ -312,9 +312,24 @@ describe('actionGroups', () => {
     const features = ref({})
     const { actionGroups } = useForYou(rosterData, user, rfeData, features, assessments, fieldDefinitions)
     const groupIds = actionGroups.value.map(g => g.id)
-    expect(groupIds).toContain('revise-rfes')
+    expect(groupIds).toContain('failed-rubric')
     expect(groupIds).toContain('advance-rfes')
+    expect(groupIds).not.toContain('passed-with-caveats')
     expect(groupIds).not.toContain('review-features')
+  })
+
+  it('separates failed-rubric from passed-with-caveats', () => {
+    const rfeData = ref({
+      issues: [
+        { key: 'RFE-1', summary: 'Failed', components: [], labels: ['rfe-creator-needs-attention'], linkedFeature: null, priority: 'High', created: '2025-01-01' },
+        { key: 'RFE-2', summary: 'Caveats', components: [], labels: ['rfe-creator-autofix-rubric-pass', 'rfe-creator-needs-attention'], linkedFeature: null, priority: 'Medium', created: '2025-01-01' }
+      ]
+    })
+    const features = ref({})
+    const { actionGroups } = useForYou(rosterData, user, rfeData, features, assessments, fieldDefinitions)
+    const groupMap = Object.fromEntries(actionGroups.value.map(g => [g.id, g]))
+    expect(groupMap['failed-rubric'].items.map(i => i.key)).toEqual(['RFE-1'])
+    expect(groupMap['passed-with-caveats'].items.map(i => i.key)).toEqual(['RFE-2'])
   })
 
   it('returns empty array when no action items', () => {

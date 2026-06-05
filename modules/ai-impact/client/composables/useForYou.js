@@ -300,17 +300,20 @@ export function useForYou(rosterData, user, rfeData, features, assessments, fiel
 
   const actionGroups = computed(() => {
     const groups = [
-      { id: 'revise-rfes', label: 'RFEs Needing Revision', items: [] },
+      { id: 'failed-rubric', label: 'RFEs Failed Rubric', items: [] },
+      { id: 'passed-with-caveats', label: 'RFEs Passed with Caveats', items: [] },
       { id: 'advance-rfes', label: 'RFEs Ready for Feature Creation', items: [] },
       { id: 'review-features', label: 'Features Needing Review', items: [] }
     ]
     for (const item of actionNeeded.value) {
-      if (item.type === 'rfe' && ['needs-revision', 'passed-with-caveats'].includes(item.state.id)) {
+      if (item.type === 'rfe' && item.state.id === 'needs-revision') {
         groups[0].items.push(item)
-      } else if (item.type === 'rfe' && item.state.id === 'ready-to-advance') {
+      } else if (item.type === 'rfe' && item.state.id === 'passed-with-caveats') {
         groups[1].items.push(item)
-      } else if (item.type === 'feature') {
+      } else if (item.type === 'rfe' && item.state.id === 'ready-to-advance') {
         groups[2].items.push(item)
+      } else if (item.type === 'feature') {
+        groups[3].items.push(item)
       }
     }
     return groups.filter(g => g.items.length > 0)

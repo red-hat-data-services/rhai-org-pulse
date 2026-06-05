@@ -105,6 +105,26 @@ describe('ForYouCard', () => {
     expect(link.attributes('href')).toBe('https://jira.example.com/browse/RHAIRFE-100')
   })
 
+  it('shows stage hover popup with info icon', () => {
+    const wrapper = mount(ForYouCard, {
+      props: { item: makeItem() }
+    })
+    const popupContainer = wrapper.find('.group')
+    expect(popupContainer.exists()).toBe(true)
+    // info icon SVG is present in the badge
+    expect(popupContainer.find('svg').exists()).toBe(true)
+    // hover popup text
+    expect(popupContainer.text()).toContain('failed the quality rubric')
+  })
+
+  it('shows passed-with-caveats hover popup', () => {
+    const wrapper = mount(ForYouCard, {
+      props: { item: makeItem({ state: { id: 'passed-with-caveats', label: 'Passed with Caveats', color: 'amber', order: 1 } }) }
+    })
+    const popupContainer = wrapper.find('.group')
+    expect(popupContainer.text()).toContain('BOTH rubric-pass AND needs-attention')
+  })
+
   it('truncates long summary', () => {
     const longSummary = 'A'.repeat(130)
     const wrapper = mount(ForYouCard, {

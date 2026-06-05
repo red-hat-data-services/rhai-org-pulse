@@ -12,6 +12,21 @@ const emit = defineEmits(['navigate'])
 
 const componentsExpanded = ref(false)
 
+const stageTooltip = computed(() => {
+  const tooltips = {
+    'needs-revision': 'Has needs-attention label but NOT rubric-pass — failed the quality rubric and could not be auto-fixed.',
+    'passed-with-caveats': 'Has BOTH rubric-pass AND needs-attention labels — passed scoring but flagged for minor issues the automation could not resolve.',
+    'ready-to-advance': 'Has rubric-pass or tech-reviewed label, no scope label yet — quality gate passed, ready to queue.',
+    'queued-for-pipeline': 'Has quality label + scope label — waiting for the automated pipeline to create a strategy feature.',
+    'not-assessed': 'No pipeline labels yet — waiting for the quality rubric to run.',
+    'rejected': 'AI review recommended rejecting this feature.',
+    'revise-required': 'AI review found issues with feasibility, testability, scope, or architecture.',
+    'awaiting-signoff': 'AI review passed — waiting for human sign-off from a staff engineer or SME.',
+    'signed-off': 'Reviewed and approved by a human engineer.'
+  }
+  return tooltips[props.item.state.id] || ''
+})
+
 const accentClass = computed(() => {
   const color = props.item.state.color
   return {
@@ -212,9 +227,22 @@ const hiddenComponentCount = computed(() => {
           <span class="text-xs uppercase font-medium text-gray-400 dark:text-gray-500">{{ item.type }}</span>
         </div>
         <div class="flex items-center gap-2 shrink-0">
-          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium" :class="stageBadgeClass">
-            {{ item.state.label }}
-          </span>
+          <div class="relative group">
+            <span
+              class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium cursor-help"
+              :class="stageBadgeClass"
+            >
+              {{ item.state.label }}
+              <svg class="h-3 w-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </span>
+            <div v-if="stageTooltip" class="absolute top-full right-0 pt-1 z-20 hidden group-hover:block w-64">
+              <div class="p-3 text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/50">
+                <p>{{ stageTooltip }}</p>
+              </div>
+            </div>
+          </div>
           <span
             v-if="item.priority && item.priority !== 'None' && item.priority !== 'Undefined'"
             class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"

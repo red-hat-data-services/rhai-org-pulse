@@ -16,9 +16,11 @@ const stats = computed(() => {
     else if (p.verdict === 'Rework') rework++
     if (p.autoRevised) autoRevised++
   }
+  const total = planList.value.length
   return {
-    total: planList.value.length,
-    avg: planList.value.length ? (sum / planList.value.length).toFixed(1) : 0,
+    total,
+    avg: total ? (sum / total).toFixed(1) : 0,
+    passRate: total ? Math.round((ready / total) * 100) : 0,
     ready,
     revise,
     rework,
@@ -29,10 +31,15 @@ const stats = computed(() => {
 
 <template>
   <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-    <div class="grid gap-6 grid-cols-2 lg:grid-cols-6">
+    <div class="grid gap-6 grid-cols-2 lg:grid-cols-7">
       <div class="space-y-1">
         <p class="text-sm text-gray-500 dark:text-gray-400">Total Plans</p>
         <span class="text-3xl font-bold dark:text-gray-100">{{ stats.total }}</span>
+      </div>
+
+      <div class="space-y-1">
+        <p class="text-sm text-gray-500 dark:text-gray-400">Pass Rate</p>
+        <span class="text-3xl font-bold dark:text-gray-100">{{ stats.passRate }}%</span>
       </div>
 
       <div class="space-y-1">
