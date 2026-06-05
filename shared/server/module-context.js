@@ -28,6 +28,7 @@
  * @property {Function} [status] - Async function returning current status
  * @property {number} [order=100] - Execution order (lower runs first)
  * @property {number} [timeout] - Per-handler timeout in ms (overrides global runAll timeout)
+ * @property {string} [cadence='24h'] - How often the handler should run (e.g. '15m', '12h', '1d'). Parsed by parseCadence(). Default '24h'.
  */
 
 /**

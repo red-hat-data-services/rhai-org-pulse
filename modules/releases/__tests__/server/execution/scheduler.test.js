@@ -9,8 +9,7 @@ const {
   loadConfig,
   runFetch,
   manualRefresh,
-  startScheduler,
-  stopScheduler,
+  setOnCadenceChange,
   onConfigSave,
   _setFetchFn
 } = scheduler
@@ -34,13 +33,12 @@ describe('scheduler', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.useFakeTimers()
-    stopScheduler()
     _setFetchFn(mockFetchArtifacts)
     scheduler.init({})
+    setOnCadenceChange(null)
   })
 
   afterEach(() => {
-    stopScheduler()
     vi.useRealTimers()
   })
 
@@ -152,42 +150,29 @@ describe('scheduler', () => {
     })
   })
 
-  describe('startScheduler / stopScheduler', () => {
-    it('runs fetch on interval', async () => {
+  describe('setOnCadenceChange', () => {
+    it('invokes callback when config is saved with new cadence', async () => {
       scheduler.init({ GITLAB_TOKEN: 'token' })
-      mockFetchArtifacts.mockResolvedValue({ status: 'success' })
+      const callback = vi.fn()
+      setOnCadenceChange(callback)
 
-      const storage = makeStorage({
-        'releases/execution/config.json': { enabled: true }
-      })
+      const storage = makeStorage()
+      await onConfigSave(storage, { enabled: true, refreshIntervalHours: 6 })
 
-      startScheduler(storage, 1)
-      expect(mockFetchArtifacts).not.toHaveBeenCalled()
-
-      await vi.advanceTimersByTimeAsync(60 * 60 * 1000)
-      expect(mockFetchArtifacts).toHaveBeenCalledTimes(1)
-
-      stopScheduler()
+      expect(callback).toHaveBeenCalledWith('6h')
     })
 
-    it('stopScheduler clears interval', async () => {
+    it('does not crash when no callback is set', async () => {
       scheduler.init({ GITLAB_TOKEN: 'token' })
-      mockFetchArtifacts.mockResolvedValue({ status: 'success' })
+      setOnCadenceChange(null)
 
-      const storage = makeStorage({
-        'releases/execution/config.json': { enabled: true }
-      })
-
-      startScheduler(storage, 1)
-      stopScheduler()
-
-      await vi.advanceTimersByTimeAsync(60 * 60 * 1000)
-      expect(mockFetchArtifacts).not.toHaveBeenCalled()
+      const storage = makeStorage()
+      await expect(onConfigSave(storage, { enabled: true })).resolves.toBeDefined()
     })
   })
 
   describe('onConfigSave', () => {
-    it('saves config and starts scheduler when enabled', async () => {
+    it('saves config', async () => {
       scheduler.init({ GITLAB_TOKEN: 'token' })
       const storage = makeStorage()
 
@@ -196,8 +181,6 @@ describe('scheduler', () => {
       const stored = storage._store['releases/execution/config.json']
       expect(stored.enabled).toBe(true)
       expect(stored.refreshIntervalHours).toBe(6)
-
-      stopScheduler()
     })
 
     it('triggers immediate fetch when newly enabled', async () => {
@@ -211,17 +194,19 @@ describe('scheduler', () => {
       const result = await onConfigSave(storage, { enabled: true })
       expect(mockFetchArtifacts).toHaveBeenCalled()
       expect(result.status).toBe('success')
-
-      stopScheduler()
     })
 
-    it('stops scheduler when disabled', async () => {
+    it('does not fetch when already enabled (not newly enabled)', async () => {
       scheduler.init({ GITLAB_TOKEN: 'token' })
+      mockFetchArtifacts.mockResolvedValue({ status: 'success' })
+
       const storage = makeStorage({
         'releases/execution/config.json': { enabled: true }
       })
 
-      await onConfigSave(storage, { enabled: false })
+      const result = await onConfigSave(storage, { enabled: true })
+      expect(mockFetchArtifacts).not.toHaveBeenCalled()
+      expect(result.status).toBe('saved')
     })
 
     it('rejects http:// gitlabBaseUrl (SSRF prevention)', async () => {

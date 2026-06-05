@@ -168,11 +168,11 @@ Your modules declare secrets in `module.json` under `secrets`. See [docs/MODULES
 
 ## CronJob
 
-The base includes a daily CronJob (`team-tracker-sync-refresh`) that runs at 6:00 AM UTC:
+The base includes a CronJob (`team-tracker-sync-refresh`) that fires every 15 minutes (`*/15 * * * *`) and triggers a cadence-aware refresh via `POST /api/admin/refresh-all`. Each handler declares its own cadence (e.g., `24h` for roster sync, `12h` for execution pipeline). Handlers that have run within their cadence window are skipped — most ticks complete in seconds.
 
-1. Triggers module content sync
-2. Runs unified refresh for all registered handlers
-3. Triggers S3 backup (only if `AWS_BACKUP_BUCKET` is configured)
+- `concurrencyPolicy: Forbid` prevents overlapping runs
+- `activeDeadlineSeconds: 1800` (30 min) accommodates the heaviest handler (`team-tracker:metrics`)
+- Backup runs as a refresh handler (`platform:backup`, cadence `24h`), not as a separate script step
 
 Set `CRON_ADMIN_EMAIL` in your ConfigMap to the email of an admin user — this is used as the `X-Forwarded-Email` header for API calls.
 

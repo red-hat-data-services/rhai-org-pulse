@@ -1,6 +1,9 @@
 /**
- * Scheduler for periodic GitLab artifact fetching.
- * Manages interval timer, mutex lock, cooldown, and config reload.
+ * Scheduler for GitLab artifact fetching.
+ * Manages mutex lock, cooldown, and config reload.
+ *
+ * The periodic scheduling is now handled by the refresh registry's
+ * cadence system — the independent setInterval scheduler has been removed.
  */
 
 const gitlabFetch = require('./gitlab-fetch');
@@ -8,7 +11,6 @@ const gitlabFetch = require('./gitlab-fetch');
 let fetchInProgress = false;
 // Allows test override
 let _fetchArtifacts = gitlabFetch.fetchArtifacts;
-let schedulerTimer = null;
 let lastSuccessfulFetch = 0;
 const COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -24,6 +26,9 @@ const DEFAULT_CONFIG = {
 
 // Module-level secrets, set once via init()
 let _secrets = {};
+
+// Callback invoked when config save changes the cadence
+let _onCadenceChange = null;
 
 function init(secrets) {
   _secrets = secrets || {};
@@ -107,52 +112,6 @@ async function manualRefresh(storage) {
 }
 
 /**
- * Start the scheduler with the given interval.
- */
-function startScheduler(storage, intervalHours) {
-  stopScheduler();
-
-  if (!intervalHours || intervalHours <= 0) return;
-
-  const intervalMs = intervalHours * 60 * 60 * 1000;
-  schedulerTimer = setInterval(function () {
-    runFetch(storage).catch(function (err) {
-      console.error('[releases/execution] Scheduled fetch error:', err.message);
-    });
-  }, intervalMs);
-
-  if (schedulerTimer.unref) schedulerTimer.unref();
-
-  console.log(`[releases/execution] Scheduler started: every ${intervalHours}h`);
-}
-
-function stopScheduler() {
-  if (schedulerTimer) {
-    clearInterval(schedulerTimer);
-    schedulerTimer = null;
-  }
-}
-
-/**
- * Initialize scheduler based on saved config.
- * Called on module load.
- */
-function initScheduler(storage) {
-  const config = loadConfig(storage);
-  const token = getToken();
-
-  if (config.enabled && token) {
-    startScheduler(storage, config.refreshIntervalHours);
-  } else {
-    if (!token) {
-      console.log('[releases/execution] No GitLab token configured, scheduler not started');
-    } else if (!config.enabled) {
-      console.log('[releases/execution] Fetch disabled in config, scheduler not started');
-    }
-  }
-}
-
-/**
  * Validate config input. Throws on invalid values.
  */
 function validateConfig(input) {
@@ -186,7 +145,16 @@ function validateConfig(input) {
 }
 
 /**
- * Handle config save: restart scheduler and optionally trigger immediate fetch.
+ * Set a callback that is invoked when config save changes the cadence.
+ * The callback receives the new cadence string (e.g. '12h').
+ * @param {Function} callback
+ */
+function setOnCadenceChange(callback) {
+  _onCadenceChange = callback;
+}
+
+/**
+ * Handle config save: notify cadence change and optionally trigger immediate fetch.
  */
 async function onConfigSave(storage, newConfig) {
   validateConfig(newConfig);
@@ -197,15 +165,15 @@ async function onConfigSave(storage, newConfig) {
 
   saveConfig(storage, config);
 
+  // Notify cadence change
+  if (_onCadenceChange) {
+    _onCadenceChange(config.refreshIntervalHours + 'h');
+  }
+
   const token = getToken();
-  if (config.enabled && token) {
-    startScheduler(storage, config.refreshIntervalHours);
+  if (config.enabled && token && !wasEnabled) {
     // Immediate fetch if newly enabled
-    if (!wasEnabled) {
-      return runFetch(storage, config);
-    }
-  } else {
-    stopScheduler();
+    return runFetch(storage, config);
   }
 
   return { status: 'saved' };
@@ -225,9 +193,7 @@ module.exports = {
   saveConfig,
   runFetch,
   manualRefresh,
-  startScheduler,
-  stopScheduler,
-  initScheduler,
+  setOnCadenceChange,
   onConfigSave,
   isFetchInProgress,
   _setFetchFn(fn) { _fetchArtifacts = fn; }

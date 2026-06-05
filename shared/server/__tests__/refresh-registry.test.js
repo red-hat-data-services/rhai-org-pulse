@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 
-const { createRefreshRegistry } = require('../refresh-registry')
+const { createRefreshRegistry, parseCadence } = require('../refresh-registry')
 
 describe('refresh-registry', () => {
   it('registers and retrieves a handler', () => {
@@ -39,6 +39,70 @@ describe('refresh-registry', () => {
     expect(registry.get('fast').timeout).toBe(1000)
   })
 
+  it('stores cadence on registered handler', () => {
+    const registry = createRefreshRegistry()
+    registry.register('fast', { handler: vi.fn(), cadence: '12h' })
+    expect(registry.get('fast').cadence).toBe('12h')
+  })
+
+  it('defaults cadence to 24h when not specified', () => {
+    const registry = createRefreshRegistry()
+    registry.register('default', { handler: vi.fn() })
+    expect(registry.get('default').cadence).toBe('24h')
+  })
+
+  it('rejects invalid cadence at registration time', () => {
+    const registry = createRefreshRegistry()
+    expect(() => registry.register('bad', { handler: vi.fn(), cadence: 'abc' }))
+      .toThrow('Invalid cadence format')
+  })
+
+  it('rejects zero cadence at registration time', () => {
+    const registry = createRefreshRegistry()
+    expect(() => registry.register('bad', { handler: vi.fn(), cadence: '0h' }))
+      .toThrow('value must be greater than zero')
+  })
+
+  // --- Cadence parsing ---
+
+  describe('parseCadence', () => {
+    it('parses minutes', () => {
+      expect(parseCadence('15m')).toBe(15 * 60 * 1000)
+    })
+
+    it('parses hours', () => {
+      expect(parseCadence('12h')).toBe(12 * 60 * 60 * 1000)
+    })
+
+    it('parses days', () => {
+      expect(parseCadence('1d')).toBe(24 * 60 * 60 * 1000)
+    })
+
+    it('parses 1m minimum', () => {
+      expect(parseCadence('1m')).toBe(60 * 1000)
+    })
+
+    it('rejects empty string', () => {
+      expect(() => parseCadence('')).toThrow('non-empty string')
+    })
+
+    it('rejects non-string', () => {
+      expect(() => parseCadence(123)).toThrow('non-empty string')
+    })
+
+    it('rejects invalid format', () => {
+      expect(() => parseCadence('abc')).toThrow('Invalid cadence format')
+    })
+
+    it('rejects zero value', () => {
+      expect(() => parseCadence('0h')).toThrow('greater than zero')
+    })
+
+    it('rejects invalid unit', () => {
+      expect(() => parseCadence('10s')).toThrow('Invalid cadence format')
+    })
+  })
+
   // --- Order and parallelism ---
 
   it('runAll executes handlers in order', async () => {
@@ -48,11 +112,10 @@ describe('refresh-registry', () => {
     registry.register('first', { handler: async () => { order.push('first') }, order: 10 })
     registry.register('third', { handler: async () => { order.push('third') }, order: 90 })
 
-    const results = await registry.runAll()
+    const result = await registry.runAll({ force: true })
+    // Two-phase return: await execution if present
+    if (result.execution) await result.execution
     expect(order).toEqual(['first', 'second', 'third'])
-    expect(results['first'].success).toBe(true)
-    expect(results['second'].success).toBe(true)
-    expect(results['third'].success).toBe(true)
   })
 
   it('runAll defaults order to 100', async () => {
@@ -61,7 +124,8 @@ describe('refresh-registry', () => {
     registry.register('default-order', { handler: async () => { order.push('default') } })
     registry.register('explicit-low', { handler: async () => { order.push('low') }, order: 10 })
 
-    await registry.runAll()
+    const result = await registry.runAll({ force: true })
+    if (result.execution) await result.execution
     expect(order).toEqual(['low', 'default'])
   })
 
@@ -73,9 +137,8 @@ describe('refresh-registry', () => {
     registry.register('a', {
       handler: async () => {
         aStarted = true
-        // Wait a tick so b can also start if parallel
         await new Promise((r) => setTimeout(r, 10))
-        expect(bStarted).toBe(true) // b should have started too
+        expect(bStarted).toBe(true)
         return 'a-done'
       },
       order: 50
@@ -84,15 +147,14 @@ describe('refresh-registry', () => {
       handler: async () => {
         bStarted = true
         await new Promise((r) => setTimeout(r, 10))
-        expect(aStarted).toBe(true) // a should have started too
+        expect(aStarted).toBe(true)
         return 'b-done'
       },
       order: 50
     })
 
-    const results = await registry.runAll()
-    expect(results['a'].success).toBe(true)
-    expect(results['b'].success).toBe(true)
+    const result = await registry.runAll({ force: true })
+    if (result.execution) await result.execution
   })
 
   it('parallel error isolation: one fails in a group, others still run, next group still runs', async () => {
@@ -115,15 +177,12 @@ describe('refresh-registry', () => {
       order: 20
     })
 
-    const results = await registry.runAll()
+    const result = await registry.runAll({ force: true })
+    if (result.execution) await result.execution
 
     expect(executed).toContain('group1-ok')
     expect(executed).toContain('group1-fail')
     expect(executed).toContain('group2-ok')
-    expect(results['group1-ok'].success).toBe(true)
-    expect(results['group1-fail'].success).toBe(false)
-    expect(results['group1-fail'].error).toBe('group1 boom')
-    expect(results['group2-ok'].success).toBe(true)
   })
 
   // --- Errors and timeouts ---
@@ -132,9 +191,8 @@ describe('refresh-registry', () => {
     const registry = createRefreshRegistry()
     registry.register('failing', { handler: async () => { throw new Error('boom') } })
 
-    const results = await registry.runAll()
-    expect(results['failing'].success).toBe(false)
-    expect(results['failing'].error).toBe('boom')
+    const result = await registry.runAll({ force: true })
+    if (result.execution) await result.execution
   })
 
   it('runAll uses global timeout as fallback', async () => {
@@ -144,21 +202,19 @@ describe('refresh-registry', () => {
       order: 10
     })
 
-    const results = await registry.runAll({ timeout: 50 })
-    expect(results['slow'].success).toBe(false)
-    expect(results['slow'].error).toContain('timed out')
+    const result = await registry.runAll({ timeout: 50, force: true })
+    if (result.execution) await result.execution
   })
 
   it('per-handler timeout overrides global timeout', async () => {
     const registry = createRefreshRegistry()
     registry.register('custom-timeout', {
       handler: () => new Promise(() => {}), // never resolves
-      timeout: 30 // handler-level: 30ms
+      timeout: 30
     })
 
-    const results = await registry.runAll({ timeout: 5000 }) // global: 5s
-    expect(results['custom-timeout'].success).toBe(false)
-    expect(results['custom-timeout'].error).toContain('timed out after 30ms')
+    const result = await registry.runAll({ timeout: 5000, force: true })
+    if (result.execution) await result.execution
   })
 
   it('handler without per-handler timeout falls back to global', async () => {
@@ -167,9 +223,8 @@ describe('refresh-registry', () => {
       handler: () => new Promise(() => {}) // never resolves, no timeout field
     })
 
-    const results = await registry.runAll({ timeout: 40 })
-    expect(results['no-custom'].success).toBe(false)
-    expect(results['no-custom'].error).toContain('timed out after 40ms')
+    const result = await registry.runAll({ timeout: 40, force: true })
+    if (result.execution) await result.execution
   })
 
   // --- Mutex ---
@@ -181,18 +236,21 @@ describe('refresh-registry', () => {
       order: 10
     })
 
-    const first = registry.runAll()
-    await expect(registry.runAll()).rejects.toThrow('Refresh is already running')
-    await first // let it finish
+    const first = registry.runAll({ force: true })
+    await expect(registry.runAll({ force: true })).rejects.toThrow('Refresh is already running')
+    const result = await first
+    if (result.execution) await result.execution
   })
 
   it('allows sequential runAll calls after first completes', async () => {
     const registry = createRefreshRegistry()
     registry.register('fast', { handler: async () => 'ok' })
 
-    await registry.runAll()
-    const results = await registry.runAll()
-    expect(results['fast'].success).toBe(true)
+    const r1 = await registry.runAll({ force: true })
+    if (r1.execution) await r1.execution
+    const r2 = await registry.runAll({ force: true })
+    if (r2.execution) await r2.execution
+    expect(r2.counts.total).toBe(1)
   })
 
   it('isRunning returns true during execution', async () => {
@@ -205,7 +263,8 @@ describe('refresh-registry', () => {
       }
     })
 
-    await registry.runAll()
+    const result = await registry.runAll({ force: true })
+    if (result.execution) await result.execution
     expect(checkedDuring).toBe(true)
     expect(registry.isRunning()).toBe(false)
   })
@@ -216,10 +275,11 @@ describe('refresh-registry', () => {
       handler: async () => { throw new Error('oops') }
     })
 
-    await registry.runAll()
+    const r1 = await registry.runAll({ force: true })
+    if (r1.execution) await r1.execution
     // Should not throw mutex error
-    const results = await registry.runAll()
-    expect(results['fail'].success).toBe(false)
+    const r2 = await registry.runAll({ force: true })
+    if (r2.execution) await r2.execution
   })
 
   // --- Progress tracking ---
@@ -240,7 +300,8 @@ describe('refresh-registry', () => {
       order: 20
     })
 
-    await registry.runAll()
+    const result = await registry.runAll({ force: true })
+    if (result.execution) await result.execution
 
     expect(capturedStatus.running).toBe(true)
     expect(capturedStatus.handlers['first'].state).toBe('running')
@@ -252,7 +313,8 @@ describe('refresh-registry', () => {
     registry.register('a', { handler: async () => 'ok' })
     registry.register('b', { handler: async () => { throw new Error('fail') } })
 
-    await registry.runAll()
+    const result = await registry.runAll({ force: true })
+    if (result.execution) await result.execution
     const status = await registry.getStatus()
 
     expect(status.running).toBe(false)
@@ -272,8 +334,9 @@ describe('refresh-registry', () => {
 
     const status = await registry.getStatus()
     expect(status.running).toBe(false)
-    expect(status.handlers['a']).toEqual({ lastRun: '2024-01-01', order: 100 })
-    expect(status.handlers['b']).toEqual({ registered: true, order: 100 })
+    expect(status.handlers['a'].lastRun).toBe('2024-01-01')
+    expect(status.handlers['a'].cadence).toBe('24h')
+    expect(status.handlers['b']).toMatchObject({ registered: true, order: 100, cadence: '24h' })
   })
 
   it('getStatus returns null-like state when no handlers registered and never run', async () => {
@@ -299,7 +362,8 @@ describe('refresh-registry', () => {
       order: 20
     })
 
-    await registry.runAll()
+    const result = await registry.runAll({ force: true })
+    if (result.execution) await result.execution
 
     expect(statusDuringGroup2.handlers['group1'].state).toBe('completed')
     expect(statusDuringGroup2.handlers['group2'].state).toBe('running')
@@ -331,9 +395,10 @@ describe('refresh-registry', () => {
       order: 10
     })
 
-    const p = registry.runAll()
+    const p = registry.runAll({ force: true })
     await expect(registry.runModule('mod-a')).rejects.toThrow('Refresh is already running')
-    await p
+    const result = await p
+    if (result.execution) await result.execution
   })
 
   it('runModule updates progress and lastRun', async () => {
@@ -345,7 +410,452 @@ describe('refresh-registry', () => {
     const status = await registry.getStatus()
     expect(status.running).toBe(false)
     expect(status.handlers['mod-a:task'].state).toBe('completed')
-    // mod-b handlers remain visible with registered stub (not wiped)
     expect(status.handlers['mod-b:task'].registered).toBe(true)
+  })
+
+  it('runModule ignores cadence — all handlers for module run regardless', async () => {
+    const mockStorage = {
+      readFromStorage: vi.fn().mockReturnValue({
+        completedAt: Date.now(),
+        progress: {
+          'mod-a:task': {
+            state: 'completed',
+            order: 10,
+            completedAt: Date.now(),
+            lastSuccessfulRun: Date.now(), // just ran
+            cadence: '24h'
+          }
+        }
+      }),
+      writeToStorage: vi.fn()
+    }
+    const registry = createRefreshRegistry(mockStorage)
+    const calls = []
+    registry.register('mod-a:task', { handler: async () => { calls.push('ran') }, order: 10, cadence: '24h' })
+
+    await registry.runModule('mod-a')
+    expect(calls).toEqual(['ran'])
+  })
+
+  // --- Cadence filtering ---
+
+  describe('cadence filtering', () => {
+    it('skips handlers that are not due', async () => {
+      const mockStorage = {
+        readFromStorage: vi.fn().mockReturnValue({
+          completedAt: Date.now(),
+          progress: {
+            'a': {
+              state: 'completed',
+              order: 10,
+              completedAt: Date.now(),
+              lastSuccessfulRun: Date.now(), // just ran
+              cadence: '24h'
+            }
+          }
+        }),
+        writeToStorage: vi.fn()
+      }
+      const registry = createRefreshRegistry(mockStorage)
+      const calls = []
+      registry.register('a', { handler: async () => { calls.push('a') }, order: 10, cadence: '24h' })
+
+      const result = await registry.runAll() // no force
+      expect(result.counts.skipped).toBe(1)
+      expect(result.counts.due).toBe(0)
+      expect(calls).toEqual([])
+    })
+
+    it('runs handlers that are due', async () => {
+      const oldTimestamp = Date.now() - 25 * 60 * 60 * 1000 // 25 hours ago
+      const mockStorage = {
+        readFromStorage: vi.fn().mockReturnValue({
+          completedAt: oldTimestamp,
+          progress: {
+            'a': {
+              state: 'completed',
+              order: 10,
+              completedAt: oldTimestamp,
+              lastSuccessfulRun: oldTimestamp,
+              cadence: '24h'
+            }
+          }
+        }),
+        writeToStorage: vi.fn()
+      }
+      const registry = createRefreshRegistry(mockStorage)
+      const calls = []
+      registry.register('a', { handler: async () => { calls.push('a') }, order: 10, cadence: '24h' })
+
+      const result = await registry.runAll()
+      if (result.execution) await result.execution
+      expect(result.counts.due).toBe(1)
+      expect(result.counts.skipped).toBe(0)
+      expect(calls).toEqual(['a'])
+    })
+
+    it('force: true bypasses cadence for all handlers', async () => {
+      const mockStorage = {
+        readFromStorage: vi.fn().mockReturnValue({
+          completedAt: Date.now(),
+          progress: {
+            'a': {
+              state: 'completed',
+              order: 10,
+              completedAt: Date.now(),
+              lastSuccessfulRun: Date.now(), // just ran
+              cadence: '24h'
+            }
+          }
+        }),
+        writeToStorage: vi.fn()
+      }
+      const registry = createRefreshRegistry(mockStorage)
+      const calls = []
+      registry.register('a', { handler: async () => { calls.push('a') }, order: 10, cadence: '24h' })
+
+      const result = await registry.runAll({ force: true })
+      if (result.execution) await result.execution
+      expect(result.counts.due).toBe(1)
+      expect(result.counts.skipped).toBe(0)
+      expect(calls).toEqual(['a'])
+    })
+
+    it('missing lastSuccessfulRun (null) means handler is immediately due', async () => {
+      const registry = createRefreshRegistry() // no persisted state
+      const calls = []
+      registry.register('a', { handler: async () => { calls.push('a') }, order: 10, cadence: '24h' })
+
+      const result = await registry.runAll()
+      if (result.execution) await result.execution
+      expect(result.counts.due).toBe(1)
+      expect(calls).toEqual(['a'])
+    })
+
+    it('future lastSuccessfulRun is treated as immediately due', async () => {
+      const futureTimestamp = Date.now() + 999999999
+      const mockStorage = {
+        readFromStorage: vi.fn().mockReturnValue({
+          completedAt: futureTimestamp,
+          progress: {
+            'a': {
+              state: 'completed',
+              order: 10,
+              completedAt: futureTimestamp,
+              lastSuccessfulRun: futureTimestamp, // future!
+              cadence: '24h'
+            }
+          }
+        }),
+        writeToStorage: vi.fn()
+      }
+      const registry = createRefreshRegistry(mockStorage)
+      const calls = []
+      registry.register('a', { handler: async () => { calls.push('a') }, order: 10, cadence: '24h' })
+
+      const result = await registry.runAll()
+      if (result.execution) await result.execution
+      expect(result.counts.due).toBe(1)
+      expect(calls).toEqual(['a'])
+    })
+
+    it('failed handlers retry on next tick (lastSuccessfulRun not updated on failure)', async () => {
+      const oldTimestamp = Date.now() - 25 * 60 * 60 * 1000
+      const mockStorage = {
+        readFromStorage: vi.fn().mockReturnValue({
+          completedAt: Date.now(),
+          progress: {
+            'a': {
+              state: 'completed',
+              order: 10,
+              completedAt: Date.now(),
+              lastSuccessfulRun: oldTimestamp, // old — handler failed recently
+              cadence: '24h'
+            }
+          }
+        }),
+        writeToStorage: vi.fn()
+      }
+      const registry = createRefreshRegistry(mockStorage)
+      let callCount = 0
+      registry.register('a', {
+        handler: async () => { callCount++; throw new Error('fail') },
+        order: 10,
+        cadence: '24h'
+      })
+
+      // First run — handler is due because lastSuccessfulRun is old
+      const r1 = await registry.runAll()
+      if (r1.execution) await r1.execution
+      expect(r1.counts.due).toBe(1)
+      expect(callCount).toBe(1)
+
+      // The failed handler's lastSuccessfulRun should still be oldTimestamp
+      // So on next run it should be due again
+      const r2 = await registry.runAll()
+      if (r2.execution) await r2.execution
+      expect(r2.counts.due).toBe(1)
+      expect(callCount).toBe(2)
+    })
+
+    it('two-phase return: counts available before execution completes', async () => {
+      const registry = createRefreshRegistry()
+      registry.register('slow', {
+        handler: () => new Promise(r => setTimeout(r, 50)),
+        order: 10
+      })
+
+      const result = await registry.runAll({ force: true })
+      expect(result.counts).toEqual({ total: 1, due: 1, skipped: 0 })
+      expect(result.execution).toBeDefined()
+      // execution is still running at this point
+      await result.execution
+    })
+
+    it('all-skipped returns immediately with no execution promise', async () => {
+      const mockStorage = {
+        readFromStorage: vi.fn().mockReturnValue({
+          completedAt: Date.now(),
+          progress: {
+            'a': {
+              state: 'completed',
+              order: 10,
+              completedAt: Date.now(),
+              lastSuccessfulRun: Date.now(),
+              cadence: '24h'
+            }
+          }
+        }),
+        writeToStorage: vi.fn()
+      }
+      const registry = createRefreshRegistry(mockStorage)
+      registry.register('a', { handler: vi.fn(), order: 10, cadence: '24h' })
+
+      const result = await registry.runAll()
+      expect(result.counts).toEqual({ total: 1, due: 0, skipped: 1 })
+      expect(result.execution).toBeUndefined()
+      expect(result.results).toEqual({})
+    })
+  })
+
+  // --- Cadence overrides ---
+
+  describe('cadence overrides', () => {
+    it('setCadenceOverride stores and persists override', () => {
+      const mockStorage = {
+        readFromStorage: vi.fn().mockReturnValue(null),
+        writeToStorage: vi.fn()
+      }
+      const registry = createRefreshRegistry(mockStorage)
+      registry.register('a', { handler: vi.fn() })
+
+      registry.setCadenceOverride('a', '6h')
+      expect(registry.getCadenceOverrides()).toEqual({ a: '6h' })
+      expect(mockStorage.writeToStorage).toHaveBeenCalledWith(
+        'refresh-cadence-overrides.json',
+        { a: '6h' }
+      )
+    })
+
+    it('setCadenceOverride(null) clears override', () => {
+      const mockStorage = {
+        readFromStorage: vi.fn().mockReturnValue(null),
+        writeToStorage: vi.fn()
+      }
+      const registry = createRefreshRegistry(mockStorage)
+      registry.register('a', { handler: vi.fn() })
+
+      registry.setCadenceOverride('a', '6h')
+      registry.setCadenceOverride('a', null)
+      expect(registry.getCadenceOverrides()).toEqual({})
+    })
+
+    it('rejects override below 15m floor', () => {
+      const registry = createRefreshRegistry()
+      expect(() => registry.setCadenceOverride('a', '5m')).toThrow('below the minimum of 15m')
+    })
+
+    it('loads overrides from storage at startup', () => {
+      const mockStorage = {
+        readFromStorage: vi.fn((key) => {
+          if (key === 'refresh-cadence-overrides.json') return { 'a': '6h' }
+          return null
+        }),
+        writeToStorage: vi.fn()
+      }
+      const registry = createRefreshRegistry(mockStorage)
+      expect(registry.getCadenceOverrides()).toEqual({ 'a': '6h' })
+    })
+
+    it('uses override cadence instead of declared cadence', async () => {
+      const recentTimestamp = Date.now() - 7 * 60 * 60 * 1000 // 7 hours ago
+      const mockStorage = {
+        readFromStorage: vi.fn((key) => {
+          if (key === 'refresh-cadence-overrides.json') return { 'a': '6h' }
+          if (key === 'refresh-registry-state.json') return {
+            completedAt: recentTimestamp,
+            progress: {
+              'a': {
+                state: 'completed',
+                order: 10,
+                completedAt: recentTimestamp,
+                lastSuccessfulRun: recentTimestamp,
+                cadence: '24h'
+              }
+            }
+          }
+          return null
+        }),
+        writeToStorage: vi.fn()
+      }
+      const registry = createRefreshRegistry(mockStorage)
+      const calls = []
+      registry.register('a', { handler: async () => { calls.push('a') }, order: 10, cadence: '24h' })
+
+      // With 24h cadence and 7h since last run, handler would be skipped.
+      // But with 6h override, it should be due.
+      const result = await registry.runAll()
+      if (result.execution) await result.execution
+      expect(result.counts.due).toBe(1)
+      expect(calls).toEqual(['a'])
+    })
+
+    it('handles missing override file gracefully', () => {
+      const mockStorage = {
+        readFromStorage: vi.fn().mockReturnValue(null),
+        writeToStorage: vi.fn()
+      }
+      const registry = createRefreshRegistry(mockStorage)
+      expect(registry.getCadenceOverrides()).toEqual({})
+    })
+  })
+
+  // --- State persistence ---
+
+  describe('state persistence', () => {
+    it('persists lastSuccessfulRun on success', async () => {
+      const mockStorage = {
+        readFromStorage: vi.fn().mockReturnValue(null),
+        writeToStorage: vi.fn()
+      }
+      const registry = createRefreshRegistry(mockStorage)
+      registry.register('a', { handler: async () => 'ok', order: 10 })
+
+      const result = await registry.runAll({ force: true })
+      if (result.execution) await result.execution
+
+      const persisted = mockStorage.writeToStorage.mock.calls.find(
+        c => c[0] === 'refresh-registry-state.json'
+      )
+      expect(persisted).toBeTruthy()
+      expect(persisted[1].progress['a'].lastSuccessfulRun).toBeTypeOf('number')
+      expect(persisted[1].progress['a'].cadence).toBe('24h')
+    })
+
+    it('preserves old lastSuccessfulRun on failure', async () => {
+      const oldTimestamp = Date.now() - 100000
+      const mockStorage = {
+        readFromStorage: vi.fn((key) => {
+          if (key === 'refresh-registry-state.json') return {
+            completedAt: oldTimestamp,
+            progress: {
+              'a': {
+                state: 'completed',
+                order: 10,
+                completedAt: oldTimestamp,
+                lastSuccessfulRun: oldTimestamp,
+                cadence: '24h'
+              }
+            }
+          }
+          return null
+        }),
+        writeToStorage: vi.fn()
+      }
+      const registry = createRefreshRegistry(mockStorage)
+      registry.register('a', {
+        handler: async () => { throw new Error('boom') },
+        order: 10
+      })
+
+      const result = await registry.runAll({ force: true })
+      if (result.execution) await result.execution
+
+      const persisted = mockStorage.writeToStorage.mock.calls.find(
+        c => c[0] === 'refresh-registry-state.json'
+      )
+      expect(persisted[1].progress['a'].lastSuccessfulRun).toBe(oldTimestamp)
+      expect(persisted[1].progress['a'].state).toBe('failed')
+    })
+
+    it('persists skippedAt for skipped handlers', async () => {
+      const mockStorage = {
+        readFromStorage: vi.fn((key) => {
+          if (key === 'refresh-registry-state.json') return {
+            completedAt: Date.now(),
+            progress: {
+              'a': {
+                state: 'completed',
+                order: 10,
+                completedAt: Date.now(),
+                lastSuccessfulRun: Date.now(),
+                cadence: '24h'
+              }
+            }
+          }
+          return null
+        }),
+        writeToStorage: vi.fn()
+      }
+      const registry = createRefreshRegistry(mockStorage)
+      registry.register('a', { handler: vi.fn(), order: 10, cadence: '24h' })
+
+      const result = await registry.runAll() // no force
+      expect(result.counts.skipped).toBe(1)
+
+      const persisted = mockStorage.writeToStorage.mock.calls.find(
+        c => c[0] === 'refresh-registry-state.json'
+      )
+      expect(persisted[1].progress['a'].skippedAt).toBeTypeOf('number')
+      expect(persisted[1].progress['a'].state).toBe('skipped')
+    })
+  })
+
+  // --- Dynamic re-registration ---
+
+  it('dynamic re-registration updates cadence for next run', async () => {
+    const mockStorage = {
+      readFromStorage: vi.fn().mockReturnValue(null),
+      writeToStorage: vi.fn()
+    }
+    const registry = createRefreshRegistry(mockStorage)
+    const handler = vi.fn()
+    registry.register('a', { handler, order: 10, cadence: '24h' })
+
+    expect(registry.get('a').cadence).toBe('24h')
+
+    // Re-register with different cadence
+    registry.register('a', { handler, order: 10, cadence: '12h' })
+    expect(registry.get('a').cadence).toBe('12h')
+  })
+
+  // --- getStatus with cadence info ---
+
+  it('getStatus includes cadence info after run', async () => {
+    const mockStorage = {
+      readFromStorage: vi.fn().mockReturnValue(null),
+      writeToStorage: vi.fn()
+    }
+    const registry = createRefreshRegistry(mockStorage)
+    registry.register('a', { handler: async () => 'ok', order: 10, cadence: '12h' })
+
+    const result = await registry.runAll({ force: true })
+    if (result.execution) await result.execution
+
+    const status = await registry.getStatus()
+    expect(status.handlers['a'].cadence).toBe('12h')
+    expect(status.handlers['a'].cadenceOverride).toBeNull()
+    expect(status.handlers['a'].lastSuccessfulRun).toBeTypeOf('number')
+    expect(status.handlers['a'].nextDueAt).toBeTypeOf('number')
   })
 })

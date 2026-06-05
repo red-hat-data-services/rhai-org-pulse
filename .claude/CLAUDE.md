@@ -148,7 +148,7 @@ Kustomize layers: `base/` (core platform + team-tracker) → `overlays/ai-eng/` 
 - `GH_PAT` — Personal access token with admin bypass, used by CI to create and auto-merge image tag update PRs
 - `GCP_SA_KEY` — GCP service account JSON key for Vertex AI auth (Claude code review)
 
-**Daily CronJob** (`deploy/openshift/base/cronjob-sync-refresh.yaml`): Runs at 6:00 AM UTC, triggers roster sync then full metrics refresh via the backend API. Uses `CRON_ADMIN_EMAIL` from ConfigMap. S3 backup step is conditional on `AWS_BACKUP_BUCKET`.
+**CronJob** (`deploy/openshift/base/cronjob-sync-refresh.yaml`): Fires every 15 minutes (`*/15 * * * *`), triggers cadence-aware `POST /api/admin/refresh-all`. Each handler declares its own cadence (e.g., `24h` for roster sync, `12h` for execution pipeline). Handlers that have run within their cadence window are skipped — most ticks complete in seconds. Backup runs as a refresh handler (`platform:backup`, cadence `24h`), not as a separate CronJob step. Uses `CRON_ADMIN_EMAIL` from ConfigMap.
 
 ### Testing
 

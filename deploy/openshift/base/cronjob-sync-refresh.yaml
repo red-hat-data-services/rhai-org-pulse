@@ -6,7 +6,7 @@ metadata:
     app: team-tracker
     component: sync-refresh
 spec:
-  schedule: "0 6 * * *"
+  schedule: "*/15 * * * *"
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 3
   failedJobsHistoryLimit: 3
@@ -34,12 +34,6 @@ spec:
                       name: proxy-auth-secret
                       key: secret
                       optional: true
-                - name: AWS_BACKUP_BUCKET
-                  valueFrom:
-                    secretKeyRef:
-                      name: aws-backup-credentials
-                      key: AWS_BACKUP_BUCKET
-                      optional: true
               command:
                 - /bin/sh
                 - -c
@@ -54,26 +48,39 @@ spec:
                   curl -sf -X POST "$BACKEND/api/admin/modules/sync" \
                     -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" || echo "Module sync skipped (no modules configured)"
 
-                  # Step 1: Trigger unified refresh (all registered handlers, ordered)
+                  # Step 1: Trigger unified refresh-all (cadence-aware)
                   echo "=== Triggering unified refresh-all ==="
-                  RESP=$(curl -sf -o /dev/null -w "%{http_code}" -X POST "$BACKEND/api/admin/refresh-all" \
-                    -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER")
-                  if [ "$RESP" = "409" ]; then
+                  REFRESH_RESP=$(curl -sf -X POST "$BACKEND/api/admin/refresh-all" \
+                    -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" \
+                    -w "\n%{http_code}" 2>/dev/null) || true
+                  HTTP_CODE=$(echo "$REFRESH_RESP" | tail -1)
+                  BODY=$(echo "$REFRESH_RESP" | sed '$d')
+
+                  if [ "$HTTP_CODE" = "409" ]; then
                     echo "ERROR: A refresh is already running"
                     exit 1
                   fi
-                  if [ "$RESP" != "202" ]; then
-                    echo "ERROR: Unexpected response code: $RESP"
+                  if [ "$HTTP_CODE" != "202" ]; then
+                    echo "ERROR: Unexpected response code: $HTTP_CODE"
                     exit 1
                   fi
-                  echo "Refresh started (HTTP $RESP)"
+
+                  # Check if any handlers are due (fast-path optimization)
+                  HANDLERS_DUE=$(echo "$BODY" | grep -o '"handlersDue":[0-9]*' | grep -o '[0-9]*' || echo "")
+                  echo "Refresh started (HTTP $HTTP_CODE) — handlers due: ${HANDLERS_DUE:-unknown}"
+
+                  if [ "$HANDLERS_DUE" = "0" ]; then
+                    echo "All handlers skipped by cadence — nothing to wait for"
+                    echo "=== Sync and refresh completed successfully ==="
+                    exit 0
+                  fi
 
                   # Poll refresh status until complete
                   echo "=== Waiting for refresh to complete ==="
                   ATTEMPTS=0
                   MAX_ATTEMPTS=120
                   while [ $ATTEMPTS -lt $MAX_ATTEMPTS ]; do
-                    sleep 15
+                    sleep 5
                     ATTEMPTS=$((ATTEMPTS + 1))
                     STATUS=$(curl -sf "$BACKEND/api/admin/refresh/status" \
                       -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER")
@@ -91,19 +98,8 @@ spec:
                   done
 
                   if [ $ATTEMPTS -ge $MAX_ATTEMPTS ]; then
-                    echo "ERROR: Refresh timed out after $MAX_ATTEMPTS checks"
-                    exit 1
-                  fi
-
-                  # Step 2: Trigger data backup (only if AWS_BACKUP_BUCKET is configured)
-                  if [ -n "${AWS_BACKUP_BUCKET}" ]; then
-                    echo "=== Triggering data backup ==="
-                    BACKUP_RESP=$(curl -sf -X POST "$BACKEND/api/admin/backup" \
-                      -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" -H "Content-Type: application/json" \
-                      --max-time 120) || echo "WARNING: Backup failed (non-fatal)"
-                    echo "Backup response: $BACKUP_RESP"
-                  else
-                    echo "=== Skipping backup (AWS_BACKUP_BUCKET not configured) ==="
+                    echo "WARNING: Refresh still running after polling timeout (backend will complete independently)"
+                    # Exit 0 — the refresh was accepted, we just can't wait for it
                   fi
 
                   echo "=== Sync and refresh completed successfully ==="

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const registerExecutionRoutes = require('../../../server/execution/routes')
-const { _setFetchFn, stopScheduler } = require('../../../server/execution/scheduler')
+const { _setFetchFn } = require('../../../server/execution/scheduler')
 
 const mockFetchArtifacts = vi.fn()
 
@@ -46,7 +46,7 @@ describe('execution routes', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     _setFetchFn(mockFetchArtifacts)
-    stopScheduler()
+
 
     storage = makeStorage()
     router = makeRouter()
@@ -151,7 +151,7 @@ describe('execution routes', () => {
       expect(res2._json.status).toBe('cooldown')
       expect(res2._json.retryAfter).toBeGreaterThan(0)
 
-      stopScheduler()
+  
     })
   })
 
@@ -187,7 +187,7 @@ describe('execution routes', () => {
       expect(res2._json.branch).toBe('develop')
       expect(res2._json.refreshIntervalHours).toBe(6)
 
-      stopScheduler()
+  
     })
 
     it('rejects http:// in gitlabBaseUrl', async () => {
@@ -203,7 +203,7 @@ describe('execution routes', () => {
       expect(res._status).toBe(400)
       expect(res._json.message).toContain('https://')
 
-      stopScheduler()
+  
     })
 
     it('rejects invalid refreshIntervalHours', async () => {
@@ -224,7 +224,7 @@ describe('execution routes', () => {
       await handler({ body: { refreshIntervalHours: 'abc' } }, res3)
       expect(res3._status).toBe(400)
 
-      stopScheduler()
+  
     })
 
     it('rejects non-string fields', async () => {
@@ -237,7 +237,7 @@ describe('execution routes', () => {
       expect(res._status).toBe(400)
       expect(res._json.message).toContain('projectPath')
 
-      stopScheduler()
+  
     })
 
     it('rejects non-boolean enabled', async () => {
@@ -250,7 +250,7 @@ describe('execution routes', () => {
       expect(res._status).toBe(400)
       expect(res._json.message).toContain('enabled')
 
-      stopScheduler()
+  
     })
   })
 

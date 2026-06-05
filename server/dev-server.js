@@ -694,20 +694,100 @@ app.post('/api/admin/backup/restore', requireAdmin, requireScope('admin:manage')
  *   post:
  *     tags: [Admin]
  *     summary: Trigger a full refresh of all registered handlers (admin only)
+ *     parameters:
+ *       - name: force
+ *         in: query
+ *         schema:
+ *           type: string
+ *         description: When "true", bypasses cadence filtering and runs all handlers
  *     responses:
  *       202:
  *         description: Refresh started
  *       409:
  *         description: Refresh already in progress
  */
-app.post('/api/admin/refresh-all', requireAdmin, requireScope('admin:manage'), function(req, res) {
+app.post('/api/admin/refresh-all', requireAdmin, requireScope('admin:manage'), async function(req, res) {
   if (refreshRegistry.isRunning()) {
     return res.status(409).json({ error: 'Refresh is already running' });
   }
-  refreshRegistry.runAll({ skipCooldown: true }).catch(function(err) {
+  var force = req.query.force === 'true';
+  try {
+    var result = await refreshRegistry.runAll({ skipCooldown: true, force: force });
+    if (result.execution) {
+      result.execution.catch(function(err) {
+        console.error('[refresh-all] runAll error:', err.message);
+      });
+    }
+    res.status(202).json({
+      status: 'started',
+      totalHandlers: result.counts.total,
+      handlersSkipped: result.counts.skipped,
+      handlersDue: result.counts.due
+    });
+  } catch (err) {
     console.error('[refresh-all] runAll error:', err.message);
-  });
-  res.status(202).json({ status: 'started' });
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * @openapi
+ * /api/admin/refresh-cadence:
+ *   get:
+ *     tags: [Admin]
+ *     summary: Get cadence info for all handlers (admin only)
+ *     responses:
+ *       200:
+ *         description: Cadence info per handler
+ */
+app.get('/api/admin/refresh-cadence', requireAdmin, requireScope('admin:manage'), async function(req, res) {
+  try {
+    var status = await refreshRegistry.getStatus();
+    var overrides = refreshRegistry.getCadenceOverrides();
+    res.json({ handlers: status.handlers, overrides: overrides });
+  } catch (error) {
+    console.error('[refresh-cadence] Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * @openapi
+ * /api/admin/refresh-cadence:
+ *   post:
+ *     tags: [Admin]
+ *     summary: Set cadence override for a handler (admin only)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [handlerId]
+ *             properties:
+ *               handlerId:
+ *                 type: string
+ *               cadence:
+ *                 type: string
+ *                 nullable: true
+ *     responses:
+ *       200:
+ *         description: Override set successfully
+ *       400:
+ *         description: Invalid cadence value
+ */
+app.post('/api/admin/refresh-cadence', requireAdmin, requireScope('admin:manage'), function(req, res) {
+  var handlerId = req.body && req.body.handlerId;
+  var cadence = req.body && req.body.cadence;
+  if (!handlerId || typeof handlerId !== 'string') {
+    return res.status(400).json({ error: 'handlerId is required' });
+  }
+  try {
+    refreshRegistry.setCadenceOverride(handlerId, cadence === undefined ? null : cadence);
+    res.json({ status: 'ok', overrides: refreshRegistry.getCadenceOverrides() });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 /**
@@ -1476,6 +1556,32 @@ const { createRefreshRegistry } = require('../shared/server/refresh-registry');
 const { createExportRegistry } = require('../shared/server/export-registry');
 const refreshRegistry = createRefreshRegistry(storageModule);
 const exportRegistry = createExportRegistry();
+
+// Register platform:backup as a refresh handler (runs via cadence system)
+refreshRegistry.register('platform:backup', {
+  order: 200,
+  cadence: '24h',
+  timeout: 120000,
+  handler: async function() {
+    if (!process.env.AWS_BACKUP_BUCKET) {
+      return { status: 'skipped', reason: 'AWS_BACKUP_BUCKET not configured' };
+    }
+    if (backupRunning) {
+      return { status: 'skipped', reason: 'backup already in progress' };
+    }
+    backupRunning = true;
+    try {
+      const result = await backup.createBackup();
+      const retention = await backup.applyRetention();
+      return { status: 'success', ...result, deleted: retention.deleted };
+    } catch (err) {
+      console.error('[platform:backup] Backup failed:', err.message);
+      throw err;
+    } finally {
+      backupRunning = false;
+    }
+  }
+});
 
 // Register backup staleness message provider (admin-only warning when latest backup > 48h old)
 const BACKUP_STALE_HOURS = 48;

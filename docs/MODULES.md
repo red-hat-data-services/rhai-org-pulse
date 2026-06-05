@@ -216,7 +216,7 @@ The authoritative typedef for the context object is in `shared/server/module-con
 | `registerScopes(configs)` | function | Register module-specific API token scopes |
 | `registerDiagnostics(fn)` | function | Register diagnostics hook (see below) |
 | `registerMessageProvider(id, fn)` | function | Register message provider (see below) |
-| `registerRefresh(id, config)` | function | Register refresh handler (see below) |
+| `registerRefresh(id, config)` | function | Register refresh handler with optional cadence (see below) |
 | `registerExport(fn)` | function | Register data export hook (see below) |
 | `secrets` | object | Frozen object containing resolved secret values declared by this module |
 | `resolveSecret(name)` | function | Read a dynamic secret from `process.env` at call time |
@@ -309,7 +309,7 @@ Disabling a module hides it from the UI immediately but its server routes remain
 
 ### CronJob behavior
 
-The daily CronJob (`deploy/openshift/base/cronjob-sync-refresh.yaml`) calls the People & Teams module's API endpoints directly. If People & Teams is disabled, those endpoints will return 404 and the CronJob will fail silently. Re-enable People & Teams and restart to restore automatic syncs.
+The CronJob (`deploy/openshift/base/cronjob-sync-refresh.yaml`, every 15 minutes) calls the People & Teams module's API endpoints directly. If People & Teams is disabled, those endpoints will return 404 and the CronJob will fail silently. Re-enable People & Teams and restart to restore automatic syncs.
 
 ## Export Hook
 
@@ -474,6 +474,68 @@ module.exports = function registerRoutes(router, context) {
 - Provider results are merged with admin-stored messages from `data/messages.json`
 - The client fetches messages once on app load (non-blocking) and renders them as sticky banners inside the header
 - Users can dismiss messages per session (sessionStorage)
+
+## Refresh Handler Hook
+
+Modules can register refresh handlers to participate in the platform's unified data refresh system. When the CronJob fires (every 15 minutes) or an admin triggers a manual refresh, registered handlers run in order.
+
+### Registering a Refresh Handler
+
+Call `context.registerRefresh(id, config)` inside your `registerRoutes` function:
+
+```javascript
+module.exports = function registerRoutes(router, context) {
+  const { storage } = context
+
+  if (context.registerRefresh) {
+    context.registerRefresh('my-data', {
+      order: 50,           // lower runs first (default: 100)
+      timeout: 300000,     // per-handler timeout in ms (default: 5 min)
+      cadence: '12h',      // how often to run (default: '24h')
+      handler: async function(options) {
+        // Fetch and store data
+        const data = await fetchExternalData()
+        storage.writeToStorage('my-module/data.json', data)
+        return { status: 'success', count: data.length }
+      }
+    })
+  }
+}
+```
+
+### RefreshConfig
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `handler` | function | (required) | Async function to execute the refresh |
+| `order` | number | 100 | Execution order — lower runs first. Handlers at the same order run in parallel |
+| `timeout` | number | 300000 | Per-handler timeout in ms |
+| `cadence` | string | `'24h'` | How often the handler should run. Formats: `'15m'`, `'12h'`, `'1d'` |
+| `status` | function | null | Async function returning current status (legacy, used when no runs have occurred) |
+
+### Cadence
+
+Each handler declares a cadence — how often it should actually run. When `runAll()` is called, handlers whose `lastSuccessfulRun` is more recent than their cadence are skipped. This allows the CronJob to fire frequently (every 15 minutes) while each handler controls its own update frequency.
+
+- Default cadence is `'24h'` — handlers without an explicit cadence run once per day
+- Cadence is validated at registration time — invalid values throw immediately
+- Missing `lastSuccessfulRun` (first deploy, new handler) means the handler is immediately due
+- Failed handlers retry on the next tick (only successful runs update `lastSuccessfulRun`)
+- Admin UI allows cadence overrides per handler (minimum override: `'15m'`)
+- `runModule()` (per-module refresh button) ignores cadence — all handlers for that module run
+
+### Dynamic Cadence
+
+If your handler's cadence depends on configuration, re-register when the config changes:
+
+```javascript
+context.registerRefresh('my-data', { ...config, cadence: myConfig.intervalHours + 'h' })
+
+// On config change, re-register to update cadence
+context.registerRefresh('my-data', { ...config, cadence: newIntervalHours + 'h' })
+```
+
+Re-registration replaces the handler entry. In-flight runs are unaffected (the registry snapshots entries at the start of each run).
 
 ## Secrets Declaration
 

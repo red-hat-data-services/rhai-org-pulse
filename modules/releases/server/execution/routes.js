@@ -12,7 +12,7 @@ const {
   loadConfig,
   manualRefresh,
   onConfigSave,
-  initScheduler
+  setOnCadenceChange
 } = scheduler;
 const { logAudit } = require('../planning/audit-log');
 
@@ -131,9 +131,6 @@ module.exports = function registerExecutionRoutes(router, context) {
   function readDataFile(relativePath) {
     return storage.readFromStorage(`${DATA_PREFIX}/${relativePath}`);
   }
-
-  // Initialize scheduler on module load (staggered: planning=0s, execution=5s, delivery=10s)
-  setTimeout(function() { initScheduler(storage); }, 5000);
 
   // GET /features — list all features with summary metrics
   router.get('/features', requireAuth, requireScope('releases:read'), function(req, res) {
@@ -337,18 +334,33 @@ module.exports = function registerExecutionRoutes(router, context) {
     });
   }
 
-  if (context.registerRefresh) {
-    context.registerRefresh('execution', {
-      order: 70,
-      timeout: 600000,
-      handler: async function(options) {
-        options = options || {};
-        if (options.skipCooldown) {
-          const { runFetch } = require('./scheduler');
-          return runFetch(storage);
-        }
-        return manualRefresh(storage);
+  // Handler config defined once — single source of truth
+  const handlerConfig = {
+    order: 70,
+    timeout: 600000,
+    handler: async function(options) {
+      options = options || {};
+      if (options.skipCooldown) {
+        const { runFetch } = require('./scheduler');
+        return runFetch(storage);
       }
+      return manualRefresh(storage);
+    }
+  };
+
+  if (context.registerRefresh) {
+    const initialConfig = loadConfig(storage);
+    context.registerRefresh('execution', {
+      ...handlerConfig,
+      cadence: initialConfig.refreshIntervalHours + 'h'
+    });
+
+    // Wire config save to re-register with updated cadence
+    setOnCadenceChange(function(newCadenceStr) {
+      context.registerRefresh('execution', {
+        ...handlerConfig,
+        cadence: newCadenceStr
+      });
     });
   }
 };
