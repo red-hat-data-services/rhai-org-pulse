@@ -194,7 +194,7 @@ async function runPass1(jiraRequest, fetchAllJqlResults, featureKeys, opts) {
     if (bi > 0) await sleep(throttleMs)
 
     var keys = batches[bi]
-    var jql = 'key in (' + keys.join(', ') + ')'
+    var jql = 'key in (' + keys.map(function(k) { return '"' + k + '"' }).join(', ') + ')'
 
     try {
       var issues = await fetchAllJqlResults(jiraRequest, jql, fieldsStr)
@@ -270,7 +270,7 @@ async function runPass2(jiraRequest, fetchAllJqlResults, targetKeys, enrichmentM
     if (bi > 0) await sleep(throttleMs)
 
     var keys = batches[bi]
-    var jql = 'key in (' + keys.join(', ') + ')'
+    var jql = 'key in (' + keys.map(function(k) { return '"' + k + '"' }).join(', ') + ')'
 
     try {
       var issues = await fetchAllJqlResults(jiraRequest, jql, CHANGELOG_FIELDS, { expand: 'changelog' })

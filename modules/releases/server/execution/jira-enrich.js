@@ -222,7 +222,7 @@ async function enrichFeatures(keys, jiraRequestFn, fetchAllJqlResultsFn) {
     if (bi > 0) await sleep(THROTTLE_MS);
 
     const batchKeys = batches[bi];
-    const jql = 'key in (' + batchKeys.join(', ') + ')';
+    const jql = 'key in (' + batchKeys.map(k => '"' + k + '"').join(', ') + ')';
 
     try {
       const issues = await fetchAllJqlResultsFn(jiraRequestFn, jql, ENRICH_FIELDS, {
@@ -280,7 +280,7 @@ async function fetchEpicsForFeatures(featureKeys, jiraRequestFn, fetchAllJqlResu
     if (bi > 0) await sleep(THROTTLE_MS);
 
     const batchKeys = batches[bi];
-    const keyList = batchKeys.join(', ');
+    const keyList = batchKeys.map(k => '"' + k + '"').join(', ');
     const jql = '("Epic Link" in (' + keyList + ') OR parent in (' + keyList + '))';
     const fields = 'summary,status,parent,customfield_10014';
 
