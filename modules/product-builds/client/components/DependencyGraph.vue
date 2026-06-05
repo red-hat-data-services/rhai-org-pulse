@@ -45,8 +45,8 @@ watch(nodes, () => {
 })
 
 function onNodeClick({ node }) {
-  const key = node.id === 'root' ? '' : node.id
-  selectedPackage.value = key
+  if (node.id === 'root') return
+  selectedPackage.value = node.id
 }
 
 function selectFromList(key) {
