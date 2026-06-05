@@ -1,0 +1,139 @@
+{
+  "fetchedAt": "2026-04-25T14:30:00.000Z",
+  "version": "3.5",
+  "demoMode": true,
+  "features": {
+    "RHAISTRAT-1168": {
+      "key": "RHAISTRAT-1168",
+      "summary": "GPU-as-a-Service Observability Dashboard",
+      "issueType": "Feature",
+      "status": "Refined",
+      "team": "Model Serving",
+      "assignee": "Alice Chen",
+      "fixVersions": ["RHOAI-3.5.GA"],
+      "components": ["Platform Core"],
+      "violations": []
+    },
+    "RHAISTRAT-1169": {
+      "key": "RHAISTRAT-1169",
+      "summary": "Model Serving Autoscaling for High-Throughput Inference",
+      "issueType": "Feature",
+      "status": "In Progress",
+      "team": "Model Serving",
+      "assignee": "Bob Park",
+      "fixVersions": ["RHOAI-3.5.EA2"],
+      "components": ["Platform Core"],
+      "violations": []
+    },
+    "RHAISTRAT-1170": {
+      "key": "RHAISTRAT-1170",
+      "summary": "LLM Fine-Tuning with Custom Datasets",
+      "issueType": "Feature",
+      "status": "Refined",
+      "team": "Training",
+      "assignee": "Carol Nguyen",
+      "fixVersions": ["RHOAI-3.5.EA1"],
+      "components": ["ML Models"],
+      "violations": []
+    },
+    "RHAISTRAT-1171": {
+      "key": "RHAISTRAT-1171",
+      "summary": "A/B Testing Framework for Model Endpoints",
+      "issueType": "Feature",
+      "status": "New",
+      "team": "Platform",
+      "assignee": "Dan Garcia",
+      "fixVersions": ["RHOAI-3.5.GA"],
+      "components": ["ML Models"],
+      "violations": []
+    },
+    "RHAISTRAT-1172": {
+      "key": "RHAISTRAT-1172",
+      "summary": "Distributed Training Pipeline Orchestration",
+      "issueType": "Feature",
+      "status": "Refined",
+      "team": "Data Science Pipelines",
+      "assignee": "Eve Kim",
+      "fixVersions": ["RHOAI-3.5.EA2"],
+      "components": ["ML Models"],
+      "violations": []
+    },
+    "RHAISTRAT-1173": {
+      "key": "RHAISTRAT-1173",
+      "summary": "GPU Memory Monitoring Dashboard",
+      "issueType": "Feature",
+      "status": "Refined",
+      "team": "Model Serving",
+      "assignee": "Frank Liu",
+      "fixVersions": ["RHOAI-3.5.GA"],
+      "components": ["Platform Dashboard"],
+      "violations": []
+    },
+    "RHAISTRAT-1174": {
+      "key": "RHAISTRAT-1174",
+      "summary": "Data Quality Validation for Training Pipelines",
+      "issueType": "Feature",
+      "status": "New",
+      "team": "Data Science Pipelines",
+      "assignee": "Grace Patel",
+      "fixVersions": ["RHOAI-3.5.EA2"],
+      "components": ["Data Pipelines"],
+      "violations": []
+    },
+    "RHAISTRAT-1175": {
+      "key": "RHAISTRAT-1175",
+      "summary": "RBAC for Shared Model Registry",
+      "issueType": "Feature",
+      "status": "Refined",
+      "team": "Platform",
+      "assignee": "Hana Tanaka",
+      "fixVersions": ["RHOAI-3.5.GA"],
+      "components": ["Platform Core"],
+      "violations": []
+    },
+    "RHAISTRAT-1176": {
+      "key": "RHAISTRAT-1176",
+      "summary": "Custom Runtime Images for Jupyter Notebooks",
+      "issueType": "Feature",
+      "status": "New",
+      "team": "Platform",
+      "assignee": "Ivan Sousa",
+      "fixVersions": ["RHOAI-3.5.GA"],
+      "components": ["Platform Core", "Infrastructure Services"],
+      "violations": []
+    },
+    "RHAISTRAT-1177": {
+      "key": "RHAISTRAT-1177",
+      "summary": "Real-Time Model Deployment Latency Optimization",
+      "issueType": "Feature",
+      "status": "In Progress",
+      "team": "Model Serving",
+      "assignee": "Julia Wang",
+      "fixVersions": ["RHOAI-3.5.EA1"],
+      "components": ["ML Models", "Platform Core"],
+      "violations": []
+    },
+    "RHAISTRAT-1178": {
+      "key": "RHAISTRAT-1178",
+      "summary": "OpenTelemetry Tracing for Pipeline Debugging",
+      "issueType": "Feature",
+      "status": "New",
+      "team": "Platform",
+      "assignee": "Karl Muller",
+      "fixVersions": ["RHOAI-3.5.GA"],
+      "components": ["Infrastructure Services"],
+      "violations": []
+    },
+    "RHAISTRAT-1179": {
+      "key": "RHAISTRAT-1179",
+      "summary": "Federated Learning for Distributed Model Training",
+      "issueType": "Feature",
+      "status": "Refined",
+      "team": "Training",
+      "assignee": "Laura Okonkwo",
+      "fixVersions": ["RHOAI-3.5.GA"],
+      "components": ["ML Models"],
+      "violations": []
+    }
+  }
+}

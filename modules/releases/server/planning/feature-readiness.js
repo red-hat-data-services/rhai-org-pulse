@@ -1,3 +1,5 @@
+var { buildTeamIndex } = require('./team-lookup')
+
 var RICE_MAX = 16900 // 13 × 13 × 100 ÷ 1 (theoretical max: max Reach × max Impact × max Confidence ÷ min Effort)
 
 var TIER_SCORES     = { T1: 1.0, T2: 0.6, T3: 0.2 }
@@ -67,6 +69,7 @@ function buildFeatureReadiness(readFromStorage, version) {
 
   var candidateIndex = new Map()
   var healthIndex = new Map()
+  var teamIndex = buildTeamIndex(readFromStorage, version)
 
   if (version) {
     var candidateCache = readFromStorage('releases/planning/candidates-cache-' + version + '.json')
@@ -123,6 +126,7 @@ function buildFeatureReadiness(readFromStorage, version) {
       ? candidateData.fixVersion || null
       : (healthData ? healthData.fixVersions || null : null)
     var deliveryOwner = healthData ? healthData.deliveryOwner || null : null
+    var team = teamIndex.get(key) || null
 
     var priorityScore = healthData ? (healthData.priorityScore != null ? healthData.priorityScore : null) : null
     var priorityScoreBreakdown = healthData ? (healthData.priorityBreakdown || healthData.priorityScoreBreakdown || null) : null
@@ -157,6 +161,7 @@ function buildFeatureReadiness(readFromStorage, version) {
       reviewers: latest.reviewers || {},
       components: componentsList,
       deliveryOwner: deliveryOwner,
+      team: team,
       reviewedAt: latest.reviewedAt,
       approvedBy: latest.approvedBy || null,
       approvedAt: latest.approvedAt || null,
@@ -187,7 +192,7 @@ function buildFeatureReadiness(readFromStorage, version) {
     if (feature.bigRock) allBigRocks.add(feature.bigRock)
     if (feature.targetRelease) allTargetReleases.add(feature.targetRelease)
     if (feature.fixVersion) allFixVersions.add(feature.fixVersion)
-    if (feature.deliveryOwner) allTeams.add(feature.deliveryOwner)
+    if (feature.team) allTeams.add(feature.team)
   }
 
   function sortFeatures(a, b) {

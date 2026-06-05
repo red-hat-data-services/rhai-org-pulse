@@ -674,42 +674,58 @@ describe('buildFeatureReadiness', function() {
       expect(result.filterMeta.teams).toEqual([])
     })
 
-    it('filterMeta.teams is populated from health cache deliveryOwner values', function() {
+    it('filterMeta.teams is populated from hygiene cache team values', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) },
         'RHAISTRAT-2': { latest: makeLatest({ key: 'RHAISTRAT-2', humanReviewStatus: 'approved' }) }
       })
-      var healthCache = {
-        features: [
-          { key: 'RHAISTRAT-1', deliveryOwner: 'Alice', priorityScore: null },
-          { key: 'RHAISTRAT-2', deliveryOwner: 'Bob', priorityScore: null }
-        ]
+      var hygieneCache = {
+        features: {
+          'RHAISTRAT-1': { key: 'RHAISTRAT-1', team: 'Alice' },
+          'RHAISTRAT-2': { key: 'RHAISTRAT-2', team: 'Bob' }
+        }
       }
       var readFromStorage = makeReadFromStorage({
         'ai-impact/features.json': store,
-        'releases/planning/health-cache-3.6.json': healthCache
+        'releases/hygiene/features-3.6.json': hygieneCache
       })
       var result = buildFeatureReadiness(readFromStorage, '3.6')
       expect(result.filterMeta.teams).toEqual(['Alice', 'Bob'])
     })
 
-    it('filterMeta.teams deduplicates delivery owners', function() {
+    it('filterMeta.teams deduplicates team names', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) },
         'RHAISTRAT-2': { latest: makeLatest({ key: 'RHAISTRAT-2', humanReviewStatus: 'approved' }) }
       })
-      var healthCache = {
-        features: [
-          { key: 'RHAISTRAT-1', deliveryOwner: 'Alice', priorityScore: null },
-          { key: 'RHAISTRAT-2', deliveryOwner: 'Alice', priorityScore: null }
-        ]
+      var hygieneCache = {
+        features: {
+          'RHAISTRAT-1': { key: 'RHAISTRAT-1', team: 'Alice' },
+          'RHAISTRAT-2': { key: 'RHAISTRAT-2', team: 'Alice' }
+        }
       }
       var readFromStorage = makeReadFromStorage({
         'ai-impact/features.json': store,
-        'releases/planning/health-cache-3.6.json': healthCache
+        'releases/hygiene/features-3.6.json': hygieneCache
       })
       var result = buildFeatureReadiness(readFromStorage, '3.6')
       expect(result.filterMeta.teams).toEqual(['Alice'])
+    })
+
+    it('feature.team comes from hygiene cache, not deliveryOwner', function() {
+      var store = makeFeaturesStore({
+        'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
+      })
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'wrong-owner', priorityScore: null }] }
+      var hygieneCache = { features: { 'RHAISTRAT-1': { key: 'RHAISTRAT-1', team: 'Real Team' } } }
+      var readFromStorage = makeReadFromStorage({
+        'ai-impact/features.json': store,
+        'releases/planning/health-cache-3.6.json': healthCache,
+        'releases/hygiene/features-3.6.json': hygieneCache
+      })
+      var result = buildFeatureReadiness(readFromStorage, '3.6')
+      expect(result.approved[0].team).toBe('Real Team')
+      expect(result.filterMeta.teams).toEqual(['Real Team'])
     })
   })
 
