@@ -408,7 +408,7 @@ describe('buildFeatureReadiness', function() {
     var version = '3.6'
     var candidatesKey = 'releases/planning/candidates-cache-3.6.json'
 
-    it('populates tier, bigRock, targetRelease, fixVersion from matching candidate', function() {
+    it('populates tier, bigRock, targetVersions, fixVersion from matching candidate', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
@@ -427,11 +427,11 @@ describe('buildFeatureReadiness', function() {
       var f = result.approved[0]
       expect(f.tier).toBe('T1')
       expect(f.bigRock).toBe('AI Efficiency')
-      expect(f.targetRelease).toBe('rhoai-3.6')
+      expect(f.targetVersions).toEqual(['rhoai-3.6'])
       expect(f.fixVersion).toBe('3.6.0')
     })
 
-    it('leaves tier/bigRock/targetRelease/fixVersion null when no candidate matches', function() {
+    it('leaves tier/bigRock/targetVersions empty when no candidate matches', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
@@ -446,7 +446,7 @@ describe('buildFeatureReadiness', function() {
       var f = result.approved[0]
       expect(f.tier).toBeNull()
       expect(f.bigRock).toBeNull()
-      expect(f.targetRelease).toBeNull()
+      expect(f.targetVersions).toEqual([])
       expect(f.fixVersion).toBeNull()
     })
 
@@ -467,7 +467,7 @@ describe('buildFeatureReadiness', function() {
   })
 
   describe('missing candidates cache', function() {
-    it('approved features still returned with null tier/bigRock/etc when candidates cache and health cache are absent', function() {
+    it('approved features still returned with null tier/bigRock and empty targetVersions when candidates cache and health cache are absent', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
@@ -479,11 +479,11 @@ describe('buildFeatureReadiness', function() {
       var f = result.approved[0]
       expect(f.tier).toBeNull()
       expect(f.bigRock).toBeNull()
-      expect(f.targetRelease).toBeNull()
+      expect(f.targetVersions).toEqual([])
       expect(f.fixVersion).toBeNull()
     })
 
-    it('falls back to health cache for tier, bigRock, targetRelease, fixVersion when candidates cache is absent', function() {
+    it('falls back to health cache for tier, bigRock, targetVersions, fixVersion when candidates cache is absent', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
@@ -506,12 +506,12 @@ describe('buildFeatureReadiness', function() {
       var f = result.approved[0]
       expect(f.tier).toBe('T2')
       expect(f.bigRock).toBe('Platform Efficiency')
-      expect(f.targetRelease).toBe('rhoai-3.6')
+      expect(f.targetVersions).toEqual(['rhoai-3.6'])
       expect(f.fixVersion).toBe('3.6.0')
       expect(f.deliveryOwner).toBe('Jane Smith')
     })
 
-    it('candidates cache takes priority over health cache for tier/bigRock/targetRelease/fixVersion', function() {
+    it('candidates cache takes priority over health cache for tier/bigRock/targetVersions/fixVersion', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
@@ -530,7 +530,7 @@ describe('buildFeatureReadiness', function() {
       var f = result.approved[0]
       expect(f.tier).toBe('T1')
       expect(f.bigRock).toBe('AI Speed')
-      expect(f.targetRelease).toBe('rhoai-3.6-cand')
+      expect(f.targetVersions).toEqual(['rhoai-3.6-cand'])
       expect(f.fixVersion).toBe('3.6.0-cand')
     })
 
@@ -636,7 +636,7 @@ describe('buildFeatureReadiness', function() {
   })
 
   describe('filterMeta', function() {
-    it('contains unique sorted arrays of priorities, components, bigRocks, targetReleases, fixVersions', function() {
+    it('contains unique sorted arrays of priorities, components, bigRocks, targetVersions, fixVersions', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved', priority: 'Critical', components: ['Serving', 'Platform'] }) },
         'RHAISTRAT-2': { latest: makeLatest({ key: 'RHAISTRAT-2', humanReviewStatus: 'approved', priority: 'Normal', components: ['Platform'] }) }
@@ -658,7 +658,7 @@ describe('buildFeatureReadiness', function() {
       expect(fm.priorities).toEqual(['Critical', 'Normal'])
       expect(fm.components).toEqual(['Platform', 'Serving'])
       expect(fm.bigRocks).toEqual(['AI Efficiency', 'Platform'])
-      expect(fm.targetReleases).toEqual(['rhoai-3.6'])
+      expect(fm.targetVersions).toEqual(['rhoai-3.6'])
       expect(fm.fixVersions).toEqual(['3.6.0'])
     })
 
@@ -669,7 +669,7 @@ describe('buildFeatureReadiness', function() {
       var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
       var result = buildFeatureReadiness(readFromStorage, null)
       expect(result.filterMeta.bigRocks).toEqual([])
-      expect(result.filterMeta.targetReleases).toEqual([])
+      expect(result.filterMeta.targetVersions).toEqual([])
       expect(result.filterMeta.fixVersions).toEqual([])
       expect(result.filterMeta.teams).toEqual([])
     })

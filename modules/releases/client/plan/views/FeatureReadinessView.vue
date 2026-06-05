@@ -30,7 +30,7 @@ const selectedFeature = ref(null)
 
 const filters = ref({
   outcome: null,
-  targetRelease: null,
+  targetVersion: null,
   fixVersion: null,
   component: null,
   priority: null,
@@ -41,7 +41,7 @@ const filters = ref({
 function matchesFilters(feature) {
   const f = filters.value
   if (f.outcome && feature.bigRock !== f.outcome) return false
-  if (f.targetRelease && feature.targetRelease !== f.targetRelease) return false
+  if (f.targetVersion && !(feature.targetVersions || []).includes(f.targetVersion)) return false
   if (f.fixVersion && feature.fixVersion !== f.fixVersion) return false
   if (f.component && !(feature.components || []).includes(f.component)) return false
   if (f.priority && feature.priority !== f.priority) return false

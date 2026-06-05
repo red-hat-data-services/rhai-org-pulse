@@ -305,8 +305,23 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
               <dt class="text-gray-400 dark:text-gray-500">Outcome</dt>
               <dd class="text-gray-700 dark:text-gray-300">{{ feature.bigRock || '—' }}</dd>
 
-              <dt class="text-gray-400 dark:text-gray-500">Target Version</dt>
-              <dd class="font-mono text-gray-700 dark:text-gray-300">{{ feature.targetRelease || '—' }}</dd>
+              <dt class="text-gray-400 dark:text-gray-500 self-start">Target Version</dt>
+              <dd>
+                <div v-if="(feature.targetVersions || []).length">
+                  <p v-if="(feature.targetVersions || []).length > 1" class="flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 mb-1">
+                    <span aria-hidden="true">⚠</span> Multiple target versions — Jira hygiene issue
+                  </p>
+                  <div class="flex flex-wrap gap-1">
+                    <span
+                      v-for="tv in feature.targetVersions"
+                      :key="tv"
+                      class="font-mono text-xs"
+                      :class="(feature.targetVersions || []).length > 1 ? 'text-amber-700 dark:text-amber-400' : 'text-gray-700 dark:text-gray-300'"
+                    >{{ tv }}</span>
+                  </div>
+                </div>
+                <span v-else class="font-mono text-gray-400 dark:text-gray-600">—</span>
+              </dd>
 
               <dt class="text-gray-400 dark:text-gray-500">Fix Version</dt>
               <dd class="font-mono text-gray-700 dark:text-gray-300">{{ feature.fixVersion || '—' }}</dd>

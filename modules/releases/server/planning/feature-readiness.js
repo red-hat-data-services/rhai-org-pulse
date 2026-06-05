@@ -96,7 +96,7 @@ function buildFeatureReadiness(readFromStorage, version) {
   var allComponents = []
   var allPriorities = new Set()
   var allBigRocks = new Set()
-  var allTargetReleases = new Set()
+  var allTargetVersions = new Set()
   var allFixVersions = new Set()
   var allTeams = new Set()
 
@@ -119,9 +119,9 @@ function buildFeatureReadiness(readFromStorage, version) {
     var bigRock = candidateData
       ? candidateData.bigRock || null
       : (healthData ? healthData.bigRock || null : null)
-    var targetRelease = candidateData
-      ? candidateData.targetRelease || null
-      : (healthData ? healthData.targetRelease || null : null)
+    var targetVersions = candidateData && candidateData.targetRelease
+      ? [candidateData.targetRelease]
+      : (healthData && healthData.targetRelease ? [healthData.targetRelease] : [])
     var fixVersion = candidateData
       ? candidateData.fixVersion || null
       : (healthData ? healthData.fixVersions || null : null)
@@ -167,7 +167,7 @@ function buildFeatureReadiness(readFromStorage, version) {
       approvedAt: latest.approvedAt || null,
       tier: tier,
       bigRock: bigRock,
-      targetRelease: targetRelease,
+      targetVersions: targetVersions,
       fixVersion: fixVersion,
       priorityScore: priorityScore,
       priorityScoreBreakdown: priorityScoreBreakdown,
@@ -190,7 +190,9 @@ function buildFeatureReadiness(readFromStorage, version) {
     }
     if (feature.priority) allPriorities.add(feature.priority)
     if (feature.bigRock) allBigRocks.add(feature.bigRock)
-    if (feature.targetRelease) allTargetReleases.add(feature.targetRelease)
+    for (var tvi = 0; tvi < feature.targetVersions.length; tvi++) {
+      allTargetVersions.add(feature.targetVersions[tvi])
+    }
     if (feature.fixVersion) allFixVersions.add(feature.fixVersion)
     if (feature.team) allTeams.add(feature.team)
   }
@@ -211,7 +213,7 @@ function buildFeatureReadiness(readFromStorage, version) {
     components: uniqueComponents,
     priorities: Array.from(allPriorities).sort(),
     bigRocks: Array.from(allBigRocks).sort(),
-    targetReleases: Array.from(allTargetReleases).sort(),
+    targetVersions: Array.from(allTargetVersions).sort(),
     fixVersions: Array.from(allFixVersions).sort(),
     teams: Array.from(allTeams).sort()
   }

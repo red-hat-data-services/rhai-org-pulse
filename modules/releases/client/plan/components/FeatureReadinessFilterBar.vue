@@ -10,7 +10,7 @@ const props = defineProps({
     type: Object,
     default: () => ({
       outcome: null,
-      targetRelease: null,
+      targetVersion: null,
       fixVersion: null,
       component: null,
       priority: null,
@@ -33,7 +33,7 @@ function toggleNeedsAttention() {
 function clearFilters() {
   emit('update:modelValue', {
     outcome: null,
-    targetRelease: null,
+    targetVersion: null,
     fixVersion: null,
     component: null,
     priority: null,
@@ -46,7 +46,7 @@ const hasActiveFilters = computed(() => {
   const f = props.modelValue
   return !!(
     f.outcome ||
-    f.targetRelease ||
+    f.targetVersion ||
     f.fixVersion ||
     f.component ||
     f.priority ||
@@ -56,7 +56,7 @@ const hasActiveFilters = computed(() => {
 })
 
 const outcomes = computed(() => props.filterMeta.bigRocks || [])
-const targetReleases = computed(() => props.filterMeta.targetReleases || [])
+const targetVersions = computed(() => props.filterMeta.targetVersions || [])
 const fixVersions = computed(() => props.filterMeta.fixVersions || [])
 const components = computed(() => props.filterMeta.components || [])
 const priorities = computed(() => props.filterMeta.priorities || [])
@@ -83,12 +83,12 @@ const teams = computed(() => props.filterMeta.teams || [])
     <div class="flex flex-col gap-0.5">
       <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Target Version</label>
       <select
-        :value="modelValue.targetRelease || ''"
-        @change="update('targetRelease', $event.target.value || null)"
+        :value="modelValue.targetVersion || ''"
+        @change="update('targetVersion', $event.target.value || null)"
         class="text-xs rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400"
       >
         <option value="">All versions</option>
-        <option v-for="r in targetReleases" :key="r" :value="r" class="text-xs">{{ r }}</option>
+        <option v-for="r in targetVersions" :key="r" :value="r" class="text-xs">{{ r }}</option>
       </select>
     </div>
 

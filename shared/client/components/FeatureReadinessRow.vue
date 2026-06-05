@@ -123,8 +123,19 @@ const priorityDisplay = computed(() => {
     </td>
 
     <!-- Target Version -->
-    <td class="px-3 py-2.5 whitespace-nowrap">
-      <span class="font-mono text-xs text-gray-700 dark:text-gray-300">{{ feature.targetRelease || '—' }}</span>
+    <td class="px-3 py-2.5">
+      <div class="flex flex-wrap gap-1">
+        <span
+          v-for="tv in (feature.targetVersions || [])"
+          :key="tv"
+          class="inline-flex items-center px-1.5 py-0.5 rounded-full font-mono text-xs font-medium"
+          :class="(feature.targetVersions || []).length > 1
+            ? 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700'
+            : 'bg-gray-100 dark:bg-gray-700/80 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600'"
+          :title="(feature.targetVersions || []).length > 1 ? 'Multiple target versions — Jira hygiene issue' : undefined"
+        >{{ tv }}</span>
+        <span v-if="!(feature.targetVersions || []).length" class="text-xs text-gray-400 dark:text-gray-600">—</span>
+      </div>
     </td>
 
     <!-- Fix Version -->
