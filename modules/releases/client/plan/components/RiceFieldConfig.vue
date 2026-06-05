@@ -5,14 +5,9 @@ import { useReleaseHealth } from '../composables/useReleaseHealth'
 var { searchJiraFields, loadRiceConfig, saveRiceConfig, testRiceFields } = useReleaseHealth()
 
 var enableRice = ref(false)
-var fields = ref({
-  riceReach: { id: '', name: '' },
-  riceImpact: { id: '', name: '' },
-  riceConfidence: { id: '', name: '' },
-  riceEffort: { id: '', name: '' }
-})
+var riceScoreField = ref({ id: '', name: '' })
 
-var activeSearch = ref(null)
+var searchActive = ref(false)
 var searchQuery = ref('')
 var searchResults = ref([])
 var searching = ref(false)
@@ -22,23 +17,13 @@ var testing = ref(false)
 var testResults = ref(null)
 var searchDebounce = null
 
-var RICE_FIELDS = [
-  { key: 'riceReach', label: 'Reach' },
-  { key: 'riceImpact', label: 'Impact' },
-  { key: 'riceConfidence', label: 'Confidence' },
-  { key: 'riceEffort', label: 'Effort' }
-]
-
 onMounted(async function() {
   try {
     var config = await loadRiceConfig()
     enableRice.value = !!config.enableRice
     var ids = config.customFieldIds || {}
-    for (var i = 0; i < RICE_FIELDS.length; i++) {
-      var k = RICE_FIELDS[i].key
-      if (ids[k]) {
-        fields.value[k] = { id: ids[k], name: ids[k] }
-      }
+    if (ids.riceScoreField) {
+      riceScoreField.value = { id: ids.riceScoreField, name: ids.riceScoreField }
     }
   } catch {
     // Config not available
@@ -49,14 +34,14 @@ onUnmounted(function() {
   if (searchDebounce) clearTimeout(searchDebounce)
 })
 
-function startSearch(fieldKey) {
-  activeSearch.value = fieldKey
+function startSearch() {
+  searchActive.value = true
   searchQuery.value = ''
   searchResults.value = []
 }
 
 function cancelSearch() {
-  activeSearch.value = null
+  searchActive.value = false
   searchQuery.value = ''
   searchResults.value = []
 }
@@ -81,9 +66,7 @@ function handleSearchInput() {
 }
 
 function selectField(field) {
-  if (activeSearch.value) {
-    fields.value[activeSearch.value] = { id: field.id, name: field.name }
-  }
+  riceScoreField.value = { id: field.id, name: field.name }
   cancelSearch()
 }
 
@@ -91,12 +74,7 @@ async function handleSave() {
   saving.value = true
   saveMessage.value = ''
   try {
-    var fieldIds = {}
-    for (var i = 0; i < RICE_FIELDS.length; i++) {
-      var k = RICE_FIELDS[i].key
-      fieldIds[k] = fields.value[k].id || ''
-    }
-    await saveRiceConfig(fieldIds, enableRice.value)
+    await saveRiceConfig(riceScoreField.value.id || '', enableRice.value)
     saveMessage.value = 'Saved'
     setTimeout(function() { saveMessage.value = '' }, 3000)
   } catch (err) {
@@ -132,16 +110,16 @@ async function handleTest() {
     </div>
 
     <div v-if="enableRice" class="space-y-3">
-      <div v-for="rf in RICE_FIELDS" :key="rf.key" class="flex items-center gap-3">
-        <span class="text-xs font-medium text-gray-600 dark:text-gray-400 w-24">{{ rf.label }}</span>
+      <div class="flex items-center gap-3">
+        <span class="text-xs font-medium text-gray-600 dark:text-gray-400 w-24">RICE Score</span>
         <div class="flex-1 relative">
-          <div v-if="activeSearch !== rf.key" class="flex items-center gap-2">
-            <span v-if="fields[rf.key].id" class="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-700 dark:text-gray-300">
-              {{ fields[rf.key].name || fields[rf.key].id }}
+          <div v-if="!searchActive" class="flex items-center gap-2">
+            <span v-if="riceScoreField.id" class="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded text-gray-700 dark:text-gray-300">
+              {{ riceScoreField.name || riceScoreField.id }}
             </span>
             <span v-else class="text-xs text-gray-400">Not configured</span>
-            <button @click="startSearch(rf.key)" class="text-xs text-primary-600 dark:text-primary-400 hover:underline">
-              {{ fields[rf.key].id ? 'Change' : 'Search' }}
+            <button @click="startSearch" class="text-xs text-primary-600 dark:text-primary-400 hover:underline">
+              {{ riceScoreField.id ? 'Change' : 'Search' }}
             </button>
           </div>
           <div v-else class="space-y-1">
@@ -185,7 +163,7 @@ async function handleTest() {
         @click="handleTest"
         :disabled="testing"
         class="px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
-      >{{ testing ? 'Testing...' : 'Test RICE Fields' }}</button>
+      >{{ testing ? 'Testing...' : 'Test RICE Field' }}</button>
       <span v-if="saveMessage" class="text-xs" :class="saveMessage.startsWith('Error') ? 'text-red-600' : 'text-green-600'">
         {{ saveMessage }}
       </span>
@@ -195,12 +173,12 @@ async function handleTest() {
       <div v-if="testResults.error" class="text-red-600">{{ testResults.error }}</div>
       <template v-else>
         <div class="font-medium text-gray-700 dark:text-gray-300 mb-2">
-          {{ testResults.validCount }}/{{ testResults.totalCount }} fields found in Jira
+          {{ testResults.validCount }}/{{ testResults.totalCount }} field found in Jira
         </div>
         <div v-for="(val, key) in testResults.results" :key="key" class="flex items-center gap-2 py-0.5">
           <span v-if="val.found" class="text-green-600">&#10003;</span>
           <span v-else class="text-red-500">&#10007;</span>
-          <span class="text-gray-600 dark:text-gray-400">{{ val.label }}:</span>
+          <span class="text-gray-600 dark:text-gray-400">RICE Score:</span>
           <span v-if="val.found" class="text-gray-800 dark:text-gray-200">{{ val.name }} ({{ val.id }})</span>
           <span v-else-if="val.id" class="text-red-500">{{ val.id }} not found</span>
           <span v-else class="text-gray-400">Not configured</span>

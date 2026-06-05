@@ -153,36 +153,24 @@ describe('RiceScoreDisplay', function() {
     expect(wrapper.text()).toContain('N/A')
   })
 
-  it('shows score when rice data is complete', function() {
-    var wrapper = mount(RiceScoreDisplay, {
-      props: { rice: { reach: 1000, impact: 2, confidence: 80, effort: 4, score: 400, complete: true } }
-    })
+  it('shows score when rice has a score', function() {
+    var wrapper = mount(RiceScoreDisplay, { props: { rice: { score: 400 } } })
     expect(wrapper.text()).toContain('400')
   })
 
   it('shows N/A when rice has no score', function() {
-    var wrapper = mount(RiceScoreDisplay, {
-      props: { rice: { reach: 1000, impact: null, confidence: 80, effort: 4, score: null, complete: false } }
-    })
+    var wrapper = mount(RiceScoreDisplay, { props: { rice: { score: null } } })
     expect(wrapper.text()).toContain('N/A')
   })
 
-  it('expands breakdown on click when score exists', async function() {
-    var wrapper = mount(RiceScoreDisplay, {
-      props: { rice: { reach: 1000, impact: 2, confidence: 80, effort: 4, score: 400, complete: true } }
-    })
-    await wrapper.find('button').trigger('click')
-    expect(wrapper.text()).toContain('Reach')
-    expect(wrapper.text()).toContain('1000')
-    expect(wrapper.text()).toContain('Impact')
-    expect(wrapper.text()).toContain('Confidence')
-    expect(wrapper.text()).toContain('Effort')
+  it('applies indigo styling when score is present', function() {
+    var wrapper = mount(RiceScoreDisplay, { props: { rice: { score: 1234 } } })
+    expect(wrapper.find('span').classes().join(' ')).toContain('indigo')
   })
 
-  it('does not expand on click when score is null', async function() {
+  it('applies gray styling when score is absent', function() {
     var wrapper = mount(RiceScoreDisplay, { props: { rice: null } })
-    await wrapper.find('button').trigger('click')
-    expect(wrapper.text()).not.toContain('Reach')
+    expect(wrapper.find('span').classes().join(' ')).toContain('gray')
   })
 })
 

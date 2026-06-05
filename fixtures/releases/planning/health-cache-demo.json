@@ -113,12 +113,7 @@
         ]
       },
       "rice": {
-        "reach": 2000,
-        "impact": 3,
-        "confidence": 90,
-        "effort": 8,
-        "score": 675,
-        "complete": true
+        "score": 675
       },
       "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1001",
       "dod": {
@@ -212,12 +207,7 @@
         ]
       },
       "rice": {
-        "reach": 1500,
-        "impact": 2,
-        "confidence": 85,
-        "effort": 5,
-        "score": 510,
-        "complete": true
+        "score": 510
       },
       "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1002",
       "dod": {
@@ -420,12 +410,7 @@
         ]
       },
       "rice": {
-        "reach": 800,
-        "impact": 2,
-        "confidence": 70,
-        "effort": 3,
-        "score": 373,
-        "complete": true
+        "score": 373
       },
       "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1004",
       "dod": {
@@ -643,12 +628,7 @@
         ]
       },
       "rice": {
-        "reach": 3000,
-        "impact": 3,
-        "confidence": 60,
-        "effort": 12,
-        "score": 450,
-        "complete": true
+        "score": 450
       },
       "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1006",
       "dod": {
@@ -871,12 +851,7 @@
         ]
       },
       "rice": {
-        "reach": 1200,
-        "impact": 3,
-        "confidence": 75,
-        "effort": 10,
-        "score": 270,
-        "complete": true
+        "score": 270
       },
       "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1008",
       "dod": {
@@ -1073,12 +1048,7 @@
         ]
       },
       "rice": {
-        "reach": 1800,
-        "impact": 3,
-        "confidence": 90,
-        "effort": 6,
-        "score": 810,
-        "complete": true
+        "score": 810
       },
       "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2006",
       "dod": {
@@ -1292,12 +1262,7 @@
         ]
       },
       "rice": {
-        "reach": 2500,
-        "impact": 3,
-        "confidence": 70,
-        "effort": 8,
-        "score": 656,
-        "complete": true
+        "score": 656
       },
       "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2016",
       "dod": {

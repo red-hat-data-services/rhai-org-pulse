@@ -70,8 +70,7 @@ function computeDoR(feature, enrichment, opts) {
   var b2Detail = 'rice-disabled'
   if (enableRice) {
     var rice = safeEnrichment.rice
-    var hasRice = rice && rice.reach != null && rice.impact != null &&
-      rice.confidence != null && rice.effort != null
+    var hasRice = rice && rice.score != null
     b2Passed = !!hasRice
     b2Detail = hasRice ? 'complete' : 'missing'
   }

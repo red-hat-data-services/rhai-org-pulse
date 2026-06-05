@@ -2,10 +2,9 @@
  * Jira enrichment for the release health pipeline.
  *
  * Two-pass strategy:
- *   Pass 1 (lightweight, all features): description, story points, issuelinks
+ *   Pass 1 (lightweight, all features): description, story points, issuelinks,
+ *          and optionally the pre-computed RICE score field
  *   Pass 2 (targeted): changelog for at-risk features only
- *
- * Optionally fetches RICE fields from parent (RHAISTRAT outcome) issues.
  *
  * Uses shared/server/jira.js for API calls, with batching and throttling
  * to respect Jira Cloud rate limits.
@@ -181,11 +180,15 @@ function identifyChangelogTargets(featureKeys, enrichmentMap, features) {
 async function runPass1(jiraRequest, fetchAllJqlResults, featureKeys, opts) {
   var batchSize = (opts && opts.batchSize) || 40
   var throttleMs = (opts && opts.throttleMs) || 1000
+  var riceScoreField = (opts && opts.riceScoreField) || ''
   var enrichmentMap = new Map()
 
   if (!featureKeys.length) return enrichmentMap
 
   var batches = batch(featureKeys, batchSize)
+  var fieldsList = ENRICHMENT_FIELDS.split(',')
+  if (riceScoreField) fieldsList.push(riceScoreField)
+  var fieldsStr = fieldsList.join(',')
 
   for (var bi = 0; bi < batches.length; bi++) {
     if (bi > 0) await sleep(throttleMs)
@@ -194,11 +197,23 @@ async function runPass1(jiraRequest, fetchAllJqlResults, featureKeys, opts) {
     var jql = 'key in (' + keys.join(', ') + ')'
 
     try {
-      var issues = await fetchAllJqlResults(jiraRequest, jql, ENRICHMENT_FIELDS)
+      var issues = await fetchAllJqlResults(jiraRequest, jql, fieldsStr)
 
       for (var ii = 0; ii < issues.length; ii++) {
         var issue = issues[ii]
         var fields = issue.fields || {}
+
+        // Normalize RICE score from the configured field
+        var rice = null
+        if (riceScoreField) {
+          var rawRice = fields[riceScoreField]
+          var riceValue = (rawRice !== null && rawRice !== undefined && rawRice !== '')
+            ? Number(typeof rawRice === 'object' && rawRice !== null ? rawRice.value : rawRice)
+            : null
+          rice = (riceValue !== null && !isNaN(riceValue))
+            ? { score: riceValue }
+            : null
+        }
 
         enrichmentMap.set(issue.key, {
           hasDescription: hasDescriptionContent(fields.description),
@@ -206,7 +221,7 @@ async function runPass1(jiraRequest, fetchAllJqlResults, featureKeys, opts) {
           dependencyLinks: parseIssueLinks(fields.issuelinks),
           labels: Array.isArray(fields.labels) ? fields.labels : [],
           refinementHistory: null,
-          rice: null,
+          rice: rice,
           tshirtSize: parseTshirtSize(fields.description)
         })
       }
@@ -273,68 +288,13 @@ async function runPass2(jiraRequest, fetchAllJqlResults, targetKeys, enrichmentM
 }
 
 /**
- * Fetch RICE fields from RHAISTRAT parent issues.
- *
- * @param {Function} jiraRequest - The shared jiraRequest function
- * @param {Function} fetchAllJqlResults - The shared fetchAllJqlResults function
- * @param {Array<string>} parentKeys - Unique parent (outcome) keys
- * @param {object} riceFieldIds - { riceReach, riceImpact, riceConfidence, riceEffort }
- * @param {object} opts - Options: { batchSize, throttleMs }
- * @returns {Promise<Map<string, object>>} Map of parentKey -> { reach, impact, confidence, effort }
- */
-async function fetchRiceFields(jiraRequest, fetchAllJqlResults, parentKeys, riceFieldIds, opts) {
-  var batchSize = (opts && opts.batchSize) || 40
-  var throttleMs = (opts && opts.throttleMs) || 1000
-  var riceMap = new Map()
-
-  if (!parentKeys.length) return riceMap
-
-  var fields = [
-    riceFieldIds.riceReach,
-    riceFieldIds.riceImpact,
-    riceFieldIds.riceConfidence,
-    riceFieldIds.riceEffort
-  ].filter(Boolean).join(',')
-
-  if (!fields) return riceMap
-
-  var batches = batch(parentKeys, batchSize)
-
-  for (var bi = 0; bi < batches.length; bi++) {
-    if (bi > 0) await sleep(throttleMs)
-
-    var keys = batches[bi]
-    var jql = 'key in (' + keys.join(', ') + ')'
-
-    try {
-      var issues = await fetchAllJqlResults(jiraRequest, jql, fields)
-
-      for (var ii = 0; ii < issues.length; ii++) {
-        var issue = issues[ii]
-        var f = issue.fields || {}
-        riceMap.set(issue.key, {
-          reach: f[riceFieldIds.riceReach] || null,
-          impact: f[riceFieldIds.riceImpact] || null,
-          confidence: f[riceFieldIds.riceConfidence] || null,
-          effort: f[riceFieldIds.riceEffort] || null
-        })
-      }
-    } catch (err) {
-      console.warn('[health] RICE field fetch batch ' + (bi + 1) + '/' + batches.length + ' failed:', err.message)
-    }
-  }
-
-  return riceMap
-}
-
-/**
  * Run the full Jira enrichment pipeline.
  *
  * @param {Function} jiraRequest - The shared jiraRequest function
  * @param {Function} fetchAllJqlResults - The shared fetchAllJqlResults function
  * @param {Array<object>} features - Feature objects (must have .key, .status, .targetVersions)
  * @param {object} config - Release-planning config with healthConfig and customFieldIds
- * @returns {Promise<{ enrichments: Map<string, object>, riceData: Map<string, object>, warnings: Array<string>, stats: object }>}
+ * @returns {Promise<{ enrichments: Map<string, object>, warnings: Array<string>, stats: object }>}
  */
 async function enrichFeatures(jiraRequest, fetchAllJqlResults, features, config) {
   var warnings = []
@@ -346,67 +306,41 @@ async function enrichFeatures(jiraRequest, fetchAllJqlResults, features, config)
   var throttleMs = healthConfig.enrichmentThrottleMs || 1000
   var opts = { batchSize: batchSize, throttleMs: throttleMs }
 
+  // Pass riceScoreField to runPass1 if RICE is enabled and configured
+  if (enableRice && customFieldIds.riceScoreField) {
+    opts.riceScoreField = customFieldIds.riceScoreField
+  } else if (enableRice && !customFieldIds.riceScoreField) {
+    warnings.push('RICE scoring enabled but riceScoreField not configured')
+  }
+
   var emptyMap = new Map()
 
   // Check Jira credentials
   if (!hasJiraCredentials(jiraRequest)) {
     warnings.push('Jira credentials not configured -- enrichment skipped')
-    return { enrichments: emptyMap, riceData: emptyMap, warnings: warnings, stats: { pass1: 0, pass2: 0, rice: 0 } }
+    return { enrichments: emptyMap, warnings: warnings, stats: { pass1: 0, pass2: 0 } }
   }
 
   if (!enableJira) {
     warnings.push('Jira enrichment disabled in config')
-    return { enrichments: emptyMap, riceData: emptyMap, warnings: warnings, stats: { pass1: 0, pass2: 0, rice: 0 } }
+    return { enrichments: emptyMap, warnings: warnings, stats: { pass1: 0, pass2: 0 } }
   }
 
   var featureKeys = features.map(function(f) { return f.key }).filter(Boolean)
 
-  // Pass 1: Lightweight enrichment for all features
+  // Pass 1: Lightweight enrichment for all features (includes RICE if configured)
   var enrichmentMap = await runPass1(jiraRequest, fetchAllJqlResults, featureKeys, opts)
 
   // Pass 2: Changelog for at-risk features
   var changelogTargets = identifyChangelogTargets(featureKeys, enrichmentMap, features)
   await runPass2(jiraRequest, fetchAllJqlResults, changelogTargets, enrichmentMap, opts)
 
-  // RICE: Fetch from parent keys if enabled
-  var riceData = new Map()
-  if (enableRice) {
-    var hasRiceFields = customFieldIds.riceReach && customFieldIds.riceImpact &&
-      customFieldIds.riceConfidence && customFieldIds.riceEffort
-
-    if (hasRiceFields) {
-      // Collect unique parentKeys
-      var parentKeySet = new Set()
-      for (var pi = 0; pi < features.length; pi++) {
-        if (features[pi].parentKey) parentKeySet.add(features[pi].parentKey)
-      }
-      var uniqueParentKeys = Array.from(parentKeySet)
-
-      if (uniqueParentKeys.length > 0) {
-        riceData = await fetchRiceFields(jiraRequest, fetchAllJqlResults, uniqueParentKeys, customFieldIds, opts)
-
-        // Map RICE data back to child features via parentKey
-        for (var ri = 0; ri < features.length; ri++) {
-          var feat = features[ri]
-          if (feat.parentKey && riceData.has(feat.parentKey)) {
-            var enrichment = enrichmentMap.get(feat.key) || {}
-            enrichment.rice = riceData.get(feat.parentKey)
-            enrichmentMap.set(feat.key, enrichment)
-          }
-        }
-      }
-    } else {
-      warnings.push('RICE scoring enabled but field IDs not configured')
-    }
-  }
-
   var stats = {
     pass1: featureKeys.length,
-    pass2: changelogTargets.length,
-    rice: riceData.size
+    pass2: changelogTargets.length
   }
 
-  return { enrichments: enrichmentMap, riceData: riceData, warnings: warnings, stats: stats }
+  return { enrichments: enrichmentMap, warnings: warnings, stats: stats }
 }
 
 module.exports = {
@@ -418,6 +352,5 @@ module.exports = {
   parseChangelog: parseChangelog,
   identifyChangelogTargets: identifyChangelogTargets,
   runPass1: runPass1,
-  runPass2: runPass2,
-  fetchRiceFields: fetchRiceFields
+  runPass2: runPass2
 }
