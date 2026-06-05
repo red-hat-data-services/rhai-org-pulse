@@ -467,13 +467,12 @@ describe('buildFeatureReadiness', function() {
   })
 
   describe('missing candidates cache', function() {
-    it('approved features still returned with null tier/bigRock/etc when candidates cache is null', function() {
+    it('approved features still returned with null tier/bigRock/etc when candidates cache and health cache are absent', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
       var readFromStorage = makeReadFromStorage({
         'ai-impact/features.json': store
-        // candidates key absent → returns null
       })
       var result = buildFeatureReadiness(readFromStorage, '3.6')
       expect(result.approved).toHaveLength(1)
@@ -482,6 +481,72 @@ describe('buildFeatureReadiness', function() {
       expect(f.bigRock).toBeNull()
       expect(f.targetRelease).toBeNull()
       expect(f.fixVersion).toBeNull()
+    })
+
+    it('falls back to health cache for tier, bigRock, targetRelease, fixVersion when candidates cache is absent', function() {
+      var store = makeFeaturesStore({
+        'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
+      })
+      var healthCache = {
+        features: [{
+          key: 'RHAISTRAT-1',
+          tier: 'T2',
+          bigRock: 'Platform Efficiency',
+          targetRelease: 'rhoai-3.6',
+          fixVersions: '3.6.0',
+          deliveryOwner: 'Jane Smith',
+          priorityScore: null
+        }]
+      }
+      var readFromStorage = makeReadFromStorage({
+        'ai-impact/features.json': store,
+        'releases/planning/health-cache-3.6.json': healthCache
+      })
+      var result = buildFeatureReadiness(readFromStorage, '3.6')
+      var f = result.approved[0]
+      expect(f.tier).toBe('T2')
+      expect(f.bigRock).toBe('Platform Efficiency')
+      expect(f.targetRelease).toBe('rhoai-3.6')
+      expect(f.fixVersion).toBe('3.6.0')
+      expect(f.deliveryOwner).toBe('Jane Smith')
+    })
+
+    it('candidates cache takes priority over health cache for tier/bigRock/targetRelease/fixVersion', function() {
+      var store = makeFeaturesStore({
+        'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
+      })
+      var candidateCache = {
+        data: { features: [{ issueKey: 'RHAISTRAT-1', tier: 1, bigRock: 'AI Speed', targetRelease: 'rhoai-3.6-cand', fixVersion: '3.6.0-cand' }] }
+      }
+      var healthCache = {
+        features: [{ key: 'RHAISTRAT-1', tier: 'T3', bigRock: 'Platform', targetRelease: 'rhoai-3.6-health', fixVersions: '3.6.0-health', priorityScore: null }]
+      }
+      var readFromStorage = makeReadFromStorage({
+        'ai-impact/features.json': store,
+        'releases/planning/candidates-cache-3.6.json': candidateCache,
+        'releases/planning/health-cache-3.6.json': healthCache
+      })
+      var result = buildFeatureReadiness(readFromStorage, '3.6')
+      var f = result.approved[0]
+      expect(f.tier).toBe('T1')
+      expect(f.bigRock).toBe('AI Speed')
+      expect(f.targetRelease).toBe('rhoai-3.6-cand')
+      expect(f.fixVersion).toBe('3.6.0-cand')
+    })
+
+    it('health cache components (string) are split into array when ai-impact components are empty', function() {
+      var store = makeFeaturesStore({
+        'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved', components: [] }) }
+      })
+      var healthCache = {
+        features: [{ key: 'RHAISTRAT-1', components: 'Serving, Training', priorityScore: null }]
+      }
+      var readFromStorage = makeReadFromStorage({
+        'ai-impact/features.json': store,
+        'releases/planning/health-cache-3.6.json': healthCache
+      })
+      var result = buildFeatureReadiness(readFromStorage, '3.6')
+      expect(result.approved[0].components).toEqual(['Serving', 'Training'])
     })
   })
 
@@ -597,7 +662,7 @@ describe('buildFeatureReadiness', function() {
       expect(fm.fixVersions).toEqual(['3.6.0'])
     })
 
-    it('filterMeta is empty collections when no candidates match', function() {
+    it('filterMeta is empty collections when no candidates or health cache data', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved', priority: 'Normal', components: [] }) }
       })
@@ -606,6 +671,45 @@ describe('buildFeatureReadiness', function() {
       expect(result.filterMeta.bigRocks).toEqual([])
       expect(result.filterMeta.targetReleases).toEqual([])
       expect(result.filterMeta.fixVersions).toEqual([])
+      expect(result.filterMeta.teams).toEqual([])
+    })
+
+    it('filterMeta.teams is populated from health cache deliveryOwner values', function() {
+      var store = makeFeaturesStore({
+        'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) },
+        'RHAISTRAT-2': { latest: makeLatest({ key: 'RHAISTRAT-2', humanReviewStatus: 'approved' }) }
+      })
+      var healthCache = {
+        features: [
+          { key: 'RHAISTRAT-1', deliveryOwner: 'Alice', priorityScore: null },
+          { key: 'RHAISTRAT-2', deliveryOwner: 'Bob', priorityScore: null }
+        ]
+      }
+      var readFromStorage = makeReadFromStorage({
+        'ai-impact/features.json': store,
+        'releases/planning/health-cache-3.6.json': healthCache
+      })
+      var result = buildFeatureReadiness(readFromStorage, '3.6')
+      expect(result.filterMeta.teams).toEqual(['Alice', 'Bob'])
+    })
+
+    it('filterMeta.teams deduplicates delivery owners', function() {
+      var store = makeFeaturesStore({
+        'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) },
+        'RHAISTRAT-2': { latest: makeLatest({ key: 'RHAISTRAT-2', humanReviewStatus: 'approved' }) }
+      })
+      var healthCache = {
+        features: [
+          { key: 'RHAISTRAT-1', deliveryOwner: 'Alice', priorityScore: null },
+          { key: 'RHAISTRAT-2', deliveryOwner: 'Alice', priorityScore: null }
+        ]
+      }
+      var readFromStorage = makeReadFromStorage({
+        'ai-impact/features.json': store,
+        'releases/planning/health-cache-3.6.json': healthCache
+      })
+      var result = buildFeatureReadiness(readFromStorage, '3.6')
+      expect(result.filterMeta.teams).toEqual(['Alice'])
     })
   })
 

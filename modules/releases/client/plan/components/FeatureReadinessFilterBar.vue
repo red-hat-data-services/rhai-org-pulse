@@ -14,6 +14,7 @@ const props = defineProps({
       fixVersion: null,
       component: null,
       priority: null,
+      team: null,
       needsAttention: false
     })
   }
@@ -36,6 +37,7 @@ function clearFilters() {
     fixVersion: null,
     component: null,
     priority: null,
+    team: null,
     needsAttention: false
   })
 }
@@ -48,6 +50,7 @@ const hasActiveFilters = computed(() => {
     f.fixVersion ||
     f.component ||
     f.priority ||
+    f.team ||
     f.needsAttention
   )
 })
@@ -57,6 +60,7 @@ const targetReleases = computed(() => props.filterMeta.targetReleases || [])
 const fixVersions = computed(() => props.filterMeta.fixVersions || [])
 const components = computed(() => props.filterMeta.components || [])
 const priorities = computed(() => props.filterMeta.priorities || [])
+const teams = computed(() => props.filterMeta.teams || [])
 </script>
 
 <template>
@@ -111,6 +115,19 @@ const priorities = computed(() => props.filterMeta.priorities || [])
       >
         <option value="">All components</option>
         <option v-for="c in components" :key="c" :value="c" class="text-xs">{{ c }}</option>
+      </select>
+    </div>
+
+    <!-- Team / Delivery Owner -->
+    <div v-if="teams.length > 0" class="flex flex-col gap-0.5">
+      <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Team</label>
+      <select
+        :value="modelValue.team || ''"
+        @change="update('team', $event.target.value || null)"
+        class="text-xs rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400"
+      >
+        <option value="">All teams</option>
+        <option v-for="t in teams" :key="t" :value="t" class="text-xs">{{ t }}</option>
       </select>
     </div>
 

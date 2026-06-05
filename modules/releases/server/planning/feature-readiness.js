@@ -95,6 +95,7 @@ function buildFeatureReadiness(readFromStorage, version) {
   var allBigRocks = new Set()
   var allTargetReleases = new Set()
   var allFixVersions = new Set()
+  var allTeams = new Set()
 
   var keys = Object.keys(raw.features)
   for (var i = 0; i < keys.length; i++) {
@@ -109,10 +110,19 @@ function buildFeatureReadiness(readFromStorage, version) {
     var candidateData = candidateIndex.get(key) || null
     var healthData = healthIndex.get(key) || null
 
-    var tier = candidateData && candidateData.tier != null ? 'T' + candidateData.tier : null
-    var bigRock = candidateData ? candidateData.bigRock : null
-    var targetRelease = candidateData ? candidateData.targetRelease : null
-    var fixVersion = candidateData ? candidateData.fixVersion : null
+    var tier = candidateData && candidateData.tier != null
+      ? 'T' + candidateData.tier
+      : (healthData ? healthData.tier || null : null)
+    var bigRock = candidateData
+      ? candidateData.bigRock || null
+      : (healthData ? healthData.bigRock || null : null)
+    var targetRelease = candidateData
+      ? candidateData.targetRelease || null
+      : (healthData ? healthData.targetRelease || null : null)
+    var fixVersion = candidateData
+      ? candidateData.fixVersion || null
+      : (healthData ? healthData.fixVersions || null : null)
+    var deliveryOwner = healthData ? healthData.deliveryOwner || null : null
 
     var priorityScore = healthData ? (healthData.priorityScore != null ? healthData.priorityScore : null) : null
     var priorityScoreBreakdown = healthData ? (healthData.priorityBreakdown || healthData.priorityScoreBreakdown || null) : null
@@ -123,6 +133,13 @@ function buildFeatureReadiness(readFromStorage, version) {
       : computeBestAvailableScore(Object.assign({}, latest, { rubricTotal: rubricTotal, tier: tier }))
 
     var blockerResult = computeBlockers(Object.assign({}, latest, { rubricTotal: rubricTotal }))
+
+    var healthComponents = healthData && healthData.components
+      ? healthData.components.split(', ').filter(Boolean)
+      : []
+    var componentsList = (latest.components && latest.components.length > 0)
+      ? latest.components
+      : healthComponents
 
     var feature = {
       key: key,
@@ -138,7 +155,8 @@ function buildFeatureReadiness(readFromStorage, version) {
       rubricTotal: rubricTotal,
       scores: scores,
       reviewers: latest.reviewers || {},
-      components: latest.components || [],
+      components: componentsList,
+      deliveryOwner: deliveryOwner,
       reviewedAt: latest.reviewedAt,
       approvedBy: latest.approvedBy || null,
       approvedAt: latest.approvedAt || null,
@@ -169,6 +187,7 @@ function buildFeatureReadiness(readFromStorage, version) {
     if (feature.bigRock) allBigRocks.add(feature.bigRock)
     if (feature.targetRelease) allTargetReleases.add(feature.targetRelease)
     if (feature.fixVersion) allFixVersions.add(feature.fixVersion)
+    if (feature.deliveryOwner) allTeams.add(feature.deliveryOwner)
   }
 
   function sortFeatures(a, b) {
@@ -188,7 +207,8 @@ function buildFeatureReadiness(readFromStorage, version) {
     priorities: Array.from(allPriorities).sort(),
     bigRocks: Array.from(allBigRocks).sort(),
     targetReleases: Array.from(allTargetReleases).sort(),
-    fixVersions: Array.from(allFixVersions).sort()
+    fixVersions: Array.from(allFixVersions).sort(),
+    teams: Array.from(allTeams).sort()
   }
 
   var meta = {

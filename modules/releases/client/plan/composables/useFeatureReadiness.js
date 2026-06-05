@@ -24,14 +24,14 @@ function buildQueryString(params) {
   return parts.length ? '?' + parts.join('&') : ''
 }
 
-// Track last fetch time for TTL-based cache skip
-let lastFetchAt = 0
+// Track last fetch time per version key for TTL-based cache skip
+const lastFetchAt = {}
 
 export function useFeatureReadiness() {
   async function loadFeatureReadiness(version) {
     const now = Date.now()
-    if (now - lastFetchAt < CACHE_TTL && meta.value !== null) {
-      // Still within TTL and we have data — skip fetch
+    const versionKey = version || '__none__'
+    if (now - (lastFetchAt[versionKey] || 0) < CACHE_TTL && meta.value !== null) {
       return
     }
 
@@ -49,7 +49,7 @@ export function useFeatureReadiness() {
         filterMeta.value = data.filterMeta || {}
         meta.value = data.meta || null
       })
-      lastFetchAt = Date.now()
+      lastFetchAt[versionKey] = Date.now()
     } catch (err) {
       error.value = err.message || 'Failed to load feature readiness data'
     } finally {

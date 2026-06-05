@@ -32,6 +32,7 @@ const filters = ref({
   fixVersion: null,
   component: null,
   priority: null,
+  team: null,
   needsAttention: false
 })
 
@@ -42,6 +43,7 @@ function matchesFilters(feature) {
   if (f.fixVersion && feature.fixVersion !== f.fixVersion) return false
   if (f.component && !(feature.components || []).includes(f.component)) return false
   if (f.priority && feature.priority !== f.priority) return false
+  if (f.team && feature.deliveryOwner !== f.team) return false
   if (f.needsAttention && !feature.needsAttention) return false
   return true
 }
