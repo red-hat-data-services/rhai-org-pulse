@@ -96,33 +96,17 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     needs: [detect-changes, run-tests]
-    permissions:
-      statuses: write
     steps:
-      - name: Set commit status
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          REPO: ${{ github.repository }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      - name: Evaluate integration test results
         run: |
           MODULES='${{ needs.detect-changes.outputs.enabled-modules }}'
           if [ "$MODULES" = "[]" ] || [ -z "$MODULES" ]; then
-            STATE="success"
-            DESC="No module changes — integration tests skipped"
+            echo "No module changes — integration tests skipped"
           elif [ "${{ needs.run-tests.result }}" = "success" ]; then
-            STATE="success"
-            DESC="All integration tests passed"
+            echo "All integration tests passed"
           elif [ "${{ needs.run-tests.result }}" = "skipped" ]; then
-            STATE="success"
-            DESC="No module changes — integration tests skipped"
+            echo "No module changes — integration tests skipped"
           else
-            STATE="failure"
-            DESC="Integration tests failed"
+            echo "Integration tests failed"
+            exit 1
           fi
-
-          gh api "repos/${REPO}/statuses/${HEAD_SHA}" \
-            -f state="$STATE" \
-            -f context="Integration Tests" \
-            -f description="$DESC" \
-            -f target_url="$RUN_URL"
