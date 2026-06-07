@@ -18,6 +18,7 @@
     <div class="p-6">
       <DashboardView v-if="activeTab === 'outcomes'" />
       <HealthDashboardView v-else-if="activeTab === 'health'" />
+      <PmHubView v-else-if="activeTab === 'pm-hub'" />
     </div>
   </div>
 </template>
@@ -26,10 +27,12 @@
 import { ref } from 'vue'
 import DashboardView from '../plan/views/DashboardView.vue'
 import HealthDashboardView from '../plan/views/HealthDashboardView.vue'
+import PmHubView from '../plan/views/PmHubView.vue'
 
 const tabs = [
   { id: 'outcomes', label: 'Outcomes' },
   { id: 'health', label: 'Health' },
+  { id: 'pm-hub', label: 'PM Hub' },
 ]
 
 const activeTab = ref('outcomes')
