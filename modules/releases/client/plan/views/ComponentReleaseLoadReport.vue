@@ -24,7 +24,15 @@
     <div class="flex flex-wrap items-start gap-4">
       <!-- Jira Component Filter -->
       <div class="min-w-[280px] max-w-[400px] relative" ref="componentDropdownRef">
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Jira Component</label>
+        <div class="flex items-center justify-between mb-1">
+          <label class="text-xs font-medium text-gray-600 dark:text-gray-400">Jira Component</label>
+          <button
+            v-if="selectedComponents.length > 0"
+            type="button"
+            @click="selectedComponents = []; componentSearch = ''"
+            class="text-[10px] font-medium text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+          >Clear</button>
+        </div>
         <div
           class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 px-2 py-1.5 cursor-text flex flex-wrap items-center gap-1 min-h-[38px]"
           :class="{ 'ring-2 ring-primary-500 border-primary-500': componentDropdownOpen }"
@@ -77,7 +85,15 @@
 
       <!-- Release / Version Filter -->
       <div class="min-w-[280px] max-w-[400px] relative" ref="versionDropdownRef">
-        <label class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Release</label>
+        <div class="flex items-center justify-between mb-1">
+          <label class="text-xs font-medium text-gray-600 dark:text-gray-400">Release</label>
+          <button
+            v-if="selectedVersions.length > 0"
+            type="button"
+            @click="selectedVersions = []; versionSearch = ''"
+            class="text-[10px] font-medium text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+          >Clear</button>
+        </div>
         <div
           class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 px-2 py-1.5 cursor-text flex flex-wrap items-center gap-1 min-h-[38px]"
           :class="{ 'ring-2 ring-primary-500 border-primary-500': versionDropdownOpen }"
