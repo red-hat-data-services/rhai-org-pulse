@@ -87,7 +87,7 @@ const dailyOnboarded = computed(() => {
   return days
 })
 
-function buildOnboardedChart() {
+const onboardedChartData = computed(() => {
   const days = dailyOnboarded.value
   if (!days.length) return null
   const maxVal = Math.max(...days.map(d => d.count), 1)
@@ -118,14 +118,26 @@ function buildOnboardedChart() {
   })
 
   return { width, height, padLeft, padRight, padTop, padBottom, chartH, gridLines, bars }
-}
+})
 
 // --- Daily report tab state ---
 const generating = ref(false)
 const expandedCards = ref(new Set())
+const expandedEpics = ref(new Set())
 const cardData = ref({})
 const cardLoading = ref(new Set())
 const collapsedSections = ref({})
+
+function isEpicExpanded(key) {
+  return expandedEpics.value.has(key)
+}
+
+function toggleEpic(key) {
+  const next = new Set(expandedEpics.value)
+  if (next.has(key)) next.delete(key)
+  else next.add(key)
+  expandedEpics.value = next
+}
 
 function formatDate(dateStr) {
   if (!dateStr) return ''
@@ -152,9 +164,7 @@ function toggleSection(date, cat) {
 }
 
 // --- SVG trend chart ---
-function buildChartData(dataKey) {
-  const sorted = [...reports.value].reverse()
-  if (sorted.length < 2) return null
+function computeChartData(dataKey, sorted) {
   const values = sorted.map(r => r.summary[dataKey])
   const maxVal = Math.max(...values, 1)
   const width = 340, height = 160
@@ -181,6 +191,16 @@ function buildChartData(dataKey) {
 
   return { width, height, padLeft, padRight, gridLines, points, polyline, area, xLabels }
 }
+
+const trendChartsData = computed(() => {
+  const sorted = [...reports.value].reverse()
+  if (sorted.length < 2) return {}
+  const result = {}
+  for (const chart of TREND_CHARTS) {
+    result[chart.key] = computeChartData(chart.key, sorted)
+  }
+  return result
+})
 
 // --- Data fetching ---
 async function fetchReports() {
@@ -382,25 +402,25 @@ onMounted(() => {
           <div v-if="dailyOnboarded.length > 0" class="mb-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
             <div class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Daily Onboarding</div>
             <svg
-              v-if="buildOnboardedChart()"
+              v-if="onboardedChartData"
               width="100%"
-              :height="buildOnboardedChart().height"
-              :viewBox="`0 0 ${buildOnboardedChart().width} ${buildOnboardedChart().height}`"
+              :height="onboardedChartData.height"
+              :viewBox="`0 0 ${onboardedChartData.width} ${onboardedChartData.height}`"
               preserveAspectRatio="xMidYMid meet"
             >
               <!-- Grid lines -->
-              <g v-for="g in buildOnboardedChart().gridLines" :key="'g' + g.val">
-                <line :x1="buildOnboardedChart().padLeft" :y1="g.y" :x2="buildOnboardedChart().width - buildOnboardedChart().padRight" :y2="g.y" stroke="#e8e8e8" stroke-dasharray="3,3" />
-                <text :x="buildOnboardedChart().padLeft - 6" :y="g.y + 4" text-anchor="end" font-size="10" fill="#6a6e73">{{ g.val }}</text>
+              <g v-for="g in onboardedChartData.gridLines" :key="'g' + g.val">
+                <line :x1="onboardedChartData.padLeft" :y1="g.y" :x2="onboardedChartData.width - onboardedChartData.padRight" :y2="g.y" stroke="#e8e8e8" stroke-dasharray="3,3" />
+                <text :x="onboardedChartData.padLeft - 6" :y="g.y + 4" text-anchor="end" font-size="10" fill="#6a6e73">{{ g.val }}</text>
               </g>
               <!-- Bars -->
-              <g v-for="bar in buildOnboardedChart().bars" :key="bar.date">
+              <g v-for="bar in onboardedChartData.bars" :key="bar.date">
                 <rect :x="bar.x" :y="bar.y" :width="bar.width" :height="bar.height" rx="2" fill="#16a34a" opacity="0.8" />
                 <text v-if="bar.count > 0" :x="bar.x + bar.width / 2" :y="bar.y - 4" text-anchor="middle" font-size="11" font-weight="600" fill="#16a34a">{{ bar.count }}</text>
-                <text :x="bar.x + bar.width / 2" :y="buildOnboardedChart().height - 8" text-anchor="middle" font-size="9" fill="#6a6e73" :transform="`rotate(-45, ${bar.x + bar.width / 2}, ${buildOnboardedChart().height - 8})`">{{ bar.label }}</text>
+                <text :x="bar.x + bar.width / 2" :y="onboardedChartData.height - 8" text-anchor="middle" font-size="9" fill="#6a6e73" :transform="`rotate(-45, ${bar.x + bar.width / 2}, ${onboardedChartData.height - 8})`">{{ bar.label }}</text>
               </g>
               <!-- Baseline -->
-              <line :x1="buildOnboardedChart().padLeft" :y1="buildOnboardedChart().padTop + buildOnboardedChart().chartH" :x2="buildOnboardedChart().width - buildOnboardedChart().padRight" :y2="buildOnboardedChart().padTop + buildOnboardedChart().chartH" stroke="#d1d5db" stroke-width="1" />
+              <line :x1="onboardedChartData.padLeft" :y1="onboardedChartData.padTop + onboardedChartData.chartH" :x2="onboardedChartData.width - onboardedChartData.padRight" :y2="onboardedChartData.padTop + onboardedChartData.chartH" stroke="#d1d5db" stroke-width="1" />
             </svg>
           </div>
 
@@ -472,23 +492,23 @@ onMounted(() => {
           >
             <div class="text-[13px] font-semibold mb-1" :style="{ color: chart.color }">{{ chart.label }}</div>
             <svg
-              v-if="buildChartData(chart.key)"
+              v-if="trendChartsData[chart.key]"
               width="100%"
-              :height="buildChartData(chart.key).height"
-              :viewBox="`0 0 ${buildChartData(chart.key).width} ${buildChartData(chart.key).height}`"
+              :height="trendChartsData[chart.key].height"
+              :viewBox="`0 0 ${trendChartsData[chart.key].width} ${trendChartsData[chart.key].height}`"
               preserveAspectRatio="xMidYMid meet"
             >
-              <g v-for="g in buildChartData(chart.key).gridLines" :key="g.val">
-                <line :x1="buildChartData(chart.key).padLeft" :y1="g.y" :x2="buildChartData(chart.key).width - buildChartData(chart.key).padRight" :y2="g.y" stroke="#e8e8e8" stroke-dasharray="3,3" />
-                <text :x="buildChartData(chart.key).padLeft - 6" :y="g.y + 4" text-anchor="end" font-size="10" fill="#6a6e73">{{ g.val }}</text>
+              <g v-for="g in trendChartsData[chart.key].gridLines" :key="g.val">
+                <line :x1="trendChartsData[chart.key].padLeft" :y1="g.y" :x2="trendChartsData[chart.key].width - trendChartsData[chart.key].padRight" :y2="g.y" stroke="#e8e8e8" stroke-dasharray="3,3" />
+                <text :x="trendChartsData[chart.key].padLeft - 6" :y="g.y + 4" text-anchor="end" font-size="10" fill="#6a6e73">{{ g.val }}</text>
               </g>
-              <polygon :points="buildChartData(chart.key).area" :fill="chart.color" opacity="0.1" />
-              <polyline :points="buildChartData(chart.key).polyline" fill="none" :stroke="chart.color" stroke-width="2.5" stroke-linejoin="round" />
-              <g v-for="(p, i) in buildChartData(chart.key).points" :key="'pt' + i">
+              <polygon :points="trendChartsData[chart.key].area" :fill="chart.color" opacity="0.1" />
+              <polyline :points="trendChartsData[chart.key].polyline" fill="none" :stroke="chart.color" stroke-width="2.5" stroke-linejoin="round" />
+              <g v-for="(p, i) in trendChartsData[chart.key].points" :key="'pt' + i">
                 <circle :cx="p.x" :cy="p.y" r="4" :fill="chart.color" stroke="white" stroke-width="1.5" />
                 <text :x="p.x" :y="p.y - 10" text-anchor="middle" font-size="11" font-weight="600" :fill="chart.color">{{ p.val }}</text>
               </g>
-              <text v-for="(xl, i) in buildChartData(chart.key).xLabels" :key="'xl' + i" :x="xl.x" :y="buildChartData(chart.key).height - 6" text-anchor="middle" font-size="10" fill="#6a6e73">{{ xl.label }}</text>
+              <text v-for="(xl, i) in trendChartsData[chart.key].xLabels" :key="'xl' + i" :x="xl.x" :y="trendChartsData[chart.key].height - 6" text-anchor="middle" font-size="10" fill="#6a6e73">{{ xl.label }}</text>
             </svg>
           </div>
         </div>
@@ -550,8 +570,8 @@ onMounted(() => {
                     <div v-if="isSectionOpen(r.report_date, cat)" class="mt-2 pl-2">
                       <div class="mb-2 text-gray-500 dark:text-gray-400 text-[13px]">{{ CATEGORY_CONFIG[cat].description }}</div>
                       <div v-for="epic in cardData[r.report_date].categories[cat]" :key="epic.key" class="border border-gray-200 dark:border-gray-700 rounded mb-2 bg-white dark:bg-gray-800">
-                        <div class="flex items-center px-3.5 py-2.5 cursor-pointer gap-3 flex-wrap" @click="epic._expanded = !epic._expanded">
-                          <span class="text-gray-400 text-xs w-4">{{ epic._expanded ? '▾' : '▸' }}</span>
+                        <div class="flex items-center px-3.5 py-2.5 cursor-pointer gap-3 flex-wrap" @click="toggleEpic(epic.key)">
+                          <span class="text-gray-400 text-xs w-4">{{ isEpicExpanded(epic.key) ? '▾' : '▸' }}</span>
                           <a :href="`${JIRA_BASE}/${epic.key}`" target="_blank" rel="noopener noreferrer" class="font-semibold text-blue-600 hover:underline min-w-[120px]" @click.stop>{{ epic.key }}</a>
                           <span class="flex-1 min-w-[200px] text-gray-900 dark:text-gray-200">{{ epic.summary_short }}</span>
                           <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-white" :class="STATUS_COLORS[epic.status] || 'bg-gray-500'">{{ epic.status }}</span>
@@ -559,7 +579,7 @@ onMounted(() => {
                           <span class="text-[13px] min-w-[100px] text-gray-700 dark:text-gray-300">{{ epic.classification.child_summary }}</span>
                           <span v-if="epic.classification.days_since !== null" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium" :class="epic.classification.days_since > 30 ? 'bg-red-100 text-red-700 dark:bg-red-900/20 dark:text-red-400' : epic.classification.days_since > 5 ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400' : 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400'">{{ epic.classification.days_since }}d ago</span>
                         </div>
-                        <div v-if="epic._expanded" class="px-3.5 pb-3.5 pt-0 ml-[42px] border-t border-gray-100 dark:border-gray-700">
+                        <div v-if="isEpicExpanded(epic.key)" class="px-3.5 pb-3.5 pt-0 ml-[42px] border-t border-gray-100 dark:border-gray-700">
                           <div class="mt-2.5"><strong class="text-gray-700 dark:text-gray-300">Insight:</strong><span class="text-gray-600 dark:text-gray-400"> {{ epic.insight }}</span></div>
                           <div v-if="epic.last_comment.text" class="mt-2 text-[13px] text-gray-600 dark:text-gray-400">
                             <strong>Last comment</strong> by {{ epic.last_comment.by }} ({{ epic.last_comment.date_str }}):

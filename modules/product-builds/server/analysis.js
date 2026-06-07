@@ -213,28 +213,31 @@ async function buildReport(jira, options = {}) {
 
   console.log('[package-analysis] Fetching children and comments for %d EPICs...', rawEpics.length)
 
+  const CONCURRENCY = 5
   const epics = []
-  for (let i = 0; i < rawEpics.length; i++) {
-    const raw = rawEpics[i]
-    console.log('  [%d/%d] %s...', i + 1, rawEpics.length, raw.key)
+  for (let i = 0; i < rawEpics.length; i += CONCURRENCY) {
+    const batch = rawEpics.slice(i, i + CONCURRENCY)
+    console.log('  [%d-%d/%d]...', i + 1, Math.min(i + CONCURRENCY, rawEpics.length), rawEpics.length)
 
-    const [children, lastComment] = await Promise.all([
-      getChildren(jira, raw.key),
-      getLastComment(jira, raw.key),
-    ])
-
-    const epic = {
-      key: raw.key,
-      summary: raw.summary,
-      summary_short: raw.summary.replace(' package update request', '').trim(),
-      status: raw.status,
-      assignee: raw.assignee,
-      children,
-      last_comment: lastComment,
-    }
-    epic.classification = classifyEpic(epic, today, thresholdDays)
-    epic.insight = buildInsight(epic)
-    epics.push(epic)
+    const results = await Promise.all(batch.map(async (raw) => {
+      const [children, lastComment] = await Promise.all([
+        getChildren(jira, raw.key),
+        getLastComment(jira, raw.key),
+      ])
+      const epic = {
+        key: raw.key,
+        summary: raw.summary,
+        summary_short: raw.summary.replace(' package update request', '').trim(),
+        status: raw.status,
+        assignee: raw.assignee,
+        children,
+        last_comment: lastComment,
+      }
+      epic.classification = classifyEpic(epic, today, thresholdDays)
+      epic.insight = buildInsight(epic)
+      return epic
+    }))
+    epics.push(...results)
   }
 
   epics.sort((a, b) => (b.classification.days_since || 0) - (a.classification.days_since || 0))
@@ -282,11 +285,12 @@ async function buildReport(jira, options = {}) {
 }
 
 function onboardedJql(days) {
+  const safeDays = Math.floor(Math.max(1, Math.min(90, Number(days) || 7)))
   return (
     'project = AIPCC AND issuetype = Epic ' +
     'AND labels in ("dashboard-filed", "package") ' +
     'AND status in (Closed, Done) ' +
-    `AND status changed to (Closed, Done) AFTER -${days}d ` +
+    `AND status changed to (Closed, Done) AFTER -${safeDays}d ` +
     'ORDER BY updated DESC'
   )
 }
