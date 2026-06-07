@@ -1,4 +1,10 @@
 const { proxyGet } = require('./proxy');
+const { createJiraClient } = require('../../../shared/server/jira');
+const { buildReport } = require('./analysis');
+
+const DEMO_MODE = process.env.DEMO_MODE === 'true';
+const PKG_STORAGE_PREFIX = 'product-builds/package-reports';
+const PKG_INDEX_PATH = `${PKG_STORAGE_PREFIX}/index.json`;
 
 const CONFIG_PATH = 'product-builds/config.json';
 
@@ -404,6 +410,167 @@ module.exports = function registerRoutes(router, context) {
   router.get('/artifacts/:key/containers', function(req, res) {
     upstream(`/artifacts/${encodeURIComponent(req.params.key)}/containers`, req, res);
   });
+
+  // --- Package Analysis ---
+
+  const jira = createJiraClient({
+    email: (context.secrets && context.secrets.JIRA_EMAIL) || '',
+    token: (context.secrets && context.secrets.JIRA_TOKEN) || '',
+  });
+
+  function rebuildPackageIndex() {
+    const files = storage.listStorageFiles(PKG_STORAGE_PREFIX + '/');
+    const index = [];
+    for (const file of files) {
+      if (file === 'index.json' || !file.endsWith('.json')) continue;
+      const report = readFromStorage(`${PKG_STORAGE_PREFIX}/${file}`);
+      if (report && report.summary) {
+        index.push({
+          report_date: report.report_date,
+          report_time: report.report_time,
+          summary: report.summary,
+        });
+      }
+    }
+    index.sort((a, b) => b.report_date.localeCompare(a.report_date));
+    return index;
+  }
+
+  async function generatePackageReport(reportDate) {
+    const report = await buildReport(jira, { reportDate });
+    writeToStorage(`${PKG_STORAGE_PREFIX}/${report.report_date}.json`, report);
+    const index = rebuildPackageIndex();
+    writeToStorage(PKG_INDEX_PATH, index);
+    return report;
+  }
+
+  /**
+   * @openapi
+   * /api/modules/product-builds/package-reports:
+   *   get:
+   *     tags: [Package Analysis]
+   *     summary: List all package analysis reports (summaries only)
+   *     responses:
+   *       200:
+   *         description: Array of report summaries sorted by date descending
+   */
+  router.get('/package-reports', function(req, res) {
+    const index = readFromStorage(PKG_INDEX_PATH);
+    res.json(index || []);
+  });
+
+  /**
+   * @openapi
+   * /api/modules/product-builds/package-reports/latest:
+   *   get:
+   *     tags: [Package Analysis]
+   *     summary: Get the most recent full package analysis report
+   *     responses:
+   *       200:
+   *         description: Full report with categories and epic details
+   *       404:
+   *         description: No reports available
+   */
+  router.get('/package-reports/latest', function(req, res) {
+    const index = readFromStorage(PKG_INDEX_PATH);
+    if (!index || index.length === 0) {
+      return res.status(404).json({ error: 'No reports available' });
+    }
+    const latest = readFromStorage(`${PKG_STORAGE_PREFIX}/${index[0].report_date}.json`);
+    if (!latest) {
+      return res.status(404).json({ error: 'Report file not found' });
+    }
+    res.json(latest);
+  });
+
+  /**
+   * @openapi
+   * /api/modules/product-builds/package-reports/{date}:
+   *   get:
+   *     tags: [Package Analysis]
+   *     summary: Get full package analysis report for a specific date
+   *     parameters:
+   *       - name: date
+   *         in: path
+   *         required: true
+   *         schema:
+   *           type: string
+   *           pattern: '^\d{4}-\d{2}-\d{2}$'
+   *         description: Report date (YYYY-MM-DD)
+   *     responses:
+   *       200:
+   *         description: Full report with categories and epic details
+   *       404:
+   *         description: No report for the specified date
+   */
+  router.get('/package-reports/:date', function(req, res) {
+    const report = readFromStorage(`${PKG_STORAGE_PREFIX}/${req.params.date}.json`);
+    if (!report) {
+      return res.status(404).json({ error: `No report for ${req.params.date}` });
+    }
+    res.json(report);
+  });
+
+  /**
+   * @openapi
+   * /api/modules/product-builds/package-reports/generate:
+   *   post:
+   *     tags: [Package Analysis]
+   *     summary: Generate a package analysis report for today (admin only)
+   *     responses:
+   *       200:
+   *         description: Generated report
+   *       500:
+   *         description: Report generation failed
+   */
+  router.post('/package-reports/generate', requireAdmin, async function(req, res) {
+    try {
+      const report = await generatePackageReport();
+      res.json(report);
+    } catch (err) {
+      console.error('[package-analysis] Generation failed:', err.message);
+      res.status(500).json({ error: 'Report generation failed', detail: err.message });
+    }
+  });
+
+  context.registerRefresh('package-analysis', {
+    order: 200,
+    timeout: 600000,
+    handler: async function() {
+      if (DEMO_MODE) return;
+      await generatePackageReport();
+    },
+  });
+
+  context.registerDiagnostics(async function() {
+    const index = readFromStorage(PKG_INDEX_PATH);
+    const hasReports = index && index.length > 0;
+    return {
+      status: hasReports ? 'ok' : 'no_data',
+      latestReport: hasReports ? index[0].report_date : null,
+      reportCount: hasReports ? index.length : 0,
+    };
+  });
+
+  if (!DEMO_MODE) {
+    const DAILY_INTERVAL = 24 * 60 * 60 * 1000;
+    setTimeout(() => {
+      const timer = setInterval(async () => {
+        const today = new Date().toISOString().slice(0, 10);
+        const existing = readFromStorage(`${PKG_STORAGE_PREFIX}/${today}.json`);
+        if (existing) return;
+        console.log('[package-analysis] Daily scheduled generation starting...');
+        try {
+          await generatePackageReport(today);
+          console.log('[package-analysis] Daily report generated for %s', today);
+        } catch (err) {
+          console.error('[package-analysis] Daily generation failed:', err.message);
+        }
+      }, DAILY_INTERVAL);
+      timer.unref();
+      console.log('[package-analysis] Daily schedule active (24h interval)');
+    }, 30000);
+  }
 };
 
 module.exports.getConfig = getConfig;
