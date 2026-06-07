@@ -36,8 +36,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { defineAsyncComponent } from 'vue'
+import { ref, defineAsyncComponent } from 'vue'
 
 const reports = [
   {

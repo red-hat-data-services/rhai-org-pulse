@@ -25,7 +25,6 @@ const FIELDS_TO_FETCH = [
  */
 module.exports = function registerPmHubRoutes(router, context) {
   var jiraClient = context.jira || null
-  var _storage = context.storage || null
 
   /**
    * @openapi
@@ -313,7 +312,7 @@ module.exports = function registerPmHubRoutes(router, context) {
       })
     } catch (err) {
       console.error('[releases/pm-hub] Component release load fetch failed:', err.message)
-      res.status(500).json({ error: 'Failed to fetch component release load data: ' + err.message })
+      res.status(500).json({ error: 'Failed to fetch component release load data' })
     }
   })
 }

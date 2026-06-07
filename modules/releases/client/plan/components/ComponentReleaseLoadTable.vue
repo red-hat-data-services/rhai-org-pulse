@@ -141,16 +141,6 @@ function colorStatusRing(colorStatus) {
   return 'ring-gray-200 dark:ring-gray-700'
 }
 
-function _stripHtml(html) {
-  var s = html || ''
-  var prev
-  do {
-    prev = s
-    s = s.replace(/<[^>]*>/g, '')
-  } while (s !== prev)
-  return s
-}
-
 defineExpose({ expandAll, collapseAll })
 </script>
 
