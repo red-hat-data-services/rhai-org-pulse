@@ -135,7 +135,7 @@ async function getTotalCount(jira) {
     `/rest/api/3/search/jql?${new URLSearchParams({
       jql: ALL_EPICS_JQL,
       fields: 'key',
-      maxResults: '0',
+      maxResults: '1',
     })}`
   )
   return data.total || 0
@@ -281,6 +281,34 @@ async function buildReport(jira, options = {}) {
   }
 }
 
+function onboardedJql(days) {
+  return (
+    'project = AIPCC AND issuetype = Epic ' +
+    'AND labels in ("dashboard-filed", "package") ' +
+    'AND status in (Closed, Done) ' +
+    `AND status changed to (Closed, Done) AFTER -${days}d ` +
+    'ORDER BY updated DESC'
+  )
+}
+
+async function getPackagesOnboarded(jira, days = 7) {
+  const issues = await jira.fetchAllJqlResults(
+    onboardedJql(days),
+    'key,summary,status,assignee,resolutiondate,updated'
+  )
+  return issues.map(issue => {
+    const f = issue.fields || {}
+    const resolved = f.resolutiondate || f.updated || ''
+    return {
+      key: issue.key,
+      summary: (f.summary || '').replace(' package update request', '').trim(),
+      assignee: (f.assignee || {}).displayName || 'Unassigned',
+      status: (f.status || {}).name || '',
+      resolved_date: resolved ? resolved.slice(0, 10) : '',
+    }
+  })
+}
+
 module.exports = {
   extractAdfText,
   classifyEpic,
@@ -291,6 +319,7 @@ module.exports = {
   getComments,
   getLastComment,
   buildReport,
+  getPackagesOnboarded,
   INACTIVE_THRESHOLD_DAYS,
   CRITICAL_THRESHOLD_DAYS,
 }

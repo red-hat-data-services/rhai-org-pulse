@@ -1,6 +1,6 @@
 const { proxyGet } = require('./proxy');
 const { createJiraClient } = require('../../../shared/server/jira');
-const { buildReport } = require('./analysis');
+const { buildReport, getPackagesOnboarded } = require('./analysis');
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 const PKG_STORAGE_PREFIX = 'product-builds/package-reports';
@@ -481,6 +481,36 @@ module.exports = function registerRoutes(router, context) {
       return res.status(404).json({ error: 'Report file not found' });
     }
     res.json(latest);
+  });
+
+  /**
+   * @openapi
+   * /api/modules/product-builds/package-reports/onboarded:
+   *   get:
+   *     tags: [Package Analysis]
+   *     summary: Get packages onboarded (closed) in a recent time window
+   *     parameters:
+   *       - name: days
+   *         in: query
+   *         schema:
+   *           type: integer
+   *           default: 7
+   *         description: Number of days to look back (7, 14, or 30)
+   *     responses:
+   *       200:
+   *         description: Array of onboarded package EPICs
+   *       500:
+   *         description: Failed to query JIRA
+   */
+  router.get('/package-reports/onboarded', async function(req, res) {
+    const days = Math.min(Math.max(parseInt(req.query.days, 10) || 7, 1), 90);
+    try {
+      const epics = await getPackagesOnboarded(jira, days);
+      res.json({ days, count: epics.length, epics });
+    } catch (err) {
+      console.error('[package-analysis] Onboarded query failed:', err.message);
+      res.status(500).json({ error: 'Failed to fetch onboarded packages', detail: err.message });
+    }
   });
 
   /**
