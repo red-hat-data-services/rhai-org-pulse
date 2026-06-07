@@ -153,4 +153,24 @@ module.exports = function registerRoutes(router, context) {
       reportCount: hasReports ? index.length : 0,
     }
   })
+
+  if (!DEMO_MODE) {
+    const DAILY_INTERVAL = 24 * 60 * 60 * 1000
+    setTimeout(() => {
+      const timer = setInterval(async () => {
+        const today = new Date().toISOString().slice(0, 10)
+        const existing = readFromStorage(`${STORAGE_PREFIX}/${today}.json`)
+        if (existing) return
+        console.log('[package-analysis] Daily scheduled generation starting...')
+        try {
+          await generateAndStore(jira, storage, today)
+          console.log('[package-analysis] Daily report generated for %s', today)
+        } catch (err) {
+          console.error('[package-analysis] Daily generation failed:', err.message)
+        }
+      }, DAILY_INTERVAL)
+      timer.unref()
+      console.log('[package-analysis] Daily schedule active (24h interval)')
+    }, 30000)
+  }
 }
