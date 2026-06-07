@@ -45,26 +45,30 @@ module.exports = function registerPmHubRoutes(router, context) {
     }
 
     try {
-      var components = []
-
-      for (var i = 0; i < PM_HUB_PROJECTS.length; i++) {
-        var project = PM_HUB_PROJECTS[i]
-        try {
-          var data = await jiraClient.jiraRequest(
+      var results = await Promise.allSettled(
+        PM_HUB_PROJECTS.map(function(project) {
+          return jiraClient.jiraRequest(
             '/rest/api/3/project/' + encodeURIComponent(project) + '/components'
-          )
-          var arr = Array.isArray(data) ? data : []
-          for (var j = 0; j < arr.length; j++) {
-            var name = String(arr[j].name || '').trim()
-            if (!name) continue
-            components.push({
-              id: String(arr[j].id || ''),
-              name: name,
-              project: project
-            })
-          }
-        } catch (err) {
-          console.warn('[releases/pm-hub] Failed to fetch components for ' + project + ': ' + err.message)
+          ).then(function(data) { return { project: project, data: data } })
+        })
+      )
+
+      var components = []
+      for (var i = 0; i < results.length; i++) {
+        if (results[i].status === 'rejected') {
+          console.warn('[releases/pm-hub] Failed to fetch components for ' + PM_HUB_PROJECTS[i] + ': ' + results[i].reason.message)
+          continue
+        }
+        var project = results[i].value.project
+        var arr = Array.isArray(results[i].value.data) ? results[i].value.data : []
+        for (var j = 0; j < arr.length; j++) {
+          var name = String(arr[j].name || '').trim()
+          if (!name) continue
+          components.push({
+            id: String(arr[j].id || ''),
+            name: name,
+            project: project
+          })
         }
       }
 
