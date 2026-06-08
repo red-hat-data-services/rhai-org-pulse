@@ -33,6 +33,19 @@ jobs:
     steps:
       - run: echo "Merge queue — skipping review (already passed on PR)"
 
+  # When the Claude review pushes an autofix commit via the GitHub App token,
+  # the synchronize event fires with actor=rhai-org-pulse[bot]. We don't want
+  # to re-run the full review (infinite loop), but "Claude Review" is a
+  # required check — so we need this no-op job to satisfy the gate.
+  autofix-pass:
+    name: Claude Review
+    if: |
+      github.event_name != 'merge_group' &&
+      (github.actor == 'rhai-org-pulse[bot]' || github.actor == 'github-actions[bot]')
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Autofix push by ${{ github.actor }} — review already passed, skipping re-review"
+
   claude-review:
     name: Claude Review
     timeout-minutes: 20
