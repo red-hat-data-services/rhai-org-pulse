@@ -42,11 +42,13 @@ jobs:
        github.event.pull_request.head.repo.full_name == github.repository &&
        github.event.pull_request.draft != true &&
        github.actor != 'github-actions[bot]' &&
+       github.actor != 'rhai-org-pulse[bot]' &&
        github.actor != 'dependabot[bot]') ||
       (github.event_name == 'pull_request_target' &&
        github.event.pull_request.head.repo.full_name != github.repository &&
        github.event.pull_request.draft != true &&
-       github.actor != 'github-actions[bot]') ||
+       github.actor != 'github-actions[bot]' &&
+       github.actor != 'rhai-org-pulse[bot]') ||
       (github.event_name == 'issue_comment' &&
        github.event.issue.pull_request &&
        contains(github.event.comment.body, '@claude') &&
@@ -117,11 +119,23 @@ jobs:
 
       # --- Same-repo setup (full checkout, Node.js, git identity) ---
 
+      # Generate a GitHub App token so that autofix pushes trigger downstream
+      # workflows (CI, Integration Tests, etc.). The default GITHUB_TOKEN does
+      # not trigger other workflows — this is a GitHub anti-recursion safeguard.
+      - name: Generate GitHub App token
+        if: steps.check-paths.outputs.needs_review == 'true' && steps.context.outputs.is_fork != 'true' && steps.fork-guard.outputs.is_fork != 'true'
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - name: Checkout code
         if: steps.check-paths.outputs.needs_review == 'true' && steps.context.outputs.is_fork != 'true' && steps.fork-guard.outputs.is_fork != 'true'
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Set up Node.js
         if: steps.check-paths.outputs.needs_review == 'true' && steps.context.outputs.is_fork != 'true' && steps.fork-guard.outputs.is_fork != 'true'
@@ -251,9 +265,6 @@ jobs:
                  - Issues found and fixed (with brief descriptions)
                  - Issues found but NOT fixed (with explanations of why)
                  - If no issues were found, say so briefly
-               - NOTE: CI (the "Test & Build" check) will NOT automatically run on
-                 your autofix commit. Mention this in your summary so the PR author
-                 knows to re-run CI if needed.
 
             5. **Set review verdict**: Follow the "Verdict rules" section in
                `.github/instructions/review.instructions.md` to populate the
