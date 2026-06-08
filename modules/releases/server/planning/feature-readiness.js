@@ -81,7 +81,7 @@ function buildFeatureReadiness(readFromStorage, version) {
       }
     }
 
-    var healthCache = readFromStorage('releases/planning/health-cache-' + version + '.json')
+    var healthCache = readFromStorage('releases/planning/health-cache-' + version + '-all.json')
     if (healthCache && Array.isArray(healthCache.features)) {
       var hf = healthCache.features
       for (var hi = 0; hi < hf.length; hi++) {
@@ -112,6 +112,9 @@ function buildFeatureReadiness(readFromStorage, version) {
 
     var candidateData = candidateIndex.get(key) || null
     var healthData = healthIndex.get(key) || null
+
+    // Skip features not in any cache for the selected version to prevent cross-product bleed
+    if (version && !candidateData && !healthData) continue
 
     var tier = candidateData && candidateData.tier != null
       ? 'T' + candidateData.tier
