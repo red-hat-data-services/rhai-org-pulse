@@ -6,24 +6,21 @@ Add two friction metrics to **RFE Review** (AI Impact) for when the rfe-creator 
 
 **Naming:** “Friction” not “Health.” Health implies a broad readiness score (like the Component Maturity dashboard). This is specifically **where automation created human overhead** — blocked, flagged, or inconclusive runs.
 
-**Scope:** Two stat tiles below the existing adoption metrics row. No new nav tab. No new Jira fetch. No PM breakdown table. No extra list filters. No new trend charts — use the same prior-period delta pattern as the adoption tiles.
+**Scope:** Embed friction as sub-text inside the existing 4-column adoption metrics row — **no second row, no new cards, no extra vertical space**. No new nav tab. No new Jira fetch. No PM breakdown table. No extra list filters. No new trend charts.
 
 **Questions this answers:**
 - What % of AI-touched RFEs require manual human cleanup?
-- Is that rate getting better or worse over time? (via pp change vs prior period, same as “Created with AI”)
+- Is that rate getting better or worse over time? (via pp change vs prior period)
+- At a glance: “We’re creating a lot with AI — and how much of that needed a human?”
 
 ---
 
-## The two panels
+## The two friction signals
 
-| Panel | Label(s) | Metric |
-|-------|----------|--------|
+| Signal | Label(s) | Metric |
+|--------|----------|--------|
 | **Needs Attention** | `rfe-creator-needs-attention` | % of AI-touched RFEs in the time window with this label |
 | **Feasibility Blocked** | `rfe-creator-feasibility-fail`, `rfe-creator-feasibility-unknown` | % of AI-touched RFEs with **either** label (one combined “feasibility didn’t clear” rate) |
-
-Each tile shows:
-- Current window %
-- Change vs prior period (percentage points), with trend direction where **lower is better**
 
 **Denominator:** RFEs in the window where `aiInvolvement !== 'none'` (pipeline actually ran). Manual RFEs with no AI labels are excluded so rates are not diluted.
 
@@ -45,6 +42,40 @@ Needs-attention = cleanup overhead. Feasibility fail/unknown = pipeline blocked 
 
 ---
 
+## UI — Split-card layout (recommended)
+
+### Problem with a stacked second row
+
+A separate “Pipeline Friction” row below adoption metrics causes:
+1. **Vertical bloat** — users scroll past two card rows before reaching trend charts
+2. **Disconnected context** — “Created with AI 100%” sits far from “Needs Attention 50%”; users must look up and down to connect success vs friction
+
+### Solution: pair friction inside existing adoption cards
+
+Keep the **4-column layout unchanged**. Friction metrics are sub-attributes of AI-touched RFEs, so show them as sub-text inside the adoption cards they relate to:
+
+| Column | Adoption metric | Friction sub-text |
+|--------|-----------------|-------------------|
+| 1 | **Created with AI** (big %) | `{needsAttentionPct}% require attention` (+ change as `pp`) |
+| 2 | **Revised with AI** (count) | `{feasibilityBlockedPct}% feasibility blocked` (+ change as `pp`) |
+| 3 | Total RFEs | *(unchanged)* |
+| 4 | Trend Status | *(unchanged)* |
+
+Example appearance:
+
+```
+Created with AI          Revised with AI
+100%  +5%                12
+33% require attention    25% feasibility blocked
+  +3pp                     -2pp
+```
+
+**Styling:** sub-text uses `text-xs text-gray-500` — informational, not alarming. No warning icons, no amber/red badges. Same neutral tone as “X prev period” on the Revised card.
+
+**Why this works:** zero extra vertical space, success vs friction read in a single glance, no new component file.
+
+---
+
 ## Data flow (unchanged infrastructure)
 
 ```
@@ -52,7 +83,7 @@ rfe-fetcher.js  →  labels[] on each issue  →  rfe-data.json
                                                     ↓
 metrics.js  →  computePipelineFrictionMetrics()  →  API response
                                                     ↓
-PhaseContent.vue  →  PipelineFrictionRow.vue (2 tiles)
+MetricsRow.vue  →  friction sub-text in columns 1 & 2
 ```
 
 Labels are already stored; `metrics.js` only aggregates `aiInvolvement` today and ignores friction labels.
@@ -104,17 +135,21 @@ return {
 - Prior-period delta and empty window → 0%, not NaN
 - Update `computeAllMetrics` test to expect `pipelineFriction`
 
-### 3. UI — `modules/ai-impact/client/components/PipelineFrictionRow.vue`
+### 3. UI — extend `modules/ai-impact/client/components/MetricsRow.vue`
 
-- Copy layout from `MetricsRow.vue` — **2 columns**, not 4
-- Section label: **Pipeline Friction**
-- Subtitle: *When automation needs a human*
-- Amber/red styling; down arrow = good for friction metrics
+- Add optional `pipelineFriction` prop
+- **Column 1 (Created with AI):** below the main stat, add sub-text:
+  - `{needsAttentionPct}% require attention`
+  - `{needsAttentionChange}` formatted as `+Npp` / `-Npp` / `—`
+- **Column 2 (Revised with AI):** below the count, add sub-text:
+  - `{feasibilityBlockedPct}% feasibility blocked`
+  - `{feasibilityBlockedChange}` formatted as `+Npp` / `-Npp` / `—`
+- No new component. No second row.
 
 ### 4. Wire-up
 
-- `PhaseContent.vue` — render `PipelineFrictionRow` below `MetricsRow`
-- `RFEReviewView.vue` — pass `rfeData.pipelineFriction` (or from `computeAllMetrics` payload)
+- `PhaseContent.vue` — pass `pipelineFriction` to `MetricsRow` (not a separate row component)
+- `RFEReviewView.vue` — pass `rfeData.pipelineFriction` through to `PhaseContent`
 
 ### 5. Fixtures — `fixtures/ai-impact/rfe-data.json`
 
@@ -128,15 +163,19 @@ Add sample friction labels on a few demo RFEs so local demo mode shows non-zero 
 
 ## Acceptance criteria
 
-- [ ] RFE Review shows **Pipeline Friction** row with two tiles below adoption metrics
+- [ ] RFE Review keeps a **single** 4-column metrics row (no second friction row)
+- [ ] “Created with AI” card shows needs-attention % and pp change as sub-text
+- [ ] “Revised with AI” card shows feasibility-blocked % and pp change as sub-text
 - [ ] Needs Attention % matches manual count: AI-touched RFEs in window with `rfe-creator-needs-attention`
 - [ ] Feasibility Blocked % matches: AI-touched RFEs with fail **or** unknown label
-- [ ] Both tiles show change vs prior period when time window changes
-- [ ] Demo fixtures include friction labels; rates visible locally
+- [ ] Sub-text updates when time window changes
+- [ ] Demo fixtures include friction labels; sub-text visible locally
 - [ ] Unit tests pass; lint passes
 
 ---
 
-## Open question (resolve before merge)
+## Resolved decisions
 
-**Denominator:** AI-touched only (recommended) vs all RFEs in window. AI-touched keeps the rate aligned with “of pipeline runs, how many failed?”
+**Denominator:** AI-touched only (`aiInvolvement !== 'none'`). Keeps the rate aligned with “of pipeline runs, how many had this outcome?”
+
+**UI layout:** Split-card (friction sub-text inside existing adoption cards), not a stacked second row.
