@@ -56,6 +56,9 @@ Core team owns `shared/` via CODEOWNERS. Changes require core team review.
 | `PermissionBadge.vue` | `@shared/client/components/PermissionBadge.vue` | Small badge showing user's role |
 | `PersonReferenceField.vue` | `@shared/client/components/PersonReferenceField.vue` | Renders person references (linked -> clickable, unlinked -> plain text) |
 | `AppMessages.vue` | `@shared/client/components/AppMessages.vue` | Stacked app-wide message banners (warning/info/error) with dismiss |
+| `FeatureReadinessRow.vue` | `@shared/client/components/FeatureReadinessRow.vue` | Table row for feature readiness with priority score, rubric, and status columns |
+| `FeatureReadinessDrawer.vue` | `@shared/client/components/FeatureReadinessDrawer.vue` | Slide-out detail panel for feature readiness (rubric bars, blocking dims, metadata) |
+| `RubricScoreBadge.vue` | `@shared/client/components/RubricScoreBadge.vue` | Compact badge displaying AI rubric score with color coding |
 
 ## Server Exports (`@shared/server`)
 

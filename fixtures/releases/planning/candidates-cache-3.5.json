@@ -1,0 +1,129 @@
+{
+  "version": "3.5",
+  "lastRefreshed": "2026-04-21T12:00:00.000Z",
+  "demoMode": true,
+  "data": {
+    "features": [
+      {
+        "issueKey": "RHAISTRAT-1168",
+        "tier": 1,
+        "bigRock": "MaaS",
+        "targetRelease": "rhoai-3.5",
+        "fixVersion": "RHOAI-3.5.GA",
+        "summary": "GPU-as-a-Service Observability Dashboard",
+        "status": "Refined",
+        "priority": "Major"
+      },
+      {
+        "issueKey": "RHAISTRAT-1169",
+        "tier": 1,
+        "bigRock": "MaaS",
+        "targetRelease": "rhoai-3.5",
+        "fixVersion": "RHOAI-3.5.EA2",
+        "summary": "Model Serving Autoscaling for High-Throughput Inference",
+        "status": "In Progress",
+        "priority": "Critical"
+      },
+      {
+        "issueKey": "RHAISTRAT-1170",
+        "tier": 1,
+        "bigRock": "Fine-Tuning / RLHF",
+        "targetRelease": "rhoai-3.5",
+        "fixVersion": "RHOAI-3.5.EA1",
+        "summary": "LLM Fine-Tuning with Custom Datasets",
+        "status": "Refined",
+        "priority": "Critical"
+      },
+      {
+        "issueKey": "RHAISTRAT-1171",
+        "tier": 2,
+        "bigRock": "Eval Hub",
+        "targetRelease": "rhoai-3.5",
+        "fixVersion": "RHOAI-3.5.GA",
+        "summary": "A/B Testing Framework for Model Endpoints",
+        "status": "New",
+        "priority": "Major"
+      },
+      {
+        "issueKey": "RHAISTRAT-1172",
+        "tier": 1,
+        "bigRock": "Gen AI Studio",
+        "targetRelease": "rhoai-3.5",
+        "fixVersion": "RHOAI-3.5.EA2",
+        "summary": "Distributed Training Pipeline Orchestration",
+        "status": "Refined",
+        "priority": "Major"
+      },
+      {
+        "issueKey": "RHAISTRAT-1173",
+        "tier": 1,
+        "bigRock": "MaaS",
+        "targetRelease": "rhoai-3.5",
+        "fixVersion": "RHOAI-3.5.GA",
+        "summary": "GPU Memory Monitoring Dashboard",
+        "status": "Refined",
+        "priority": "Minor"
+      },
+      {
+        "issueKey": "RHAISTRAT-1174",
+        "tier": 2,
+        "bigRock": "Gen AI Studio",
+        "targetRelease": "rhoai-3.5",
+        "fixVersion": "RHOAI-3.5.EA2",
+        "summary": "Data Quality Validation for Training Pipelines",
+        "status": "New",
+        "priority": "Normal"
+      },
+      {
+        "issueKey": "RHAISTRAT-1175",
+        "tier": 1,
+        "bigRock": "llm-d / xKS",
+        "targetRelease": "rhoai-3.5",
+        "fixVersion": "RHOAI-3.5.GA",
+        "summary": "RBAC for Shared Model Registry",
+        "status": "Refined",
+        "priority": "Major"
+      },
+      {
+        "issueKey": "RHAISTRAT-1176",
+        "tier": 3,
+        "bigRock": "Gen AI Studio",
+        "targetRelease": "rhoai-3.5",
+        "fixVersion": "RHOAI-3.5.GA",
+        "summary": "Custom Runtime Images for Jupyter Notebooks",
+        "status": "New",
+        "priority": "Normal"
+      },
+      {
+        "issueKey": "RHAISTRAT-1177",
+        "tier": 1,
+        "bigRock": "MaaS",
+        "targetRelease": "rhoai-3.5",
+        "fixVersion": "RHOAI-3.5.EA1",
+        "summary": "Real-Time Model Deployment Latency Optimization",
+        "status": "In Progress",
+        "priority": "Blocker"
+      },
+      {
+        "issueKey": "RHAISTRAT-1178",
+        "tier": 3,
+        "bigRock": "Eval Hub",
+        "targetRelease": "rhoai-3.5",
+        "fixVersion": "RHOAI-3.5.GA",
+        "summary": "OpenTelemetry Tracing for Pipeline Debugging",
+        "status": "New",
+        "priority": "Minor"
+      },
+      {
+        "issueKey": "RHAISTRAT-1179",
+        "tier": 1,
+        "bigRock": "Fine-Tuning / RLHF",
+        "targetRelease": "rhoai-3.5",
+        "fixVersion": "RHOAI-3.5.GA",
+        "summary": "Federated Learning for Distributed Model Training",
+        "status": "Refined",
+        "priority": "Critical"
+      }
+    ]
+  }
+}

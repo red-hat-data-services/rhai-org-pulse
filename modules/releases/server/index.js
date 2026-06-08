@@ -14,6 +14,7 @@ const registerFeatureTrackingRoutes = require('./execution/feature-tracking-rout
 const registerDeliveryRoutes = require('./delivery/routes');
 const registerHygieneRoutes = require('./hygiene/routes');
 const registerTvFvDeltaRoutes = require('./tv-fv-delta/routes');
+const registerPmHubRoutes = require('./pm-hub/routes');
 const { getAuditLog } = require('./planning/audit-log');
 
 /**
@@ -227,6 +228,16 @@ module.exports = function registerRoutes(router, context) {
     registerDiagnostics: context.registerDiagnostics || null
   });
   router.use('/tv-fv-delta', tvFvDeltaRouter);
+
+  // PM Hub sub-router (mounted at /api/modules/releases/pm-hub/)
+  var pmHubRouter = express.Router();
+  registerPmHubRoutes(pmHubRouter, {
+    requireAuth,
+    requireScope,
+    jira,
+    storage
+  });
+  router.use('/pm-hub', pmHubRouter);
 
   // ─── Unified Audit Routes ───
 
