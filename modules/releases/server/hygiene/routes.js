@@ -705,6 +705,7 @@ module.exports = function registerHygieneRoutes(router, context) {
     context.registerRefresh('hygiene', {
       order: 70,
       timeout: 600000,
+      description: 'Fetches feature data from Jira and evaluates hygiene rules across active releases.',
       handler: async function() {
         return runHygieneRefreshAll({ skipCooldown: true, user: 'system' });
       }

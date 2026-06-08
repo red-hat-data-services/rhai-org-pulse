@@ -406,6 +406,7 @@ module.exports = function registerExecutionRoutes(router, context) {
   const handlerConfig = {
     order: 70,
     timeout: 600000,
+    description: 'Fetches execution pipeline data from GitLab CI artifacts for release tracking.',
     handler: async function(options) {
       options = options || {};
       if (options.skipCooldown) {
@@ -474,6 +475,7 @@ module.exports = function registerExecutionRoutes(router, context) {
         order: 75,
         cadence: syncIntervalHours + 'h',
         timeout: 120000,
+        description: 'Enriches execution data with Jira issue details, status transitions, and tracking reconciliation.',
         handler: enrichmentHandler
       });
     }

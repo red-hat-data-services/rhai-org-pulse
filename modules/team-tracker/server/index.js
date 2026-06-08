@@ -4241,6 +4241,7 @@ module.exports = function registerRoutes(router, context) {
     context.registerRefresh('roster-sync', {
       order: 10,
       timeout: 600000,
+      description: 'Syncs the team roster from IPA LDAP and Google Sheets, enriching with GitHub/GitLab usernames.',
       handler: async function() {
         if (DEMO_MODE) return;
         await consolidatedSync.runConsolidatedSync(storage, { ...context.secrets, resolveSecret: context.resolveSecret });
@@ -4253,6 +4254,7 @@ module.exports = function registerRoutes(router, context) {
     context.registerRefresh('metrics', {
       order: 20,
       timeout: 1800000,
+      description: 'Refreshes per-person Jira metrics (resolved issues, story points) with a 365-day lookback.',
       handler: async function() {
         await refreshAllMetrics();
       },
@@ -4269,6 +4271,7 @@ module.exports = function registerRoutes(router, context) {
     context.registerRefresh('github', {
       order: 30,
       timeout: 600000,
+      description: 'Fetches GitHub contribution stats (commits, PRs, reviews) for all roster members via GraphQL.',
       handler: async function() {
         await refreshAllGithub();
       }
@@ -4277,6 +4280,7 @@ module.exports = function registerRoutes(router, context) {
     context.registerRefresh('gitlab', {
       order: 30,
       timeout: 600000,
+      description: 'Fetches GitLab contribution stats for all roster members across configured instances.',
       handler: async function() {
         await refreshAllGitlab();
       }
@@ -4285,6 +4289,7 @@ module.exports = function registerRoutes(router, context) {
     context.registerRefresh('snapshots', {
       order: 80,
       timeout: 300000,
+      description: 'Generates daily team snapshots for historical trend tracking.',
       handler: async function() {
         await generateAllSnapshots();
       }

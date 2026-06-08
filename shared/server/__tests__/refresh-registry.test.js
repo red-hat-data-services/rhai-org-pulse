@@ -45,6 +45,18 @@ describe('refresh-registry', () => {
     expect(registry.get('fast').cadence).toBe('12h')
   })
 
+  it('stores description on registered handler', () => {
+    const registry = createRefreshRegistry()
+    registry.register('desc', { handler: vi.fn(), description: 'Syncs data from Jira' })
+    expect(registry.get('desc').description).toBe('Syncs data from Jira')
+  })
+
+  it('defaults description to null when not provided', () => {
+    const registry = createRefreshRegistry()
+    registry.register('no-desc', { handler: vi.fn() })
+    expect(registry.get('no-desc').description).toBeNull()
+  })
+
   it('defaults cadence to 24h when not specified', () => {
     const registry = createRefreshRegistry()
     registry.register('default', { handler: vi.fn() })
@@ -435,6 +447,71 @@ describe('refresh-registry', () => {
 
     await registry.runModule('mod-a')
     expect(calls).toEqual(['ran'])
+  })
+
+  // --- runOne ---
+
+  it('runOne runs a single handler by id', async () => {
+    const registry = createRefreshRegistry()
+    const calls = []
+    registry.register('mod:a', { handler: async () => { calls.push('a'); return 'ok' }, order: 10 })
+    registry.register('mod:b', { handler: async () => { calls.push('b') }, order: 20 })
+
+    const results = await registry.runOne('mod:a')
+    expect(calls).toEqual(['a'])
+    expect(results['mod:a'].success).toBe(true)
+  })
+
+  it('runOne throws for unknown handler id', async () => {
+    const registry = createRefreshRegistry()
+    await expect(registry.runOne('nonexistent')).rejects.toThrow('No handler registered with id "nonexistent"')
+  })
+
+  it('runOne updates progress and preserves other handlers in lastRun', async () => {
+    const registry = createRefreshRegistry()
+    registry.register('mod:a', { handler: async () => 'done', order: 10 })
+    registry.register('mod:b', { handler: async () => 'also', order: 10 })
+
+    await registry.runOne('mod:a')
+    const status = await registry.getStatus()
+    expect(status.running).toBe(false)
+    expect(status.handlers['mod:a'].state).toBe('completed')
+    expect(status.handlers['mod:b'].registered).toBe(true)
+  })
+
+  it('runOne ignores cadence — runs even if recently completed', async () => {
+    const mockStorage = {
+      readFromStorage: vi.fn().mockReturnValue({
+        completedAt: Date.now(),
+        progress: {
+          'a': {
+            state: 'completed',
+            order: 10,
+            completedAt: Date.now(),
+            lastSuccessfulRun: Date.now(),
+            cadence: '24h'
+          }
+        }
+      }),
+      writeToStorage: vi.fn()
+    }
+    const registry = createRefreshRegistry(mockStorage)
+    const calls = []
+    registry.register('a', { handler: async () => { calls.push('ran') }, order: 10, cadence: '24h' })
+
+    await registry.runOne('a')
+    expect(calls).toEqual(['ran'])
+  })
+
+  it('runOne throws mutex error if refresh is already running', async () => {
+    const registry = createRefreshRegistry()
+    let resolve
+    registry.register('slow', { handler: () => new Promise(r => { resolve = r }) })
+
+    const p = registry.runOne('slow')
+    await expect(registry.runOne('slow')).rejects.toThrow('Refresh is already running')
+    resolve()
+    await p
   })
 
   // --- Cadence filtering ---
@@ -857,5 +934,32 @@ describe('refresh-registry', () => {
     expect(status.handlers['a'].cadenceOverride).toBeNull()
     expect(status.handlers['a'].lastSuccessfulRun).toBeTypeOf('number')
     expect(status.handlers['a'].nextDueAt).toBeTypeOf('number')
+  })
+
+  it('getStatus includes description after run', async () => {
+    const mockStorage = {
+      readFromStorage: vi.fn().mockReturnValue(null),
+      writeToStorage: vi.fn()
+    }
+    const registry = createRefreshRegistry(mockStorage)
+    registry.register('a', { handler: async () => 'ok', description: 'Syncs data' })
+    registry.register('b', { handler: async () => 'ok' })
+
+    const result = await registry.runAll({ force: true })
+    if (result.execution) await result.execution
+
+    const status = await registry.getStatus()
+    expect(status.handlers['a'].description).toBe('Syncs data')
+    expect(status.handlers['b'].description).toBeNull()
+  })
+
+  it('getStatus includes description in never-run state', async () => {
+    const registry = createRefreshRegistry()
+    registry.register('a', { handler: vi.fn(), description: 'Fetches metrics' })
+    registry.register('b', { handler: vi.fn() })
+
+    const status = await registry.getStatus()
+    expect(status.handlers['a'].description).toBe('Fetches metrics')
+    expect(status.handlers['b'].description).toBeNull()
   })
 })

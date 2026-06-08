@@ -492,6 +492,7 @@ module.exports = function registerRoutes(router, context) {
       order: 50,           // lower runs first (default: 100)
       timeout: 300000,     // per-handler timeout in ms (default: 5 min)
       cadence: '12h',      // how often to run (default: '24h')
+      description: 'Fetches external data and stores it locally.',
       handler: async function(options) {
         // Fetch and store data
         const data = await fetchExternalData()
@@ -511,6 +512,7 @@ module.exports = function registerRoutes(router, context) {
 | `order` | number | 100 | Execution order — lower runs first. Handlers at the same order run in parallel |
 | `timeout` | number | 300000 | Per-handler timeout in ms |
 | `cadence` | string | `'24h'` | How often the handler should run. Formats: `'15m'`, `'12h'`, `'1d'` |
+| `description` | string | null | Human-readable description shown in the admin Settings UI |
 | `status` | function | null | Async function returning current status (legacy, used when no runs have occurred) |
 
 ### Cadence

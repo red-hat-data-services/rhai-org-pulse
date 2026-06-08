@@ -116,7 +116,8 @@ function createRefreshRegistry(storage) {
       status: typeof config.status === 'function' ? config.status : null,
       order: typeof config.order === 'number' ? config.order : DEFAULT_ORDER,
       timeout: typeof config.timeout === 'number' ? config.timeout : null,
-      cadence: cadence
+      cadence: cadence,
+      description: typeof config.description === 'string' ? config.description : null
     })
   }
 
@@ -389,6 +390,40 @@ function createRefreshRegistry(storage) {
     }
   }
 
+  async function runOne(id, options = {}) {
+    if (running) {
+      throw new Error('Refresh is already running')
+    }
+    const config = entries.get(id)
+    if (!config) {
+      throw new Error('No handler registered with id "' + id + '"')
+    }
+    running = true
+    progress = {}
+
+    try {
+      // runOne ignores cadence — manual trigger always runs
+      const results = await runEntries([[id, config]], options)
+      return results
+    } finally {
+      running = false
+      var baseline = {}
+      if (lastRun) {
+        Object.assign(baseline, lastRun.progress)
+      } else {
+        for (var [baseId, baseConfig] of entries) {
+          baseline[baseId] = { registered: true, order: baseConfig.order }
+        }
+      }
+      lastRun = {
+        completedAt: Date.now(),
+        progress: Object.assign(baseline, progress),
+        results: {}
+      }
+      persistLastRun()
+    }
+  }
+
   async function getStatus() {
     if (running) {
       // Build baseline from previous run or registered stubs, then overlay current progress
@@ -400,9 +435,17 @@ function createRefreshRegistry(storage) {
           baseline[baseId] = { registered: true, order: baseConfig.order }
         }
       }
+      var merged = Object.assign(baseline, progress)
+      // Enrich with description from live registry
+      for (var mid in merged) {
+        var mConfig = entries.get(mid)
+        if (mConfig && mConfig.description) {
+          merged[mid] = { ...merged[mid], description: mConfig.description }
+        }
+      }
       return {
         running: true,
-        handlers: Object.assign(baseline, progress)
+        handlers: merged
       }
     }
 
@@ -418,6 +461,7 @@ function createRefreshRegistry(storage) {
           enriched.cadence = cadenceStr
           enriched.baseCadence = config.cadence || DEFAULT_CADENCE
           enriched.cadenceOverride = cadenceOverrides[id] || null
+          enriched.description = config.description || null
           if (enriched.lastSuccessfulRun) {
             enriched.nextDueAt = enriched.lastSuccessfulRun + parseCadence(cadenceStr)
           }
@@ -438,13 +482,13 @@ function createRefreshRegistry(storage) {
         try {
           const s = await config.status()
           const ec = getEffectiveCadence(id, config)
-          status[id] = { ...s, order: config.order, cadence: ec.cadenceStr, baseCadence: config.cadence || DEFAULT_CADENCE, cadenceOverride: cadenceOverrides[id] || null }
+          status[id] = { ...s, order: config.order, cadence: ec.cadenceStr, baseCadence: config.cadence || DEFAULT_CADENCE, cadenceOverride: cadenceOverrides[id] || null, description: config.description || null }
         } catch (err) {
-          status[id] = { error: err.message, order: config.order }
+          status[id] = { error: err.message, order: config.order, description: config.description || null }
         }
       } else {
         const ec = getEffectiveCadence(id, config)
-        status[id] = { registered: true, order: config.order, cadence: ec.cadenceStr, baseCadence: config.cadence || DEFAULT_CADENCE, cadenceOverride: cadenceOverrides[id] || null }
+        status[id] = { registered: true, order: config.order, cadence: ec.cadenceStr, baseCadence: config.cadence || DEFAULT_CADENCE, cadenceOverride: cadenceOverrides[id] || null, description: config.description || null }
       }
     }
     return {
@@ -489,7 +533,7 @@ function createRefreshRegistry(storage) {
   }
 
   return {
-    register, get, getAll, runAll, runModule, getStatus, isRunning,
+    register, get, getAll, runAll, runModule, runOne, getStatus, isRunning,
     setCadenceOverride, getCadenceOverrides, parseCadence
   }
 }

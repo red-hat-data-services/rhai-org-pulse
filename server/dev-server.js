@@ -829,6 +829,42 @@ app.post('/api/admin/refresh/:module', requireAdmin, requireScope('admin:manage'
 
 /**
  * @openapi
+ * /api/admin/refresh/handler/{handlerId}:
+ *   post:
+ *     tags: [Admin]
+ *     summary: Run a single refresh handler by ID (admin only)
+ *     parameters:
+ *       - in: path
+ *         name: handlerId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Full handler ID (e.g. "team-tracker:roster-sync")
+ *     responses:
+ *       202:
+ *         description: Handler started
+ *       404:
+ *         description: Handler not found
+ *       409:
+ *         description: Refresh already in progress
+ */
+app.post('/api/admin/refresh/handler/:handlerId', requireAdmin, requireScope('admin:manage'), function(req, res) {
+  if (refreshRegistry.isRunning()) {
+    return res.status(409).json({ error: 'Refresh is already running' });
+  }
+  const handlerId = req.params.handlerId;
+  const handler = refreshRegistry.get(handlerId);
+  if (!handler) {
+    return res.status(404).json({ error: 'No handler registered with id "' + handlerId + '"' });
+  }
+  refreshRegistry.runOne(handlerId, { skipCooldown: true }).catch(function(err) {
+    console.error('[refresh-handler] runOne error for %s:', handlerId, err.message);
+  });
+  res.status(202).json({ status: 'started', handler: handlerId });
+});
+
+/**
+ * @openapi
  * /api/admin/refresh/status:
  *   get:
  *     tags: [Admin]
@@ -1562,6 +1598,7 @@ refreshRegistry.register('platform:backup', {
   order: 200,
   cadence: '24h',
   timeout: 120000,
+  description: 'Creates a backup of all data files to S3 and applies retention policy.',
   handler: async function() {
     if (!process.env.AWS_BACKUP_BUCKET) {
       return { status: 'skipped', reason: 'AWS_BACKUP_BUCKET not configured' };

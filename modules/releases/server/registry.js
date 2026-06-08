@@ -744,6 +744,7 @@ function registerRegistryRoutes(router, context) {
     context.registerRefresh('registry-sync', {
       order: 65,
       timeout: 300000,
+      description: 'Syncs the release registry from Product Pages, updating release metadata and versions.',
       handler: async function() {
         return runRegistrySync(storage);
       }

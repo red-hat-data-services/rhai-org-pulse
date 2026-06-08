@@ -346,6 +346,7 @@ module.exports = function registerRoutes(router, context) {
     context.registerRefresh('refresh', {
       order: 50,
       timeout: 600000,
+      description: 'Refreshes AI Impact component assessments and onboarding data from Jira.',
       handler: async function() {
         await runAiImpactRefresh();
       }

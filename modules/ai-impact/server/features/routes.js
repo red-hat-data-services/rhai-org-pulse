@@ -193,6 +193,7 @@ module.exports = function registerFeatureRoutes(router, context) {
     context.registerRefresh('feature-sync', {
       order: 60,
       timeout: 600000,
+      description: 'Syncs AI Impact feature data from Jira, updating local feature records.',
       handler: async function() {
         await runSync(readFromStorage, writeToStorageAtomic);
       }

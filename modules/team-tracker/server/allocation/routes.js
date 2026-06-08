@@ -235,6 +235,7 @@ module.exports = function registerAllocationRoutes(router, context) {
   if (context.registerRefresh) context.registerRefresh('allocation', {
     order: 40,
     timeout: 600000,
+    description: 'Fetches sprint data from Jira boards and classifies issues for team allocation tracking.',
     handler: async function(options) {
       await runAllocationRefresh(options);
     },
