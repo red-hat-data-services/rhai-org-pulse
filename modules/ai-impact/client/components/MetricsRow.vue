@@ -3,6 +3,10 @@ defineProps({
   metrics: {
     type: Object,
     default: null
+  },
+  pipelineFriction: {
+    type: Object,
+    default: null
   }
 })
 
@@ -15,6 +19,12 @@ function getTrendClass(trend) {
 function formatChange(change) {
   if (change > 0) return `+${change}%`
   return `${change}%`
+}
+
+function formatFrictionChange(change) {
+  if (change > 0) return `+${change}pp`
+  if (change < 0) return `${change}pp`
+  return '—'
 }
 </script>
 
@@ -33,7 +43,6 @@ function formatChange(change) {
         <div class="flex items-baseline gap-2">
           <span class="text-3xl font-bold dark:text-gray-100">{{ metrics.createdPct }}%</span>
           <span class="text-sm flex items-center gap-1" :class="getTrendClass(metrics.trend)">
-            <!-- Trend arrow -->
             <svg v-if="metrics.trend === 'growing'" class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
             </svg>
@@ -46,6 +55,10 @@ function formatChange(change) {
             {{ formatChange(metrics.createdChange) }}
           </span>
         </div>
+        <p v-if="pipelineFriction" class="text-xs text-gray-400 dark:text-gray-500">
+          {{ pipelineFriction.needsAttentionPct }}% require attention
+          <span class="ml-1">{{ formatFrictionChange(pipelineFriction.needsAttentionChange) }}</span>
+        </p>
       </div>
 
       <!-- Revised with AI -->
@@ -63,6 +76,10 @@ function formatChange(change) {
             {{ metrics.priorRevisedCount }} prev period
           </span>
         </div>
+        <p v-if="pipelineFriction" class="text-xs text-gray-400 dark:text-gray-500">
+          {{ pipelineFriction.feasibilityBlockedPct }}% feasibility blocked
+          <span class="ml-1">{{ formatFrictionChange(pipelineFriction.feasibilityBlockedChange) }}</span>
+        </p>
       </div>
 
       <!-- Total RFEs -->

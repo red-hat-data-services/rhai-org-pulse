@@ -25,7 +25,8 @@ const props = defineProps({
   priorityFilter: { type: String, default: 'all' },
   statusFilter: { type: String, default: 'all' },
   selectedRFE: { type: Object, default: null },
-  rfeToFeature: { type: Object, default: () => ({}) }
+  rfeToFeature: { type: Object, default: () => ({}) },
+  pipelineFriction: { type: Object, default: null }
 })
 
 const emit = defineEmits([
@@ -105,7 +106,7 @@ const isEmpty = computed(() => !props.rfeData?.fetchedAt)
 
       <!-- Data display -->
       <template v-else>
-        <MetricsRow :metrics="metrics" />
+        <MetricsRow :metrics="metrics" :pipelineFriction="pipelineFriction" />
 
         <TrendCharts
           :trendData="trendData"

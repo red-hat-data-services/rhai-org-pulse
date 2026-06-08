@@ -298,13 +298,16 @@ describe('buildBreakdownData', () => {
 });
 
 describe('computeAllMetrics', () => {
-  it('returns metrics, trendData, and breakdown', () => {
+  it('returns metrics, trendData, breakdown, and pipelineFriction', () => {
     const issues = [makeIssue(5, 'created')];
     const result = computeAllMetrics(issues, 'month', { trendThresholdPp: 2 });
 
     expect(result).toHaveProperty('metrics');
     expect(result).toHaveProperty('trendData');
     expect(result).toHaveProperty('breakdown');
+    expect(result).toHaveProperty('pipelineFriction');
     expect(result.trendData).toHaveLength(8);
+    expect(result.pipelineFriction).toHaveProperty('needsAttentionPct');
+    expect(result.pipelineFriction).toHaveProperty('feasibilityBlockedPct');
   });
 });

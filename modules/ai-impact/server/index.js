@@ -60,6 +60,24 @@ module.exports = function registerRoutes(router, context) {
 
   const VALID_TIME_WINDOWS = ['week', 'month', '3months'];
 
+  /**
+   * @openapi
+   * /modules/ai-impact/rfe-data:
+   *   get:
+   *     summary: RFE data with computed metrics and pipeline friction
+   *     tags: [ai-impact]
+   *     parameters:
+   *       - in: query
+   *         name: timeWindow
+   *         schema:
+   *           type: string
+   *           enum: [week, month, 3months]
+   *           default: month
+   *         description: Time window for metric computation
+   *     responses:
+   *       200:
+   *         description: RFE dataset with metrics, trend data, breakdown, and pipeline friction
+   */
   router.get('/rfe-data', requireScope('ai-impact:read'), function(req, res) {
     const timeWindow = VALID_TIME_WINDOWS.includes(req.query.timeWindow)
       ? req.query.timeWindow
@@ -73,13 +91,14 @@ module.exports = function registerRoutes(router, context) {
         metrics: { createdPct: 0, createdChange: 0, trend: 'stable', revisedCount: 0, priorRevisedCount: 0, windowTotal: 0, totalRFEs: 0 },
         trendData: [],
         breakdown: [],
+        pipelineFriction: { needsAttentionPct: 0, needsAttentionChange: 0, needsAttentionTrend: 'stable', feasibilityBlockedPct: 0, feasibilityBlockedChange: 0, feasibilityBlockedTrend: 'stable' },
         issues: []
       });
     }
 
     // Compute metrics server-side from cached issues
     const config = getConfig(readFromStorage);
-    const { metrics, trendData, breakdown } = computeAllMetrics(data.issues, timeWindow, config);
+    const { metrics, trendData, breakdown, pipelineFriction } = computeAllMetrics(data.issues, timeWindow, config);
 
     res.json({
       fetchedAt: data.fetchedAt,
@@ -87,6 +106,7 @@ module.exports = function registerRoutes(router, context) {
       metrics,
       trendData,
       breakdown,
+      pipelineFriction,
       issues: data.issues
     });
   });

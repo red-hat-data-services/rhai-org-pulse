@@ -9,8 +9,7 @@
       "created": "2026-03-15T10:00:00Z",
       "creator": "schen",
       "creatorDisplayName": "Sarah Chen",
-      "components": ["Platform Core"],
-      "labels": ["rfe-creator-auto-created", "rfe-creator-auto-revised", "customer-request"],
+      "labels": ["rfe-creator-auto-created", "rfe-creator-auto-revised", "rfe-creator-needs-attention", "customer-request"],
       "aiInvolvement": "both",
       "linkedFeature": {
         "key": "RHAISTRAT-1168",
@@ -27,8 +26,7 @@
       "created": "2026-03-12T14:30:00Z",
       "creator": "jpark",
       "creatorDisplayName": "James Park",
-      "components": ["Platform Dashboard"],
-      "labels": ["rfe-creator-auto-created", "rfe-creator-autofix-rubric-pass", "strat-creator-3.5"],
+      "labels": ["rfe-creator-auto-created", "rfe-creator-feasibility-unknown"],
       "aiInvolvement": "created",
       "linkedFeature": null
     },
@@ -40,8 +38,7 @@
       "created": "2026-03-10T09:15:00Z",
       "creator": "mgarcia",
       "creatorDisplayName": "Maria Garcia",
-      "components": ["ML Models"],
-      "labels": ["rfe-creator-auto-revised", "rfe-creator-autofix-rubric-pass", "tech-reviewed", "strategic"],
+      "labels": ["rfe-creator-auto-revised", "strategic"],
       "aiInvolvement": "revised",
       "linkedFeature": {
         "key": "RHAISTRAT-502",
@@ -58,7 +55,6 @@
       "created": "2026-03-08T11:00:00Z",
       "creator": "akim",
       "creatorDisplayName": "Alex Kim",
-      "components": ["Infrastructure Services"],
       "labels": [],
       "aiInvolvement": "none",
       "linkedFeature": null
@@ -71,10 +67,14 @@
       "created": "2026-02-28T16:45:00Z",
       "creator": "lwong",
       "creatorDisplayName": "Lisa Wong",
-      "components": ["ML Models"],
-      "labels": ["rfe-creator-auto-created", "rfe-creator-auto-revised", "rfe-creator-autofix-rubric-pass", "rfe-creator-needs-attention"],
+      "labels": ["rfe-creator-auto-created", "rfe-creator-auto-revised"],
       "aiInvolvement": "both",
-      "linkedFeature": null
+      "linkedFeature": {
+        "key": "RHAISTRAT-503",
+        "summary": "Strat: A/B testing for model endpoints",
+        "status": "In Progress",
+        "fixVersions": ["RHOAI 2.16"]
+      }
     },
     {
       "key": "RHAIRFE-1006",
@@ -84,8 +84,7 @@
       "created": "2026-02-20T08:30:00Z",
       "creator": "rpatel",
       "creatorDisplayName": "Raj Patel",
-      "components": ["Data Pipelines"],
-      "labels": ["rfe-creator-auto-created", "rfe-creator-needs-attention"],
+      "labels": ["rfe-creator-auto-created", "rfe-creator-feasibility-fail"],
       "aiInvolvement": "created",
       "linkedFeature": null
     },
@@ -97,8 +96,7 @@
       "created": "2026-02-15T13:20:00Z",
       "creator": "emiller",
       "creatorDisplayName": "Emily Miller",
-      "components": ["Platform Core"],
-      "labels": ["rfe-creator-auto-revised", "rfe-creator-autofix-rubric-pass"],
+      "labels": ["rfe-creator-auto-revised"],
       "aiInvolvement": "revised",
       "linkedFeature": null
     },
@@ -110,8 +108,7 @@
       "created": "2026-02-10T10:00:00Z",
       "creator": "dlee",
       "creatorDisplayName": "David Lee",
-      "components": ["Platform Core", "Infrastructure Services"],
-      "labels": ["rfe-creator-autofix-rubric-pass", "tech-reviewed", "strat-creator-3.5"],
+      "labels": [],
       "aiInvolvement": "none",
       "linkedFeature": null
     },
@@ -123,8 +120,7 @@
       "created": "2026-01-25T15:00:00Z",
       "creator": "schen",
       "creatorDisplayName": "Sarah Chen",
-      "components": ["ML Models"],
-      "labels": ["rfe-creator-auto-created", "rfe-creator-auto-revised", "rfe-creator-autofix-rubric-pass", "innovation"],
+      "labels": ["rfe-creator-auto-created", "rfe-creator-auto-revised", "innovation"],
       "aiInvolvement": "both",
       "linkedFeature": null
     },
@@ -136,7 +132,6 @@
       "created": "2026-01-15T09:45:00Z",
       "creator": "jpark",
       "creatorDisplayName": "James Park",
-      "components": ["ML Models", "Platform Core"],
       "labels": [],
       "aiInvolvement": "none",
       "linkedFeature": null
