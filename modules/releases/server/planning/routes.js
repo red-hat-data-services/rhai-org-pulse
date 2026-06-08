@@ -25,6 +25,7 @@ const { getOutcomeSummaries } = require('./outcome-fetch')
 const { previewDocImport, executeDocImport } = require('./doc-import')
 const { logAudit, getAuditLog } = require('./audit-log')
 const healthRoutes = require('./health/health-routes')
+var { buildFeatureReadiness } = require('./feature-readiness')
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true'
 const DATA_PREFIX = 'releases/planning'
@@ -448,6 +449,40 @@ module.exports = function registerPlanningRoutes(router, context) {
   router.get('/config', requireAdmin, requireScope('releases:write'), function(req, res) {
     const config = getConfig(readFromStorage)
     res.json(config)
+  })
+
+  /**
+   * @openapi
+   * /api/modules/releases/planning/feature-readiness:
+   *   get:
+   *     summary: Prioritized feature readiness lists split by human review status
+   *     tags: [releases-planning]
+   *     security: [{ bearerAuth: [] }]
+   *     parameters:
+   *       - name: version
+   *         in: query
+   *         required: false
+   *         schema:
+   *           type: string
+   *         description: Release version for cross-reference enrichment (e.g. "3.6")
+   *     responses:
+   *       200:
+   *         description: Feature readiness data with pendingReview and approved arrays
+   *       500:
+   *         description: Internal error building readiness data
+   */
+  router.get('/feature-readiness', requireAuth, requireScope('releases:read'), function(req, res) {
+    var version = req.query.version || null
+    if (version && !isValidVersion(version)) {
+      return res.status(400).json({ error: 'Invalid version format' })
+    }
+    try {
+      var result = buildFeatureReadiness(readFromStorage, version)
+      res.json(result)
+    } catch (err) {
+      console.error('[releases/planning] Feature readiness build failed:', err.message)
+      res.status(500).json({ error: 'Failed to build feature readiness data' })
+    }
   })
 
   // ─── Cache Invalidation Helper ───

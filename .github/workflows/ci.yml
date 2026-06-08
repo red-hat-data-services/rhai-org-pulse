@@ -143,33 +143,18 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     needs: [test, smoke-test-core, smoke-test-ai-eng]
-    permissions:
-      statuses: write
     steps:
-      - name: Set commit status
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          REPO: ${{ github.repository }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      - name: Evaluate smoke test results
         run: |
           if [ "${{ needs.test.outputs.app }}" != "true" ]; then
-            STATE="success"
-            DESC="No code changes — smoke tests skipped"
+            echo "No code changes — smoke tests skipped"
           elif [ "${{ needs.test.result }}" != "success" ]; then
-            STATE="failure"
-            DESC="Test & Build failed — smoke tests did not run"
+            echo "Test & Build failed — smoke tests did not run"
+            exit 1
           elif [ "${{ needs.smoke-test-core.result }}" = "success" ] && \
                [ "${{ needs.smoke-test-ai-eng.result }}" = "success" ]; then
-            STATE="success"
-            DESC="All smoke tests passed"
+            echo "All smoke tests passed"
           else
-            STATE="failure"
-            DESC="Smoke tests failed"
+            echo "Smoke tests failed"
+            exit 1
           fi
-
-          gh api "repos/${REPO}/statuses/${HEAD_SHA}" \
-            -f state="$STATE" \
-            -f context="Smoke Tests" \
-            -f description="$DESC" \
-            -f target_url="$RUN_URL"

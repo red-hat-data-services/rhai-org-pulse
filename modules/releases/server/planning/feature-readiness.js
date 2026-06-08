@@ -1,0 +1,232 @@
+var { buildTeamIndex } = require('./team-lookup')
+
+var RICE_MAX = 16900 // 13 × 13 × 100 ÷ 1 (theoretical max: max Reach × max Impact × max Confidence ÷ min Effort)
+
+var TIER_SCORES     = { T1: 1.0, T2: 0.6, T3: 0.2 }
+var PRIORITY_SCORES = { Blocker: 1.0, Critical: 0.8, Major: 0.6, Normal: 0.4, Minor: 0.2 }
+var TSHIRT_SCORES   = { XS: 1.0, S: 0.8, M: 0.6, L: 0.4, XL: 0.2 }
+
+function computeBestAvailableScore(feature) {
+  var signals = []
+
+  if (feature.riceScore != null) {
+    signals.push({ value: feature.riceScore / RICE_MAX, weight: 30 })
+  } else {
+    // Rubric proxy: well-scored feature = high confidence, which is what RICE captures.
+    // Drops out automatically once riceScore is present.
+    signals.push({ value: (feature.rubricTotal || 0) / 8, weight: 30 })
+  }
+
+  if (feature.tier != null) {
+    signals.push({ value: TIER_SCORES[feature.tier] || 0, weight: 30 })
+  }
+
+  signals.push({ value: PRIORITY_SCORES[feature.priority] || 0.4, weight: 25 })
+
+  if (feature.size != null) {
+    signals.push({ value: TSHIRT_SCORES[feature.size] || 0.6, weight: 15 })
+  }
+
+  var totalWeight = 0
+  var weightedSum = 0
+  for (var i = 0; i < signals.length; i++) {
+    totalWeight += signals[i].weight
+    weightedSum += signals[i].value * signals[i].weight
+  }
+
+  return Math.round((weightedSum / totalWeight) * 100)
+}
+
+function computeBlockers(feature) {
+  var blockingDimensions = []
+  var reviewers = feature.reviewers || {}
+  var dims = Object.keys(reviewers)
+  for (var i = 0; i < dims.length; i++) {
+    var dim = dims[i]
+    var verdict = reviewers[dim]
+    if (verdict === 'revise' || verdict === 'reject') {
+      var score = feature.scores && feature.scores[dim] != null ? feature.scores[dim] : null
+      blockingDimensions.push({ dimension: dim, verdict: verdict, score: score })
+    }
+  }
+
+  var actionRequired = null
+  var status = feature.humanReviewStatus
+  if (status === 'needs-review') {
+    actionRequired = 'Open the Jira issue, add Staff Engineer feedback in the description, then remove the strat-creator-needs-attention label to unblock re-refinement'
+  } else if (status === 'awaiting-review') {
+    actionRequired = 'Open the Jira issue and add the strat-creator-human-sign-off label when ready'
+  }
+
+  return { blockingDimensions: blockingDimensions, actionRequired: actionRequired }
+}
+
+function buildFeatureReadiness(readFromStorage, version) {
+  var raw = readFromStorage('ai-impact/features.json')
+  if (!raw || !raw.features) {
+    return { pendingReview: [], approved: [], filterMeta: {}, meta: {} }
+  }
+
+  var candidateIndex = new Map()
+  var healthIndex = new Map()
+  var teamIndex = buildTeamIndex(readFromStorage, version)
+
+  if (version) {
+    var candidateCache = readFromStorage('releases/planning/candidates-cache-' + version + '.json')
+    if (candidateCache && candidateCache.data && Array.isArray(candidateCache.data.features)) {
+      var candidates = candidateCache.data.features
+      for (var ci = 0; ci < candidates.length; ci++) {
+        var c = candidates[ci]
+        if (c.issueKey) candidateIndex.set(c.issueKey, c)
+      }
+    }
+
+    var healthCache = readFromStorage('releases/planning/health-cache-' + version + '.json')
+    if (healthCache && Array.isArray(healthCache.features)) {
+      var hf = healthCache.features
+      for (var hi = 0; hi < hf.length; hi++) {
+        var h = hf[hi]
+        if (h.key) healthIndex.set(h.key, h)
+      }
+    }
+  }
+
+  var pendingReview = []
+  var approved = []
+  var allComponents = []
+  var allPriorities = new Set()
+  var allBigRocks = new Set()
+  var allTargetVersions = new Set()
+  var allFixVersions = new Set()
+  var allTeams = new Set()
+
+  var keys = Object.keys(raw.features)
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i]
+    var entry = raw.features[key]
+    if (!entry || !entry.latest) continue
+    var latest = entry.latest
+
+    var scores = latest.scores || {}
+    var rubricTotal = (scores.feasibility || 0) + (scores.testability || 0) + (scores.scope || 0) + (scores.architecture || 0)
+
+    var candidateData = candidateIndex.get(key) || null
+    var healthData = healthIndex.get(key) || null
+
+    var tier = candidateData && candidateData.tier != null
+      ? 'T' + candidateData.tier
+      : (healthData ? healthData.tier || null : null)
+    var bigRock = candidateData
+      ? candidateData.bigRock || null
+      : (healthData ? healthData.bigRock || null : null)
+    var targetVersions = candidateData && candidateData.targetRelease
+      ? [candidateData.targetRelease]
+      : (healthData && healthData.targetRelease ? [healthData.targetRelease] : [])
+    var fixVersion = candidateData
+      ? candidateData.fixVersion || null
+      : (healthData ? healthData.fixVersions || null : null)
+    var deliveryOwner = healthData ? healthData.deliveryOwner || null : null
+    var team = teamIndex.get(key) || null
+
+    var priorityScore = healthData ? (healthData.priorityScore != null ? healthData.priorityScore : null) : null
+    var priorityScoreBreakdown = healthData ? (healthData.priorityBreakdown || healthData.priorityScoreBreakdown || null) : null
+
+    var priorityScoreFallback = priorityScore === null
+    var effectivePriorityScore = priorityScore !== null
+      ? priorityScore
+      : computeBestAvailableScore(Object.assign({}, latest, { rubricTotal: rubricTotal, tier: tier }))
+
+    var blockerResult = computeBlockers(Object.assign({}, latest, { rubricTotal: rubricTotal }))
+
+    var healthComponents = healthData && healthData.components
+      ? healthData.components.split(', ').filter(Boolean)
+      : []
+    var componentsList = (latest.components && latest.components.length > 0)
+      ? latest.components
+      : healthComponents
+
+    var feature = {
+      key: key,
+      title: latest.title,
+      sourceRfe: latest.sourceRfe,
+      priority: latest.priority,
+      status: latest.status,
+      size: latest.size,
+      recommendation: latest.recommendation,
+      needsAttention: latest.needsAttention,
+      humanReviewStatus: latest.humanReviewStatus,
+      riceScore: latest.riceScore != null ? latest.riceScore : null,
+      rubricTotal: rubricTotal,
+      scores: scores,
+      reviewers: latest.reviewers || {},
+      components: componentsList,
+      deliveryOwner: deliveryOwner,
+      team: team,
+      reviewedAt: latest.reviewedAt,
+      approvedBy: latest.approvedBy || null,
+      approvedAt: latest.approvedAt || null,
+      tier: tier,
+      bigRock: bigRock,
+      targetVersions: targetVersions,
+      fixVersion: fixVersion,
+      priorityScore: priorityScore,
+      priorityScoreBreakdown: priorityScoreBreakdown,
+      priorityScoreFallback: priorityScoreFallback,
+      effectivePriorityScore: effectivePriorityScore,
+      blockingDimensions: blockerResult.blockingDimensions,
+      actionRequired: blockerResult.actionRequired
+    }
+
+    if (latest.humanReviewStatus === 'approved') {
+      approved.push(feature)
+    } else {
+      pendingReview.push(feature)
+    }
+
+    if (Array.isArray(feature.components)) {
+      for (var ci2 = 0; ci2 < feature.components.length; ci2++) {
+        allComponents.push(feature.components[ci2])
+      }
+    }
+    if (feature.priority) allPriorities.add(feature.priority)
+    if (feature.bigRock) allBigRocks.add(feature.bigRock)
+    for (var tvi = 0; tvi < feature.targetVersions.length; tvi++) {
+      allTargetVersions.add(feature.targetVersions[tvi])
+    }
+    if (feature.fixVersion) allFixVersions.add(feature.fixVersion)
+    if (feature.team) allTeams.add(feature.team)
+  }
+
+  function sortFeatures(a, b) {
+    if (b.effectivePriorityScore !== a.effectivePriorityScore) {
+      return b.effectivePriorityScore - a.effectivePriorityScore
+    }
+    return b.rubricTotal - a.rubricTotal
+  }
+
+  pendingReview.sort(sortFeatures)
+  approved.sort(sortFeatures)
+
+  var uniqueComponents = Array.from(new Set(allComponents)).sort()
+
+  var filterMeta = {
+    components: uniqueComponents,
+    priorities: Array.from(allPriorities).sort(),
+    bigRocks: Array.from(allBigRocks).sort(),
+    targetVersions: Array.from(allTargetVersions).sort(),
+    fixVersions: Array.from(allFixVersions).sort(),
+    teams: Array.from(allTeams).sort()
+  }
+
+  var meta = {
+    total: pendingReview.length + approved.length,
+    pendingReviewCount: pendingReview.length,
+    approvedCount: approved.length,
+    version: version || null,
+    lastSyncedAt: raw.lastSyncedAt || null
+  }
+
+  return { pendingReview: pendingReview, approved: approved, filterMeta: filterMeta, meta: meta }
+}
+
+module.exports = { buildFeatureReadiness: buildFeatureReadiness, computeBlockers: computeBlockers, computeBestAvailableScore: computeBestAvailableScore }

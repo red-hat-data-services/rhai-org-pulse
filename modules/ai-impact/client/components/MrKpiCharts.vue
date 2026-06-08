@@ -110,7 +110,14 @@ const commitsDistOptions = computed(() => ({
   }
 }))
 
-// ─── Graph E: Commits Trend (rolling avg) ───
+// ─── Graph E: AI Draft Maturity Score ───
+// score = 1 / (1 + α·(commits−1) + β·comments), α=0.3, β=0.1
+
+function draftMaturityScore(commitCount, commentCount) {
+  const commits = commitCount || 1
+  const comments = commentCount || 0
+  return 1 / (1 + 0.3 * (commits - 1) + 0.1 * comments)
+}
 
 function getISOWeek(date) {
   const d = new Date(date)
@@ -121,7 +128,16 @@ function getISOWeek(date) {
   return `${d.getFullYear()}-W${String(weekNum).padStart(2, '0')}`
 }
 
-const commitsTrendData = computed(() => {
+const overallMaturity = computed(() => {
+  const threeMonthsAgo = new Date()
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3)
+  const recentMerged = mergedMrs.value.filter(mr => new Date(mr.mergedAt) >= threeMonthsAgo)
+  if (!recentMerged.length) return null
+  const scores = recentMerged.map(mr => draftMaturityScore(mr.commitCount, mr.commentCount))
+  return +(scores.reduce((s, v) => s + v, 0) / scores.length).toFixed(2)
+})
+
+const readinessTrendData = computed(() => {
   const threeMonthsAgo = new Date()
   threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3)
 
@@ -130,19 +146,19 @@ const commitsTrendData = computed(() => {
   for (const mr of recentMrs) {
     const week = getISOWeek(mr.mergedAt)
     if (!byWeek[week]) byWeek[week] = []
-    byWeek[week].push(mr.commitCount || 1)
+    byWeek[week].push(draftMaturityScore(mr.commitCount, mr.commentCount))
   }
 
   const weeks = Object.keys(byWeek).sort()
   const avgs = weeks.map(w => {
     const vals = byWeek[w]
-    return +(vals.reduce((s, v) => s + v, 0) / vals.length).toFixed(1)
+    return +(vals.reduce((s, v) => s + v, 0) / vals.length).toFixed(2)
   })
 
   return {
     labels: weeks,
     datasets: [{
-      label: 'Avg commits/MR',
+      label: 'Draft Maturity',
       data: avgs,
       borderColor: '#6366f1',
       backgroundColor: 'rgba(99, 102, 241, 0.1)',
@@ -154,20 +170,20 @@ const commitsTrendData = computed(() => {
   }
 })
 
-const commitsTrendOptions = computed(() => ({
+const readinessTrendOptions = computed(() => ({
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
     legend: { display: false },
     tooltip: {
       callbacks: {
-        label(ctx) { return `${ctx.parsed.y} commits/MR` }
+        label(ctx) { return `Score: ${Math.round(ctx.parsed.y * 100)}%` }
       }
     }
   },
   scales: {
     x: { ticks: { font: { size: 9 }, color: textColor.value, maxRotation: 45, maxTicksLimit: 8 }, grid: { color: gridColor.value } },
-    y: { beginAtZero: true, ticks: { font: { size: 10 }, color: textColor.value }, title: { display: true, text: 'Avg commits', font: { size: 10 }, color: textColor.value }, grid: { color: gridColor.value } }
+    y: { min: 0, max: 1, ticks: { font: { size: 10 }, color: textColor.value, callback: v => Math.round(v * 100) + '%' }, title: { display: true, text: 'Maturity', font: { size: 10 }, color: textColor.value }, grid: { color: gridColor.value } }
   }
 }))
 
@@ -317,6 +333,36 @@ const reviewTimeOptions = computed(() => ({
       <span class="text-xs text-gray-400 dark:text-gray-500">{{ activeMrs.length }} AI-Generated MRs ({{ mergedMrs.length }} merged, {{ openMrs.length }} open)</span>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <!-- Graph E: AI Draft Maturity Score -->
+      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
+        <div class="flex items-center justify-between mb-1">
+          <div class="flex items-center gap-2">
+            <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100">AI Draft Maturity Score</h4>
+            <div class="relative group">
+              <svg class="h-3.5 w-3.5 text-gray-400 dark:text-gray-500 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div class="absolute left-0 top-6 z-10 hidden group-hover:block w-72 p-3 text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/50">
+                <p>Composite score (0–100%) estimating how close AI-generated MRs are to merge-ready. 100% = merged as-is; lower scores mean more human rework and review discussion were needed.</p>
+                <div class="flex items-center justify-center mt-2 mb-1 font-mono text-[11px]">
+                  <span class="italic mr-1">score</span><span class="mr-1">=</span>
+                  <span class="inline-flex flex-col items-center">
+                    <span class="px-1 leading-tight">1</span>
+                    <span class="border-t border-gray-400 dark:border-gray-500 px-1 leading-tight">1 + 0.3·(<i>c</i> − 1) + 0.1·<i>m</i></span>
+                  </span>
+                </div>
+                <p class="text-[10px] text-gray-400 dark:text-gray-500 text-center"><i>c</i> = commits, <i>m</i> = comments</p>
+              </div>
+            </div>
+          </div>
+          <span v-if="overallMaturity !== null" class="text-lg font-bold" :class="overallMaturity >= 0.7 ? 'text-green-600 dark:text-green-400' : overallMaturity >= 0.4 ? 'text-yellow-600 dark:text-yellow-400' : 'text-orange-500 dark:text-orange-400'">{{ Math.round(overallMaturity * 100) }}%</span>
+        </div>
+        <div class="text-[10px] text-gray-400 dark:text-gray-500 mb-3">weekly avg, last 3 months</div>
+        <div class="h-[160px]">
+          <Line :data="readinessTrendData" :options="readinessTrendOptions" />
+        </div>
+      </div>
+
       <!-- Graph D: Commits Distribution -->
       <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
         <div class="flex items-center justify-between mb-1">
@@ -335,27 +381,6 @@ const reviewTimeOptions = computed(() => ({
         <div class="text-[10px] text-gray-400 dark:text-gray-500 mb-3">distribution across AI-Generated MRs</div>
         <div class="h-[160px]">
           <Bar :data="commitsDistData" :options="commitsDistOptions" />
-        </div>
-      </div>
-
-      <!-- Graph E: Commits Trend -->
-      <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
-        <div class="flex items-center justify-between mb-1">
-          <div class="flex items-center gap-2">
-            <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Commits Trend</h4>
-            <div class="relative group">
-              <svg class="h-3.5 w-3.5 text-gray-400 dark:text-gray-500 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <div class="absolute left-0 top-6 z-10 hidden group-hover:block w-56 p-3 text-xs text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/50">
-                Weekly average of commits per merged MR over the last 3 months. A downward trend indicates improving AI output quality.
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="text-[10px] text-gray-400 dark:text-gray-500 mb-3">weekly avg, last 3 months</div>
-        <div class="h-[160px]">
-          <Line :data="commitsTrendData" :options="commitsTrendOptions" />
         </div>
       </div>
 

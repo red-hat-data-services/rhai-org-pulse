@@ -1,0 +1,151 @@
+{
+  "cachedAt": "2026-04-25T14:30:00.000Z",
+  "version": "3.5",
+  "demoMode": true,
+  "features": [
+    {
+      "key": "RHAISTRAT-1168",
+      "summary": "GPU-as-a-Service Observability Dashboard",
+      "tier": "T1",
+      "bigRock": "MaaS",
+      "targetRelease": "rhoai-3.5",
+      "fixVersions": "RHOAI-3.5.GA",
+      "components": "Platform Core",
+      "deliveryOwner": "Model Serving Team",
+      "priorityScore": 78,
+      "priorityBreakdown": { "tier": 30, "rice": 28, "priority": 20 }
+    },
+    {
+      "key": "RHAISTRAT-1169",
+      "summary": "Model Serving Autoscaling for High-Throughput Inference",
+      "tier": "T1",
+      "bigRock": "MaaS",
+      "targetRelease": "rhoai-3.5",
+      "fixVersions": "RHOAI-3.5.EA2",
+      "components": "Platform Core",
+      "deliveryOwner": "Model Serving Team",
+      "priorityScore": 85,
+      "priorityBreakdown": { "tier": 30, "rice": 35, "priority": 20 }
+    },
+    {
+      "key": "RHAISTRAT-1170",
+      "summary": "LLM Fine-Tuning with Custom Datasets",
+      "tier": "T1",
+      "bigRock": "Fine-Tuning / RLHF",
+      "targetRelease": "rhoai-3.5",
+      "fixVersions": "RHOAI-3.5.EA1",
+      "components": "ML Models",
+      "deliveryOwner": "Training Team",
+      "priorityScore": 72,
+      "priorityBreakdown": { "tier": 30, "rice": 22, "priority": 20 }
+    },
+    {
+      "key": "RHAISTRAT-1171",
+      "summary": "A/B Testing Framework for Model Endpoints",
+      "tier": "T2",
+      "bigRock": "Eval Hub",
+      "targetRelease": "rhoai-3.5",
+      "fixVersions": "RHOAI-3.5.GA",
+      "components": "ML Models",
+      "deliveryOwner": "Platform Team",
+      "priorityScore": 60,
+      "priorityBreakdown": { "tier": 18, "rice": 22, "priority": 20 }
+    },
+    {
+      "key": "RHAISTRAT-1172",
+      "summary": "Distributed Training Pipeline Orchestration",
+      "tier": "T1",
+      "bigRock": "Gen AI Studio",
+      "targetRelease": "rhoai-3.5",
+      "fixVersions": "RHOAI-3.5.EA2",
+      "components": "ML Models",
+      "deliveryOwner": "Data Science Pipelines Team",
+      "priorityScore": 55,
+      "priorityBreakdown": { "tier": 30, "rice": 5, "priority": 20 }
+    },
+    {
+      "key": "RHAISTRAT-1173",
+      "summary": "GPU Memory Monitoring Dashboard",
+      "tier": "T1",
+      "bigRock": "MaaS",
+      "targetRelease": "rhoai-3.5",
+      "fixVersions": "RHOAI-3.5.GA",
+      "components": "Platform Dashboard",
+      "deliveryOwner": "Model Serving Team",
+      "priorityScore": 52,
+      "priorityBreakdown": { "tier": 30, "rice": 12, "priority": 10 }
+    },
+    {
+      "key": "RHAISTRAT-1174",
+      "summary": "Data Quality Validation for Training Pipelines",
+      "tier": "T2",
+      "bigRock": "Gen AI Studio",
+      "targetRelease": "rhoai-3.5",
+      "fixVersions": "RHOAI-3.5.EA2",
+      "components": "Data Pipelines",
+      "deliveryOwner": "Data Science Pipelines Team",
+      "priorityScore": 48,
+      "priorityBreakdown": { "tier": 18, "rice": 15, "priority": 15 }
+    },
+    {
+      "key": "RHAISTRAT-1175",
+      "summary": "RBAC for Shared Model Registry",
+      "tier": "T1",
+      "bigRock": "llm-d / xKS",
+      "targetRelease": "rhoai-3.5",
+      "fixVersions": "RHOAI-3.5.GA",
+      "components": "Platform Core",
+      "deliveryOwner": "Platform Team",
+      "priorityScore": 65,
+      "priorityBreakdown": { "tier": 30, "rice": 15, "priority": 20 }
+    },
+    {
+      "key": "RHAISTRAT-1176",
+      "summary": "Custom Runtime Images for Jupyter Notebooks",
+      "tier": "T3",
+      "bigRock": "Gen AI Studio",
+      "targetRelease": "rhoai-3.5",
+      "fixVersions": "RHOAI-3.5.GA",
+      "components": "Platform Core, Infrastructure Services",
+      "deliveryOwner": "Platform Team",
+      "priorityScore": 35,
+      "priorityBreakdown": { "tier": 6, "rice": 14, "priority": 15 }
+    },
+    {
+      "key": "RHAISTRAT-1177",
+      "summary": "Real-Time Model Deployment Latency Optimization",
+      "tier": "T1",
+      "bigRock": "MaaS",
+      "targetRelease": "rhoai-3.5",
+      "fixVersions": "RHOAI-3.5.EA1",
+      "components": "ML Models, Platform Core",
+      "deliveryOwner": "Model Serving Team",
+      "priorityScore": 88,
+      "priorityBreakdown": { "tier": 30, "rice": 28, "priority": 30 }
+    },
+    {
+      "key": "RHAISTRAT-1178",
+      "summary": "OpenTelemetry Tracing for Pipeline Debugging",
+      "tier": "T3",
+      "bigRock": "Eval Hub",
+      "targetRelease": "rhoai-3.5",
+      "fixVersions": "RHOAI-3.5.GA",
+      "components": "Infrastructure Services",
+      "deliveryOwner": "Platform Team",
+      "priorityScore": 22,
+      "priorityBreakdown": { "tier": 6, "rice": 6, "priority": 10 }
+    },
+    {
+      "key": "RHAISTRAT-1179",
+      "summary": "Federated Learning for Distributed Model Training",
+      "tier": "T1",
+      "bigRock": "Fine-Tuning / RLHF",
+      "targetRelease": "rhoai-3.5",
+      "fixVersions": "RHOAI-3.5.GA",
+      "components": "ML Models",
+      "deliveryOwner": "Training Team",
+      "priorityScore": 80,
+      "priorityBreakdown": { "tier": 30, "rice": 30, "priority": 20 }
+    }
+  ]
+}
