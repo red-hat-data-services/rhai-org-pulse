@@ -4,7 +4,8 @@ import { reactive } from 'vue'
 const props = defineProps({
   groups: { type: Array, default: () => [] },
   portfolioVersion: { type: String, default: '' },
-  featureFreezeDate: { type: String, default: null }
+  featureFreezeDate: { type: String, default: null },
+  freezeLabel: { type: String, default: 'Freeze' }
 })
 
 const JIRA_BASE = 'https://redhat.atlassian.net/browse'
@@ -169,7 +170,7 @@ defineExpose({ expandAll, collapseAll })
                 <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                Freeze: {{ formatDate(featureFreezeDate) }}
+                {{ freezeLabel }}: {{ formatDate(featureFreezeDate) }}
               </span>
             </div>
           </td>

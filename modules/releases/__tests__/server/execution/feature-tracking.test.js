@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 
 const { transformIssue, CUSTOM_FIELDS } = require('../../../server/hygiene/jira-fetch')
-const { findFixVersionAddedDate, findFixVersionRemovedDate, classifyFeature, normalizeVersionName, pickCanonicalVersionName } = require('../../../server/execution/feature-tracking-routes')
+const { findFixVersionAddedDate, findFixVersionRemovedDate, classifyFeature, normalizeVersionName, pickCanonicalVersionName, isEaVersion } = require('../../../server/execution/feature-tracking-routes')
 
 function makeRawIssue(overrides) {
   var fields = {}
@@ -424,5 +424,29 @@ describe('pickCanonicalVersionName', function () {
   it('handles null/undefined', function () {
     expect(pickCanonicalVersionName(null)).toBe('')
     expect(pickCanonicalVersionName(undefined)).toBe('')
+  })
+})
+
+describe('isEaVersion', function () {
+  it('detects EA1, EA2 etc', function () {
+    expect(isEaVersion('3.5.EA1')).toBe(true)
+    expect(isEaVersion('3.5.EA2')).toBe(true)
+    expect(isEaVersion('rhoai-3.5 EA1 release')).toBe(true)
+  })
+
+  it('detects bare EA', function () {
+    expect(isEaVersion('3.5.EA')).toBe(true)
+  })
+
+  it('rejects GA versions', function () {
+    expect(isEaVersion('3.5')).toBe(false)
+    expect(isEaVersion('3.5 GA')).toBe(false)
+    expect(isEaVersion('rhoai-3.5')).toBe(false)
+  })
+
+  it('handles null/undefined/empty', function () {
+    expect(isEaVersion(null)).toBe(false)
+    expect(isEaVersion(undefined)).toBe(false)
+    expect(isEaVersion('')).toBe(false)
   })
 })

@@ -364,11 +364,12 @@ function findFixVersionRemovedDate(changelog, fixVersionNames) {
 }
 
 /**
- * Get Feature Freeze dates from PP cache, keyed by product release number.
- * Returns a map: { "rhoai-3.5.EA1": "2026-05-15", "rhelai-3.5.EA1": "2026-04-17", ... }
+ * Get freeze dates from PP cache, keyed by product release number.
+ * @param {string} freezeField - 'featureFreezeDate' or 'codeFreezeDate'
+ * Returns a map: { "rhoai-3.5.EA1": "2026-05-15", ... }
  * Also returns the earliest date across products as a portfolio-level fallback.
  */
-function getFeatureFreezeDatesFromCache(portfolioVersion, readFromStorage) {
+function getFreezeDatesFromCache(portfolioVersion, readFromStorage, freezeField) {
   const ppCache = readFromStorage(PP_CACHE_FILE)
   const ppReleases = Array.isArray(ppCache) ? ppCache : (ppCache && ppCache.releases) || []
 
@@ -379,20 +380,23 @@ function getFeatureFreezeDatesFromCache(portfolioVersion, readFromStorage) {
   for (let i = 0; i < ppReleases.length; i++) {
     const rel = ppReleases[i]
     const relVersion = normalizeVersionName(rel.releaseNumber).replace(/^[a-z]+-/, '')
-    if (relVersion === normalizedPortfolio && rel.featureFreezeDate) {
+    const dateVal = rel[freezeField]
+    if (relVersion === normalizedPortfolio && dateVal) {
       const key = normalizeVersionName(rel.releaseNumber)
-      // Prefer the earliest date per product to avoid parent GA dates
-      // overriding EA-specific dates from expanded entries
-      if (!byProduct[key] || rel.featureFreezeDate < byProduct[key]) {
-        byProduct[key] = rel.featureFreezeDate
+      if (!byProduct[key] || dateVal < byProduct[key]) {
+        byProduct[key] = dateVal
       }
-      if (!earliest || rel.featureFreezeDate < earliest) {
-        earliest = rel.featureFreezeDate
+      if (!earliest || dateVal < earliest) {
+        earliest = dateVal
       }
     }
   }
 
   return { byProduct: byProduct, earliest: earliest }
+}
+
+function isEaVersion(version) {
+  return /ea\d*/i.test(version || '')
 }
 
 /**
@@ -480,7 +484,8 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
     const versions = Object.keys(versionMap).map(function (k) { return versionMap[k] })
 
     for (let vi = 0; vi < versions.length; vi++) {
-      const fd = getFeatureFreezeDatesFromCache(versions[vi].version, storage.readFromStorage)
+      const vField = isEaVersion(versions[vi].version) ? 'codeFreezeDate' : 'featureFreezeDate'
+      const fd = getFreezeDatesFromCache(versions[vi].version, storage.readFromStorage, vField)
       versions[vi].featureFreezeDate = fd.earliest || null
     }
 
@@ -519,7 +524,10 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
       const fetchAllJqlResults = jira.fetchAllJqlResults
 
       const productVersions = await resolveProductVersionsFromJira(version, jiraRequest)
-      const freezeDates = getFeatureFreezeDatesFromCache(version, storage.readFromStorage)
+      const ea = isEaVersion(version)
+      const freezeField = ea ? 'codeFreezeDate' : 'featureFreezeDate'
+      const freezeType = ea ? 'code' : 'feature'
+      const freezeDates = getFreezeDatesFromCache(version, storage.readFromStorage, freezeField)
       const cacheDates = Object.assign({}, freezeDates.byProduct)
 
       // Always try the schedule API — it returns EA-specific freeze dates
@@ -530,24 +538,22 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
         const ppConfig = {
           productPagesBaseUrl: process.env.PRODUCT_PAGES_BASE_URL || 'https://productpages.redhat.com'
         }
-        const scheduleDates = await fetchFeatureFreezeDatesFromSchedule(version, DEFAULT_PRODUCTS, ppConfig)
+        const scheduleDates = await fetchFeatureFreezeDatesFromSchedule(version, DEFAULT_PRODUCTS, ppConfig, freezeType)
         const schedEntries = Object.entries(scheduleDates.byProduct)
         if (schedEntries.length > 0) {
           scheduleSource = 'schedule-api'
-          console.log('[feature-tracking] Schedule API returned freeze dates:', JSON.stringify(scheduleDates.byProduct))
+          console.log('[feature-tracking] Schedule API returned ' + freezeType + ' freeze dates:', JSON.stringify(scheduleDates.byProduct))
           for (const [key, date] of schedEntries) {
             const normKey = normalizeVersionName(key)
             freezeDates.byProduct[normKey] = date
           }
-          // Recalculate earliest from final merged dates — unconditional
-          // overrides may have replaced the entry that was previously earliest
           freezeDates.earliest = null
           for (const d of Object.values(freezeDates.byProduct)) {
             if (!freezeDates.earliest || d < freezeDates.earliest) freezeDates.earliest = d
           }
         } else {
           scheduleSource = 'cache-only (schedule returned empty)'
-          console.warn('[feature-tracking] Schedule API returned no freeze dates for version:', version)
+          console.warn('[feature-tracking] Schedule API returned no ' + freezeType + ' freeze dates for version:', version)
         }
       } catch (schedErr) {
         scheduleSource = 'cache-only (' + schedErr.message + ')'
@@ -611,6 +617,7 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
 
       const responseData = {
         portfolioVersion: version,
+        freezeType: freezeType,
         featureFreezeDate: freezeDates.earliest,
         fetchedAt: new Date().toISOString(),
         groups: groups,
@@ -637,3 +644,4 @@ module.exports.extractProduct = extractProduct
 module.exports.normalizeVersionName = normalizeVersionName
 module.exports.resolveProductVersionsFromJira = resolveProductVersionsFromJira
 module.exports.pickCanonicalVersionName = pickCanonicalVersionName
+module.exports.isEaVersion = isEaVersion
