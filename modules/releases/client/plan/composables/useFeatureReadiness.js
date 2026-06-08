@@ -6,7 +6,7 @@ const CACHE_TTL = 300_000 // 5 minutes — data changes only when strat pipeline
 
 // Module-level refs -- singleton pattern so all components share state
 const pendingReview = ref([])
-const approved = ref([])
+const ready = ref([])
 const filterMeta = ref({})
 const meta = ref(null)
 const loading = ref(false)
@@ -27,7 +27,7 @@ export function useFeatureReadiness() {
     try {
       await cachedRequest('feature-readiness', API_PATH, function(data) {
         pendingReview.value = data.pendingReview || []
-        approved.value = data.approved || []
+        ready.value = data.ready || []
         filterMeta.value = data.filterMeta || {}
         meta.value = data.meta || null
       })
@@ -41,7 +41,7 @@ export function useFeatureReadiness() {
 
   return {
     pendingReview,
-    approved,
+    ready,
     filterMeta,
     meta,
     loading,

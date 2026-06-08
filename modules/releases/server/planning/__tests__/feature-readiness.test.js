@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 
 const {
+  isHealthFeatureReady,
   buildFeatureReadiness,
   computeBlockers,
   computeBestAvailableScore
@@ -49,15 +50,20 @@ var CONFIG_3_6 = { releases: { '3.6': { release: '3.6' } } }
 // computeBestAvailableScore
 //
 // Formula: weighted average of active signals, normalized by sum of active weights.
-//   RICE (w=30) or Rubric proxy (w=30, when no RICE)
+// When RICE or rubric is present (hasValueSignal=true):
+//   RICE (w=30) or Rubric proxy (w=30)
 //   Tier (w=30) — only when tier present
 //   Priority (w=25) — always
 //   Size/complexity (w=15) — only when size present
+// When neither RICE nor rubric (hasValueSignal=false, e.g. health-pipeline features):
+//   Tier (w=40) — only when tier present
+//   Priority (w=35) — always
+//   Size/complexity (w=25) — only when size present
 // ---------------------------------------------------------------------------
 
 describe('computeBestAvailableScore', function() {
   describe('signals: rubric proxy + priority only (no riceScore, no tier, no size)', function() {
-    // totalWeight = 30 + 25 = 55
+    // hasValueSignal=true (rubric>0), totalWeight = 30 + 25 = 55
 
     it('Blocker priority + rubricTotal=8 → 100', function() {
       // (1.0*30 + 1.0*25) / 55 * 100 = 100
@@ -69,42 +75,45 @@ describe('computeBestAvailableScore', function() {
       expect(computeBestAvailableScore({ priority: 'Normal', rubricTotal: 4 })).toBe(45)
     })
 
-    it('unknown priority uses 0.4 fallback', function() {
-      // (0*30 + 0.4*25) / 55 * 100 = round(18.18) = 18
-      expect(computeBestAvailableScore({ priority: 'Unknown', rubricTotal: 0 })).toBe(18)
+    it('unknown priority with rubricTotal=0 redistributes to priority only', function() {
+      // hasValueSignal=false, only priority signal: (0.4*35) / 35 * 100 = 40
+      expect(computeBestAvailableScore({ priority: 'Unknown', rubricTotal: 0 })).toBe(40)
     })
 
     it('missing priority uses 0.4 fallback', function() {
-      expect(computeBestAvailableScore({ rubricTotal: 0 })).toBe(18)
+      // hasValueSignal=false, only priority: (0.4*35) / 35 * 100 = 40
+      expect(computeBestAvailableScore({ rubricTotal: 0 })).toBe(40)
     })
 
-    it('missing rubricTotal defaults to 0', function() {
-      // (0*30 + 1.0*25) / 55 * 100 = round(45.45) = 45
-      expect(computeBestAvailableScore({ priority: 'Blocker' })).toBe(45)
+    it('missing rubricTotal redistributes weights', function() {
+      // hasValueSignal=false, only priority: (1.0*35) / 35 * 100 = 100
+      expect(computeBestAvailableScore({ priority: 'Blocker' })).toBe(100)
     })
   })
 
   describe('signals: rubric proxy + priority + size (no riceScore, no tier)', function() {
-    // totalWeight = 30 + 25 + 15 = 70
 
     it('Blocker + rubricTotal=8 + XS size → 100', function() {
+      // hasValueSignal=true, totalWeight = 30 + 25 + 15 = 70
       // (1.0*30 + 1.0*25 + 1.0*15) / 70 * 100 = 100
       expect(computeBestAvailableScore({ priority: 'Blocker', rubricTotal: 8, size: 'XS' })).toBe(100)
     })
 
-    it('Normal + rubricTotal=0 + M size → 27', function() {
-      // (0*30 + 0.4*25 + 0.6*15) / 70 * 100 = round(27.14) = 27
-      expect(computeBestAvailableScore({ priority: 'Normal', rubricTotal: 0, size: 'M' })).toBe(27)
+    it('Normal + rubricTotal=0 + M size → 48', function() {
+      // hasValueSignal=false, totalWeight = 35 + 25 = 60
+      // (0.4*35 + 0.6*25) / 60 * 100 = round(29/60*100) = round(48.33) = 48
+      expect(computeBestAvailableScore({ priority: 'Normal', rubricTotal: 0, size: 'M' })).toBe(48)
     })
 
-    it('Minor + rubricTotal=0 + XL size → 11', function() {
-      // (0*30 + 0.2*25 + 0.2*15) / 70 * 100 = round(8/70*100) = round(11.43) = 11
-      expect(computeBestAvailableScore({ priority: 'Minor', rubricTotal: 0, size: 'XL' })).toBe(11)
+    it('Minor + rubricTotal=0 + XL size → 20', function() {
+      // hasValueSignal=false, totalWeight = 35 + 25 = 60
+      // (0.2*35 + 0.2*25) / 60 * 100 = round(12/60*100) = 20
+      expect(computeBestAvailableScore({ priority: 'Minor', rubricTotal: 0, size: 'XL' })).toBe(20)
     })
   })
 
   describe('signals: rubric proxy + tier + priority + size (no riceScore)', function() {
-    // totalWeight = 30 + 30 + 25 + 15 = 100
+    // hasValueSignal=true (rubric>0), totalWeight = 30 + 30 + 25 + 15 = 100
 
     it('Blocker + rubricTotal=8 + T1 + XS → 100', function() {
       // (1.0*30 + 1.0*30 + 1.0*25 + 1.0*15) / 100 * 100 = 100
@@ -119,8 +128,37 @@ describe('computeBestAvailableScore', function() {
     })
   })
 
+  describe('signals: no RICE, no rubric (health-pipeline features)', function() {
+    // hasValueSignal=false → redistributed weights: tier=40, priority=35, size=25
+
+    it('T1 + Blocker + XS → 100', function() {
+      // (1.0*40 + 1.0*35 + 1.0*25) / 100 * 100 = 100
+      expect(computeBestAvailableScore({ priority: 'Blocker', rubricTotal: 0, tier: 'T1', size: 'XS' })).toBe(100)
+    })
+
+    it('T2 + Normal + M → 52', function() {
+      // (0.6*40 + 0.4*35 + 0.6*25) / 100 * 100 = (24+14+15) = 53
+      expect(computeBestAvailableScore({ priority: 'Normal', rubricTotal: 0, tier: 'T2', size: 'M' })).toBe(53)
+    })
+
+    it('T3 + Minor + XL → 20', function() {
+      // (0.2*40 + 0.2*35 + 0.2*25) / 100 * 100 = (8+7+5) = 20
+      expect(computeBestAvailableScore({ priority: 'Minor', rubricTotal: 0, tier: 'T3', size: 'XL' })).toBe(20)
+    })
+
+    it('no tier, no size → only priority', function() {
+      // (0.4*35) / 35 * 100 = 40
+      expect(computeBestAvailableScore({ priority: 'Normal', rubricTotal: 0 })).toBe(40)
+    })
+
+    it('tier + priority, no size → two signals', function() {
+      // (1.0*40 + 0.4*35) / 75 * 100 = round(54/75*100) = 72
+      expect(computeBestAvailableScore({ priority: 'Normal', rubricTotal: 0, tier: 'T1' })).toBe(72)
+    })
+  })
+
   describe('signals: RICE + tier + priority + size (riceScore present)', function() {
-    // totalWeight = 30 + 30 + 25 + 15 = 100
+    // hasValueSignal=true, totalWeight = 30 + 30 + 25 + 15 = 100
 
     it('max RICE (16900) + T1 + Blocker + XS → 100', function() {
       // riceNorm = 16900/16900 = 1.0
@@ -292,9 +330,9 @@ describe('buildFeatureReadiness', function() {
       var readFromStorage = makeReadFromStorage({})
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.pendingReview).toEqual([])
-      expect(result.approved).toEqual([])
-      expect(result.filterMeta).toEqual({})
-      expect(result.meta).toEqual({})
+      expect(result.ready).toEqual([])
+      expect(result.filterMeta).toEqual({ components: [], priorities: [], bigRocks: [], targetVersions: [], fixVersions: [], teams: [] })
+      expect(result.meta).toEqual({ total: 0, pendingReviewCount: 0, readyCount: 0, versions: [], lastSyncedAt: null })
     })
 
     it('returns empty buckets when features object is missing', function() {
@@ -303,7 +341,7 @@ describe('buildFeatureReadiness', function() {
       })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.pendingReview).toEqual([])
-      expect(result.approved).toEqual([])
+      expect(result.ready).toEqual([])
     })
   })
 
@@ -314,8 +352,8 @@ describe('buildFeatureReadiness', function() {
       })
       var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.approved).toHaveLength(1)
-      expect(result.approved[0].key).toBe('RHAISTRAT-1')
+      expect(result.ready).toHaveLength(1)
+      expect(result.ready[0].key).toBe('RHAISTRAT-1')
       expect(result.pendingReview).toHaveLength(0)
     })
 
@@ -326,7 +364,7 @@ describe('buildFeatureReadiness', function() {
       var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.pendingReview).toHaveLength(1)
-      expect(result.approved).toHaveLength(0)
+      expect(result.ready).toHaveLength(0)
     })
 
     it('humanReviewStatus needs-review → goes to pendingReview bucket', function() {
@@ -336,7 +374,7 @@ describe('buildFeatureReadiness', function() {
       var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.pendingReview).toHaveLength(1)
-      expect(result.approved).toHaveLength(0)
+      expect(result.ready).toHaveLength(0)
     })
 
     it('null humanReviewStatus → goes to pendingReview bucket', function() {
@@ -346,7 +384,7 @@ describe('buildFeatureReadiness', function() {
       var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.pendingReview).toHaveLength(1)
-      expect(result.approved).toHaveLength(0)
+      expect(result.ready).toHaveLength(0)
     })
 
     it('skips entries with no latest', function() {
@@ -356,7 +394,7 @@ describe('buildFeatureReadiness', function() {
       })
       var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.approved).toHaveLength(1)
+      expect(result.ready).toHaveLength(1)
       expect(result.pendingReview).toHaveLength(0)
     })
   })
@@ -369,8 +407,8 @@ describe('buildFeatureReadiness', function() {
       })
       var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.approved[0].key).toBe('RHAISTRAT-HIGH')
-      expect(result.approved[1].key).toBe('RHAISTRAT-LOW')
+      expect(result.ready[0].key).toBe('RHAISTRAT-HIGH')
+      expect(result.ready[1].key).toBe('RHAISTRAT-LOW')
     })
 
     it('higher rubric score → higher effectivePriorityScore → appears first', function() {
@@ -380,8 +418,8 @@ describe('buildFeatureReadiness', function() {
       })
       var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
       var result = buildFeatureReadiness(readFromStorage)
-      var highIdx = result.approved.findIndex(function(f) { return f.key === 'RHAISTRAT-HIGHTOTAL' })
-      var lowIdx = result.approved.findIndex(function(f) { return f.key === 'RHAISTRAT-LOWTOTAL' })
+      var highIdx = result.ready.findIndex(function(f) { return f.key === 'RHAISTRAT-HIGHTOTAL' })
+      var lowIdx = result.ready.findIndex(function(f) { return f.key === 'RHAISTRAT-LOWTOTAL' })
       expect(highIdx).toBeLessThan(lowIdx)
     })
   })
@@ -400,8 +438,8 @@ describe('buildFeatureReadiness', function() {
 
     it('equal priority + equal size: higher rubric score → higher effectivePriorityScore → appears first', function() {
       var store = makeFeaturesStore({
-        'RHAISTRAT-A': { latest: makeLatest({ key: 'RHAISTRAT-A', humanReviewStatus: null, priority: 'Normal', size: null, scores: { feasibility: 1, testability: 0, scope: 0, architecture: 0 } }) },
-        'RHAISTRAT-B': { latest: makeLatest({ key: 'RHAISTRAT-B', humanReviewStatus: null, priority: 'Normal', size: null, scores: { feasibility: 0, testability: 0, scope: 0, architecture: 0 } }) }
+        'RHAISTRAT-A': { latest: makeLatest({ key: 'RHAISTRAT-A', humanReviewStatus: null, priority: 'Normal', size: null, scores: { feasibility: 2, testability: 1, scope: 0, architecture: 0 } }) },
+        'RHAISTRAT-B': { latest: makeLatest({ key: 'RHAISTRAT-B', humanReviewStatus: null, priority: 'Normal', size: null, scores: { feasibility: 1, testability: 0, scope: 0, architecture: 0 } }) }
       })
       var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
       var result = buildFeatureReadiness(readFromStorage)
@@ -451,7 +489,7 @@ describe('buildFeatureReadiness', function() {
         [candidatesKey]: candidateCache
       })
       var result = buildFeatureReadiness(readFromStorage)
-      var f = result.approved[0]
+      var f = result.ready[0]
       expect(f.tier).toBe('T1')
       expect(f.bigRock).toBe('AI Efficiency')
       expect(f.targetVersions).toEqual(['rhoai-3.6'])
@@ -475,7 +513,7 @@ describe('buildFeatureReadiness', function() {
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
       var result = buildFeatureReadiness(readFromStorage)
-      var f = result.approved[0]
+      var f = result.ready[0]
       expect(f.tier).toBeNull()
       expect(f.bigRock).toBeNull()
       expect(f.targetVersions).toEqual([])
@@ -495,7 +533,7 @@ describe('buildFeatureReadiness', function() {
         [candidatesKey]: candidateCache
       })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.approved[0].tier).toBe('T2')
+      expect(result.ready[0].tier).toBe('T2')
     })
   })
 
@@ -509,8 +547,8 @@ describe('buildFeatureReadiness', function() {
         'releases/planning/config.json': CONFIG_3_6
       })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.approved).toHaveLength(1)
-      var f = result.approved[0]
+      expect(result.ready).toHaveLength(1)
+      var f = result.ready[0]
       expect(f.tier).toBeNull()
       expect(f.bigRock).toBeNull()
       expect(f.targetVersions).toEqual([])
@@ -525,8 +563,8 @@ describe('buildFeatureReadiness', function() {
         'ai-impact/features.json': store
       })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.approved).toHaveLength(1)
-      var f = result.approved[0]
+      expect(result.ready).toHaveLength(1)
+      var f = result.ready[0]
       expect(f.tier).toBeNull()
       expect(f.bigRock).toBeNull()
       expect(f.targetVersions).toEqual([])
@@ -554,7 +592,7 @@ describe('buildFeatureReadiness', function() {
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
       var result = buildFeatureReadiness(readFromStorage)
-      var f = result.approved[0]
+      var f = result.ready[0]
       expect(f.tier).toBe('T2')
       expect(f.bigRock).toBe('Platform Efficiency')
       expect(f.targetVersions).toEqual(['rhoai-3.6'])
@@ -579,7 +617,7 @@ describe('buildFeatureReadiness', function() {
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
       var result = buildFeatureReadiness(readFromStorage)
-      var f = result.approved[0]
+      var f = result.ready[0]
       expect(f.tier).toBe('T1')
       expect(f.bigRock).toBe('AI Speed')
       expect(f.targetVersions).toEqual(['rhoai-3.6-cand'])
@@ -599,7 +637,7 @@ describe('buildFeatureReadiness', function() {
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.approved[0].components).toEqual(['Serving', 'Training'])
+      expect(result.ready[0].components).toEqual(['Serving', 'Training'])
     })
   })
 
@@ -619,7 +657,7 @@ describe('buildFeatureReadiness', function() {
         [healthKey]: healthCache
       })
       var result = buildFeatureReadiness(readFromStorage)
-      var f = result.approved[0]
+      var f = result.ready[0]
       expect(f.priorityScore).toBe(87)
       expect(f.effectivePriorityScore).toBe(87)
       expect(f.priorityScoreFallback).toBe(false)
@@ -646,19 +684,17 @@ describe('buildFeatureReadiness', function() {
         [healthKey]: healthCache
       })
       var result = buildFeatureReadiness(readFromStorage)
-      var f = result.approved[0]
+      var f = result.ready[0]
       expect(f.priorityScore).toBeNull()
       expect(f.priorityScoreFallback).toBe(true)
       expect(f.effectivePriorityScore).toBe(70)
     })
 
     it('RICE score present on feature improves estimated score over rubric proxy', function() {
-      // riceScore=16900 (max) vs rubricTotal=8 (max): with RICE, score should be higher than without
       var storeWithRice = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved', priority: 'Normal' }) }
       })
-      // Manually inject riceScore onto latest
-      storeWithRice.features['RHAISTRAT-1'].latest.riceScore = 1690 // 10% of max
+      storeWithRice.features['RHAISTRAT-1'].latest.riceScore = 8450 // 50% of max
       storeWithRice.features['RHAISTRAT-1'].latest.scores = { feasibility: 0, testability: 0, scope: 0, architecture: 0 }
 
       var storeWithoutRice = makeFeaturesStore({
@@ -668,11 +704,11 @@ describe('buildFeatureReadiness', function() {
       var rfWithRice = makeReadFromStorage({ 'ai-impact/features.json': storeWithRice })
       var rfWithoutRice = makeReadFromStorage({ 'ai-impact/features.json': storeWithoutRice })
 
-      var withRice = buildFeatureReadiness(rfWithRice).approved[0].effectivePriorityScore
-      var withoutRice = buildFeatureReadiness(rfWithoutRice).approved[0].effectivePriorityScore
+      var withRice = buildFeatureReadiness(rfWithRice).ready[0].effectivePriorityScore
+      var withoutRice = buildFeatureReadiness(rfWithoutRice).ready[0].effectivePriorityScore
 
-      // riceNorm=1690/16900≈0.1 > rubricProxy=0/8=0 → RICE-path score should be higher
-      // confirming riceScore is used in place of rubric proxy when present
+      // RICE=8450 → hasValueSignal=true → (0.5*30 + 0.4*25)/55 = 45
+      // No RICE, no rubric → hasValueSignal=false → (0.4*35)/35 = 40
       expect(withRice).toBeGreaterThan(withoutRice)
     })
 
@@ -690,7 +726,7 @@ describe('buildFeatureReadiness', function() {
         [healthKey]: healthCache
       })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.approved[0].priorityScoreBreakdown).toEqual(breakdown)
+      expect(result.ready[0].priorityScoreBreakdown).toEqual(breakdown)
     })
   })
 
@@ -801,7 +837,7 @@ describe('buildFeatureReadiness', function() {
         'releases/hygiene/features-3.6.json': hygieneCache
       })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.approved[0].team).toBe('Real Team')
+      expect(result.ready[0].team).toBe('Real Team')
       expect(result.filterMeta.teams).toEqual(['Real Team'])
     })
   })
@@ -827,7 +863,7 @@ describe('buildFeatureReadiness', function() {
       })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.meta.total).toBe(3)
-      expect(result.meta.approvedCount).toBe(1)
+      expect(result.meta.readyCount).toBe(1)
       expect(result.meta.pendingReviewCount).toBe(2)
       expect(result.meta.versions).toEqual(['3.6'])
     })
@@ -853,7 +889,7 @@ describe('buildFeatureReadiness', function() {
       })
       var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.approved[0].rubricTotal).toBe(8)
+      expect(result.ready[0].rubricTotal).toBe(8)
     })
 
     it('treats missing score dimensions as 0', function() {
@@ -865,7 +901,7 @@ describe('buildFeatureReadiness', function() {
       })
       var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.approved[0].rubricTotal).toBe(2)
+      expect(result.ready[0].rubricTotal).toBe(2)
     })
   })
 
@@ -884,8 +920,8 @@ describe('buildFeatureReadiness', function() {
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.approved).toHaveLength(1)
-      expect(result.approved[0].key).toBe('RHAISTRAT-IN')
+      expect(result.ready).toHaveLength(1)
+      expect(result.ready[0].key).toBe('RHAISTRAT-IN')
     })
 
     it('includes all features when no configured releases exist', function() {
@@ -897,7 +933,7 @@ describe('buildFeatureReadiness', function() {
         'ai-impact/features.json': store
       })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.approved).toHaveLength(1)
+      expect(result.ready).toHaveLength(1)
       expect(result.pendingReview).toHaveLength(1)
     })
 
@@ -914,7 +950,7 @@ describe('buildFeatureReadiness', function() {
         'releases/planning/candidates-cache-3.6.json': candidateCache
       })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.approved).toHaveLength(1)
+      expect(result.ready).toHaveLength(1)
     })
 
     it('includes features that are only in health cache (not candidates cache)', function() {
@@ -930,7 +966,7 @@ describe('buildFeatureReadiness', function() {
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.approved).toHaveLength(1)
+      expect(result.ready).toHaveLength(1)
     })
 
     it('meta counts reflect only cache-scoped features', function() {
@@ -948,7 +984,7 @@ describe('buildFeatureReadiness', function() {
       })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.meta.total).toBe(1)
-      expect(result.meta.approvedCount).toBe(1)
+      expect(result.meta.readyCount).toBe(1)
       expect(result.meta.pendingReviewCount).toBe(0)
     })
   })
@@ -967,7 +1003,7 @@ describe('buildFeatureReadiness', function() {
         'releases/planning/health-cache-3.6-all.json': { features: [{ key: 'RHAISTRAT-2', priorityScore: 60 }] }
       })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.approved).toHaveLength(2)
+      expect(result.ready).toHaveLength(2)
       expect(result.meta.versions).toEqual(['3.5', '3.6'])
     })
 
@@ -983,9 +1019,9 @@ describe('buildFeatureReadiness', function() {
         'releases/planning/candidates-cache-3.6.json': { data: { features: [{ issueKey: 'RHAISTRAT-1', tier: 2, bigRock: 'Second' }] } }
       })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.approved).toHaveLength(1)
-      expect(result.approved[0].tier).toBe('T1')
-      expect(result.approved[0].bigRock).toBe('First')
+      expect(result.ready).toHaveLength(1)
+      expect(result.ready[0].tier).toBe('T1')
+      expect(result.ready[0].bigRock).toBe('First')
     })
 
     it('team data merges across versions (first-seen wins)', function() {
@@ -1001,7 +1037,7 @@ describe('buildFeatureReadiness', function() {
         'releases/hygiene/features-3.6.json': { features: { 'RHAISTRAT-1': { key: 'RHAISTRAT-1', team: 'Beta' } } }
       })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.approved[0].team).toBe('Alpha')
+      expect(result.ready[0].team).toBe('Alpha')
     })
 
     it('meta.versions reflects all configured release versions', function() {
@@ -1015,6 +1051,299 @@ describe('buildFeatureReadiness', function() {
       })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.meta.versions).toEqual(['3.4', '3.5', '3.6'])
+    })
+  })
+
+  // -------------------------------------------------------------------------
+  // isHealthFeatureReady
+  // -------------------------------------------------------------------------
+
+  describe('isHealthFeatureReady', function() {
+    it('returns true when all four gates pass', function() {
+      var hd = { deliveryOwner: 'Alice', blockerCount: 0, status: 'In Progress', targetRelease: 'rhoai-3.6' }
+      expect(isHealthFeatureReady(hd, null)).toBe(true)
+    })
+
+    it('returns false when owner is missing', function() {
+      var hd = { deliveryOwner: null, assignee: null, blockerCount: 0, status: 'In Progress', targetRelease: 'rhoai-3.6' }
+      expect(isHealthFeatureReady(hd, null)).toBe(false)
+    })
+
+    it('returns true when assignee is set but deliveryOwner is not', function() {
+      var hd = { deliveryOwner: null, assignee: 'Bob', blockerCount: 0, status: 'In Progress', targetRelease: 'rhoai-3.6' }
+      expect(isHealthFeatureReady(hd, null)).toBe(true)
+    })
+
+    it('returns false when there are blockers', function() {
+      var hd = { deliveryOwner: 'Alice', blockerCount: 2, status: 'In Progress', targetRelease: 'rhoai-3.6' }
+      expect(isHealthFeatureReady(hd, null)).toBe(false)
+    })
+
+    it('returns false when status is New', function() {
+      var hd = { deliveryOwner: 'Alice', blockerCount: 0, status: 'New', targetRelease: 'rhoai-3.6' }
+      expect(isHealthFeatureReady(hd, null)).toBe(false)
+    })
+
+    it('returns false when status is Refinement', function() {
+      var hd = { deliveryOwner: 'Alice', blockerCount: 0, status: 'Refinement', targetRelease: 'rhoai-3.6' }
+      expect(isHealthFeatureReady(hd, null)).toBe(false)
+    })
+
+    it('returns false when status is null', function() {
+      var hd = { deliveryOwner: 'Alice', blockerCount: 0, status: null, targetRelease: 'rhoai-3.6' }
+      expect(isHealthFeatureReady(hd, null)).toBe(false)
+    })
+
+    it('returns false when no target version', function() {
+      var hd = { deliveryOwner: 'Alice', blockerCount: 0, status: 'In Progress', targetRelease: null }
+      expect(isHealthFeatureReady(hd, null)).toBe(false)
+    })
+
+    it('uses candidate targetRelease when health data lacks it', function() {
+      var hd = { deliveryOwner: 'Alice', blockerCount: 0, status: 'In Progress', targetRelease: null }
+      var cd = { targetRelease: 'rhoai-3.6' }
+      expect(isHealthFeatureReady(hd, cd)).toBe(true)
+    })
+  })
+
+  // -------------------------------------------------------------------------
+  // Cache-based feature discovery (health-pipeline features)
+  // -------------------------------------------------------------------------
+
+  describe('cache-based feature discovery', function() {
+    it('discovers features in health cache but not in ai-impact', function() {
+      var store = makeFeaturesStore({})
+      var healthCache = {
+        features: [{ key: 'AIPCC-100', summary: 'AIPCC Feature', status: 'In Progress', priority: 'Major', deliveryOwner: 'Alice', blockerCount: 0, targetRelease: 'rhoai-3.6' }]
+      }
+      var readFromStorage = makeReadFromStorage({
+        'ai-impact/features.json': store,
+        'releases/planning/config.json': CONFIG_3_6,
+        'releases/planning/health-cache-3.6-all.json': healthCache
+      })
+      var result = buildFeatureReadiness(readFromStorage)
+      expect(result.ready.length + result.pendingReview.length).toBe(1)
+      var feat = result.ready[0] || result.pendingReview[0]
+      expect(feat.key).toBe('AIPCC-100')
+      expect(feat.dataSource).toBe('health-pipeline')
+      expect(feat.recommendation).toBeNull()
+      expect(feat.rubricTotal).toBe(0)
+    })
+
+    it('health-pipeline feature with all gates passing goes to ready', function() {
+      var store = makeFeaturesStore({})
+      var healthCache = {
+        features: [{
+          key: 'AIPCC-200', summary: 'Ready AIPCC', status: 'In Progress',
+          priority: 'Major', deliveryOwner: 'Bob', blockerCount: 0, targetRelease: 'rhoai-3.6'
+        }]
+      }
+      var readFromStorage = makeReadFromStorage({
+        'ai-impact/features.json': store,
+        'releases/planning/config.json': CONFIG_3_6,
+        'releases/planning/health-cache-3.6-all.json': healthCache
+      })
+      var result = buildFeatureReadiness(readFromStorage)
+      expect(result.ready).toHaveLength(1)
+      expect(result.ready[0].key).toBe('AIPCC-200')
+    })
+
+    it('health-pipeline feature missing owner goes to pendingReview', function() {
+      var store = makeFeaturesStore({})
+      var healthCache = {
+        features: [{
+          key: 'AIPCC-300', summary: 'No Owner', status: 'In Progress',
+          priority: 'Normal', deliveryOwner: null, blockerCount: 0, targetRelease: 'rhoai-3.6'
+        }]
+      }
+      var readFromStorage = makeReadFromStorage({
+        'ai-impact/features.json': store,
+        'releases/planning/config.json': CONFIG_3_6,
+        'releases/planning/health-cache-3.6-all.json': healthCache
+      })
+      var result = buildFeatureReadiness(readFromStorage)
+      expect(result.pendingReview).toHaveLength(1)
+      expect(result.pendingReview[0].key).toBe('AIPCC-300')
+    })
+
+    it('health-pipeline feature in Refinement status goes to pendingReview', function() {
+      var store = makeFeaturesStore({})
+      var healthCache = {
+        features: [{
+          key: 'AIPCC-400', summary: 'Still refining', status: 'Refinement',
+          priority: 'Major', deliveryOwner: 'Alice', blockerCount: 0, targetRelease: 'rhoai-3.6'
+        }]
+      }
+      var readFromStorage = makeReadFromStorage({
+        'ai-impact/features.json': store,
+        'releases/planning/config.json': CONFIG_3_6,
+        'releases/planning/health-cache-3.6-all.json': healthCache
+      })
+      var result = buildFeatureReadiness(readFromStorage)
+      expect(result.pendingReview).toHaveLength(1)
+    })
+
+    it('strat-creator features get dataSource strat-creator', function() {
+      var store = makeFeaturesStore({
+        'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
+      })
+      var healthCache = {
+        features: [{ key: 'RHAISTRAT-1', priorityScore: 70 }]
+      }
+      var readFromStorage = makeReadFromStorage({
+        'ai-impact/features.json': store,
+        'releases/planning/config.json': CONFIG_3_6,
+        'releases/planning/health-cache-3.6-all.json': healthCache
+      })
+      var result = buildFeatureReadiness(readFromStorage)
+      expect(result.ready[0].dataSource).toBe('strat-creator')
+    })
+
+    it('feature in both ai-impact and health cache is NOT duplicated', function() {
+      var store = makeFeaturesStore({
+        'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
+      })
+      var healthCache = {
+        features: [
+          { key: 'RHAISTRAT-1', priorityScore: 70 },
+          { key: 'AIPCC-100', summary: 'AIPCC', status: 'In Progress', priority: 'Major', deliveryOwner: 'Alice', blockerCount: 0, targetRelease: 'rhoai-3.6' }
+        ]
+      }
+      var readFromStorage = makeReadFromStorage({
+        'ai-impact/features.json': store,
+        'releases/planning/config.json': CONFIG_3_6,
+        'releases/planning/health-cache-3.6-all.json': healthCache
+      })
+      var result = buildFeatureReadiness(readFromStorage)
+      var allFeatures = result.ready.concat(result.pendingReview)
+      var keys = allFeatures.map(function(f) { return f.key })
+      expect(keys).toHaveLength(2)
+      expect(keys).toContain('RHAISTRAT-1')
+      expect(keys).toContain('AIPCC-100')
+    })
+
+    it('uses health pipeline priorityScore when available', function() {
+      var store = makeFeaturesStore({})
+      var healthCache = {
+        features: [{
+          key: 'AIPCC-500', summary: 'Scored', status: 'In Progress',
+          priority: 'Major', deliveryOwner: 'Alice', blockerCount: 0,
+          targetRelease: 'rhoai-3.6', priorityScore: 85
+        }]
+      }
+      var readFromStorage = makeReadFromStorage({
+        'ai-impact/features.json': store,
+        'releases/planning/config.json': CONFIG_3_6,
+        'releases/planning/health-cache-3.6-all.json': healthCache
+      })
+      var result = buildFeatureReadiness(readFromStorage)
+      var feat = result.ready[0]
+      expect(feat.effectivePriorityScore).toBe(85)
+      expect(feat.priorityScoreFallback).toBe(false)
+    })
+
+    it('falls back to computeBestAvailableScore when priorityScore is null', function() {
+      var store = makeFeaturesStore({})
+      var healthCache = {
+        features: [{
+          key: 'AIPCC-600', summary: 'No score', status: 'In Progress',
+          priority: 'Major', deliveryOwner: 'Alice', blockerCount: 0,
+          targetRelease: 'rhoai-3.6', priorityScore: null, tier: 'T1', tshirtSize: 'M'
+        }]
+      }
+      var candidateCache = {
+        data: { features: [{ issueKey: 'AIPCC-600', tier: 1 }] }
+      }
+      var readFromStorage = makeReadFromStorage({
+        'ai-impact/features.json': store,
+        'releases/planning/config.json': CONFIG_3_6,
+        'releases/planning/health-cache-3.6-all.json': healthCache,
+        'releases/planning/candidates-cache-3.6.json': candidateCache
+      })
+      var result = buildFeatureReadiness(readFromStorage)
+      var feat = result.ready[0]
+      expect(feat.priorityScoreFallback).toBe(true)
+      expect(feat.effectivePriorityScore).toBeGreaterThan(0)
+    })
+
+    it('filter metadata includes health-pipeline features', function() {
+      var store = makeFeaturesStore({})
+      var healthCache = {
+        features: [{
+          key: 'AIPCC-700', summary: 'With components', status: 'In Progress',
+          priority: 'Critical', deliveryOwner: 'Alice', blockerCount: 0,
+          targetRelease: 'rhoai-3.6', components: 'ModelServing, Pipeline'
+        }]
+      }
+      var readFromStorage = makeReadFromStorage({
+        'ai-impact/features.json': store,
+        'releases/planning/config.json': CONFIG_3_6,
+        'releases/planning/health-cache-3.6-all.json': healthCache
+      })
+      var result = buildFeatureReadiness(readFromStorage)
+      expect(result.filterMeta.components).toContain('ModelServing')
+      expect(result.filterMeta.components).toContain('Pipeline')
+      expect(result.filterMeta.priorities).toContain('Critical')
+    })
+
+    it('readinessGates are populated on health-pipeline features', function() {
+      var store = makeFeaturesStore({})
+      var healthCache = {
+        features: [{
+          key: 'AIPCC-800', summary: 'Gates test', status: 'New',
+          priority: 'Normal', deliveryOwner: 'Alice', blockerCount: 1, targetRelease: null
+        }]
+      }
+      var readFromStorage = makeReadFromStorage({
+        'ai-impact/features.json': store,
+        'releases/planning/config.json': CONFIG_3_6,
+        'releases/planning/health-cache-3.6-all.json': healthCache
+      })
+      var result = buildFeatureReadiness(readFromStorage)
+      var feat = result.pendingReview[0]
+      expect(feat.readinessGates).toEqual({
+        ownerAssigned: true,
+        notBlocked: false,
+        pastRefinement: false,
+        hasTargetVersion: false
+      })
+    })
+
+    it('works when ai-impact/features.json is null', function() {
+      var healthCache = {
+        features: [{
+          key: 'AIPCC-900', summary: 'No ai-impact', status: 'In Progress',
+          priority: 'Major', deliveryOwner: 'Alice', blockerCount: 0, targetRelease: 'rhoai-3.6'
+        }]
+      }
+      var readFromStorage = makeReadFromStorage({
+        'ai-impact/features.json': null,
+        'releases/planning/config.json': CONFIG_3_6,
+        'releases/planning/health-cache-3.6-all.json': healthCache
+      })
+      var result = buildFeatureReadiness(readFromStorage)
+      expect(result.ready).toHaveLength(1)
+      expect(result.ready[0].key).toBe('AIPCC-900')
+    })
+
+    it('meta counts include health-pipeline features', function() {
+      var store = makeFeaturesStore({
+        'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
+      })
+      var healthCache = {
+        features: [
+          { key: 'RHAISTRAT-1', priorityScore: 70 },
+          { key: 'AIPCC-1000', summary: 'AIPCC Ready', status: 'In Progress', priority: 'Major', deliveryOwner: 'Alice', blockerCount: 0, targetRelease: 'rhoai-3.6' }
+        ]
+      }
+      var readFromStorage = makeReadFromStorage({
+        'ai-impact/features.json': store,
+        'releases/planning/config.json': CONFIG_3_6,
+        'releases/planning/health-cache-3.6-all.json': healthCache
+      })
+      var result = buildFeatureReadiness(readFromStorage)
+      expect(result.meta.total).toBe(2)
+      expect(result.meta.readyCount).toBe(2)
     })
   })
 

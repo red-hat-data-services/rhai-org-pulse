@@ -10,6 +10,8 @@ const emit = defineEmits(['close'])
 
 const open = computed(() => props.feature !== null)
 
+const isHealthPipeline = computed(() => props.feature?.dataSource === 'health-pipeline')
+
 const RUBRIC_DIMS = ['feasibility', 'testability', 'scope', 'architecture']
 
 function tierClass(tier) {
@@ -124,6 +126,8 @@ const hasBlockers = computed(() =>
     !!props.feature.actionRequired)
 )
 
+const readinessGates = computed(() => props.feature?.readinessGates || null)
+
 function onKey(e) {
   if (e.key === 'Escape' && open.value) emit('close')
 }
@@ -181,12 +185,33 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             <span v-if="feature.tier" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold" :class="tierClass(feature.tier)">
               {{ feature.tier }}
             </span>
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold" :class="reviewStatusClass(feature.humanReviewStatus)">
-              {{ reviewStatusLabel(feature.humanReviewStatus) }}
-            </span>
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold" :class="recommendationClass(feature.recommendation)">
-              {{ recommendationLabel(feature.recommendation) }}
-            </span>
+
+            <!-- Health pipeline badges -->
+            <template v-if="isHealthPipeline">
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                Health Pipeline
+              </span>
+              <span
+                v-if="readinessGates"
+                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold"
+                :class="readinessGates.ownerAssigned && readinessGates.notBlocked && readinessGates.pastRefinement && readinessGates.hasTargetVersion
+                  ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200'
+                  : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200'"
+              >
+                {{ readinessGates.ownerAssigned && readinessGates.notBlocked && readinessGates.pastRefinement && readinessGates.hasTargetVersion ? 'Ready' : 'Not Ready' }}
+              </span>
+            </template>
+
+            <!-- Strat-creator badges -->
+            <template v-else>
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold" :class="reviewStatusClass(feature.humanReviewStatus)">
+                {{ reviewStatusLabel(feature.humanReviewStatus) }}
+              </span>
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold" :class="recommendationClass(feature.recommendation)">
+                {{ recommendationLabel(feature.recommendation) }}
+              </span>
+            </template>
+
             <span
               v-if="feature.needsAttention"
               class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300"
@@ -216,15 +241,48 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
                 </div>
                 <p class="text-xs text-gray-400 dark:text-gray-500 mt-1.5">
                   {{ feature.priorityScoreFallback
-                    ? 'Estimated — no pipeline score yet (rubric + tier + priority)'
+                    ? 'Estimated — no pipeline score yet (tier + priority + size)'
                     : 'From prioritization pipeline' }}
                 </p>
               </div>
             </div>
           </section>
 
-          <!-- Rubric -->
-          <section class="px-4 py-4">
+          <!-- Readiness Gates (health-pipeline features only) -->
+          <section v-if="isHealthPipeline && readinessGates" class="px-4 py-4">
+            <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">Readiness Gates</p>
+            <div class="space-y-2">
+              <div class="flex items-center gap-2 text-xs">
+                <span :class="readinessGates.ownerAssigned ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'">
+                  {{ readinessGates.ownerAssigned ? '●' : '○' }}
+                </span>
+                <span class="text-gray-700 dark:text-gray-300">Owner assigned</span>
+                <span v-if="feature.deliveryOwner" class="text-gray-400 dark:text-gray-500 ml-auto">{{ feature.deliveryOwner }}</span>
+              </div>
+              <div class="flex items-center gap-2 text-xs">
+                <span :class="readinessGates.notBlocked ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'">
+                  {{ readinessGates.notBlocked ? '●' : '○' }}
+                </span>
+                <span class="text-gray-700 dark:text-gray-300">No blockers</span>
+              </div>
+              <div class="flex items-center gap-2 text-xs">
+                <span :class="readinessGates.pastRefinement ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'">
+                  {{ readinessGates.pastRefinement ? '●' : '○' }}
+                </span>
+                <span class="text-gray-700 dark:text-gray-300">Status beyond Refinement</span>
+                <span v-if="feature.status" class="text-gray-400 dark:text-gray-500 ml-auto">{{ feature.status }}</span>
+              </div>
+              <div class="flex items-center gap-2 text-xs">
+                <span :class="readinessGates.hasTargetVersion ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'">
+                  {{ readinessGates.hasTargetVersion ? '●' : '○' }}
+                </span>
+                <span class="text-gray-700 dark:text-gray-300">Target version assigned</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Rubric (strat-creator features only) -->
+          <section v-if="!isHealthPipeline" class="px-4 py-4">
             <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">
               Rubric — {{ rubricTotal }} / 8
             </p>
@@ -248,7 +306,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             </div>
           </section>
 
-          <!-- Blocking / What needs to change -->
+          <!-- Blocking / What needs to change (strat-creator features only) -->
           <section v-if="hasBlockers" class="px-4 py-4">
             <p class="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wide mb-3">
               What needs to change
@@ -272,7 +330,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             </div>
           </section>
 
-          <!-- Approved by -->
+          <!-- Approved by (strat-creator features only) -->
           <section v-if="feature.approvedBy" class="px-4 py-4">
             <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">Approved</p>
             <div class="flex items-center gap-2.5">
@@ -341,6 +399,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
               <dt class="text-gray-400 dark:text-gray-500">Team</dt>
               <dd class="text-gray-700 dark:text-gray-300">{{ feature.team || '—' }}</dd>
 
+              <template v-if="feature.deliveryOwner">
+                <dt class="text-gray-400 dark:text-gray-500">Delivery Owner</dt>
+                <dd class="text-gray-700 dark:text-gray-300">{{ feature.deliveryOwner }}</dd>
+              </template>
+
               <dt class="text-gray-400 dark:text-gray-500">Priority</dt>
               <dd class="text-gray-700 dark:text-gray-300">{{ feature.priority || '—' }}</dd>
 
@@ -354,6 +417,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
               <dt class="text-gray-400 dark:text-gray-500">Jira Status</dt>
               <dd class="text-gray-700 dark:text-gray-300">{{ feature.status || '—' }}</dd>
+
+              <dt class="text-gray-400 dark:text-gray-500">Data Source</dt>
+              <dd class="text-gray-700 dark:text-gray-300">{{ isHealthPipeline ? 'Health Pipeline' : 'Strategy Creator' }}</dd>
 
             </dl>
           </section>

@@ -6,25 +6,26 @@ var TIER_SCORES     = { T1: 1.0, T2: 0.6, T3: 0.2 }
 var PRIORITY_SCORES = { Blocker: 1.0, Critical: 0.8, Major: 0.6, Normal: 0.4, Minor: 0.2 }
 var TSHIRT_SCORES   = { XS: 1.0, S: 0.8, M: 0.6, L: 0.4, XL: 0.2 }
 
+var EARLY_STATUSES = ['New', 'Refinement']
+
 function computeBestAvailableScore(feature) {
   var signals = []
+  var hasValueSignal = feature.riceScore != null || (feature.rubricTotal || 0) > 0
 
   if (feature.riceScore != null) {
     signals.push({ value: feature.riceScore / RICE_MAX, weight: 30 })
-  } else {
-    // Rubric proxy: well-scored feature = high confidence, which is what RICE captures.
-    // Drops out automatically once riceScore is present.
-    signals.push({ value: (feature.rubricTotal || 0) / 8, weight: 30 })
+  } else if ((feature.rubricTotal || 0) > 0) {
+    signals.push({ value: feature.rubricTotal / 8, weight: 30 })
   }
 
   if (feature.tier != null) {
-    signals.push({ value: TIER_SCORES[feature.tier] || 0, weight: 30 })
+    signals.push({ value: TIER_SCORES[feature.tier] || 0, weight: hasValueSignal ? 30 : 40 })
   }
 
-  signals.push({ value: PRIORITY_SCORES[feature.priority] || 0.4, weight: 25 })
+  signals.push({ value: PRIORITY_SCORES[feature.priority] || 0.4, weight: hasValueSignal ? 25 : 35 })
 
   if (feature.size != null) {
-    signals.push({ value: TSHIRT_SCORES[feature.size] || 0.6, weight: 15 })
+    signals.push({ value: TSHIRT_SCORES[feature.size] || 0.6, weight: hasValueSignal ? 15 : 25 })
   }
 
   var totalWeight = 0
@@ -65,10 +66,36 @@ function computeBlockers(feature, productPath) {
   return { blockingDimensions: blockingDimensions, actionRequired: actionRequired }
 }
 
+function isHealthFeatureReady(hd, cd) {
+  var hasOwner = !!(hd.deliveryOwner || hd.assignee)
+  var notBlocked = !(hd.blockerCount > 0)
+  var pastRefinement = !!hd.status && EARLY_STATUSES.indexOf(hd.status) === -1
+  var hasTargetVersion = !!(
+    (hd.targetRelease && hd.targetRelease.length > 0) ||
+    (cd && cd.targetRelease)
+  )
+  return hasOwner && notBlocked && pastRefinement && hasTargetVersion
+}
+
+function collectFilterMeta(feature, allComponents, allPriorities, allBigRocks, allTargetVersions, allFixVersions, allTeams) {
+  if (Array.isArray(feature.components)) {
+    for (var i = 0; i < feature.components.length; i++) {
+      allComponents.push(feature.components[i])
+    }
+  }
+  if (feature.priority) allPriorities.add(feature.priority)
+  if (feature.bigRock) allBigRocks.add(feature.bigRock)
+  for (var tvi = 0; tvi < feature.targetVersions.length; tvi++) {
+    allTargetVersions.add(feature.targetVersions[tvi])
+  }
+  if (feature.fixVersion) allFixVersions.add(feature.fixVersion)
+  if (feature.team) allTeams.add(feature.team)
+}
+
 function buildFeatureReadiness(readFromStorage) {
   var raw = readFromStorage('ai-impact/features.json')
   if (!raw || !raw.features) {
-    return { pendingReview: [], approved: [], filterMeta: {}, meta: {} }
+    raw = { features: {} }
   }
 
   var candidateIndex = new Map()
@@ -111,7 +138,7 @@ function buildFeatureReadiness(readFromStorage) {
   var hasCaches = candidateIndex.size > 0 || healthIndex.size > 0
 
   var pendingReview = []
-  var approved = []
+  var ready = []
   var allComponents = []
   var allPriorities = new Set()
   var allBigRocks = new Set()
@@ -119,6 +146,7 @@ function buildFeatureReadiness(readFromStorage) {
   var allFixVersions = new Set()
   var allTeams = new Set()
 
+  // First pass: strat-creator features (from ai-impact/features.json)
   var keys = Object.keys(raw.features)
   for (var i = 0; i < keys.length; i++) {
     var key = keys[i]
@@ -195,27 +223,103 @@ function buildFeatureReadiness(readFromStorage) {
       priorityScoreFallback: priorityScoreFallback,
       effectivePriorityScore: effectivePriorityScore,
       blockingDimensions: blockerResult.blockingDimensions,
-      actionRequired: blockerResult.actionRequired
+      actionRequired: blockerResult.actionRequired,
+      dataSource: 'strat-creator'
     }
 
     if (latest.humanReviewStatus === 'approved') {
-      approved.push(feature)
+      ready.push(feature)
     } else {
       pendingReview.push(feature)
     }
 
-    if (Array.isArray(feature.components)) {
-      for (var ci2 = 0; ci2 < feature.components.length; ci2++) {
-        allComponents.push(feature.components[ci2])
+    collectFilterMeta(feature, allComponents, allPriorities, allBigRocks, allTargetVersions, allFixVersions, allTeams)
+  }
+
+  // Second pass: features in health/candidates caches but not in ai-impact (health-pipeline-only)
+  var cacheKeys = Array.from(healthIndex.keys())
+  for (var ci3 = 0; ci3 < cacheKeys.length; ci3++) {
+    var ckey = cacheKeys[ci3]
+    if (raw.features[ckey]) continue
+
+    var hd = healthIndex.get(ckey)
+    var cd = candidateIndex.get(ckey) || null
+
+    var hpTier = cd && cd.tier != null ? 'T' + cd.tier : (hd.tier || null)
+    var hpBigRock = cd ? cd.bigRock || null : (hd.bigRock || null)
+    var hpTargetVersions = cd && cd.targetRelease
+      ? [cd.targetRelease]
+      : (hd.targetRelease ? [hd.targetRelease] : [])
+    var hpFixVersion = cd ? cd.fixVersion || null : (hd.fixVersions || null)
+    var hpComponents = hd.components
+      ? hd.components.split(', ').filter(Boolean)
+      : []
+    var hpTeam = teamIndex.get(ckey) || null
+
+    var hpPriorityScore = hd.priorityScore != null ? hd.priorityScore : null
+    var hpPriorityBreakdown = hd.priorityBreakdown || null
+    var hpFallback = hpPriorityScore === null
+    var hpEffective = hpPriorityScore !== null
+      ? hpPriorityScore
+      : computeBestAvailableScore({
+          tier: hpTier,
+          priority: hd.priority,
+          size: hd.tshirtSize || null,
+          riceScore: hd.rice && hd.rice.score != null ? hd.rice.score : null,
+          rubricTotal: 0
+        })
+
+    var hpReady = isHealthFeatureReady(hd, cd)
+
+    var hpFeature = {
+      key: ckey,
+      title: hd.summary || ckey,
+      sourceRfe: null,
+      priority: hd.priority || null,
+      status: hd.status || null,
+      size: hd.tshirtSize || null,
+      recommendation: null,
+      needsAttention: false,
+      humanReviewStatus: null,
+      riceScore: hd.rice && hd.rice.score != null ? hd.rice.score : null,
+      rubricTotal: 0,
+      scores: {},
+      reviewers: {},
+      components: hpComponents,
+      deliveryOwner: hd.deliveryOwner || null,
+      team: hpTeam,
+      reviewedAt: null,
+      approvedBy: null,
+      approvedAt: null,
+      tier: hpTier,
+      bigRock: hpBigRock,
+      targetVersions: hpTargetVersions,
+      fixVersion: hpFixVersion,
+      priorityScore: hpPriorityScore,
+      priorityScoreBreakdown: hpPriorityBreakdown,
+      priorityScoreFallback: hpFallback,
+      effectivePriorityScore: hpEffective,
+      blockingDimensions: [],
+      actionRequired: null,
+      dataSource: 'health-pipeline',
+      readinessGates: {
+        ownerAssigned: !!(hd.deliveryOwner || hd.assignee),
+        notBlocked: !(hd.blockerCount > 0),
+        pastRefinement: !!hd.status && EARLY_STATUSES.indexOf(hd.status) === -1,
+        hasTargetVersion: !!(
+          (hd.targetRelease && hd.targetRelease.length > 0) ||
+          (cd && cd.targetRelease)
+        )
       }
     }
-    if (feature.priority) allPriorities.add(feature.priority)
-    if (feature.bigRock) allBigRocks.add(feature.bigRock)
-    for (var tvi = 0; tvi < feature.targetVersions.length; tvi++) {
-      allTargetVersions.add(feature.targetVersions[tvi])
+
+    if (hpReady) {
+      ready.push(hpFeature)
+    } else {
+      pendingReview.push(hpFeature)
     }
-    if (feature.fixVersion) allFixVersions.add(feature.fixVersion)
-    if (feature.team) allTeams.add(feature.team)
+
+    collectFilterMeta(hpFeature, allComponents, allPriorities, allBigRocks, allTargetVersions, allFixVersions, allTeams)
   }
 
   function sortFeatures(a, b) {
@@ -226,7 +330,7 @@ function buildFeatureReadiness(readFromStorage) {
   }
 
   pendingReview.sort(sortFeatures)
-  approved.sort(sortFeatures)
+  ready.sort(sortFeatures)
 
   var uniqueComponents = Array.from(new Set(allComponents)).sort()
 
@@ -240,14 +344,14 @@ function buildFeatureReadiness(readFromStorage) {
   }
 
   var meta = {
-    total: pendingReview.length + approved.length,
+    total: pendingReview.length + ready.length,
     pendingReviewCount: pendingReview.length,
-    approvedCount: approved.length,
+    readyCount: ready.length,
     versions: configuredVersions,
     lastSyncedAt: raw.lastSyncedAt || null
   }
 
-  return { pendingReview: pendingReview, approved: approved, filterMeta: filterMeta, meta: meta }
+  return { pendingReview: pendingReview, ready: ready, filterMeta: filterMeta, meta: meta }
 }
 
-module.exports = { buildFeatureReadiness: buildFeatureReadiness, computeBlockers: computeBlockers, computeBestAvailableScore: computeBestAvailableScore }
+module.exports = { buildFeatureReadiness: buildFeatureReadiness, computeBlockers: computeBlockers, computeBestAvailableScore: computeBestAvailableScore, isHealthFeatureReady: isHealthFeatureReady }

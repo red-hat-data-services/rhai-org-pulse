@@ -455,13 +455,13 @@ module.exports = function registerPlanningRoutes(router, context) {
    * @openapi
    * /api/modules/releases/planning/feature-readiness:
    *   get:
-   *     summary: Prioritized feature readiness lists split by human review status
+   *     summary: Prioritized feature readiness lists split by readiness status
    *     tags: [releases-planning]
    *     security: [{ bearerAuth: [] }]
    *     description: Loads data from all configured releases and merges into a single prioritized list.
    *     responses:
    *       200:
-   *         description: Feature readiness data with pendingReview and approved arrays
+   *         description: Feature readiness data with pendingReview and ready arrays
    *       500:
    *         description: Internal error building readiness data
    */

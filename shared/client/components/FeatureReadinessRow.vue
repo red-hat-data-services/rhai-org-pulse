@@ -10,6 +10,8 @@ const props = defineProps({
 
 const emit = defineEmits(['select'])
 
+const isHealthPipeline = computed(() => props.feature.dataSource === 'health-pipeline')
+
 function recommendationClass(rec) {
   switch (rec) {
     case 'approve': return 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200'
@@ -59,6 +61,20 @@ const priorityDisplay = computed(() => {
   const score = props.feature.effectivePriorityScore
   if (score == null) return '—'
   return props.feature.priorityScoreFallback ? `~${score}` : String(score)
+})
+
+const readinessLabel = computed(() => {
+  if (!props.feature.readinessGates) return '—'
+  const g = props.feature.readinessGates
+  return (g.ownerAssigned && g.notBlocked && g.pastRefinement && g.hasTargetVersion) ? 'Ready' : 'Not Ready'
+})
+
+const readinessClass = computed(() => {
+  if (!props.feature.readinessGates) return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+  const g = props.feature.readinessGates
+  return (g.ownerAssigned && g.notBlocked && g.pastRefinement && g.hasTargetVersion)
+    ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200'
+    : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200'
 })
 </script>
 
@@ -167,7 +183,8 @@ const priorityDisplay = computed(() => {
 
     <!-- Rubric (compact dots) -->
     <td class="px-3 py-2.5">
-      <RubricScoreBadge :scores="feature.scores" :show-total="false" />
+      <span v-if="isHealthPipeline" class="text-xs text-gray-400 dark:text-gray-500 italic">no rubric</span>
+      <RubricScoreBadge v-else :scores="feature.scores" :show-total="false" />
     </td>
 
     <!-- Recommendation -->
@@ -180,10 +197,18 @@ const priorityDisplay = computed(() => {
 
     <!-- Status -->
     <td class="px-3 py-2.5 whitespace-nowrap">
-      <span
-        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
-        :class="reviewStatusClass(feature.humanReviewStatus)"
-      >{{ reviewStatusLabel(feature.humanReviewStatus) }}</span>
+      <template v-if="isHealthPipeline">
+        <span
+          class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+          :class="readinessClass"
+        >{{ readinessLabel }}</span>
+      </template>
+      <template v-else>
+        <span
+          class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+          :class="reviewStatusClass(feature.humanReviewStatus)"
+        >{{ reviewStatusLabel(feature.humanReviewStatus) }}</span>
+      </template>
     </td>
 
     <!-- Priority -->

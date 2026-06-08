@@ -7,13 +7,13 @@ import FeatureReadinessDrawer from '@shared/client/components/FeatureReadinessDr
 
 const jiraBaseUrl = 'https://issues.redhat.com/browse'
 
-const { pendingReview, approved, filterMeta, meta, loading, error, loadFeatureReadiness } = useFeatureReadiness()
+const { pendingReview, ready, filterMeta, meta, loading, error, loadFeatureReadiness } = useFeatureReadiness()
 
 onMounted(function() {
   loadFeatureReadiness()
 })
 
-const activeTab = ref('approved')
+const activeTab = ref('ready')
 const selectedFeature = ref(null)
 
 const filters = ref({
@@ -39,7 +39,7 @@ function matchesFilters(feature) {
 }
 
 const filteredPending = computed(() => pendingReview.value.filter(matchesFilters))
-const filteredApproved = computed(() => approved.value.filter(matchesFilters))
+const filteredReady = computed(() => ready.value.filter(matchesFilters))
 
 const headers = [
   { id: 'h-num',        label: '#',               scope: 'col' },
@@ -94,7 +94,7 @@ function formatSyncDate(dateStr) {
             ? 'border-primary-500 text-primary-600 dark:text-primary-400'
             : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'"
         >
-          Pending Approval – Not Ready
+          Not Ready
           <span
             class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-semibold"
             :class="activeTab === 'pending'
@@ -105,23 +105,23 @@ function formatSyncDate(dateStr) {
 
         <button
           role="tab"
-          id="tab-fr-approved"
-          :aria-selected="activeTab === 'approved'"
-          aria-controls="panel-fr-approved"
-          :tabindex="activeTab === 'approved' ? 0 : -1"
-          @click="activeTab = 'approved'"
+          id="tab-fr-ready"
+          :aria-selected="activeTab === 'ready'"
+          aria-controls="panel-fr-ready"
+          :tabindex="activeTab === 'ready' ? 0 : -1"
+          @click="activeTab = 'ready'"
           class="inline-flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors"
-          :class="activeTab === 'approved'
+          :class="activeTab === 'ready'
             ? 'border-primary-500 text-primary-600 dark:text-primary-400'
             : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'"
         >
-          Approved
+          Ready
           <span
             class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-semibold"
-            :class="activeTab === 'approved'
+            :class="activeTab === 'ready'
               ? 'bg-primary-100 dark:bg-primary-500/20 text-primary-700 dark:text-primary-400'
               : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'"
-          >{{ filteredApproved.length }}</span>
+          >{{ filteredReady.length }}</span>
         </button>
       </div>
     </div>
@@ -135,7 +135,7 @@ function formatSyncDate(dateStr) {
       {{ error }}
     </div>
 
-    <!-- Table panel -->
+    <!-- Table panel: Not Ready -->
     <div
       id="panel-fr-pending"
       role="tabpanel"
@@ -178,18 +178,19 @@ function formatSyncDate(dateStr) {
           <!-- Empty state -->
           <tr v-if="!loading && filteredPending.length === 0" role="row">
             <td :colspan="headers.length" class="px-4 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
-              No features pending approval
+              No features in not-ready state
             </td>
           </tr>
         </tbody>
       </table>
     </div>
 
+    <!-- Table panel: Ready -->
     <div
-      id="panel-fr-approved"
+      id="panel-fr-ready"
       role="tabpanel"
-      aria-labelledby="tab-fr-approved"
-      v-show="activeTab === 'approved'"
+      aria-labelledby="tab-fr-ready"
+      v-show="activeTab === 'ready'"
       class="overflow-x-auto"
     >
       <table role="table" class="w-full text-xs">
@@ -206,7 +207,7 @@ function formatSyncDate(dateStr) {
         </thead>
         <tbody role="rowgroup">
           <!-- Loading skeleton -->
-          <template v-if="loading && filteredApproved.length === 0">
+          <template v-if="loading && filteredReady.length === 0">
             <tr v-for="i in 5" :key="'skel-a-' + i" role="row" class="border-b border-gray-100 dark:border-gray-800">
               <td v-for="j in headers.length" :key="j" class="px-3 py-3">
                 <div class="h-3 rounded animate-pulse bg-gray-200 dark:bg-gray-700" :class="j === 3 ? 'w-24' : 'w-16'"></div>
@@ -216,7 +217,7 @@ function formatSyncDate(dateStr) {
 
           <!-- Rows -->
           <FeatureReadinessRow
-            v-for="(feature, i) in filteredApproved"
+            v-for="(feature, i) in filteredReady"
             :key="feature.key"
             :feature="feature"
             :index="i + 1"
@@ -225,9 +226,9 @@ function formatSyncDate(dateStr) {
           />
 
           <!-- Empty state -->
-          <tr v-if="!loading && filteredApproved.length === 0" role="row">
+          <tr v-if="!loading && filteredReady.length === 0" role="row">
             <td :colspan="headers.length" class="px-4 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
-              No approved features
+              No ready features
             </td>
           </tr>
         </tbody>
