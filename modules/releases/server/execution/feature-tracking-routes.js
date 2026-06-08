@@ -97,6 +97,29 @@ function normalizeVersionName(name) {
   return result
 }
 
+/**
+ * Pick the most canonical (human-readable) version name from a list of
+ * Jira fixVersion name variants. Prefers names with spaces (e.g.
+ * "rhelai-3.5 EA1 release" over "rhelai-3.5EA1"), then longest name.
+ */
+function pickCanonicalVersionName(fixVersions) {
+  if (!fixVersions || fixVersions.length === 0) return ''
+  if (fixVersions.length === 1) return fixVersions[0]
+
+  let best = fixVersions[0]
+  for (let i = 1; i < fixVersions.length; i++) {
+    const v = fixVersions[i]
+    const vHasSpace = v.indexOf(' ') !== -1
+    const bestHasSpace = best.indexOf(' ') !== -1
+    if (vHasSpace && !bestHasSpace) {
+      best = v
+    } else if (vHasSpace === bestHasSpace && v.length > best.length) {
+      best = v
+    }
+  }
+  return best
+}
+
 const jiraVersionsCache = { versions: null, fetchedAt: 0 }
 const VERSIONS_CACHE_TTL_MS = 15 * 60 * 1000
 
@@ -146,7 +169,7 @@ async function resolveProductVersionsFromJira(portfolioVersion, jiraRequestFn) {
     const entry = productMap[keys[ki]]
     matched.push({
       product: entry.product,
-      releaseNumber: entry.fixVersions[0],
+      releaseNumber: pickCanonicalVersionName(entry.fixVersions),
       fixVersions: entry.fixVersions
     })
   }
@@ -613,3 +636,4 @@ module.exports.classifyFeature = classifyFeature
 module.exports.extractProduct = extractProduct
 module.exports.normalizeVersionName = normalizeVersionName
 module.exports.resolveProductVersionsFromJira = resolveProductVersionsFromJira
+module.exports.pickCanonicalVersionName = pickCanonicalVersionName
