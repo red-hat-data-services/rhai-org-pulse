@@ -439,7 +439,7 @@ function createRefreshRegistry(storage) {
       // Enrich with description from live registry
       for (var mid in merged) {
         var mConfig = entries.get(mid)
-        if (mConfig && mConfig.description) {
+        if (mConfig) {
           merged[mid] = { ...merged[mid], description: mConfig.description }
         }
       }
