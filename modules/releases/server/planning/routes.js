@@ -473,11 +473,15 @@ module.exports = function registerPlanningRoutes(router, context) {
    */
   router.get('/feature-readiness', requireAuth, requireScope('releases:read'), function(req, res) {
     var version = req.query.version || null
+    if (version && !isValidVersion(version)) {
+      return res.status(400).json({ error: 'Invalid version format' })
+    }
     try {
       var result = buildFeatureReadiness(readFromStorage, version)
       res.json(result)
     } catch (err) {
-      res.status(500).json({ error: 'Failed to build feature readiness data', detail: err.message })
+      console.error('[releases/planning] Feature readiness build failed:', err.message)
+      res.status(500).json({ error: 'Failed to build feature readiness data' })
     }
   })
 
