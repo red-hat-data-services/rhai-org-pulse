@@ -164,3 +164,79 @@ test.describe('Releases Views @releases', () => {
     await testView(page, 'audit', 'Audit');
   });
 });
+
+/**
+ * PM Hub
+ *
+ * Verify the PM Hub tab loads under Plan, the Component Release Load Tracking
+ * report card is visible and clickable, and the PM Hub API endpoints respond.
+ */
+test.describe('Releases PM Hub @releases', () => {
+  test.beforeEach(async ({ page }) => {
+    setupErrorTracking(page);
+  });
+
+  test.afterEach(async ({ page }, testInfo) => {
+    logCapturedErrors(page, testInfo);
+  });
+
+  test('should show PM Hub tab under Plan and load report card', async ({ page }) => {
+    await page.goto('/#/releases/plan');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const pmHubTab = page.locator('button', { hasText: 'PM Hub' });
+    await expect(pmHubTab).toBeVisible();
+
+    await pmHubTab.click();
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const reportCard = page.locator('text=Component Release Load Tracking');
+    await expect(reportCard.first()).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('should open Component Release Load report with filter dropdowns', async ({ page }) => {
+    await page.goto('/#/releases/plan');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await page.locator('button', { hasText: 'PM Hub' }).click();
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const reportCard = page.locator('.cursor-pointer', { hasText: 'Component Release Load Tracking' });
+    await reportCard.first().click();
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const componentFilter = page.locator('text=Jira Component');
+    const releaseFilter = page.locator('text=Release');
+    await expect(componentFilter.first()).toBeVisible();
+    await expect(releaseFilter.first()).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('PM Hub API endpoints should respond', async ({ request }) => {
+    const componentsRes = await request.get('/api/modules/releases/pm-hub/jira/components');
+    expect(componentsRes.ok()).toBe(true);
+    const componentsBody = await componentsRes.json();
+    expect(componentsBody).toHaveProperty('components');
+    expect(componentsBody).toHaveProperty('projects');
+    expect(Array.isArray(componentsBody.components)).toBe(true);
+
+    const versionsRes = await request.get('/api/modules/releases/pm-hub/jira/versions');
+    expect(versionsRes.ok()).toBe(true);
+    const versionsBody = await versionsRes.json();
+    expect(versionsBody).toHaveProperty('versions');
+    expect(versionsBody).toHaveProperty('projects');
+    expect(Array.isArray(versionsBody.versions)).toBe(true);
+  });
+
+  test('component-release-load endpoint requires filters', async ({ request }) => {
+    const res = await request.get('/api/modules/releases/pm-hub/component-release-load');
+    expect(res.status()).toBe(400);
+    const body = await res.json();
+    expect(body.error).toContain('filter');
+  });
+});
