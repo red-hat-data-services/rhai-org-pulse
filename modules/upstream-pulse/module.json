@@ -17,6 +17,20 @@
   "server": {
     "entry": "./server/index.js"
   },
+  "secrets": {
+    "module": [
+      {
+        "key": "GITLAB_TOKEN",
+        "description": "GitLab PAT with read_api scope for fetching team data",
+        "required": false
+      },
+      {
+        "key": "GITLAB_TEAM_DATA_PROJECT_ID",
+        "description": "GitLab project ID containing github-access.json",
+        "required": false
+      }
+    ]
+  },
   "defaultEnabled": false,
   "requires": []
 }

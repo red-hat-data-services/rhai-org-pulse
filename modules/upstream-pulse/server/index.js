@@ -131,7 +131,10 @@ async function checkConnection() {
 // instead of CODEOWNERS or maintainer files. This data is precomputed externally and
 // stored in a GitLab project file. We fetch it directly here because the upstream-pulse
 // backend is open-source and can't have this org-specific integration.
-const GITLAB_DATA_PROJECT_ID = process.env.GITLAB_TEAM_DATA_PROJECT_ID || '82624331';
+let _moduleSecrets = null;
+function getGitlabProjectId() {
+  return (_moduleSecrets && _moduleSecrets.GITLAB_TEAM_DATA_PROJECT_ID) || '82624331';
+}
 const GITLAB_DATA_FILE_PATH = encodeURIComponent('github-access.json');
 const GITLAB_DATA_CACHE_TTL = 30 * 60 * 1000;
 let _gitlabDataCache = null;
@@ -141,10 +144,10 @@ async function fetchPytorchAccess() {
     return _gitlabDataCache.data;
   }
 
-  const token = process.env.GITLAB_TOKEN;
+  const token = _moduleSecrets && _moduleSecrets.GITLAB_TOKEN;
   if (!token) return null;
 
-  const url = `https://gitlab.com/api/v4/projects/${GITLAB_DATA_PROJECT_ID}/repository/files/${GITLAB_DATA_FILE_PATH}/raw?ref=main`;
+  const url = `https://gitlab.com/api/v4/projects/${getGitlabProjectId()}/repository/files/${GITLAB_DATA_FILE_PATH}/raw?ref=main`;
   const resp = await fetch(url, {
     timeout: 10000,
     headers: { 'PRIVATE-TOKEN': token, 'Accept': 'application/json' },
@@ -257,7 +260,8 @@ function startPeriodicRosterPush(storage) {
 }
 
 module.exports = function registerRoutes(router, context) {
-  const { requireScope } = context;
+  const { requireScope, secrets } = context;
+  _moduleSecrets = secrets;
   const DEMO_MODE = process.env.DEMO_MODE === 'true';
 
   // Register module scopes
@@ -495,6 +499,18 @@ module.exports = function registerRoutes(router, context) {
     }
   });
 
+  /**
+   * @openapi
+   * /api/modules/upstream-pulse/github-access:
+   *   get:
+   *     tags: [Upstream Pulse]
+   *     summary: PyTorch repo access level counts
+   *     responses:
+   *       200:
+   *         description: Access level counts sourced from GitLab team data
+   *       503:
+   *         description: GitLab token not configured
+   */
   router.get('/github-access', requireScope('upstream-pulse:read'), async function(req, res) {
     try {
       const data = await fetchPytorchAccess();
