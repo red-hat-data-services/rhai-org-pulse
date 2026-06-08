@@ -567,6 +567,7 @@ async function fetchAllProducts(config) {
  * @param {string} portfolioVersion  e.g. "3.5.EA1", "3.5"
  * @param {string[]} productShortnames  e.g. ['rhoai', 'rhelai', 'RHAII']
  * @param {object}  config  { productPagesBaseUrl }
+ * @param {string}  [freezeType='feature']  'feature' or 'code'
  * @returns {Promise<{ byProduct: Object<string,string>, earliest: string|null }>}
  */
 async function fetchFeatureFreezeDatesFromSchedule(portfolioVersion, productShortnames, config, freezeType) {

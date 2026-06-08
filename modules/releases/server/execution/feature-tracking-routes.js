@@ -396,7 +396,7 @@ function getFreezeDatesFromCache(portfolioVersion, readFromStorage, freezeField)
 }
 
 function isEaVersion(version) {
-  return /ea\d*/i.test(version || '')
+  return /\bea\d*\b/i.test(version || '')
 }
 
 /**
