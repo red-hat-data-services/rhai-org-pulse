@@ -442,6 +442,7 @@ describe('isEaVersion', function () {
     expect(isEaVersion('3.5')).toBe(false)
     expect(isEaVersion('3.5 GA')).toBe(false)
     expect(isEaVersion('rhoai-3.5')).toBe(false)
+    expect(isEaVersion('3.5 GA release')).toBe(false)
   })
 
   it('handles null/undefined/empty', function () {
