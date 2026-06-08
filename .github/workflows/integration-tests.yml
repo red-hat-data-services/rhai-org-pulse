@@ -3,6 +3,7 @@ name: Integration Tests
 on:
   pull_request:
     branches: [main]
+  merge_group:
 
 concurrency:
   group: integration-tests-${{ github.ref }}
@@ -21,8 +22,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
+      # For PRs, use dorny/paths-filter (GitHub API mode, fast)
       - uses: dorny/paths-filter@v4
+        if: github.event_name == 'pull_request'
         id: filter
         with:
           # This determines which keys get added to the 'changes' output array
@@ -60,14 +65,66 @@ jobs:
               - 'modules/releases/client/components/ClickableCount.vue'
               - 'tests/integration/tv-fv-delta.spec.js'
 
+      # For merge_group events, dorny/paths-filter doesn't support this event type.
+      # Use git diff directly, mirroring the filter definitions above.
+      - name: Detect changes via git diff
+        if: github.event_name == 'merge_group'
+        id: git-filter
+        run: |
+          BASE_SHA="${{ github.event.merge_group.base_sha }}"
+          if [ -z "$BASE_SHA" ]; then
+            echo "::error::BASE_SHA is empty — cannot detect changes"
+            exit 1
+          fi
+
+          CHANGED=$(git diff --name-only ${BASE_SHA} HEAD)
+          echo "Changed files:"
+          echo "$CHANGED"
+
+          ALL_MODULES='["ai-impact", "system-health", "people-teams", "upstream-pulse", "releases", "tv-fv-delta"]'
+
+          # If shared test infrastructure changed, test all modules
+          if echo "$CHANGED" | grep -qE '^tests/integration/(constants|helpers)\.js$'; then
+            echo "modules=$ALL_MODULES" >> "$GITHUB_OUTPUT"
+            echo "Shared test files changed — testing all modules"
+            exit 0
+          fi
+
+          MODULES="[]"
+
+          check_module() {
+            local name="$1"
+            local pattern="$2"
+            if echo "$CHANGED" | grep -qE "$pattern"; then
+              MODULES=$(echo "$MODULES" | jq -c ". + [\"$name\"]")
+            fi
+          }
+
+          check_module "ai-impact" \
+            "^(modules/ai-impact/|tests/integration/ai-impact\.spec\.js)"
+          check_module "system-health" \
+            "^(modules/system-health/|tests/integration/system-health\.spec\.js)"
+          check_module "people-teams" \
+            "^(modules/team-tracker/|tests/integration/people-teams\.spec\.js)"
+          check_module "upstream-pulse" \
+            "^(modules/upstream-pulse/|tests/integration/upstream-pulse\.spec\.js)"
+          check_module "releases" \
+            "^(modules/releases/server/execution/|modules/releases/client/views/FeatureDetailView\.vue|modules/releases/client/execute/|tests/integration/(execution-data|releases)\.spec\.js)"
+          check_module "tv-fv-delta" \
+            "^(modules/releases/server/(tv-fv-delta/|index\.js)|modules/releases/client/views/TvFvDeltaView\.vue|modules/releases/client/composables/use.*(TvFv|ReleasePicker|ComponentBreakdown)\.js|modules/releases/client/components/(FeatureTable|ClickableCount)\.vue|tests/integration/tv-fv-delta\.spec\.js)"
+
+          echo "modules=$MODULES" >> "$GITHUB_OUTPUT"
+          echo "Testing modules: $MODULES"
+
       - name: Build module matrix
         id: build-matrix
         run: |
-          # If shared test files changed, then test all modules
-          if [ "${{ steps.filter.outputs.shared-test-files }}" == "true" ]; then
+          if [ "${{ github.event_name }}" = "merge_group" ]; then
+            MODULES='${{ steps.git-filter.outputs.modules }}'
+          elif [ "${{ steps.filter.outputs.shared-test-files }}" == "true" ]; then
             MODULES='["ai-impact", "system-health", "people-teams", "upstream-pulse", "releases", "tv-fv-delta"]'
           else
-            # Otherwise, use the modules that have direct changes
+            # Use the modules that have direct changes
             MODULES='${{ steps.filter.outputs.changes }}'
             # Remove 'shared-test-files' from the array if it's present
             MODULES=$(echo "$MODULES" | jq -c 'map(select(. != "shared-test-files"))')
