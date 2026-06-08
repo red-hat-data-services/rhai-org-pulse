@@ -3,6 +3,8 @@ name: CI
 on:
   pull_request:
     branches: [main]
+  merge_group:
+  workflow_dispatch:
 
 jobs:
   test:
@@ -20,7 +22,20 @@ jobs:
       - name: Detect changed paths
         id: changes
         run: |
-          CHANGED=$(git diff --name-only ${{ github.event.pull_request.base.sha }} HEAD)
+          if [ "${{ github.event_name }}" = "merge_group" ]; then
+            BASE_SHA="${{ github.event.merge_group.base_sha }}"
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          else
+            BASE_SHA="origin/main"
+          fi
+
+          if [ -z "$BASE_SHA" ]; then
+            echo "::error::BASE_SHA is empty — cannot detect changes"
+            exit 1
+          fi
+
+          CHANGED=$(git diff --name-only ${BASE_SHA} HEAD)
           if echo "$CHANGED" | grep -qE '^(src/|server/|modules/|shared/|scripts/validate|package|vite\.config|tailwind\.config|postcss\.config|vitest\.config|index\.html|public/|tests/smoke/|playwright\.config|Makefile)'; then
             echo "app=true" >> "$GITHUB_OUTPUT"
           fi

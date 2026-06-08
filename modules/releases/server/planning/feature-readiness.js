@@ -1,4 +1,4 @@
-var { buildTeamIndex } = require('./team-lookup')
+var { getConfiguredReleases } = require('./config')
 
 var RICE_MAX = 16900 // 13 × 13 × 100 ÷ 1 (theoretical max: max Reach × max Impact × max Confidence ÷ min Effort)
 
@@ -65,7 +65,7 @@ function computeBlockers(feature, productPath) {
   return { blockingDimensions: blockingDimensions, actionRequired: actionRequired }
 }
 
-function buildFeatureReadiness(readFromStorage, version) {
+function buildFeatureReadiness(readFromStorage) {
   var raw = readFromStorage('ai-impact/features.json')
   if (!raw || !raw.features) {
     return { pendingReview: [], approved: [], filterMeta: {}, meta: {} }
@@ -73,27 +73,42 @@ function buildFeatureReadiness(readFromStorage, version) {
 
   var candidateIndex = new Map()
   var healthIndex = new Map()
-  var teamIndex = buildTeamIndex(readFromStorage, version)
+  var teamIndex = new Map()
 
-  if (version) {
-    var candidateCache = readFromStorage('releases/planning/candidates-cache-' + version + '.json')
+  var configuredVersions = getConfiguredReleases(readFromStorage).map(function(r) { return r.version })
+
+  for (var vi = 0; vi < configuredVersions.length; vi++) {
+    var ver = configuredVersions[vi]
+
+    var candidateCache = readFromStorage('releases/planning/candidates-cache-' + ver + '.json')
     if (candidateCache && candidateCache.data && Array.isArray(candidateCache.data.features)) {
       var candidates = candidateCache.data.features
       for (var ci = 0; ci < candidates.length; ci++) {
         var c = candidates[ci]
-        if (c.issueKey) candidateIndex.set(c.issueKey, c)
+        if (c.issueKey && !candidateIndex.has(c.issueKey)) candidateIndex.set(c.issueKey, c)
       }
     }
 
-    var healthCache = readFromStorage('releases/planning/health-cache-' + version + '-all.json')
+    var healthCache = readFromStorage('releases/planning/health-cache-' + ver + '-all.json')
     if (healthCache && Array.isArray(healthCache.features)) {
       var hf = healthCache.features
       for (var hi = 0; hi < hf.length; hi++) {
         var h = hf[hi]
-        if (h.key) healthIndex.set(h.key, h)
+        if (h.key && !healthIndex.has(h.key)) healthIndex.set(h.key, h)
+      }
+    }
+
+    var hygieneData = readFromStorage('releases/hygiene/features-' + ver + '.json')
+    if (hygieneData && hygieneData.features) {
+      var hkeys = Object.keys(hygieneData.features)
+      for (var ti = 0; ti < hkeys.length; ti++) {
+        var feat = hygieneData.features[hkeys[ti]]
+        if (feat && feat.team && !teamIndex.has(hkeys[ti])) teamIndex.set(hkeys[ti], feat.team)
       }
     }
   }
+
+  var hasCaches = candidateIndex.size > 0 || healthIndex.size > 0
 
   var pendingReview = []
   var approved = []
@@ -117,8 +132,7 @@ function buildFeatureReadiness(readFromStorage, version) {
     var candidateData = candidateIndex.get(key) || null
     var healthData = healthIndex.get(key) || null
 
-    // Skip features not in any cache for the selected version to prevent cross-product bleed
-    if (version && !candidateData && !healthData) continue
+    if (hasCaches && !candidateData && !healthData) continue
 
     var tier = candidateData && candidateData.tier != null
       ? 'T' + candidateData.tier
@@ -229,7 +243,7 @@ function buildFeatureReadiness(readFromStorage, version) {
     total: pendingReview.length + approved.length,
     pendingReviewCount: pendingReview.length,
     approvedCount: approved.length,
-    version: version || null,
+    versions: configuredVersions,
     lastSyncedAt: raw.lastSyncedAt || null
   }
 

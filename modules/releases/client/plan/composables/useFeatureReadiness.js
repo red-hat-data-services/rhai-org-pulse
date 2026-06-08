@@ -12,44 +12,26 @@ const meta = ref(null)
 const loading = ref(false)
 const error = ref(null)
 
-// Simple query string builder — no URLSearchParams
-function buildQueryString(params) {
-  const parts = []
-  for (const key of Object.keys(params)) {
-    const val = params[key]
-    if (val != null && val !== '') {
-      parts.push(encodeURIComponent(key) + '=' + encodeURIComponent(val))
-    }
-  }
-  return parts.length ? '?' + parts.join('&') : ''
-}
-
-// Track last fetch time per version key for TTL-based cache skip
-const lastFetchAt = {}
+var lastFetchAt = 0
 
 export function useFeatureReadiness() {
-  async function loadFeatureReadiness(version) {
-    const now = Date.now()
-    const versionKey = version || '__none__'
-    if (now - (lastFetchAt[versionKey] || 0) < CACHE_TTL && meta.value !== null) {
+  async function loadFeatureReadiness() {
+    var now = Date.now()
+    if (now - lastFetchAt < CACHE_TTL && meta.value !== null) {
       return
     }
 
     loading.value = true
     error.value = null
 
-    const qs = buildQueryString(version ? { version } : {})
-    const path = API_PATH + qs
-    const cacheKey = 'feature-readiness' + (version ? ':' + version : '')
-
     try {
-      await cachedRequest(cacheKey, path, function(data) {
+      await cachedRequest('feature-readiness', API_PATH, function(data) {
         pendingReview.value = data.pendingReview || []
         approved.value = data.approved || []
         filterMeta.value = data.filterMeta || {}
         meta.value = data.meta || null
       })
-      lastFetchAt[versionKey] = Date.now()
+      lastFetchAt = Date.now()
     } catch (err) {
       error.value = err.message || 'Failed to load feature readiness data'
     } finally {

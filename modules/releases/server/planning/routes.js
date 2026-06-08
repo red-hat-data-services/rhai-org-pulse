@@ -458,13 +458,7 @@ module.exports = function registerPlanningRoutes(router, context) {
    *     summary: Prioritized feature readiness lists split by human review status
    *     tags: [releases-planning]
    *     security: [{ bearerAuth: [] }]
-   *     parameters:
-   *       - name: version
-   *         in: query
-   *         required: false
-   *         schema:
-   *           type: string
-   *         description: Release version for cross-reference enrichment (e.g. "3.6")
+   *     description: Loads data from all configured releases and merges into a single prioritized list.
    *     responses:
    *       200:
    *         description: Feature readiness data with pendingReview and approved arrays
@@ -472,12 +466,8 @@ module.exports = function registerPlanningRoutes(router, context) {
    *         description: Internal error building readiness data
    */
   router.get('/feature-readiness', requireAuth, requireScope('releases:read'), function(req, res) {
-    var version = req.query.version || null
-    if (version && !isValidVersion(version)) {
-      return res.status(400).json({ error: 'Invalid version format' })
-    }
     try {
-      var result = buildFeatureReadiness(readFromStorage, version)
+      var result = buildFeatureReadiness(readFromStorage)
       res.json(result)
     } catch (err) {
       console.error('[releases/planning] Feature readiness build failed:', err.message)
