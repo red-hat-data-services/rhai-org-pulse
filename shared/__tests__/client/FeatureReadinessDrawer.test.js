@@ -16,7 +16,6 @@ function makeStratFeature(overrides = {}) {
     reviewers: { feasibility: 'approve', testability: 'revise', scope: 'approve', architecture: 'approve' },
     components: ['Dashboard'],
     team: 'Serving',
-    tier: 'T1',
     bigRock: 'MaaS',
     targetVersions: ['2.20'],
     fixVersion: '2.20-EA1',
@@ -26,6 +25,15 @@ function makeStratFeature(overrides = {}) {
     actionRequired: null,
     deliveryOwner: null,
     dataSource: 'strat-creator',
+    confidence: 'committed',
+    readinessGates: {
+      ownerAssigned: true,
+      notBlocked: true,
+      pastRefinement: true,
+      hasTargetVersion: true,
+      noBlockingViolations: true
+    },
+    violations: null,
     ...overrides
   }
 }
@@ -44,7 +52,6 @@ function makeHealthFeature(overrides = {}) {
     reviewers: {},
     components: ['Inference'],
     team: 'ModelServing',
-    tier: 'T1',
     bigRock: 'AIPCC Serving',
     targetVersions: ['2.20'],
     fixVersion: null,
@@ -54,12 +61,15 @@ function makeHealthFeature(overrides = {}) {
     actionRequired: null,
     deliveryOwner: 'Jane Smith',
     dataSource: 'health-pipeline',
+    confidence: 'ready',
     readinessGates: {
       ownerAssigned: true,
       notBlocked: true,
       pastRefinement: true,
-      hasTargetVersion: true
+      hasTargetVersion: true,
+      noBlockingViolations: true
     },
+    violations: null,
     ...overrides
   }
 }
@@ -76,6 +86,48 @@ describe('FeatureReadinessDrawer', () => {
     it('renders nothing when feature is null', () => {
       const wrapper = mountDrawer(null)
       expect(wrapper.find('aside').exists()).toBe(false)
+    })
+  })
+
+  describe('confidence badge', () => {
+    it('shows green Ready badge for committed features', () => {
+      const wrapper = mountDrawer(makeStratFeature({ confidence: 'committed' }))
+      const headerDiv = wrapper.find('.flex.flex-wrap')
+      const badges = headerDiv.findAll('span')
+      const readyBadge = badges.find(b => b.text() === 'Ready' && b.classes().some(c => c.includes('green')))
+      expect(readyBadge).toBeTruthy()
+    })
+
+    it('shows yellow Ready badge for ready features', () => {
+      const wrapper = mountDrawer(makeHealthFeature({ confidence: 'ready' }))
+      const headerDiv = wrapper.find('.flex.flex-wrap')
+      const badges = headerDiv.findAll('span')
+      const readyBadge = badges.find(b => b.text() === 'Ready' && b.classes().some(c => c.includes('yellow')))
+      expect(readyBadge).toBeTruthy()
+    })
+
+    it('shows red Not Ready badge for not-ready features', () => {
+      const wrapper = mountDrawer(makeHealthFeature({ confidence: 'not-ready' }))
+      const headerDiv = wrapper.find('.flex.flex-wrap')
+      const badges = headerDiv.findAll('span')
+      const readyBadge = badges.find(b => b.text() === 'Not Ready' && b.classes().some(c => c.includes('red')))
+      expect(readyBadge).toBeTruthy()
+    })
+
+    it('shows confidence tooltip on badge', () => {
+      const wrapper = mountDrawer(makeStratFeature({ confidence: 'committed' }))
+      const headerDiv = wrapper.find('.flex.flex-wrap')
+      const badges = headerDiv.findAll('span')
+      const readyBadge = badges.find(b => b.attributes('title') && b.attributes('title').includes('Committed'))
+      expect(readyBadge).toBeTruthy()
+    })
+  })
+
+  describe('tier removed', () => {
+    it('does not show tier badge in header', () => {
+      const wrapper = mountDrawer(makeStratFeature({ tier: 'T1' }))
+      const headerDiv = wrapper.find('.flex.flex-wrap')
+      expect(headerDiv.text()).not.toContain('T1')
     })
   })
 
@@ -111,11 +163,6 @@ describe('FeatureReadinessDrawer', () => {
       expect(wrapper.text()).toContain('6 / 8')
     })
 
-    it('does not show readiness gates section', () => {
-      const wrapper = mountDrawer(makeStratFeature())
-      expect(wrapper.text()).not.toContain('Readiness Gates')
-    })
-
     it('shows Data Source as Strategy Creator', () => {
       const wrapper = mountDrawer(makeStratFeature())
       expect(wrapper.text()).toContain('Strategy Creator')
@@ -128,18 +175,6 @@ describe('FeatureReadinessDrawer', () => {
       expect(wrapper.text()).toContain('Health Pipeline')
     })
 
-    it('shows "Ready" badge when all gates pass', () => {
-      const wrapper = mountDrawer(makeHealthFeature())
-      expect(wrapper.text()).toContain('Ready')
-    })
-
-    it('shows "Not Ready" badge when a gate fails', () => {
-      const wrapper = mountDrawer(makeHealthFeature({
-        readinessGates: { ownerAssigned: false, notBlocked: true, pastRefinement: true, hasTargetVersion: true }
-      }))
-      expect(wrapper.text()).toContain('Not Ready')
-    })
-
     it('does not show humanReviewStatus or recommendation badges in header', () => {
       const wrapper = mountDrawer(makeHealthFeature())
       const headerDiv = wrapper.find('.flex.flex-wrap')
@@ -150,51 +185,6 @@ describe('FeatureReadinessDrawer', () => {
       const wrapper = mountDrawer(makeHealthFeature())
       expect(wrapper.text()).not.toContain('Rubric')
       expect(wrapper.text()).not.toContain('feasibility')
-    })
-
-    it('shows readiness gates section', () => {
-      const wrapper = mountDrawer(makeHealthFeature())
-      expect(wrapper.text()).toContain('Readiness Gates')
-    })
-
-    it('shows all four readiness gate labels', () => {
-      const wrapper = mountDrawer(makeHealthFeature())
-      expect(wrapper.text()).toContain('Owner assigned')
-      expect(wrapper.text()).toContain('No blockers')
-      expect(wrapper.text()).toContain('Status beyond Refinement')
-      expect(wrapper.text()).toContain('Target version assigned')
-    })
-
-    it('shows filled circle for passing gates and empty circle for failing gates', () => {
-      const wrapper = mountDrawer(makeHealthFeature({
-        readinessGates: { ownerAssigned: true, notBlocked: false, pastRefinement: true, hasTargetVersion: false }
-      }))
-      const gateSection = wrapper.findAll('section').find(s => s.text().includes('Readiness Gates'))
-      const gateItems = gateSection.findAll('.flex.items-center.gap-2')
-      const indicators = gateItems.map(item => item.findAll('span')[0].text())
-      expect(indicators).toEqual(['●', '○', '●', '○'])
-    })
-
-    it('shows green class for passing gates', () => {
-      const wrapper = mountDrawer(makeHealthFeature())
-      const gateSection = wrapper.findAll('section').find(s => s.text().includes('Readiness Gates'))
-      const firstIndicator = gateSection.findAll('.flex.items-center.gap-2')[0].findAll('span')[0]
-      expect(firstIndicator.classes().some(c => c.includes('green'))).toBe(true)
-    })
-
-    it('shows red class for failing gates', () => {
-      const wrapper = mountDrawer(makeHealthFeature({
-        readinessGates: { ownerAssigned: false, notBlocked: true, pastRefinement: true, hasTargetVersion: true }
-      }))
-      const gateSection = wrapper.findAll('section').find(s => s.text().includes('Readiness Gates'))
-      const firstIndicator = gateSection.findAll('.flex.items-center.gap-2')[0].findAll('span')[0]
-      expect(firstIndicator.classes().some(c => c.includes('red'))).toBe(true)
-    })
-
-    it('shows delivery owner in readiness gates section', () => {
-      const wrapper = mountDrawer(makeHealthFeature({ deliveryOwner: 'Jane Smith' }))
-      const gateSection = wrapper.findAll('section').find(s => s.text().includes('Readiness Gates'))
-      expect(gateSection.text()).toContain('Jane Smith')
     })
 
     it('shows delivery owner in details section', () => {
@@ -211,6 +201,102 @@ describe('FeatureReadinessDrawer', () => {
       const wrapper = mountDrawer(makeHealthFeature({ status: 'Planning' }))
       const gateSection = wrapper.findAll('section').find(s => s.text().includes('Readiness Gates'))
       expect(gateSection.text()).toContain('Planning')
+    })
+  })
+
+  describe('readiness gates (all features)', () => {
+    it('shows readiness gates section for strat-creator features', () => {
+      const wrapper = mountDrawer(makeStratFeature())
+      expect(wrapper.text()).toContain('Readiness Gates')
+    })
+
+    it('shows readiness gates section for health-pipeline features', () => {
+      const wrapper = mountDrawer(makeHealthFeature())
+      expect(wrapper.text()).toContain('Readiness Gates')
+    })
+
+    it('shows all five readiness gate labels', () => {
+      const wrapper = mountDrawer(makeHealthFeature())
+      expect(wrapper.text()).toContain('Owner assigned')
+      expect(wrapper.text()).toContain('No blockers')
+      expect(wrapper.text()).toContain('Status beyond Refinement')
+      expect(wrapper.text()).toContain('Target version assigned')
+      expect(wrapper.text()).toContain('No blocking hygiene violations')
+    })
+
+    it('shows filled circle for passing gates and empty circle for failing gates', () => {
+      const wrapper = mountDrawer(makeHealthFeature({
+        readinessGates: { ownerAssigned: true, notBlocked: false, pastRefinement: true, hasTargetVersion: false, noBlockingViolations: true }
+      }))
+      const gateSection = wrapper.findAll('section').find(s => s.text().includes('Readiness Gates'))
+      const gateItems = gateSection.findAll('.flex.items-center.gap-2')
+      const indicators = gateItems.map(item => item.findAll('span')[0].text())
+      expect(indicators).toEqual(['●', '○', '●', '○', '●'])
+    })
+
+    it('shows green class for passing gates', () => {
+      const wrapper = mountDrawer(makeHealthFeature())
+      const gateSection = wrapper.findAll('section').find(s => s.text().includes('Readiness Gates'))
+      const firstIndicator = gateSection.findAll('.flex.items-center.gap-2')[0].findAll('span')[0]
+      expect(firstIndicator.classes().some(c => c.includes('green'))).toBe(true)
+    })
+
+    it('shows red class for failing gates', () => {
+      const wrapper = mountDrawer(makeHealthFeature({
+        readinessGates: { ownerAssigned: false, notBlocked: true, pastRefinement: true, hasTargetVersion: true, noBlockingViolations: true }
+      }))
+      const gateSection = wrapper.findAll('section').find(s => s.text().includes('Readiness Gates'))
+      const firstIndicator = gateSection.findAll('.flex.items-center.gap-2')[0].findAll('span')[0]
+      expect(firstIndicator.classes().some(c => c.includes('red'))).toBe(true)
+    })
+
+    it('shows delivery owner in readiness gates section', () => {
+      const wrapper = mountDrawer(makeHealthFeature({ deliveryOwner: 'Jane Smith' }))
+      const gateSection = wrapper.findAll('section').find(s => s.text().includes('Readiness Gates'))
+      expect(gateSection.text()).toContain('Jane Smith')
+    })
+  })
+
+  describe('hygiene section', () => {
+    it('shows "All clear" badge when no violations', () => {
+      const wrapper = mountDrawer(makeStratFeature({ violations: [] }))
+      expect(wrapper.text()).toContain('Hygiene')
+      expect(wrapper.text()).toContain('All clear')
+    })
+
+    it('shows violation count badge when violations exist', () => {
+      const wrapper = mountDrawer(makeStratFeature({
+        violations: [
+          { id: 'missing-assignee', name: 'Missing Assignee', category: 'ownership', message: 'No assignee' },
+          { id: 'missing-target-version', name: 'Missing Target', category: 'metadata', message: 'No target' }
+        ]
+      }))
+      expect(wrapper.text()).toContain('Hygiene')
+      expect(wrapper.text()).toContain('2')
+    })
+
+    it('renders violations grouped by category', () => {
+      const wrapper = mountDrawer(makeStratFeature({
+        violations: [
+          { id: 'missing-assignee', name: 'Missing Assignee', category: 'ownership', message: 'No assignee set' },
+          { id: 'stale-status', name: 'Stale Status', category: 'timeliness', message: 'Status is stale' }
+        ]
+      }))
+      expect(wrapper.text()).toContain('Ownership')
+      expect(wrapper.text()).toContain('Missing Assignee')
+      expect(wrapper.text()).toContain('Timeliness')
+      expect(wrapper.text()).toContain('Stale Status')
+    })
+
+    it('shows "All checks passing" when violations is empty array', () => {
+      const wrapper = mountDrawer(makeHealthFeature({ violations: [] }))
+      expect(wrapper.text()).toContain('All checks passing')
+    })
+
+    it('shows hygiene section for null violations', () => {
+      const wrapper = mountDrawer(makeStratFeature({ violations: null }))
+      expect(wrapper.text()).toContain('Hygiene')
+      expect(wrapper.text()).toContain('All clear')
     })
   })
 
@@ -235,7 +321,7 @@ describe('FeatureReadinessDrawer', () => {
 
     it('shows fallback explanation text for estimated scores', () => {
       const wrapper = mountDrawer(makeHealthFeature({ priorityScoreFallback: true }))
-      expect(wrapper.text()).toContain('tier + priority + size')
+      expect(wrapper.text()).toContain('tier + priority')
     })
 
     it('shows pipeline explanation text for non-fallback scores', () => {

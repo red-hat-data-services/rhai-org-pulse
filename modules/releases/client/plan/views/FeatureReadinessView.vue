@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useFeatureReadiness } from '../composables/useFeatureReadiness'
+import { useReleases } from '../composables/useReleasePlanning'
 import FeatureReadinessFilterBar from '../components/FeatureReadinessFilterBar.vue'
 import FeatureReadinessRow from '@shared/client/components/FeatureReadinessRow.vue'
 import FeatureReadinessDrawer from '@shared/client/components/FeatureReadinessDrawer.vue'
@@ -8,13 +9,15 @@ import FeatureReadinessDrawer from '@shared/client/components/FeatureReadinessDr
 const jiraBaseUrl = 'https://issues.redhat.com/browse'
 
 const { pendingReview, ready, filterMeta, meta, loading, error, loadFeatureReadiness } = useFeatureReadiness()
+const { releases, loadReleases } = useReleases()
 
 onMounted(function() {
   loadFeatureReadiness()
+  loadReleases()
 })
 
-const activeTab = ref('ready')
 const selectedFeature = ref(null)
+const selectedVersion = ref('')
 
 const filters = ref({
   outcome: null,
@@ -23,6 +26,7 @@ const filters = ref({
   component: null,
   priority: null,
   team: null,
+  readiness: null,
   needsAttention: false
 })
 
@@ -35,18 +39,66 @@ function matchesFilters(feature) {
   if (f.priority && feature.priority !== f.priority) return false
   if (f.team && feature.team !== f.team) return false
   if (f.needsAttention && !feature.needsAttention) return false
+  if (f.readiness === 'ready' && feature.confidence === 'not-ready') return false
+  if (f.readiness === 'not-ready' && feature.confidence !== 'not-ready') return false
+  if (selectedVersion.value) {
+    if (!(feature.targetVersions || []).some(function(tv) {
+      return tv === selectedVersion.value || tv.indexOf(selectedVersion.value) !== -1 || selectedVersion.value.indexOf(tv) !== -1
+    })) return false
+  }
   return true
 }
 
-const filteredPending = computed(() => pendingReview.value.filter(matchesFilters))
-const filteredReady = computed(() => ready.value.filter(matchesFilters))
+const filteredFeatures = computed(() => {
+  var all = pendingReview.value.concat(ready.value)
+  return all.filter(matchesFilters).sort(function(a, b) {
+    if (b.effectivePriorityScore !== a.effectivePriorityScore) {
+      return b.effectivePriorityScore - a.effectivePriorityScore
+    }
+    return b.rubricTotal - a.rubricTotal
+  })
+})
+
+const readyCounts = computed(() => {
+  var all = pendingReview.value.concat(ready.value).filter(function(f) {
+    const fv = filters.value
+    if (fv.outcome && f.bigRock !== fv.outcome) return false
+    if (fv.targetVersion && !(f.targetVersions || []).includes(fv.targetVersion)) return false
+    if (fv.fixVersion && f.fixVersion !== fv.fixVersion) return false
+    if (fv.component && !(f.components || []).includes(fv.component)) return false
+    if (fv.priority && f.priority !== fv.priority) return false
+    if (fv.team && f.team !== fv.team) return false
+    if (fv.needsAttention && !f.needsAttention) return false
+    if (selectedVersion.value) {
+      if (!(f.targetVersions || []).some(function(tv) {
+        return tv === selectedVersion.value || tv.indexOf(selectedVersion.value) !== -1 || selectedVersion.value.indexOf(tv) !== -1
+      })) return false
+    }
+    return true
+  })
+  var readyCount = 0
+  var notReadyCount = 0
+  for (var i = 0; i < all.length; i++) {
+    if (all[i].confidence === 'not-ready') notReadyCount++
+    else readyCount++
+  }
+  return { ready: readyCount, notReady: notReadyCount, total: all.length }
+})
+
+const releaseOptions = computed(() => {
+  var opts = [{ version: '', label: 'All Releases' }]
+  for (var i = 0; i < releases.value.length; i++) {
+    opts.push({ version: releases.value[i].version, label: releases.value[i].version })
+  }
+  return opts
+})
 
 const headers = [
   { id: 'h-num',        label: '#',               scope: 'col' },
   { id: 'h-score',      label: 'Score',           scope: 'col' },
+  { id: 'h-readiness',  label: 'Readiness',       scope: 'col', hasTooltip: true },
   { id: 'h-key',        label: 'Key',             scope: 'col' },
   { id: 'h-title',      label: 'Title',           scope: 'col' },
-  { id: 'h-tier',       label: 'Tier',            scope: 'col' },
   { id: 'h-outcome',    label: 'Outcome',         scope: 'col' },
   { id: 'h-target',     label: 'Target Version',  scope: 'col' },
   { id: 'h-fixver',     label: 'Fix Version',     scope: 'col' },
@@ -58,6 +110,8 @@ const headers = [
   { id: 'h-priority',   label: 'Priority',        scope: 'col' },
   { id: 'h-attention',  label: '',                scope: 'col' },
 ]
+
+const showLegend = ref(false)
 
 function formatSyncDate(dateStr) {
   if (!dateStr) return '—'
@@ -73,58 +127,31 @@ function formatSyncDate(dateStr) {
 <template>
   <div class="space-y-0">
 
+    <!-- Release selector + summary bar -->
+    <div class="flex items-center justify-between px-4 py-2 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+      <div class="flex items-center gap-3">
+        <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Release:</label>
+        <select
+          v-model="selectedVersion"
+          class="bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
+        >
+          <option v-for="opt in releaseOptions" :key="opt.version" :value="opt.version">
+            {{ opt.label }}
+          </option>
+        </select>
+      </div>
+      <div class="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+        <span>{{ readyCounts.total }} features</span>
+        <span class="text-green-600 dark:text-green-400">{{ readyCounts.ready }} ready</span>
+        <span class="text-red-600 dark:text-red-400">{{ readyCounts.notReady }} not ready</span>
+      </div>
+    </div>
+
     <!-- Filter bar -->
     <FeatureReadinessFilterBar
       :filterMeta="filterMeta"
       v-model="filters"
     />
-
-    <!-- Inner tab bar -->
-    <div class="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-      <div role="tablist" aria-label="Feature readiness groups" class="flex -mb-px px-4">
-        <button
-          role="tab"
-          id="tab-fr-pending"
-          :aria-selected="activeTab === 'pending'"
-          aria-controls="panel-fr-pending"
-          :tabindex="activeTab === 'pending' ? 0 : -1"
-          @click="activeTab = 'pending'"
-          class="inline-flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors"
-          :class="activeTab === 'pending'
-            ? 'border-primary-500 text-primary-600 dark:text-primary-400'
-            : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'"
-        >
-          Not Ready
-          <span
-            class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-semibold"
-            :class="activeTab === 'pending'
-              ? 'bg-primary-100 dark:bg-primary-500/20 text-primary-700 dark:text-primary-400'
-              : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'"
-          >{{ filteredPending.length }}</span>
-        </button>
-
-        <button
-          role="tab"
-          id="tab-fr-ready"
-          :aria-selected="activeTab === 'ready'"
-          aria-controls="panel-fr-ready"
-          :tabindex="activeTab === 'ready' ? 0 : -1"
-          @click="activeTab = 'ready'"
-          class="inline-flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors"
-          :class="activeTab === 'ready'
-            ? 'border-primary-500 text-primary-600 dark:text-primary-400'
-            : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'"
-        >
-          Ready
-          <span
-            class="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-xs font-semibold"
-            :class="activeTab === 'ready'
-              ? 'bg-primary-100 dark:bg-primary-500/20 text-primary-700 dark:text-primary-400'
-              : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'"
-          >{{ filteredReady.length }}</span>
-        </button>
-      </div>
-    </div>
 
     <!-- Error state -->
     <div
@@ -135,14 +162,8 @@ function formatSyncDate(dateStr) {
       {{ error }}
     </div>
 
-    <!-- Table panel: Not Ready -->
-    <div
-      id="panel-fr-pending"
-      role="tabpanel"
-      aria-labelledby="tab-fr-pending"
-      v-show="activeTab === 'pending'"
-      class="overflow-x-auto"
-    >
+    <!-- Unified table -->
+    <div class="overflow-x-auto">
       <table role="table" class="w-full text-xs">
         <thead role="rowgroup" class="bg-gray-50 dark:bg-gray-800/60 border-b border-gray-200 dark:border-gray-700">
           <tr role="row">
@@ -152,13 +173,49 @@ function formatSyncDate(dateStr) {
               role="columnheader"
               :scope="header.scope"
               class="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide leading-tight"
-            >{{ header.label }}</th>
+            >
+              <span v-if="header.hasTooltip" class="inline-flex items-center gap-1">
+                {{ header.label }}
+                <button
+                  type="button"
+                  class="relative inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500 text-[9px] font-bold leading-none cursor-help"
+                  title="Color indicates confidence: Green=Committed, Yellow=Ready, Red=Not Ready"
+                  @click.stop="showLegend = !showLegend"
+                >i</button>
+                <div
+                  v-if="showLegend"
+                  class="absolute z-50 mt-1 top-8 left-0 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 text-xs text-left font-normal normal-case tracking-normal"
+                >
+                  <p class="font-semibold text-gray-700 dark:text-gray-200 mb-1.5">Confidence Legend</p>
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                      <span class="w-2.5 h-2.5 rounded-full bg-green-500 shrink-0"></span>
+                      <span class="text-gray-600 dark:text-gray-300"><strong>Committed</strong> — fix version assigned</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="w-2.5 h-2.5 rounded-full bg-yellow-500 shrink-0"></span>
+                      <span class="text-gray-600 dark:text-gray-300"><strong>Ready</strong> — passes gates, not yet committed</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0"></span>
+                      <span class="text-gray-600 dark:text-gray-300"><strong>Not Ready</strong> — does not pass readiness gates</span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    class="mt-2 text-[10px] text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    @click.stop="showLegend = false"
+                  >Close</button>
+                </div>
+              </span>
+              <span v-else>{{ header.label }}</span>
+            </th>
           </tr>
         </thead>
         <tbody role="rowgroup">
           <!-- Loading skeleton -->
-          <template v-if="loading && filteredPending.length === 0">
-            <tr v-for="i in 5" :key="'skel-p-' + i" role="row" class="border-b border-gray-100 dark:border-gray-800">
+          <template v-if="loading && filteredFeatures.length === 0">
+            <tr v-for="i in 5" :key="'skel-' + i" role="row" class="border-b border-gray-100 dark:border-gray-800">
               <td v-for="j in headers.length" :key="j" class="px-3 py-3">
                 <div class="h-3 rounded animate-pulse bg-gray-200 dark:bg-gray-700" :class="j === 3 ? 'w-24' : 'w-16'"></div>
               </td>
@@ -167,7 +224,7 @@ function formatSyncDate(dateStr) {
 
           <!-- Rows -->
           <FeatureReadinessRow
-            v-for="(feature, i) in filteredPending"
+            v-for="(feature, i) in filteredFeatures"
             :key="feature.key"
             :feature="feature"
             :index="i + 1"
@@ -176,59 +233,9 @@ function formatSyncDate(dateStr) {
           />
 
           <!-- Empty state -->
-          <tr v-if="!loading && filteredPending.length === 0" role="row">
+          <tr v-if="!loading && filteredFeatures.length === 0" role="row">
             <td :colspan="headers.length" class="px-4 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
-              No features in not-ready state
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Table panel: Ready -->
-    <div
-      id="panel-fr-ready"
-      role="tabpanel"
-      aria-labelledby="tab-fr-ready"
-      v-show="activeTab === 'ready'"
-      class="overflow-x-auto"
-    >
-      <table role="table" class="w-full text-xs">
-        <thead role="rowgroup" class="bg-gray-50 dark:bg-gray-800/60 border-b border-gray-200 dark:border-gray-700">
-          <tr role="row">
-            <th
-              v-for="header in headers"
-              :key="header.id"
-              role="columnheader"
-              :scope="header.scope"
-              class="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide leading-tight"
-            >{{ header.label }}</th>
-          </tr>
-        </thead>
-        <tbody role="rowgroup">
-          <!-- Loading skeleton -->
-          <template v-if="loading && filteredReady.length === 0">
-            <tr v-for="i in 5" :key="'skel-a-' + i" role="row" class="border-b border-gray-100 dark:border-gray-800">
-              <td v-for="j in headers.length" :key="j" class="px-3 py-3">
-                <div class="h-3 rounded animate-pulse bg-gray-200 dark:bg-gray-700" :class="j === 3 ? 'w-24' : 'w-16'"></div>
-              </td>
-            </tr>
-          </template>
-
-          <!-- Rows -->
-          <FeatureReadinessRow
-            v-for="(feature, i) in filteredReady"
-            :key="feature.key"
-            :feature="feature"
-            :index="i + 1"
-            :jiraBaseUrl="jiraBaseUrl"
-            @select="selectedFeature = $event"
-          />
-
-          <!-- Empty state -->
-          <tr v-if="!loading && filteredReady.length === 0" role="row">
-            <td :colspan="headers.length" class="px-4 py-10 text-center text-sm text-gray-400 dark:text-gray-500">
-              No ready features
+              No features found
             </td>
           </tr>
         </tbody>

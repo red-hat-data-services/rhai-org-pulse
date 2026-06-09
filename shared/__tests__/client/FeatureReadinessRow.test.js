@@ -16,13 +16,20 @@ function makeFeature(overrides = {}) {
     reviewers: {},
     components: ['Dashboard'],
     team: 'Serving',
-    tier: 'T1',
     bigRock: 'MaaS',
     targetVersions: ['2.20'],
     fixVersion: '2.20-EA1',
     effectivePriorityScore: 72,
     priorityScoreFallback: false,
     dataSource: 'strat-creator',
+    confidence: 'committed',
+    readinessGates: {
+      ownerAssigned: true,
+      notBlocked: true,
+      pastRefinement: true,
+      hasTargetVersion: true,
+      noBlockingViolations: true
+    },
     ...overrides
   }
 }
@@ -36,11 +43,13 @@ function makeHealthFeature(overrides = {}) {
     humanReviewStatus: null,
     scores: {},
     reviewers: {},
+    confidence: 'ready',
     readinessGates: {
       ownerAssigned: true,
       notBlocked: true,
       pastRefinement: true,
-      hasTargetVersion: true
+      hasTargetVersion: true,
+      noBlockingViolations: true
     },
     ...overrides
   })
@@ -94,38 +103,43 @@ describe('FeatureReadinessRow', () => {
       expect(wrapper.find('.italic').exists()).toBe(true)
     })
 
-    it('shows "Ready" badge when all gates pass', () => {
-      const wrapper = mountRow(makeHealthFeature())
-      expect(wrapper.text()).toContain('Ready')
-    })
-
-    it('shows "Not Ready" badge when a gate fails', () => {
-      const wrapper = mountRow(makeHealthFeature({
-        readinessGates: { ownerAssigned: false, notBlocked: true, pastRefinement: true, hasTargetVersion: true }
-      }))
-      expect(wrapper.text()).toContain('Not Ready')
-    })
-
-    it('applies green class to Ready badge', () => {
-      const wrapper = mountRow(makeHealthFeature())
-      const statusTd = wrapper.findAll('td').at(12)
-      const badge = statusTd.findAll('span').find(s => s.text() === 'Ready')
-      expect(badge.classes().some(c => c.includes('green'))).toBe(true)
-    })
-
-    it('applies amber class to Not Ready badge', () => {
-      const wrapper = mountRow(makeHealthFeature({
-        readinessGates: { ownerAssigned: false, notBlocked: true, pastRefinement: true, hasTargetVersion: true }
-      }))
-      const statusTd = wrapper.findAll('td').at(12)
-      const badge = statusTd.findAll('span').find(s => s.text() === 'Not Ready')
-      expect(badge.classes().some(c => c.includes('amber'))).toBe(true)
-    })
-
     it('shows dash for recommendation when null', () => {
       const wrapper = mountRow(makeHealthFeature({ recommendation: null }))
       const recTd = wrapper.findAll('td').at(11)
       expect(recTd.text()).toBe('—')
+    })
+  })
+
+  describe('confidence column', () => {
+    it('shows "Ready" with green class for committed features', () => {
+      const wrapper = mountRow(makeFeature({ confidence: 'committed' }))
+      const readinessTd = wrapper.findAll('td').at(2)
+      const badge = readinessTd.find('span')
+      expect(badge.text()).toBe('Ready')
+      expect(badge.classes().some(c => c.includes('green'))).toBe(true)
+    })
+
+    it('shows "Ready" with yellow class for ready features', () => {
+      const wrapper = mountRow(makeHealthFeature({ confidence: 'ready' }))
+      const readinessTd = wrapper.findAll('td').at(2)
+      const badge = readinessTd.find('span')
+      expect(badge.text()).toBe('Ready')
+      expect(badge.classes().some(c => c.includes('yellow'))).toBe(true)
+    })
+
+    it('shows "Not Ready" with red class for not-ready features', () => {
+      const wrapper = mountRow(makeHealthFeature({ confidence: 'not-ready' }))
+      const readinessTd = wrapper.findAll('td').at(2)
+      const badge = readinessTd.find('span')
+      expect(badge.text()).toBe('Not Ready')
+      expect(badge.classes().some(c => c.includes('red'))).toBe(true)
+    })
+
+    it('shows confidence tooltip on readiness badge', () => {
+      const wrapper = mountRow(makeFeature({ confidence: 'committed' }))
+      const readinessTd = wrapper.findAll('td').at(2)
+      const badge = readinessTd.find('span')
+      expect(badge.attributes('title')).toContain('Committed')
     })
   })
 
@@ -156,9 +170,11 @@ describe('FeatureReadinessRow', () => {
       expect(wrapper.text()).not.toContain('~72')
     })
 
-    it('shows tier badge', () => {
+    it('does not show tier column', () => {
       const wrapper = mountRow(makeFeature({ tier: 'T2' }))
-      expect(wrapper.text()).toContain('T2')
+      const allTds = wrapper.findAll('td')
+      const tdsText = allTds.map(td => td.text())
+      expect(tdsText).not.toContain('T2')
     })
 
     it('shows needs-attention indicator', () => {

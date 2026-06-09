@@ -48,33 +48,37 @@ function reviewStatusLabel(status) {
   }
 }
 
-function tierClass(tier) {
-  switch (tier) {
-    case 'T1': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
-    case 'T2': return 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'
-    case 'T3': return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
-    default:   return 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
-  }
-}
-
 const priorityDisplay = computed(() => {
   const score = props.feature.effectivePriorityScore
   if (score == null) return '—'
   return props.feature.priorityScoreFallback ? `~${score}` : String(score)
 })
 
-const readinessLabel = computed(() => {
-  if (!props.feature.readinessGates) return '—'
-  const g = props.feature.readinessGates
-  return (g.ownerAssigned && g.notBlocked && g.pastRefinement && g.hasTargetVersion) ? 'Ready' : 'Not Ready'
+const confidenceClass = computed(() => {
+  switch (props.feature.confidence) {
+    case 'committed': return 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200'
+    case 'ready':     return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200'
+    case 'not-ready': return 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200'
+    default:          return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+  }
 })
 
-const readinessClass = computed(() => {
-  if (!props.feature.readinessGates) return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
-  const g = props.feature.readinessGates
-  return (g.ownerAssigned && g.notBlocked && g.pastRefinement && g.hasTargetVersion)
-    ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200'
-    : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200'
+const confidenceLabel = computed(() => {
+  switch (props.feature.confidence) {
+    case 'committed': return 'Ready'
+    case 'ready':     return 'Ready'
+    case 'not-ready': return 'Not Ready'
+    default:          return '—'
+  }
+})
+
+const confidenceTooltip = computed(() => {
+  switch (props.feature.confidence) {
+    case 'committed': return 'Committed — fix version assigned to a release'
+    case 'ready':     return 'Ready — passes readiness gates, not yet committed'
+    case 'not-ready': return 'Not Ready — does not pass readiness gates'
+    default:          return ''
+  }
 })
 </script>
 
@@ -100,6 +104,15 @@ const readinessClass = computed(() => {
       >{{ priorityDisplay }}</span>
     </td>
 
+    <!-- Readiness (confidence-colored) -->
+    <td class="px-3 py-2.5 whitespace-nowrap">
+      <span
+        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+        :class="confidenceClass"
+        :title="confidenceTooltip"
+      >{{ confidenceLabel }}</span>
+    </td>
+
     <!-- Key -->
     <td class="px-3 py-2.5 whitespace-nowrap">
       <a
@@ -118,16 +131,6 @@ const readinessClass = computed(() => {
         class="text-xs text-gray-900 dark:text-gray-100 block truncate"
         :title="feature.title"
       >{{ feature.title || '—' }}</span>
-    </td>
-
-    <!-- Tier -->
-    <td class="px-3 py-2.5 whitespace-nowrap">
-      <span
-        v-if="feature.tier"
-        class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold"
-        :class="tierClass(feature.tier)"
-      >{{ feature.tier }}</span>
-      <span v-else class="text-xs text-gray-400 dark:text-gray-600">—</span>
     </td>
 
     <!-- Outcome (Big Rock) -->
@@ -200,8 +203,8 @@ const readinessClass = computed(() => {
       <template v-if="isHealthPipeline">
         <span
           class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
-          :class="readinessClass"
-        >{{ readinessLabel }}</span>
+          :class="confidenceClass"
+        >{{ confidenceLabel }}</span>
       </template>
       <template v-else>
         <span

@@ -15,6 +15,7 @@ const props = defineProps({
       component: null,
       priority: null,
       team: null,
+      readiness: null,
       needsAttention: false
     })
   }
@@ -38,6 +39,7 @@ function clearFilters() {
     component: null,
     priority: null,
     team: null,
+    readiness: null,
     needsAttention: false
   })
 }
@@ -51,6 +53,7 @@ const hasActiveFilters = computed(() => {
     f.component ||
     f.priority ||
     f.team ||
+    f.readiness ||
     f.needsAttention
   )
 })
@@ -65,6 +68,20 @@ const teams = computed(() => props.filterMeta.teams || [])
 
 <template>
   <div class="flex flex-wrap items-center gap-3 py-3 px-4 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+
+    <!-- Readiness -->
+    <div class="flex flex-col gap-0.5">
+      <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Readiness</label>
+      <select
+        :value="modelValue.readiness || ''"
+        @change="update('readiness', $event.target.value || null)"
+        class="text-xs rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400"
+      >
+        <option value="">All</option>
+        <option value="ready">Ready</option>
+        <option value="not-ready">Not Ready</option>
+      </select>
+    </div>
 
     <!-- Outcome / Big Rock -->
     <div class="flex flex-col gap-0.5">

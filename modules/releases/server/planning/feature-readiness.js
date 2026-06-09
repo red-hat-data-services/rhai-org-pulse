@@ -4,11 +4,41 @@ var RICE_MAX = 16900 // 13 × 13 × 100 ÷ 1 (theoretical max: max Reach × max 
 
 var TIER_SCORES     = { T1: 1.0, T2: 0.6, T3: 0.2 }
 var PRIORITY_SCORES = { Blocker: 1.0, Critical: 0.8, Major: 0.6, Normal: 0.4, Minor: 0.2 }
-var TSHIRT_SCORES   = { XS: 1.0, S: 0.8, M: 0.6, L: 0.4, XL: 0.2 }
 
 var EARLY_STATUSES = ['New', 'Refinement']
 
-function computeBestAvailableScore(feature) {
+var BLOCKING_HYGIENE_RULES = ['missing-assignee', 'missing-fix-version', 'missing-target-version', 'open-children-on-closed']
+
+function computeTierScore(feature) {
+  if (feature.tier === 'T1' && feature.rockPriority != null && feature.rockPriority > 0) {
+    return Math.max(0.3, 1.0 - (feature.rockPriority - 1) * 0.1)
+  }
+  return TIER_SCORES[feature.tier] || 0
+}
+
+function computeTargetVersionScore(feature, configuredVersions) {
+  if (!configuredVersions || configuredVersions.length === 0) return null
+  var tvs = feature.targetVersions || []
+  if (tvs.length === 0) return 0.0
+  var bestIndex = configuredVersions.length
+  for (var i = 0; i < tvs.length; i++) {
+    var idx = configuredVersions.indexOf(tvs[i])
+    if (idx === -1) {
+      for (var j = 0; j < configuredVersions.length; j++) {
+        if (tvs[i].indexOf(configuredVersions[j]) !== -1 || configuredVersions[j].indexOf(tvs[i]) !== -1) {
+          idx = j
+          break
+        }
+      }
+    }
+    if (idx !== -1 && idx < bestIndex) bestIndex = idx
+  }
+  if (bestIndex >= configuredVersions.length) return 0.1
+  if (configuredVersions.length === 1) return 1.0
+  return 1.0 - (bestIndex / (configuredVersions.length - 1)) * 0.7
+}
+
+function computeBestAvailableScore(feature, configuredVersions) {
   var signals = []
   var hasValueSignal = feature.riceScore != null || (feature.rubricTotal || 0) > 0
 
@@ -19,13 +49,14 @@ function computeBestAvailableScore(feature) {
   }
 
   if (feature.tier != null) {
-    signals.push({ value: TIER_SCORES[feature.tier] || 0, weight: hasValueSignal ? 30 : 40 })
+    signals.push({ value: computeTierScore(feature), weight: hasValueSignal ? 25 : 40 })
   }
 
   signals.push({ value: PRIORITY_SCORES[feature.priority] || 0.4, weight: hasValueSignal ? 25 : 35 })
 
-  if (feature.size != null) {
-    signals.push({ value: TSHIRT_SCORES[feature.size] || 0.6, weight: hasValueSignal ? 15 : 25 })
+  var tvScore = computeTargetVersionScore(feature, configuredVersions)
+  if (tvScore != null) {
+    signals.push({ value: tvScore, weight: hasValueSignal ? 20 : 25 })
   }
 
   var totalWeight = 0
@@ -77,6 +108,20 @@ function isHealthFeatureReady(hd, cd) {
   return hasOwner && notBlocked && pastRefinement && hasTargetVersion
 }
 
+function hasBlockingViolations(violations) {
+  if (!violations || !Array.isArray(violations) || violations.length === 0) return false
+  for (var i = 0; i < violations.length; i++) {
+    if (BLOCKING_HYGIENE_RULES.indexOf(violations[i].id) !== -1) return true
+  }
+  return false
+}
+
+function computeConfidence(isReady, fixVersion) {
+  if (!isReady) return 'not-ready'
+  if (fixVersion) return 'committed'
+  return 'ready'
+}
+
 function collectFilterMeta(feature, allComponents, allPriorities, allBigRocks, allTargetVersions, allFixVersions, allTeams) {
   if (Array.isArray(feature.components)) {
     for (var i = 0; i < feature.components.length; i++) {
@@ -101,6 +146,7 @@ function buildFeatureReadiness(readFromStorage) {
   var candidateIndex = new Map()
   var healthIndex = new Map()
   var teamIndex = new Map()
+  var hygieneIndex = new Map()
 
   var configuredVersions = getConfiguredReleases(readFromStorage).map(function(r) { return r.version })
 
@@ -130,7 +176,10 @@ function buildFeatureReadiness(readFromStorage) {
       var hkeys = Object.keys(hygieneData.features)
       for (var ti = 0; ti < hkeys.length; ti++) {
         var feat = hygieneData.features[hkeys[ti]]
-        if (feat && feat.team && !teamIndex.has(hkeys[ti])) teamIndex.set(hkeys[ti], feat.team)
+        if (feat && !teamIndex.has(hkeys[ti])) {
+          if (feat.team) teamIndex.set(hkeys[ti], feat.team)
+          if (feat.violations) hygieneIndex.set(hkeys[ti], feat.violations)
+        }
       }
     }
   }
@@ -168,6 +217,7 @@ function buildFeatureReadiness(readFromStorage) {
     var bigRock = candidateData
       ? candidateData.bigRock || null
       : (healthData ? healthData.bigRock || null : null)
+    var rockPriority = candidateData ? candidateData.rockPriority || null : null
     var targetVersions = candidateData && candidateData.targetRelease
       ? [candidateData.targetRelease]
       : (healthData && healthData.targetRelease ? [healthData.targetRelease] : [])
@@ -183,7 +233,7 @@ function buildFeatureReadiness(readFromStorage) {
     var priorityScoreFallback = priorityScore === null
     var effectivePriorityScore = priorityScore !== null
       ? priorityScore
-      : computeBestAvailableScore(Object.assign({}, latest, { rubricTotal: rubricTotal, tier: tier }))
+      : computeBestAvailableScore(Object.assign({}, latest, { rubricTotal: rubricTotal, tier: tier, rockPriority: rockPriority, targetVersions: targetVersions }), configuredVersions)
 
     var blockerResult = computeBlockers(Object.assign({}, latest, { rubricTotal: rubricTotal }))
 
@@ -193,6 +243,20 @@ function buildFeatureReadiness(readFromStorage) {
     var componentsList = (latest.components && latest.components.length > 0)
       ? latest.components
       : healthComponents
+
+    var violations = hygieneIndex.get(key) || null
+    var isApproved = latest.humanReviewStatus === 'approved'
+    var blockedByHygiene = hasBlockingViolations(violations)
+    var isReady = isApproved && !blockedByHygiene
+    var confidence = computeConfidence(isReady, fixVersion)
+
+    var readinessGates = {
+      ownerAssigned: !!(deliveryOwner || (healthData && healthData.assignee) || latest.approvedBy),
+      notBlocked: blockerResult.blockingDimensions.length === 0,
+      pastRefinement: !!latest.status && EARLY_STATUSES.indexOf(latest.status) === -1,
+      hasTargetVersion: targetVersions.length > 0,
+      noBlockingViolations: !blockedByHygiene
+    }
 
     var feature = {
       key: key,
@@ -216,6 +280,7 @@ function buildFeatureReadiness(readFromStorage) {
       approvedAt: latest.approvedAt || null,
       tier: tier,
       bigRock: bigRock,
+      rockPriority: rockPriority,
       targetVersions: targetVersions,
       fixVersion: fixVersion,
       priorityScore: priorityScore,
@@ -224,10 +289,13 @@ function buildFeatureReadiness(readFromStorage) {
       effectivePriorityScore: effectivePriorityScore,
       blockingDimensions: blockerResult.blockingDimensions,
       actionRequired: blockerResult.actionRequired,
-      dataSource: 'strat-creator'
+      dataSource: 'strat-creator',
+      confidence: confidence,
+      readinessGates: readinessGates,
+      violations: violations
     }
 
-    if (latest.humanReviewStatus === 'approved') {
+    if (isReady) {
       ready.push(feature)
     } else {
       pendingReview.push(feature)
@@ -246,6 +314,7 @@ function buildFeatureReadiness(readFromStorage) {
     var cd = candidateIndex.get(ckey) || null
 
     var hpTier = cd && cd.tier != null ? 'T' + cd.tier : (hd.tier || null)
+    var hpRockPriority = cd ? cd.rockPriority || null : null
     var hpBigRock = cd ? cd.bigRock || null : (hd.bigRock || null)
     var hpTargetVersions = cd && cd.targetRelease
       ? [cd.targetRelease]
@@ -264,12 +333,17 @@ function buildFeatureReadiness(readFromStorage) {
       : computeBestAvailableScore({
           tier: hpTier,
           priority: hd.priority,
-          size: hd.tshirtSize || null,
           riceScore: hd.rice && hd.rice.score != null ? hd.rice.score : null,
-          rubricTotal: 0
-        })
+          rubricTotal: 0,
+          rockPriority: hpRockPriority,
+          targetVersions: hpTargetVersions
+        }, configuredVersions)
 
-    var hpReady = isHealthFeatureReady(hd, cd)
+    var hpViolations = hygieneIndex.get(ckey) || null
+    var hpGatesReady = isHealthFeatureReady(hd, cd)
+    var hpBlockedByHygiene = hasBlockingViolations(hpViolations)
+    var hpReady = hpGatesReady && !hpBlockedByHygiene
+    var hpConfidence = computeConfidence(hpReady, hpFixVersion)
 
     var hpFeature = {
       key: ckey,
@@ -293,6 +367,7 @@ function buildFeatureReadiness(readFromStorage) {
       approvedAt: null,
       tier: hpTier,
       bigRock: hpBigRock,
+      rockPriority: hpRockPriority,
       targetVersions: hpTargetVersions,
       fixVersion: hpFixVersion,
       priorityScore: hpPriorityScore,
@@ -302,6 +377,7 @@ function buildFeatureReadiness(readFromStorage) {
       blockingDimensions: [],
       actionRequired: null,
       dataSource: 'health-pipeline',
+      confidence: hpConfidence,
       readinessGates: {
         ownerAssigned: !!(hd.deliveryOwner || hd.assignee),
         notBlocked: !(hd.blockerCount > 0),
@@ -309,8 +385,10 @@ function buildFeatureReadiness(readFromStorage) {
         hasTargetVersion: !!(
           (hd.targetRelease && hd.targetRelease.length > 0) ||
           (cd && cd.targetRelease)
-        )
-      }
+        ),
+        noBlockingViolations: !hpBlockedByHygiene
+      },
+      violations: hpViolations
     }
 
     if (hpReady) {
@@ -354,4 +432,4 @@ function buildFeatureReadiness(readFromStorage) {
   return { pendingReview: pendingReview, ready: ready, filterMeta: filterMeta, meta: meta }
 }
 
-module.exports = { buildFeatureReadiness: buildFeatureReadiness, computeBlockers: computeBlockers, computeBestAvailableScore: computeBestAvailableScore, isHealthFeatureReady: isHealthFeatureReady }
+module.exports = { buildFeatureReadiness: buildFeatureReadiness, computeBlockers: computeBlockers, computeBestAvailableScore: computeBestAvailableScore, isHealthFeatureReady: isHealthFeatureReady, computeTierScore: computeTierScore, computeTargetVersionScore: computeTargetVersionScore, hasBlockingViolations: hasBlockingViolations, computeConfidence: computeConfidence, BLOCKING_HYGIENE_RULES: BLOCKING_HYGIENE_RULES }

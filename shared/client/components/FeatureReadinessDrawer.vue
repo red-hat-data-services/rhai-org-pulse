@@ -1,5 +1,6 @@
 <script setup>
-import { computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import HygieneViolations from '../../../modules/releases/client/execute/components/hygiene/HygieneViolations.vue'
 
 const props = defineProps({
   feature: { type: Object, default: null },
@@ -13,15 +14,6 @@ const open = computed(() => props.feature !== null)
 const isHealthPipeline = computed(() => props.feature?.dataSource === 'health-pipeline')
 
 const RUBRIC_DIMS = ['feasibility', 'testability', 'scope', 'architecture']
-
-function tierClass(tier) {
-  switch (tier) {
-    case 'T1': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
-    case 'T2': return 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300'
-    case 'T3': return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
-    default:   return 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
-  }
-}
 
 function reviewStatusClass(status) {
   switch (status) {
@@ -107,6 +99,33 @@ function initials(name) {
   return (name || '').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
 }
 
+const confidenceClass = computed(() => {
+  switch (props.feature?.confidence) {
+    case 'committed': return 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200'
+    case 'ready':     return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200'
+    case 'not-ready': return 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200'
+    default:          return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+  }
+})
+
+const confidenceLabel = computed(() => {
+  switch (props.feature?.confidence) {
+    case 'committed': return 'Ready'
+    case 'ready':     return 'Ready'
+    case 'not-ready': return 'Not Ready'
+    default:          return '—'
+  }
+})
+
+const confidenceTooltip = computed(() => {
+  switch (props.feature?.confidence) {
+    case 'committed': return 'Committed — fix version assigned to a release'
+    case 'ready':     return 'Ready — passes readiness gates, not yet committed'
+    case 'not-ready': return 'Not Ready — does not pass readiness gates'
+    default:          return ''
+  }
+})
+
 const rubricTotal = computed(() => {
   if (!props.feature) return 0
   const s = props.feature.scores || {}
@@ -127,6 +146,11 @@ const hasBlockers = computed(() =>
 )
 
 const readinessGates = computed(() => props.feature?.readinessGates || null)
+
+const violationsList = computed(() => props.feature?.violations || [])
+const violationCount = computed(() => violationsList.value.length)
+
+const hygieneExpanded = ref(true)
 
 function onKey(e) {
   if (e.key === 'Escape' && open.value) emit('close')
@@ -182,23 +206,18 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
           </div>
 
           <div class="flex flex-wrap gap-1.5 mt-2.5">
-            <span v-if="feature.tier" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold" :class="tierClass(feature.tier)">
-              {{ feature.tier }}
-            </span>
+            <!-- Confidence badge (all features) -->
+            <span
+              v-if="feature.confidence"
+              class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold"
+              :class="confidenceClass"
+              :title="confidenceTooltip"
+            >{{ confidenceLabel }}</span>
 
             <!-- Health pipeline badges -->
             <template v-if="isHealthPipeline">
               <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
                 Health Pipeline
-              </span>
-              <span
-                v-if="readinessGates"
-                class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold"
-                :class="readinessGates.ownerAssigned && readinessGates.notBlocked && readinessGates.pastRefinement && readinessGates.hasTargetVersion
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200'
-                  : 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200'"
-              >
-                {{ readinessGates.ownerAssigned && readinessGates.notBlocked && readinessGates.pastRefinement && readinessGates.hasTargetVersion ? 'Ready' : 'Not Ready' }}
               </span>
             </template>
 
@@ -241,15 +260,15 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
                 </div>
                 <p class="text-xs text-gray-400 dark:text-gray-500 mt-1.5">
                   {{ feature.priorityScoreFallback
-                    ? 'Estimated — no pipeline score yet (tier + priority + size)'
+                    ? 'Estimated — no pipeline score yet (tier + priority)'
                     : 'From prioritization pipeline' }}
                 </p>
               </div>
             </div>
           </section>
 
-          <!-- Readiness Gates (health-pipeline features only) -->
-          <section v-if="isHealthPipeline && readinessGates" class="px-4 py-4">
+          <!-- Readiness Gates -->
+          <section v-if="readinessGates" class="px-4 py-4">
             <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">Readiness Gates</p>
             <div class="space-y-2">
               <div class="flex items-center gap-2 text-xs">
@@ -278,6 +297,43 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
                 </span>
                 <span class="text-gray-700 dark:text-gray-300">Target version assigned</span>
               </div>
+              <div class="flex items-center gap-2 text-xs">
+                <span :class="readinessGates.noBlockingViolations ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'">
+                  {{ readinessGates.noBlockingViolations ? '●' : '○' }}
+                </span>
+                <span class="text-gray-700 dark:text-gray-300">No blocking hygiene violations</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Hygiene Violations -->
+          <section class="px-4 py-4">
+            <button
+              type="button"
+              class="w-full flex items-center justify-between text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              @click="hygieneExpanded = !hygieneExpanded"
+            >
+              <span class="flex items-center gap-2">
+                Hygiene
+                <span
+                  v-if="violationCount > 0"
+                  class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300"
+                >{{ violationCount }}</span>
+                <span
+                  v-else
+                  class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
+                >All clear</span>
+              </span>
+              <svg
+                class="w-3.5 h-3.5 transition-transform"
+                :class="hygieneExpanded ? 'rotate-180' : ''"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <div v-if="hygieneExpanded">
+              <HygieneViolations :violations="violationsList" />
             </div>
           </section>
 
