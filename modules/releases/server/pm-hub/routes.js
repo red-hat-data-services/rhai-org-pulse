@@ -49,6 +49,7 @@ const FIELDS_TO_FETCH = [
   'summary', 'status', 'issuetype', 'assignee', 'fixVersions', 'versions',
   'components', 'labels', 'issuelinks',
   CUSTOM_FIELDS.team,
+  CUSTOM_FIELDS.releaseType,
   CUSTOM_FIELDS.statusSummary,
   CUSTOM_FIELDS.colorStatus,
   CUSTOM_FIELDS.productManager
@@ -326,6 +327,7 @@ module.exports = function registerPmHubRoutes(router, context) {
           status: f.status || null,
           colorStatus: f.colorStatus || null,
           statusSummary: f.statusSummary || null,
+          releaseType: f.releaseType || null,
           isBlocked: f.isBlocked || false,
           components: f.components || [],
           assignee: f.assignee || null,

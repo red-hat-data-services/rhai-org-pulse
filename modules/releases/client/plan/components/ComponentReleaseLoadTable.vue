@@ -113,6 +113,7 @@ var componentGroups = computed(function() {
             status: feat.status,
             colorStatus: feat.colorStatus,
             statusSummary: feat.statusSummary,
+            releaseType: feat.releaseType,
             isBlocked: feat.isBlocked,
             components: feat.components,
             assignee: feat.assignee,
@@ -200,7 +201,7 @@ defineExpose({ expandAll, collapseAll })
             :class="COMP_STYLE.border"
             @click="toggleComponent(comp.component)"
           >
-            <td colspan="8" class="px-4 py-3.5">
+            <td colspan="9" class="px-4 py-3.5">
               <div class="flex items-center gap-3">
                 <svg
                   class="w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform duration-200 flex-shrink-0"
@@ -236,6 +237,7 @@ defineExpose({ expandAll, collapseAll })
             <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Title</th>
             <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">Product</th>
             <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24">Type</th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-28">Release Type</th>
             <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16">Status</th>
             <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16">Blocked</th>
             <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">Delivery Owner</th>
@@ -284,6 +286,13 @@ defineExpose({ expandAll, collapseAll })
               </td>
               <td class="px-3 py-2.5 text-center">
                 <span
+                  v-if="feature.releaseType"
+                  class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300"
+                >{{ feature.releaseType }}</span>
+                <span v-else class="text-gray-300 dark:text-gray-600 text-xs">--</span>
+              </td>
+              <td class="px-3 py-2.5 text-center">
+                <span
                   v-if="feature.colorStatus"
                   class="inline-block w-3.5 h-3.5 rounded-full ring-2"
                   :class="[colorStatusClass(feature.colorStatus), colorStatusRing(feature.colorStatus)]"
@@ -316,7 +325,7 @@ defineExpose({ expandAll, collapseAll })
 
           <!-- Empty state -->
           <tr v-if="isComponentExpanded(comp.component) && comp.features.length === 0">
-            <td colspan="8" class="px-8 py-6 text-sm text-gray-400 dark:text-gray-500 italic text-center">
+            <td colspan="9" class="px-8 py-6 text-sm text-gray-400 dark:text-gray-500 italic text-center">
               No features found for {{ comp.component }}
             </td>
           </tr>
@@ -324,7 +333,7 @@ defineExpose({ expandAll, collapseAll })
 
         <!-- No matching results for active filter -->
         <tr v-if="componentGroups.length === 0 && activeFilter">
-          <td colspan="8" class="px-8 py-10 text-sm text-gray-400 dark:text-gray-500 italic text-center">
+          <td colspan="9" class="px-8 py-10 text-sm text-gray-400 dark:text-gray-500 italic text-center">
             No {{ activeFilter }} features found.
           </td>
         </tr>
