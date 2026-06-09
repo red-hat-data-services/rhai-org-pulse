@@ -11,7 +11,8 @@ const props = defineProps({
   canEdit: { type: Boolean, default: false },
   jiraBaseUrl: { type: String, default: '' },
   isAdded: { type: Boolean, default: false },
-  showChanges: { type: Boolean, default: true }
+  showChanges: { type: Boolean, default: true },
+  releasePhaseMode: { type: String, default: 'unknown' }
 })
 
 const emit = defineEmits(['toggle', 'setOverride', 'removeOverride'])
@@ -73,6 +74,20 @@ function handleToggle() {
   emit('toggle', props.feature.key)
 }
 
+var isPlanningMode = computed(function() {
+  return props.releasePhaseMode === 'planning'
+})
+
+var planningChecksPct = computed(function() {
+  var pc = props.feature.planningChecks
+  if (!pc || !pc.totalCount) return 0
+  return Math.round((pc.passedCount / pc.totalCount) * 100)
+})
+
+var expandedColspan = computed(function() {
+  return isPlanningMode.value ? 12 : 11
+})
+
 var flagSeverityClass = {
   high: 'bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 border-red-200 dark:border-red-500/30',
   medium: 'bg-yellow-50 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-500/30'
@@ -87,7 +102,15 @@ var flagSeverityClass = {
     @click="handleToggle"
   >
     <!-- Expand toggle -->
-    <td class="px-2 py-2 border border-gray-300 dark:border-gray-600 w-8 text-center">
+    <td
+      class="px-2 py-2 border border-gray-300 dark:border-gray-600 w-8 text-center"
+      role="button"
+      tabindex="0"
+      :aria-expanded="expanded"
+      :aria-label="'Expand details for ' + feature.key"
+      @keydown.enter.prevent="handleToggle"
+      @keydown.space.prevent="handleToggle"
+    >
       <svg
         class="w-3.5 h-3.5 text-gray-400 transition-transform inline-block"
         :class="expanded ? 'rotate-90' : ''"
@@ -128,6 +151,32 @@ var flagSeverityClass = {
     <!-- Status -->
     <td class="px-3 py-2 border border-gray-300 dark:border-gray-600">
       <StatusBadge :status="feature.status" />
+    </td>
+    <!-- Planning Checks (planning mode only) -->
+    <td v-if="isPlanningMode" class="px-3 py-2 border border-gray-300 dark:border-gray-600">
+      <template v-if="feature.planningChecks">
+        <div class="flex items-center gap-1.5">
+          <span class="text-xs font-semibold" :class="feature.planningChecks.hasHardBlockers ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'">
+            {{ feature.planningChecks.passedCount }}/{{ feature.planningChecks.totalCount }}
+          </span>
+          <div class="w-16 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div
+              class="h-full rounded-full transition-all"
+              :class="feature.planningChecks.hasHardBlockers ? 'bg-red-500' : 'bg-green-500'"
+              :style="{ width: planningChecksPct + '%' }"
+              role="progressbar"
+              :aria-valuenow="feature.planningChecks.passedCount"
+              :aria-valuemin="0"
+              :aria-valuemax="feature.planningChecks.totalCount"
+              :aria-label="'Planning checks for ' + feature.key"
+            />
+          </div>
+          <span v-if="feature.planningChecks.hasHardBlockers" class="inline-block px-1 py-0.5 rounded text-[9px] font-semibold bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400">
+            {{ feature.planningChecks.hardBlockersFailed.length }}
+          </span>
+        </div>
+      </template>
+      <span v-else class="text-gray-400 dark:text-gray-600 text-xs">--</span>
     </td>
     <!-- Health (Risk + Planning Status) -->
     <td class="px-3 py-2 border border-gray-300 dark:border-gray-600">
@@ -196,7 +245,7 @@ var flagSeverityClass = {
 
   <!-- Expanded detail row -->
   <tr v-if="expanded">
-    <td colspan="11" class="border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 p-0">
+    <td :colspan="expandedColspan" class="border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 p-0">
       <div class="p-4 space-y-4">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <!-- Planning Gate Status -->
@@ -205,6 +254,7 @@ var flagSeverityClass = {
               :dor="feature.dor"
               :dod="feature.dod"
               :planningStatus="feature.planningStatus"
+              :planningChecks="feature.planningChecks"
             />
           </div>
 

@@ -50,8 +50,10 @@ jobs:
               - 'tests/integration/upstream-pulse.spec.js'
             releases:
               - 'modules/releases/server/execution/**'
+              - 'modules/releases/server/planning/**'
               - 'modules/releases/client/views/FeatureDetailView.vue'
               - 'modules/releases/client/execute/**'
+              - 'modules/releases/client/plan/**'
               - 'tests/integration/execution-data.spec.js'
               - 'tests/integration/releases.spec.js'
             tv-fv-delta:
@@ -109,7 +111,7 @@ jobs:
           check_module "upstream-pulse" \
             "^(modules/upstream-pulse/|tests/integration/upstream-pulse\.spec\.js)"
           check_module "releases" \
-            "^(modules/releases/server/execution/|modules/releases/client/views/FeatureDetailView\.vue|modules/releases/client/execute/|tests/integration/(execution-data|releases)\.spec\.js)"
+            "^(modules/releases/server/(execution|planning)/|modules/releases/client/views/FeatureDetailView\.vue|modules/releases/client/(execute|plan)/|tests/integration/(execution-data|releases)\.spec\.js)"
           check_module "tv-fv-delta" \
             "^(modules/releases/server/(tv-fv-delta/|index\.js)|modules/releases/client/views/TvFvDeltaView\.vue|modules/releases/client/composables/use.*(TvFv|ReleasePicker|ComponentBreakdown)\.js|modules/releases/client/components/(FeatureTable|ClickableCount)\.vue|tests/integration/tv-fv-delta\.spec\.js)"
 

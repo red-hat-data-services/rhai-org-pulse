@@ -119,7 +119,7 @@ describe('computeMilestoneInfo', function() {
 describe('buildEmptyCache', function() {
   it('returns correct structure with zero counts', function() {
     var cache = buildEmptyCache('3.5', ['some warning'])
-    expect(cache.healthCacheVersion).toBe(2)
+    expect(cache.healthCacheVersion).toBe(3)
     expect(cache.version).toBe('3.5')
     expect(cache.cachedAt).toBeDefined()
     expect(cache.milestones).toBeNull()
@@ -772,7 +772,7 @@ describe('runHealthPipeline', function() {
       { issueKey: 'T-1', summary: 'F1', status: 'In Progress', components: '', fixVersion: '', deliveryOwner: 'Jane', tier: 1 }
     ]))
     var result = await runHealthPipeline('3.5', storage.readFromStorage, storage.writeToStorage, vi.fn(), vi.fn())
-    expect(result.healthCacheVersion).toBe(2)
+    expect(result.healthCacheVersion).toBe(3)
     expect(result.version).toBe('3.5')
     expect(result.cachedAt).toBeDefined()
     expect(result.phase).toBe('all')

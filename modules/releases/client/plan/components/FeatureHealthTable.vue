@@ -8,7 +8,8 @@ const props = defineProps({
   jiraBaseUrl: { type: String, default: '' },
   addedKeys: { type: Set, default: () => new Set() },
   removedFeatures: { type: Array, default: () => [] },
-  showChanges: { type: Boolean, default: true }
+  showChanges: { type: Boolean, default: true },
+  releasePhaseMode: { type: String, default: 'unknown' }
 })
 
 const emit = defineEmits(['setOverride', 'removeOverride'])
@@ -19,11 +20,16 @@ var sortKey = ref('priority')
 var sortAsc = ref(false)
 var currentPage = ref(1)
 
-var columns = [
+var isPlanningMode = computed(function() {
+  return props.releasePhaseMode === 'planning'
+})
+
+var BASE_COLUMNS = [
   { key: 'expand', label: '', sortable: false },
   { key: 'key', label: 'Feature', sortable: true },
   { key: 'summary', label: 'Summary', sortable: true },
   { key: 'status', label: 'Status', sortable: true },
+  { key: 'planningChecks', label: 'Planning Checks', sortable: true, planningOnly: true },
   { key: 'health', label: 'Health', sortable: true },
   { key: 'priority', label: 'Priority', sortable: true },
   { key: 'rice', label: 'RICE', sortable: true },
@@ -32,6 +38,17 @@ var columns = [
   { key: 'fixVersions', label: 'Fix Version', sortable: true },
   { key: 'targetRelease', label: 'Target Release', sortable: true }
 ]
+
+var columns = computed(function() {
+  return BASE_COLUMNS.filter(function(col) {
+    if (col.planningOnly) return isPlanningMode.value
+    return true
+  })
+})
+
+var columnCount = computed(function() {
+  return columns.value.length
+})
 
 var RISK_ORDER = { red: 0, yellow: 1, green: 2 }
 
@@ -49,7 +66,12 @@ var sortedFeatures = computed(function() {
   list.sort(function(a, b) {
     var va, vb
 
-    if (key === 'key') {
+    if (key === 'planningChecks') {
+      var pcA = a.planningChecks
+      var pcB = b.planningChecks
+      va = pcA ? pcA.passedCount : -1
+      vb = pcB ? pcB.passedCount : -1
+    } else if (key === 'key') {
       va = a.key || ''
       vb = b.key || ''
     } else if (key === 'summary') {
@@ -172,6 +194,7 @@ function sortIndicator(key) {
               :jiraBaseUrl="jiraBaseUrl"
               :isAdded="addedKeys.has(feature.key)"
               :showChanges="showChanges"
+              :releasePhaseMode="releasePhaseMode"
               @toggle="toggleRow"
               @removeOverride="handleRemoveOverride"
             />
@@ -185,6 +208,7 @@ function sortIndicator(key) {
               </td>
               <td class="px-3 py-2 text-gray-500 dark:text-gray-400 max-w-[300px] border border-gray-300 dark:border-gray-600 text-xs line-through">{{ removed.summary }}</td>
               <td class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-xs text-gray-400">{{ removed.status || '-' }}</td>
+              <td v-if="isPlanningMode" class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-xs text-gray-400">-</td>
               <td class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-xs text-gray-400">-</td>
               <td class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-xs text-gray-400">-</td>
               <td class="px-3 py-2 border border-gray-300 dark:border-gray-600 text-xs text-gray-400">-</td>
@@ -195,7 +219,7 @@ function sortIndicator(key) {
             </tr>
           </template>
           <tr v-if="(!features || features.length === 0) && removedFeatures.length === 0">
-            <td colspan="11" class="px-3 py-8 text-center text-gray-500 border border-gray-300 dark:border-gray-600">
+            <td :colspan="columnCount" class="px-3 py-8 text-center text-gray-500 border border-gray-300 dark:border-gray-600">
               No features found matching the current filters.
             </td>
           </tr>

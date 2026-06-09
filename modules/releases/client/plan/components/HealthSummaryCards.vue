@@ -3,10 +3,40 @@ import { ref, computed } from 'vue'
 
 const props = defineProps({
   cardCounts: { type: Object, default: null },
-  planningDeadline: { type: Object, default: null }
+  planningDeadline: { type: Object, default: null },
+  releasePhaseMode: { type: String, default: 'unknown' },
+  planningReadiness: { type: Object, default: null }
 })
 
+var emit = defineEmits(['filterByCheck'])
+
 var showDetails = ref(false)
+var activeCard = ref('')
+
+var isPlanningMode = computed(function() {
+  return props.releasePhaseMode === 'planning' && props.planningReadiness != null
+})
+
+var planningCards = computed(function() {
+  var p = props.planningReadiness || {}
+  var byCheck = p.byCheck || {}
+  return [
+    { label: 'Planning Ready', count: p.fullyReady || 0, total: p.totalChecked || 0, color: 'green', filterKey: 'all-clear' },
+    { label: 'Hard Blockers', count: p.withHardBlockers || 0, total: p.totalChecked || 0, color: 'red', invert: true, filterKey: 'has-blockers' },
+    { label: 'RFE Linked', count: byCheck['DoR-P5'] || 0, total: p.totalChecked || 0, color: 'indigo', filterKey: 'missing-rfe' },
+    { label: 'Epics Created', count: byCheck['DoR-P4'] || 0, total: p.totalChecked || 0, color: 'blue', filterKey: 'missing-epics' }
+  ]
+})
+
+function handleCardClick(card) {
+  if (activeCard.value === card.filterKey) {
+    activeCard.value = ''
+    emit('filterByCheck', '')
+  } else {
+    activeCard.value = card.filterKey
+    emit('filterByCheck', card.filterKey)
+  }
+}
 
 var primaryCards = computed(function() {
   var c = props.cardCounts || { total: 0, dorPassed: 0, dodPassed: 0, stratSignedOff: 0, riceComplete: 0 }
@@ -86,76 +116,127 @@ var deadlineColorClass = computed(function() {
 </script>
 
 <template>
-  <div v-if="cardCounts" class="space-y-3">
-    <!-- Primary cards (Row 1) -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      <div
-        v-for="card in primaryCards"
-        :key="card.label"
-        class="p-4 rounded-lg border"
-        :class="[colorClasses[card.color].bg, colorClasses[card.color].border]"
-      >
-        <div class="text-sm font-semibold" :class="colorClasses[card.color].text">{{ card.label }}</div>
-        <div class="mt-2">
-          <span class="text-2xl font-bold" :class="colorClasses[card.color].text">{{ card.count }}</span>
-          <span class="text-sm ml-0.5" :class="colorClasses[card.color].subtext">/ {{ card.total }}</span>
-        </div>
-        <div class="text-xs mt-0.5" :class="colorClasses[card.color].subtext">{{ pct(card.count, card.total) }}%</div>
-        <div class="mt-2 w-full rounded-full h-1.5" :class="colorClasses[card.color].barBg">
-          <div
-            class="h-1.5 rounded-full transition-all"
-            :class="colorClasses[card.color].bar"
-            :style="{ width: Math.min(pct(card.count, card.total), 100) + '%' }"
-          ></div>
+  <div v-if="cardCounts || isPlanningMode" class="space-y-3">
+    <!-- Planning mode cards -->
+    <template v-if="isPlanningMode">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <button
+          v-for="card in planningCards"
+          :key="card.label"
+          type="button"
+          class="p-4 rounded-lg border text-left cursor-pointer transition-shadow"
+          :class="[
+            colorClasses[card.color].bg,
+            colorClasses[card.color].border,
+            activeCard === card.filterKey ? 'ring-2 ring-offset-1 ring-indigo-400 dark:ring-indigo-500 shadow-md' : 'hover:shadow-sm'
+          ]"
+          :aria-pressed="activeCard === card.filterKey"
+          @click="handleCardClick(card)"
+        >
+          <div class="text-sm font-semibold" :class="colorClasses[card.color].text">{{ card.label }}</div>
+          <div class="mt-2">
+            <span class="text-2xl font-bold" :class="colorClasses[card.color].text">{{ card.count }}</span>
+            <span class="text-sm ml-0.5" :class="colorClasses[card.color].subtext">/ {{ card.total }}</span>
+          </div>
+          <div class="text-xs mt-0.5" :class="colorClasses[card.color].subtext">{{ pct(card.count, card.total) }}%</div>
+          <div class="mt-2 w-full rounded-full h-1.5" :class="colorClasses[card.color].barBg">
+            <div
+              class="h-1.5 rounded-full transition-all"
+              :class="colorClasses[card.color].bar"
+              :style="{ width: Math.min(pct(card.count, card.total), 100) + '%' }"
+              role="progressbar"
+              :aria-valuenow="card.count"
+              :aria-valuemin="0"
+              :aria-valuemax="card.total"
+              :aria-label="card.label + ' progress'"
+            ></div>
+          </div>
+        </button>
+      </div>
+    </template>
+
+    <!-- Execution mode cards -->
+    <template v-else-if="cardCounts">
+      <!-- Primary cards (Row 1) -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div
+          v-for="card in primaryCards"
+          :key="card.label"
+          class="p-4 rounded-lg border"
+          :class="[colorClasses[card.color].bg, colorClasses[card.color].border]"
+        >
+          <div class="text-sm font-semibold" :class="colorClasses[card.color].text">{{ card.label }}</div>
+          <div class="mt-2">
+            <span class="text-2xl font-bold" :class="colorClasses[card.color].text">{{ card.count }}</span>
+            <span class="text-sm ml-0.5" :class="colorClasses[card.color].subtext">/ {{ card.total }}</span>
+          </div>
+          <div class="text-xs mt-0.5" :class="colorClasses[card.color].subtext">{{ pct(card.count, card.total) }}%</div>
+          <div class="mt-2 w-full rounded-full h-1.5" :class="colorClasses[card.color].barBg">
+            <div
+              class="h-1.5 rounded-full transition-all"
+              :class="colorClasses[card.color].bar"
+              :style="{ width: Math.min(pct(card.count, card.total), 100) + '%' }"
+              role="progressbar"
+              :aria-valuenow="card.count"
+              :aria-valuemin="0"
+              :aria-valuemax="card.total"
+              :aria-label="card.label + ' progress'"
+            ></div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Detail toggle -->
-    <button
-      @click="showDetails = !showDetails"
-      class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1"
-    >
-      <svg
-        class="w-3.5 h-3.5 transition-transform"
-        :class="showDetails ? 'rotate-90' : ''"
-        fill="none" stroke="currentColor" viewBox="0 0 24 24"
+      <!-- Detail toggle -->
+      <button
+        @click="showDetails = !showDetails"
+        class="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 flex items-center gap-1"
       >
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-      </svg>
-      {{ showDetails ? 'Hide' : 'Show' }} details
-    </button>
+        <svg
+          class="w-3.5 h-3.5 transition-transform"
+          :class="showDetails ? 'rotate-90' : ''"
+          fill="none" stroke="currentColor" viewBox="0 0 24 24"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+        {{ showDetails ? 'Hide' : 'Show' }} details
+      </button>
 
-    <!-- Detail cards (Row 2) -->
-    <div v-if="showDetails" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      <div
-        v-for="card in detailCards"
-        :key="card.label"
-        class="p-4 rounded-lg border"
-        :class="[colorClasses[card.color].bg, colorClasses[card.color].border]"
-      >
-        <div class="text-sm font-semibold" :class="colorClasses[card.color].text">{{ card.label }}</div>
-        <div class="mt-2">
-          <span class="text-2xl font-bold" :class="colorClasses[card.color].text">{{ card.count }}</span>
-          <span v-if="!card.invert" class="text-sm ml-0.5" :class="colorClasses[card.color].subtext">/ {{ card.total }}</span>
-        </div>
-        <div v-if="!card.invert" class="text-xs mt-0.5" :class="colorClasses[card.color].subtext">{{ pct(card.count, card.total) }}%</div>
-        <div v-if="!card.invert" class="mt-2 w-full rounded-full h-1.5" :class="colorClasses[card.color].barBg">
-          <div
-            class="h-1.5 rounded-full transition-all"
-            :class="colorClasses[card.color].bar"
-            :style="{ width: Math.min(pct(card.count, card.total), 100) + '%' }"
-          ></div>
+      <!-- Detail cards (Row 2) -->
+      <div v-if="showDetails" class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div
+          v-for="card in detailCards"
+          :key="card.label"
+          class="p-4 rounded-lg border"
+          :class="[colorClasses[card.color].bg, colorClasses[card.color].border]"
+        >
+          <div class="text-sm font-semibold" :class="colorClasses[card.color].text">{{ card.label }}</div>
+          <div class="mt-2">
+            <span class="text-2xl font-bold" :class="colorClasses[card.color].text">{{ card.count }}</span>
+            <span v-if="!card.invert" class="text-sm ml-0.5" :class="colorClasses[card.color].subtext">/ {{ card.total }}</span>
+          </div>
+          <div v-if="!card.invert" class="text-xs mt-0.5" :class="colorClasses[card.color].subtext">{{ pct(card.count, card.total) }}%</div>
+          <div v-if="!card.invert" class="mt-2 w-full rounded-full h-1.5" :class="colorClasses[card.color].barBg">
+            <div
+              class="h-1.5 rounded-full transition-all"
+              :class="colorClasses[card.color].bar"
+              :style="{ width: Math.min(pct(card.count, card.total), 100) + '%' }"
+              role="progressbar"
+              :aria-valuenow="card.count"
+              :aria-valuemin="0"
+              :aria-valuemax="card.total"
+              :aria-label="card.label + ' progress'"
+            ></div>
+          </div>
         </div>
       </div>
-    </div>
+    </template>
 
     <!-- Planning deadline indicator -->
     <div v-if="planningDeadline" class="p-3 rounded-lg border flex items-center gap-3" :class="deadlineColorClass">
       <span class="text-sm font-semibold">Planning Deadline</span>
       <span class="text-sm">
-        <span class="font-bold">{{ planningDeadline.daysRemaining }}</span>
-        {{ planningDeadline.daysRemaining === 1 ? 'day' : 'days' }} {{ planningDeadline.daysRemaining >= 0 ? 'remaining' : 'overdue' }}
+        <span class="font-bold">{{ Math.abs(planningDeadline.daysRemaining) }}</span>
+        {{ Math.abs(planningDeadline.daysRemaining) === 1 ? 'day' : 'days' }} {{ planningDeadline.daysRemaining >= 0 ? 'remaining' : 'overdue' }}
       </span>
       <span class="text-xs opacity-70">{{ planningDeadline.date }}</span>
     </div>

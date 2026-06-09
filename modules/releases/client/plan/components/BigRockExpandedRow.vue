@@ -1,16 +1,34 @@
 <script setup>
+import { computed } from 'vue'
 
-defineProps({
+var props = defineProps({
   features: { type: Array, default: () => [] },
   colspan: { type: Number, default: 7 },
   loading: { type: Boolean, default: false },
-  rockName: { type: String, default: '' }
+  rockName: { type: String, default: '' },
+  releasePhaseMode: { type: String, default: 'unknown' }
+})
+
+var isPlanningMode = computed(function() {
+  return props.releasePhaseMode === 'planning'
 })
 
 var DOT_CLASS = {
   green: 'bg-green-500',
   yellow: 'bg-yellow-500',
   red: 'bg-red-500'
+}
+
+var PLANNING_STATUS_LABELS = {
+  'not-ready': 'Not Ready',
+  'in-planning': 'In Planning',
+  'ready-for-execution': 'Ready'
+}
+
+var PLANNING_STATUS_CLASSES = {
+  'not-ready': 'bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400',
+  'in-planning': 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-700 dark:text-yellow-400',
+  'ready-for-execution': 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400'
 }
 
 function truncate(text, max) {
@@ -43,6 +61,7 @@ function truncate(text, max) {
           <tr>
             <th class="px-2 py-1 text-left text-gray-600 dark:text-gray-400 font-semibold">Feature</th>
             <th class="px-2 py-1 text-left text-gray-600 dark:text-gray-400 font-semibold">Summary</th>
+            <th v-if="isPlanningMode" class="px-2 py-1 text-left text-gray-600 dark:text-gray-400 font-semibold">Planning Status</th>
             <th class="px-2 py-1 text-left text-gray-600 dark:text-gray-400 font-semibold">Risk Flags</th>
             <th class="px-2 py-1 text-left text-gray-600 dark:text-gray-400 font-semibold">Owner</th>
           </tr>
@@ -75,6 +94,16 @@ function truncate(text, max) {
             </td>
             <td class="px-2 py-1.5 text-gray-700 dark:text-gray-300 max-w-[250px]">
               <span :title="f.summary">{{ truncate(f.summary, 60) }}</span>
+            </td>
+            <td v-if="isPlanningMode" class="px-2 py-1.5">
+              <span
+                v-if="f.planningStatus"
+                class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold"
+                :class="PLANNING_STATUS_CLASSES[f.planningStatus] || ''"
+              >{{ PLANNING_STATUS_LABELS[f.planningStatus] || f.planningStatus }}</span>
+              <span v-if="f.planningChecks" class="ml-1 text-[10px] text-gray-500 dark:text-gray-400">
+                {{ f.planningChecks.passedCount }}/{{ f.planningChecks.totalCount }}
+              </span>
             </td>
             <td class="px-2 py-1.5 text-gray-600 dark:text-gray-400">
               {{ f.flagCategories && f.flagCategories.length > 0 ? f.flagCategories.join(', ') : '--' }}

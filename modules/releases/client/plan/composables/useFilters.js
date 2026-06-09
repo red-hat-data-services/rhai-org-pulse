@@ -14,7 +14,7 @@ export function useFilters(features, rfes, bigRocks) {
       const matchesSearch =
         (item.issueKey && item.issueKey.toLowerCase().includes(q)) ||
         (item.summary && item.summary.toLowerCase().includes(q)) ||
-        (item.components && item.components.toLowerCase().includes(q)) ||
+        (item.components && (Array.isArray(item.components) ? item.components.join(', ') : item.components).toLowerCase().includes(q)) ||
         (item.pm && item.pm.toLowerCase().includes(q)) ||
         (item.deliveryOwner && item.deliveryOwner.toLowerCase().includes(q))
       if (!matchesSearch) return false
@@ -25,7 +25,7 @@ export function useFilters(features, rfes, bigRocks) {
 
     if (selectedTeams.value.length > 0) {
       const itemComponents = item.components
-        ? item.components.split(', ').map(function(c) { return c.trim() })
+        ? (Array.isArray(item.components) ? item.components : item.components.split(', ').map(function(c) { return c.trim() }))
         : []
       const hasMatch = selectedTeams.value.some(function(team) {
         return itemComponents.includes(team)

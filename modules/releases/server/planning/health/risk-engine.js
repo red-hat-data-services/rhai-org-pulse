@@ -166,6 +166,18 @@ function computeFeatureRisk(feature, milestones, enrichment, opts) {
     })
   }
 
+  // 4. Planning Incomplete Risk (only in planning mode when enabled)
+  if (options.releasePhaseMode === 'planning' && options.enablePlanningChecks
+      && options.planningChecks && options.planningChecks.hasHardBlockers) {
+    flags.push({
+      category: RISK_CATEGORIES.PLANNING_INCOMPLETE,
+      severity: 'high',
+      message: 'Feature has unresolved planning hard blockers: '
+        + options.planningChecks.hardBlockersFailed
+            .map(function(c) { return c.label }).join(', ')
+    })
+  }
+
   // Composite risk level: high → red, medium → yellow, low alone → green
   var risk = 'green'
   if (flags.some(function(f) { return f.severity === 'high' })) {

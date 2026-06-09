@@ -64,8 +64,11 @@ const demoMode = computed(() => candidates.value ? candidates.value.demoMode : f
 
 const {
   rockHealth,
-  rockFeatures
+  rockFeatures,
+  planningReadiness,
+  releasePhaseMode
 } = useHealthAggregation(healthData, features, rfes, bigRocks)
+const healthMilestones = computed(() => healthData.value ? healthData.value.milestones : null)
 const warning = computed(() => candidates.value ? candidates.value.warning : null)
 const pipelineWarnings = computed(() => candidates.value ? candidates.value.pipelineWarnings || [] : [])
 const canEdit = computed(() => !demoMode.value && permissions.value && permissions.value.canEdit)
@@ -439,6 +442,42 @@ onMounted(async function() {
         </div>
       </div>
 
+      <!-- Planning readiness banner (inline, not via SummaryCards.vue) -->
+      <div v-if="releasePhaseMode === 'planning' && planningReadiness" class="bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/30 border-l-4 border-l-indigo-500 dark:border-l-indigo-400 rounded-lg px-4 py-3">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div>
+            <div class="flex items-center gap-2 text-sm font-semibold text-indigo-700 dark:text-indigo-400">
+              <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+              </svg>
+              Planning Phase
+              <span v-if="healthMilestones && healthMilestones.gaFreeze" class="font-normal text-indigo-600/70 dark:text-indigo-400/70">
+                &mdash; GA Code Freeze: {{ healthMilestones.gaFreeze }}
+              </span>
+            </div>
+            <div class="text-xs text-indigo-600/70 dark:text-indigo-400/70 mt-0.5 ml-6">
+              {{ planningReadiness.totalChecked }} features checked
+            </div>
+          </div>
+          <div class="flex items-center gap-4 text-sm">
+            <div class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+              <span class="text-gray-700 dark:text-gray-300 font-medium">{{ planningReadiness.fullyReady }}</span>
+              <span class="text-gray-500 dark:text-gray-400 text-xs">ready</span>
+            </div>
+            <div v-if="planningReadiness.withHardBlockers > 0" class="flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+              <span class="text-gray-700 dark:text-gray-300 font-medium">{{ planningReadiness.withHardBlockers }}</span>
+              <span class="text-gray-500 dark:text-gray-400 text-xs">blockers</span>
+            </div>
+            <a
+              href="#/releases/health"
+              class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline ml-2"
+            >View details &rarr;</a>
+          </div>
+        </div>
+      </div>
+
       <!-- Tab content -->
       <div v-if="activeTab === 'big-rocks'" id="panel-big-rocks" role="tabpanel" aria-labelledby="tab-big-rocks">
         <BigRocksTable
@@ -449,6 +488,7 @@ onMounted(async function() {
           :rockFeatures="rockFeatures"
           :loading="loading"
           :healthLoading="healthLoading"
+          :releasePhaseMode="releasePhaseMode"
           @editRock="handleEditRock"
           @addRock="handleAddRock"
           @deleteRock="handleDeleteRock"

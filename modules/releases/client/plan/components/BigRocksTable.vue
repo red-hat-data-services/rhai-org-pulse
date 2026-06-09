@@ -10,7 +10,8 @@ const props = defineProps({
   rockHealth: { type: Object, default: () => ({}) },
   rockFeatures: { type: Object, default: () => ({}) },
   loading: { type: Boolean, default: false },
-  healthLoading: { type: Boolean, default: false }
+  healthLoading: { type: Boolean, default: false },
+  releasePhaseMode: { type: String, default: 'unknown' }
 })
 
 const hasHealth = computed(function() {
@@ -178,7 +179,7 @@ function handleDeleteClick(event, rock) {
                   &#x2807;
                 </span>
               </td>
-              <BigRockRow :rock="rock" :jiraBaseUrl="jiraBaseUrl" :health="rockHealth[rock.name]" :hasHealth="hasHealth" :rockFeatures="rockFeatures[rock.name] || []" :canEdit="true" :expanded="isExpanded(rock.name)" @toggle-expand="toggleExpand(rock.name)" />
+              <BigRockRow :rock="rock" :jiraBaseUrl="jiraBaseUrl" :health="rockHealth[rock.name]" :hasHealth="hasHealth" :rockFeatures="rockFeatures[rock.name] || []" :canEdit="true" :expanded="isExpanded(rock.name)" :releasePhaseMode="releasePhaseMode" @toggle-expand="toggleExpand(rock.name)" />
               <td class="px-2 py-2 text-center border border-gray-300 dark:border-gray-600">
                 <div class="flex items-center justify-center gap-1">
                   <button
@@ -208,6 +209,7 @@ function handleDeleteClick(event, rock) {
                 :colspan="hasHealth ? 9 : 8"
                 :loading="healthLoading"
                 :rockName="rock.name"
+                :releasePhaseMode="releasePhaseMode"
               />
             </tr>
           </template>
@@ -239,6 +241,7 @@ function handleDeleteClick(event, rock) {
                   :rockFeatures="rockFeatures[rock.name] || []"
                   :canEdit="false"
                   :expanded="isExpanded(rock.name)"
+                  :releasePhaseMode="releasePhaseMode"
                   @toggle-expand="toggleExpand(rock.name)"
                 />
               </tr>
@@ -248,6 +251,7 @@ function handleDeleteClick(event, rock) {
                   :colspan="hasHealth ? 7 : 6"
                   :loading="healthLoading"
                   :rockName="rock.name"
+                  :releasePhaseMode="releasePhaseMode"
                 />
               </tr>
             </template>

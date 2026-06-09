@@ -71,12 +71,30 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
   })
 
   /**
+   * Planning readiness data from the health API summary.
+   * Null when not in planning mode or enablePlanningChecks is off.
+   */
+  var planningReadiness = computed(function() {
+    if (!healthData.value || !healthData.value.summary) return null
+    return healthData.value.summary.planningReadiness || null
+  })
+
+  /**
+   * Release phase mode from the health API response.
+   * 'planning' = before GA freeze, 'execution' = at/past GA freeze, 'unknown' = cannot determine.
+   */
+  var releasePhaseMode = computed(function() {
+    return healthData.value ? healthData.value.releasePhaseMode || 'unknown' : 'unknown'
+  })
+
+  /**
    * Per-big-rock aggregated health: worst risk level, total flags, feature count.
-   * Respects risk overrides.
+   * Respects risk overrides. In planning mode, also aggregates planning check data.
    */
   var rockHealth = computed(function() {
     if (Object.keys(healthByKey.value).length === 0) return {}
     var result = {}
+    var isPlanningMode = releasePhaseMode.value === 'planning'
     for (var i = 0; i < features.value.length; i++) {
       var f = features.value[i]
       var rockName = f.bigRock
@@ -85,7 +103,7 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
       if (!h || !h.risk) continue
 
       if (!result[rockName]) {
-        result[rockName] = { worstLevel: 'green', totalFlags: 0, featureCount: 0, dorPassedCount: 0, dodPassedCount: 0 }
+        result[rockName] = { worstLevel: 'green', totalFlags: 0, featureCount: 0, dorPassedCount: 0, dodPassedCount: 0, planningReady: 0, planningTotal: 0, planningBlockers: 0 }
       }
       result[rockName].featureCount++
       result[rockName].totalFlags += (h.risk.score || 0)
@@ -94,6 +112,15 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
       var level = effectiveLevel(h)
       if (isWorse(level, result[rockName].worstLevel)) {
         result[rockName].worstLevel = level
+      }
+      // Planning mode aggregation
+      if (isPlanningMode && h.planningChecks) {
+        result[rockName].planningTotal++
+        if (!h.planningChecks.hasHardBlockers) {
+          result[rockName].planningReady++
+        } else {
+          result[rockName].planningBlockers++
+        }
       }
     }
     return result
@@ -160,6 +187,8 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
     rockHealth: rockHealth,
     rockFeatures: rockFeatures,
     healthSummary: healthSummary,
-    tier1HealthSummary: tier1HealthSummary
+    tier1HealthSummary: tier1HealthSummary,
+    planningReadiness: planningReadiness,
+    releasePhaseMode: releasePhaseMode
   }
 }

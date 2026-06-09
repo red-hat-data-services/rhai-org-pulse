@@ -1,13 +1,14 @@
 {
   "cachedAt": "2026-04-25T14:30:00.000Z",
   "version": "3.5",
+  "releasePhaseMode": "planning",
   "milestones": {
     "ea1Freeze": "2026-05-01",
     "ea1Target": "2026-05-15",
     "ea2Freeze": "2026-06-15",
     "ea2Target": "2026-07-01",
-    "gaFreeze": "2026-08-01",
-    "gaTarget": "2026-08-15"
+    "gaFreeze": "2099-12-31",
+    "gaTarget": "2099-12-31"
   },
   "phase": "all",
   "summary": {
@@ -25,6 +26,19 @@
     "planningDeadline": {
       "date": "2026-04-24",
       "daysRemaining": -2
+    },
+    "planningReadiness": {
+      "totalChecked": 12,
+      "fullyReady": 8,
+      "withHardBlockers": 4,
+      "withWarnings": 0,
+      "byCheck": {
+        "DoR-P1": 10,
+        "DoR-P2": 11,
+        "DoR-P3": 12,
+        "DoR-P4": 9,
+        "DoR-P5": 10
+      }
     },
     "byPlanningStatus": {
       "not-ready": 0,
@@ -114,6 +128,19 @@
       },
       "rice": {
         "score": 675
+      },
+      "planningChecks": {
+        "checks": [
+          { "id": "DoR-P1", "label": "Components Set", "passed": true, "severity": "hard-blocker", "detail": "Model Serving" },
+          { "id": "DoR-P2", "label": "Product Manager Assigned", "passed": true, "severity": "hard-blocker", "detail": "Sarah Chen" },
+          { "id": "DoR-P3", "label": "Release Type Set", "passed": true, "severity": "hard-blocker", "detail": "GA" },
+          { "id": "DoR-P4", "label": "Child Epics Created", "passed": true, "severity": "hard-blocker", "detail": "4 epic(s)" },
+          { "id": "DoR-P5", "label": "RFE Linked", "passed": true, "severity": "hard-blocker", "detail": "RHAISTRAT-100" }
+        ],
+        "passedCount": 5,
+        "totalCount": 5,
+        "hasHardBlockers": false,
+        "hardBlockersFailed": []
       },
       "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1001",
       "dod": {
@@ -630,6 +657,22 @@
       "rice": {
         "score": 450
       },
+      "planningChecks": {
+        "checks": [
+          { "id": "DoR-P1", "label": "Components Set", "passed": true, "severity": "hard-blocker", "detail": "Operator" },
+          { "id": "DoR-P2", "label": "Product Manager Assigned", "passed": true, "severity": "hard-blocker", "detail": "Tom Wilson" },
+          { "id": "DoR-P3", "label": "Release Type Set", "passed": true, "severity": "hard-blocker", "detail": "GA" },
+          { "id": "DoR-P4", "label": "Child Epics Created", "passed": false, "severity": "hard-blocker", "detail": "No child epics linked" },
+          { "id": "DoR-P5", "label": "RFE Linked", "passed": false, "severity": "hard-blocker", "detail": "No source RFE linked" }
+        ],
+        "passedCount": 3,
+        "totalCount": 5,
+        "hasHardBlockers": true,
+        "hardBlockersFailed": [
+          { "id": "DoR-P4", "label": "Child Epics Created", "passed": false, "severity": "hard-blocker", "detail": "No child epics linked" },
+          { "id": "DoR-P5", "label": "RFE Linked", "passed": false, "severity": "hard-blocker", "detail": "No source RFE linked" }
+        ]
+      },
       "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1006",
       "dod": {
         "gate": "dod",
@@ -741,6 +784,24 @@
         ]
       },
       "rice": null,
+      "planningChecks": {
+        "checks": [
+          { "id": "DoR-P1", "label": "Components Set", "passed": false, "severity": "hard-blocker", "detail": "No components assigned" },
+          { "id": "DoR-P2", "label": "Product Manager Assigned", "passed": false, "severity": "hard-blocker", "detail": null },
+          { "id": "DoR-P3", "label": "Release Type Set", "passed": true, "severity": "hard-blocker", "detail": "TP" },
+          { "id": "DoR-P4", "label": "Child Epics Created", "passed": false, "severity": "hard-blocker", "detail": "No child epics linked" },
+          { "id": "DoR-P5", "label": "RFE Linked", "passed": false, "severity": "hard-blocker", "detail": "No source RFE linked" }
+        ],
+        "passedCount": 1,
+        "totalCount": 5,
+        "hasHardBlockers": true,
+        "hardBlockersFailed": [
+          { "id": "DoR-P1", "label": "Components Set", "passed": false, "severity": "hard-blocker", "detail": "No components assigned" },
+          { "id": "DoR-P2", "label": "Product Manager Assigned", "passed": false, "severity": "hard-blocker", "detail": null },
+          { "id": "DoR-P4", "label": "Child Epics Created", "passed": false, "severity": "hard-blocker", "detail": "No child epics linked" },
+          { "id": "DoR-P5", "label": "RFE Linked", "passed": false, "severity": "hard-blocker", "detail": "No source RFE linked" }
+        ]
+      },
       "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1007",
       "dod": {
         "gate": "dod",
@@ -1301,5 +1362,5 @@
     "riceAvailable": true,
     "warnings": []
   },
-  "healthCacheVersion": 2
+  "healthCacheVersion": 3
 }
