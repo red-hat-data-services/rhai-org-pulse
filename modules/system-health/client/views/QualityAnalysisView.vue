@@ -158,7 +158,7 @@ watch(
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
                 <span
-                  v-if="row.score"
+                  v-if="row.score !== ''"
                   class="font-medium"
                   :class="scoreClass(row.score)"
                 >
