@@ -129,7 +129,12 @@ function collectFilterMeta(feature, allComponents, allPriorities, allBigRocks, a
     }
   }
   if (feature.priority) allPriorities.add(feature.priority)
-  if (feature.bigRock) allBigRocks.add(feature.bigRock)
+  if (feature.bigRock) {
+    var rockParts = feature.bigRock.split(', ')
+    for (var rpi = 0; rpi < rockParts.length; rpi++) {
+      allBigRocks.add(rockParts[rpi])
+    }
+  }
   for (var tvi = 0; tvi < feature.targetVersions.length; tvi++) {
     allTargetVersions.add(feature.targetVersions[tvi])
   }
@@ -493,4 +498,4 @@ function buildFeatureReadiness(readFromStorage) {
   return { pendingReview: pendingReview, ready: ready, filterMeta: filterMeta, meta: meta }
 }
 
-module.exports = { buildFeatureReadiness: buildFeatureReadiness, computeBlockers: computeBlockers, computeBestAvailableScore: computeBestAvailableScore, isHealthFeatureReady: isHealthFeatureReady, computeTierScore: computeTierScore, computeTargetVersionScore: computeTargetVersionScore, hasBlockingViolations: hasBlockingViolations, computeConfidence: computeConfidence, BLOCKING_HYGIENE_RULES: BLOCKING_HYGIENE_RULES }
+module.exports = { buildFeatureReadiness: buildFeatureReadiness, computeBlockers: computeBlockers, computeBestAvailableScore: computeBestAvailableScore, isHealthFeatureReady: isHealthFeatureReady, computeTierScore: computeTierScore, computeTargetVersionScore: computeTargetVersionScore, hasBlockingViolations: hasBlockingViolations, computeConfidence: computeConfidence, collectFilterMeta: collectFilterMeta, BLOCKING_HYGIENE_RULES: BLOCKING_HYGIENE_RULES }

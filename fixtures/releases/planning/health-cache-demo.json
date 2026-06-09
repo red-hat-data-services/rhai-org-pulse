@@ -12,7 +12,7 @@
   },
   "phase": "all",
   "summary": {
-    "totalFeatures": 12,
+    "totalFeatures": 13,
     "byRisk": {
       "green": 3,
       "yellow": 4,
@@ -1247,6 +1247,106 @@
       "planningStatus": "in-planning",
       "issueType": "Feature",
       "versionStatus": "none"
+    },
+    {
+      "key": "RHAISTRAT-2030",
+      "summary": "Shared outcome feature for multi-rock testing",
+      "status": "In Progress",
+      "priority": "Major",
+      "phase": "EA1",
+      "bigRock": "Rock Alpha, Rock Beta",
+      "tier": 1,
+      "pm": "Test PM",
+      "deliveryOwner": "Test Owner",
+      "components": [
+        "Platform"
+      ],
+      "completionPct": 50,
+      "epicCount": 2,
+      "issueCount": 10,
+      "blockerCount": 0,
+      "health": "",
+      "risk": {
+        "level": "yellow",
+        "score": 1,
+        "flags": [
+          {
+            "category": "DOR_INCOMPLETE",
+            "severity": "medium",
+            "message": "DoR completion at 60% (below 80% threshold)"
+          }
+        ],
+        "override": null
+      },
+      "dor": {
+        "gate": "dor",
+        "passed": true,
+        "blockers": [
+          {
+            "id": "DoR-B1",
+            "label": "Strategy Human Sign-off",
+            "passed": true,
+            "detail": "strat-creator-disabled"
+          },
+          {
+            "id": "DoR-B2",
+            "label": "RICE Score Present",
+            "passed": true,
+            "detail": "rice-disabled"
+          }
+        ],
+        "warnings": [
+          {
+            "id": "DoR-W1",
+            "label": "Owner Assigned",
+            "passed": true,
+            "detail": "Test Owner"
+          },
+          {
+            "id": "DoR-W2",
+            "label": "Version Set",
+            "passed": true,
+            "detail": "committed"
+          },
+          {
+            "id": "DoR-W3",
+            "label": "Blockers Resolved",
+            "passed": true,
+            "detail": null
+          }
+        ]
+      },
+      "rice": {
+        "score": 400
+      },
+      "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2030",
+      "dod": {
+        "gate": "dod",
+        "passed": true,
+        "checks": [
+          {
+            "id": "DoD-1",
+            "label": "Owner Assigned",
+            "passed": true,
+            "detail": "Test Owner"
+          },
+          {
+            "id": "DoD-2",
+            "label": "Fix Version Set",
+            "passed": true,
+            "detail": null
+          },
+          {
+            "id": "DoD-3",
+            "label": "Blockers Resolved",
+            "passed": true,
+            "detail": null
+          }
+        ]
+      },
+      "planningStatus": "in-planning",
+      "issueType": "Feature",
+      "versionStatus": "committed"
     },
     {
       "key": "RHAISTRAT-2016",

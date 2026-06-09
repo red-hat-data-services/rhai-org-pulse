@@ -31,7 +31,10 @@ const filters = ref({
 
 function matchesFilters(feature) {
   const f = filters.value
-  if (f.outcome.length && !f.outcome.includes(feature.bigRock)) return false
+  if (f.outcome.length) {
+    var featureRocks = feature.bigRock ? feature.bigRock.split(', ') : []
+    if (!featureRocks.some(function(r) { return f.outcome.includes(r) })) return false
+  }
   if (f.targetVersion.length && !(feature.targetVersions || []).some(function(tv) { return f.targetVersion.includes(tv) })) return false
   if (f.fixVersion.length && !f.fixVersion.includes(feature.fixVersion)) return false
   if (f.component.length && !(feature.components || []).some(function(c) { return f.component.includes(c) })) return false
@@ -60,7 +63,10 @@ const filteredFeatures = computed(() => {
 const readyCounts = computed(() => {
   var all = pendingReview.value.concat(ready.value).filter(function(f) {
     const fv = filters.value
-    if (fv.outcome.length && !fv.outcome.includes(f.bigRock)) return false
+    if (fv.outcome.length) {
+      var countRocks = f.bigRock ? f.bigRock.split(', ') : []
+      if (!countRocks.some(function(r) { return fv.outcome.includes(r) })) return false
+    }
     if (fv.targetVersion.length && !(f.targetVersions || []).some(function(tv) { return fv.targetVersion.includes(tv) })) return false
     if (fv.fixVersion.length && !fv.fixVersion.includes(f.fixVersion)) return false
     if (fv.component.length && !(f.components || []).some(function(c) { return fv.component.includes(c) })) return false

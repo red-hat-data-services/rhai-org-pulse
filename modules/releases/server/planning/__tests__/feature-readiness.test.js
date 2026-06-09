@@ -8,7 +8,8 @@ const {
   computeTierScore,
   computeTargetVersionScore,
   hasBlockingViolations,
-  computeConfidence
+  computeConfidence,
+  collectFilterMeta
 } = require('../feature-readiness')
 
 // ---------------------------------------------------------------------------
@@ -1454,7 +1455,6 @@ describe('buildFeatureReadiness', function() {
     })
   })
 
-
   describe('hygiene alias lookup', function() {
     it('finds hygiene cache via registry displayName when config key differs', function() {
       var store = makeFeaturesStore({
@@ -1631,4 +1631,55 @@ describe('buildFeatureReadiness', function() {
       expect(result.ready).toHaveLength(1)
     })
   })
+
+  describe('collectFilterMeta', function() {
+    it('splits merged bigRock into separate Set entries', function() {
+      var allComponents = []
+      var allPriorities = new Set()
+      var allBigRocks = new Set()
+      var allTargetVersions = new Set()
+      var allFixVersions = new Set()
+      var allTeams = new Set()
+
+      var feature = {
+        bigRock: 'Rock A, Rock B',
+        priority: 'Major',
+        components: ['Platform'],
+        targetVersions: ['3.6'],
+        fixVersion: '',
+        team: ''
+      }
+
+      collectFilterMeta(feature, allComponents, allPriorities, allBigRocks, allTargetVersions, allFixVersions, allTeams)
+
+      expect(allBigRocks.has('Rock A')).toBe(true)
+      expect(allBigRocks.has('Rock B')).toBe(true)
+      expect(allBigRocks.has('Rock A, Rock B')).toBe(false)
+      expect(allBigRocks.size).toBe(2)
+    })
+
+    it('adds single bigRock as one entry', function() {
+      var allBigRocks = new Set()
+
+      collectFilterMeta(
+        { bigRock: 'Rock A', priority: null, components: [], targetVersions: [], fixVersion: '', team: '' },
+        [], new Set(), allBigRocks, new Set(), new Set(), new Set()
+      )
+
+      expect(allBigRocks.has('Rock A')).toBe(true)
+      expect(allBigRocks.size).toBe(1)
+    })
+
+    it('skips empty bigRock', function() {
+      var allBigRocks = new Set()
+
+      collectFilterMeta(
+        { bigRock: '', priority: null, components: [], targetVersions: [], fixVersion: '', team: '' },
+        [], new Set(), allBigRocks, new Set(), new Set(), new Set()
+      )
+
+      expect(allBigRocks.size).toBe(0)
+    })
+  })
+
 })

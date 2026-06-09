@@ -197,8 +197,12 @@ function phaseFeatureCount(tabId) {
 var bigRockOptions = computed(function() {
   var rocks = {}
   for (var i = 0; i < features.value.length; i++) {
-    var rock = features.value[i].bigRock
-    if (rock) rocks[rock] = true
+    var raw = features.value[i].bigRock
+    if (!raw) continue
+    var parts = raw.split(', ')
+    for (var j = 0; j < parts.length; j++) {
+      rocks[parts[j]] = true
+    }
   }
   return Object.keys(rocks).sort()
 })
@@ -227,7 +231,10 @@ var filteredFeatures = computed(function() {
 
   return list.filter(function(f) {
     // Big Rock filter
-    if (bigRockFilter.value && f.bigRock !== bigRockFilter.value) return false
+    if (bigRockFilter.value) {
+      var fRocks = f.bigRock ? f.bigRock.split(', ') : []
+      if (!fRocks.includes(bigRockFilter.value)) return false
+    }
 
     // Component filter (multi-select with comma split)
     if (selectedComponents.value.length > 0) {

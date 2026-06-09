@@ -187,6 +187,49 @@ describe('useHealthAggregation', function() {
       var result = useHealthAggregation(ref(null), ref([]), ref([]), ref([]))
       expect(result.rockHealth.value).toEqual({})
     })
+
+    it('splits merged bigRock names into separate entries', function() {
+      var hd = ref(makeHealthData([
+        makeHealthFeature('FEAT-1', 'yellow', [{ category: 'DOR_INCOMPLETE' }])
+      ]))
+      var features = ref([
+        makeFeature('FEAT-1', null, 'Rock A, Rock B')
+      ])
+
+      var result = useHealthAggregation(hd, features, ref([]), ref([]))
+      expect(result.rockHealth.value['Rock A']).toBeDefined()
+      expect(result.rockHealth.value['Rock B']).toBeDefined()
+      expect(result.rockHealth.value['Rock A, Rock B']).toBeUndefined()
+      expect(result.rockHealth.value['Rock A'].worstLevel).toBe('yellow')
+      expect(result.rockHealth.value['Rock B'].worstLevel).toBe('yellow')
+      expect(result.rockHealth.value['Rock A'].featureCount).toBe(1)
+      expect(result.rockHealth.value['Rock B'].featureCount).toBe(1)
+    })
+
+    it('worst-of aggregation works across split rocks', function() {
+      var hd = ref(makeHealthData([
+        makeHealthFeature('FEAT-1', 'red', [{ category: 'BLOCKED' }])
+      ]))
+      var features = ref([
+        makeFeature('FEAT-1', null, 'Rock A, Rock B')
+      ])
+
+      var result = useHealthAggregation(hd, features, ref([]), ref([]))
+      expect(result.rockHealth.value['Rock A'].worstLevel).toBe('red')
+      expect(result.rockHealth.value['Rock B'].worstLevel).toBe('red')
+    })
+
+    it('empty bigRock string is skipped', function() {
+      var hd = ref(makeHealthData([
+        makeHealthFeature('FEAT-1', 'red', [])
+      ]))
+      var features = ref([
+        makeFeature('FEAT-1', null, '')
+      ])
+
+      var result = useHealthAggregation(hd, features, ref([]), ref([]))
+      expect(Object.keys(result.rockHealth.value)).toEqual([])
+    })
   })
 
   describe('rockFeatures', function() {
@@ -279,6 +322,38 @@ describe('useHealthAggregation', function() {
       expect(unknown.jiraUrl).toBe('')
       expect(unknown.override).toBe(null)
       expect(unknown.status).toBe('')
+    })
+
+    it('splits merged bigRock names into separate entries', function() {
+      var hd = ref(makeHealthData([
+        makeHealthFeature('FEAT-1', 'yellow', [{ category: 'DOR_INCOMPLETE' }])
+      ]))
+      var features = ref([
+        makeFeature('FEAT-1', null, 'Rock A, Rock B')
+      ])
+
+      var result = useHealthAggregation(hd, features, ref([]), ref([]))
+      expect(result.rockFeatures.value['Rock A']).toBeDefined()
+      expect(result.rockFeatures.value['Rock B']).toBeDefined()
+      expect(result.rockFeatures.value['Rock A, Rock B']).toBeUndefined()
+      expect(result.rockFeatures.value['Rock A']).toHaveLength(1)
+      expect(result.rockFeatures.value['Rock B']).toHaveLength(1)
+      expect(result.rockFeatures.value['Rock A'][0].key).toBe('FEAT-1')
+      expect(result.rockFeatures.value['Rock B'][0].key).toBe('FEAT-1')
+      expect(result.rockFeatures.value['Rock A'][0].bigRock).toBe('Rock A, Rock B')
+      expect(result.rockFeatures.value['Rock B'][0].bigRock).toBe('Rock A, Rock B')
+    })
+
+    it('includes bigRock field in rockFeatures projection', function() {
+      var hd = ref(makeHealthData([
+        makeHealthFeature('FEAT-1', 'green', [])
+      ]))
+      var features = ref([
+        makeFeature('FEAT-1', null, 'Single Rock')
+      ])
+
+      var result = useHealthAggregation(hd, features, ref([]), ref([]))
+      expect(result.rockFeatures.value['Single Rock'][0].bigRock).toBe('Single Rock')
     })
 
     it('green count never exceeds total count (fraction consistency)', function() {

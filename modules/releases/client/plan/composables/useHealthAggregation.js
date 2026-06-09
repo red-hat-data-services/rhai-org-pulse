@@ -97,29 +97,32 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
     var isPlanningMode = releasePhaseMode.value === 'planning'
     for (var i = 0; i < features.value.length; i++) {
       var f = features.value[i]
-      var rockName = f.bigRock
-      if (!rockName) continue
+      var rockNames = f.bigRock ? f.bigRock.split(', ') : []
+      if (rockNames.length === 0) continue
       var h = healthByKey.value[f.issueKey]
       if (!h || !h.risk) continue
 
-      if (!result[rockName]) {
-        result[rockName] = { worstLevel: 'green', totalFlags: 0, featureCount: 0, dorPassedCount: 0, dodPassedCount: 0, planningReady: 0, planningTotal: 0, planningBlockers: 0 }
-      }
-      result[rockName].featureCount++
-      result[rockName].totalFlags += (h.risk.score || 0)
-      if (h.dor && h.dor.passed) result[rockName].dorPassedCount++
-      if (h.dod && h.dod.passed) result[rockName].dodPassedCount++
-      var level = effectiveLevel(h)
-      if (isWorse(level, result[rockName].worstLevel)) {
-        result[rockName].worstLevel = level
-      }
-      // Planning mode aggregation
-      if (isPlanningMode && h.planningChecks) {
-        result[rockName].planningTotal++
-        if (!h.planningChecks.hasHardBlockers) {
-          result[rockName].planningReady++
-        } else {
-          result[rockName].planningBlockers++
+      for (var ri = 0; ri < rockNames.length; ri++) {
+        var rockName = rockNames[ri]
+        if (!result[rockName]) {
+          result[rockName] = { worstLevel: 'green', totalFlags: 0, featureCount: 0, dorPassedCount: 0, dodPassedCount: 0, planningReady: 0, planningTotal: 0, planningBlockers: 0 }
+        }
+        result[rockName].featureCount++
+        result[rockName].totalFlags += (h.risk.score || 0)
+        if (h.dor && h.dor.passed) result[rockName].dorPassedCount++
+        if (h.dod && h.dod.passed) result[rockName].dodPassedCount++
+        var level = effectiveLevel(h)
+        if (isWorse(level, result[rockName].worstLevel)) {
+          result[rockName].worstLevel = level
+        }
+        // Planning mode aggregation
+        if (isPlanningMode && h.planningChecks) {
+          result[rockName].planningTotal++
+          if (!h.planningChecks.hasHardBlockers) {
+            result[rockName].planningReady++
+          } else {
+            result[rockName].planningBlockers++
+          }
         }
       }
     }
@@ -135,26 +138,30 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
     var result = {}
     for (var i = 0; i < features.value.length; i++) {
       var f = features.value[i]
-      var rockName = f.bigRock
-      if (!rockName) continue
+      var rockNames = f.bigRock ? f.bigRock.split(', ') : []
+      if (rockNames.length === 0) continue
       var h = healthByKey.value[f.issueKey]
-      if (!result[rockName]) result[rockName] = []
-      var level = h && h.risk ? effectiveLevel(h) : 'green'
-      var flags = h && h.risk ? h.risk.flags || [] : []
-      result[rockName].push({
-        key: f.issueKey,
-        level: level,
-        flagCount: flags.length,
-        flagCategories: flags.map(function(fl) { return fl.category }),
-        summary: h ? (h.summary || '') : '',
-        dorPassed: h && h.dor ? h.dor.passed : null,
-        dodPassed: h && h.dod ? h.dod.passed : null,
-        planningStatus: h ? (h.planningStatus || '') : '',
-        deliveryOwner: h ? (h.deliveryOwner || '') : '',
-        jiraUrl: h ? (h.jiraUrl || '') : '',
-        override: h && h.risk ? (h.risk.override || null) : null,
-        status: h ? (h.status || '') : ''
-      })
+      for (var ri = 0; ri < rockNames.length; ri++) {
+        var rockName = rockNames[ri]
+        if (!result[rockName]) result[rockName] = []
+        var level = h && h.risk ? effectiveLevel(h) : 'green'
+        var flags = h && h.risk ? h.risk.flags || [] : []
+        result[rockName].push({
+          key: f.issueKey,
+          bigRock: f.bigRock || '',
+          level: level,
+          flagCount: flags.length,
+          flagCategories: flags.map(function(fl) { return fl.category }),
+          summary: h ? (h.summary || '') : '',
+          dorPassed: h && h.dor ? h.dor.passed : null,
+          dodPassed: h && h.dod ? h.dod.passed : null,
+          planningStatus: h ? (h.planningStatus || '') : '',
+          deliveryOwner: h ? (h.deliveryOwner || '') : '',
+          jiraUrl: h ? (h.jiraUrl || '') : '',
+          override: h && h.risk ? (h.risk.override || null) : null,
+          status: h ? (h.status || '') : ''
+        })
+      }
     }
     return result
   })
