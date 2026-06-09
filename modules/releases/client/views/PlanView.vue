@@ -34,7 +34,7 @@ import PmHubView from '../plan/views/PmHubView.vue'
 const tabs = [
   { id: 'outcomes', label: 'Outcomes' },
   { id: 'health', label: 'Health' },
-  { id: 'feature-readiness', label: 'Feature Readiness (Prioritized)' },
+  { id: 'feature-readiness', label: 'Features List (1-n)' },
   { id: 'pm-hub', label: 'PM Hub' },
 ]
 
