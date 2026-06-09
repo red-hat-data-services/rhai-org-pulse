@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useReleaseHealth } from '../composables/useReleaseHealth'
 import { useReleases } from '../composables/useReleasePlanning'
-import { useAuth, formatDate } from '@shared/client'
+import { formatDate } from '@shared/client'
 import { passesPhaseFilter } from '../utils/phase-filter'
 import ReleaseSelector from '../components/ReleaseSelector.vue'
 import MilestoneTimeline from '../components/MilestoneTimeline.vue'
@@ -19,7 +19,6 @@ var {
 } = useReleaseHealth()
 
 var { releases, loadReleases } = useReleases()
-var { isAdmin } = useAuth()
 
 var selectedVersion = ref('')
 
@@ -47,7 +46,7 @@ var creatingSnapshot = ref(false)
 
 var canEdit = computed(function() {
   if (healthData.value && healthData.value.demoMode) return false
-  return isAdmin.value
+  return true
 })
 
 var demoMode = computed(function() {
@@ -379,6 +378,7 @@ onUnmounted(function() {
           v-if="releases.length > 0"
           :releases="releases"
           v-model="selectedVersion"
+          :canEdit="canEdit"
         />
         <button
           v-if="selectedVersion && !demoMode"

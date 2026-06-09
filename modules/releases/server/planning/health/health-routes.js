@@ -13,6 +13,7 @@ const { getConfig } = require('../config')
 const { CACHE_MAX_AGE_MS, VALID_PHASES } = require('../constants')
 const { runHealthPipeline, loadMilestones, backfillFreezeDatesFromSmartsheet, deriveFreezeDates } = require('./health-pipeline')
 const { logAudit } = require('../audit-log')
+var { blockDuringImpersonation } = require('../../../../../shared/server/auth')
 var sharedJira = require('../../../../../shared/server/jira')
 
 var DATA_PREFIX = 'releases/planning'
@@ -369,7 +370,7 @@ function healthRoutes(router, context) {
    *       400:
    *         description: Invalid input
    */
-  router.put('/releases/:version/health/override/:featureKey', requirePM, requireScope('releases:write'), function(req, res) {
+  router.put('/releases/:version/health/override/:featureKey', requirePM, blockDuringImpersonation, requireScope('releases:write'), function(req, res) {
     var version = req.params.version
     var featureKey = req.params.featureKey
     if (!isValidVersion(version)) {
@@ -419,7 +420,7 @@ function healthRoutes(router, context) {
     logAudit(readFromStorage, writeToStorage, {
       version: version,
       action: 'set_risk_override',
-      user: userEmail,
+      user: req.auditActor || userEmail,
       summary: 'Set risk override to ' + riskOverride + ' for ' + featureKey,
       details: { featureKey: featureKey, riskOverride: riskOverride, reason: reason.trim() }
     })
@@ -456,7 +457,7 @@ function healthRoutes(router, context) {
    *       404:
    *         description: No override found
    */
-  router.delete('/releases/:version/health/override/:featureKey', requirePM, requireScope('releases:write'), function(req, res) {
+  router.delete('/releases/:version/health/override/:featureKey', requirePM, blockDuringImpersonation, requireScope('releases:write'), function(req, res) {
     var version = req.params.version
     var featureKey = req.params.featureKey
     if (!isValidVersion(version)) {
@@ -483,7 +484,7 @@ function healthRoutes(router, context) {
     logAudit(readFromStorage, writeToStorage, {
       version: version,
       action: 'remove_risk_override',
-      user: userEmail,
+      user: req.auditActor || userEmail,
       summary: 'Removed risk override for ' + featureKey,
       details: { featureKey: featureKey }
     })
@@ -559,7 +560,7 @@ function healthRoutes(router, context) {
    *       404:
    *         description: No health cache available
    */
-  router.post('/releases/:version/health/snapshot/:phase', requirePM, requireScope('releases:write'), function(req, res) {
+  router.post('/releases/:version/health/snapshot/:phase', requirePM, blockDuringImpersonation, requireScope('releases:write'), function(req, res) {
     var version = req.params.version
     var phase = (req.params.phase || '').toUpperCase()
     if (!isValidVersion(version)) {
@@ -600,7 +601,7 @@ function healthRoutes(router, context) {
 
     writeToStorage(DATA_PREFIX + '/committed-snapshot-' + version + '-' + phase + '.json', snapshotData)
 
-    var user = req.userEmail || 'unknown'
+    var user = req.auditActor || req.userEmail || 'unknown'
     logAudit(readFromStorage, writeToStorage, {
       version: version,
       action: 'committed_snapshot',
@@ -952,6 +953,19 @@ function healthRoutes(router, context) {
     }
 
     writeToStorage('releases/planning/config.json', config)
+
+    logAudit(readFromStorage, writeToStorage, {
+      version: null,
+      action: 'update_health_config',
+      user: req.auditActor || req.userEmail,
+      summary: 'Updated health admin configuration',
+      details: {
+        riceScoreField: req.body.riceScoreField,
+        enableRice: req.body.enableRice,
+        enableStratCreator: req.body.enableStratCreator
+      }
+    })
+
     res.json({
       saved: true,
       customFieldIds: config.customFieldIds,

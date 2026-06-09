@@ -5,9 +5,9 @@
  * Mounted at /api/modules/releases/planning/ by the parent router.
  *
  * Changes from original:
- * - requirePM replaced with requireReleaseManager (from context)
+ * - requirePM replaced with requireAuth (open to all authenticated users)
  * - PM user management routes removed (replaced by central role system)
- * - permissions endpoint uses req.isAdmin || req.isReleaseManager
+ * - permissions endpoint returns canEdit: true for all authenticated users
  * - loadFixture path adjusted for new directory depth
  * - require() paths reference local files (same directory)
  * - Storage paths migrated to releases/planning/ (Phase 5)
@@ -23,7 +23,8 @@ const { backupConfig } = require('./config-backup')
 const { validateBigRock } = require('./validation')
 const { getOutcomeSummaries } = require('./outcome-fetch')
 const { previewDocImport, executeDocImport } = require('./doc-import')
-const { logAudit, getAuditLog } = require('./audit-log')
+const { logAudit, getAuditLog, computeFieldDiff } = require('./audit-log')
+const { blockDuringImpersonation } = require('../../../../shared/server/auth')
 const healthRoutes = require('./health/health-routes')
 var { buildFeatureReadiness } = require('./feature-readiness')
 
@@ -40,13 +41,13 @@ function isValidVersion(version) {
  * Register planning routes on the provided Express router.
  *
  * @param {object} router - Express router mounted at /api/modules/releases/planning/
- * @param {object} context - { storage, requireAuth, requireAdmin, requireReleaseManager, requireScope, roleStore, registerDiagnostics }
+ * @param {object} context - { storage, requireAuth, requireAdmin, requireScope, roleStore, registerDiagnostics }
  */
 module.exports = function registerPlanningRoutes(router, context) {
   var smartsheetClient = context.smartsheet || require('../../../../shared/server/smartsheet')
   var jiraClient = context.jira || null
 
-  const { storage, requireAuth, requireAdmin, requireReleaseManager, requireScope } = context
+  const { storage, requireAuth, requireAdmin, requireScope } = context
   const { readFromStorage, writeToStorage } = storage
   const listStorageFiles = storage.listStorageFiles || null
   const deleteFromStorage = storage.deleteFromStorage || null
@@ -229,11 +230,11 @@ module.exports = function registerPlanningRoutes(router, context) {
     doRefresh(1)
   }
 
-  // Mount health routes -- pass requireReleaseManager as requirePM
+  // Mount health routes -- pass requireAuth as requirePM (open to all authenticated users)
   healthRoutes(router, {
     storage: storage,
     requireAuth: requireAuth,
-    requirePM: requireReleaseManager,
+    requirePM: requireAuth,
     requireScope: requireScope,
     refreshStates: refreshStates,
     MAX_CONCURRENT_REFRESHES: MAX_CONCURRENT_REFRESHES,
@@ -379,7 +380,7 @@ module.exports = function registerPlanningRoutes(router, context) {
    *       200:
    *         description: Refresh started or already running
    */
-  router.post('/releases/:version/refresh', requireReleaseManager, requireScope('releases:write'), function(req, res) {
+  router.post('/releases/:version/refresh', requireAuth, requireScope('releases:write'), function(req, res) {
     const version = req.params.version
     if (!isValidVersion(version)) {
       return res.status(400).json({ error: 'Invalid version format' })
@@ -508,7 +509,7 @@ module.exports = function registerPlanningRoutes(router, context) {
    */
   router.get('/permissions', requireAuth, requireScope('releases:read'), function(req, res) {
     res.json({
-      canEdit: !!req.isAdmin || !!req.isReleaseManager
+      canEdit: true
     })
   })
 
@@ -538,7 +539,7 @@ module.exports = function registerPlanningRoutes(router, context) {
    *       200:
    *         description: Reordered Big Rocks
    */
-  router.put('/releases/:version/big-rocks/reorder', requireReleaseManager, requireScope('releases:write'), async function(req, res) {
+  router.put('/releases/:version/big-rocks/reorder', requireAuth, requireScope('releases:write'), async function(req, res) {
     const version = req.params.version
     if (!isValidVersion(version)) {
       return res.status(400).json({ error: 'Invalid version format' })
@@ -549,14 +550,16 @@ module.exports = function registerPlanningRoutes(router, context) {
     }
 
     try {
+      var previousOrder = loadBigRocks(readFromStorage, version).map(function(r) { return r.name })
       const result = await withConfigLock(function() {
         return reorderBigRocks(readFromStorage, writeToStorage, version, order)
       })
       logAudit(readFromStorage, writeToStorage, {
         version: version,
         action: 'reorder_rocks',
-        user: req.userEmail,
-        summary: 'Reordered Big Rocks'
+        user: req.auditActor || req.userEmail,
+        summary: 'Reordered Big Rocks',
+        details: { previousOrder: previousOrder, newOrder: order }
       })
       invalidateCache(version)
       res.json(result)
@@ -586,7 +589,7 @@ module.exports = function registerPlanningRoutes(router, context) {
    *       200:
    *         description: Updated Big Rock
    */
-  router.put('/releases/:version/big-rocks/:name', requireReleaseManager, requireScope('releases:write'), async function(req, res) {
+  router.put('/releases/:version/big-rocks/:name', requireAuth, requireScope('releases:write'), async function(req, res) {
     const version = req.params.version
     if (!isValidVersion(version)) {
       return res.status(400).json({ error: 'Invalid version format' })
@@ -599,6 +602,7 @@ module.exports = function registerPlanningRoutes(router, context) {
     }
 
     try {
+      var existingRockSnapshot = null
       const result = await withConfigLock(function() {
         const currentConfig = getConfig(readFromStorage)
         if (!currentConfig.releases[version]) {
@@ -606,6 +610,11 @@ module.exports = function registerPlanningRoutes(router, context) {
         }
         const existingRocks = loadBigRocks(readFromStorage, version)
         const existingNames = existingRocks.map(function(r) { return r.name })
+
+        existingRockSnapshot = existingRocks.find(function(r) { return r.name === name })
+        if (existingRockSnapshot) {
+          existingRockSnapshot = JSON.parse(JSON.stringify(existingRockSnapshot))
+        }
 
         const validation = validateBigRock(req.body, {
           existingNames: existingNames,
@@ -621,9 +630,9 @@ module.exports = function registerPlanningRoutes(router, context) {
       logAudit(readFromStorage, writeToStorage, {
         version: version,
         action: 'update_rock',
-        user: req.userEmail,
+        user: req.auditActor || req.userEmail,
         summary: 'Updated Big Rock "' + name + '"',
-        details: { rockName: name }
+        details: { rockName: name, changes: computeFieldDiff(existingRockSnapshot, req.body) }
       })
       invalidateCache(version)
       res.json(result)
@@ -651,7 +660,7 @@ module.exports = function registerPlanningRoutes(router, context) {
    *       201:
    *         description: Created Big Rock
    */
-  router.post('/releases/:version/big-rocks', requireReleaseManager, requireScope('releases:write'), async function(req, res) {
+  router.post('/releases/:version/big-rocks', requireAuth, requireScope('releases:write'), async function(req, res) {
     const version = req.params.version
     if (!isValidVersion(version)) {
       return res.status(400).json({ error: 'Invalid version format' })
@@ -680,9 +689,21 @@ module.exports = function registerPlanningRoutes(router, context) {
       logAudit(readFromStorage, writeToStorage, {
         version: version,
         action: 'create_rock',
-        user: req.userEmail,
+        user: req.auditActor || req.userEmail,
         summary: 'Created Big Rock "' + newName + '"',
-        details: { rockName: newName }
+        details: {
+          rockName: newName,
+          definition: {
+            name: req.body.name,
+            pillar: req.body.pillar,
+            jiraKeys: req.body.jiraKeys,
+            outcomeKeys: req.body.outcomeKeys,
+            owner: req.body.owner,
+            architect: req.body.architect,
+            state: req.body.state,
+            description: req.body.description
+          }
+        }
       })
       invalidateCache(version)
       res.status(201).json(result)
@@ -714,7 +735,7 @@ module.exports = function registerPlanningRoutes(router, context) {
    *       200:
    *         description: Deleted Big Rock
    */
-  router.delete('/releases/:version/big-rocks/:name', requireReleaseManager, requireScope('releases:write'), async function(req, res) {
+  router.delete('/releases/:version/big-rocks/:name', requireAuth, blockDuringImpersonation, requireScope('releases:write'), async function(req, res) {
     const version = req.params.version
     if (!isValidVersion(version)) {
       return res.status(400).json({ error: 'Invalid version format' })
@@ -727,6 +748,7 @@ module.exports = function registerPlanningRoutes(router, context) {
     }
 
     try {
+      var deletedRockSnapshot = null
       const result = await withConfigLock(function() {
         const currentConfig = getConfig(readFromStorage)
         if (!currentConfig.releases[version]) {
@@ -738,6 +760,15 @@ module.exports = function registerPlanningRoutes(router, context) {
           throw Object.assign(new Error("Big Rock '" + name + "' not found for release " + version), { statusCode: 404 })
         }
 
+        deletedRockSnapshot = {
+          name: found.name,
+          pillar: found.pillar,
+          jiraKeys: found.jiraKeys,
+          outcomeKeys: found.outcomeKeys,
+          owner: found.owner,
+          architect: found.architect
+        }
+
         backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
 
         return deleteBigRock(readFromStorage, writeToStorage, version, name)
@@ -746,9 +777,9 @@ module.exports = function registerPlanningRoutes(router, context) {
       logAudit(readFromStorage, writeToStorage, {
         version: version,
         action: 'delete_rock',
-        user: req.userEmail,
+        user: req.auditActor || req.userEmail,
         summary: 'Deleted Big Rock "' + name + '"',
-        details: { rockName: name }
+        details: { rockName: name, deletedDefinition: deletedRockSnapshot }
       })
       invalidateCache(version)
       res.json(result)
@@ -778,7 +809,7 @@ module.exports = function registerPlanningRoutes(router, context) {
    *       201:
    *         description: Created release
    */
-  router.post('/releases', requireReleaseManager, requireScope('releases:write'), async function(req, res) {
+  router.post('/releases', requireAuth, blockDuringImpersonation, requireScope('releases:write'), async function(req, res) {
     const version = req.body && req.body.version
     const cloneFrom = req.body && req.body.cloneFrom
 
@@ -803,7 +834,7 @@ module.exports = function registerPlanningRoutes(router, context) {
       logAudit(readFromStorage, writeToStorage, {
         version: version,
         action: cloneFrom ? 'clone_release' : 'create_release',
-        user: req.userEmail,
+        user: req.auditActor || req.userEmail,
         summary: cloneFrom
           ? 'Cloned release ' + version + ' from ' + cloneFrom
           : 'Created release ' + version
@@ -846,7 +877,7 @@ module.exports = function registerPlanningRoutes(router, context) {
       logAudit(readFromStorage, writeToStorage, {
         version: version,
         action: 'delete_release',
-        user: req.userEmail,
+        user: req.auditActor || req.userEmail,
         summary: 'Deleted release ' + version
       })
 
@@ -889,7 +920,7 @@ module.exports = function registerPlanningRoutes(router, context) {
    *       200:
    *         description: Validation results
    */
-  router.post('/jira/validate-keys', requireReleaseManager, requireScope('releases:write'), function(req, res) {
+  router.post('/jira/validate-keys', requireAuth, requireScope('releases:write'), function(req, res) {
     const keys = req.body && req.body.keys
     if (!Array.isArray(keys) || keys.length === 0) {
       return res.status(400).json({ error: 'keys must be a non-empty array' })
@@ -934,7 +965,7 @@ module.exports = function registerPlanningRoutes(router, context) {
    *       200:
    *         description: Preview result
    */
-  router.post('/releases/:version/import/doc/preview', requireReleaseManager, requireScope('releases:write'), async function(req, res) {
+  router.post('/releases/:version/import/doc/preview', requireAuth, requireScope('releases:write'), async function(req, res) {
     const version = req.params.version
     if (!isValidVersion(version)) {
       return res.status(400).json({ error: 'Invalid version format' })
@@ -986,7 +1017,7 @@ module.exports = function registerPlanningRoutes(router, context) {
    *       200:
    *         description: Import result
    */
-  router.post('/releases/:version/import/doc', requireReleaseManager, requireScope('releases:write'), async function(req, res) {
+  router.post('/releases/:version/import/doc', requireAuth, blockDuringImpersonation, requireScope('releases:write'), async function(req, res) {
     const version = req.params.version
     if (!isValidVersion(version)) {
       return res.status(400).json({ error: 'Invalid version format' })
@@ -1003,6 +1034,10 @@ module.exports = function registerPlanningRoutes(router, context) {
     try {
       const parsedDoc = await previewDocImport(docId)
 
+      var existingRocksBeforeImport = mode === 'replace'
+        ? loadBigRocks(readFromStorage, version).map(function(r) { return { name: r.name, pillar: r.pillar, jiraKeys: r.jiraKeys } })
+        : undefined
+
       const result = await withConfigLock(function() {
         if (mode === 'replace') {
           backupConfig(readFromStorage, writeToStorage, listStorageFiles, deleteFromStorage)
@@ -1013,9 +1048,14 @@ module.exports = function registerPlanningRoutes(router, context) {
       logAudit(readFromStorage, writeToStorage, {
         version: version,
         action: 'import_doc',
-        user: req.userEmail,
+        user: req.auditActor || req.userEmail,
         summary: 'Imported Big Rocks from Google Doc (' + mode + ' mode)',
-        details: { docId: docId, mode: mode }
+        details: {
+          docId: docId,
+          mode: mode,
+          importedRocks: parsedDoc.bigRocks ? parsedDoc.bigRocks.map(function(r) { return r.name }) : [],
+          replacedRocks: existingRocksBeforeImport
+        }
       })
       invalidateCache(version)
       res.json(result)
@@ -1145,7 +1185,7 @@ module.exports = function registerPlanningRoutes(router, context) {
 
       logAudit(readFromStorage, writeToStorage, {
         action: 'seed',
-        user: req.userEmail,
+        user: req.auditActor || req.userEmail,
         summary: 'Seeded release data for ' + versions.join(', ')
       })
       res.json(result)
