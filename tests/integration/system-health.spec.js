@@ -207,7 +207,7 @@ test.describe('System Health Views @system-health', () => {
     expect(page.errors).toHaveLength(0);
   });
 
-test('should display table with required columns in Quality Analysis', async ({ page }) => {
+  test('should display table with required columns in Quality Analysis', async ({ page }) => {
     await page.goto('/#/system-health/quality-analysis');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
