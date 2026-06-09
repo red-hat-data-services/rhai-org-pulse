@@ -25,7 +25,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, inject, watch } from 'vue'
 import DashboardView from '../plan/views/DashboardView.vue'
 import HealthDashboardView from '../plan/views/HealthDashboardView.vue'
 import FeatureReadinessView from '../plan/views/FeatureReadinessView.vue'
@@ -38,5 +38,22 @@ const tabs = [
   { id: 'pm-hub', label: 'PM Hub' },
 ]
 
-const activeTab = ref('outcomes')
+var moduleNav = inject('moduleNav', null)
+var validTabIds = tabs.map(function(t) { return t.id })
+
+function getTabFromParams() {
+  var params = moduleNav && moduleNav.params ? moduleNav.params.value : {}
+  var tab = params.tab
+  if (tab && validTabIds.indexOf(tab) !== -1) return tab
+  return 'outcomes'
+}
+
+const activeTab = ref(getTabFromParams())
+
+if (moduleNav && moduleNav.params) {
+  watch(moduleNav.params, function() {
+    var tab = getTabFromParams()
+    if (tab !== activeTab.value) activeTab.value = tab
+  })
+}
 </script>

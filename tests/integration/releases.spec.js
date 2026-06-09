@@ -283,7 +283,7 @@ test.describe('Releases Planning Health @releases', () => {
   });
 
   test('Health tab loads and shows planning mode banner when applicable', async ({ page }) => {
-    await page.goto('/#/releases/health');
+    await page.goto('/#/releases/plan?tab=health');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
