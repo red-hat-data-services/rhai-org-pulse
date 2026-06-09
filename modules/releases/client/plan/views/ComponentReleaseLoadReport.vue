@@ -190,8 +190,7 @@
           v-if="versionDropdownOpen"
           class="absolute z-50 mt-1 w-full max-h-60 overflow-auto rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-lg"
         >
-          <div v-if="loadingVersions" class="px-3 py-2 text-xs text-gray-400">Loading…</div>
-          <div v-else-if="filteredVersions.length === 0" class="px-3 py-2 text-xs text-gray-400">No matches</div>
+          <div v-if="filteredVersions.length === 0" class="px-3 py-2 text-xs text-gray-400">No matches</div>
           <button
             v-for="name in filteredVersions"
             :key="name"
@@ -448,18 +447,31 @@ var uniqueComponents = computed(function() {
   return result
 })
 
-var uniqueVersions = computed(function() {
-  var seen = new Set()
+var PORTFOLIO_VERSIONS = [
+  { label: '3.5 EA1', jiraVersions: ['rhoai-3.5.EA1', 'rhelai-3.5 EA1 release', 'RHAII-3.5 EA1'] },
+  { label: '3.5 EA2', jiraVersions: ['rhoai-3.5.EA2', 'rhelai-3.5 EA2 release', 'RHAII-3.5 EA2'] },
+  { label: '3.5', jiraVersions: ['rhoai-3.5', 'rhelai-3.5', 'RHAII-3.5'] },
+  { label: '3.6 EA1', jiraVersions: ['rhoai-3.6.EA1', 'rhelai-3.6 EA1 release', 'RHAII-3.6 EA1'] },
+  { label: '3.6 EA2', jiraVersions: ['rhoai-3.6.EA2', 'rhelai-3.6 EA2 release', 'RHAII-3.6 EA2'] },
+  { label: '3.6', jiraVersions: ['rhoai-3.6', 'rhelai-3.6', 'RHAII-3.6'] }
+]
+
+var portfolioVersionLabels = PORTFOLIO_VERSIONS.map(function(v) { return v.label })
+
+function resolveJiraVersions(selectedLabels) {
   var result = []
-  for (var i = 0; i < versions.value.length; i++) {
-    var name = versions.value[i].name
-    if (!seen.has(name)) {
-      seen.add(name)
-      result.push(name)
+  for (var i = 0; i < selectedLabels.length; i++) {
+    var pv = PORTFOLIO_VERSIONS.find(function(v) { return v.label === selectedLabels[i] })
+    if (pv) {
+      for (var j = 0; j < pv.jiraVersions.length; j++) {
+        if (result.indexOf(pv.jiraVersions[j]) === -1) {
+          result.push(pv.jiraVersions[j])
+        }
+      }
     }
   }
   return result
-})
+}
 
 var pillarNames = computed(function() {
   return pillarConfig.value.pillars.map(function(p) { return p.name })
@@ -515,8 +527,8 @@ var filteredComponents = computed(function() {
 
 var filteredVersions = computed(function() {
   var q = versionSearch.value.toLowerCase().trim()
-  if (!q) return uniqueVersions.value
-  return uniqueVersions.value.filter(function(name) {
+  if (!q) return portfolioVersionLabels
+  return portfolioVersionLabels.filter(function(name) {
     return name.toLowerCase().includes(q)
   })
 })
@@ -694,7 +706,8 @@ async function loadData() {
       params.set('components', selectedComponents.value.join(','))
     }
     if (selectedVersions.value.length > 0) {
-      params.set('versions', selectedVersions.value.join(','))
+      var jiraVersions = resolveJiraVersions(selectedVersions.value)
+      params.set('versions', jiraVersions.join(','))
     }
 
     var response = await fetch(getApiBase() + API_BASE + '/component-release-load?' + params.toString())
@@ -713,8 +726,10 @@ async function loadData() {
 }
 
 watch(selectedPillars, function() {
-  if (selectedPillars.value.length > 0 && selectedComponents.value.length > 0) {
-    selectedComponents.value = selectedComponents.value.filter(componentMatchesPillar)
+  if (selectedPillars.value.length > 0) {
+    selectedComponents.value = pillarFilteredComponents.value.slice()
+  } else {
+    selectedComponents.value = []
   }
 }, { deep: true })
 
