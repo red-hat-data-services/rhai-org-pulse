@@ -855,11 +855,10 @@ async function loadData() {
 }
 
 watch(selectedPillars, function() {
-  if (selectedPillars.value.length > 0) {
-    selectedComponents.value = pillarFilteredComponents.value.slice()
-  } else {
-    selectedComponents.value = []
-  }
+  var allowed = pillarFilteredComponents.value
+  selectedComponents.value = selectedComponents.value.filter(function(c) {
+    return allowed.indexOf(c) >= 0
+  })
 }, { deep: true })
 
 watch([selectedComponents, selectedVersions], function() {
