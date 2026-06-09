@@ -102,6 +102,8 @@
           </div>
         </div>
 
+        <p v-if="componentError" class="text-xs text-red-500 self-end pb-1">{{ componentError }}</p>
+
         <!-- Release -->
         <div class="relative min-w-[180px] flex-1 max-w-[260px]" ref="versionDropdownRef">
           <label class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1 block">Release</label>

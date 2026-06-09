@@ -95,9 +95,6 @@ function validatePillarConfig(data) {
   return null
 }
 
-function _getComponentName(comp) {
-  return typeof comp === 'string' ? comp : (comp && comp.name) || ''
-}
 const DEFAULT_ISSUE_TYPES = ['Feature', 'Initiative']
 const FIELDS_TO_FETCH = [
   'summary', 'status', 'issuetype', 'assignee', 'fixVersions', 'versions',
@@ -269,7 +266,16 @@ module.exports = function registerPmHubRoutes(router, context) {
    *                   type: object
    *                   properties:
    *                     name: { type: string }
-   *                     components: { type: array, items: { type: string } }
+   *                     components:
+   *                       type: array
+   *                       items:
+   *                         oneOf:
+   *                           - type: string
+   *                           - type: object
+   *                             properties:
+   *                               name: { type: string }
+   *                               pmLead: { type: string }
+   *                               engLead: { type: string }
    *     responses:
    *       200:
    *         description: Updated pillar config
