@@ -5,18 +5,14 @@ import { useReleaseHealth } from '../composables/useReleaseHealth'
 import { useBigRockEditor } from '../composables/useBigRockEditor'
 import { useFilters } from '../composables/useFilters'
 import { useHealthAggregation } from '../composables/useHealthAggregation'
-import { useReleaseDistribution } from '../composables/useReleaseDistribution'
 import { useRefreshPolling } from '../composables/useRefreshPolling'
 import { useClickOutside } from '../composables/useClickOutside'
 import { exportMarkdown as exportMd, exportCsv as exportCsvFile } from '../utils/outcomes-export'
 import { formatDate } from '@shared/client'
-import SummaryCards from '../components/SummaryCards.vue'
 import BigRocksTable from '../components/BigRocksTable.vue'
 import BigRockEditPanel from '../components/BigRockEditPanel.vue'
 import BigRockDeleteDialog from '../components/BigRockDeleteDialog.vue'
 import NewReleaseDialog from '../components/NewReleaseDialog.vue'
-import FeaturesTable from '../components/FeaturesTable.vue'
-import RfesTable from '../components/RfesTable.vue'
 import FilterBar from '../components/FilterBar.vue'
 import ReleaseSelector from '../components/ReleaseSelector.vue'
 import RecentActivity from '../components/RecentActivity.vue'
@@ -62,20 +58,14 @@ useRefreshPolling(refreshing, checkRefreshStatus, function() {
 const features = computed(() => candidates.value ? candidates.value.features || [] : [])
 const rfes = computed(() => candidates.value ? candidates.value.rfes || [] : [])
 const bigRocks = computed(() => candidates.value ? candidates.value.bigRocks || [] : [])
-const summary = computed(() => candidates.value ? candidates.value.summary : null)
 const filterOptions = computed(() => candidates.value ? candidates.value.filterOptions || {} : {})
 const jiraBaseUrl = computed(() => candidates.value ? candidates.value.jiraBaseUrl || '' : '')
 const demoMode = computed(() => candidates.value ? candidates.value.demoMode : false)
 
 const {
-  healthByKey,
-  rfeKeyToHealth,
   rockHealth,
-  rockFeatures,
-  tier1HealthSummary
+  rockFeatures
 } = useHealthAggregation(healthData, features, rfes, bigRocks)
-
-const { releaseDistribution } = useReleaseDistribution(features)
 const warning = computed(() => candidates.value ? candidates.value.warning : null)
 const pipelineWarnings = computed(() => candidates.value ? candidates.value.pipelineWarnings || [] : [])
 const canEdit = computed(() => !demoMode.value && permissions.value && permissions.value.canEdit)
@@ -97,18 +87,12 @@ const {
 const moduleNav = inject('moduleNav', null)
 
 const tabs = [
-  { id: 'big-rocks', label: 'Big Rocks' },
-  { id: 'features', label: 'Features' },
-  { id: 'rfes', label: 'RFEs' }
+  { id: 'big-rocks', label: 'Big Rocks' }
 ]
 
-const featureCount = computed(() => filteredFeatures.value.length)
-const rfeCount = computed(() => filteredRfes.value.length)
 const bigRockCount = computed(() => filteredBigRocks.value.length)
 
 function tabCount(tabId) {
-  if (tabId === 'features') return featureCount.value
-  if (tabId === 'rfes') return rfeCount.value
   if (tabId === 'big-rocks') return bigRockCount.value
   return 0
 }
@@ -306,7 +290,6 @@ onMounted(async function() {
     var p = moduleNav.params.value
     if (p.bigRock) {
       selectedRock.value = p.bigRock
-      activeTab.value = 'features'
     }
   }
 })
@@ -377,9 +360,6 @@ onMounted(async function() {
     </div>
 
     <template v-if="candidates">
-      <!-- Summary -->
-      <SummaryCards :summary="summary" :tier1HealthSummary="tier1HealthSummary" :releaseDistribution="releaseDistribution" />
-
       <!-- Tabs -->
       <div>
         <div class="flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
@@ -473,24 +453,6 @@ onMounted(async function() {
           @addRock="handleAddRock"
           @deleteRock="handleDeleteRock"
           @reorder="handleReorder"
-        />
-      </div>
-      <div v-if="activeTab === 'features'" id="panel-features" role="tabpanel" aria-labelledby="tab-features">
-        <FeaturesTable
-          :features="filteredFeatures"
-          :bigRocks="bigRocks"
-          :jiraBaseUrl="jiraBaseUrl"
-          :summary="summary"
-          :healthByKey="healthByKey"
-        />
-      </div>
-      <div v-if="activeTab === 'rfes'" id="panel-rfes" role="tabpanel" aria-labelledby="tab-rfes">
-        <RfesTable
-          :rfes="filteredRfes"
-          :bigRocks="bigRocks"
-          :jiraBaseUrl="jiraBaseUrl"
-          :summary="summary"
-          :rfeKeyToHealth="rfeKeyToHealth"
         />
       </div>
 

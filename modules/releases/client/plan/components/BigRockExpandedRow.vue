@@ -1,7 +1,6 @@
 <script setup>
-import { computed } from 'vue'
 
-const props = defineProps({
+defineProps({
   features: { type: Array, default: () => [] },
   colspan: { type: Number, default: 7 },
   loading: { type: Boolean, default: false },
@@ -19,10 +18,6 @@ function truncate(text, max) {
   return text.length > max ? text.slice(0, max) + '...' : text
 }
 
-var featuresTabHref = computed(function() {
-  if (!props.rockName) return '#/releases/plan?tab=health'
-  return '#/releases/plan?tab=health&bigRock=' + encodeURIComponent(props.rockName)
-})
 </script>
 
 <template>
@@ -90,12 +85,6 @@ var featuresTabHref = computed(function() {
           </tr>
         </tbody>
       </table>
-      <div class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-        <a
-          :href="featuresTabHref"
-          class="text-xs text-primary-600 dark:text-blue-400 hover:underline"
-        >View all in Features tab &rarr;</a>
-      </div>
     </div>
   </td>
 </template>

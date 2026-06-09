@@ -476,14 +476,6 @@ describe('BigRockExpandedRow', function() {
     expect(wrapper.text()).toContain('BLOCKED, MILESTONE_MISS')
   })
 
-  it('renders "View all in Features tab" link', function() {
-    var wrapper = mountExpanded({ features: sampleFeatures, rockName: 'MaaS' })
-    var viewLink = wrapper.findAll('a').filter(function(a) { return a.text().includes('View all in Features tab') })
-    expect(viewLink.length).toBe(1)
-    expect(viewLink[0].attributes('href')).toContain('#/releases/plan?tab=health')
-    expect(viewLink[0].attributes('href')).toContain('bigRock=MaaS')
-  })
-
   it('shows override indicator (M) when feature has override', function() {
     var wrapper = mountExpanded({ features: sampleFeatures })
     var overrideIndicators = wrapper.findAll('span').filter(function(s) { return s.text() === 'M' })
