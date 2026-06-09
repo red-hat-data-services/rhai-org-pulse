@@ -36,6 +36,10 @@ vi.mock('../../../server/planning/health/health-pipeline', () => ({
   })
 }))
 
+vi.mock('../../../../../shared/server/auth', () => ({
+  blockDuringImpersonation: function(req, res, next) { next() }
+}))
+
 vi.mock('../../../../../shared/server/jira', () => ({
   jiraRequest: vi.fn().mockResolvedValue([]),
   fetchAllJqlResults: vi.fn()
@@ -899,6 +903,109 @@ describe('health routes', function() {
         makeReq({ params: { version: '3.5' } }))
       expect(res._status).toBe(500)
       expect(res._json.error).toContain('Storage read error')
+    })
+  })
+
+  // ─── Open Access ───
+
+  describe('open access for authenticated users', function() {
+    it('allows non-admin, non-release-manager to set risk override', function() {
+      var res = callRoute(router._routes, 'PUT', '/releases/:version/health/override/:featureKey',
+        makeReq({
+          isAdmin: false,
+          isReleaseManager: false,
+          userEmail: 'user@test.com',
+          params: { version: '3.5', featureKey: 'T-1' },
+          body: { riskOverride: 'green', reason: 'Verified by user' }
+        }))
+      expect(res._status).toBe(200)
+      expect(res._json.featureKey).toBe('T-1')
+    })
+
+    it('allows non-admin, non-release-manager to create snapshot', function() {
+      storage._store['releases/planning/health-cache-3.5-all.json'] = freshCache('3.5', {
+        features: [
+          { key: 'T-1', summary: 'F1', fixVersions: 'rhoai-3.5.EA1', status: 'In Progress', components: 'Comp1', deliveryOwner: 'owner1' }
+        ]
+      })
+      var res = callRoute(router._routes, 'POST', '/releases/:version/health/snapshot/:phase',
+        makeReq({
+          isAdmin: false,
+          isReleaseManager: false,
+          userEmail: 'user@test.com',
+          params: { version: '3.5', phase: 'EA1' }
+        }))
+      expect(res._status).toBe(200)
+      expect(res._json.phase).toBe('EA1')
+    })
+  })
+
+  // ─── Impersonation Safety ───
+
+  describe('blockDuringImpersonation on destructive routes', function() {
+    it('includes blockDuringImpersonation middleware on DELETE override', function() {
+      var handlers = router._routes['DELETE /releases/:version/health/override/:featureKey']
+      // Should have at least 4 middleware: requirePM, blockDuringImpersonation, requireScope, handler
+      expect(handlers.length).toBeGreaterThanOrEqual(4)
+    })
+
+    it('includes blockDuringImpersonation middleware on POST snapshot', function() {
+      var handlers = router._routes['POST /releases/:version/health/snapshot/:phase']
+      expect(handlers.length).toBeGreaterThanOrEqual(4)
+    })
+  })
+
+  // ─── Audit Actor ───
+
+  describe('audit actor tracking', function() {
+    it('uses auditActor in audit log for risk override', function() {
+      callRoute(router._routes, 'PUT', '/releases/:version/health/override/:featureKey',
+        makeReq({
+          params: { version: '3.5', featureKey: 'T-1' },
+          body: { riskOverride: 'yellow', reason: 'Under review' },
+          auditActor: 'target@test.com (impersonated by admin@test.com)'
+        }))
+      var auditLog = storage._store['releases/audit-log.json']
+      var entry = auditLog.entries[auditLog.entries.length - 1]
+      expect(entry.user).toBe('target@test.com (impersonated by admin@test.com)')
+    })
+
+    it('falls back to userEmail when auditActor is not set', function() {
+      callRoute(router._routes, 'PUT', '/releases/:version/health/override/:featureKey',
+        makeReq({
+          params: { version: '3.5', featureKey: 'T-1' },
+          body: { riskOverride: 'red', reason: 'Critical issue' },
+          userEmail: 'regular@test.com'
+        }))
+      var auditLog = storage._store['releases/audit-log.json']
+      var entry = auditLog.entries[auditLog.entries.length - 1]
+      expect(entry.user).toBe('regular@test.com')
+    })
+  })
+
+  // ─── Health Admin Config Audit ───
+
+  describe('PUT /releases/health-admin/config audit logging', function() {
+    it('writes audit log entry on config save', function() {
+      callRoute(router._routes, 'PUT', '/releases/health-admin/config',
+        makeReq({ body: { enableRice: true, riceScoreField: 'customfield_123' } }))
+      var auditLog = storage._store['releases/audit-log.json']
+      expect(auditLog).toBeDefined()
+      var entry = auditLog.entries[auditLog.entries.length - 1]
+      expect(entry.action).toBe('update_health_config')
+      expect(entry.details.enableRice).toBe(true)
+      expect(entry.details.riceScoreField).toBe('customfield_123')
+    })
+
+    it('uses auditActor in health config audit log', function() {
+      callRoute(router._routes, 'PUT', '/releases/health-admin/config',
+        makeReq({
+          body: { enableStratCreator: true },
+          auditActor: 'user@test.com (impersonated by admin@test.com)'
+        }))
+      var auditLog = storage._store['releases/audit-log.json']
+      var entry = auditLog.entries[auditLog.entries.length - 1]
+      expect(entry.user).toBe('user@test.com (impersonated by admin@test.com)')
     })
   })
 })

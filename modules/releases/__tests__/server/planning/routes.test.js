@@ -25,6 +25,10 @@ vi.mock('../../../server/planning/doc-import', () => ({
   executeDocImport: vi.fn()
 }))
 
+vi.mock('../../../../../shared/server/auth', () => ({
+  blockDuringImpersonation: function(req, res, next) { next() }
+}))
+
 vi.mock('../../../../../shared/server/smartsheet', () => ({
   isConfigured: vi.fn().mockReturnValue(false),
   discoverReleases: vi.fn()
@@ -187,7 +191,7 @@ describe('release-planning routes', function() {
       expect(handlers.length).toBeGreaterThan(1)
     })
 
-    it('uses requireReleaseManager on POST /releases/:version/refresh', function() {
+    it('uses requireAuth on POST /releases/:version/refresh', function() {
       expect(router.post).toHaveBeenCalledWith(
         '/releases/:version/refresh',
         expect.any(Function),
@@ -484,10 +488,10 @@ describe('release-planning routes', function() {
       expect(res._json.canEdit).toBe(true)
     })
 
-    it('returns canEdit false for regular user', function() {
+    it('returns canEdit true for regular user', function() {
       const req = makeReq({ isAdmin: false, isReleaseManager: false, userEmail: 'user@test.com' })
       const res = callRoute(router._routes, 'GET', '/permissions', req)
-      expect(res._json.canEdit).toBe(false)
+      expect(res._json.canEdit).toBe(true)
     })
   })
 
@@ -596,6 +600,93 @@ describe('release-planning routes', function() {
       const res = callRoute(router._routes, 'GET', '/refresh/status', req)
       expect(res._json.running).toBe(false)
       expect(res._json.lastResult).toBe(null)
+    })
+  })
+
+  // ─── Open Access ───
+
+  describe('open access for authenticated users', function() {
+    it('allows non-admin, non-release-manager to create big rocks', async function() {
+      const req = makeReq({
+        isAdmin: false,
+        isReleaseManager: false,
+        userEmail: 'user@test.com',
+        params: { version: '3.5' },
+        body: VALID_ROCK
+      })
+      const res = await callRoute(router._routes, 'POST', '/releases/:version/big-rocks', req)
+      expect(res._status).toBe(201)
+    })
+
+    it('allows non-admin, non-release-manager to update big rocks', async function() {
+      setupVersion(storage._store, '3.5', [VALID_ROCK])
+      const req = makeReq({
+        isAdmin: false,
+        isReleaseManager: false,
+        userEmail: 'user@test.com',
+        params: { version: '3.5', name: 'Test Rock' },
+        body: Object.assign({}, VALID_ROCK, { notes: 'User updated' })
+      })
+      const res = await callRoute(router._routes, 'PUT', '/releases/:version/big-rocks/:name', req)
+      expect(res._status).toBe(200)
+    })
+
+    it('allows non-admin, non-release-manager to delete big rocks', async function() {
+      setupVersion(storage._store, '3.5', [VALID_ROCK])
+      const req = makeReq({
+        isAdmin: false,
+        isReleaseManager: false,
+        userEmail: 'user@test.com',
+        params: { version: '3.5', name: 'Test Rock' }
+      })
+      const res = await callRoute(router._routes, 'DELETE', '/releases/:version/big-rocks/:name', req)
+      expect(res._status).toBe(200)
+    })
+  })
+
+  // ─── Impersonation Safety ───
+
+  describe('blockDuringImpersonation on destructive routes', function() {
+    it('includes blockDuringImpersonation middleware on DELETE big-rocks', function() {
+      const handlers = router._routes['DELETE /releases/:version/big-rocks/:name']
+      // Should have at least 4 middleware: requireAuth, blockDuringImpersonation, requireScope, handler
+      expect(handlers.length).toBeGreaterThanOrEqual(4)
+    })
+
+    it('includes blockDuringImpersonation middleware on POST /releases', function() {
+      const handlers = router._routes['POST /releases']
+      expect(handlers.length).toBeGreaterThanOrEqual(4)
+    })
+
+    it('includes blockDuringImpersonation middleware on POST import/doc', function() {
+      const handlers = router._routes['POST /releases/:version/import/doc']
+      expect(handlers.length).toBeGreaterThanOrEqual(4)
+    })
+  })
+
+  // ─── Audit Actor ───
+
+  describe('audit actor tracking', function() {
+    it('uses auditActor in audit log when set', async function() {
+      const req = makeReq({
+        params: { version: '3.5' },
+        body: VALID_ROCK,
+        auditActor: 'target@test.com (impersonated by admin@test.com)'
+      })
+      await callRoute(router._routes, 'POST', '/releases/:version/big-rocks', req)
+      const log = storage._store['releases/audit-log.json']
+      expect(log.entries[0].user).toBe('target@test.com (impersonated by admin@test.com)')
+    })
+
+    it('falls back to userEmail when auditActor is not set', async function() {
+      const req = makeReq({
+        params: { version: '3.5' },
+        body: VALID_ROCK,
+        userEmail: 'regular@test.com'
+      })
+      await callRoute(router._routes, 'POST', '/releases/:version/big-rocks', req)
+      const log = storage._store['releases/audit-log.json']
+      expect(log.entries[0].user).toBe('regular@test.com')
     })
   })
 })

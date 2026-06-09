@@ -60,4 +60,23 @@ function getAuditLog(readFromStorage, options) {
   return { entries: entries, total: total }
 }
 
-module.exports = { logAudit, getAuditLog }
+function computeFieldDiff(before, after) {
+  if (!before || !after) return null
+  var diff = {}
+  var allKeys = Object.keys(before)
+  var afterKeys = Object.keys(after)
+  for (var i = 0; i < afterKeys.length; i++) {
+    if (allKeys.indexOf(afterKeys[i]) === -1) allKeys.push(afterKeys[i])
+  }
+  for (var j = 0; j < allKeys.length; j++) {
+    var key = allKeys[j]
+    var oldVal = before[key]
+    var newVal = after[key]
+    if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
+      diff[key] = { from: oldVal, to: newVal }
+    }
+  }
+  return Object.keys(diff).length > 0 ? diff : null
+}
+
+module.exports = { logAudit, getAuditLog, computeFieldDiff }
