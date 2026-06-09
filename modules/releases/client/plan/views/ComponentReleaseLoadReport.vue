@@ -9,6 +9,16 @@
       </div>
       <div class="flex items-center gap-2">
         <button
+          @click="pillarPanelOpen = true"
+          class="p-1.5 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-md transition-colors"
+          title="Configure pillars"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </button>
+        <button
           v-if="groups.length > 0"
           @click="handleExpandAll"
           class="px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
@@ -22,6 +32,65 @@
     </div>
 
     <div class="flex flex-wrap items-start gap-4">
+      <!-- Pillar Filter -->
+      <div class="min-w-[200px] max-w-[280px] relative" ref="pillarDropdownRef">
+        <div class="flex items-center justify-between mb-1">
+          <label class="text-xs font-medium text-gray-600 dark:text-gray-400">Pillar</label>
+          <button
+            v-if="selectedPillars.length > 0"
+            type="button"
+            @click="selectedPillars = []; pillarSearch = ''"
+            class="text-[10px] font-medium text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+          >Clear</button>
+        </div>
+        <div
+          class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 px-2 py-1.5 cursor-text flex flex-wrap items-center gap-1 min-h-[38px]"
+          :class="{ 'ring-2 ring-primary-500 border-primary-500': pillarDropdownOpen }"
+          @click="openPillarDropdown"
+        >
+          <span
+            v-for="name in selectedPillars"
+            :key="name"
+            class="inline-flex items-center gap-1 bg-violet-100 dark:bg-violet-900/50 text-violet-700 dark:text-violet-300 rounded px-1.5 py-0.5 text-xs font-medium"
+          >
+            {{ name }}
+            <button type="button" class="hover:text-violet-900 dark:hover:text-violet-100" @click.stop="togglePillar(name)">&times;</button>
+          </span>
+          <input
+            ref="pillarInputRef"
+            v-model="pillarSearch"
+            type="text"
+            class="flex-1 min-w-[60px] bg-transparent outline-none text-sm placeholder-gray-400 dark:placeholder-gray-500"
+            :placeholder="selectedPillars.length ? '' : 'Select pillar…'"
+            @focus="pillarDropdownOpen = true"
+            @keydown.backspace="onPillarBackspace"
+          />
+        </div>
+        <div
+          v-if="pillarDropdownOpen"
+          class="absolute z-50 mt-1 w-full max-h-60 overflow-auto rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 shadow-lg"
+        >
+          <div v-if="filteredPillarNames.length === 0" class="px-3 py-2 text-xs text-gray-400">No pillars</div>
+          <button
+            v-for="name in filteredPillarNames"
+            :key="name"
+            type="button"
+            class="w-full text-left px-3 py-1.5 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+            @mousedown.prevent="togglePillar(name)"
+          >
+            <span
+              class="w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center text-xs"
+              :class="selectedPillars.includes(name)
+                ? 'bg-violet-500 border-violet-500 text-white'
+                : 'border-gray-300 dark:border-gray-500'"
+            >
+              <span v-if="selectedPillars.includes(name)">&#10003;</span>
+            </span>
+            {{ name }}
+          </button>
+        </div>
+      </div>
+
       <!-- Jira Component Filter -->
       <div class="min-w-[280px] max-w-[400px] relative" ref="componentDropdownRef">
         <div class="flex items-center justify-between mb-1">
@@ -302,6 +371,14 @@
       :groups="groups"
       :activeFilter="activeFilter"
     />
+
+    <!-- Pillar config panel -->
+    <PillarConfigPanel
+      :open="pillarPanelOpen"
+      :config="pillarConfig"
+      @close="pillarPanelOpen = false"
+      @saved="onPillarConfigSaved"
+    />
   </div>
 </template>
 
@@ -309,22 +386,31 @@
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
 import { getApiBase } from '@shared/client/services/api'
 import ComponentReleaseLoadTable from '../components/ComponentReleaseLoadTable.vue'
+import PillarConfigPanel from '../components/PillarConfigPanel.vue'
 
 const API_BASE = '/modules/releases/pm-hub'
 
+var selectedPillars = ref([])
 var selectedComponents = ref([])
 var selectedVersions = ref([])
 
+var pillarSearch = ref('')
 var componentSearch = ref('')
 var versionSearch = ref('')
 
+var pillarDropdownOpen = ref(false)
 var componentDropdownOpen = ref(false)
 var versionDropdownOpen = ref(false)
 
+var pillarDropdownRef = ref(null)
+var pillarInputRef = ref(null)
 var componentDropdownRef = ref(null)
 var versionDropdownRef = ref(null)
 var componentInputRef = ref(null)
 var versionInputRef = ref(null)
+
+var pillarConfig = ref({ pillars: [] })
+var pillarPanelOpen = ref(false)
 
 var components = ref([])
 var loadingComponents = ref(false)
@@ -375,10 +461,54 @@ var uniqueVersions = computed(function() {
   return result
 })
 
+var pillarNames = computed(function() {
+  return pillarConfig.value.pillars.map(function(p) { return p.name })
+})
+
+var filteredPillarNames = computed(function() {
+  var q = pillarSearch.value.toLowerCase().trim()
+  if (!q) return pillarNames.value
+  return pillarNames.value.filter(function(name) {
+    return name.toLowerCase().includes(q)
+  })
+})
+
+var pillarAllowedComponents = computed(function() {
+  if (selectedPillars.value.length === 0) return null
+  var allowed = new Set()
+  for (var pi = 0; pi < selectedPillars.value.length; pi++) {
+    var pillar = pillarConfig.value.pillars.find(function(p) { return p.name === selectedPillars.value[pi] })
+    if (!pillar) continue
+    for (var ci = 0; ci < pillar.components.length; ci++) {
+      allowed.add(pillar.components[ci].toLowerCase())
+    }
+  }
+  return allowed
+})
+
+function componentMatchesPillar(jiraName) {
+  var allowed = pillarAllowedComponents.value
+  if (!allowed) return true
+  var lower = jiraName.toLowerCase()
+  var iter = allowed.values()
+  var next = iter.next()
+  while (!next.done) {
+    var entry = next.value
+    if (lower.includes(entry) || entry.includes(lower)) return true
+    next = iter.next()
+  }
+  return false
+}
+
+var pillarFilteredComponents = computed(function() {
+  if (!pillarAllowedComponents.value) return uniqueComponents.value
+  return uniqueComponents.value.filter(componentMatchesPillar)
+})
+
 var filteredComponents = computed(function() {
   var q = componentSearch.value.toLowerCase().trim()
-  if (!q) return uniqueComponents.value
-  return uniqueComponents.value.filter(function(name) {
+  if (!q) return pillarFilteredComponents.value
+  return pillarFilteredComponents.value.filter(function(name) {
     return name.toLowerCase().includes(q)
   })
 })
@@ -414,6 +544,27 @@ var totalBlocked = computed(function() {
   }
   return count
 })
+
+function togglePillar(name) {
+  var idx = selectedPillars.value.indexOf(name)
+  if (idx >= 0) {
+    selectedPillars.value.splice(idx, 1)
+  } else {
+    selectedPillars.value.push(name)
+  }
+  pillarSearch.value = ''
+}
+
+function openPillarDropdown() {
+  pillarDropdownOpen.value = true
+  if (pillarInputRef.value) pillarInputRef.value.focus()
+}
+
+function onPillarBackspace() {
+  if (!pillarSearch.value && selectedPillars.value.length) {
+    selectedPillars.value.pop()
+  }
+}
 
 function toggleComponent(name) {
   var idx = selectedComponents.value.indexOf(name)
@@ -458,6 +609,10 @@ function onVersionBackspace() {
 }
 
 function handleClickOutside(e) {
+  if (pillarDropdownRef.value && !pillarDropdownRef.value.contains(e.target)) {
+    pillarDropdownOpen.value = false
+    pillarSearch.value = ''
+  }
   if (componentDropdownRef.value && !componentDropdownRef.value.contains(e.target)) {
     componentDropdownOpen.value = false
     componentSearch.value = ''
@@ -474,6 +629,21 @@ function handleExpandAll() {
 
 function handleCollapseAll() {
   if (tableRef.value) tableRef.value.collapseAll()
+}
+
+function onPillarConfigSaved(newConfig) {
+  pillarConfig.value = newConfig
+  pillarPanelOpen.value = false
+}
+
+async function fetchPillarConfig() {
+  try {
+    var response = await fetch(getApiBase() + API_BASE + '/pillar-config')
+    if (response.ok) {
+      var data = await response.json()
+      pillarConfig.value = data
+    }
+  } catch (e) { void e }
 }
 
 async function fetchComponents() {
@@ -542,6 +712,12 @@ async function loadData() {
   }
 }
 
+watch(selectedPillars, function() {
+  if (selectedPillars.value.length > 0 && selectedComponents.value.length > 0) {
+    selectedComponents.value = selectedComponents.value.filter(componentMatchesPillar)
+  }
+}, { deep: true })
+
 watch([selectedComponents, selectedVersions], function() {
   activeFilter.value = null
   if (selectedComponents.value.length === 0 && selectedVersions.value.length === 0) {
@@ -553,6 +729,7 @@ watch([selectedComponents, selectedVersions], function() {
 }, { deep: true })
 
 onMounted(function() {
+  fetchPillarConfig()
   fetchComponents()
   fetchVersions()
   document.addEventListener('mousedown', handleClickOutside)

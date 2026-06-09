@@ -9,6 +9,41 @@
 const { CUSTOM_FIELDS, transformIssue } = require('../hygiene/jira-fetch')
 
 const PM_HUB_PROJECTS = ['RHAIENG', 'RHOAIENG', 'INFERENG', 'AIPCC', 'RHAISTRAT', 'RHAIRFE']
+const PILLAR_CONFIG_FILE = 'releases/pm-hub/pillar-config.json'
+
+var DEFAULT_PILLAR_CONFIG = {
+  pillars: [
+    {
+      name: 'Inference',
+      components: ['llm-d', 'vllm', 'Inference Midstream', 'llm-compressor', 'Optimized Models', 'Model Validation', 'Tool calling', 'AI security -model validation', 'Model Serving Runtimes', 'Serving Orchestration', 'PSAP']
+    },
+    {
+      name: 'Data',
+      components: ['EvalHub / Model Eval', 'AutoRAG / RAG', 'AutoML', 'Development platform', 'Data Processing', 'SDG', 'Training Hub', 'Fine Tuning / Kubeflow-Dev', 'Kubeflow Training', 'Ray Training', 'Inference Time Techniques']
+    },
+    {
+      name: 'Agents',
+      components: ['GenAI Studio', 'AgentOps', 'AgentDev', 'OGX (formerly Llama Stack) core', 'Agentic and AI Tooling Experience', 'PSAP agentic', 'Model Context Protocol']
+    },
+    {
+      name: 'Platform',
+      components: ['MaaS', 'AI Gateway', 'GPUaaS', 'AI Hub', 'Observability', 'AI Safety', 'AI Navigator', 'Feature Store', 'Notebook Server', 'Notebook images and extensions', 'AI Pipelines', 'AI Core Platform', 'MLflow', 'AI Core Dashboard']
+    }
+  ]
+}
+
+function validatePillarConfig(data) {
+  if (!data || !Array.isArray(data.pillars)) return 'pillars must be an array'
+  for (var i = 0; i < data.pillars.length; i++) {
+    var p = data.pillars[i]
+    if (!p.name || typeof p.name !== 'string') return 'pillar at index ' + i + ' must have a name string'
+    if (!Array.isArray(p.components)) return 'pillar "' + p.name + '" must have a components array'
+    for (var j = 0; j < p.components.length; j++) {
+      if (typeof p.components[j] !== 'string') return 'components in pillar "' + p.name + '" must be strings'
+    }
+  }
+  return null
+}
 const DEFAULT_ISSUE_TYPES = ['Feature', 'Initiative']
 const FIELDS_TO_FETCH = [
   'summary', 'status', 'issuetype', 'assignee', 'fixVersions', 'versions',
@@ -138,6 +173,64 @@ module.exports = function registerPmHubRoutes(router, context) {
    *       503:
    *         description: Jira client not configured
    */
+  /**
+   * @openapi
+   * /api/modules/releases/pm-hub/pillar-config:
+   *   get:
+   *     tags: [Releases]
+   *     summary: Get pillar-to-component mapping config
+   *     description: Returns the pillar configuration used to group Jira components. Seeds defaults if none exists.
+   *     responses:
+   *       200:
+   *         description: Pillar config object with pillars array
+   */
+  router.get('/pillar-config', context.requireAuth, context.requireScope('releases:read'), function(req, res) {
+    var storage = context.storage
+    var config = storage.readFromStorage(PILLAR_CONFIG_FILE)
+    if (!config) {
+      config = DEFAULT_PILLAR_CONFIG
+      storage.writeToStorage(PILLAR_CONFIG_FILE, config)
+    }
+    res.json(config)
+  })
+
+  /**
+   * @openapi
+   * /api/modules/releases/pm-hub/pillar-config:
+   *   put:
+   *     tags: [Releases]
+   *     summary: Update pillar-to-component mapping config
+   *     description: Saves an updated pillar configuration. Admin only.
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               pillars:
+   *                 type: array
+   *                 items:
+   *                   type: object
+   *                   properties:
+   *                     name: { type: string }
+   *                     components: { type: array, items: { type: string } }
+   *     responses:
+   *       200:
+   *         description: Updated pillar config
+   *       400:
+   *         description: Invalid config shape
+   */
+  router.put('/pillar-config', context.requireAuth, context.requireScope('releases:write'), function(req, res) {
+    var err = validatePillarConfig(req.body)
+    if (err) {
+      return res.status(400).json({ error: err })
+    }
+    var config = { pillars: req.body.pillars }
+    context.storage.writeToStorage(PILLAR_CONFIG_FILE, config)
+    res.json(config)
+  })
+
   router.get('/component-release-load', context.requireAuth, context.requireScope('releases:read'), async function(req, res) {
     if (!jiraClient) {
       return res.status(503).json({ error: 'Jira client not configured' })
@@ -320,3 +413,7 @@ module.exports = function registerPmHubRoutes(router, context) {
     }
   })
 }
+
+module.exports.DEFAULT_PILLAR_CONFIG = DEFAULT_PILLAR_CONFIG
+module.exports.validatePillarConfig = validatePillarConfig
+module.exports.PILLAR_CONFIG_FILE = PILLAR_CONFIG_FILE

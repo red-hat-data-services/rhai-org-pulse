@@ -253,4 +253,15 @@ test.describe('Releases PM Hub @releases', () => {
     const body = await res.json();
     expect(body.error).toContain('filter');
   });
+
+  test('pillar-config endpoint returns valid config', async ({ request }) => {
+    const res = await request.get('/api/modules/releases/pm-hub/pillar-config');
+    expect(res.ok()).toBe(true);
+    const body = await res.json();
+    expect(body).toHaveProperty('pillars');
+    expect(Array.isArray(body.pillars)).toBe(true);
+    expect(body.pillars.length).toBeGreaterThan(0);
+    expect(body.pillars[0]).toHaveProperty('name');
+    expect(body.pillars[0]).toHaveProperty('components');
+  });
 });
