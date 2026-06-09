@@ -9,7 +9,7 @@ import TrafficMap from '../execute/components/TrafficMap.vue'
 import EpicBreakdown from '../execute/components/EpicBreakdown.vue'
 import SignoffSection from '../execute/components/SignoffSection.vue'
 import AIReviewSection from '../execute/components/AIReviewSection.vue'
-import HygieneViolations from '../execute/components/hygiene/HygieneViolations.vue'
+import HygieneViolations from '@shared/client/components/HygieneViolations.vue'
 
 const nav = inject('moduleNav')
 const { feature, loading, error, loadFeature } = useFeatureDetail()

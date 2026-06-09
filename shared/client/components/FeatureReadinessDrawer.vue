@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import HygieneViolations from '../../../modules/releases/client/execute/components/hygiene/HygieneViolations.vue'
+import HygieneViolations from './HygieneViolations.vue'
 
 const props = defineProps({
   feature: { type: Object, default: null },
