@@ -95,6 +95,47 @@ function validatePillarConfig(data) {
   return null
 }
 
+function _getComponentName(comp) {
+  return typeof comp === 'string' ? comp : (comp && comp.name) || ''
+}
+
+function backfillLeads(config) {
+  var defaultMap = {}
+  for (var di = 0; di < DEFAULT_PILLAR_CONFIG.pillars.length; di++) {
+    var dp = DEFAULT_PILLAR_CONFIG.pillars[di]
+    for (var dci = 0; dci < dp.components.length; dci++) {
+      var dc = dp.components[dci]
+      if (typeof dc === 'object' && dc !== null && dc.name) {
+        defaultMap[dc.name.toLowerCase()] = dc
+      }
+    }
+  }
+
+  var changed = false
+  for (var pi = 0; pi < config.pillars.length; pi++) {
+    var pillar = config.pillars[pi]
+    for (var ci = 0; ci < pillar.components.length; ci++) {
+      var comp = pillar.components[ci]
+      var compName = _getComponentName(comp)
+      if (!compName) continue
+      var defaults = defaultMap[compName.toLowerCase()]
+
+      if (typeof comp === 'string') {
+        var obj = { name: comp }
+        if (defaults) { obj.pmLead = defaults.pmLead || ''; obj.engLead = defaults.engLead || '' }
+        pillar.components[ci] = obj
+        changed = true
+      } else if (typeof comp === 'object' && comp !== null) {
+        if (!comp.pmLead && !comp.engLead && defaults) {
+          comp.pmLead = defaults.pmLead || ''
+          comp.engLead = defaults.engLead || ''
+          changed = true
+        }
+      }
+    }
+  }
+  return changed
+}
 const DEFAULT_ISSUE_TYPES = ['Feature', 'Initiative']
 const FIELDS_TO_FETCH = [
   'summary', 'status', 'issuetype', 'assignee', 'fixVersions', 'versions',
@@ -242,6 +283,11 @@ module.exports = function registerPmHubRoutes(router, context) {
     if (!config) {
       config = DEFAULT_PILLAR_CONFIG
       storage.writeToStorage(PILLAR_CONFIG_FILE, config)
+    } else {
+      var migrated = backfillLeads(config)
+      if (migrated) {
+        storage.writeToStorage(PILLAR_CONFIG_FILE, config)
+      }
     }
     res.json(config)
   })
@@ -479,3 +525,4 @@ module.exports = function registerPmHubRoutes(router, context) {
 module.exports.DEFAULT_PILLAR_CONFIG = DEFAULT_PILLAR_CONFIG
 module.exports.validatePillarConfig = validatePillarConfig
 module.exports.PILLAR_CONFIG_FILE = PILLAR_CONFIG_FILE
+module.exports.backfillLeads = backfillLeads

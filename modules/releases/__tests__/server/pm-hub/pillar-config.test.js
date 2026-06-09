@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-const { validatePillarConfig, DEFAULT_PILLAR_CONFIG } = require('../../../server/pm-hub/routes')
+const { validatePillarConfig, DEFAULT_PILLAR_CONFIG, backfillLeads } = require('../../../server/pm-hub/routes')
 
 describe('validatePillarConfig', function () {
   it('accepts valid config', function () {
@@ -95,5 +95,46 @@ describe('DEFAULT_PILLAR_CONFIG', function () {
 
   it('passes its own validation', function () {
     expect(validatePillarConfig(DEFAULT_PILLAR_CONFIG)).toBe(null)
+  })
+})
+
+describe('backfillLeads', function () {
+  it('converts string components to objects with leads from defaults', function () {
+    var firstName = DEFAULT_PILLAR_CONFIG.pillars[0].components[0].name
+    var config = {
+      pillars: [{ name: DEFAULT_PILLAR_CONFIG.pillars[0].name, components: [firstName] }]
+    }
+    var changed = backfillLeads(config)
+    expect(changed).toBe(true)
+    var comp = config.pillars[0].components[0]
+    expect(comp).toHaveProperty('name', firstName)
+    expect(comp).toHaveProperty('pmLead')
+    expect(comp).toHaveProperty('engLead')
+  })
+
+  it('backfills leads into object components missing them', function () {
+    var firstName = DEFAULT_PILLAR_CONFIG.pillars[0].components[0].name
+    var config = {
+      pillars: [{ name: 'Test', components: [{ name: firstName }] }]
+    }
+    var changed = backfillLeads(config)
+    expect(changed).toBe(true)
+    expect(config.pillars[0].components[0].pmLead).toBeTruthy()
+  })
+
+  it('does not overwrite existing leads', function () {
+    var firstName = DEFAULT_PILLAR_CONFIG.pillars[0].components[0].name
+    var config = {
+      pillars: [{ name: 'Test', components: [{ name: firstName, pmLead: 'Custom PM', engLead: 'Custom Eng' }] }]
+    }
+    var changed = backfillLeads(config)
+    expect(changed).toBe(false)
+    expect(config.pillars[0].components[0].pmLead).toBe('Custom PM')
+  })
+
+  it('returns false when nothing to migrate', function () {
+    var config = JSON.parse(JSON.stringify(DEFAULT_PILLAR_CONFIG))
+    var changed = backfillLeads(config)
+    expect(changed).toBe(false)
   })
 })
