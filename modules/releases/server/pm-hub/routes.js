@@ -122,7 +122,8 @@ function backfillLeads(config) {
 
       if (typeof comp === 'string') {
         var obj = { name: comp }
-        if (defaults) { obj.pmLead = defaults.pmLead || ''; obj.engLead = defaults.engLead || '' }
+        obj.pmLead = (defaults && defaults.pmLead) || ''
+        obj.engLead = (defaults && defaults.engLead) || ''
         pillar.components[ci] = obj
         changed = true
       } else if (typeof comp === 'object' && comp !== null) {
@@ -136,6 +137,7 @@ function backfillLeads(config) {
   }
   return changed
 }
+
 const DEFAULT_ISSUE_TYPES = ['Feature', 'Initiative']
 const FIELDS_TO_FETCH = [
   'summary', 'status', 'issuetype', 'assignee', 'fixVersions', 'versions',
