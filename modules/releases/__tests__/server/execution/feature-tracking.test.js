@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 
 const { transformIssue, CUSTOM_FIELDS } = require('../../../server/hygiene/jira-fetch')
-const { findFixVersionAddedDate, findFixVersionRemovedDate, classifyFeature, normalizeVersionName, pickCanonicalVersionName, isEaVersion } = require('../../../server/execution/feature-tracking-routes')
+const { findFixVersionAddedDate, findFixVersionRemovedDate, classifyFeature, normalizeVersionName } = require('../../../server/execution/feature-tracking-routes')
 
 function makeRawIssue(overrides) {
   var fields = {}
@@ -391,63 +391,5 @@ describe('normalizeVersionName', function () {
   it('handles null/empty gracefully', function () {
     expect(normalizeVersionName(null)).toBe('')
     expect(normalizeVersionName('')).toBe('')
-  })
-})
-
-// ─── pickCanonicalVersionName ─────────────────────────────────────────
-
-describe('pickCanonicalVersionName', function () {
-  it('returns the only version when array has one entry', function () {
-    expect(pickCanonicalVersionName(['rhelai-3.5EA1'])).toBe('rhelai-3.5EA1')
-  })
-
-  it('prefers version with spaces over compact form', function () {
-    expect(pickCanonicalVersionName(['rhelai-3.5EA1', 'rhelai-3.5 EA1 release'])).toBe('rhelai-3.5 EA1 release')
-  })
-
-  it('prefers version with spaces regardless of order', function () {
-    expect(pickCanonicalVersionName(['rhelai-3.5 EA2 release', 'rhelai-3.5EA2'])).toBe('rhelai-3.5 EA2 release')
-  })
-
-  it('prefers longer name when both have spaces', function () {
-    expect(pickCanonicalVersionName(['rhelai-3.5 GA', 'rhelai-3.5 GA release'])).toBe('rhelai-3.5 GA release')
-  })
-
-  it('prefers longer name when neither has spaces', function () {
-    expect(pickCanonicalVersionName(['rhoai-3.5', 'rhoai-3.5.EA1'])).toBe('rhoai-3.5.EA1')
-  })
-
-  it('handles empty array', function () {
-    expect(pickCanonicalVersionName([])).toBe('')
-  })
-
-  it('handles null/undefined', function () {
-    expect(pickCanonicalVersionName(null)).toBe('')
-    expect(pickCanonicalVersionName(undefined)).toBe('')
-  })
-})
-
-describe('isEaVersion', function () {
-  it('detects EA1, EA2 etc', function () {
-    expect(isEaVersion('3.5.EA1')).toBe(true)
-    expect(isEaVersion('3.5.EA2')).toBe(true)
-    expect(isEaVersion('rhoai-3.5 EA1 release')).toBe(true)
-  })
-
-  it('detects bare EA', function () {
-    expect(isEaVersion('3.5.EA')).toBe(true)
-  })
-
-  it('rejects GA versions', function () {
-    expect(isEaVersion('3.5')).toBe(false)
-    expect(isEaVersion('3.5 GA')).toBe(false)
-    expect(isEaVersion('rhoai-3.5')).toBe(false)
-    expect(isEaVersion('3.5 GA release')).toBe(false)
-  })
-
-  it('handles null/undefined/empty', function () {
-    expect(isEaVersion(null)).toBe(false)
-    expect(isEaVersion(undefined)).toBe(false)
-    expect(isEaVersion('')).toBe(false)
   })
 })

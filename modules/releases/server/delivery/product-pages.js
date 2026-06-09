@@ -567,11 +567,9 @@ async function fetchAllProducts(config) {
  * @param {string} portfolioVersion  e.g. "3.5.EA1", "3.5"
  * @param {string[]} productShortnames  e.g. ['rhoai', 'rhelai', 'RHAII']
  * @param {object}  config  { productPagesBaseUrl }
- * @param {string}  [freezeType='feature']  'feature' or 'code'
  * @returns {Promise<{ byProduct: Object<string,string>, earliest: string|null }>}
  */
-async function fetchFeatureFreezeDatesFromSchedule(portfolioVersion, productShortnames, config, freezeType) {
-  var _freezeType = freezeType || 'feature'
+async function fetchFeatureFreezeDatesFromSchedule(portfolioVersion, productShortnames, config) {
   const version = Array.isArray(portfolioVersion) ? portfolioVersion[0] : portfolioVersion
   const versionStr = String(version || '')
   if (!versionStr) return { byProduct: {}, earliest: null }
@@ -655,8 +653,8 @@ async function fetchFeatureFreezeDatesFromSchedule(portfolioVersion, productShor
 
       console.log(`[product-pages] Found release entity ${releaseId} ("${matchedShortname}") for "${shortname}", exactEa=${matchedExactEa}`)
 
-      const freezeQuery = _freezeType + ' freeze'
-      const schedUrl = `${baseUrl}/api/v7/schedule-tasks/?entity_id=${releaseId}&q=${encodeURIComponent(freezeQuery)}`
+      // Fetch schedule tasks filtered to "feature freeze"
+      const schedUrl = `${baseUrl}/api/v7/schedule-tasks/?entity_id=${releaseId}&q=${encodeURIComponent('feature freeze')}`
       const schedResponse = await fetch(schedUrl, { headers, signal: AbortSignal.timeout(15000) })
       if (!schedResponse.ok) {
         console.warn(`[product-pages] Schedule tasks API returned HTTP ${schedResponse.status} for entity ${releaseId}`)
@@ -668,7 +666,7 @@ async function fetchFeatureFreezeDatesFromSchedule(portfolioVersion, productShor
         ? schedPayload
         : (schedPayload.data || schedPayload.results || schedPayload.result || [])
 
-      const freezePattern = new RegExp(_freezeType + '[.\\-_\\s]*freeze', 'i')
+      const freezePattern = /feature[.\-_\s]*freeze/i
       let bestDate = null
 
       for (const task of tasks) {
@@ -699,9 +697,9 @@ async function fetchFeatureFreezeDatesFromSchedule(portfolioVersion, productShor
         const key = (matchedExactEa ? matchedShortname : `${shortname}-${baseVersion}${eaTag ? '.' + eaTag : ''}`).toLowerCase()
         byProduct[key] = bestDate
         if (!earliest || bestDate < earliest) earliest = bestDate
-        console.log(`[product-pages] ${_freezeType} freeze date for "${key}": ${bestDate}`)
+        console.log(`[product-pages] Freeze date for "${key}": ${bestDate}`)
       } else {
-        console.warn(`[product-pages] No "${freezeQuery}" task found in ${tasks.length} schedule tasks for entity ${releaseId} ("${matchedShortname}")`)
+        console.warn(`[product-pages] No "feature freeze" task found in ${tasks.length} schedule tasks for entity ${releaseId} ("${matchedShortname}")`)
         if (tasks.length > 0) {
           console.warn(`[product-pages] Task names: ${tasks.slice(0, 5).map(t => t.name).join(', ')}`)
         }

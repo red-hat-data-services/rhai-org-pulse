@@ -25,8 +25,6 @@ const portfolioVersions = computed(() => {
 const currentData = computed(() => trackingData.value)
 const groups = computed(() => currentData.value ? currentData.value.groups || [] : [])
 const featureFreezeDate = computed(() => currentData.value ? currentData.value.featureFreezeDate : null)
-const freezeType = computed(() => currentData.value ? currentData.value.freezeType || 'feature' : 'feature')
-const freezeLabel = computed(() => freezeType.value === 'code' ? 'Code Freeze' : 'Feature Freeze')
 const freezeStatus = computed(() => {
   if (!featureFreezeDate.value) return 'unknown'
   var today = new Date().toISOString().split('T')[0]
@@ -157,7 +155,7 @@ onMounted(async () => {
           Feature Execution Tracking
         </h2>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 ml-9">
-          Track features committed at {{ freezeLabel }} across RHOAI, RHAIIS, and RHELAI.
+          Track features committed at Feature Freeze across RHOAI, RHAIIS, and RHELAI.
         </p>
       </div>
       <div class="flex items-center gap-2">
@@ -238,7 +236,7 @@ onMounted(async () => {
               <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </span>
-          <span class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">{{ freezeLabel }}</span>
+          <span class="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Freeze Date</span>
         </div>
         <div class="text-sm font-bold ml-7" :class="freezeStatus === 'past' ? 'text-orange-600 dark:text-orange-400' : freezeStatus === 'future' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-400'">
           {{ featureFreezeDate ? formatDate(featureFreezeDate) : 'Not set' }}
@@ -394,7 +392,6 @@ onMounted(async () => {
         :groups="filteredGroups"
         :portfolioVersion="selectedVersion"
         :featureFreezeDate="featureFreezeDate"
-        :freezeLabel="freezeLabel"
       />
     </template>
   </div>
