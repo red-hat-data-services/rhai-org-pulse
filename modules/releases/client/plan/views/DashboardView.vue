@@ -470,10 +470,6 @@ onMounted(async function() {
               <span class="text-gray-700 dark:text-gray-300 font-medium">{{ planningReadiness.withHardBlockers }}</span>
               <span class="text-gray-500 dark:text-gray-400 text-xs">blockers</span>
             </div>
-            <a
-              href="#/releases/plan?tab=health"
-              class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline ml-2"
-            >View details &rarr;</a>
           </div>
         </div>
       </div>
