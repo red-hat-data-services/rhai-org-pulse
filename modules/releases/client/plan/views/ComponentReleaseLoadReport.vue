@@ -209,7 +209,6 @@
             {{ name }}
           </button>
         </div>
-        <p v-if="versionError" class="text-xs text-red-500 mt-1">{{ versionError }}</p>
       </div>
     </div>
 
@@ -414,10 +413,6 @@ var pillarPanelOpen = ref(false)
 var components = ref([])
 var loadingComponents = ref(false)
 var componentError = ref(null)
-
-var versions = ref([])
-var loadingVersions = ref(false)
-var versionError = ref(null)
 
 var groups = ref([])
 var loadingData = ref(false)
@@ -676,24 +671,6 @@ async function fetchComponents() {
   }
 }
 
-async function fetchVersions() {
-  loadingVersions.value = true
-  versionError.value = null
-  try {
-    var response = await fetch(getApiBase() + API_BASE + '/jira/versions')
-    if (!response.ok) {
-      var errData = await response.json().catch(function() { return {} })
-      throw new Error(errData.error || 'HTTP ' + response.status)
-    }
-    var data = await response.json()
-    versions.value = data.versions || []
-  } catch (err) {
-    versionError.value = err.message
-  } finally {
-    loadingVersions.value = false
-  }
-}
-
 async function loadData() {
   if (selectedComponents.value.length === 0 && selectedVersions.value.length === 0) return
   loadingData.value = true
@@ -746,7 +723,6 @@ watch([selectedComponents, selectedVersions], function() {
 onMounted(function() {
   fetchPillarConfig()
   fetchComponents()
-  fetchVersions()
   document.addEventListener('mousedown', handleClickOutside)
 })
 
