@@ -1554,83 +1554,6 @@ describe('buildFeatureReadiness', function() {
     })
   })
 
-  describe('released version filtering', function() {
-    it('excludes features whose target versions are all archived', function() {
-      var store = makeFeaturesStore({
-        'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
-      })
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', priorityScore: 80, targetRelease: '3.6' }] }
-      var registryData = {
-        releases: [
-          { id: 'rhoai-3.6', displayName: '3.6', fixVersions: [], state: 'archived', milestones: {} }
-        ]
-      }
-      var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
-        'releases/planning/config.json': CONFIG_3_6,
-        'releases/planning/health-cache-3.6-all.json': healthCache,
-        'releases/registry.json': registryData
-      })
-      var result = buildFeatureReadiness(readFromStorage)
-      expect(result.ready).toHaveLength(0)
-      expect(result.pendingReview).toHaveLength(0)
-    })
-
-    it('excludes features whose target versions have past GA date', function() {
-      var store = makeFeaturesStore({
-        'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
-      })
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', priorityScore: 80, targetRelease: '3.6' }] }
-      var registryData = {
-        releases: [
-          { id: 'rhoai-3.6', displayName: '3.6', fixVersions: [], state: 'active', milestones: { ga: '2020-01-01' } }
-        ]
-      }
-      var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
-        'releases/planning/config.json': CONFIG_3_6,
-        'releases/planning/health-cache-3.6-all.json': healthCache,
-        'releases/registry.json': registryData
-      })
-      var result = buildFeatureReadiness(readFromStorage)
-      expect(result.ready).toHaveLength(0)
-      expect(result.pendingReview).toHaveLength(0)
-    })
-
-    it('includes features targeting active versions with future GA date', function() {
-      var store = makeFeaturesStore({
-        'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
-      })
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', priorityScore: 80, targetRelease: '3.6' }] }
-      var registryData = {
-        releases: [
-          { id: 'rhoai-3.6', displayName: '3.6', fixVersions: [], state: 'active', milestones: { ga: '2099-01-01' } }
-        ]
-      }
-      var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
-        'releases/planning/config.json': CONFIG_3_6,
-        'releases/planning/health-cache-3.6-all.json': healthCache,
-        'releases/registry.json': registryData
-      })
-      var result = buildFeatureReadiness(readFromStorage)
-      expect(result.ready).toHaveLength(1)
-    })
-
-    it('includes features when no registry exists', function() {
-      var store = makeFeaturesStore({
-        'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
-      })
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', priorityScore: 80 }] }
-      var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
-        'releases/planning/config.json': CONFIG_3_6,
-        'releases/planning/health-cache-3.6-all.json': healthCache
-      })
-      var result = buildFeatureReadiness(readFromStorage)
-      expect(result.ready).toHaveLength(1)
-    })
-  })
 
   describe('collectFilterMeta', function() {
     it('splits merged bigRock into separate Set entries', function() {
@@ -1682,4 +1605,256 @@ describe('buildFeatureReadiness', function() {
     })
   })
 
+})
+
+// ---------------------------------------------------------------------------
+// deriveHumanReviewStatusFromLabels
+// ---------------------------------------------------------------------------
+
+const { deriveHumanReviewStatusFromLabels } = require('../feature-readiness')
+
+describe('deriveHumanReviewStatusFromLabels', function() {
+  it('returns approved when sign-off label present', function() {
+    expect(deriveHumanReviewStatusFromLabels(['strat-creator-human-sign-off'])).toBe('approved')
+  })
+
+  it('returns needs-review when needs-attention label present', function() {
+    expect(deriveHumanReviewStatusFromLabels(['strat-creator-needs-attention'])).toBe('needs-review')
+  })
+
+  it('returns awaiting-review for other labels', function() {
+    expect(deriveHumanReviewStatusFromLabels(['some-label'])).toBe('awaiting-review')
+  })
+
+  it('returns awaiting-review for null', function() {
+    expect(deriveHumanReviewStatusFromLabels(null)).toBe('awaiting-review')
+  })
+
+  it('sign-off takes precedence over needs-attention', function() {
+    expect(deriveHumanReviewStatusFromLabels(['strat-creator-needs-attention', 'strat-creator-human-sign-off'])).toBe('approved')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Pass 3: execution index features
+// ---------------------------------------------------------------------------
+
+describe('buildFeatureReadiness — pass 3 (execution index)', function() {
+  function makeExecIndex(features) {
+    return { features: features, fetchedAt: '2026-06-09T00:00:00Z', schemaVersion: 'v2', featureCount: features.length }
+  }
+
+  function makeExecFeature(key, overrides) {
+    return Object.assign({
+      key: key,
+      summary: 'Exec Feature ' + key,
+      status: 'In Progress',
+      priority: 'Major',
+      assignee: 'Jane Doe',
+      components: ['UI'],
+      labels: [],
+      targetVersions: ['rhoai-3.6'],
+      fixVersions: [],
+      team: 'Platform'
+    }, overrides)
+  }
+
+  it('includes execution index features not in caches or ai-impact', function() {
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/execution/index.json': makeExecIndex([
+        makeExecFeature('RHAISTRAT-999')
+      ])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage)
+    expect(result.meta.total).toBe(1)
+    expect(result.pendingReview[0].key).toBe('RHAISTRAT-999')
+    expect(result.pendingReview[0].dataSource).toBe('execution')
+    expect(result.pendingReview[0].title).toBe('Exec Feature RHAISTRAT-999')
+    expect(result.pendingReview[0].deliveryOwner).toBe('Jane Doe')
+    expect(result.pendingReview[0].team).toBe('Platform')
+  })
+
+  it('execution feature with sign-off label and all gates passing is ready', function() {
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/execution/index.json': makeExecIndex([
+        makeExecFeature('RHAISTRAT-888', {
+          labels: ['strat-creator-human-sign-off'],
+          assignee: 'John',
+          status: 'In Progress',
+          targetVersions: ['rhoai-3.6']
+        })
+      ])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage)
+    expect(result.ready.length).toBe(1)
+    expect(result.ready[0].confidence).toBe('ready')
+    expect(result.ready[0].humanReviewStatus).toBe('approved')
+  })
+
+  it('execution feature in Refinement status is not ready', function() {
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/execution/index.json': makeExecIndex([
+        makeExecFeature('RHAISTRAT-777', {
+          labels: ['strat-creator-human-sign-off'],
+          status: 'Refinement'
+        })
+      ])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage)
+    expect(result.pendingReview.length).toBe(1)
+    expect(result.pendingReview[0].readinessGates.pastRefinement).toBe(false)
+  })
+
+  it('skips closed features from execution index', function() {
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/execution/index.json': makeExecIndex([
+        makeExecFeature('RHAISTRAT-666', { status: 'Closed' }),
+        makeExecFeature('RHAISTRAT-667', { status: 'Resolved' }),
+        makeExecFeature('RHAISTRAT-668', { status: 'In Progress' })
+      ])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage)
+    expect(result.meta.total).toBe(1)
+    expect(result.pendingReview[0].key).toBe('RHAISTRAT-668')
+  })
+
+  it('does not duplicate features already in strat-creator pass', function() {
+    var store = makeFeaturesStore({
+      'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
+    })
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': store,
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/execution/index.json': makeExecIndex([
+        makeExecFeature('RHAISTRAT-1')
+      ])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage)
+    var keys = result.pendingReview.concat(result.ready).map(function(f) { return f.key })
+    expect(new Set(keys).size).toBe(keys.length)
+  })
+
+  it('does not duplicate features already in health-pipeline pass', function() {
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/planning/health-cache-3.6-all.json': {
+        features: [{ key: 'RHAISTRAT-50', summary: 'Health Feature', status: 'In Progress', priority: 'Major' }]
+      },
+      'releases/execution/index.json': makeExecIndex([
+        makeExecFeature('RHAISTRAT-50')
+      ])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage)
+    var keys = result.pendingReview.concat(result.ready).map(function(f) { return f.key })
+    expect(new Set(keys).size).toBe(keys.length)
+    var feature = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-50' })
+    expect(feature.dataSource).toBe('health-pipeline')
+  })
+
+  it('populates filter metadata from execution features', function() {
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/execution/index.json': makeExecIndex([
+        makeExecFeature('RHAISTRAT-444', {
+          components: ['NewComp'],
+          team: 'NewTeam',
+          priority: 'Blocker',
+          targetVersions: ['rhoai-4.0']
+        })
+      ])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage)
+    expect(result.filterMeta.components).toContain('NewComp')
+    expect(result.filterMeta.teams).toContain('NewTeam')
+    expect(result.filterMeta.priorities).toContain('Blocker')
+    expect(result.filterMeta.targetVersions).toContain('rhoai-4.0')
+  })
+
+  it('execution feature with fix version gets committed confidence', function() {
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/execution/index.json': makeExecIndex([
+        makeExecFeature('RHAISTRAT-333', {
+          labels: ['strat-creator-human-sign-off'],
+          fixVersions: ['rhoai-3.6'],
+          assignee: 'Alice',
+          status: 'In Progress',
+          targetVersions: ['rhoai-3.6']
+        })
+      ])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage)
+    expect(result.ready[0].confidence).toBe('committed')
+    expect(result.ready[0].fixVersion).toBe('rhoai-3.6')
+  })
+
+  it('handles string components from execution index', function() {
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/execution/index.json': makeExecIndex([
+        makeExecFeature('RHAISTRAT-222', { components: 'UI, API, Docs' })
+      ])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage)
+    expect(result.pendingReview[0].components).toEqual(['UI', 'API', 'Docs'])
+  })
+
+  it('handles multiple execution features sorted by priority score', function() {
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/execution/index.json': makeExecIndex([
+        makeExecFeature('RHAISTRAT-A', { priority: 'Minor' }),
+        makeExecFeature('RHAISTRAT-B', { priority: 'Blocker' }),
+        makeExecFeature('RHAISTRAT-C', { priority: 'Major' })
+      ])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage)
+    expect(result.pendingReview.length).toBe(3)
+    expect(result.pendingReview[0].key).toBe('RHAISTRAT-B')
+    expect(result.pendingReview[result.pendingReview.length - 1].key).toBe('RHAISTRAT-A')
+  })
+
+  it('handles empty execution index gracefully', function() {
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/execution/index.json': makeExecIndex([])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage)
+    expect(result.meta.total).toBe(0)
+  })
+
+  it('handles missing execution index gracefully', function() {
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6
+    })
+
+    var result = buildFeatureReadiness(readFromStorage)
+    expect(result.meta.total).toBe(0)
+  })
 })

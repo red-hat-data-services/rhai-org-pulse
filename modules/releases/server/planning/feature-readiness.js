@@ -1,4 +1,6 @@
 var { getConfiguredReleases } = require('./config')
+var { loadIndex } = require('./cache-reader')
+var { CLOSED_STATUSES } = require('./constants')
 
 var RICE_MAX = 16900 // 13 × 13 × 100 ÷ 1 (theoretical max: max Reach × max Impact × max Confidence ÷ min Effort)
 
@@ -130,9 +132,9 @@ function collectFilterMeta(feature, allComponents, allPriorities, allBigRocks, a
   }
   if (feature.priority) allPriorities.add(feature.priority)
   if (feature.bigRock) {
-    var rockParts = feature.bigRock.split(', ')
-    for (var rpi = 0; rpi < rockParts.length; rpi++) {
-      allBigRocks.add(rockParts[rpi])
+    var rocks = feature.bigRock.split(', ')
+    for (var bri = 0; bri < rocks.length; bri++) {
+      if (rocks[bri]) allBigRocks.add(rocks[bri])
     }
   }
   for (var tvi = 0; tvi < feature.targetVersions.length; tvi++) {
@@ -142,11 +144,20 @@ function collectFilterMeta(feature, allComponents, allPriorities, allBigRocks, a
   if (feature.team) allTeams.add(feature.team)
 }
 
+function deriveHumanReviewStatusFromLabels(labels) {
+  if (!labels || !Array.isArray(labels)) return 'awaiting-review'
+  if (labels.indexOf('strat-creator-human-sign-off') !== -1) return 'approved'
+  if (labels.indexOf('strat-creator-needs-attention') !== -1) return 'needs-review'
+  return 'awaiting-review'
+}
+
 function buildFeatureReadiness(readFromStorage) {
   var raw = readFromStorage('ai-impact/features.json')
   if (!raw || !raw.features) {
     raw = { features: {} }
   }
+
+  var processedKeys = new Set()
 
   var candidateIndex = new Map()
   var healthIndex = new Map()
@@ -157,24 +168,11 @@ function buildFeatureReadiness(readFromStorage) {
   var registryReleases = (registry && registry.releases) || []
 
   var versionAliasMap = {}
-  var releasedVersions = new Set()
   for (var ri = 0; ri < registryReleases.length; ri++) {
     var rel = registryReleases[ri]
     var aliases = [rel.displayName, rel.id].concat(rel.fixVersions || []).filter(Boolean)
     for (var ai = 0; ai < aliases.length; ai++) {
       versionAliasMap[aliases[ai]] = aliases
-    }
-    var isArchived = rel.state === 'archived'
-    var gaDate = rel.milestones && (rel.milestones.gaDate || rel.milestones.ga)
-    var isReleased = false
-    if (gaDate) {
-      var gaTime = new Date(gaDate + 'T00:00:00Z').getTime()
-      if (!isNaN(gaTime) && Date.now() > gaTime) isReleased = true
-    }
-    if (isArchived || isReleased) {
-      for (var rvi = 0; rvi < aliases.length; rvi++) {
-        releasedVersions.add(aliases[rvi])
-      }
     }
   }
 
@@ -264,6 +262,8 @@ function buildFeatureReadiness(readFromStorage) {
     var healthData = healthIndex.get(key) || null
 
     if (hasCaches && !candidateData && !healthData) continue
+
+    processedKeys.add(key)
 
     var tier = candidateData && candidateData.tier != null
       ? 'T' + candidateData.tier
@@ -362,7 +362,9 @@ function buildFeatureReadiness(readFromStorage) {
   var cacheKeys = Array.from(healthIndex.keys())
   for (var ci3 = 0; ci3 < cacheKeys.length; ci3++) {
     var ckey = cacheKeys[ci3]
-    if (raw.features[ckey]) continue
+    if (processedKeys.has(ckey)) continue
+
+    processedKeys.add(ckey)
 
     var hd = healthIndex.get(ckey)
     var cd = candidateIndex.get(ckey) || null
@@ -454,24 +456,113 @@ function buildFeatureReadiness(readFromStorage) {
     collectFilterMeta(hpFeature, allComponents, allPriorities, allBigRocks, allTargetVersions, allFixVersions, allTeams)
   }
 
+  // Third pass: features from execution index not processed in passes 1 or 2
+  var execIndex = loadIndex(readFromStorage)
+  var execFeatures = execIndex.features || []
+  for (var ei = 0; ei < execFeatures.length; ei++) {
+    var ef = execFeatures[ei]
+    if (!ef.key || processedKeys.has(ef.key)) continue
+    if (ef.status && CLOSED_STATUSES.indexOf(ef.status) !== -1) continue
+
+    processedKeys.add(ef.key)
+
+    var efLabels = Array.isArray(ef.labels) ? ef.labels : []
+    var efHumanReviewStatus = deriveHumanReviewStatusFromLabels(efLabels)
+    var efTargetVersions = Array.isArray(ef.targetVersions) ? ef.targetVersions : []
+    var efFixVersions = Array.isArray(ef.fixVersions) ? ef.fixVersions : []
+    var efFixVersion = efFixVersions.length > 0 ? efFixVersions[0] : null
+    var efComponents = []
+    if (typeof ef.components === 'string' && ef.components) {
+      efComponents = ef.components.split(', ').filter(Boolean)
+    } else if (Array.isArray(ef.components)) {
+      efComponents = ef.components
+    }
+    var efAssignee = typeof ef.assignee === 'string' ? ef.assignee : (ef.assignee && ef.assignee.displayName ? ef.assignee.displayName : null)
+    var efTeam = teamIndex.get(ef.key) || ef.team || null
+    var efViolations = hygieneIndex.get(ef.key) || null
+
+    var efCandidateData = candidateIndex.get(ef.key) || null
+    var efTier = efCandidateData && efCandidateData.tier != null ? 'T' + efCandidateData.tier : null
+    var efBigRock = efCandidateData ? efCandidateData.bigRock || null : null
+    var efRockPriority = efCandidateData ? efCandidateData.rockPriority || null : null
+
+    var efEffective = computeBestAvailableScore({
+      tier: efTier,
+      priority: ef.priority || null,
+      riceScore: ef.riceScore != null ? ef.riceScore : null,
+      rubricTotal: 0,
+      rockPriority: efRockPriority,
+      targetVersions: efTargetVersions
+    }, configuredVersions)
+
+    var efBlockedByHygiene = hasBlockingViolations(efViolations)
+    var efIsApproved = efHumanReviewStatus === 'approved'
+    var efHasOwner = !!efAssignee
+    var efPastRefinement = !!ef.status && EARLY_STATUSES.indexOf(ef.status) === -1
+    var efHasTargetVersion = efTargetVersions.length > 0
+    var efIsReady = efIsApproved && !efBlockedByHygiene && efHasOwner && efPastRefinement && efHasTargetVersion
+    var efConfidence = computeConfidence(efIsReady, efFixVersion)
+
+    var efFeature = {
+      key: ef.key,
+      title: ef.summary || ef.key,
+      sourceRfe: null,
+      priority: ef.priority || null,
+      status: ef.status || null,
+      size: null,
+      recommendation: null,
+      needsAttention: false,
+      humanReviewStatus: efHumanReviewStatus,
+      riceScore: ef.riceScore != null ? ef.riceScore : null,
+      rubricTotal: 0,
+      scores: {},
+      reviewers: {},
+      components: efComponents,
+      deliveryOwner: efAssignee,
+      team: efTeam,
+      reviewedAt: null,
+      approvedBy: null,
+      approvedAt: null,
+      tier: efTier,
+      bigRock: efBigRock,
+      rockPriority: efRockPriority,
+      targetVersions: efTargetVersions,
+      fixVersion: efFixVersion,
+      priorityScore: null,
+      priorityScoreBreakdown: null,
+      priorityScoreFallback: true,
+      effectivePriorityScore: efEffective,
+      blockingDimensions: [],
+      actionRequired: efHumanReviewStatus !== 'approved'
+        ? 'Open the Jira issue and add the strat-creator-human-sign-off label when ready'
+        : null,
+      dataSource: 'execution',
+      confidence: efConfidence,
+      readinessGates: {
+        ownerAssigned: efHasOwner,
+        notBlocked: !(ef.blockerCount > 0),
+        pastRefinement: efPastRefinement,
+        hasTargetVersion: efHasTargetVersion,
+        noBlockingViolations: !efBlockedByHygiene
+      },
+      violations: efViolations
+    }
+
+    if (efIsReady) {
+      ready.push(efFeature)
+    } else {
+      pendingReview.push(efFeature)
+    }
+
+    collectFilterMeta(efFeature, allComponents, allPriorities, allBigRocks, allTargetVersions, allFixVersions, allTeams)
+  }
+
   function sortFeatures(a, b) {
     if (b.effectivePriorityScore !== a.effectivePriorityScore) {
       return b.effectivePriorityScore - a.effectivePriorityScore
     }
     return b.rubricTotal - a.rubricTotal
   }
-
-  function isReleasedFeature(feature) {
-    var tvs = feature.targetVersions || []
-    if (tvs.length === 0) return false
-    for (var tvi2 = 0; tvi2 < tvs.length; tvi2++) {
-      if (!releasedVersions.has(tvs[tvi2])) return false
-    }
-    return true
-  }
-
-  pendingReview = pendingReview.filter(function(f) { return !isReleasedFeature(f) })
-  ready = ready.filter(function(f) { return !isReleasedFeature(f) })
 
   pendingReview.sort(sortFeatures)
   ready.sort(sortFeatures)
@@ -498,4 +589,4 @@ function buildFeatureReadiness(readFromStorage) {
   return { pendingReview: pendingReview, ready: ready, filterMeta: filterMeta, meta: meta }
 }
 
-module.exports = { buildFeatureReadiness: buildFeatureReadiness, computeBlockers: computeBlockers, computeBestAvailableScore: computeBestAvailableScore, isHealthFeatureReady: isHealthFeatureReady, computeTierScore: computeTierScore, computeTargetVersionScore: computeTargetVersionScore, hasBlockingViolations: hasBlockingViolations, computeConfidence: computeConfidence, collectFilterMeta: collectFilterMeta, BLOCKING_HYGIENE_RULES: BLOCKING_HYGIENE_RULES }
+module.exports = { buildFeatureReadiness: buildFeatureReadiness, computeBlockers: computeBlockers, computeBestAvailableScore: computeBestAvailableScore, isHealthFeatureReady: isHealthFeatureReady, computeTierScore: computeTierScore, computeTargetVersionScore: computeTargetVersionScore, hasBlockingViolations: hasBlockingViolations, computeConfidence: computeConfidence, collectFilterMeta: collectFilterMeta, deriveHumanReviewStatusFromLabels: deriveHumanReviewStatusFromLabels, BLOCKING_HYGIENE_RULES: BLOCKING_HYGIENE_RULES }
