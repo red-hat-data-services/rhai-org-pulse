@@ -172,7 +172,7 @@ watch(
                 </span>
               </td>
               <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
-                <template v-if="row.gaps">{{ row.gaps }}</template>
+                <template v-if="row.gaps !== ''">{{ row.gaps }}</template>
                 <span
                   v-else
                   class="text-xs text-gray-400 dark:text-gray-500 italic"
