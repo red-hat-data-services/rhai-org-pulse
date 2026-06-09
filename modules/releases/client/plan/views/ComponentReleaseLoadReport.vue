@@ -368,6 +368,7 @@
       ref="tableRef"
       :groups="groups"
       :activeFilter="activeFilter"
+      :componentLeads="componentLeads"
     />
 
     <!-- Pillar config panel -->
@@ -472,6 +473,21 @@ var pillarNames = computed(function() {
   return pillarConfig.value.pillars.map(function(p) { return p.name })
 })
 
+var componentLeads = computed(function() {
+  var map = {}
+  var pillars = pillarConfig.value.pillars || []
+  for (var pi = 0; pi < pillars.length; pi++) {
+    var comps = pillars[pi].components || []
+    for (var ci = 0; ci < comps.length; ci++) {
+      var c = comps[ci]
+      if (typeof c === 'object' && c !== null && c.name) {
+        map[c.name.toLowerCase()] = { pmLead: c.pmLead || '', engLead: c.engLead || '' }
+      }
+    }
+  }
+  return map
+})
+
 var filteredPillarNames = computed(function() {
   var q = pillarSearch.value.toLowerCase().trim()
   if (!q) return pillarNames.value
@@ -487,7 +503,9 @@ var pillarAllowedComponents = computed(function() {
     var pillar = pillarConfig.value.pillars.find(function(p) { return p.name === selectedPillars.value[pi] })
     if (!pillar) continue
     for (var ci = 0; ci < pillar.components.length; ci++) {
-      allowed.add(pillar.components[ci].toLowerCase())
+      var pc = pillar.components[ci]
+      var pcName = typeof pc === 'string' ? pc : (pc && pc.name) || ''
+      if (pcName) allowed.add(pcName.toLowerCase())
     }
   }
   return allowed

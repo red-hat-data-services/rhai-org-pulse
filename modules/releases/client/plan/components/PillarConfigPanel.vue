@@ -1,6 +1,6 @@
 <template>
   <div v-if="open" class="fixed inset-0 z-[100] flex justify-end" @mousedown.self="$emit('close')">
-    <div class="w-full max-w-lg bg-white dark:bg-gray-900 shadow-2xl border-l border-gray-200 dark:border-gray-700 flex flex-col h-full">
+    <div class="w-full max-w-2xl bg-white dark:bg-gray-900 shadow-2xl border-l border-gray-200 dark:border-gray-700 flex flex-col h-full">
       <!-- Header -->
       <div class="flex items-center justify-between px-5 py-4 border-b border-gray-200 dark:border-gray-700">
         <h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Pillar Configuration</h3>
@@ -17,7 +17,7 @@
       <!-- Body -->
       <div class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
         <p class="text-xs text-gray-500 dark:text-gray-400">
-          Define which Jira components belong to each pillar. Components are matched using substring matching against Jira's component names.
+          Define which Jira components belong to each pillar, along with their PM and Engineering leads.
         </p>
 
         <div v-for="(pillar, pi) in draft" :key="pi" class="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -51,32 +51,51 @@
           </div>
 
           <!-- Components list (expandable) -->
-          <div v-if="expanded[pi]" class="px-3 py-2 space-y-1.5 border-t border-gray-100 dark:border-gray-700">
-            <div v-for="(comp, ci) in pillar.components" :key="ci" class="flex items-center gap-1.5">
-              <input
-                v-model="pillar.components[ci]"
-                class="flex-1 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded px-2 py-1 text-gray-700 dark:text-gray-300 outline-none focus:ring-1 focus:ring-primary-400"
-              />
+          <div v-if="expanded[pi]" class="border-t border-gray-100 dark:border-gray-700 divide-y divide-gray-100 dark:divide-gray-800">
+            <div v-for="(comp, ci) in pillar.components" :key="ci" class="px-3 py-2">
+              <div class="flex items-center gap-1.5">
+                <input
+                  v-model="comp.name"
+                  class="flex-1 text-sm font-medium bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded px-2 py-1 text-gray-700 dark:text-gray-300 outline-none focus:ring-1 focus:ring-primary-400"
+                  placeholder="Component name"
+                />
+                <button
+                  type="button"
+                  @click="removeComponent(pi, ci)"
+                  class="p-0.5 rounded text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div class="flex items-center gap-2 mt-1.5 ml-0.5">
+                <label class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase w-7 flex-shrink-0">PM</label>
+                <input
+                  v-model="comp.pmLead"
+                  class="flex-1 text-xs bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-600 rounded px-2 py-0.5 text-gray-600 dark:text-gray-400 outline-none focus:ring-1 focus:ring-primary-400 placeholder-gray-300 dark:placeholder-gray-600"
+                  placeholder="PM Lead"
+                />
+                <label class="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase w-7 flex-shrink-0">Eng</label>
+                <input
+                  v-model="comp.engLead"
+                  class="flex-1 text-xs bg-white dark:bg-gray-800/60 border border-gray-200 dark:border-gray-600 rounded px-2 py-0.5 text-gray-600 dark:text-gray-400 outline-none focus:ring-1 focus:ring-primary-400 placeholder-gray-300 dark:placeholder-gray-600"
+                  placeholder="Engineering Lead"
+                />
+              </div>
+            </div>
+            <div class="px-3 py-2">
               <button
                 type="button"
-                @click="removeComponent(pi, ci)"
-                class="p-0.5 rounded text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                @click="addComponent(pi)"
+                class="flex items-center gap-1 text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium"
               >
-                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
+                Add component
               </button>
             </div>
-            <button
-              type="button"
-              @click="addComponent(pi)"
-              class="flex items-center gap-1 text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium mt-1"
-            >
-              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-              Add component
-            </button>
           </div>
         </div>
 
@@ -130,9 +149,19 @@ var saving = ref(false)
 var saveError = ref(null)
 var saveSuccess = ref(false)
 
+function normalizeComponent(c) {
+  if (typeof c === 'string') return { name: c, pmLead: '', engLead: '' }
+  return { name: c.name || '', pmLead: c.pmLead || '', engLead: c.engLead || '' }
+}
+
 watch(function() { return props.open }, function(isOpen) {
   if (isOpen) {
-    draft.value = JSON.parse(JSON.stringify(props.config.pillars || []))
+    draft.value = (props.config.pillars || []).map(function(p) {
+      return {
+        name: p.name,
+        components: (p.components || []).map(normalizeComponent)
+      }
+    })
     expanded.value = {}
     saveError.value = null
     saveSuccess.value = false
@@ -153,7 +182,7 @@ function removePillar(idx) {
 }
 
 function addComponent(pillarIdx) {
-  draft.value[pillarIdx].components.push('')
+  draft.value[pillarIdx].components.push({ name: '', pmLead: '', engLead: '' })
 }
 
 function removeComponent(pillarIdx, compIdx) {
@@ -170,7 +199,11 @@ async function save() {
     .map(function(p) {
       return {
         name: p.name.trim(),
-        components: p.components.filter(function(c) { return c.trim() }).map(function(c) { return c.trim() })
+        components: p.components
+          .filter(function(c) { return c.name.trim() })
+          .map(function(c) {
+            return { name: c.name.trim(), pmLead: (c.pmLead || '').trim(), engLead: (c.engLead || '').trim() }
+          })
       }
     })
 

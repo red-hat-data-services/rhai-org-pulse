@@ -42,10 +42,31 @@ describe('validatePillarConfig', function () {
     })).toMatch(/must have a components array/)
   })
 
-  it('rejects non-string component entries', function () {
+  it('rejects non-string/non-object component entries', function () {
     expect(validatePillarConfig({
       pillars: [{ name: 'Test', components: [123] }]
-    })).toMatch(/must be strings/)
+    })).toMatch(/must be strings or objects/)
+  })
+
+  it('accepts object components with name, pmLead, engLead', function () {
+    expect(validatePillarConfig({
+      pillars: [{ name: 'Test', components: [
+        { name: 'Comp A', pmLead: 'Alice', engLead: 'Bob' },
+        { name: 'Comp B', pmLead: '', engLead: '' }
+      ] }]
+    })).toBe(null)
+  })
+
+  it('accepts mixed string and object components', function () {
+    expect(validatePillarConfig({
+      pillars: [{ name: 'Test', components: ['plain-string', { name: 'Obj Comp', pmLead: 'X', engLead: 'Y' }] }]
+    })).toBe(null)
+  })
+
+  it('rejects object component without name', function () {
+    expect(validatePillarConfig({
+      pillars: [{ name: 'Test', components: [{ pmLead: 'Alice' }] }]
+    })).toMatch(/must be strings or objects/)
   })
 })
 
@@ -63,6 +84,13 @@ describe('DEFAULT_PILLAR_CONFIG', function () {
     for (var i = 0; i < DEFAULT_PILLAR_CONFIG.pillars.length; i++) {
       expect(DEFAULT_PILLAR_CONFIG.pillars[i].components.length).toBeGreaterThan(0)
     }
+  })
+
+  it('components have name, pmLead, and engLead fields', function () {
+    var first = DEFAULT_PILLAR_CONFIG.pillars[0].components[0]
+    expect(first).toHaveProperty('name')
+    expect(first).toHaveProperty('pmLead')
+    expect(first).toHaveProperty('engLead')
   })
 
   it('passes its own validation', function () {

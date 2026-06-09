@@ -15,19 +15,66 @@ var DEFAULT_PILLAR_CONFIG = {
   pillars: [
     {
       name: 'Inference',
-      components: ['llm-d', 'vllm', 'Inference Midstream', 'llm-compressor', 'Optimized Models', 'Model Validation', 'Tool calling', 'AI security -model validation', 'Model Serving Runtimes', 'Serving Orchestration', 'PSAP']
+      components: [
+        { name: 'llm-d', pmLead: 'Naina Singh', engLead: 'Anish Asthana' },
+        { name: 'vllm', pmLead: 'Yuchen Fama', engLead: 'Ashraf Bhuiyan' },
+        { name: 'Inference Midstream', pmLead: 'Erwan Gallen', engLead: 'Selbi Nuryyeva' },
+        { name: 'llm-compressor', pmLead: 'Rob Greenberg', engLead: 'Dipika Sikka' },
+        { name: 'Optimized Models', pmLead: 'Rob Greenberg', engLead: 'Alexandre Marques' },
+        { name: 'Model Validation', pmLead: 'Rob Greenberg', engLead: 'Aviran Badli' },
+        { name: 'Tool calling', pmLead: 'Rob Greenberg, Yuchen Fama', engLead: 'Cat Weeks, Aviran Badli, Ben Browning' },
+        { name: 'AI security -model validation', pmLead: 'Rob Greenberg, William Caban, Adam Bellusci', engLead: 'Stuart Battersby, Dominik Dahlem, Aviran Badli' },
+        { name: 'Model Serving Runtimes', pmLead: 'Adam Bellusci', engLead: 'Steven Grubb' },
+        { name: 'Serving Orchestration', pmLead: 'Adam Bellusci', engLead: 'Yuan Tang' },
+        { name: 'PSAP', pmLead: 'Yuchen Fama', engLead: 'Ashish Kamra' }
+      ]
     },
     {
       name: 'Data',
-      components: ['EvalHub / Model Eval', 'AutoRAG / RAG', 'AutoML', 'Development platform', 'Data Processing', 'SDG', 'Training Hub', 'Fine Tuning / Kubeflow-Dev', 'Kubeflow Training', 'Ray Training', 'Inference Time Techniques']
+      components: [
+        { name: 'EvalHub / Model Eval', pmLead: 'William Caban', engLead: 'Rui Vieira, Marius Danciu' },
+        { name: 'AutoRAG / RAG', pmLead: 'Suhas Kashyap', engLead: 'Lukasz Cmielowski' },
+        { name: 'AutoML', pmLead: 'Aditi Saluja', engLead: 'Lukasz Cmielowski' },
+        { name: 'Development platform', pmLead: 'Jehlum Pandit', engLead: 'Doug Hellmann' },
+        { name: 'Data Processing', pmLead: 'Jehlum Pandit', engLead: 'Francisco Arceo, Chris Bynum' },
+        { name: 'SDG', pmLead: 'Aditi Saluja', engLead: 'Abhishek Bhanwaldar' },
+        { name: 'Training Hub', pmLead: 'Aditi Saluja', engLead: 'Mustafa Eyceoz' },
+        { name: 'Fine Tuning / Kubeflow-Dev', pmLead: 'Aditi Saluja', engLead: 'Brian Gallagher' },
+        { name: 'Kubeflow Training', pmLead: 'Christoph Görn', engLead: 'Umberto Manganiello' },
+        { name: 'Ray Training', pmLead: 'Christoph Görn', engLead: 'Laura Fitzgerald' },
+        { name: 'Inference Time Techniques', pmLead: 'Luke Inglis', engLead: 'Yi Zheng' }
+      ]
     },
     {
       name: 'Agents',
-      components: ['GenAI Studio', 'AgentOps', 'AgentDev', 'OGX (formerly Llama Stack) core', 'Agentic and AI Tooling Experience', 'PSAP agentic', 'Model Context Protocol']
+      components: [
+        { name: 'GenAI Studio', pmLead: 'Peter Double', engLead: 'Eder Ignatowicz' },
+        { name: 'AgentOps', pmLead: 'Adel Zaalouk', engLead: 'Roland Huß, Dimitri Saridakis' },
+        { name: 'AgentDev', pmLead: 'Adel Zaalouk', engLead: 'Bill Murdock, Justin Sun' },
+        { name: 'OGX (formerly Llama Stack) core', pmLead: 'Adel Zaalouk', engLead: 'Sebastien Han, Francisco Arceo, Eric Duen' },
+        { name: 'Agentic and AI Tooling Experience', pmLead: 'Jehlum Pandit', engLead: 'Ann Marie Fred, Nick Ommen' },
+        { name: 'PSAP agentic', pmLead: '', engLead: 'Alex Calhoun / Tanya Osokin' },
+        { name: 'Model Context Protocol', pmLead: 'Peter Double', engLead: '' }
+      ]
     },
     {
       name: 'Platform',
-      components: ['MaaS', 'AI Gateway', 'GPUaaS', 'AI Hub', 'Observability', 'AI Safety', 'AI Navigator', 'Feature Store', 'Notebook Server', 'Notebook images and extensions', 'AI Pipelines', 'AI Core Platform', 'MLflow', 'AI Core Dashboard']
+      components: [
+        { name: 'MaaS', pmLead: 'Jonathan Zarecki', engLead: 'Yuan Tang, Lindani Phiri' },
+        { name: 'AI Gateway', pmLead: 'Jonathan Zarecki', engLead: 'Shane Utt' },
+        { name: 'GPUaaS', pmLead: 'Christoph Goern', engLead: 'Luca Burgazzoli' },
+        { name: 'AI Hub', pmLead: 'Adam Bellusci', engLead: 'Chris Hambridge' },
+        { name: 'Observability', pmLead: 'Suhas Kashyap', engLead: 'Arik Hadas' },
+        { name: 'AI Safety', pmLead: 'William Caban', engLead: 'Stuart Battersby/Rob Geada/Rui Vieira' },
+        { name: 'AI Navigator', pmLead: 'Suhas Kashyap', engLead: 'Amit Oren' },
+        { name: 'Feature Store', pmLead: 'Jonathan Zarecki, Kezia Cook', engLead: 'Umberto Manganiello' },
+        { name: 'Notebook Server', pmLead: 'Kezia Cook', engLead: 'Andy Stoneberg' },
+        { name: 'Notebook images and extensions', pmLead: 'Kezia Cook', engLead: 'Nick Ommen' },
+        { name: 'AI Pipelines', pmLead: 'Myriam Fentanes Gutierrez', engLead: 'Edson Tirelli' },
+        { name: 'AI Core Platform', pmLead: 'Myriam Fentanes Gutierrez', engLead: 'Lindani Phiri' },
+        { name: 'MLflow', pmLead: 'Myriam Fentanes Gutierrez', engLead: 'Lindani Phiri' },
+        { name: 'AI Core Dashboard', pmLead: 'Jenny Yi', engLead: 'Eder Ignatowicz' }
+      ]
     }
   ]
 }
@@ -39,10 +86,17 @@ function validatePillarConfig(data) {
     if (!p.name || typeof p.name !== 'string') return 'pillar at index ' + i + ' must have a name string'
     if (!Array.isArray(p.components)) return 'pillar "' + p.name + '" must have a components array'
     for (var j = 0; j < p.components.length; j++) {
-      if (typeof p.components[j] !== 'string') return 'components in pillar "' + p.name + '" must be strings'
+      var c = p.components[j]
+      if (typeof c === 'string') continue
+      if (typeof c === 'object' && c !== null && typeof c.name === 'string') continue
+      return 'components in pillar "' + p.name + '" must be strings or objects with a name'
     }
   }
   return null
+}
+
+function _getComponentName(comp) {
+  return typeof comp === 'string' ? comp : (comp && comp.name) || ''
 }
 const DEFAULT_ISSUE_TYPES = ['Feature', 'Initiative']
 const FIELDS_TO_FETCH = [
