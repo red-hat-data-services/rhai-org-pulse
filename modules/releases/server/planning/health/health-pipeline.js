@@ -838,7 +838,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
   if (releasePhaseMode === 'planning' && healthConfig.enablePlanningChecks) {
     var fullyReadyCount = 0
     var hardBlockerCount = 0
-    var warningCount = 0
+    var warningCount = 0 // reserved for future warning-severity checks; currently all checks are hard-blockers
     var planningCheckSummary = {}
     for (var pci = 0; pci < healthFeatures.length; pci++) {
       var pc = healthFeatures[pci].planningChecks

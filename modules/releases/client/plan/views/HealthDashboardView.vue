@@ -257,8 +257,9 @@ var filteredFeatures = computed(function() {
     }
 
     // Planning check filter
-    if (planningCheckFilter.value && f.planningChecks) {
+    if (planningCheckFilter.value) {
       var pc = f.planningChecks
+      if (!pc) return false
       var checkIdMap = { 'missing-components': 'DoR-P1', 'missing-pm': 'DoR-P2', 'missing-release-type': 'DoR-P3', 'missing-epics': 'DoR-P4', 'missing-rfe': 'DoR-P5' }
       if (planningCheckFilter.value === 'has-blockers') {
         if (!pc.hasHardBlockers) return false
