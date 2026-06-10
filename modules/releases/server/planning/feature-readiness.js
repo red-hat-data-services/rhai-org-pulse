@@ -247,11 +247,12 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
   }
 
   if (listStorageFiles) {
-    try {
-      var hygieneFiles = listStorageFiles('releases/hygiene')
-      for (var hfi = 0; hfi < hygieneFiles.length; hfi++) {
-        var hfMatch = hygieneFiles[hfi].match(/^features-(.+)\.json$/)
-        if (!hfMatch) continue
+    var hygieneFiles = []
+    try { hygieneFiles = listStorageFiles('releases/hygiene') } catch { /* directory may not exist */ }
+    for (var hfi = 0; hfi < hygieneFiles.length; hfi++) {
+      var hfMatch = hygieneFiles[hfi].match(/^features-(.+)\.json$/)
+      if (!hfMatch) continue
+      try {
         var hfData = readFromStorage('releases/hygiene/' + hygieneFiles[hfi])
         if (!hfData || !hfData.features) continue
         var hfKeys = Object.keys(hfData.features)
@@ -261,9 +262,9 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
           if (!teamIndex.has(hfKeys[hfki]) && hfFeat.team) teamIndex.set(hfKeys[hfki], hfFeat.team)
           if (!hygieneIndex.has(hfKeys[hfki]) && hfFeat.violations) hygieneIndex.set(hfKeys[hfki], hfFeat.violations)
         }
+      } catch {
+        console.warn('[releases/planning] Failed to load hygiene file:', hygieneFiles[hfi])
       }
-    } catch {
-      // listStorageFiles may fail if directory doesn't exist
     }
   }
 
