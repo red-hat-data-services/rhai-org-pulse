@@ -250,3 +250,121 @@ describe('feature-query', function() {
     })
   })
 })
+
+// ---------------------------------------------------------------------------
+// Expanded custom fields (statusSummary, colorStatus, releaseType, docsRequired, targetEnd)
+// ---------------------------------------------------------------------------
+
+describe('expanded custom fields', function() {
+
+  describe('QUERY_FIELDS', function() {
+    it('includes statusSummary, colorStatus, releaseType, docsRequired, targetEnd custom field IDs', function() {
+      expect(QUERY_FIELDS).toContain(CUSTOM_FIELDS.statusSummary)
+      expect(QUERY_FIELDS).toContain(CUSTOM_FIELDS.colorStatus)
+      expect(QUERY_FIELDS).toContain(CUSTOM_FIELDS.releaseType)
+      expect(QUERY_FIELDS).toContain(CUSTOM_FIELDS.docsRequired)
+      expect(QUERY_FIELDS).toContain(CUSTOM_FIELDS.targetEnd)
+    })
+  })
+
+  describe('normalizeIssue - new fields', function() {
+    it('extracts statusSummary from custom field', function() {
+      var result = normalizeIssue({
+        key: 'RHAISTRAT-NF1',
+        fields: {
+          [CUSTOM_FIELDS.statusSummary]: 'On track for GA'
+        }
+      })
+      expect(result.statusSummary).toBe('On track for GA')
+    })
+
+    it('extracts colorStatus from object custom field', function() {
+      var result = normalizeIssue({
+        key: 'RHAISTRAT-NF2',
+        fields: {
+          [CUSTOM_FIELDS.colorStatus]: { value: 'Green' }
+        }
+      })
+      expect(result.colorStatus).toBe('Green')
+    })
+
+    it('extracts releaseType from object custom field', function() {
+      var result = normalizeIssue({
+        key: 'RHAISTRAT-NF3',
+        fields: {
+          [CUSTOM_FIELDS.releaseType]: { value: 'GA' }
+        }
+      })
+      expect(result.releaseType).toBe('GA')
+    })
+
+    it('extracts docsRequired from object custom field', function() {
+      var result = normalizeIssue({
+        key: 'RHAISTRAT-NF4',
+        fields: {
+          [CUSTOM_FIELDS.docsRequired]: { value: 'Yes' }
+        }
+      })
+      expect(result.docsRequired).toBe('Yes')
+    })
+
+    it('extracts targetEnd date string', function() {
+      var result = normalizeIssue({
+        key: 'RHAISTRAT-NF5',
+        fields: {
+          [CUSTOM_FIELDS.targetEnd]: '2026-09-15'
+        }
+      })
+      expect(result.targetEnd).toBe('2026-09-15')
+    })
+
+    it('returns null for missing new fields', function() {
+      var result = normalizeIssue({
+        key: 'RHAISTRAT-NF6',
+        fields: {}
+      })
+      expect(result.statusSummary).toBeNull()
+      expect(result.colorStatus).toBeNull()
+      expect(result.releaseType).toBeNull()
+      expect(result.docsRequired).toBeNull()
+      expect(result.targetEnd).toBeNull()
+    })
+
+    it('fetchFeatures includes new fields in returned map entries', async function() {
+      var mockClient = {
+        fetchAllJqlResults: vi.fn().mockResolvedValue([
+          {
+            key: 'RHAISTRAT-NF7',
+            fields: {
+              summary: 'Full Feature',
+              status: { name: 'In Progress' },
+              issuetype: { name: 'Feature' },
+              assignee: { displayName: 'Dev' },
+              fixVersions: [{ name: 'rhoai-3.6' }],
+              components: [{ name: 'API' }],
+              labels: [],
+              priority: { name: 'Major' },
+              [CUSTOM_FIELDS.team]: { value: 'MyTeam' },
+              [CUSTOM_FIELDS.targetVersion]: { value: 'rhoai-3.6' },
+              [CUSTOM_FIELDS.riceScore]: 200,
+              [CUSTOM_FIELDS.statusSummary]: 'Looking good',
+              [CUSTOM_FIELDS.colorStatus]: { value: 'Green' },
+              [CUSTOM_FIELDS.releaseType]: { value: 'GA' },
+              [CUSTOM_FIELDS.docsRequired]: { value: 'Yes' },
+              [CUSTOM_FIELDS.targetEnd]: '2026-10-01'
+            }
+          }
+        ])
+      }
+
+      var result = await fetchFeatures(mockClient)
+      expect(result.size).toBe(1)
+      var feature = result.get('RHAISTRAT-NF7')
+      expect(feature.statusSummary).toBe('Looking good')
+      expect(feature.colorStatus).toBe('Green')
+      expect(feature.releaseType).toBe('GA')
+      expect(feature.docsRequired).toBe('Yes')
+      expect(feature.targetEnd).toBe('2026-10-01')
+    })
+  })
+})

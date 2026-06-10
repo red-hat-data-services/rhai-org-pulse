@@ -1,6 +1,8 @@
 var { getConfiguredReleases } = require('./config')
 var { loadIndex } = require('./cache-reader')
 var { CLOSED_STATUSES } = require('./constants')
+var { evaluateHygiene } = require('../hygiene/hygiene-rules')
+var { loadConfig: loadHygieneConfig } = require('../hygiene/config')
 
 var RICE_MAX = 16900 // 13 × 13 × 100 ÷ 1 (theoretical max: max Reach × max Impact × max Confidence ÷ min Effort)
 
@@ -151,7 +153,7 @@ function deriveHumanReviewStatusFromLabels(labels) {
   return 'awaiting-review'
 }
 
-function buildFeatureReadiness(readFromStorage, jiraFeatures) {
+function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) {
   var raw = readFromStorage('ai-impact/features.json')
   if (!raw || !raw.features) {
     raw = { features: {} }
@@ -177,6 +179,14 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures) {
   }
 
   var configuredVersions = getConfiguredReleases(readFromStorage).map(function(r) { return r.version })
+
+  var hygieneRulesConfig = {}
+  try {
+    var hConfig = loadHygieneConfig({ readFromStorage: readFromStorage })
+    hygieneRulesConfig = hConfig.rules || {}
+  } catch {
+    // hygiene config not available
+  }
 
   for (var cvi = 0; cvi < configuredVersions.length; cvi++) {
     var cv = configuredVersions[cvi]
@@ -236,6 +246,27 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures) {
     }
   }
 
+  if (listStorageFiles) {
+    try {
+      var hygieneFiles = listStorageFiles('releases/hygiene')
+      for (var hfi = 0; hfi < hygieneFiles.length; hfi++) {
+        var hfMatch = hygieneFiles[hfi].match(/^features-(.+)\.json$/)
+        if (!hfMatch) continue
+        var hfData = readFromStorage('releases/hygiene/' + hygieneFiles[hfi])
+        if (!hfData || !hfData.features) continue
+        var hfKeys = Object.keys(hfData.features)
+        for (var hfki = 0; hfki < hfKeys.length; hfki++) {
+          var hfFeat = hfData.features[hfKeys[hfki]]
+          if (!hfFeat) continue
+          if (!teamIndex.has(hfKeys[hfki]) && hfFeat.team) teamIndex.set(hfKeys[hfki], hfFeat.team)
+          if (!hygieneIndex.has(hfKeys[hfki]) && hfFeat.violations) hygieneIndex.set(hfKeys[hfki], hfFeat.violations)
+        }
+      }
+    } catch {
+      // listStorageFiles may fail if directory doesn't exist
+    }
+  }
+
   var hasCaches = candidateIndex.size > 0 || healthIndex.size > 0
 
   var pendingReview = []
@@ -278,8 +309,8 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures) {
     var fixVersion = candidateData
       ? candidateData.fixVersion || null
       : (healthData ? healthData.fixVersions || null : null)
-    var deliveryOwner = healthData ? healthData.deliveryOwner || null : null
-    var team = teamIndex.get(key) || null
+    var deliveryOwner = (healthData ? healthData.deliveryOwner || null : null) || (jiraFeatures && jiraFeatures.has(key) ? jiraFeatures.get(key).assignee : null) || null
+    var team = teamIndex.get(key) || (jiraFeatures && jiraFeatures.has(key) ? jiraFeatures.get(key).team : null) || null
 
     var priorityScore = healthData ? (healthData.priorityScore != null ? healthData.priorityScore : null) : null
     var priorityScoreBreakdown = healthData ? (healthData.priorityBreakdown || healthData.priorityScoreBreakdown || null) : null
@@ -294,9 +325,10 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures) {
     var healthComponents = healthData && healthData.components
       ? healthData.components.split(', ').filter(Boolean)
       : []
+    var jiraComponents = jiraFeatures && jiraFeatures.has(key) ? jiraFeatures.get(key).components || [] : []
     var componentsList = (latest.components && latest.components.length > 0)
       ? latest.components
-      : healthComponents
+      : (healthComponents.length > 0 ? healthComponents : jiraComponents)
 
     var violations = hygieneIndex.get(key) || null
     var isApproved = latest.humanReviewStatus === 'approved'
@@ -376,10 +408,11 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures) {
       ? [cd.targetRelease]
       : (hd.targetRelease ? [hd.targetRelease] : [])
     var hpFixVersion = cd ? cd.fixVersion || null : (hd.fixVersions || null)
+    var hpJiraComponents = jiraFeatures && jiraFeatures.has(ckey) ? jiraFeatures.get(ckey).components || [] : []
     var hpComponents = hd.components
       ? hd.components.split(', ').filter(Boolean)
-      : []
-    var hpTeam = teamIndex.get(ckey) || null
+      : hpJiraComponents
+    var hpTeam = teamIndex.get(ckey) || (jiraFeatures && jiraFeatures.has(ckey) ? jiraFeatures.get(ckey).team : null) || null
 
     var hpPriorityScore = hd.priorityScore != null ? hd.priorityScore : null
     var hpPriorityBreakdown = hd.priorityBreakdown || null
@@ -492,6 +525,30 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures) {
     var efAssignee = typeof ef.assignee === 'string' ? ef.assignee : (ef.assignee && ef.assignee.displayName ? ef.assignee.displayName : null)
     var efTeam = teamIndex.get(ef.key) || ef.team || null
     var efViolations = hygieneIndex.get(ef.key) || null
+    if (!efViolations && pass3DataSource === 'jira') {
+      try {
+        efViolations = evaluateHygiene({
+          key: ef.key,
+          summary: ef.summary,
+          status: ef.status,
+          issueType: ef.issueType,
+          assignee: efAssignee,
+          team: efTeam,
+          components: efComponents,
+          fixVersions: efFixVersions,
+          labels: efLabels,
+          statusSummary: ef.statusSummary || null,
+          colorStatus: ef.colorStatus || null,
+          releaseType: ef.releaseType || null,
+          docsRequired: ef.docsRequired || null,
+          targetEnd: ef.targetEnd || null,
+          riceScore: ef.riceScore || null
+        }, hygieneRulesConfig)
+        if (efViolations && efViolations.length === 0) efViolations = null
+      } catch {
+        // dynamic evaluation failed, leave as null
+      }
+    }
 
     var efCandidateData = candidateIndex.get(ef.key) || null
     var efTier = efCandidateData && efCandidateData.tier != null ? 'T' + efCandidateData.tier : null

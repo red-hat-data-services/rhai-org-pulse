@@ -478,7 +478,7 @@ module.exports = function registerPlanningRoutes(router, context) {
           console.warn('[releases/planning] Jira feature query failed, falling back to execution index:', jiraErr.message)
         }
       }
-      var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+      var result = buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles)
       res.json(result)
     } catch (err) {
       console.error('[releases/planning] Feature readiness build failed:', err.message)

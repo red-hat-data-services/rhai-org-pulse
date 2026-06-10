@@ -195,7 +195,9 @@ async function rebuildIndex(storage) {
       parentKey: feature.parentKey || null,
       // Jira-sourced fields for index filtering
       colorStatus: feature.colorStatus || null,
-      ownerStatusColor: feature.colorStatus || null // backward compat alias
+      ownerStatusColor: feature.colorStatus || null, // backward compat alias
+      team: feature.team || null,
+      components: feature.components || []
     };
 
     features.push(indexEntry);

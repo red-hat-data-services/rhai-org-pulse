@@ -5,7 +5,12 @@ var QUERY_FIELDS = [
   'components', 'labels', 'priority', 'created', 'updated',
   CUSTOM_FIELDS.team,
   CUSTOM_FIELDS.targetVersion,
-  CUSTOM_FIELDS.riceScore
+  CUSTOM_FIELDS.riceScore,
+  CUSTOM_FIELDS.statusSummary,
+  CUSTOM_FIELDS.colorStatus,
+  CUSTOM_FIELDS.releaseType,
+  CUSTOM_FIELDS.docsRequired,
+  CUSTOM_FIELDS.targetEnd
 ].join(',')
 
 var JQL = 'project = RHAISTRAT AND issuetype IN (Feature, Initiative) AND status NOT IN (Closed, Done, Resolved, Cancelled)'
@@ -46,7 +51,12 @@ function normalizeIssue(issue) {
     fixVersions: fixVersions,
     targetVersions: targetVersions,
     priority: priority,
-    riceScore: fields[CUSTOM_FIELDS.riceScore] || null
+    riceScore: fields[CUSTOM_FIELDS.riceScore] || null,
+    statusSummary: serializeField(fields[CUSTOM_FIELDS.statusSummary]),
+    colorStatus: serializeField(fields[CUSTOM_FIELDS.colorStatus]),
+    releaseType: serializeField(fields[CUSTOM_FIELDS.releaseType]),
+    docsRequired: serializeField(fields[CUSTOM_FIELDS.docsRequired]),
+    targetEnd: serializeField(fields[CUSTOM_FIELDS.targetEnd])
   }
 }
 

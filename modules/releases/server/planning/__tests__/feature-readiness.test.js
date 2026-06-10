@@ -2018,8 +2018,14 @@ describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
       makeJiraFeature('RHAISTRAT-500', {
         labels: ['strat-creator-human-sign-off'],
         assignee: 'Alice',
+        team: 'MyTeam',
         status: 'In Progress',
-        targetVersions: ['rhoai-3.6']
+        targetVersions: ['rhoai-3.6'],
+        fixVersions: ['rhoai-3.6'],
+        colorStatus: 'Green',
+        releaseType: 'GA',
+        docsRequired: 'Yes',
+        targetEnd: '2026-09-15'
       })
     ])
     var readFromStorage = makeReadFromStorage({
@@ -2030,7 +2036,7 @@ describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
 
     var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
     expect(result.ready.length).toBe(1)
-    expect(result.ready[0].confidence).toBe('ready')
+    expect(result.ready[0].confidence).toBe('committed')
     expect(result.ready[0].humanReviewStatus).toBe('approved')
   })
 
@@ -2213,5 +2219,444 @@ describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
     var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
     expect(result.pendingReview.length).toBe(1)
     expect(result.pendingReview[0].readinessGates.hasTargetVersion).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// All-hygiene-files loading via listStorageFiles
+// ---------------------------------------------------------------------------
+
+describe('buildFeatureReadiness - all-hygiene-files loading', function() {
+  function makeExecIndex(features) {
+    return { features: features, fetchedAt: '2026-06-09T00:00:00Z', schemaVersion: 'v2', featureCount: features.length }
+  }
+
+  function makeExecFeature(key, overrides) {
+    return Object.assign({
+      key: key,
+      summary: 'Exec Feature ' + key,
+      status: 'In Progress',
+      priority: 'Major',
+      assignee: 'Jane Doe',
+      components: ['UI'],
+      labels: [],
+      targetVersions: ['rhoai-3.6'],
+      fixVersions: [],
+      team: 'Platform'
+    }, overrides)
+  }
+
+  function makeJiraMap(features) {
+    var map = new Map()
+    for (var i = 0; i < features.length; i++) {
+      map.set(features[i].key, features[i])
+    }
+    return map
+  }
+
+  function makeJiraFeature(key, overrides) {
+    return Object.assign({
+      key: key,
+      summary: 'Jira Feature ' + key,
+      status: 'In Progress',
+      issueType: 'Feature',
+      assignee: 'Alice',
+      team: 'Platform',
+      components: ['Dashboard'],
+      labels: [],
+      fixVersions: [],
+      targetVersions: ['rhoai-3.6'],
+      priority: 'Major',
+      riceScore: null
+    }, overrides)
+  }
+
+  it('loads team and violations from non-configured hygiene files via listStorageFiles', function() {
+    var jiraFeatures = makeJiraMap([
+      makeJiraFeature('RHAISTRAT-500', { team: null })
+    ])
+
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': { releases: { '3.6': { release: '3.6' } } },
+      'releases/execution/index.json': makeExecIndex([]),
+      'releases/hygiene/features-rhoai-3.7.json': {
+        features: {
+          'RHAISTRAT-500': {
+            team: 'Llama Stack Core',
+            violations: [{ id: 'missing-fix-version', name: 'Missing Fix Version' }]
+          }
+        }
+      }
+    })
+
+    var listStorageFiles = function(dir) {
+      if (dir === 'releases/hygiene') return ['features-rhoai-3.7.json']
+      return []
+    }
+
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles)
+    var feature = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-500' })
+    expect(feature).toBeDefined()
+    expect(feature.team).toBe('Llama Stack Core')
+    expect(feature.violations).toEqual([{ id: 'missing-fix-version', name: 'Missing Fix Version' }])
+  })
+
+  it('does not overwrite team from configured version with non-configured version data', function() {
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': { releases: { '3.6': { release: '3.6' } } },
+      'releases/execution/index.json': makeExecIndex([
+        makeExecFeature('RHAISTRAT-600', { team: null })
+      ]),
+      'releases/hygiene/features-3.6.json': {
+        features: {
+          'RHAISTRAT-600': { team: 'RHOAI Dashboard', violations: [] }
+        }
+      },
+      'releases/hygiene/features-rhoai-3.7.json': {
+        features: {
+          'RHAISTRAT-600': { team: 'Llama Stack Core', violations: [{ id: 'test' }] }
+        }
+      }
+    })
+
+    var listStorageFiles = function(dir) {
+      if (dir === 'releases/hygiene') return ['features-3.6.json', 'features-rhoai-3.7.json']
+      return []
+    }
+
+    var result = buildFeatureReadiness(readFromStorage, null, listStorageFiles)
+    var feature = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-600' })
+    expect(feature).toBeDefined()
+    expect(feature.team).toBe('RHOAI Dashboard')
+  })
+
+  it('works without listStorageFiles (backward compatible)', function() {
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': { releases: { '3.6': { release: '3.6' } } },
+      'releases/execution/index.json': makeExecIndex([
+        makeExecFeature('RHAISTRAT-700')
+      ])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, null)
+    expect(result.pendingReview.concat(result.ready).length).toBeGreaterThan(0)
+  })
+
+  it('handles listStorageFiles throwing an error gracefully', function() {
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': { releases: { '3.6': { release: '3.6' } } },
+      'releases/execution/index.json': makeExecIndex([
+        makeExecFeature('RHAISTRAT-800')
+      ])
+    })
+
+    var listStorageFiles = function() {
+      throw new Error('directory not found')
+    }
+
+    var result = buildFeatureReadiness(readFromStorage, null, listStorageFiles)
+    expect(result.pendingReview.concat(result.ready).length).toBeGreaterThan(0)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Jira data fallback for passes 1 and 2
+// ---------------------------------------------------------------------------
+
+describe('buildFeatureReadiness - Jira data fallback enrichment', function() {
+  function makeJiraMap(features) {
+    var map = new Map()
+    for (var i = 0; i < features.length; i++) {
+      map.set(features[i].key, features[i])
+    }
+    return map
+  }
+
+  function makeJiraFeature(key, overrides) {
+    return Object.assign({
+      key: key,
+      summary: 'Jira Feature ' + key,
+      status: 'In Progress',
+      issueType: 'Feature',
+      assignee: 'JiraAssignee',
+      team: 'JiraTeam',
+      components: ['JiraComp'],
+      labels: [],
+      fixVersions: [],
+      targetVersions: ['rhoai-3.6'],
+      priority: 'Major',
+      riceScore: null
+    }, overrides)
+  }
+
+  it('pass 1: uses Jira team when teamIndex has no entry', function() {
+    var jiraFeatures = makeJiraMap([
+      makeJiraFeature('RHAISTRAT-1', { team: 'JiraTeamFallback' })
+    ])
+
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({
+        'RHAISTRAT-1': {
+          latest: makeLatest({ key: 'RHAISTRAT-1', humanReviewStatus: 'approved' })
+        }
+      }),
+      'releases/planning/config.json': { releases: { '3.6': { release: '3.6' } } },
+      'releases/planning/candidates-cache-3.6.json': {
+        data: { features: [{ issueKey: 'RHAISTRAT-1', tier: 1, bigRock: 'Rock' }] }
+      },
+      'releases/execution/index.json': { features: [], fetchedAt: '2026-06-09T00:00:00Z', schemaVersion: 'v2', featureCount: 0 }
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+    var feature = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-1' })
+    expect(feature).toBeDefined()
+    expect(feature.team).toBe('JiraTeamFallback')
+  })
+
+  it('pass 1: uses Jira components when strat-creator and health-cache are empty', function() {
+    var jiraFeatures = makeJiraMap([
+      makeJiraFeature('RHAISTRAT-1', { components: ['CompFromJira'] })
+    ])
+
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({
+        'RHAISTRAT-1': {
+          latest: makeLatest({ key: 'RHAISTRAT-1', components: [] })
+        }
+      }),
+      'releases/planning/config.json': { releases: { '3.6': { release: '3.6' } } },
+      'releases/planning/candidates-cache-3.6.json': {
+        data: { features: [{ issueKey: 'RHAISTRAT-1', tier: 1, bigRock: 'Rock' }] }
+      },
+      'releases/execution/index.json': { features: [], fetchedAt: '2026-06-09T00:00:00Z', schemaVersion: 'v2', featureCount: 0 }
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+    var feature = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-1' })
+    expect(feature).toBeDefined()
+    expect(feature.components).toEqual(['CompFromJira'])
+  })
+
+  it('pass 1: uses Jira assignee as deliveryOwner when healthData has none', function() {
+    var jiraFeatures = makeJiraMap([
+      makeJiraFeature('RHAISTRAT-1', { assignee: 'JiraOwner' })
+    ])
+
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({
+        'RHAISTRAT-1': {
+          latest: makeLatest({ key: 'RHAISTRAT-1' })
+        }
+      }),
+      'releases/planning/config.json': { releases: { '3.6': { release: '3.6' } } },
+      'releases/planning/candidates-cache-3.6.json': {
+        data: { features: [{ issueKey: 'RHAISTRAT-1', tier: 1, bigRock: 'Rock' }] }
+      },
+      'releases/execution/index.json': { features: [], fetchedAt: '2026-06-09T00:00:00Z', schemaVersion: 'v2', featureCount: 0 }
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+    var feature = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-1' })
+    expect(feature).toBeDefined()
+    expect(feature.deliveryOwner).toBe('JiraOwner')
+  })
+
+  it('pass 2: uses Jira team when teamIndex has no entry', function() {
+    var jiraFeatures = makeJiraMap([
+      makeJiraFeature('RHAISTRAT-HP1', { team: 'JiraTeamHP' })
+    ])
+
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': { releases: { '3.6': { release: '3.6' } } },
+      'releases/planning/health-cache-3.6-all.json': {
+        features: [{
+          key: 'RHAISTRAT-HP1',
+          summary: 'Health Feature',
+          status: 'In Progress',
+          priority: 'Major',
+          components: '',
+          assignee: 'Owner'
+        }]
+      },
+      'releases/execution/index.json': { features: [], fetchedAt: '2026-06-09T00:00:00Z', schemaVersion: 'v2', featureCount: 0 }
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+    var feature = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-HP1' })
+    expect(feature).toBeDefined()
+    expect(feature.team).toBe('JiraTeamHP')
+  })
+
+  it('pass 2: uses Jira components when health-cache components are empty', function() {
+    var jiraFeatures = makeJiraMap([
+      makeJiraFeature('RHAISTRAT-HP2', { components: ['JiraCompHP'] })
+    ])
+
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': { releases: { '3.6': { release: '3.6' } } },
+      'releases/planning/health-cache-3.6-all.json': {
+        features: [{
+          key: 'RHAISTRAT-HP2',
+          summary: 'Health Feature',
+          status: 'In Progress',
+          priority: 'Major',
+          components: '',
+          assignee: 'Owner'
+        }]
+      },
+      'releases/execution/index.json': { features: [], fetchedAt: '2026-06-09T00:00:00Z', schemaVersion: 'v2', featureCount: 0 }
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+    var feature = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-HP2' })
+    expect(feature).toBeDefined()
+    expect(feature.components).toEqual(['JiraCompHP'])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Dynamic hygiene evaluation in pass 3
+// ---------------------------------------------------------------------------
+
+describe('buildFeatureReadiness - dynamic hygiene evaluation', function() {
+  function makeExecIndex(features) {
+    return { features: features, fetchedAt: '2026-06-09T00:00:00Z', schemaVersion: 'v2', featureCount: features.length }
+  }
+
+  function makeJiraMap(features) {
+    var map = new Map()
+    for (var i = 0; i < features.length; i++) {
+      map.set(features[i].key, features[i])
+    }
+    return map
+  }
+
+  function makeJiraFeature(key, overrides) {
+    return Object.assign({
+      key: key,
+      summary: 'Jira Feature ' + key,
+      status: 'In Progress',
+      issueType: 'Feature',
+      assignee: null,
+      team: null,
+      components: [],
+      labels: [],
+      fixVersions: [],
+      targetVersions: ['rhoai-3.6'],
+      priority: 'Major',
+      riceScore: null,
+      statusSummary: null,
+      colorStatus: null,
+      releaseType: null,
+      docsRequired: null,
+      targetEnd: null
+    }, overrides)
+  }
+
+  it('dynamically evaluates hygiene for Jira pass 3 features not in hygieneIndex', function() {
+    var jiraFeatures = makeJiraMap([
+      makeJiraFeature('RHAISTRAT-DYN1', {
+        status: 'In Progress',
+        assignee: null,
+        team: null
+      })
+    ])
+
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': { releases: { '3.6': { release: '3.6' } } },
+      'releases/execution/index.json': makeExecIndex([])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+    var feature = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-DYN1' })
+    expect(feature).toBeDefined()
+    expect(feature.violations).not.toBeNull()
+    expect(feature.violations.length).toBeGreaterThan(0)
+    var violationIds = feature.violations.map(function(v) { return v.id })
+    expect(violationIds).toContain('missing-assignee')
+    expect(violationIds).toContain('missing-team')
+  })
+
+  it('does not dynamically evaluate when hygieneIndex already has violations', function() {
+    var jiraFeatures = makeJiraMap([
+      makeJiraFeature('RHAISTRAT-DYN2', {
+        status: 'In Progress',
+        assignee: null
+      })
+    ])
+
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': { releases: { '3.6': { release: '3.6' } } },
+      'releases/execution/index.json': makeExecIndex([]),
+      'releases/hygiene/features-3.6.json': {
+        features: {
+          'RHAISTRAT-DYN2': {
+            team: 'CachedTeam',
+            violations: [{ id: 'cached-violation', name: 'Cached Violation' }]
+          }
+        }
+      }
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+    var feature = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-DYN2' })
+    expect(feature).toBeDefined()
+    expect(feature.violations).toEqual([{ id: 'cached-violation', name: 'Cached Violation' }])
+  })
+
+  it('does not dynamically evaluate for execution index source', function() {
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': { releases: { '3.6': { release: '3.6' } } },
+      'releases/execution/index.json': makeExecIndex([{
+        key: 'RHAISTRAT-DYN3',
+        summary: 'Exec Feature',
+        status: 'In Progress',
+        priority: 'Major',
+        assignee: null,
+        components: [],
+        labels: [],
+        targetVersions: ['rhoai-3.6'],
+        fixVersions: [],
+        team: null
+      }])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, null)
+    var feature = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-DYN3' })
+    expect(feature).toBeDefined()
+    expect(feature.violations).toBeNull()
+  })
+
+  it('detects missing-color-status for In Progress feature without colorStatus', function() {
+    var jiraFeatures = makeJiraMap([
+      makeJiraFeature('RHAISTRAT-DYN4', {
+        status: 'In Progress',
+        assignee: 'Owner',
+        team: 'MyTeam',
+        colorStatus: null
+      })
+    ])
+
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': { releases: { '3.6': { release: '3.6' } } },
+      'releases/execution/index.json': makeExecIndex([])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+    var feature = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-DYN4' })
+    expect(feature).toBeDefined()
+    expect(feature.violations).not.toBeNull()
+    var violationIds = feature.violations.map(function(v) { return v.id })
+    expect(violationIds).toContain('missing-color-status')
   })
 })
