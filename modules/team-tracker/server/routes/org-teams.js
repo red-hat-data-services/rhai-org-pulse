@@ -185,7 +185,10 @@ module.exports = function registerOrgTeamsRoutes(router, context) {
       const emptyTeamComponents = componentFieldId && structure.metadata?.[componentFieldId]
         ? [].concat(structure.metadata[componentFieldId])
         : [];
-      teams.push({ org, name, boardUrls: [], boards: [], engLeads: [], productManagers: [], headcount: {}, components: emptyTeamComponents, memberCount: 0, jiraFilter: null, structureId: structure.id, metadata: structure.metadata || {} });
+      const structureBoards = Array.isArray(structure.boards)
+        ? structure.boards.map(b => b.boardId != null ? b : { ...b, boardId: teamStore.extractBoardId(b.url) })
+        : [];
+      teams.push({ org, name, boardUrls: structureBoards.map(b => b.url), boards: structureBoards, engLeads: [], productManagers: [], headcount: {}, components: emptyTeamComponents, memberCount: 0, jiraFilter: null, structureId: structure.id, metadata: structure.metadata || {} });
     }
 
     // Find people with no team assignment

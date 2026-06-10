@@ -238,6 +238,82 @@ describe('buildEnrichedTeams board cascade', () => {
     expect(team.components).toEqual(['Legacy Comp'])
   })
 
+  it('preserves structure boards on empty teams (no members in _teamGrouping)', () => {
+    // Simulates a team that exists in team-data/teams.json with boards,
+    // but has zero people with matching _teamGrouping (e.g. after a rename).
+    // The "empty structure team" code path must carry boards forward.
+    const storageData = {
+      ...buildRegistryAndConfig('org1', 'Org One', ['OtherTeam']),
+      'org-roster/teams-metadata.json': { teams: [], boardNames: {} },
+      'org-roster/components.json': { components: {} },
+      'team-data/teams.json': {
+        teams: {
+          team_ft: {
+            id: 'team_ft',
+            name: 'Fine Tuning',
+            orgKey: 'org1',
+            metadata: {},
+            boards: [
+              { url: 'https://jira.example.com/boards/100', name: 'FT Board', boardId: 100 }
+            ]
+          }
+        }
+      },
+      'audit-log.json': { entries: [] }
+    }
+
+    const storage = makeStorage(storageData)
+    const handlers = setupRoutes(storage)
+    const res = mockRes()
+
+    handlers['GET /org-teams']({ query: {} }, res)
+
+    expect(res._status).toBe(200)
+    const team = res._body.teams.find(t => t.name === 'Fine Tuning')
+    expect(team).toBeDefined()
+    expect(team.structureId).toBe('team_ft')
+    expect(team.memberCount).toBe(0)
+    expect(team.boards).toHaveLength(1)
+    expect(team.boards[0].url).toBe('https://jira.example.com/boards/100')
+    expect(team.boards[0].name).toBe('FT Board')
+    expect(team.boards[0].boardId).toBe(100)
+    expect(team.boardUrls).toEqual(['https://jira.example.com/boards/100'])
+  })
+
+  it('backfills boardId on empty structure teams with legacy board entries', () => {
+    const storageData = {
+      ...buildRegistryAndConfig('org1', 'Org One', ['OtherTeam']),
+      'org-roster/teams-metadata.json': { teams: [], boardNames: {} },
+      'org-roster/components.json': { components: {} },
+      'team-data/teams.json': {
+        teams: {
+          team_legacy: {
+            id: 'team_legacy',
+            name: 'Legacy Team',
+            orgKey: 'org1',
+            metadata: {},
+            boards: [
+              { url: 'https://jira.example.com/boards/42', name: 'Old Board' }
+            ]
+          }
+        }
+      },
+      'audit-log.json': { entries: [] }
+    }
+
+    const storage = makeStorage(storageData)
+    const handlers = setupRoutes(storage)
+    const res = mockRes()
+
+    handlers['GET /org-teams']({ query: {} }, res)
+
+    expect(res._status).toBe(200)
+    const team = res._body.teams.find(t => t.name === 'Legacy Team')
+    expect(team).toBeDefined()
+    expect(team.boards).toHaveLength(1)
+    expect(team.boards[0].boardId).toBe(42)
+  })
+
   it('handles missing boards array on structure team gracefully', () => {
     const storageData = {
       ...buildRegistryAndConfig('org1', 'Org One', ['Platform']),
