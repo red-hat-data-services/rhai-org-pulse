@@ -33,6 +33,7 @@ export default defineConfig({
           environment: 'node',
           include: [
             'server/**/*.{test,spec}.js',
+            'shared/server/**/*.{test,spec}.js',
             'modules/*/server/**/*.{test,spec}.js',
             'modules/*/__tests__/server/**/*.{test,spec}.js',
           ],
@@ -48,6 +49,7 @@ export default defineConfig({
           exclude: [
             ...sharedExclude,
             'server/**',
+            'shared/server/**',
             'modules/*/server/**',
             'modules/*/__tests__/server/**',
           ],
