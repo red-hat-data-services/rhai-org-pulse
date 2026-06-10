@@ -151,6 +151,13 @@ const violationsList = computed(() => props.feature?.violations || [])
 const violationCount = computed(() => violationsList.value.length)
 
 const hygieneExpanded = ref(true)
+const breakdownExpanded = ref(false)
+
+const scoreBreakdown = computed(() => {
+  const bd = props.feature?.priorityScoreBreakdown
+  if (!bd || !bd.signals) return null
+  return bd
+})
 
 function onKey(e) {
   if (e.key === 'Escape' && open.value) emit('close')
@@ -263,6 +270,53 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
                     ? 'Estimated — no pipeline score yet (tier + priority)'
                     : 'From prioritization pipeline' }}
                 </p>
+              </div>
+            </div>
+          </section>
+
+          <!-- Score Breakdown -->
+          <section v-if="scoreBreakdown" class="px-4 py-4">
+            <button
+              type="button"
+              class="w-full flex items-center justify-between text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              @click="breakdownExpanded = !breakdownExpanded"
+            >
+              <span class="flex items-center gap-2">
+                Score Breakdown
+                <span
+                  v-if="scoreBreakdown.completenessMultiplier < 1"
+                  class="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
+                >{{ scoreBreakdown.signalCount }}/{{ scoreBreakdown.maxSignals }} signals</span>
+              </span>
+              <svg
+                class="w-3.5 h-3.5 transition-transform"
+                :class="breakdownExpanded ? 'rotate-180' : ''"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <div v-if="breakdownExpanded" class="space-y-3">
+              <div v-for="signal in scoreBreakdown.signals" :key="signal.name" class="space-y-1">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="text-gray-700 dark:text-gray-300">{{ signal.name }}</span>
+                  <span class="text-gray-400 dark:text-gray-500 tabular-nums">{{ Math.round(signal.value * 100) }}% &times; {{ signal.weight }}w</span>
+                </div>
+                <div class="h-1.5 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
+                  <div
+                    class="h-full rounded-full bg-gradient-to-r from-primary-500 to-purple-500 transition-all"
+                    :style="{ width: Math.round(signal.value * 100) + '%' }"
+                  />
+                </div>
+              </div>
+              <div v-if="scoreBreakdown.completenessMultiplier < 1" class="pt-2 border-t border-gray-100 dark:border-gray-800">
+                <p class="text-xs text-amber-600 dark:text-amber-400">
+                  Raw score {{ scoreBreakdown.rawScore }} &times; {{ scoreBreakdown.completenessMultiplier }} completeness
+                  = {{ scoreBreakdown.score }}
+                </p>
+              </div>
+              <div v-if="scoreBreakdown.missing && scoreBreakdown.missing.length > 0" class="text-xs text-gray-400 dark:text-gray-500">
+                Missing: {{ scoreBreakdown.missing.join(', ') }}
               </div>
             </div>
           </section>

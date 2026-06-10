@@ -43,25 +43,35 @@ function computeTargetVersionScore(feature, configuredVersions) {
   return 1.0 - (bestIndex / (configuredVersions.length - 1)) * 0.7
 }
 
+var COMPLETENESS_MULTIPLIERS = [0, 0.5, 0.7, 0.85, 1.0]
+var MAX_SIGNALS = 4
+
 function computeBestAvailableScore(feature, configuredVersions) {
   var signals = []
+  var missing = []
   var hasValueSignal = feature.riceScore != null || (feature.rubricTotal || 0) > 0
 
   if (feature.riceScore != null) {
-    signals.push({ value: feature.riceScore / RICE_MAX, weight: 30 })
+    signals.push({ name: "RICE Score", value: feature.riceScore / RICE_MAX, weight: 30, raw: feature.riceScore })
   } else if ((feature.rubricTotal || 0) > 0) {
-    signals.push({ value: feature.rubricTotal / 8, weight: 30 })
+    signals.push({ name: "Rubric", value: feature.rubricTotal / 8, weight: 30, raw: feature.rubricTotal })
+  } else {
+    missing.push("RICE Score")
   }
 
   if (feature.tier != null) {
-    signals.push({ value: computeTierScore(feature), weight: hasValueSignal ? 25 : 40 })
+    signals.push({ name: "Tier", value: computeTierScore(feature), weight: hasValueSignal ? 25 : 40, raw: feature.tier })
+  } else {
+    missing.push("Tier")
   }
 
-  signals.push({ value: PRIORITY_SCORES[feature.priority] || 0.4, weight: hasValueSignal ? 25 : 35 })
+  signals.push({ name: "Priority", value: PRIORITY_SCORES[feature.priority] || 0.4, weight: hasValueSignal ? 25 : 35, raw: feature.priority || "Normal" })
 
   var tvScore = computeTargetVersionScore(feature, configuredVersions)
   if (tvScore != null) {
-    signals.push({ value: tvScore, weight: hasValueSignal ? 20 : 25 })
+    signals.push({ name: "Target Version", value: tvScore, weight: hasValueSignal ? 20 : 25, raw: (feature.targetVersions || []).join(", ") || "none" })
+  } else {
+    missing.push("Target Version")
   }
 
   var totalWeight = 0
@@ -71,7 +81,20 @@ function computeBestAvailableScore(feature, configuredVersions) {
     weightedSum += signals[i].value * signals[i].weight
   }
 
-  return Math.round((weightedSum / totalWeight) * 100)
+  var rawScore = Math.round((weightedSum / totalWeight) * 100)
+  var signalCount = signals.length
+  var completenessMultiplier = COMPLETENESS_MULTIPLIERS[Math.min(signalCount, MAX_SIGNALS)]
+  var score = Math.round(rawScore * completenessMultiplier)
+
+  return {
+    score: score,
+    rawScore: rawScore,
+    signals: signals,
+    signalCount: signalCount,
+    maxSignals: MAX_SIGNALS,
+    completenessMultiplier: completenessMultiplier,
+    missing: missing
+  }
 }
 
 function computeBlockers(feature, productPath) {
@@ -347,12 +370,14 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
     var team = teamIndex.get(key) || (jiraFeatures && jiraFeatures.has(key) ? jiraFeatures.get(key).team : null) || null
 
     var priorityScore = healthData ? (healthData.priorityScore != null ? healthData.priorityScore : null) : null
-    var priorityScoreBreakdown = healthData ? (healthData.priorityBreakdown || healthData.priorityScoreBreakdown || null) : null
-
     var priorityScoreFallback = priorityScore === null
-    var effectivePriorityScore = priorityScore !== null
-      ? priorityScore
-      : computeBestAvailableScore(Object.assign({}, latest, { rubricTotal: rubricTotal, tier: tier, rockPriority: rockPriority, targetVersions: targetVersions }), configuredVersions)
+    var fallbackResult = priorityScoreFallback
+      ? computeBestAvailableScore(Object.assign({}, latest, { rubricTotal: rubricTotal, tier: tier, rockPriority: rockPriority, targetVersions: targetVersions }), configuredVersions)
+      : null
+    var effectivePriorityScore = priorityScoreFallback ? fallbackResult.score : priorityScore
+    var priorityScoreBreakdown = priorityScoreFallback
+      ? fallbackResult
+      : (healthData ? (healthData.priorityBreakdown || healthData.priorityScoreBreakdown || null) : null)
 
     var blockerResult = computeBlockers(Object.assign({}, latest, { rubricTotal: rubricTotal }))
 
@@ -365,6 +390,23 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
       : (healthComponents.length > 0 ? healthComponents : jiraComponents)
 
     var violations = hygieneIndex.get(key) || null
+    if (!violations && jiraFeatures && jiraFeatures.has(key)) {
+      try {
+        var jf = jiraFeatures.get(key)
+        violations = evaluateHygiene({
+          key: key, summary: jf.summary || latest.title, status: jf.status || latest.status,
+          issueType: jf.issueType, assignee: jf.assignee, team: team,
+          components: componentsList, fixVersions: jf.fixVersions || [],
+          labels: jf.labels || [], statusSummary: jf.statusSummary || null,
+          colorStatus: jf.colorStatus || null, releaseType: jf.releaseType || null,
+          docsRequired: jf.docsRequired || null, targetEnd: jf.targetEnd || null,
+          riceScore: jf.riceScore || null
+        }, hygieneRulesConfig)
+        if (violations && violations.length === 0) violations = null
+      } catch {
+        // dynamic evaluation failed, leave violations as null
+      }
+    }
     var isApproved = latest.humanReviewStatus === 'approved'
     var blockedByHygiene = hasBlockingViolations(violations)
     var isReady = isApproved && !blockedByHygiene
@@ -449,11 +491,9 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
     var hpTeam = teamIndex.get(ckey) || (jiraFeatures && jiraFeatures.has(ckey) ? jiraFeatures.get(ckey).team : null) || null
 
     var hpPriorityScore = hd.priorityScore != null ? hd.priorityScore : null
-    var hpPriorityBreakdown = hd.priorityBreakdown || null
     var hpFallback = hpPriorityScore === null
-    var hpEffective = hpPriorityScore !== null
-      ? hpPriorityScore
-      : computeBestAvailableScore({
+    var hpFallbackResult = hpFallback
+      ? computeBestAvailableScore({
           tier: hpTier,
           priority: hd.priority,
           riceScore: hd.rice && hd.rice.score != null ? hd.rice.score : null,
@@ -461,8 +501,28 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
           rockPriority: hpRockPriority,
           targetVersions: hpTargetVersions
         }, configuredVersions)
+      : null
+    var hpEffective = hpFallback ? hpFallbackResult.score : hpPriorityScore
+    var hpPriorityBreakdown = hpFallback ? hpFallbackResult : (hd.priorityBreakdown || null)
 
     var hpViolations = hygieneIndex.get(ckey) || null
+    if (!hpViolations && jiraFeatures && jiraFeatures.has(ckey)) {
+      try {
+        var hpJf = jiraFeatures.get(ckey)
+        hpViolations = evaluateHygiene({
+          key: ckey, summary: hpJf.summary || hd.summary, status: hpJf.status || hd.status,
+          issueType: hpJf.issueType, assignee: hpJf.assignee || hd.assignee,
+          team: hpTeam, components: hpComponents, fixVersions: hpJf.fixVersions || [],
+          labels: hpJf.labels || [], statusSummary: hpJf.statusSummary || null,
+          colorStatus: hpJf.colorStatus || null, releaseType: hpJf.releaseType || null,
+          docsRequired: hpJf.docsRequired || null, targetEnd: hpJf.targetEnd || null,
+          riceScore: hpJf.riceScore || null
+        }, hygieneRulesConfig)
+        if (hpViolations && hpViolations.length === 0) hpViolations = null
+      } catch {
+        // dynamic evaluation failed, leave violations as null
+      }
+    }
     var hpGatesReady = isHealthFeatureReady(hd, cd)
     var hpBlockedByHygiene = hasBlockingViolations(hpViolations)
     var hpReady = hpGatesReady && !hpBlockedByHygiene
@@ -590,7 +650,7 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
 
     var efRiceScore = ef.riceScore != null ? ef.riceScore : (execData && execData.riceScore != null ? execData.riceScore : null)
 
-    var efEffective = computeBestAvailableScore({
+    var efFallbackResult = computeBestAvailableScore({
       tier: efTier,
       priority: ef.priority || null,
       riceScore: efRiceScore,
@@ -598,6 +658,7 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
       rockPriority: efRockPriority,
       targetVersions: efTargetVersions
     }, configuredVersions)
+    var efEffective = efFallbackResult.score
 
     var efBlockedByHygiene = hasBlockingViolations(efViolations)
     var efIsApproved = efHumanReviewStatus === 'approved'
@@ -634,7 +695,7 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
       targetVersions: efTargetVersions,
       fixVersion: efFixVersion,
       priorityScore: null,
-      priorityScoreBreakdown: null,
+      priorityScoreBreakdown: efFallbackResult,
       priorityScoreFallback: true,
       effectivePriorityScore: efEffective,
       blockingDimensions: [],
@@ -694,4 +755,4 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
   return { pendingReview: pendingReview, ready: ready, filterMeta: filterMeta, meta: meta }
 }
 
-module.exports = { buildFeatureReadiness: buildFeatureReadiness, computeBlockers: computeBlockers, computeBestAvailableScore: computeBestAvailableScore, isHealthFeatureReady: isHealthFeatureReady, computeTierScore: computeTierScore, computeTargetVersionScore: computeTargetVersionScore, hasBlockingViolations: hasBlockingViolations, computeConfidence: computeConfidence, collectFilterMeta: collectFilterMeta, deriveHumanReviewStatusFromLabels: deriveHumanReviewStatusFromLabels, BLOCKING_HYGIENE_RULES: BLOCKING_HYGIENE_RULES }
+module.exports = { buildFeatureReadiness: buildFeatureReadiness, computeBlockers: computeBlockers, computeBestAvailableScore: computeBestAvailableScore, isHealthFeatureReady: isHealthFeatureReady, computeTierScore: computeTierScore, computeTargetVersionScore: computeTargetVersionScore, hasBlockingViolations: hasBlockingViolations, computeConfidence: computeConfidence, collectFilterMeta: collectFilterMeta, deriveHumanReviewStatusFromLabels: deriveHumanReviewStatusFromLabels, BLOCKING_HYGIENE_RULES: BLOCKING_HYGIENE_RULES, COMPLETENESS_MULTIPLIERS: COMPLETENESS_MULTIPLIERS, MAX_SIGNALS: MAX_SIGNALS }

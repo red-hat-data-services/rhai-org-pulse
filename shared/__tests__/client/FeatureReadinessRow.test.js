@@ -181,5 +181,44 @@ describe('FeatureReadinessRow', () => {
       const wrapper = mountRow(makeFeature({ needsAttention: true }))
       expect(wrapper.find('[title="Needs attention"]').exists()).toBe(true)
     })
+
+    it('shows score breakdown tooltip when priorityScoreBreakdown is present', () => {
+      const breakdown = {
+        score: 62,
+        rawScore: 88,
+        signals: [
+          { name: 'Rubric', value: 0.75, weight: 30, raw: 6 },
+          { name: 'Priority', value: 0.6, weight: 35, raw: 'Major' }
+        ],
+        signalCount: 2,
+        maxSignals: 4,
+        completenessMultiplier: 0.7,
+        missing: ['Tier', 'Target Version']
+      }
+      const wrapper = mountRow(makeFeature({
+        effectivePriorityScore: 62,
+        priorityScoreFallback: true,
+        priorityScoreBreakdown: breakdown
+      }))
+      const scoreTd = wrapper.findAll('td').at(1)
+      const scoreSpan = scoreTd.find('span')
+      const title = scoreSpan.attributes('title')
+      expect(title).toContain('Score: 62 / 100')
+      expect(title).toContain('Rubric')
+      expect(title).toContain('Priority')
+      expect(title).toContain('0.7')
+      expect(title).toContain('Missing')
+    })
+
+    it('shows simple tooltip when no breakdown available', () => {
+      const wrapper = mountRow(makeFeature({
+        effectivePriorityScore: 72,
+        priorityScoreFallback: false,
+        priorityScoreBreakdown: null
+      }))
+      const scoreTd = wrapper.findAll('td').at(1)
+      const scoreSpan = scoreTd.find('span')
+      expect(scoreSpan.attributes('title')).toBe('Computed priority score')
+    })
   })
 })

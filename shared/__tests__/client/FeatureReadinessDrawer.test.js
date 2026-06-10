@@ -329,4 +329,80 @@ describe('FeatureReadinessDrawer', () => {
       expect(wrapper.text()).toContain('From prioritization pipeline')
     })
   })
+
+  describe('score breakdown section', () => {
+    const breakdown = {
+      score: 62,
+      rawScore: 88,
+      signals: [
+        { name: 'Rubric', value: 0.75, weight: 30, raw: 6 },
+        { name: 'Priority', value: 0.6, weight: 35, raw: 'Major' }
+      ],
+      signalCount: 2,
+      maxSignals: 4,
+      completenessMultiplier: 0.7,
+      missing: ['Tier', 'Target Version']
+    }
+
+    it('shows Score Breakdown header when breakdown is present', () => {
+      const wrapper = mountDrawer(makeStratFeature({
+        priorityScoreFallback: true,
+        priorityScoreBreakdown: breakdown
+      }))
+      expect(wrapper.text()).toContain('Score Breakdown')
+    })
+
+    it('shows signal count badge when completeness < 1', () => {
+      const wrapper = mountDrawer(makeStratFeature({
+        priorityScoreFallback: true,
+        priorityScoreBreakdown: breakdown
+      }))
+      expect(wrapper.text()).toContain('2/4 signals')
+    })
+
+    it('does not render breakdown section when no breakdown', () => {
+      const wrapper = mountDrawer(makeStratFeature({
+        priorityScoreFallback: false,
+        priorityScoreBreakdown: null
+      }))
+      expect(wrapper.text()).not.toContain('Score Breakdown')
+    })
+
+    it('shows signal names when expanded', async () => {
+      const wrapper = mountDrawer(makeStratFeature({
+        priorityScoreFallback: true,
+        priorityScoreBreakdown: breakdown
+      }))
+      const buttons = wrapper.findAll('button')
+      const breakdownBtn = buttons.find(b => b.text().includes('Score Breakdown'))
+      await breakdownBtn.trigger('click')
+      expect(wrapper.text()).toContain('Rubric')
+      expect(wrapper.text()).toContain('Priority')
+    })
+
+    it('shows completeness penalty info when expanded', async () => {
+      const wrapper = mountDrawer(makeStratFeature({
+        priorityScoreFallback: true,
+        priorityScoreBreakdown: breakdown
+      }))
+      const buttons = wrapper.findAll('button')
+      const breakdownBtn = buttons.find(b => b.text().includes('Score Breakdown'))
+      await breakdownBtn.trigger('click')
+      expect(wrapper.text()).toContain('completeness')
+      expect(wrapper.text()).toContain('0.7')
+    })
+
+    it('shows missing signals when expanded', async () => {
+      const wrapper = mountDrawer(makeStratFeature({
+        priorityScoreFallback: true,
+        priorityScoreBreakdown: breakdown
+      }))
+      const buttons = wrapper.findAll('button')
+      const breakdownBtn = buttons.find(b => b.text().includes('Score Breakdown'))
+      await breakdownBtn.trigger('click')
+      expect(wrapper.text()).toContain('Missing')
+      expect(wrapper.text()).toContain('Tier')
+      expect(wrapper.text()).toContain('Target Version')
+    })
+  })
 })

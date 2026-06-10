@@ -36,6 +36,25 @@ const priorityDisplay = computed(() => {
   return props.feature.priorityScoreFallback ? `~${score}` : String(score)
 })
 
+const scoreTooltip = computed(() => {
+  const bd = props.feature.priorityScoreBreakdown
+  if (!bd || !bd.signals) {
+    return props.feature.priorityScoreFallback ? 'Estimated score (fallback)' : 'Computed priority score'
+  }
+  const lines = [`Score: ${bd.score} / 100`]
+  for (const s of bd.signals) {
+    const pct = Math.round(s.value * 100)
+    lines.push(`${s.name}: ${pct}% × ${s.weight}w`)
+  }
+  if (bd.completenessMultiplier < 1) {
+    lines.push(`Raw: ${bd.rawScore} × ${bd.completenessMultiplier} (${bd.signalCount}/${bd.maxSignals} signals)`)
+  }
+  if (bd.missing && bd.missing.length > 0) {
+    lines.push(`Missing: ${bd.missing.join(', ')}`)
+  }
+  return lines.join('\n')
+})
+
 const confidenceClass = computed(() => {
   switch (props.feature.confidence) {
     case 'committed': return 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200'
@@ -82,7 +101,7 @@ const confidenceTooltip = computed(() => {
         :class="feature.priorityScoreFallback
           ? 'text-amber-600 dark:text-amber-400'
           : 'text-gray-800 dark:text-gray-200'"
-        :title="feature.priorityScoreFallback ? 'Estimated score (fallback)' : 'Computed priority score'"
+        :title="scoreTooltip"
       >{{ priorityDisplay }}</span>
     </td>
 

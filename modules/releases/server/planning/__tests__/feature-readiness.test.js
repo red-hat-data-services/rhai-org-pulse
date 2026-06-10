@@ -9,7 +9,8 @@ const {
   computeTargetVersionScore,
   hasBlockingViolations,
   computeConfidence,
-  collectFilterMeta
+  collectFilterMeta,
+  MAX_SIGNALS
 } = require('../feature-readiness')
 
 // ---------------------------------------------------------------------------
@@ -309,56 +310,85 @@ describe('computeConfidence', function() {
 // ---------------------------------------------------------------------------
 
 describe('computeBestAvailableScore', function() {
+  it('returns an object with score, rawScore, signals, and breakdown fields', function() {
+    var result = computeBestAvailableScore({ priority: 'Normal', rubricTotal: 4, tier: 'T1' })
+    expect(result).toHaveProperty('score')
+    expect(result).toHaveProperty('rawScore')
+    expect(result).toHaveProperty('signals')
+    expect(result).toHaveProperty('signalCount')
+    expect(result).toHaveProperty('maxSignals', MAX_SIGNALS)
+    expect(result).toHaveProperty('completenessMultiplier')
+    expect(result).toHaveProperty('missing')
+    expect(Array.isArray(result.signals)).toBe(true)
+    expect(Array.isArray(result.missing)).toBe(true)
+  })
+
   describe('signals: rubric proxy + priority only (no riceScore, no tier, no target version)', function() {
-    it('Blocker priority + rubricTotal=8 → 100', function() {
-      // (1.0*30 + 1.0*25) / 55 * 100 = 100
-      expect(computeBestAvailableScore({ priority: 'Blocker', rubricTotal: 8 })).toBe(100)
+    it('Blocker priority + rubricTotal=8 rawScore=100, penalized by completeness', function() {
+      var result = computeBestAvailableScore({ priority: 'Blocker', rubricTotal: 8 })
+      expect(result.rawScore).toBe(100)
+      expect(result.signalCount).toBe(2)
+      expect(result.completenessMultiplier).toBe(0.7)
+      expect(result.score).toBe(70)
     })
 
-    it('Normal priority + rubricTotal=4 → 45', function() {
-      // (0.5*30 + 0.4*25) / 55 * 100 = round(45.45) = 45
-      expect(computeBestAvailableScore({ priority: 'Normal', rubricTotal: 4 })).toBe(45)
+    it('Normal priority + rubricTotal=4 rawScore=45, penalized', function() {
+      var result = computeBestAvailableScore({ priority: 'Normal', rubricTotal: 4 })
+      expect(result.rawScore).toBe(45)
+      expect(result.signalCount).toBe(2)
+      expect(result.score).toBe(Math.round(45 * 0.7))
     })
 
     it('unknown priority with rubricTotal=0 redistributes to priority only', function() {
-      // hasValueSignal=false, only priority signal: (0.4*35) / 35 * 100 = 40
-      expect(computeBestAvailableScore({ priority: 'Unknown', rubricTotal: 0 })).toBe(40)
+      var result = computeBestAvailableScore({ priority: 'Unknown', rubricTotal: 0 })
+      expect(result.rawScore).toBe(40)
+      expect(result.signalCount).toBe(1)
+      expect(result.completenessMultiplier).toBe(0.5)
+      expect(result.score).toBe(20)
     })
 
     it('missing priority uses 0.4 fallback', function() {
-      expect(computeBestAvailableScore({ rubricTotal: 0 })).toBe(40)
+      var result = computeBestAvailableScore({ rubricTotal: 0 })
+      expect(result.rawScore).toBe(40)
+      expect(result.signalCount).toBe(1)
+      expect(result.score).toBe(20)
     })
 
     it('missing rubricTotal redistributes weights', function() {
-      // hasValueSignal=false, only priority: (1.0*35) / 35 * 100 = 100
-      expect(computeBestAvailableScore({ priority: 'Blocker' })).toBe(100)
+      var result = computeBestAvailableScore({ priority: 'Blocker' })
+      expect(result.rawScore).toBe(100)
+      expect(result.signalCount).toBe(1)
+      expect(result.score).toBe(50)
     })
   })
 
   describe('signals: rubric proxy + priority + tier (no riceScore, no target version)', function() {
-    it('Blocker + rubricTotal=8 + T1 → 100', function() {
-      // hasValueSignal=true, totalWeight = 30 + 25 + 25 = 80
-      // (1.0*30 + 1.0*25 + 1.0*25) / 80 * 100 = 100
-      expect(computeBestAvailableScore({ priority: 'Blocker', rubricTotal: 8, tier: 'T1' })).toBe(100)
+    it('Blocker + rubricTotal=8 + T1 rawScore=100, 3 signals', function() {
+      var result = computeBestAvailableScore({ priority: 'Blocker', rubricTotal: 8, tier: 'T1' })
+      expect(result.rawScore).toBe(100)
+      expect(result.signalCount).toBe(3)
+      expect(result.completenessMultiplier).toBe(0.85)
+      expect(result.score).toBe(85)
     })
 
-    it('Normal + rubricTotal=4 + T2 → 49', function() {
-      // rubricProxy=4/8=0.5, tier=T2=0.6, priority=0.4
-      // (0.5*30 + 0.6*25 + 0.4*25) / 80 * 100
-      // = (15 + 15 + 10) / 80 * 100 = 50
-      expect(computeBestAvailableScore({ priority: 'Normal', rubricTotal: 4, tier: 'T2' })).toBe(50)
+    it('Normal + rubricTotal=4 + T2 rawScore=50, 3 signals', function() {
+      var result = computeBestAvailableScore({ priority: 'Normal', rubricTotal: 4, tier: 'T2' })
+      expect(result.rawScore).toBe(50)
+      expect(result.signalCount).toBe(3)
+      expect(result.score).toBe(Math.round(50 * 0.85))
     })
   })
 
   describe('signals with target version', function() {
-    it('includes target version weight when configured versions provided', function() {
-      // hasValueSignal=true (rubric>0), all signals: rubric(30) + tier(25) + priority(25) + tv(20) = 100
-      // rubric=1.0, tier=T1=1.0, priority=Blocker=1.0, tv=first=1.0
-      var score = computeBestAvailableScore(
+    it('all 4 signals: no completeness penalty', function() {
+      var result = computeBestAvailableScore(
         { priority: 'Blocker', rubricTotal: 8, tier: 'T1', targetVersions: ['3.6'] },
         ['3.6']
       )
-      expect(score).toBe(100)
+      expect(result.signalCount).toBe(4)
+      expect(result.completenessMultiplier).toBe(1.0)
+      expect(result.rawScore).toBe(result.score)
+      expect(result.score).toBe(100)
     })
 
     it('later target version lowers score', function() {
@@ -370,7 +400,7 @@ describe('computeBestAvailableScore', function() {
         { priority: 'Normal', rubricTotal: 4, tier: 'T1', targetVersions: ['3.7'] },
         ['3.5', '3.6', '3.7']
       )
-      expect(first).toBeGreaterThan(last)
+      expect(first.score).toBeGreaterThan(last.score)
     })
 
     it('no target version gives lowest tv score', function() {
@@ -382,7 +412,7 @@ describe('computeBestAvailableScore', function() {
         { priority: 'Normal', rubricTotal: 4, tier: 'T1', targetVersions: [] },
         ['3.6']
       )
-      expect(withTv).toBeGreaterThan(noTv)
+      expect(withTv.score).toBeGreaterThan(noTv.score)
     })
   })
 
@@ -390,30 +420,36 @@ describe('computeBestAvailableScore', function() {
     it('T1 rock priority 1 scores higher than rock priority 8', function() {
       var rock1 = computeBestAvailableScore({ priority: 'Normal', rubricTotal: 4, tier: 'T1', rockPriority: 1 })
       var rock8 = computeBestAvailableScore({ priority: 'Normal', rubricTotal: 4, tier: 'T1', rockPriority: 8 })
-      expect(rock1).toBeGreaterThan(rock8)
+      expect(rock1.score).toBeGreaterThan(rock8.score)
     })
 
     it('T2 rockPriority is ignored', function() {
       var rock1 = computeBestAvailableScore({ priority: 'Normal', rubricTotal: 4, tier: 'T2', rockPriority: 1 })
       var rock8 = computeBestAvailableScore({ priority: 'Normal', rubricTotal: 4, tier: 'T2', rockPriority: 8 })
-      expect(rock1).toBe(rock8)
+      expect(rock1.score).toBe(rock8.score)
     })
   })
 
   describe('signals: no RICE, no rubric (health-pipeline features)', function() {
-    it('T1 + Blocker → high score', function() {
-      var score = computeBestAvailableScore({ priority: 'Blocker', rubricTotal: 0, tier: 'T1' })
-      expect(score).toBeGreaterThanOrEqual(70)
+    it('T1 + Blocker with 2 signals', function() {
+      var result = computeBestAvailableScore({ priority: 'Blocker', rubricTotal: 0, tier: 'T1' })
+      expect(result.signalCount).toBe(2)
+      expect(result.completenessMultiplier).toBe(0.7)
+      expect(result.rawScore).toBe(100)
+      expect(result.score).toBe(70)
     })
 
-    it('no tier → only priority', function() {
-      // (0.4*35) / 35 * 100 = 40
-      expect(computeBestAvailableScore({ priority: 'Normal', rubricTotal: 0 })).toBe(40)
+    it('no tier, only priority = 1 signal', function() {
+      var result = computeBestAvailableScore({ priority: 'Normal', rubricTotal: 0 })
+      expect(result.signalCount).toBe(1)
+      expect(result.completenessMultiplier).toBe(0.5)
+      expect(result.score).toBe(20)
     })
 
-    it('tier + priority, no target version → two signals', function() {
-      var score = computeBestAvailableScore({ priority: 'Normal', rubricTotal: 0, tier: 'T1' })
-      expect(score).toBeGreaterThan(40)
+    it('tier + priority, no target version = 2 signals', function() {
+      var result = computeBestAvailableScore({ priority: 'Normal', rubricTotal: 0, tier: 'T1' })
+      expect(result.signalCount).toBe(2)
+      expect(result.score).toBeGreaterThan(20)
     })
   })
 
@@ -421,7 +457,47 @@ describe('computeBestAvailableScore', function() {
     it('RICE present drops rubric proxy', function() {
       var withRice = computeBestAvailableScore({ priority: 'Blocker', riceScore: 1690, tier: 'T1', rubricTotal: 8 })
       var withoutRice = computeBestAvailableScore({ priority: 'Blocker', riceScore: 1690, tier: 'T1', rubricTotal: 0 })
-      expect(withRice).toBe(withoutRice)
+      expect(withRice.score).toBe(withoutRice.score)
+    })
+  })
+
+  describe('completeness penalty', function() {
+    it('4 signals get no penalty (1.0x)', function() {
+      var result = computeBestAvailableScore(
+        { priority: 'Major', rubricTotal: 6, tier: 'T2', targetVersions: ['3.6'] },
+        ['3.6']
+      )
+      expect(result.signalCount).toBe(4)
+      expect(result.completenessMultiplier).toBe(1.0)
+      expect(result.score).toBe(result.rawScore)
+    })
+
+    it('fewer signals produce lower scores for same raw inputs', function() {
+      var four = computeBestAvailableScore(
+        { priority: 'Major', rubricTotal: 6, tier: 'T2', targetVersions: ['3.6'] },
+        ['3.6']
+      )
+      var two = computeBestAvailableScore(
+        { priority: 'Major', rubricTotal: 6 }
+      )
+      expect(four.score).toBeGreaterThan(two.score)
+    })
+
+    it('missing signals are listed in the missing array', function() {
+      var result = computeBestAvailableScore({ priority: 'Major' })
+      expect(result.missing).toContain('RICE Score')
+      expect(result.missing).toContain('Tier')
+      expect(result.missing).toContain('Target Version')
+    })
+
+    it('signal objects have name, value, weight, and raw', function() {
+      var result = computeBestAvailableScore({ priority: 'Major', rubricTotal: 6, tier: 'T1' })
+      for (var i = 0; i < result.signals.length; i++) {
+        expect(result.signals[i]).toHaveProperty('name')
+        expect(result.signals[i]).toHaveProperty('value')
+        expect(result.signals[i]).toHaveProperty('weight')
+        expect(result.signals[i]).toHaveProperty('raw')
+      }
     })
   })
 })
