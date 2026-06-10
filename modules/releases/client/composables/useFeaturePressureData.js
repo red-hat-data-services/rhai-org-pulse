@@ -1,6 +1,7 @@
 import { ref, shallowRef } from 'vue'
 import { apiRequest } from '@shared/client'
 
+const POLL_INTERVAL_MS = 5000
 const MAX_POLL_RETRIES = 24 // 24 x 5s = 2 minutes max
 
 /** Feature pressure data fetching, refresh, and polling. */
@@ -28,7 +29,7 @@ export function useFeaturePressureData() {
         pollRetryCount++
         if (pollRetryCount < MAX_POLL_RETRIES) {
           if (pipelinePollTimeout) clearTimeout(pipelinePollTimeout)
-          pipelinePollTimeout = setTimeout(fetchData, 5000)
+          pipelinePollTimeout = setTimeout(fetchData, POLL_INTERVAL_MS)
         } else {
           error.value = 'Data pipeline is taking too long. Try refreshing manually.'
           refreshing.value = false
@@ -64,7 +65,7 @@ export function useFeaturePressureData() {
             refreshPollInterval = null
             refreshing.value = false
           }
-        }, 5000)
+        }, POLL_INTERVAL_MS)
       }
     } catch (e) {
       if (!_alive) return
@@ -76,7 +77,7 @@ export function useFeaturePressureData() {
   }
 
   async function triggerRefresh(months) {
-    if (refreshing.value) return
+    if (!_alive || refreshing.value) return
     refreshing.value = true
     const lm = months || lookbackMonths.value || 12
     try {
@@ -102,7 +103,7 @@ export function useFeaturePressureData() {
           refreshPollInterval = null
           refreshing.value = false
         }
-      }, 3000)
+      }, POLL_INTERVAL_MS)
     } catch (e) {
       console.warn('[useFeaturePressureData] triggerRefresh failed:', e.message)
       refreshing.value = false

@@ -215,7 +215,11 @@ onBeforeUnmount(() => { cleanup() })
             'text-yellow-600 dark:text-yellow-400': summary.months_to_clear >= 6 && summary.months_to_clear < 12,
             'text-red-600 dark:text-red-400': summary.months_to_clear >= 12,
           }">{{ formatMonths(summary.months_to_clear) }}</strong></span>
-          <span>Backlog: <strong :class="summary.backlog_trend === 'growing' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'">{{ summary.backlog_trend }}</strong></span>
+          <span>Backlog: <strong :class="{
+            'text-red-600 dark:text-red-400': summary.backlog_trend === 'growing',
+            'text-green-600 dark:text-green-400': summary.backlog_trend === 'burning down',
+            'text-gray-600 dark:text-gray-400': summary.backlog_trend === 'stable',
+          }">{{ summary.backlog_trend }}</strong></span>
         </div>
 
         <!-- Executive Summary — RFEs (RHAIRFE) -->
@@ -260,7 +264,7 @@ onBeforeUnmount(() => { cleanup() })
                 <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                   +{{ h.net }} net features |
                   {{ h.rfe_pending }} RFEs pending |
-                  <ClickableCount :count="h.open" :jql="h.open_jql" size="xs" /> open
+                  <ClickableCount :count="h.open" :jql="h.open_jql" /> open
                 </div>
               </div>
               <span class="inline-block px-2 py-0.5 rounded text-xs font-medium ml-2 shrink-0" :class="riskColor(h.risk_level)">
@@ -418,7 +422,7 @@ onBeforeUnmount(() => { cleanup() })
               <div class="flex flex-wrap gap-2">
                 <span v-for="c in zeroComponents" :key="c.component"
                   class="inline-flex items-center px-2 py-1 rounded text-xs bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">
-                  {{ c.component }} (<ClickableCount :count="c.open" :jql="c.open_jql" size="xs" /> open)
+                  {{ c.component }} (<ClickableCount :count="c.open" :jql="c.open_jql" /> open)
                 </span>
               </div>
             </div>
@@ -437,7 +441,7 @@ onBeforeUnmount(() => { cleanup() })
                   <tr v-for="c in activeComponents" :key="c.component" class="border-b dark:border-gray-800">
                     <td class="px-3 py-1 text-gray-700 dark:text-gray-300">{{ c.component }}</td>
                     <td class="px-3 py-1"><ClickableCount :count="c.open" :jql="c.open_jql" /></td>
-                    <td class="px-3 py-1">{{ c.resolved_per_month }}</td>
+                    <td class="px-3 py-1">{{ typeof c.resolved_per_month === 'number' ? c.resolved_per_month.toFixed(1) : c.resolved_per_month }}</td>
                     <td class="px-3 py-1 font-semibold" :class="{
                       'text-red-600 dark:text-red-400': c.months_to_clear > 24,
                       'text-yellow-600 dark:text-yellow-400': c.months_to_clear > 12 && c.months_to_clear <= 24,

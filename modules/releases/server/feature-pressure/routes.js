@@ -53,20 +53,25 @@ function quoteComponent(name) {
 // ---------------------------------------------------------------------------
 
 /**
- * Replace Infinity values with the string "Infinity" so JSON.stringify
- * doesn't silently turn them into null.  Mutates in place.
+ * Replace non-finite numeric values so JSON.stringify doesn't silently
+ * turn them into null.  Infinity → "Infinity", -Infinity → "-Infinity",
+ * NaN → null.  Mutates in place.
  */
 function sanitizeInfinity(obj) {
   if (obj === null || typeof obj !== 'object') return obj
   if (Array.isArray(obj)) {
     for (var i = 0; i < obj.length; i++) {
       if (obj[i] === Infinity) obj[i] = 'Infinity'
+      else if (obj[i] === -Infinity) obj[i] = '-Infinity'
+      else if (typeof obj[i] === 'number' && isNaN(obj[i])) obj[i] = null
       else if (typeof obj[i] === 'object' && obj[i] !== null) sanitizeInfinity(obj[i])
     }
   } else {
     var keys = Object.keys(obj)
     for (var k = 0; k < keys.length; k++) {
       if (obj[keys[k]] === Infinity) obj[keys[k]] = 'Infinity'
+      else if (obj[keys[k]] === -Infinity) obj[keys[k]] = '-Infinity'
+      else if (typeof obj[keys[k]] === 'number' && isNaN(obj[keys[k]])) obj[keys[k]] = null
       else if (typeof obj[keys[k]] === 'object' && obj[keys[k]] !== null) sanitizeInfinity(obj[keys[k]])
     }
   }
@@ -240,7 +245,7 @@ function computeComponentPressure(features, lookbackMonths) {
     var data = compMap[name]
     var net = data.created - data.resolved
     var ratio = data.resolved > 0 ? Math.round(100 * data.created / data.resolved) / 100 : (data.created > 0 ? Infinity : 0)
-    var compQ = name === '(No Component)' ? '' : ' AND component = ' + quoteComponent(name)
+    var compQ = name === '(No Component)' ? ' AND component is EMPTY' : ' AND component = ' + quoteComponent(name)
 
     result.push({
       component: name,
@@ -327,7 +332,7 @@ function computeRfePipeline(rfes, lookbackMonths) {
 
   var perComponentPending = Object.keys(compPending)
     .map(function (comp) {
-      var compQ = comp === '(No Component)' ? '' : ' AND component = ' + quoteComponent(comp)
+      var compQ = comp === '(No Component)' ? ' AND component is EMPTY' : ' AND component = ' + quoteComponent(comp)
       return {
         component: comp,
         count: compPending[comp],
@@ -561,7 +566,7 @@ function computeScorecard(componentPressure, rfePipeline, backlogHalfLife, trend
   for (var ci = 0; ci < componentPressure.length; ci++) {
     var cp = componentPressure[ci]
     var rfePending = rfeMap[cp.component] || 0
-    var halfLife = halfLifeMap[cp.component] || 0
+    var halfLife = halfLifeMap[cp.component] !== undefined ? halfLifeMap[cp.component] : null
     var trendDir = trendMap[cp.component] || 'stable'
 
     var netScore = Math.min(Math.max(cp.net, 0) / 5, 10)
@@ -609,17 +614,23 @@ async function fetchAndAnalyze(lookbackMonths, storage) {
   console.log('[releases/feature-pressure] Fetching features: ' + featureJql)
   console.log('[releases/feature-pressure] Fetching RFEs: ' + rfeJql)
 
+  var timer
   var timeout = new Promise(function (_, reject) {
-    setTimeout(function () { reject(new Error('Jira fetch timed out after ' + (FETCH_TIMEOUT_MS / 1000) + 's')) }, FETCH_TIMEOUT_MS)
+    timer = setTimeout(function () { reject(new Error('Jira fetch timed out after ' + (FETCH_TIMEOUT_MS / 1000) + 's')) }, FETCH_TIMEOUT_MS)
   })
 
-  var results = await Promise.race([
-    Promise.all([
-      fetchAllJqlResults(jiraRequest, featureJql, FEATURE_FIELDS),
-      fetchAllJqlResults(jiraRequest, rfeJql, RFE_FIELDS)
-    ]),
-    timeout
-  ])
+  var results
+  try {
+    results = await Promise.race([
+      Promise.all([
+        fetchAllJqlResults(jiraRequest, featureJql, FEATURE_FIELDS),
+        fetchAllJqlResults(jiraRequest, rfeJql, RFE_FIELDS)
+      ]),
+      timeout
+    ])
+  } finally {
+    clearTimeout(timer)
+  }
 
   var rawFeatures = results[0]
   var rawRfes = results[1]
@@ -677,7 +688,7 @@ async function fetchAndAnalyze(lookbackMonths, storage) {
       net_in_window: totalCreated - totalResolved,
       monthly_burn_rate: burnRate,
       months_to_clear: monthsToClear,
-      backlog_trend: totalCreated > totalResolved ? 'growing' : 'burning down',
+      backlog_trend: totalCreated > totalResolved ? 'growing' : (totalCreated < totalResolved ? 'burning down' : 'stable'),
       total_rfes: rfes.length,
       total_rfes_jql: jqlUrl(rfeBaseJql),
       rfe_pending: rfePipeline.status_breakdown.pending.count,

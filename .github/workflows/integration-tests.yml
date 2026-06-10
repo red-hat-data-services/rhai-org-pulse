@@ -66,6 +66,16 @@ jobs:
               - 'modules/releases/client/components/FeatureTable.vue'
               - 'modules/releases/client/components/ClickableCount.vue'
               - 'tests/integration/tv-fv-delta.spec.js'
+            feature-pressure:
+              - 'modules/releases/server/feature-pressure/**'
+              - 'modules/releases/server/index.js'
+              - 'modules/releases/client/views/FeaturePressureView.vue'
+              - 'modules/releases/client/composables/useFeaturePressureData.js'
+              - 'modules/releases/client/composables/useComponentPressure.js'
+              - 'modules/releases/client/components/PressureHeatmap.vue'
+              - 'modules/releases/client/components/MonthlyFlowChart.vue'
+              - 'modules/releases/client/components/ClickableCount.vue'
+              - 'tests/integration/feature-pressure.spec.js'
 
       # For merge_group events, dorny/paths-filter doesn't support this event type.
       # Use git diff directly, mirroring the filter definitions above.
@@ -83,7 +93,7 @@ jobs:
           echo "Changed files:"
           echo "$CHANGED"
 
-          ALL_MODULES='["ai-impact", "system-health", "people-teams", "upstream-pulse", "releases", "tv-fv-delta"]'
+          ALL_MODULES='["ai-impact", "system-health", "people-teams", "upstream-pulse", "releases", "tv-fv-delta", "feature-pressure"]'
 
           # If shared test infrastructure changed, test all modules
           if echo "$CHANGED" | grep -qE '^tests/integration/(constants|helpers)\.js$'; then
@@ -114,6 +124,8 @@ jobs:
             "^(modules/releases/server/(execution|planning)/|modules/releases/client/views/FeatureDetailView\.vue|modules/releases/client/(execute|plan)/|tests/integration/(execution-data|releases)\.spec\.js)"
           check_module "tv-fv-delta" \
             "^(modules/releases/server/(tv-fv-delta/|index\.js)|modules/releases/client/views/TvFvDeltaView\.vue|modules/releases/client/composables/use.*(TvFv|ReleasePicker|ComponentBreakdown)\.js|modules/releases/client/components/(FeatureTable|ClickableCount)\.vue|tests/integration/tv-fv-delta\.spec\.js)"
+          check_module "feature-pressure" \
+            "^(modules/releases/server/(feature-pressure/|index\.js)|modules/releases/client/views/FeaturePressureView\.vue|modules/releases/client/composables/use(FeaturePressureData|ComponentPressure)\.js|modules/releases/client/components/(PressureHeatmap|MonthlyFlowChart|ClickableCount)\.vue|tests/integration/feature-pressure\.spec\.js)"
 
           echo "modules=$MODULES" >> "$GITHUB_OUTPUT"
           echo "Testing modules: $MODULES"
@@ -124,7 +136,7 @@ jobs:
           if [ "${{ github.event_name }}" = "merge_group" ]; then
             MODULES='${{ steps.git-filter.outputs.modules }}'
           elif [ "${{ steps.filter.outputs.shared-test-files }}" == "true" ]; then
-            MODULES='["ai-impact", "system-health", "people-teams", "upstream-pulse", "releases", "tv-fv-delta"]'
+            MODULES='["ai-impact", "system-health", "people-teams", "upstream-pulse", "releases", "tv-fv-delta", "feature-pressure"]'
           else
             # Use the modules that have direct changes
             MODULES='${{ steps.filter.outputs.changes }}'
