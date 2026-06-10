@@ -24,7 +24,7 @@ export function useFeaturePressureData() {
       if (!_alive) return
 
       if (result._noCache) {
-        loading.value = false
+        // Keep loading = true until data arrives so the template shows the spinner
         refreshing.value = true
         pollRetryCount++
         if (pollRetryCount < MAX_POLL_RETRIES) {

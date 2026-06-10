@@ -9,6 +9,8 @@
  * background refresh with cooldown, polling status endpoint).
  */
 
+// NOTE: uses deprecated jiraRequest/fetchAllJqlResults (process.env auth) to match
+// tv-fv-delta pattern.  Migrate to context.secrets + createJiraClient when tv-fv-delta does.
 const { jiraRequest, JIRA_HOST, fetchAllJqlResults } = require('../../../../shared/server/jira')
 
 const JIRA_BROWSE = JIRA_HOST + '/browse'
@@ -31,7 +33,7 @@ const RFE_FIELDS = 'summary,status,components,created,resolutiondate'
 // Status classification constants
 // ---------------------------------------------------------------------------
 
-const STATUS_DONE = ['Release Pending', 'Closed']
+// Open/done classification uses statusCategory from Jira (not individual status names).
 const RFE_ACCEPTED = ['Approved', 'In Progress', 'Refinement', 'Planning', 'Review', 'Resolved']
 const RFE_PENDING = ['New', 'Draft', 'Stakeholder review', 'Stakeholder Feedback', 'Pending Approval']
 
@@ -396,6 +398,8 @@ function buildHeatmapMatrix(features, lookbackMonths) {
 
   for (var fi = 0; fi < features.length; fi++) {
     var feat = features[fi]
+    // Intentionally skip features with no component — heatmap/trend are per-component views.
+    // "(No Component)" is tracked separately in computeComponentPressure.
     var comps = feat.components.length > 0 ? feat.components : []
     if (comps.length === 0) continue
 
@@ -487,6 +491,7 @@ function computeTrend(features, lookbackMonths) {
 
   for (var fi = 0; fi < features.length; fi++) {
     var feat = features[fi]
+    // Skip unclassified features — trend is per-component only (same as heatmap)
     var comps = feat.components.length > 0 ? feat.components : []
     if (comps.length === 0) continue
 
@@ -899,7 +904,6 @@ module.exports.computeTrend = computeTrend
 module.exports.computeScorecard = computeScorecard
 module.exports.jqlUrl = jqlUrl
 module.exports.quoteComponent = quoteComponent
-module.exports.STATUS_DONE = STATUS_DONE
 module.exports.RFE_ACCEPTED = RFE_ACCEPTED
 module.exports.RFE_PENDING = RFE_PENDING
 module.exports.CACHE_KEY = CACHE_KEY

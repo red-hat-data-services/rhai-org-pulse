@@ -18,7 +18,6 @@ const {
   jqlUrl,
   quoteComponent,
   sanitizeInfinity,
-  STATUS_DONE,
   RFE_ACCEPTED,
   RFE_PENDING
 } = require('../../../server/feature-pressure/routes')
@@ -798,11 +797,6 @@ describe('computeScorecard', function () {
 // ---------------------------------------------------------------------------
 
 describe('status constants', function () {
-  it('STATUS_DONE includes expected values', function () {
-    expect(STATUS_DONE).toContain('Release Pending')
-    expect(STATUS_DONE).toContain('Closed')
-  })
-
   it('RFE_ACCEPTED includes all expected values', function () {
     expect(RFE_ACCEPTED).toContain('Approved')
     expect(RFE_ACCEPTED).toContain('In Progress')
