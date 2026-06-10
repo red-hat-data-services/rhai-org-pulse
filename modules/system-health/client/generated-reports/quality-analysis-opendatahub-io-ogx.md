@@ -1,5 +1,5 @@
 ---
-repository: "opendatahub-io/llama-stack"
+repository: "opendatahub-io/ogx"
 overall_score: 8.2
 scorecard:
   - dimension: "Unit Tests"

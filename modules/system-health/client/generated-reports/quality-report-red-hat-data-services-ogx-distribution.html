@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quality Analysis: red-hat-data-services/llama-stack-distribution</title>
+    <title>Quality Analysis: red-hat-data-services/ogx-distribution</title>
     <style>
         * {
             margin: 0;
@@ -332,8 +332,8 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 11:44 AM</p>
-            <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/llama-stack-distribution</h2>
+            <p class="timestamp">Generated on June 10, 2026 at 09:41 AM</p>
+            <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/ogx-distribution</h2>
         </header>
 
         <div class="content">
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#fd7e14"
+                                stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="260.12365199999994"
+                                stroke-dashoffset="186.61044599999997"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">5.4</div>
+                        <div class="score-value">6.7</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No Python unit tests exist; repo has only shell-based smoke/integration test scripts</div>
+                            <div class="scorecard-status">No unit tests — repo is a distribution/packaging project with no library code to unit-test</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Excellent upstream pytest integration tests, multi-provider response tests, and OpenShift showroom E2E</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
+                            <div class="scorecard-status">Strong multi-provider integration tests (vLLM, OpenAI, Vertex AI, Gemini) plus Showroom E2E on real OpenShift</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">PR-time Docker builds with smoke + integration tests, Konflux multi-arch pipelines</div>
+                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
+                            <div class="scorecard-status">PR builds image and runs smoke + integration tests; Konflux PR builds available on-demand via label/comment</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">Multi-arch builds (amd64/arm64/ppc64le), runtime smoke tests, but no vulnerability scanning or SBOM</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">Multi-arch builds (amd64/arm64), smoke tests validate health/inference/DB/file-processor, vLLM image tested separately</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No code coverage tracking, no codecov/coveralls integration, no coverage thresholds</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No coverage tooling — shell/config-based project with no code coverage mechanism</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
                             <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Well-organized workflows with concurrency control, GHA caching, Mergify auto-merge, Slack notifications</div>
+                            <div class="scorecard-status">14 workflows, reusable composite actions, concurrency control, GHA caching, Mergify auto-merge, Dependabot/Renovate, Slack notifications</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory; no AI agent test automation guidance</div>
+                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no agent rules or test automation guidance</div>
                         </div>
                     </div>
                 </div>
@@ -411,35 +411,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No unit tests for Python code</div>
-                            <p>485 lines of build.py and 160+ lines of test utility scripts have zero unit test coverage; regressions in Containerfile generation or version parsing go undetected until integration tests or production</p>
+                            <div class="item-description">No security scanning (Trivy, Snyk, CodeQL, SAST)</div>
+                            <p>Container images and dependencies are not scanned for vulnerabilities before merge or publish</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No container vulnerability scanning</div>
-                            <p>CVEs in base images or Python dependencies are not detected before merge; security issues discovered only in Konflux or downstream scans</p>
+                            <div class="item-description">No SBOM generation or image signing</div>
+                            <p>Supply chain security requirements (SLSA, FedRAMP) not met; no provenance attestation</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">4-8 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No code coverage tracking</div>
-                            <p>Cannot measure or enforce test coverage; no visibility into which code paths are exercised by existing tests</p>
+                            <div class="item-description">No agent rules for AI-assisted development</div>
+                            <p>No guardrails for AI-generated contributions; no test patterns, coding standards, or review checklists</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-medium">MEDIUM</span>
+                                <span class="meta-tag effort-tag">3-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card medium">
+                            <div class="item-description">Smoke/integration tests are bash-only with no JUnit output</div>
+                            <p>Smoke test results not machine-parseable; no trend tracking, no PR-level test reporting for core tests</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No SAST/CodeQL integration</div>
-                            <p>Static analysis security vulnerabilities not caught at PR time; relying solely on pre-commit hooks for code quality</p>
+                            <div class="item-description">Containerfile.in / Dockerfile.konflux drift risk</div>
+                            <p>Two separate Containerfiles for upstream and Konflux can diverge silently; Mergify warns but doesn&#x27;t enforce</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-3 hours</span>
+                                <span class="meta-tag effort-tag">6-10 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -457,34 +465,34 @@
                         
                         <li class="item-card ">
                             <div class="item-description">Add Trivy container scanning to PR workflow</div>
-                            <p>Immediate CVE detection on every PR; blocks merging images with critical vulnerabilities</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add CodeQL/SAST workflow</div>
-                            <p>Catches security vulnerabilities in Python code at PR time</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Create agent rules for test patterns</div>
-                            <p>Guide AI agents to generate tests following project conventions</p>
+                            <p>Catch CVEs in base images and pip dependencies before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add unit tests for build.py</div>
-                            <p>Protect Containerfile generation, version parsing, and config stripping logic from regressions</p>
+                            <div class="item-description">Generate SBOM with Syft in publish step</div>
+                            <p>Meet supply chain compliance requirements with minimal CI change</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add JUnit XML output to smoke.sh via bash-based tap-to-junit or simple wrapper</div>
+                            <p>Enable test trend tracking and PR annotations for smoke tests</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">3-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Create basic CLAUDE.md with contribution and testing guidelines</div>
+                            <p>Guide AI-assisted contributions toward project standards</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -501,15 +509,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add unit tests for distribution/build.py (version validation, config stripping, Containerfile generation)</li><li>Integrate Trivy or Snyk container scanning into the redhat-distro-container.yml workflow</li></ul>
+                            <ul><li>Add container vulnerability scanning (Trivy or Grype) to the PR build-test job</li><li>Add SBOM generation and cosign image signing to the publish job</li><li>Add secret detection (Gitleaks) to pre-commit and CI</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add CodeQL GitHub Actions workflow for Python SAST</li><li>Add pytest coverage tracking with codecov integration and minimum threshold</li><li>Create CLAUDE.md and .claude/rules/ with test automation guidance</li></ul>
+                            <ul><li>Convert smoke.sh to produce JUnit XML output for PR test reporting</li><li>Add Containerfile drift detection CI check comparing Containerfile.in vs Dockerfile.konflux</li><li>Create CLAUDE.md / .claude/rules/ with testing and contribution guidelines</li><li>Add weekly Trivy scheduled scan for published images</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add SBOM generation (syft/cdxgen) to container build pipeline</li><li>Add Gitleaks secret scanning to PR workflow</li><li>Add performance regression tests for inference latency</li></ul>
+                            <ul><li>Add load/performance testing for the OGX server endpoint</li><li>Add contract tests for the OpenAI-compatible API surface</li><li>Consider adding shellcheck to CI as a separate linting step (currently in pre-commit only)</li></ul>
                         </div>
                     </div>
                 </div>

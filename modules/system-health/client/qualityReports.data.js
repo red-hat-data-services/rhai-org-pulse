@@ -10,7 +10,6 @@ import reportOpendatahubIoOpenclaw from './generated-reports/quality-report-open
 import reportLlmDLlmDInferenceScheduler from './generated-reports/quality-report-llm-d-llm-d-inference-scheduler.html?url'
 import reportRedHatDataServicesNotebooks from './generated-reports/quality-report-red-hat-data-services-notebooks.html?url'
 import reportRedHatDataServicesOdhDashboard from './generated-reports/quality-report-red-hat-data-services-odh-dashboard.html?url'
-import reportOgxAiOgx from './generated-reports/quality-report-ogx-ai-ogx.html?url'
 import reportBerriaiLitellm from './generated-reports/quality-report-BerriAI-litellm.html?url'
 import reportKubeflowPipelines from './generated-reports/quality-report-kubeflow-pipelines.html?url'
 import reportLangfuseLangfuse from './generated-reports/quality-report-langfuse-langfuse.html?url'
@@ -39,6 +38,7 @@ import reportOpendatahubIoKubeflow from './generated-reports/quality-report-open
 import reportOpendatahubIoKserve from './generated-reports/quality-report-opendatahub-io-kserve.html?url'
 import reportRedHatDataServicesSparkOperator from './generated-reports/quality-report-red-hat-data-services-spark-operator.html?url'
 import reportTraefikTraefik from './generated-reports/quality-report-traefik-traefik.html?url'
+import reportOgxAiOgx from './generated-reports/quality-report-ogx-ai-ogx.html?url'
 import reportOpendatahubIoSparkOperator from './generated-reports/quality-report-opendatahub-io-spark-operator.html?url'
 import reportArgoprojArgoWorkflows from './generated-reports/quality-report-argoproj-argo-workflows.html?url'
 import reportEvalHubEvalHub from './generated-reports/quality-report-eval-hub-eval-hub.html?url'
@@ -55,23 +55,24 @@ import reportOpenvinotoolkitOpenvino from './generated-reports/quality-report-op
 import reportProjectCodeflareCodeflareSdk from './generated-reports/quality-report-project-codeflare-codeflare-sdk.html?url'
 import reportRedHatDataServicesDataSciencePipelines from './generated-reports/quality-report-red-hat-data-services-data-science-pipelines.html?url'
 import reportRedHatDataServicesKubeflow from './generated-reports/quality-report-red-hat-data-services-kubeflow.html?url'
-import reportRedHatDataServicesOgxK8sOperator from './generated-reports/quality-report-red-hat-data-services-ogx-k8s-operator.html?url'
 import reportRedHatDataServicesLlmDInferenceScheduler from './generated-reports/quality-report-red-hat-data-services-llm-d-inference-scheduler.html?url'
 import reportRedHatDataServicesMlflow from './generated-reports/quality-report-red-hat-data-services-mlflow.html?url'
 import reportRedHatDataServicesMlflowOperator from './generated-reports/quality-report-red-hat-data-services-mlflow-operator.html?url'
 import reportRedHatDataServicesModelRegistry from './generated-reports/quality-report-red-hat-data-services-model-registry.html?url'
 import reportRedHatDataServicesNotebooksDownstreamZTest from './generated-reports/quality-report-red-hat-data-services-notebooks-downstream-z-test.html?url'
+import reportRedHatDataServicesOgxK8sOperator from './generated-reports/quality-report-red-hat-data-services-ogx-k8s-operator.html?url'
 import reportTrustyaiExplainabilityNemoGuardrails from './generated-reports/quality-report-trustyai-explainability-NeMo-Guardrails.html?url'
 import reportLlmDLlmDWorkloadVariantAutoscaler from './generated-reports/quality-report-llm-d-llm-d-workload-variant-autoscaler.html?url'
 import reportOpendatahubIoModelRegistryOperator from './generated-reports/quality-report-opendatahub-io-model-registry-operator.html?url'
 import reportOpendatahubIoOdhIdeExtensions from './generated-reports/quality-report-opendatahub-io-odh-ide-extensions.html?url'
+import reportOpendatahubIoOgxDistribution from './generated-reports/quality-report-opendatahub-io-ogx-distribution.html?url'
 import reportAnomalycoOpencode from './generated-reports/quality-report-anomalyco-opencode.html?url'
 import reportFeastDevFeast from './generated-reports/quality-report-feast-dev-feast.html?url'
 import reportKubeflowSparkOperator from './generated-reports/quality-report-kubeflow-spark-operator.html?url'
 import reportKubernetesSigsGatewayApiInferenceExtension from './generated-reports/quality-report-kubernetes-sigs-gateway-api-inference-extension.html?url'
 import reportOpendatahubIoKubeflowSdk from './generated-reports/quality-report-opendatahub-io-kubeflow-sdk.html?url'
-import reportOpendatahubIoOgxDistribution from './generated-reports/quality-report-opendatahub-io-ogx-distribution.html?url'
 import reportOpendatahubIoMlflowKubernetesPlugins from './generated-reports/quality-report-opendatahub-io-mlflow-kubernetes-plugins.html?url'
+import reportOpendatahubIoOgxK8sOperator from './generated-reports/quality-report-opendatahub-io-ogx-k8s-operator.html?url'
 import reportRedHatDataServicesAgenticStarterKits from './generated-reports/quality-report-red-hat-data-services-agentic-starter-kits.html?url'
 import reportRedHatDataServicesAiGatewayPayloadProcessing from './generated-reports/quality-report-red-hat-data-services-ai-gateway-payload-processing.html?url'
 import reportRedHatDataServicesKueue from './generated-reports/quality-report-red-hat-data-services-kueue.html?url'
@@ -97,7 +98,6 @@ import reportKubeflowPipelinesComponents from './generated-reports/quality-repor
 import reportOpendatahubIoAiGatewayPayloadProcessing from './generated-reports/quality-report-opendatahub-io-ai-gateway-payload-processing.html?url'
 import reportOpendatahubIoOdhPlatformUtilities from './generated-reports/quality-report-opendatahub-io-odh-platform-utilities.html?url'
 import reportRedHatDataServicesRhodsOperator from './generated-reports/quality-report-red-hat-data-services-rhods-operator.html?url'
-import reportOpendatahubIoOgxK8sOperator from './generated-reports/quality-report-opendatahub-io-ogx-k8s-operator.html?url'
 import reportOpendatahubIoModelsAsAService from './generated-reports/quality-report-opendatahub-io-models-as-a-service.html?url'
 import reportOpendatahubIoKubeAuthProxy from './generated-reports/quality-report-opendatahub-io-kube-auth-proxy.html?url'
 import reportOpendatahubIoKueue from './generated-reports/quality-report-opendatahub-io-kueue.html?url'
@@ -118,6 +118,7 @@ import reportRedHatDataServicesRedHatOdhDashboard from './generated-reports/qual
 import reportRedHatDataServicesRhaiOrgPulse from './generated-reports/quality-report-red-hat-data-services-rhai-org-pulse.html?url'
 import reportRedHatDataServicesTrainingOperator from './generated-reports/quality-report-red-hat-data-services-training-operator.html?url'
 import reportKubeflowSdk from './generated-reports/quality-report-kubeflow-sdk.html?url'
+import reportRedHatDataServicesOgxDistribution from './generated-reports/quality-report-red-hat-data-services-ogx-distribution.html?url'
 import reportLlmDIncubationBatchGateway from './generated-reports/quality-report-llm-d-incubation-batch-gateway.html?url'
 import reportOpendatahubIoCodeflareOperatorPoc from './generated-reports/quality-report-opendatahub-io-codeflare-operator-poc.html?url'
 import reportOpendatahubIoKubeAuthkit from './generated-reports/quality-report-opendatahub-io-kube-authkit.html?url'
@@ -129,6 +130,7 @@ import reportOpendatahubIoTrainerSdk from './generated-reports/quality-report-op
 import reportRedHatDataServicesCodeflareOperator from './generated-reports/quality-report-red-hat-data-services-codeflare-operator.html?url'
 import reportRedHatDataServicesKuberay from './generated-reports/quality-report-red-hat-data-services-kuberay.html?url'
 import reportRedHatDataServicesModelMetadataCollection from './generated-reports/quality-report-red-hat-data-services-model-metadata-collection.html?url'
+import reportRedHatDataServicesOgx from './generated-reports/quality-report-red-hat-data-services-ogx.html?url'
 import reportRedHatDataServicesOpenvino from './generated-reports/quality-report-red-hat-data-services-openvino.html?url'
 import reportRedHatDataServicesSnykJiraReporter from './generated-reports/quality-report-red-hat-data-services-snyk-jira-reporter.html?url'
 import reportAutogluonAutogluon from './generated-reports/quality-report-autogluon-autogluon.html?url'
@@ -155,7 +157,6 @@ import reportOpendatahubIoMlflowGo from './generated-reports/quality-report-open
 import reportOpendatahubIoModelMetadataCollection from './generated-reports/quality-report-opendatahub-io-model-metadata-collection.html?url'
 import reportRedHatDataServicesMlserver from './generated-reports/quality-report-red-hat-data-services-MLServer.html?url'
 import reportKubeflowNotebooks from './generated-reports/quality-report-kubeflow-notebooks.html?url'
-import reportRedHatDataServicesOgx from './generated-reports/quality-report-red-hat-data-services-ogx.html?url'
 import reportOpendatahubIoAiHelpers from './generated-reports/quality-report-opendatahub-io-ai-helpers.html?url'
 import reportOpendatahubIoAutogluon from './generated-reports/quality-report-opendatahub-io-autogluon.html?url'
 import reportOpendatahubIoGuardrailsDetectors from './generated-reports/quality-report-opendatahub-io-guardrails-detectors.html?url'
@@ -189,7 +190,6 @@ import reportFoundationModelStackFmsHfTuning from './generated-reports/quality-r
 import reportLangfuseLangfuseK8s from './generated-reports/quality-report-langfuse-langfuse-k8s.html?url'
 import reportOpendatahubIoAgentEvalHarness from './generated-reports/quality-report-opendatahub-io-agent-eval-harness.html?url'
 import reportOpendatahubIoModArchLibrary from './generated-reports/quality-report-opendatahub-io-mod-arch-library.html?url'
-import reportRedHatDataServicesOgxDistribution from './generated-reports/quality-report-red-hat-data-services-ogx-distribution.html?url'
 import reportRedHatDataServicesModelmesh from './generated-reports/quality-report-red-hat-data-services-modelmesh.html?url'
 import reportRedHatDataServicesCodeflareSdk from './generated-reports/quality-report-red-hat-data-services-codeflare-sdk.html?url'
 import reportCaikitCaikitNlp from './generated-reports/quality-report-caikit-caikit-nlp.html?url'
@@ -246,6 +246,7 @@ import reportRedHatDataServicesMlMetadata from './generated-reports/quality-repo
 import reportOpendatahubIoCoderabbit from './generated-reports/quality-report-opendatahub-io-coderabbit.html?url'
 import reportOpendatahubIoModelRuntimesAgent from './generated-reports/quality-report-opendatahub-io-model-runtimes-agent.html?url'
 import reportOpendatahubIoRhaiWiki from './generated-reports/quality-report-opendatahub-io-rhai-wiki.html?url'
+import reportOgxAiOgxDemos from './generated-reports/quality-report-ogx-ai-ogx-demos.html?url'
 import reportOpendatahubIoSkillsRegistry from './generated-reports/quality-report-opendatahub-io-skills-registry.html?url'
 import reportRedHatDataServicesVllmOrchestratorGateway from './generated-reports/quality-report-red-hat-data-services-vllm-orchestrator-gateway.html?url'
 import reportOpendatahubIoCommunityOperatorsProd from './generated-reports/quality-report-opendatahub-io-community-operators-prod.html?url'
@@ -338,10 +339,10 @@ import reportOpendatahubIoGuidesVllmLlmD from './generated-reports/quality-repor
 import reportRedHatDataServicesKronophage from './generated-reports/quality-report-red-hat-data-services-kronophage.html?url'
 
 export const QUALITY_SAMPLE_META = {
-  generatedAt: '2026-06-03 13:56:22',
+  generatedAt: '2026-06-10 18:26:42',
   averageScore: '5.0/10',
   blurb:
-    'All RHOAI components — full catalog coverage'
+    'Quality analysis of 334 repositories.'
 }
 
 /** @type {Array<{ id: string, label: string, githubUrl: string, score: string, gaps: string, tier: string, component: string, team: string, reportUrl: string }>} */
@@ -428,29 +429,6 @@ export const QUALITY_REPORTS = [
     component: 'AI Core Dashboard',
     team: 'Crimson',
     reportUrl: reportRedHatDataServicesOdhDashboard
-  },
-  {
-    id: 'ogx-ai-ogx',
-    label: 'ogx-ai/ogx',
-    githubUrl: 'https://github.com/ogx-ai/ogx',
-    score: '8.6/10',
-    gaps:
-      'No coverage enforcement or PR reporting, No container vulnerability scanning',
-    tier: 'upstream',
-    component: 'Llama Stack Core',
-    team: 'Architects & Staff Engineers',
-    reportUrl: reportOgxAiOgx
-  },
-  {
-    id: 'ogx-ai-ogx-demos',
-    label: 'ogx-ai/ogx-demos',
-    githubUrl: 'https://github.com/ogx-ai/ogx-demos',
-    score: '',
-    gaps: '',
-    tier: 'upstream',
-    component: 'Llama Stack Core',
-    team: 'Architects & Staff Engineers',
-    reportUrl: ''
   },
   {
     id: 'BerriAI-litellm',
@@ -788,6 +766,18 @@ export const QUALITY_REPORTS = [
     reportUrl: reportTraefikTraefik
   },
   {
+    id: 'ogx-ai-ogx',
+    label: 'ogx-ai/ogx',
+    githubUrl: 'https://github.com/ogx-ai/ogx',
+    score: '7.8/10',
+    gaps:
+      'No container vulnerability scanning, No coverage reporting on PRs',
+    tier: 'upstream',
+    component: 'Llama Stack Core',
+    team: 'Architects & Staff Engineers',
+    reportUrl: reportOgxAiOgx
+  },
+  {
     id: 'opendatahub-io-spark-operator',
     label: 'opendatahub-io/spark-operator',
     githubUrl: 'https://github.com/opendatahub-io/spark-operator',
@@ -980,18 +970,6 @@ export const QUALITY_REPORTS = [
     reportUrl: reportRedHatDataServicesKubeflow
   },
   {
-    id: 'red-hat-data-services-ogx-k8s-operator',
-    label: 'red-hat-data-services/ogx-k8s-operator',
-    githubUrl: 'https://github.com/red-hat-data-services/ogx-k8s-operator',
-    score: '7.6/10',
-    gaps:
-      'No container image security scanning, No agent rules for AI-assisted development',
-    tier: 'downstream',
-    component: 'Llama Stack Core',
-    team: 'Architects & Staff Engineers',
-    reportUrl: reportRedHatDataServicesOgxK8sOperator
-  },
-  {
     id: 'red-hat-data-services-llm-d-inference-scheduler',
     label: 'red-hat-data-services/llm-d-inference-scheduler',
     githubUrl: 'https://github.com/red-hat-data-services/llm-d-inference-scheduler',
@@ -1052,6 +1030,18 @@ export const QUALITY_REPORTS = [
     reportUrl: reportRedHatDataServicesNotebooksDownstreamZTest
   },
   {
+    id: 'red-hat-data-services-ogx-k8s-operator',
+    label: 'red-hat-data-services/ogx-k8s-operator',
+    githubUrl: 'https://github.com/red-hat-data-services/ogx-k8s-operator',
+    score: '7.6/10',
+    gaps:
+      'No container vulnerability scanning, Coverage thresholds set to 0%',
+    tier: 'downstream',
+    component: 'Llama Stack Core',
+    team: 'Architects & Staff Engineers',
+    reportUrl: reportRedHatDataServicesOgxK8sOperator
+  },
+  {
     id: 'trustyai-explainability-NeMo-Guardrails',
     label: 'trustyai-explainability/NeMo-Guardrails',
     githubUrl: 'https://github.com/trustyai-explainability/NeMo-Guardrails',
@@ -1098,6 +1088,18 @@ export const QUALITY_REPORTS = [
     component: 'Notebooks Extensions',
     team: 'Notebook Extensions: Teal',
     reportUrl: reportOpendatahubIoOdhIdeExtensions
+  },
+  {
+    id: 'opendatahub-io-ogx-distribution',
+    label: 'opendatahub-io/ogx-distribution',
+    githubUrl: 'https://github.com/opendatahub-io/ogx-distribution',
+    score: '7.5/10',
+    gaps:
+      'No unit tests for build tooling, No container vulnerability scanning',
+    tier: 'midstream',
+    component: 'Llama Stack Core',
+    team: 'Architects & Staff Engineers',
+    reportUrl: reportOpendatahubIoOgxDistribution
   },
   {
     id: 'anomalyco-opencode',
@@ -1160,18 +1162,6 @@ export const QUALITY_REPORTS = [
     reportUrl: reportOpendatahubIoKubeflowSdk
   },
   {
-    id: 'opendatahub-io-ogx-distribution',
-    label: 'opendatahub-io/ogx-distribution',
-    githubUrl: 'https://github.com/opendatahub-io/ogx-distribution',
-    score: '7.4/10',
-    gaps:
-      'No unit tests for Python build/utility scripts, No coverage tracking or enforcement',
-    tier: 'midstream',
-    component: 'Llama Stack Core',
-    team: 'Architects & Staff Engineers',
-    reportUrl: reportOpendatahubIoOgxDistribution
-  },
-  {
     id: 'opendatahub-io-mlflow-kubernetes-plugins',
     label: 'opendatahub-io/mlflow-kubernetes-plugins',
     githubUrl: 'https://github.com/opendatahub-io/mlflow-kubernetes-plugins',
@@ -1182,6 +1172,18 @@ export const QUALITY_REPORTS = [
     component: 'MLflow',
     team: 'AI Pipelines',
     reportUrl: reportOpendatahubIoMlflowKubernetesPlugins
+  },
+  {
+    id: 'opendatahub-io-ogx-k8s-operator',
+    label: 'opendatahub-io/ogx-k8s-operator',
+    githubUrl: 'https://github.com/opendatahub-io/ogx-k8s-operator',
+    score: '7.4/10',
+    gaps:
+      'Coverage thresholds set to 0%, No container image runtime validation',
+    tier: 'midstream',
+    component: 'Llama Stack Core',
+    team: 'Architects & Staff Engineers',
+    reportUrl: reportOpendatahubIoOgxK8sOperator
   },
   {
     id: 'red-hat-data-services-agentic-starter-kits',
@@ -1484,18 +1486,6 @@ export const QUALITY_REPORTS = [
     reportUrl: reportRedHatDataServicesRhodsOperator
   },
   {
-    id: 'opendatahub-io-ogx-k8s-operator',
-    label: 'opendatahub-io/ogx-k8s-operator',
-    githubUrl: 'https://github.com/opendatahub-io/ogx-k8s-operator',
-    score: '7.0/10',
-    gaps:
-      'No container vulnerability scanning, Coverage thresholds set to 0 and only tracked on odh branch',
-    tier: 'midstream',
-    component: 'Llama Stack Core',
-    team: 'Architects & Staff Engineers',
-    reportUrl: reportOpendatahubIoOgxK8sOperator
-  },
-  {
     id: 'opendatahub-io-models-as-a-service',
     label: 'opendatahub-io/models-as-a-service',
     githubUrl: 'https://github.com/opendatahub-io/models-as-a-service',
@@ -1735,6 +1725,18 @@ export const QUALITY_REPORTS = [
     reportUrl: reportKubeflowSdk
   },
   {
+    id: 'red-hat-data-services-ogx-distribution',
+    label: 'red-hat-data-services/ogx-distribution',
+    githubUrl: 'https://github.com/red-hat-data-services/ogx-distribution',
+    score: '6.7/10',
+    gaps:
+      'No security scanning (Trivy, Snyk, CodeQL, SAST), No SBOM generation or image signing',
+    tier: 'downstream',
+    component: 'Llama Stack Core',
+    team: 'Architects & Staff Engineers',
+    reportUrl: reportRedHatDataServicesOgxDistribution
+  },
+  {
     id: 'llm-d-incubation-batch-gateway',
     label: 'llm-d-incubation/batch-gateway',
     githubUrl: 'https://github.com/llm-d-incubation/batch-gateway',
@@ -1865,6 +1867,18 @@ export const QUALITY_REPORTS = [
     component: 'AI Hub',
     team: 'AI Core Platform',
     reportUrl: reportRedHatDataServicesModelMetadataCollection
+  },
+  {
+    id: 'red-hat-data-services-ogx',
+    label: 'red-hat-data-services/ogx',
+    githubUrl: 'https://github.com/red-hat-data-services/ogx',
+    score: '6.5/10',
+    gaps:
+      'No coverage enforcement or PR gating, No container security scanning (Trivy, Snyk, CodeQL)',
+    tier: 'downstream',
+    component: 'Llama Stack Core',
+    team: 'Architects & Staff Engineers',
+    reportUrl: reportRedHatDataServicesOgx
   },
   {
     id: 'red-hat-data-services-openvino',
@@ -2176,18 +2190,6 @@ export const QUALITY_REPORTS = [
     component: 'Notebooks Server',
     team: '',
     reportUrl: reportKubeflowNotebooks
-  },
-  {
-    id: 'red-hat-data-services-ogx',
-    label: 'red-hat-data-services/ogx',
-    githubUrl: 'https://github.com/red-hat-data-services/ogx',
-    score: '6.0/10',
-    gaps:
-      'No coverage tracking or enforcement, No security scanning in CI (Trivy, CodeQL, SAST)',
-    tier: 'downstream',
-    component: 'Llama Stack Core',
-    team: 'Architects & Staff Engineers',
-    reportUrl: reportRedHatDataServicesOgx
   },
   {
     id: 'opendatahub-io-ai-helpers',
@@ -2581,18 +2583,6 @@ export const QUALITY_REPORTS = [
     component: 'AI Core Dashboard',
     team: 'Crimson',
     reportUrl: reportOpendatahubIoModArchLibrary
-  },
-  {
-    id: 'red-hat-data-services-ogx-distribution',
-    label: 'red-hat-data-services/ogx-distribution',
-    githubUrl: 'https://github.com/red-hat-data-services/ogx-distribution',
-    score: '5.4/10',
-    gaps:
-      'No unit tests for Python code, No container vulnerability scanning',
-    tier: 'downstream',
-    component: 'Llama Stack Core',
-    team: 'Architects & Staff Engineers',
-    reportUrl: reportRedHatDataServicesOgxDistribution
   },
   {
     id: 'red-hat-data-services-modelmesh',
@@ -3258,6 +3248,17 @@ export const QUALITY_REPORTS = [
     component: 'Internal Processes & Documentation',
     team: '',
     reportUrl: reportOpendatahubIoRhaiWiki
+  },
+  {
+    id: 'ogx-ai-ogx-demos',
+    label: 'ogx-ai/ogx-demos',
+    githubUrl: 'https://github.com/ogx-ai/ogx-demos',
+    score: '3.1/10',
+    gaps: 'No unit tests whatsoever, Eval tests not automated in CI',
+    tier: 'upstream',
+    component: 'Llama Stack Core',
+    team: 'Architects & Staff Engineers',
+    reportUrl: reportOgxAiOgxDemos
   },
   {
     id: 'opendatahub-io-skills-registry',

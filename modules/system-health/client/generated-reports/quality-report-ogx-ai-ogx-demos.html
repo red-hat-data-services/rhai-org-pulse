@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quality Analysis: red-hat-data-services/ogx-k8s-operator</title>
+    <title>Quality Analysis: ogx-ai/ogx-demos</title>
     <style>
         * {
             margin: 0;
@@ -332,8 +332,8 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 10, 2026 at 09:55 AM</p>
-            <h2 style="margin-top: 1rem; font-weight: 400;">red-hat-data-services/ogx-k8s-operator</h2>
+            <p class="timestamp">Generated on June 10, 2026 at 09:37 AM</p>
+            <h2 style="margin-top: 1rem; font-weight: 400;">ogx-ai/ogx-demos</h2>
         </header>
 
         <div class="content">
@@ -342,13 +342,13 @@
                     <svg width="200" height="200">
                         <circle class="bg-circle" cx="100" cy="100" r="90"></circle>
                         <circle class="score-arc" cx="100" cy="100" r="90"
-                                stroke="#ffc107"
+                                stroke="#dc3545"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="135.71668799999998"
+                                stroke-dashoffset="390.18547799999993"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">7.6</div>
+                        <div class="score-value">3.1</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -364,38 +364,38 @@
                         
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Strong unit test suite with envtest, testify, table-driven tests, 82% test-to-code ratio</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No unit tests — only eval/integration scripts exist, no pytest or unittest usage</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Automated E2E on PR via Kind cluster with operator deployment, CRD/webhook/TLS/rollout coverage</div>
+                            <div class="scorecard-score" style="color: #fd7e14;">4.0/10</div>
+                            <div class="scorecard-status">Manual eval test harness with 1,100+ queries but no CI automation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">Konflux PR builds via Tekton on-demand (/build-konflux comment), multi-arch, but no auto-trigger</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
+                            <div class="scorecard-status">No PR-time build validation, no image builds in CI</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #fd7e14;">5.5/10</div>
-                            <div class="scorecard-status">E2E builds and deploys image in Kind but no standalone image validation, no vulnerability scanning</div>
+                            <div class="scorecard-score" style="color: #dc3545;">1.5/10</div>
+                            <div class="scorecard-status">Single Dockerfile for MCP server, no runtime validation or scanning</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">6.0/10</div>
-                            <div class="scorecard-status">limgo coverage on odh branch with threshold config, but global threshold=0 and no codecov integration</div>
+                            <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
+                            <div class="scorecard-status">No coverage generation, no codecov/coveralls, no thresholds</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Well-organized workflows with concurrency control, Mergify auto-merge, SHA-pinned actions, multi-arch builds</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">Single pre-commit workflow; no test, build, or release automation</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory — no AI agent guidance</div>
+                            <div class="scorecard-status">No CLAUDE.md, no .claude/ directory, no test automation rules</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +411,51 @@
                     <ul class="items-list">
                         
                         <li class="item-card high">
-                            <div class="item-description">No container vulnerability scanning</div>
-                            <p>Security vulnerabilities in base images and dependencies go undetected until downstream scanning</p>
+                            <div class="item-description">No unit tests whatsoever</div>
+                            <p>Regressions in demo code, utility functions, and shared modules go undetected</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">8-12 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">Eval tests not automated in CI</div>
+                            <p>1,100+ eval queries exist but never run on PRs — tool call regressions can ship</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No coverage tracking</div>
+                            <p>No visibility into which code paths are exercised, impossible to set quality gates</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">Coverage thresholds set to 0%</div>
-                            <p>Coverage tracking exists but threshold is 0%, so any regression passes undetected</p>
+                            <div class="item-description">No container image scanning or runtime validation</div>
+                            <p>Vulnerabilities in the MCP Dockerfile base image (python:3.11-slim) undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
-                        <li class="item-card high">
-                            <div class="item-description">Coverage workflow only runs on odh branch, not main</div>
-                            <p>PRs to main branch have no coverage reporting or enforcement</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-high">HIGH</span>
-                                <span class="meta-tag effort-tag">1-2 hours</span>
-                            </div>
-                        </li>
                         <li class="item-card medium">
-                            <div class="item-description">No SAST/CodeQL integration</div>
-                            <p>No static application security testing in CI — code-level vulnerabilities may reach production</p>
+                            <div class="item-description">No SAST, dependency scanning, or secret detection</div>
+                            <p>Code and dependency vulnerabilities not caught before merge</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">No AI agent rules for test automation</div>
-                            <p>AI-assisted development lacks project-specific testing guidance, reducing generated test quality</p>
+                            <div class="item-description">Pre-commit hooks are minimal (3 basic checks)</div>
+                            <p>No linting, type checking, or formatting enforcement</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">3-4 hours</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -464,43 +472,35 @@
                     <ul class="items-list">
                         
                         <li class="item-card ">
-                            <div class="item-description">Add Trivy container scanning to PR workflow</div>
-                            <p>Catch CVEs in base images and dependencies before merge</p>
+                            <div class="item-description">Add ruff linting to pre-commit and CI</div>
+                            <p>Catch style issues, unused imports, and basic bugs automatically</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Set meaningful coverage thresholds in .limgo.json</div>
-                            <p>Prevent coverage regressions — even 50% as a starting floor catches big drops</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">1 hour</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Extend coverage workflow to main branch PRs</div>
-                            <p>All PRs get coverage reporting, not just odh-targeted ones</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">30 minutes</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add CodeQL workflow</div>
-                            <p>Free GitHub-native SAST scanning for Go code</p>
+                            <div class="item-description">Add Trivy scanning for the MCP Dockerfile</div>
+                            <p>Detect known vulnerabilities in the python:3.11-slim base image</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create basic CLAUDE.md with test patterns</div>
-                            <p>Guide AI agents to follow project conventions for test generation</p>
+                            <div class="item-description">Add pytest with a smoke test suite for demo imports</div>
+                            <p>Ensure all 47 demo scripts at least import without errors</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">2-3 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Wire up the eval test harness in CI (even a subset)</div>
+                            <p>Automated validation of tool call accuracy on every PR</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">3-4 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -517,15 +517,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add container vulnerability scanning (Trivy) to PR and post-merge workflows</li><li>Set real coverage thresholds in .limgo.json (recommend 60%+ for statements/lines)</li><li>Enable coverage workflow on main branch PRs (currently odh-only)</li></ul>
+                            <ul><li>Add unit tests for shared utilities (utils.py, client_tools/) and eval test infrastructure</li><li>Automate the eval test harness in CI — run against a local mock or lightweight server</li><li>Add coverage tracking with pytest-cov and integrate codecov</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Add CodeQL/SAST scanning workflow for Go static analysis</li><li>Add secret detection (Gitleaks) to pre-commit and CI</li><li>Create CLAUDE.md with testing patterns, conventions, and operator-specific guidance</li><li>Auto-trigger Konflux PR builds instead of requiring /build-konflux comment</li></ul>
+                            <ul><li>Add ruff linting and mypy type checking to pre-commit hooks and CI</li><li>Add Trivy container scanning for the MCP Dockerfile</li><li>Add CodeQL or Semgrep SAST scanning</li><li>Create agent rules (.claude/rules/) for test creation patterns</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add image startup validation test (build image, verify entrypoint works)</li><li>Add SBOM generation to image build workflows</li><li>Add performance/load testing for operator reconciliation loops</li><li>Consider adding contract tests for API boundaries</li></ul>
+                            <ul><li>Add Gitleaks or TruffleHog for secret detection in CI</li><li>Add multi-architecture builds for the MCP server image</li><li>Add a smoke test that exercises each demo module&#x27;s import path</li><li>Add Dependabot or Renovate for dependency updates</li></ul>
                         </div>
                     </div>
                 </div>

@@ -44,10 +44,10 @@
 </head>
 <body>
   <div class="card">
-    <h1>Quality Analysis (344 Repos)</h1>
-    <p><strong>Generated:</strong> 2026-06-03 13:56:22</p>
+    <h1>Quality Analysis (334 Repos)</h1>
+    <p><strong>Generated:</strong> 2026-06-10 18:26:42</p>
     <p><strong>Average score:</strong> 5.0/10</p>
-    <p>All RHOAI components — full catalog coverage</p>
+    <p>Quality analysis of 334 repositories.</p>
   </div>
 
   <div class="card">
@@ -119,14 +119,6 @@
               <td>AI Core Dashboard</td>
               <td>8.7/10</td>
               <td>No PR-time Konflux build simulation, No container image runtime validation</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-ogx-ai-ogx.html">ogx-ai/ogx</a></td>
-              <td><a href="https://github.com/ogx-ai/ogx" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td>Llama Stack Core</td>
-              <td>8.6/10</td>
-              <td>No coverage enforcement or PR reporting, No container vulnerability scanning</td>
             </tr>
             <tr>
               <td><a href="quality-report-BerriAI-litellm.html">BerriAI/litellm</a></td>
@@ -241,8 +233,8 @@
               <td>No coverage tracking or enforcement, No container image vulnerability scanning of built images</td>
             </tr>
             <tr>
-              <td><a href="quality-report-opendatahub-io-llama-stack.html">opendatahub-io/llama-stack</a></td>
-              <td><a href="https://github.com/opendatahub-io/llama-stack" target="_blank">GitHub</a></td>
+              <td><a href="quality-report-opendatahub-io-ogx.html">opendatahub-io/ogx</a></td>
+              <td><a href="https://github.com/opendatahub-io/ogx" target="_blank">GitHub</a></td>
               <td>midstream</td>
               <td>Llama Stack Core</td>
               <td>8.2/10</td>
@@ -353,12 +345,12 @@
               <td>No coverage enforcement in CI, No container vulnerability scanning</td>
             </tr>
             <tr>
-              <td><a href="quality-report-red-hat-data-services-llama-stack-provider-trustyai-garak.html">red-hat-data-services/llama-stack-provider-trustyai-garak</a></td>
-              <td><a href="https://github.com/red-hat-data-services/llama-stack-provider-trustyai-garak" target="_blank">GitHub</a></td>
-              <td>downstream</td>
+              <td><a href="quality-report-ogx-ai-ogx.html">ogx-ai/ogx</a></td>
+              <td><a href="https://github.com/ogx-ai/ogx" target="_blank">GitHub</a></td>
+              <td>upstream</td>
               <td>Llama Stack Core</td>
               <td>7.8/10</td>
-              <td>No integration or E2E tests, No CI-enforced coverage reporting</td>
+              <td>No container vulnerability scanning, No coverage reporting on PRs</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-spark-operator.html">opendatahub-io/spark-operator</a></td>
@@ -489,14 +481,6 @@
               <td>Konflux PR builds are opt-in (label/comment), not automatic, No standalone container image runtime validation</td>
             </tr>
             <tr>
-              <td><a href="quality-report-red-hat-data-services-llama-stack-k8s-operator.html">red-hat-data-services/llama-stack-k8s-operator</a></td>
-              <td><a href="https://github.com/red-hat-data-services/llama-stack-k8s-operator" target="_blank">GitHub</a></td>
-              <td>downstream</td>
-              <td>Llama Stack Core</td>
-              <td>7.6/10</td>
-              <td>No container image security scanning, No agent rules for AI-assisted development</td>
-            </tr>
-            <tr>
               <td><a href="quality-report-red-hat-data-services-llm-d-inference-scheduler.html">red-hat-data-services/llm-d-inference-scheduler</a></td>
               <td><a href="https://github.com/red-hat-data-services/llm-d-inference-scheduler" target="_blank">GitHub</a></td>
               <td>downstream</td>
@@ -537,12 +521,12 @@
               <td>No test coverage tracking or enforcement, No agent rules for AI-assisted test creation</td>
             </tr>
             <tr>
-              <td><a href="quality-report-trustyai-explainability-llama-stack-provider-trustyai-garak.html">trustyai-explainability/llama-stack-provider-trustyai-garak</a></td>
-              <td><a href="https://github.com/trustyai-explainability/llama-stack-provider-trustyai-garak" target="_blank">GitHub</a></td>
-              <td>upstream</td>
+              <td><a href="quality-report-red-hat-data-services-ogx-k8s-operator.html">red-hat-data-services/ogx-k8s-operator</a></td>
+              <td><a href="https://github.com/red-hat-data-services/ogx-k8s-operator" target="_blank">GitHub</a></td>
+              <td>downstream</td>
               <td>Llama Stack Core</td>
               <td>7.6/10</td>
-              <td>No integration or E2E tests, No CI coverage enforcement</td>
+              <td>No container vulnerability scanning, Coverage thresholds set to 0%</td>
             </tr>
             <tr>
               <td><a href="quality-report-trustyai-explainability-NeMo-Guardrails.html">trustyai-explainability/NeMo-Guardrails</a></td>
@@ -575,6 +559,14 @@
               <td>Notebooks Extensions</td>
               <td>7.5/10</td>
               <td>Coverage thresholds disabled in Jest, No pre-commit hooks configured</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-ogx-distribution.html">opendatahub-io/ogx-distribution</a></td>
+              <td><a href="https://github.com/opendatahub-io/ogx-distribution" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>Llama Stack Core</td>
+              <td>7.5/10</td>
+              <td>No unit tests for build tooling, No container vulnerability scanning</td>
             </tr>
             <tr>
               <td><a href="quality-report-anomalyco-opencode.html">anomalyco/opencode</a></td>
@@ -617,20 +609,20 @@
               <td>No PR-time package build validation, No coverage enforcement thresholds</td>
             </tr>
             <tr>
-              <td><a href="quality-report-opendatahub-io-llama-stack-distribution.html">opendatahub-io/llama-stack-distribution</a></td>
-              <td><a href="https://github.com/opendatahub-io/llama-stack-distribution" target="_blank">GitHub</a></td>
-              <td>midstream</td>
-              <td>Llama Stack Core</td>
-              <td>7.4/10</td>
-              <td>No unit tests for Python build/utility scripts, No coverage tracking or enforcement</td>
-            </tr>
-            <tr>
               <td><a href="quality-report-opendatahub-io-mlflow-kubernetes-plugins.html">opendatahub-io/mlflow-kubernetes-plugins</a></td>
               <td><a href="https://github.com/opendatahub-io/mlflow-kubernetes-plugins" target="_blank">GitHub</a></td>
               <td>midstream</td>
               <td>MLflow</td>
               <td>7.4/10</td>
               <td>No test coverage tracking or enforcement, No container image runtime validation</td>
+            </tr>
+            <tr>
+              <td><a href="quality-report-opendatahub-io-ogx-k8s-operator.html">opendatahub-io/ogx-k8s-operator</a></td>
+              <td><a href="https://github.com/opendatahub-io/ogx-k8s-operator" target="_blank">GitHub</a></td>
+              <td>midstream</td>
+              <td>Llama Stack Core</td>
+              <td>7.4/10</td>
+              <td>Coverage thresholds set to 0%, No container image runtime validation</td>
             </tr>
             <tr>
               <td><a href="quality-report-red-hat-data-services-agentic-starter-kits.html">red-hat-data-services/agentic-starter-kits</a></td>
@@ -833,14 +825,6 @@
               <td>No container vulnerability scanning in GitHub workflows, Coverage tracking is informational only — no enforcement</td>
             </tr>
             <tr>
-              <td><a href="quality-report-opendatahub-io-llama-stack-k8s-operator.html">opendatahub-io/llama-stack-k8s-operator</a></td>
-              <td><a href="https://github.com/opendatahub-io/llama-stack-k8s-operator" target="_blank">GitHub</a></td>
-              <td>midstream</td>
-              <td>Llama Stack Core</td>
-              <td>7.0/10</td>
-              <td>No container vulnerability scanning, Coverage thresholds set to 0 and only tracked on odh branch</td>
-            </tr>
-            <tr>
               <td><a href="quality-report-opendatahub-io-models-as-a-service.html">opendatahub-io/models-as-a-service</a></td>
               <td><a href="https://github.com/opendatahub-io/models-as-a-service" target="_blank">GitHub</a></td>
               <td>midstream</td>
@@ -1001,6 +985,14 @@
               <td>No coverage enforcement or minimum thresholds, 23 of 43 source files lack dedicated unit tests</td>
             </tr>
             <tr>
+              <td><a href="quality-report-red-hat-data-services-ogx-distribution.html">red-hat-data-services/ogx-distribution</a></td>
+              <td><a href="https://github.com/red-hat-data-services/ogx-distribution" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>Llama Stack Core</td>
+              <td>6.7/10</td>
+              <td>No security scanning (Trivy, Snyk, CodeQL, SAST), No SBOM generation or image signing</td>
+            </tr>
+            <tr>
               <td><a href="quality-report-llm-d-incubation-batch-gateway.html">llm-d-incubation/batch-gateway</a></td>
               <td><a href="https://github.com/llm-d-incubation/batch-gateway" target="_blank">GitHub</a></td>
               <td>upstream</td>
@@ -1089,6 +1081,14 @@
               <td>No CI coverage tracking or enforcement, No container image runtime validation</td>
             </tr>
             <tr>
+              <td><a href="quality-report-red-hat-data-services-ogx.html">red-hat-data-services/ogx</a></td>
+              <td><a href="https://github.com/red-hat-data-services/ogx" target="_blank">GitHub</a></td>
+              <td>downstream</td>
+              <td>Llama Stack Core</td>
+              <td>6.5/10</td>
+              <td>No coverage enforcement or PR gating, No container security scanning (Trivy, Snyk, CodeQL)</td>
+            </tr>
+            <tr>
               <td><a href="quality-report-red-hat-data-services-openvino.html">red-hat-data-services/openvino</a></td>
               <td><a href="https://github.com/red-hat-data-services/openvino" target="_blank">GitHub</a></td>
               <td>downstream</td>
@@ -1103,14 +1103,6 @@
               <td>Internal Processes &amp; Documentation</td>
               <td>6.5/10</td>
               <td>No integration tests against real Snyk/Jira APIs, No coverage threshold enforcement</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-trustyai-explainability-llama-stack-provider-ragas.html">trustyai-explainability/llama-stack-provider-ragas</a></td>
-              <td><a href="https://github.com/trustyai-explainability/llama-stack-provider-ragas" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td>Llama Stack Core</td>
-              <td>6.5/10</td>
-              <td>No test coverage tracking or enforcement, No container image build or scan in CI</td>
             </tr>
             <tr>
               <td><a href="quality-report-autogluon-autogluon.html">autogluon/autogluon</a></td>
@@ -1303,14 +1295,6 @@
               <td>Notebooks Server</td>
               <td>6.0/10</td>
               <td>No security scanning in CI/CD, No coverage enforcement or tracking</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-red-hat-data-services-llama-stack.html">red-hat-data-services/llama-stack</a></td>
-              <td><a href="https://github.com/red-hat-data-services/llama-stack" target="_blank">GitHub</a></td>
-              <td>downstream</td>
-              <td>Llama Stack Core</td>
-              <td>6.0/10</td>
-              <td>No coverage tracking or enforcement, No security scanning in CI (Trivy, CodeQL, SAST)</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-ai-helpers.html">opendatahub-io/ai-helpers</a></td>
@@ -1577,14 +1561,6 @@
               <td>Very low component test coverage in mod-arch-shared, Zero tests in mod-arch-kubeflow</td>
             </tr>
             <tr>
-              <td><a href="quality-report-red-hat-data-services-llama-stack-distribution.html">red-hat-data-services/llama-stack-distribution</a></td>
-              <td><a href="https://github.com/red-hat-data-services/llama-stack-distribution" target="_blank">GitHub</a></td>
-              <td>downstream</td>
-              <td>Llama Stack Core</td>
-              <td>5.4/10</td>
-              <td>No unit tests for Python code, No container vulnerability scanning</td>
-            </tr>
-            <tr>
               <td><a href="quality-report-red-hat-data-services-modelmesh.html">red-hat-data-services/modelmesh</a></td>
               <td><a href="https://github.com/red-hat-data-services/modelmesh" target="_blank">GitHub</a></td>
               <td>downstream</td>
@@ -1719,14 +1695,6 @@
               <td>Model Runtimes</td>
               <td>4.8/10</td>
               <td>Zero test coverage tracking or enforcement, OpenVINO Code extension has 0 test files for 54 source files</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-red-hat-data-services-rhds-llama-stack-distribution.html">red-hat-data-services/rhds-llama-stack-distribution</a></td>
-              <td><a href="https://github.com/red-hat-data-services/rhds-llama-stack-distribution" target="_blank">GitHub</a></td>
-              <td>downstream</td>
-              <td>Llama Stack Core</td>
-              <td>4.8/10</td>
-              <td>No unit tests for build scripts, No container vulnerability scanning in CI</td>
             </tr>
             <tr>
               <td><a href="quality-report-elyra-ai-pipeline-editor.html">elyra-ai/pipeline-editor</a></td>
@@ -1873,14 +1841,6 @@
               <td>Linter job disabled in CI, No coverage tracking in CI</td>
             </tr>
             <tr>
-              <td><a href="quality-report-red-hat-data-services-llama-stack-provider-ragas.html">red-hat-data-services/llama-stack-provider-ragas</a></td>
-              <td><a href="https://github.com/red-hat-data-services/llama-stack-provider-ragas" target="_blank">GitHub</a></td>
-              <td>downstream</td>
-              <td>Llama Stack Core</td>
-              <td>4.4/10</td>
-              <td>No tests execute in CI, Zero unit tests</td>
-            </tr>
-            <tr>
               <td><a href="quality-report-opendatahub-io-data-processing.html">opendatahub-io/data-processing</a></td>
               <td><a href="https://github.com/opendatahub-io/data-processing" target="_blank">GitHub</a></td>
               <td>midstream</td>
@@ -1953,14 +1913,6 @@
               <td>No code coverage tracking or enforcement, No container image security scanning</td>
             </tr>
             <tr>
-              <td><a href="quality-report-ogx-ai-ogx-client-python.html">ogx-ai/ogx-client-python</a></td>
-              <td><a href="https://github.com/ogx-ai/ogx-client-python" target="_blank">GitHub</a></td>
-              <td>upstream</td>
-              <td>Llama Stack Core</td>
-              <td>4.0/10</td>
-              <td>Tests are DISABLED in CI, No test coverage tracking at all</td>
-            </tr>
-            <tr>
               <td><a href="quality-report-red-hat-data-services-llm-d-routing-sidecar.html">red-hat-data-services/llm-d-routing-sidecar</a></td>
               <td><a href="https://github.com/red-hat-data-services/llm-d-routing-sidecar" target="_blank">GitHub</a></td>
               <td>downstream</td>
@@ -1975,14 +1927,6 @@
               <td>AgentOps</td>
               <td>3.8/10</td>
               <td>No integration or E2E testing, No security scanning</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-opendatahub-io-llama-stack-client-python.html">opendatahub-io/llama-stack-client-python</a></td>
-              <td><a href="https://github.com/opendatahub-io/llama-stack-client-python" target="_blank">GitHub</a></td>
-              <td>midstream</td>
-              <td>Llama Stack Core</td>
-              <td>3.8/10</td>
-              <td>CI workflow does not run on PRs, Tests are explicitly disabled</td>
             </tr>
             <tr>
               <td><a href="quality-report-red-hat-data-services-text-generation-inference.html">red-hat-data-services/text-generation-inference</a></td>
@@ -2065,6 +2009,14 @@
               <td>No CI/CD pipeline exists, No code coverage tracking</td>
             </tr>
             <tr>
+              <td><a href="quality-report-ogx-ai-ogx-demos.html">ogx-ai/ogx-demos</a></td>
+              <td><a href="https://github.com/ogx-ai/ogx-demos" target="_blank">GitHub</a></td>
+              <td>upstream</td>
+              <td>Llama Stack Core</td>
+              <td>3.1/10</td>
+              <td>No unit tests whatsoever, Eval tests not automated in CI</td>
+            </tr>
+            <tr>
               <td><a href="quality-report-opendatahub-io-skills-registry.html">opendatahub-io/skills-registry</a></td>
               <td><a href="https://github.com/opendatahub-io/skills-registry" target="_blank">GitHub</a></td>
               <td>midstream</td>
@@ -2145,14 +2097,6 @@
               <td>No CI/CD pipeline, No automated test execution</td>
             </tr>
             <tr>
-              <td><a href="quality-report-opendatahub-io-llama-stack-provider-kft.html">opendatahub-io/llama-stack-provider-kft</a></td>
-              <td><a href="https://github.com/opendatahub-io/llama-stack-provider-kft" target="_blank">GitHub</a></td>
-              <td>midstream</td>
-              <td>Llama Stack Core</td>
-              <td>2.6/10</td>
-              <td>Zero unit tests for core provider logic, No coverage tracking or enforcement</td>
-            </tr>
-            <tr>
               <td><a href="quality-report-red-hat-data-services-robotframework-openshift.html">red-hat-data-services/robotframework-openshift</a></td>
               <td><a href="https://github.com/red-hat-data-services/robotframework-openshift" target="_blank">GitHub</a></td>
               <td>downstream</td>
@@ -2217,22 +2161,6 @@
               <td>Zero test coverage for Tekton tasks and embedded bash scripts, No YAML schema validation for Tekton task definitions</td>
             </tr>
             <tr>
-              <td><a href="quality-report-opendatahub-io-llama-stack-provider-kfp-trainer.html">opendatahub-io/llama-stack-provider-kfp-trainer</a></td>
-              <td><a href="https://github.com/opendatahub-io/llama-stack-provider-kfp-trainer" target="_blank">GitHub</a></td>
-              <td>midstream</td>
-              <td>Llama Stack Core</td>
-              <td>2.2/10</td>
-              <td>Critical test coverage gap - 5 of 6 modules untested, No coverage tracking or enforcement</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-opendatahub-io-llama-stack-provider-ragas.html">opendatahub-io/llama-stack-provider-ragas</a></td>
-              <td><a href="https://github.com/opendatahub-io/llama-stack-provider-ragas" target="_blank">GitHub</a></td>
-              <td>midstream</td>
-              <td>Llama Stack Core</td>
-              <td>2.2/10</td>
-              <td>Zero tests execute in CI, No unit tests exist</td>
-            </tr>
-            <tr>
               <td><a href="quality-report-opendatahub-io-vllm-orchestrator-gateway.html">opendatahub-io/vllm-orchestrator-gateway</a></td>
               <td><a href="https://github.com/opendatahub-io/vllm-orchestrator-gateway" target="_blank">GitHub</a></td>
               <td>midstream</td>
@@ -2247,14 +2175,6 @@
               <td>Internal Processes &amp; Documentation</td>
               <td>2.1/10</td>
               <td>Zero test coverage for custom TraefikTomlConfigmapProxy, Repository appears abandoned since July 2021</td>
-            </tr>
-            <tr>
-              <td><a href="quality-report-opendatahub-io-llama-stack-provider-instructlab-train.html">opendatahub-io/llama-stack-provider-instructlab-train</a></td>
-              <td><a href="https://github.com/opendatahub-io/llama-stack-provider-instructlab-train" target="_blank">GitHub</a></td>
-              <td>midstream</td>
-              <td>Llama Stack Core</td>
-              <td>2.1/10</td>
-              <td>Zero unit tests for all 224 lines of source code, No container image build or testing</td>
             </tr>
             <tr>
               <td><a href="quality-report-opendatahub-io-llm-d-playbooks.html">opendatahub-io/llm-d-playbooks</a></td>

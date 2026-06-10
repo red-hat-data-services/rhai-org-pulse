@@ -1,366 +1,445 @@
 ---
 repository: "ogx-ai/ogx"
-overall_score: 8.6
+overall_score: 7.8
 scorecard:
   - dimension: "Unit Tests"
-    score: 8.5
-    status: "171 unit test files across Python (pytest) and TypeScript (Jest); multi-Python-version matrix; pytest-socket blocks network access"
+    score: 8.0
+    weight: 20
+    status: "328 test files, 85K test LOC vs 73K source LOC (1.18:1 ratio), coverage generation with pytest-cov"
   - dimension: "Integration/E2E"
     score: 9.0
-    status: "60+ integration test files with recording/replay system; multi-provider matrix; backward compatibility tests; OpenResponses conformance suite"
+    weight: 25
+    status: "Sophisticated recording/replay integration system, 10+ integration workflows, conformance testing, backward compatibility checks"
   - dimension: "Build Integration"
     score: 8.0
-    status: "PR-time venv builds for all distributions; container builds on push/schedule; UBI9 and ARM64 variants; entrypoint verification"
+    weight: 0
+    status: "PR-time venv builds, container builds on push, multi-arch (amd64/arm64), UBI9 support"
   - dimension: "Image Testing"
     score: 7.0
-    status: "Multi-arch container builds (amd64/arm64); entrypoint validation; config label verification; but no runtime startup tests or Trivy scanning"
+    weight: 20
+    status: "Container build validation, entrypoint checks, config label verification, but no vulnerability scanning or SBOM"
   - dimension: "Coverage Tracking"
     score: 5.0
-    status: "Coverage SVG badge exists; .coveragerc configured; pytest-cov in dev deps; but no codecov/coveralls integration or PR enforcement"
+    weight: 15
+    status: "Coverage generation and SVG badge exist, but no codecov/coveralls integration, no PR reporting, no thresholds"
   - dimension: "CI/CD Automation"
-    score: 9.5
-    status: "34 workflows; concurrency control; SHA-pinned actions; merge queue; Dependabot + Mergify; semantic PR titles; CI status aggregator"
+    score: 9.0
+    weight: 20
+    status: "35 workflows with concurrency control, SHA-pinned actions, merge queue, Dependabot, Mergify, path filtering"
   - dimension: "Agent Rules"
     score: 8.0
-    status: "Comprehensive AGENTS.md with testing guidelines, code style, provider architecture; CLAUDE.md for design context; no .claude/rules/ directory"
+    weight: 0
+    status: "Comprehensive CLAUDE.md + AGENTS.md with coding standards, testing guidance, and architecture docs"
 critical_gaps:
-  - title: "No coverage enforcement or PR reporting"
-    impact: "Coverage can silently regress without any gate or visibility in PRs"
-    severity: "HIGH"
-    effort: "4-6 hours"
   - title: "No container vulnerability scanning"
-    impact: "Container images may ship with known CVEs in OS packages or Python dependencies"
+    impact: "CVEs in base images and dependencies go undetected until production deployment"
     severity: "HIGH"
     effort: "2-4 hours"
-  - title: "No container runtime startup validation"
-    impact: "Images may build successfully but fail to start the server; only entrypoint is verified"
+  - title: "No coverage reporting on PRs"
+    impact: "Test coverage regressions slip through without reviewer visibility"
+    severity: "HIGH"
+    effort: "2-4 hours"
+  - title: "No coverage enforcement thresholds"
+    impact: "No automated gate preventing coverage drops in new code"
     severity: "MEDIUM"
-    effort: "4-6 hours"
-quick_wins:
-  - title: "Add Codecov integration to unit-tests workflow"
-    effort: "2-3 hours"
-    impact: "Immediate visibility into coverage trends and PR-level coverage delta reporting"
-  - title: "Add Trivy container scanning to providers-build workflow"
     effort: "1-2 hours"
-    impact: "Catch known CVEs in container images before they reach registries"
-  - title: "Add container startup smoke test to build workflow"
-    effort: "2-3 hours"
-    impact: "Verify the server starts and responds to /v1/health after image build"
-  - title: "Create .claude/rules/ with test-type-specific rules"
-    effort: "2-3 hours"
-    impact: "Improve AI-generated test quality with structured, actionable test patterns"
+  - title: "No secret detection tooling"
+    impact: "Accidental credential commits may not be caught despite detect-private-key pre-commit hook"
+    severity: "MEDIUM"
+    effort: "1-2 hours"
+quick_wins:
+  - title: "Add Codecov integration to unit test workflow"
+    effort: "2-4 hours"
+    impact: "PR-level coverage reporting and trend tracking for every pull request"
+  - title: "Add Trivy container scanning workflow"
+    effort: "1-2 hours"
+    impact: "Automated CVE detection for built container images before release"
+  - title: "Add coverage threshold to unit-tests.sh"
+    effort: "1 hour"
+    impact: "Prevent coverage regressions with fail-under flag in coverage configuration"
+  - title: "Add Gitleaks to pre-commit and CI"
+    effort: "1-2 hours"
+    impact: "Detect accidentally committed secrets beyond just private keys"
 recommendations:
   priority_0:
-    - "Add Codecov/Coveralls integration with PR-level coverage reporting and minimum threshold enforcement"
     - "Add Trivy or Grype container scanning to the providers-build and build-distributions workflows"
+    - "Integrate Codecov with the unit-tests workflow for PR coverage reporting and enforcement"
   priority_1:
-    - "Add container runtime smoke tests — build image, start server, verify /v1/health responds"
-    - "Create .claude/rules/ directory with test-type-specific rules for unit, integration, and E2E tests"
-    - "Add SBOM generation (syft) to container build pipelines for supply chain transparency"
+    - "Add coverage fail-under threshold (e.g., 60%) to .coveragerc and enforce in CI"
+    - "Add Gitleaks secret scanning to pre-commit config and a dedicated CI workflow"
+    - "Add SBOM generation (Syft/Trivy) to container build pipelines"
   priority_2:
-    - "Add performance/load testing with the existing locust benchmarking infrastructure"
-    - "Add secret scanning via Gitleaks in CI (currently only detect-private-key in pre-commit)"
-    - "Consider adding contract tests between ogx and ogx_api packages"
+    - "Add .claude/rules/ directory with test-type-specific rules for unit, integration, and E2E tests"
+    - "Add container runtime functional testing (health check, startup validation) to PR builds"
+    - "Consider load/performance regression testing via the existing benchmarking infrastructure"
 ---
 
 # Quality Analysis: OGX (ogx-ai/ogx)
 
 ## Executive Summary
 
-- **Overall Score: 8.6/10**
-- **Repository Type**: Python API server with TypeScript UI component
-- **Primary Language**: Python 3.12 (with TypeScript for UI)
-- **Framework**: FastAPI-based, OpenAI-compatible API server with provider architecture
-
-OGX is an exceptionally well-engineered open-source project with one of the most sophisticated CI/CD pipelines I've analyzed. With 34 GitHub Actions workflows, a recording/replay integration test system, backward compatibility testing, and comprehensive pre-commit enforcement, this project far exceeds typical open-source quality standards.
-
-**Key Strengths:**
-- Extraordinary CI/CD automation with 34 workflows covering unit, integration, auth, conformance, backward compat, and build validation
-- Innovative recording/replay integration test infrastructure that enables deterministic CI without API keys
-- Deep pre-commit hooks including SQL injection prevention, FIPS compliance, API breaking change detection, and f-string logging enforcement
-- Comprehensive AGENTS.md with actionable testing and development guidance
-- Multi-architecture container builds with UBI9 support
-
-**Critical Gaps:**
-- No coverage enforcement or PR-level reporting (despite having coverage tooling configured)
-- No container vulnerability scanning (Trivy/Snyk)
-- No container runtime validation beyond entrypoint check
-
-**Agent Rules Status**: Present (AGENTS.md + CLAUDE.md) — comprehensive but no `.claude/rules/` directory
+- **Overall Score: 7.8/10**
+- **Repository Type**: Python API server (OpenAI-compatible agentic platform)
+- **Primary Language**: Python 3.12+
+- **Framework**: FastAPI, Pydantic, SQLAlchemy, OpenTelemetry
+- **Key Strengths**: Exceptional integration testing with recording/replay system, 35 well-orchestrated CI/CD workflows, comprehensive pre-commit hooks with custom security checks, backward compatibility testing, OpenResponses conformance suite
+- **Critical Gaps**: No container vulnerability scanning, no PR coverage reporting or enforcement, no SBOM generation
+- **Agent Rules Status**: Present — comprehensive `CLAUDE.md` and `AGENTS.md` with coding standards and test guidance; no `.claude/rules/` directory
 
 ## Quality Scorecard
 
-| Dimension | Score | Status |
-|-----------|-------|--------|
-| Unit Tests | 8.5/10 | 171 test files, pytest + Jest, multi-Python-version matrix, network isolation |
-| Integration/E2E | 9.0/10 | 60+ test files, recording/replay system, multi-provider matrix, conformance suite |
-| **Build Integration** | **8.0/10** | **PR-time venv builds, container builds on push, UBI9 + ARM64 variants** |
-| Image Testing | 7.0/10 | Multi-arch builds, entrypoint verification, but no runtime tests or vuln scanning |
-| Coverage Tracking | 5.0/10 | .coveragerc configured, pytest-cov available, but no enforcement or PR reporting |
-| CI/CD Automation | 9.5/10 | 34 workflows, merge queue, SHA-pinned actions, Dependabot + Mergify |
-| Agent Rules | 8.0/10 | Comprehensive AGENTS.md, but no .claude/rules/ directory |
+| Dimension | Score | Weight | Status |
+|-----------|-------|--------|--------|
+| Unit Tests | 8.0/10 | 20% | 328 test files, 1.18:1 test-to-code ratio, coverage generation |
+| Integration/E2E | 9.0/10 | 25% | Recording/replay system, 10+ integration workflows, conformance testing |
+| Build Integration | 8.0/10 | — | PR venv builds, container builds on push, multi-arch + UBI9 |
+| Image Testing | 7.0/10 | 20% | Build validation with entrypoint/label checks, no vuln scanning |
+| Coverage Tracking | 5.0/10 | 15% | Coverage generated locally, SVG badge, no codecov or thresholds |
+| CI/CD Automation | 9.0/10 | 20% | 35 workflows, SHA-pinned actions, merge queue, path filtering |
+| Agent Rules | 8.0/10 | — | Comprehensive CLAUDE.md + AGENTS.md, no `.claude/rules/` |
 
 ## Critical Gaps
 
-1. **No coverage enforcement or PR reporting**
-   - Impact: Coverage can silently regress; no visibility for reviewers
-   - Severity: HIGH
-   - Effort: 4-6 hours
-   - Details: `pytest-cov` and `.coveragerc` are configured, but no codecov/coveralls integration exists. The unit-tests workflow generates coverage artifacts but doesn't upload or enforce thresholds.
+### 1. No Container Vulnerability Scanning
+- **Impact**: CVEs in base images (python:3.12-slim, UBI9) and pip dependencies are not detected until production
+- **Severity**: HIGH
+- **Effort**: 2-4 hours
+- **Detail**: The `providers-build.yml` and `build-distributions.yml` workflows build container images but do not scan them with Trivy, Snyk, or Grype. The project has excellent dependency constraint pinning (CVE-specific pins in `pyproject.toml`), but the container images themselves are never scanned.
 
-2. **No container vulnerability scanning**
-   - Impact: Container images may ship with known CVEs in base image or Python packages
-   - Severity: HIGH
-   - Effort: 2-4 hours
-   - Details: Despite extensive constraint-dependency pinning for CVEs in `pyproject.toml`, there is no automated Trivy, Grype, or Snyk scanning in the container build workflows.
+### 2. No PR Coverage Reporting
+- **Impact**: Reviewers cannot see coverage impact of PRs; coverage regressions go unnoticed
+- **Severity**: HIGH
+- **Effort**: 2-4 hours
+- **Detail**: Unit tests generate coverage data (`coverage run`, `coverage html`), and a `coverage.svg` badge exists, but there is no Codecov/Coveralls integration. Coverage artifacts are uploaded but not reported on PRs.
 
-3. **No container runtime startup validation**
-   - Impact: Images may build but fail to start; discovered only during deployment
-   - Severity: MEDIUM
-   - Effort: 4-6 hours
-   - Details: The `providers-build.yml` verifies entrypoint is correct but doesn't actually start the server and verify it responds to `/v1/health`.
+### 3. No Coverage Enforcement Thresholds
+- **Impact**: No automated gate preventing coverage from dropping below a minimum
+- **Severity**: MEDIUM
+- **Effort**: 1-2 hours
+- **Detail**: The `.coveragerc` file omits coverage directories but sets no `fail_under` threshold. The `unit-tests.sh` script generates coverage but doesn't enforce a minimum.
+
+### 4. No Secret Detection Beyond Private Keys
+- **Impact**: API keys, tokens, and other secrets may be committed undetected
+- **Severity**: MEDIUM
+- **Effort**: 1-2 hours
+- **Detail**: Pre-commit includes `detect-private-key` (SSH keys only) but no comprehensive secret scanner like Gitleaks or TruffleHog. The `no-sql-string-interpolation` hook is excellent but covers SQL injection, not secrets.
 
 ## Quick Wins
 
-1. **Add Codecov integration to unit-tests workflow** (2-3 hours)
-   - Impact: Immediate coverage trend visibility and PR-level delta reporting
-   - Implementation:
-   ```yaml
-   - name: Upload coverage to Codecov
-     uses: codecov/codecov-action@v4
-     with:
-       file: ./coverage.xml
-       fail_ci_if_error: false
-   ```
+### 1. Add Codecov Integration (2-4 hours)
+- **Impact**: PR-level coverage reporting, trend tracking, and automatic coverage comments on every PR
+- **Implementation**: Add `codecov/codecov-action` to `unit-tests.yml` after the test step:
+```yaml
+- name: Upload coverage to Codecov
+  if: always()
+  uses: codecov/codecov-action@v5
+  with:
+    files: .coverage
+    flags: unittests
+    fail_ci_if_error: false
+```
 
-2. **Add Trivy scanning to providers-build workflow** (1-2 hours)
-   - Impact: Catch known CVEs before images reach registries
-   - Implementation:
-   ```yaml
-   - name: Run Trivy vulnerability scanner
-     uses: aquasecurity/trivy-action@master
-     with:
-       image-ref: 'ogx:${{ matrix.distro }}-ci'
-       format: 'sarif'
-       severity: 'CRITICAL,HIGH'
-   ```
+### 2. Add Trivy Container Scanning (1-2 hours)
+- **Impact**: Automated CVE detection for every container build
+- **Implementation**: Add to `providers-build.yml` after the build step:
+```yaml
+- name: Scan container image
+  uses: aquasecurity/trivy-action@master
+  with:
+    image-ref: ogx:${{ matrix.distro }}-ci
+    format: 'sarif'
+    output: 'trivy-results.sarif'
+    severity: 'CRITICAL,HIGH'
+```
 
-3. **Add container startup smoke test** (2-3 hours)
-   - Impact: Verify server actually starts and responds after build
-   - Implementation: Add a step after `docker build` that runs `docker run -d` and checks `/v1/health`.
+### 3. Add Coverage Threshold (1 hour)
+- **Impact**: Prevent coverage regressions
+- **Implementation**: Add to `.coveragerc`:
+```ini
+[report]
+fail_under = 60
+```
 
-4. **Create .claude/rules/ with test-type-specific rules** (2-3 hours)
-   - Impact: Improve AI-generated test quality with structured patterns
-   - Add rules for: unit-tests.md, integration-tests.md, recording-replay.md
+### 4. Add Gitleaks (1-2 hours)
+- **Impact**: Comprehensive secret detection in pre-commit and CI
+- **Implementation**: Add to `.pre-commit-config.yaml`:
+```yaml
+- repo: https://github.com/gitleaks/gitleaks
+  rev: v8.21.0
+  hooks:
+  - id: gitleaks
+```
 
 ## Detailed Findings
 
 ### CI/CD Pipeline
 
-**Outstanding.** 34 GitHub Actions workflows covering every quality dimension:
+**Workflow Inventory (35 workflows)**:
 
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| `unit-tests.yml` | PR, push, merge_group | Python unit tests with multi-version matrix (3.12, 3.13) |
-| `integration-tests.yml` | PR, push, daily schedule | Integration tests with recording/replay; multi-provider matrix |
-| `integration-auth-tests.yml` | PR, push | K8s authentication tests with minikube |
-| `integration-sql-store-tests.yml` | PR, push | SQL store integration tests |
-| `integration-vector-io-tests.yml` | PR, push | Vector I/O integration tests |
-| `integration-responses-conversations-auth-tests.yml` | PR, push | Auth-specific conversation tests |
-| `integration-tests-messages-cli.yml` | PR, push | Messages CLI integration tests |
-| `openresponses-conformance.yml` | PR, push | OpenResponses API conformance testing |
-| `backward-compat.yml` | PR | Config.yaml backward compatibility checks |
-| `pre-commit.yml` | PR, push | Comprehensive linting, typing, conformance |
-| `codeql.yml` | PR | CodeQL security scanning (Python + Actions) |
-| `providers-build.yml` | PR, push, weekly | All distribution builds (venv + container) |
-| `build-distributions.yml` | workflow_dispatch | Multi-arch distribution image builds |
-| `ui-unit-tests.yml` | PR, push | TypeScript UI tests (Jest) |
-| `ci-status.yml` | PR, merge_group | Aggregates all CI check results |
-| `semantic-pr.yml` | PR | Conventional commits title enforcement |
-| `file-processors-tests.yml` | PR, push | File processor tests |
-| `test-external-provider-module.yml` | PR, push | External provider testing |
-| `install-script-ci.yml` | PR, push | Install script validation |
+| Category | Workflows | Trigger |
+|----------|-----------|---------|
+| Unit Tests | `unit-tests.yml`, `ui-unit-tests.yml` | PR, push, merge_group |
+| Integration Tests | `integration-tests.yml` + 6 specialized variants | PR, push, schedule, merge_group |
+| Pre-commit | `pre-commit.yml` | PR, push, merge_group |
+| Build Validation | `providers-build.yml`, `build-distributions.yml` | PR, push, schedule |
+| Backward Compat | `backward-compat.yml` | PR, merge_group |
+| Conformance | `openresponses-conformance.yml` | PR, push |
+| Security | `codeql.yml` | PR |
+| Release | `pypi.yml`, `prepare-release.yml`, `post-release.yml` | Tags, workflow_dispatch |
+| API Validation | `openapi-generator-validation.yml`, `semantic-pr.yml` | PR |
+| CI Aggregation | `ci-status.yml` | PR, merge_group |
+| Maintenance | `stale_bot.yml`, `dependabot-constraints.yml` | Schedule |
 
-**Strengths:**
-- Concurrency control on all workflows with `cancel-in-progress: true`
-- SHA-pinned GitHub Actions for supply chain security (verified by pre-commit hook)
-- Merge queue support (`merge_group` trigger) on critical workflows
-- Smart path filtering to minimize unnecessary CI runs
+**Strengths**:
+- SHA-pinned GitHub Actions throughout (e.g., `actions/checkout@de0fac2...` with version comment)
+- Concurrency control on every workflow with cancel-in-progress
+- Path-based filtering to avoid unnecessary CI runs
+- Merge queue support (`merge_group` trigger) on all critical workflows
 - Multi-Python-version testing (3.12 on PR, 3.12+3.13 on push/schedule)
+- Multi-client-version testing (published vs latest SDK)
 - CI status aggregator workflow that waits for all checks before reporting
-- Dependabot for weekly dependency updates + Mergify for automated conflict management
+- Dependabot with auto-approve for GitHub Actions updates
+- Mergify for automated rebase notifications
+- Pre-commit.ci integration with autofix
+- `check-workflows-use-hashes` pre-commit hook enforcing SHA-pinned actions
+
+**Minor gaps**:
+- No workflow for scanning container images for vulnerabilities
+- No dedicated secret scanning workflow
 
 ### Test Coverage
 
-**Strong test infrastructure with innovative recording/replay system.**
+**Unit Tests (328 files, 85,847 lines)**:
+- **Framework**: pytest with async support (auto mode)
+- **Test-to-Code Ratio**: 1.18:1 (85K test LOC / 73K source LOC) — excellent
+- **Source Files**: 462 Python source files
+- **Coverage Tool**: `coverage run` + `coverage html` per Python version
+- **Test Categories**: server, providers, registry, RAG, skills, telemetry, conversations, API namespaces, CLI, core, tools, utilities
+- **Fixtures**: Comprehensive `conftest.py` at root and per-directory levels
+- **Custom Pre-commit**: `forbid-pytest-asyncio` hook enforces async-mode=auto (no decorators)
 
-| Metric | Value |
-|--------|-------|
-| Total Python test files | 316 |
-| Unit test files | 171 (actual test files) |
-| Integration test files | 60+ (actual test files) |
-| Eval test files | 9 |
-| TypeScript test files | 8 (5 UI unit, 1 E2E, 2 integration) |
-| Source files (non-test) | 439 |
-| Test-to-code ratio | ~0.72 |
-| Test framework (Python) | pytest with pytest-asyncio, pytest-cov, pytest-socket |
-| Test framework (TypeScript) | Jest (UI), Vitest (integration) |
+**Integration Tests (extensive)**:
+- **Recording/Replay System**: SHA256-keyed JSON recordings of HTTP responses — tests run in replay mode by default, no API keys needed
+- **Suites**: responses, vision, base, plus specialized suites for auth, SQL stores, vector I/O, MCP, messages clients, codex-cli
+- **Multi-Provider Testing**: Ollama, GPT, Azure, WatsonX, Bedrock, Vertex AI, Gemini
+- **CI Matrix Generation**: Dynamic `ci_matrix.json` with changed-files filtering on PRs
+- **Client Modes**: Library (in-process) and server (HTTP) modes tested
+- **TypeScript Client Tests**: Node.js test suite for TypeScript SDK validation
 
-**Recording/Replay System**: Integration tests use a JSON recording system that captures HTTP request/response pairs keyed by SHA256 hashes. This enables:
-- Deterministic CI without API keys
-- Tests replay pre-recorded responses from `tests/integration/*/recordings/`
-- Mode switching: `replay`, `record`, `record-if-missing`
-- CI matrix across providers: ollama, gpt, vllm, gemini, bedrock, azure, watsonx
-- Unused recording cleanup enforced in CI
+**E2E / Conformance Tests**:
+- **OpenResponses Conformance**: Standalone suite cloning the OpenResponses spec repo and running compliance tests against a live server
+- **Backward Compatibility**: Tests PR code against main's config AND latest release's config, with breaking-change acknowledgment flow
+- **External Provider Testing**: `test-external.yml` and `test-external-provider-module.yml` for third-party provider validation
 
-**Network Isolation**: Unit tests use `pytest-socket` to block network access, ensuring tests are truly isolated.
-
-**Multi-tenant Eval Tests**: Dedicated adversarial scenario tests for cross-tenant leakage, resource access control, and retrieval quality.
+**Benchmarking**:
+- Vertical scaling benchmarks with Locust
+- RAG benchmarks with configurable parameters
+- Kubernetes benchmark infrastructure
 
 ### Code Quality
 
-**Exceptional.** One of the most comprehensive pre-commit configurations I've analyzed.
+**Pre-commit Hooks (23+ hooks)**:
 
-**Ruff Configuration** (`pyproject.toml`):
-- 14+ rule sets enabled including security (S/bandit), datetime (DTZ), imports (I), naming (N)
-- Security-focused per-file ignores with documented rationale
-- Custom rule for SQL injection detection (`no-sql-string-interpolation`)
-- FIPS compliance enforcement (blocks md5, sha1, uuid3, uuid5)
+| Hook | Purpose |
+|------|---------|
+| `ruff` + `ruff-format` | Python linting and formatting |
+| `mypy` + `mypy-full` | Type checking (basic on commit, full in CI) |
+| `actionlint` | GitHub Actions workflow linting |
+| `markdownlint` | Markdown formatting |
+| `blacken-docs` | Format code blocks in documentation |
+| `insert-license` | License header enforcement |
+| `check-log-usage` | Enforce custom logger over stdlib logging |
+| `no-fstring-logging` | Enforce structured logging key-value style |
+| `fips-compliance` | Block MD5/SHA1/UUID3/UUID5 usage |
+| `no-sql-string-interpolation` | Prevent SQL injection via f-strings |
+| `check-api-independence` | Ensure ogx_api doesn't import ogx |
+| `enforce-authorized-sqlstore` | Enforce authorized SQL store pattern |
+| `check-file-size` | Python file size limits |
+| `forbid-pytest-asyncio` | Enforce async-mode=auto |
+| `check-init-py` | Missing `__init__.py` detection |
+| `check-workflows-use-hashes` | SHA-pinned GitHub Actions enforcement |
+| `uv-lock` | Lock file consistency |
+| `distro-codegen` | Distribution template code generation |
+| `provider-codegen` | Provider code generation |
+| `openapi-codegen` | API spec code generation |
+| `api-conformance` | Breaking change detection via oasdiff |
+| `openai-coverage` | OpenAI API coverage tracking |
+| `anthropic-coverage` | Anthropic API coverage tracking |
+| `google-interactions-coverage` | Google Interactions API coverage |
+| `provider-compat-matrix` | Provider compatibility matrix generation |
+| `detect-private-key` | SSH private key detection |
 
-**Pre-commit Hooks** (30+ hooks):
-- Standard: merge conflict, trailing whitespace, large files, private key detection, YAML/JSON/TOML validation
-- Security: SQL injection blocking, FIPS compliance, `detect-private-key`, `check-workflows-use-hashes`
-- Code quality: ruff (lint + format), mypy (pre-commit + full CI), blacken-docs, markdownlint
-- Architecture: API independence check (ogx_api must not import ogx), authorized SQLStore enforcement
-- CI/CD: action SHA pinning verification, distro/provider/OpenAPI codegen, API conformance, coverage tracking
-- Custom: f-string logging blocker, file size limits, unused recording detection, init.py checker
+This is one of the most comprehensive pre-commit configurations encountered.
 
-**Type Checking**: mypy with pydantic plugin, 91 files in strict exclusion list being progressively addressed.
+**Static Analysis**:
+- CodeQL with `security-extended` queries on PR (Python + Actions)
+- mypy type checking (full in CI, basic on pre-commit)
+- ruff for linting with auto-fix
+- oasdiff for API breaking change detection
+
+**Dependency Management**:
+- `uv` for all dependency management
+- Dependabot for GitHub Actions, Python (uv), and npm
+- Constraint pinning with CVE documentation (excellent practice)
+- `commit-constraint-updates.yml` workflow for automated constraint updates
 
 ### Container Images
 
-**Solid multi-arch support with room for runtime validation.**
+**Build Process**:
+- Single `Containerfile` with flexible build arguments
+- Multi-stage support: PyPI, editable, and test-pypi install modes
+- Multi-architecture: linux/amd64 and linux/arm64
+- Base images: python:3.12-slim (default) and UBI9
+- Build matrix across all distributions
 
-- **Containerfile**: Multi-stage build supporting `python:3.12-slim` and `registry.access.redhat.com/ubi9:latest` base images
-- **Multi-arch**: amd64 + arm64 builds via Docker Buildx (ARM64 on schedule)
-- **Install modes**: editable, pypi, test-pypi
-- **Config labels**: Generated and verified in CI
-- **Entrypoint validation**: CI verifies correct entrypoint path
-- **OpenTelemetry**: Auto-instrumentation support built into entrypoint
-- **Air-gap support**: Tiktoken cache pre-warmed at build time
+**Validation**:
+- Entrypoint verification (correct binary path check)
+- Config label generation and verification (`generate-config-labels.sh`, `verify-config-labels.sh`)
+- UBI9 OS identity check (`/etc/os-release`)
+- ARM64 cross-platform build verification (weekly schedule)
+- Dependency installation validation via `list-deps`
 
-**Missing:**
-- No Trivy/Grype vulnerability scanning
-- No SBOM generation (syft/cyclonedx)
-- No runtime startup validation (server health check after build)
-- No image signing/attestation (cosign/sigstore)
+**Gaps**:
+- No Trivy/Snyk/Grype vulnerability scanning
+- No SBOM generation (Syft, Trivy SBOM)
+- No image signing (only PyPI packages are Sigstore-signed)
+- No container runtime functional testing (health endpoint, startup validation beyond entrypoint check)
 
 ### Security
 
-**Strong security posture with proactive CVE management.**
+**Strengths**:
+- CodeQL with `security-extended` query suite
+- SHA-pinned GitHub Actions throughout (enforced by pre-commit hook)
+- FIPS compliance hook (blocks MD5, SHA1, UUID3, UUID5)
+- SQL injection prevention hook
+- Authorized SQLStore pattern enforcement
+- CVE-specific dependency constraint pins with documentation
+- Sigstore signing for PyPI releases
+- Security policy with private reporting via GitHub Security Advisories
+- CODEOWNERS for access control
+- Minimal permissions in workflows (`permissions: contents: read`)
+- Cache poisoning protection (`UV_NO_CACHE` for untrusted contexts)
 
-- **CodeQL**: Configured for Python and GitHub Actions with `security-extended` query suite on PRs
-- **Dependency Management**: Extensive constraint-dependencies in `pyproject.toml` pinning versions with CVE citations (30+ entries with specific CVE references)
-- **Dependabot**: Weekly updates for GitHub Actions, Python (uv), and npm dependencies
-- **Pre-commit Security**: SQL injection prevention, FIPS compliance, private key detection, SHA-pinned actions enforcement
-- **Auth Testing**: Dedicated Kubernetes authentication integration tests with minikube
-
-**Missing:**
-- No container image scanning (Trivy, Snyk)
-- No secret scanning beyond `detect-private-key` (no Gitleaks or TruffleHog)
-- No SBOM generation for supply chain transparency
-- No image signing/attestation
+**Gaps**:
+- No container image vulnerability scanning
+- No SBOM generation
+- No dedicated secret detection (Gitleaks/TruffleHog) — only `detect-private-key`
+- No image signing for container artifacts
+- No dependency license scanning
 
 ### Agent Rules (Agentic Flow Quality)
 
-- **Status**: Present — AGENTS.md + CLAUDE.md at root
-- **Coverage**: AGENTS.md covers repository layout, Python/tooling standards, code style, git conventions, testing (unit + integration with recording/replay), provider architecture, distribution configs, API changes, documentation updates
-- **Quality**: Excellent — specific, actionable, framework-aware guidance with code examples
-- **Gaps**:
-  - No `.claude/rules/` directory with test-type-specific rules
-  - No dedicated E2E test guidance (only unit and integration)
-  - No contract test patterns documented
-  - CLAUDE.md focuses on design/branding context rather than development guidance (correctly delegates to AGENTS.md)
-- **Recommendation**: Create `.claude/rules/` with structured rules for unit-tests, integration-tests, recording-replay patterns, and security tests using `/test-rules-generator`
+**Status**: Present and comprehensive
+
+**CLAUDE.md**: Design context document covering users, brand personality, aesthetic direction, and design principles. Well-structured for guiding AI agents on non-code contributions.
+
+**AGENTS.md** (199 lines): Comprehensive agent guidelines covering:
+- Repository layout and architecture
+- Python & tooling requirements (Python 3.12, uv, type hints, mypy)
+- Code style (structured logging, error message prefixes, comment philosophy)
+- Git conventions (signoff, conventional commits, merge over rebase)
+- Testing instructions (unit, integration with recording/replay, re-recording workflow)
+- Provider architecture patterns
+- Distribution config management
+- API change workflow
+- Common patterns (adding parameters, deprecated aliases)
+- Documentation maintenance checklist
+
+**Gaps**:
+- No `.claude/rules/` directory for test-type-specific rules
+- No specific unit test creation rules with framework patterns
+- No integration test recording creation guide as a rule
+- No E2E test rules
+
+**Recommendation**: Generate `.claude/rules/` with `/test-rules-generator` covering unit test patterns, integration test recording workflow, and conformance test patterns.
 
 ## Recommendations
 
 ### Priority 0 (Critical)
 
-1. **Add coverage enforcement with Codecov/Coveralls integration**
-   - Upload coverage from `unit-tests.yml` and set minimum thresholds
-   - Add PR-level coverage delta reporting
-   - Estimated effort: 4-6 hours
+1. **Add container vulnerability scanning** — Integrate Trivy or Grype into `providers-build.yml` to scan every container image built on PR. This is the single highest-impact improvement given the project distributes Docker images via Docker Hub.
 
-2. **Add container vulnerability scanning (Trivy)**
-   - Integrate into `providers-build.yml` and `build-distributions.yml`
-   - Set severity thresholds (CRITICAL, HIGH)
-   - Upload SARIF results to GitHub Security tab
-   - Estimated effort: 2-4 hours
+2. **Integrate Codecov for PR coverage reporting** — Add Codecov action to `unit-tests.yml` to provide per-PR coverage reports, trend tracking, and coverage diff annotations. The infrastructure (coverage data generation) already exists.
 
 ### Priority 1 (High Value)
 
-3. **Add container runtime smoke tests**
-   - After building images, start the server and verify `/v1/health`
-   - Use the same pattern as `openresponses-conformance.yml`
-   - Estimated effort: 4-6 hours
+3. **Add coverage fail-under threshold** — Set `fail_under = 60` in `.coveragerc` `[report]` section. Given the current 1.18:1 test-to-code ratio, a 60% minimum is conservative and prevents regressions.
 
-4. **Create .claude/rules/ directory**
-   - Add test-type-specific rules: `unit-tests.md`, `integration-tests.md`, `recording-replay.md`
-   - Include framework-specific patterns (pytest, recording system, network isolation)
-   - Estimated effort: 2-3 hours
+4. **Add comprehensive secret detection** — Add Gitleaks to pre-commit and as a CI workflow. The existing `detect-private-key` only catches SSH keys.
 
-5. **Add SBOM generation to container builds**
-   - Use syft or cyclonedx-bom for software bill of materials
-   - Attach SBOM as build artifact
-   - Estimated effort: 2-3 hours
+5. **Add SBOM generation to container builds** — Add Syft or Trivy SBOM output to `build-distributions.yml` and attach as build artifacts. Critical for enterprise and compliance use cases.
 
 ### Priority 2 (Nice-to-Have)
 
-6. **Formalize performance testing with locust**
-   - The `benchmarking/` directory has locust infrastructure; integrate into periodic CI
-   - Estimated effort: 4-8 hours
+6. **Create `.claude/rules/` test patterns** — Add specific rules for unit test creation (pytest patterns, async fixtures, mocking), integration test recording workflow, and conformance test patterns.
 
-7. **Add Gitleaks secret scanning**
-   - More comprehensive than `detect-private-key` pre-commit hook
-   - Estimated effort: 1-2 hours
+7. **Add container runtime functional testing** — After building container images, start them and verify the `/v1/health` endpoint responds. The conformance workflow already does this pattern — extract it into a reusable action.
 
-8. **Add image signing with cosign/sigstore**
-   - Sign container images in the release workflow
-   - Estimated effort: 4-6 hours
+8. **Add performance regression testing** — The benchmarking infrastructure exists (Locust, RAG benchmarks, k8s benchmarks). Wire vertical-scaling benchmarks into CI as a nightly job with threshold alerts.
+
+9. **Add container image signing** — Extend Sigstore signing from PyPI packages to container images. Use `cosign` to sign images pushed to Docker Hub.
 
 ## Comparison to Gold Standards
 
-| Dimension | OGX | odh-dashboard | notebooks | kserve |
-|-----------|-----|---------------|-----------|--------|
-| Unit Tests | 8.5 | 9.0 | 7.0 | 8.5 |
-| Integration/E2E | 9.0 | 9.0 | 6.0 | 9.0 |
-| Build Integration | 8.0 | 8.0 | 9.0 | 7.0 |
-| Image Testing | 7.0 | 7.0 | 9.5 | 6.0 |
-| Coverage Tracking | 5.0 | 8.0 | 5.0 | 9.0 |
-| CI/CD Automation | 9.5 | 8.5 | 8.0 | 8.5 |
-| Agent Rules | 8.0 | 9.0 | 3.0 | 2.0 |
-| **Overall** | **8.6** | **8.5** | **7.1** | **7.4** |
+| Practice | OGX | odh-dashboard | notebooks | kserve |
+|----------|-----|---------------|-----------|--------|
+| Unit Test Framework | pytest ✅ | Jest ✅ | pytest ✅ | Go testing ✅ |
+| Test-to-Code Ratio | 1.18:1 ✅ | ~0.8:1 | ~0.3:1 | ~0.6:1 |
+| Integration Tests | Recording/replay ✅ | Cypress E2E ✅ | Image validation ✅ | envtest ✅ |
+| Coverage Tracking | Local only ⚠️ | Codecov ✅ | None ❌ | Codecov ✅ |
+| Coverage Enforcement | None ❌ | PR gate ✅ | None ❌ | 70% minimum ✅ |
+| Container Scanning | None ❌ | None ❌ | Trivy ✅ | None ❌ |
+| Pre-commit Hooks | 23+ hooks ✅✅ | ESLint/Prettier ✅ | Basic ⚠️ | golangci-lint ✅ |
+| SAST (CodeQL) | Yes ✅ | No ❌ | No ❌ | Yes ✅ |
+| Secret Detection | Basic (SSH keys) ⚠️ | None ❌ | None ❌ | None ❌ |
+| Backward Compat Tests | Yes ✅✅ | No ❌ | No ❌ | Partial ⚠️ |
+| Conformance Tests | OpenResponses ✅✅ | None ❌ | None ❌ | None ❌ |
+| Multi-arch Builds | amd64 + arm64 ✅ | amd64 only ⚠️ | Multi-arch ✅ | amd64 only ⚠️ |
+| Agent Rules | CLAUDE.md + AGENTS.md ✅ | Basic ⚠️ | None ❌ | None ❌ |
+| SHA-pinned Actions | Enforced ✅✅ | No ❌ | No ❌ | Partial ⚠️ |
+| Merge Queue | Yes ✅ | No ❌ | No ❌ | Yes ✅ |
 
-OGX stands out for its CI/CD automation breadth (34 workflows is exceptional), its innovative recording/replay integration test infrastructure, and its remarkably comprehensive pre-commit configuration. The main area lagging behind is coverage tracking enforcement, which is a relatively easy gap to close.
+**Key Differentiator**: OGX's recording/replay integration test system, backward compatibility testing against both main and latest release, and OpenResponses conformance suite set it apart from comparable projects. The pre-commit configuration with custom security hooks (FIPS, SQL injection, structured logging) is among the most comprehensive seen in any open-source project.
 
 ## File Paths Reference
 
-| Category | Path |
-|----------|------|
-| CI Workflows | `.github/workflows/*.yml` (34 files) |
-| Unit Tests | `tests/unit/` (171 test files) |
-| Integration Tests | `tests/integration/` (60+ test files) |
-| Eval Tests | `tests/evals/` (9 files) |
-| UI Tests | `src/ogx_ui/lib/*.test.ts`, `src/ogx_ui/e2e/*.spec.ts` |
-| Pre-commit Config | `.pre-commit-config.yaml` (30+ hooks) |
-| Ruff Config | `pyproject.toml` [tool.ruff] |
-| Mypy Config | `pyproject.toml` [tool.mypy] |
-| Coverage Config | `.coveragerc` |
-| Containerfile | `containers/Containerfile` |
-| CodeQL Config | `.github/workflows/codeql.yml` |
-| Dependabot | `.github/dependabot.yml` |
-| Mergify | `.github/mergify.yml` |
-| Agent Rules | `AGENTS.md`, `CLAUDE.md` |
-| Benchmarks | `benchmarking/` |
-| Scripts | `scripts/` |
+### CI/CD
+- `.github/workflows/` — 35 workflow files (7,118 total lines)
+- `.github/actions/` — Reusable composite actions
+- `.github/mergify.yml` — Auto-rebase and dependabot approval
+- `.github/dependabot.yml` — Dependency update automation
+- `.github/CODEOWNERS` — Code ownership definitions
+
+### Testing
+- `tests/unit/` — Unit test suite (17+ subdirectories)
+- `tests/integration/` — Integration tests with recording/replay (20+ subdirectories)
+- `tests/integration/*/recordings/` — HTTP response recordings (JSON)
+- `tests/backward_compat/` — Backward compatibility tests
+- `tests/containers/` — Container test Dockerfiles
+- `tests/evals/` — Evaluation test infrastructure
+- `tests/external/` — External provider test modules
+- `benchmarking/` — Performance benchmarking (vertical-scaling, RAG, k8s)
+- `conftest.py` — Root test configuration
+- `scripts/unit-tests.sh` — Unit test runner with coverage
+- `scripts/integration-tests.sh` — Integration test runner
+
+### Code Quality
+- `.pre-commit-config.yaml` — 23+ hooks (14,397 bytes)
+- `pyproject.toml` — Build config, dependencies, tool configuration
+- `.coveragerc` — Coverage configuration
+- `.markdownlint.yaml` — Markdown linting rules
+- `.impeccable.md` — Code quality aspirations
+
+### Container Images
+- `containers/Containerfile` — Multi-stage, multi-arch Containerfile
+- `.dockerignore` — Docker build context exclusions
+
+### Security
+- `.github/workflows/codeql.yml` — CodeQL SAST scanning
+- `SECURITY.md` — Vulnerability reporting policy
+
+### Agent Rules
+- `CLAUDE.md` — AI agent design context and brand guidelines
+- `AGENTS.md` — Comprehensive agent coding guidelines
+- `ARCHITECTURE.md` — System architecture documentation
+- `CONTRIBUTING.md` — Human contributor guidelines

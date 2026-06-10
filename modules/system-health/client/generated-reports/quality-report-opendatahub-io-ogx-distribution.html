@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quality Analysis: opendatahub-io/llama-stack-distribution</title>
+    <title>Quality Analysis: opendatahub-io/ogx-distribution</title>
     <style>
         * {
             margin: 0;
@@ -332,8 +332,8 @@
     <div class="container">
         <header>
             <h1>Quality Analysis Report</h1>
-            <p class="timestamp">Generated on June 03, 2026 at 10:34 AM</p>
-            <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/llama-stack-distribution</h2>
+            <p class="timestamp">Generated on June 10, 2026 at 09:37 AM</p>
+            <h2 style="margin-top: 1rem; font-weight: 400;">opendatahub-io/ogx-distribution</h2>
         </header>
 
         <div class="content">
@@ -344,11 +344,11 @@
                         <circle class="score-arc" cx="100" cy="100" r="90"
                                 stroke="#ffc107"
                                 stroke-dasharray="565.4861999999999"
-                                stroke-dashoffset="147.026412"
+                                stroke-dashoffset="141.37154999999998"
                                 id="scoreArc"></circle>
                     </svg>
                     <div class="score-text">
-                        <div class="score-value">7.4</div>
+                        <div class="score-value">7.5</div>
                         <div class="score-label">Overall Score</div>
                     </div>
                 </div>
@@ -365,37 +365,37 @@
                         <div class="scorecard-item">
                             <h3>Unit Tests</h3>
                             <div class="scorecard-score" style="color: #dc3545;">2.0/10</div>
-                            <div class="scorecard-status">No unit tests exist; repo is primarily configuration and shell scripts</div>
+                            <div class="scorecard-status">No unit tests — repo is a distribution/packaging project with shell-based smoke tests only</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Integration/E2E</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.5/10</div>
-                            <div class="scorecard-status">Strong multi-provider integration tests with upstream pytest suite and OpenShift showroom E2E</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">Excellent multi-provider integration tests (vLLM, OpenAI, Vertex AI, Gemini) with upstream pytest suite and weekly Responses API test report</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Build Integration</h3>
-                            <div class="scorecard-score" style="color: #ffc107;">7.0/10</div>
-                            <div class="scorecard-status">PR-time image build + smoke/integration on PR; Tekton/Konflux for production builds</div>
+                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
+                            <div class="scorecard-status">PR-time container builds on both amd64 and arm64 with full smoke + integration test gate; Konflux pipelines configured</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Image Testing</h3>
-                            <div class="scorecard-score" style="color: #28a745;">8.0/10</div>
-                            <div class="scorecard-status">Multi-arch builds (amd64/arm64), smoke tests validate container startup, inference, and DB</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
+                            <div class="scorecard-status">Multi-arch builds (amd64/arm64), container smoke tests, health checks, PostgreSQL validation, file processor validation, MaaS fallback</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Coverage Tracking</h3>
-                            <div class="scorecard-score" style="color: #dc3545;">1.0/10</div>
-                            <div class="scorecard-status">No coverage tool integration (codecov, coveralls); no coverage thresholds</div>
+                            <div class="scorecard-score" style="color: #dc3545;">3.0/10</div>
+                            <div class="scorecard-status">JUnit XML reporting for Responses tests with GitHub Pages trend dashboard, but no code coverage tracking (no Python unit tests to measure)</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>CI/CD Automation</h3>
-                            <div class="scorecard-score" style="color: #28a745;">9.0/10</div>
-                            <div class="scorecard-status">Excellent workflow organization with concurrency, caching, nightly runs, auto-version updates</div>
+                            <div class="scorecard-score" style="color: #28a745;">9.5/10</div>
+                            <div class="scorecard-status">12 workflows covering PR, push, nightly, weekly, dispatch; concurrency control; GHA caching; Mergify auto-merge; Dependabot; Slack notifications</div>
                         </div>
                         <div class="scorecard-item">
                             <h3>Agent Rules</h3>
                             <div class="scorecard-score" style="color: #dc3545;">0.0/10</div>
-                            <div class="scorecard-status">No CLAUDE.md, .claude/, or AGENTS.md; no AI agent guidance for testing</div>
+                            <div class="scorecard-status">No CLAUDE.md, AGENTS.md, or .claude/ directory — zero AI agent guidance</div>
                         </div>
                     </div>
                 </div>
@@ -411,43 +411,43 @@
                     <ul class="items-list">
                         
                         <li class="item-card medium">
-                            <div class="item-description">No unit tests for Python build/utility scripts</div>
-                            <p>919 lines of Python (build.py, junit scripts) have zero test coverage — regressions discovered only in CI</p>
+                            <div class="item-description">No unit tests for build tooling</div>
+                            <p>build.py and gen_distro_docs.py (~200+ lines Python) have no tests — regressions in config generation caught only at integration level</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">8-12 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card medium">
-                            <div class="item-description">No coverage tracking or enforcement</div>
-                            <p>No visibility into what code paths are tested; impossible to set quality gates</p>
-                            <div class="item-meta">
-                                <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">2-4 hours</span>
+                                <span class="meta-tag effort-tag">4-6 hours</span>
                             </div>
                         </li>
                         <li class="item-card high">
-                            <div class="item-description">No security scanning (Trivy, Snyk, CodeQL)</div>
-                            <p>Container image and dependency vulnerabilities not detected until downstream pipelines</p>
+                            <div class="item-description">No container vulnerability scanning</div>
+                            <p>No Trivy, Snyk, or CodeQL scanning in any workflow — CVEs in base image or Python dependencies go undetected</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-high">HIGH</span>
                                 <span class="meta-tag effort-tag">2-4 hours</span>
                             </div>
                         </li>
-                        <li class="item-card low">
-                            <div class="item-description">No agent rules for AI-assisted development</div>
-                            <p>AI agents generating code have no guidance on testing patterns, PR conventions, or repo structure</p>
+                        <li class="item-card high">
+                            <div class="item-description">No SBOM generation</div>
+                            <p>No Software Bill of Materials for supply chain compliance — required for Red Hat product security standards</p>
                             <div class="item-meta">
-                                <span class="meta-tag severity-low">LOW</span>
-                                <span class="meta-tag effort-tag">3-5 hours</span>
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">2-3 hours</span>
                             </div>
                         </li>
                         <li class="item-card medium">
-                            <div class="item-description">Integration tests rely on cloning upstream repo at runtime</div>
-                            <p>Test reproducibility depends on external git state; version pinning mitigates but doesn&#x27;t eliminate risk</p>
+                            <div class="item-description">No agent rules for AI-assisted development</div>
+                            <p>Contributors using Claude Code, Copilot, or other AI tools have no guidance on project conventions, test patterns, or code quality standards</p>
                             <div class="item-meta">
                                 <span class="meta-tag severity-medium">MEDIUM</span>
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">3-4 hours</span>
+                            </div>
+                        </li>
+                        <li class="item-card high">
+                            <div class="item-description">No secret detection in CI</div>
+                            <p>No Gitleaks or TruffleHog scanning — secrets in commits may go undetected (repo handles many API keys)</p>
+                            <div class="item-meta">
+                                <span class="meta-tag severity-high">HIGH</span>
+                                <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -465,34 +465,34 @@
                         
                         <li class="item-card ">
                             <div class="item-description">Add Trivy container scanning to PR workflow</div>
-                            <p>Early detection of CVEs in container images and dependencies before merge</p>
+                            <p>Catch CVEs in base image and Python dependencies before merge</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Add CodeQL or Semgrep SAST scanning</div>
-                            <p>Catch security issues in Python/shell scripts automatically</p>
+                            <div class="item-description">Add Gitleaks secret detection</div>
+                            <p>Prevent accidental secret commits in a repo that handles OpenAI, GCP, and Gemini API keys</p>
+                            <div class="item-meta">
+                                
+                                <span class="meta-tag effort-tag">1 hour</span>
+                            </div>
+                        </li>
+                        <li class="item-card ">
+                            <div class="item-description">Add SBOM generation with Syft</div>
+                            <p>Supply chain compliance and vulnerability tracking</p>
                             <div class="item-meta">
                                 
                                 <span class="meta-tag effort-tag">1-2 hours</span>
                             </div>
                         </li>
                         <li class="item-card ">
-                            <div class="item-description">Create CLAUDE.md with testing guidance</div>
-                            <p>Improve AI-generated contribution quality and test consistency</p>
+                            <div class="item-description">Create CLAUDE.md with project conventions</div>
+                            <p>Guide AI-assisted contributions to follow existing patterns (shell tests, pre-commit, build.py)</p>
                             <div class="item-meta">
                                 
-                                <span class="meta-tag effort-tag">2-3 hours</span>
-                            </div>
-                        </li>
-                        <li class="item-card ">
-                            <div class="item-description">Add pytest for distribution/build.py</div>
-                            <p>Prevent regressions in the Containerfile generation pipeline</p>
-                            <div class="item-meta">
-                                
-                                <span class="meta-tag effort-tag">4-6 hours</span>
+                                <span class="meta-tag effort-tag">2 hours</span>
                             </div>
                         </li>
                     </ul>
@@ -509,15 +509,15 @@
                         
                         <div class="rec-priority p0">
                             <h3>Priority 0: Critical</h3>
-                            <ul><li>Add container vulnerability scanning (Trivy) to the PR workflow — this is a distribution image shipped to production</li><li>Add SAST scanning (CodeQL or Semgrep) for Python and shell scripts</li></ul>
+                            <ul><li>Add container vulnerability scanning (Trivy) to the redhat-distro-container.yml workflow — scan built image before publish</li><li>Add secret detection (Gitleaks) as a pre-commit hook and CI check — this repo handles numerous provider API keys</li><li>Generate SBOM (Syft/Grype) alongside container publish for supply chain compliance</li></ul>
                         </div>
                         <div class="rec-priority p1">
                             <h3>Priority 1: High Value</h3>
-                            <ul><li>Write unit tests for distribution/build.py (481 LOC) and scripts/*.py (438 LOC)</li><li>Add coverage tracking with pytest-cov and codecov integration</li><li>Create agent rules (.claude/rules/) for contribution and testing patterns</li></ul>
+                            <ul><li>Add unit tests for build/build.py covering config generation, version validation, and dependency resolution</li><li>Create CLAUDE.md and .claude/rules/ with test patterns, commit conventions, and build process guidance</li><li>Add CodeQL or Bandit SAST scanning for the Python build scripts</li></ul>
                         </div>
                         <div class="rec-priority p2">
                             <h3>Priority 2: Nice-to-Have</h3>
-                            <ul><li>Add SBOM generation to container builds</li><li>Pin the Tekton/Konflux pipeline reference to a specific commit for reproducibility</li><li>Add image signing/attestation for published images</li></ul>
+                            <ul><li>Add container image signing with cosign for published images</li><li>Add smoke test for ARM64 with local vLLM (currently skips integration tests on ARM)</li><li>Consider adding mypy type checking for build scripts</li></ul>
                         </div>
                     </div>
                 </div>
