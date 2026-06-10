@@ -8,7 +8,9 @@
 
 const { CUSTOM_FIELDS, transformIssue } = require('../hygiene/jira-fetch')
 const { blockDuringImpersonation } = require('../../../../shared/server/auth')
+const { JIRA_HOST } = require('../../../../shared/server/jira')
 
+const JIRA_SEARCH = JIRA_HOST + '/issues/?jql='
 const PM_HUB_PROJECTS = ['RHAIENG', 'RHOAIENG', 'INFERENG', 'AIPCC', 'RHAISTRAT', 'RHAIRFE']
 const PILLAR_CONFIG_FILE = 'releases/pm-hub/pillar-config.json'
 
@@ -137,6 +139,127 @@ function backfillLeads(config) {
     }
   }
   return changed
+}
+
+var VELOCITY_LOOKBACK_WEEKS = 52
+
+/**
+ * Compute per-component velocity from resolved Jira issues, then return a
+ * weighted average across components.
+ *
+ * For each component:
+ *   velocity_i = resolved_i / distinct_releases_i
+ *
+ * Weighted average = Σ(velocity_i × resolved_i) / Σ(resolved_i)
+ *   — components that ship more features carry more weight.
+ *
+ * @param {Array} rawIssues - Raw Jira issues (statusCategory = Done, fixVersion set)
+ * @param {string} componentClause - JQL component clause for verification URLs
+ * @returns {{ avgPerRelease: string, totalResolved: number, components: Array, jql: string }}
+ */
+function computeVelocity(rawIssues, componentClause, nowDate) {
+  var now = nowDate ? new Date(nowDate) : new Date()
+
+  // Group issues by component → { resolved keys, version set, earliest resolution }
+  var compMap = {}
+  for (var i = 0; i < rawIssues.length; i++) {
+    var raw = rawIssues[i]
+    var key = raw.key
+    var fields = raw.fields || {}
+    var comps = fields.components
+    if (!Array.isArray(comps) || comps.length === 0) comps = [{ name: 'No Component' }]
+    var fvs = fields.fixVersions
+    if (!Array.isArray(fvs)) continue
+
+    var resolvedDate = fields.resolutiondate ? new Date(fields.resolutiondate) : null
+
+    for (var ci = 0; ci < comps.length; ci++) {
+      var cName = comps[ci] && comps[ci].name
+      if (!cName) continue
+      if (!compMap[cName]) compMap[cName] = { seen: {}, versions: {}, earliestResolved: null }
+      var entry = compMap[cName]
+      if (entry.seen[key]) continue
+      entry.seen[key] = true
+
+      if (resolvedDate && !isNaN(resolvedDate.getTime())) {
+        if (!entry.earliestResolved || resolvedDate < entry.earliestResolved) {
+          entry.earliestResolved = resolvedDate
+        }
+      }
+
+      for (var vi = 0; vi < fvs.length; vi++) {
+        var vName = fvs[vi] && fvs[vi].name
+        if (vName) entry.versions[vName] = (entry.versions[vName] || 0) + 1
+      }
+    }
+  }
+
+  // Compute per-component velocity and age-weighted average
+  var compNames = Object.keys(compMap)
+  var totalResolved = 0
+  var weightedSum = 0
+  var weightedDenom = 0
+  var hasPartialYear = false
+  var perComponent = []
+
+  for (var k = 0; k < compNames.length; k++) {
+    var name = compNames[k]
+    var data = compMap[name]
+    var resolved = Object.keys(data.seen).length
+    var releases = Object.keys(data.versions).length
+    var vel = releases > 0 ? resolved / releases : 0
+
+    // Determine team age from earliest resolution date
+    var activeWeeks = VELOCITY_LOOKBACK_WEEKS
+    var isPartialYear = false
+    if (data.earliestResolved) {
+      var diffMs = now.getTime() - data.earliestResolved.getTime()
+      activeWeeks = Math.max(1, Math.floor(diffMs / (7 * 24 * 60 * 60 * 1000)))
+      if (activeWeeks < VELOCITY_LOOKBACK_WEEKS) {
+        isPartialYear = true
+        hasPartialYear = true
+      }
+    }
+
+    var ageFactor = Math.min(activeWeeks / VELOCITY_LOOKBACK_WEEKS, 1)
+
+    totalResolved += resolved
+    weightedSum += vel * resolved * ageFactor
+    weightedDenom += resolved * ageFactor
+
+    perComponent.push({
+      component: name,
+      resolved: resolved,
+      releases: releases,
+      avgPerRelease: formatAvg(vel),
+      activeWeeks: activeWeeks,
+      isPartialYear: isPartialYear
+    })
+  }
+
+  var avg = weightedDenom > 0 ? weightedSum / weightedDenom : 0
+
+  var jqlParts = [
+    'project IN (' + PM_HUB_PROJECTS.join(', ') + ')',
+    'issuetype IN (Feature, Initiative)',
+    'statusCategory = Done',
+    'resolved >= -' + VELOCITY_LOOKBACK_WEEKS + 'w',
+    'fixVersion is not EMPTY'
+  ]
+  if (componentClause) jqlParts.push(componentClause)
+  var jql = jqlParts.join(' AND ')
+
+  return {
+    avgPerRelease: totalResolved > 0 ? formatAvg(avg) : '—',
+    totalResolved: totalResolved,
+    hasPartialYear: hasPartialYear,
+    components: perComponent,
+    jql: JIRA_SEARCH + encodeURIComponent(jql)
+  }
+}
+
+function formatAvg(value) {
+  return value % 1 === 0 ? String(value) : value.toFixed(1)
 }
 
 const DEFAULT_ISSUE_TYPES = ['Feature', 'Initiative']
@@ -434,6 +557,7 @@ module.exports = function registerPmHubRoutes(router, context) {
           key: f.key,
           summary: f.summary || '',
           status: f.status || null,
+          statusCategory: f.statusCategory || null,
           colorStatus: f.colorStatus || null,
           statusSummary: f.statusSummary || null,
           releaseType: f.releaseType || null,
@@ -491,6 +615,20 @@ module.exports = function registerPmHubRoutes(router, context) {
         }
       }
 
+      // Query 3: Velocity — resolved features in the last year with a fixVersion
+      var velocityIssues = []
+      if (componentClause) {
+        var velJqlParts = baseParts.slice()
+        velJqlParts.push(componentClause)
+        velJqlParts.push('statusCategory = Done')
+        velJqlParts.push('resolved >= -' + VELOCITY_LOOKBACK_WEEKS + 'w')
+        velJqlParts.push('fixVersion is not EMPTY')
+        var velJql = velJqlParts.join(' AND ')
+        velocityIssues = await jiraClient.fetchAllJqlResults(velJql, 'summary,status,fixVersions,components,resolutiondate', {})
+      }
+
+      var velocity = computeVelocity(velocityIssues, componentClause)
+
       var groups = Object.keys(versionGroups).sort().map(function(vKey) {
         var vg = versionGroups[vKey]
         var compGroups = Object.keys(vg.components).sort().map(function(cKey) {
@@ -515,6 +653,7 @@ module.exports = function registerPmHubRoutes(router, context) {
 
       res.json({
         groups: groups,
+        velocity: velocity,
         fetchedAt: new Date().toISOString(),
         filters: { components: componentNames, versions: versionNames }
       })
@@ -529,3 +668,4 @@ module.exports.DEFAULT_PILLAR_CONFIG = DEFAULT_PILLAR_CONFIG
 module.exports.validatePillarConfig = validatePillarConfig
 module.exports.PILLAR_CONFIG_FILE = PILLAR_CONFIG_FILE
 module.exports.backfillLeads = backfillLeads
+module.exports.computeVelocity = computeVelocity
