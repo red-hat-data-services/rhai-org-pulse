@@ -327,4 +327,61 @@ describe('computeVelocity', function () {
     expect(result.components[0].avgPerRelease).toBe('0.3')
     expect(result.avgPerRelease).toBe('0.3')
   })
+
+  // --- selectedComponents filtering ---
+
+  it('filters to only selected components, ignoring phantom components', function () {
+    // Issue belongs to CompA + CompB + CompC, but only CompA and CompB are selected
+    var issues = [
+      makeRawIssue('X-1', ['v1'], ['CompA', 'CompB', 'CompC']),
+      makeRawIssue('X-2', ['v1'], ['CompA']),
+      makeRawIssue('X-3', ['v1'], ['CompC'])
+    ]
+    var result = computeVelocity(issues, '', NOW, ['CompA', 'CompB'])
+    // CompC should be excluded entirely
+    expect(result.components).toHaveLength(2)
+    var names = result.components.map(function (c) { return c.component })
+    expect(names).toContain('CompA')
+    expect(names).toContain('CompB')
+    expect(names).not.toContain('CompC')
+  })
+
+  it('includes all components when selectedComponents is not provided', function () {
+    var issues = [
+      makeRawIssue('X-1', ['v1'], ['CompA', 'CompB'])
+    ]
+    var result = computeVelocity(issues, '', NOW)
+    expect(result.components).toHaveLength(2)
+  })
+
+  it('weighted average is bounded by component velocities when filtered', function () {
+    // CompA: 3 features / 1 release = 3.0
+    // CompB: 1 feature / 1 release = 1.0
+    // CompC (phantom): 5 features / 1 release — should be excluded
+    var issues = [
+      makeRawIssue('A-1', ['v1'], ['CompA']),
+      makeRawIssue('A-2', ['v1'], ['CompA']),
+      makeRawIssue('A-3', ['v1'], ['CompA']),
+      makeRawIssue('B-1', ['v1'], ['CompB']),
+      makeRawIssue('C-1', ['v1'], ['CompA', 'CompC']),
+      makeRawIssue('C-2', ['v1'], ['CompC']),
+      makeRawIssue('C-3', ['v1'], ['CompC']),
+      makeRawIssue('C-4', ['v1'], ['CompC']),
+      makeRawIssue('C-5', ['v1'], ['CompC'])
+    ]
+    // Without filter: CompC would inflate the average
+    var unfiltered = computeVelocity(issues, '', NOW)
+    expect(unfiltered.components).toHaveLength(3)
+
+    // With filter: only CompA (4 features incl C-1) and CompB
+    var filtered = computeVelocity(issues, '', NOW, ['CompA', 'CompB'])
+    expect(filtered.components).toHaveLength(2)
+    var compA = filtered.components.find(function (c) { return c.component === 'CompA' })
+    var compB = filtered.components.find(function (c) { return c.component === 'CompB' })
+    // CompA gets C-1 (has CompA component), so 4 features / 1 release = 4.0
+    expect(compA.resolved).toBe(4)
+    expect(compB.resolved).toBe(1)
+    // Weighted avg = (4.0*4 + 1.0*1) / (4+1) = 17/5 = 3.4
+    expect(filtered.avgPerRelease).toBe('3.4')
+  })
 })

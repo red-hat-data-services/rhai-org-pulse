@@ -156,8 +156,17 @@ var VELOCITY_LOOKBACK_WEEKS = 52
  * @param {string} componentClause - JQL component clause for verification URLs
  * @returns {{ avgPerRelease: string, totalResolved: number, components: Array, jql: string }}
  */
-function computeVelocity(rawIssues, componentClause, nowDate) {
+function computeVelocity(rawIssues, componentClause, nowDate, selectedComponents) {
   var now = nowDate ? new Date(nowDate) : new Date()
+
+  // Build a lookup set for selected components (when provided, only group by these)
+  var selectedSet = null
+  if (Array.isArray(selectedComponents) && selectedComponents.length > 0) {
+    selectedSet = {}
+    for (var si = 0; si < selectedComponents.length; si++) {
+      selectedSet[selectedComponents[si]] = true
+    }
+  }
 
   // Group issues by component → { resolved keys, version set, earliest resolution }
   var compMap = {}
@@ -175,6 +184,7 @@ function computeVelocity(rawIssues, componentClause, nowDate) {
     for (var ci = 0; ci < comps.length; ci++) {
       var cName = comps[ci] && comps[ci].name
       if (!cName) continue
+      if (selectedSet && !selectedSet[cName]) continue
       if (!compMap[cName]) compMap[cName] = { seen: {}, versions: {}, earliestResolved: null }
       var entry = compMap[cName]
       if (entry.seen[key]) continue
@@ -626,7 +636,7 @@ module.exports = function registerPmHubRoutes(router, context) {
         velocityIssues = await jiraClient.fetchAllJqlResults(velJql, 'summary,status,fixVersions,components,resolutiondate', {})
       }
 
-      var velocity = computeVelocity(velocityIssues, componentClause)
+      var velocity = computeVelocity(velocityIssues, componentClause, null, componentNames)
 
       var groups = Object.keys(versionGroups).sort().map(function(vKey) {
         var vg = versionGroups[vKey]
