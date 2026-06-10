@@ -23,6 +23,7 @@ var { isVisible, isPinned, popoverId, onMouseEnter, onMouseLeave, onClick, dismi
     :aria-expanded="isVisible"
     tabindex="0"
     role="button"
+    aria-label="Version summary"
   >
     <span class="text-xs cursor-pointer" :class="missingVersionCount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-700 dark:text-gray-300'">
       {{ versionedCount }} versioned<span v-if="missingVersionCount > 0">, {{ missingVersionCount }} missing</span>
