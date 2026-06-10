@@ -5,7 +5,7 @@
  * discovers new features via JQL, and reconciles tracking data.
  */
 
-const { enrichFeatures, discoverFeatures } = require('./jira-enrich');
+const { enrichFeatures, discoverFeatures, fetchSignOffDetails } = require('./jira-enrich');
 const { mergeFeatureData, writeFeatures } = require('./feature-store');
 
 const DATA_PREFIX = 'releases/execution';
@@ -56,6 +56,29 @@ async function syncAllFeatures(storage, jiraRequestFn, fetchAllJqlResultsFn) {
 
   // Write all merged features + rebuild index
   await writeFeatures(storage, mergedFeatures);
+
+  // Targeted sign-off detection pass: fetch changelog only for features that
+  // have aiReview with humanReviewStatus=approved but no approvedBy/approvedAt
+  try {
+    const signOffMap = await fetchSignOffDetails(keys, storage, jiraRequestFn, fetchAllJqlResultsFn);
+    if (signOffMap.size > 0) {
+      const signOffUpdates = [];
+      for (const [key, signOff] of signOffMap) {
+        const feature = storage.readFromStorage(DATA_PREFIX + '/features/' + key + '.json');
+        if (feature && feature.aiReview) {
+          feature.aiReview.approvedBy = signOff.approvedBy;
+          feature.aiReview.approvedAt = signOff.approvedAt;
+          signOffUpdates.push(feature);
+        }
+      }
+      if (signOffUpdates.length > 0) {
+        await writeFeatures(storage, signOffUpdates);
+        console.log('[jira-sync] Updated sign-off details for ' + signOffUpdates.length + ' features');
+      }
+    }
+  } catch (err) {
+    console.warn('[jira-sync] Sign-off detection pass failed:', err.message);
+  }
 
   const duration = Date.now() - startTime;
   const result = {

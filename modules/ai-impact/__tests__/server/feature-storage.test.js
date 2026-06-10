@@ -1,156 +1,134 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
   readFeatures,
-  upsertFeature,
   getLatestProjection,
-  trimForHistory,
-  countHistoryEntries,
-  MAX_HISTORY
+  countHistoryEntries
 } from '../../server/features/storage.js';
 
-function makeFeature(overrides = {}) {
+function makeReleasesIndex(features = []) {
   return {
-    key: 'RHAISTRAT-1168',
-    title: 'GPU-as-a-Service Observability',
-    sourceRfe: 'RHAIRFE-262',
-    priority: 'Major',
-    status: 'Refined',
-    size: 'L',
-    recommendation: 'approve',
-    needsAttention: false,
-    humanReviewStatus: 'approved',
-    scores: { feasibility: 1, testability: 1, scope: 2, architecture: 2, total: 6 },
-    reviewers: { feasibility: 'approve', testability: 'revise', scope: 'approve', architecture: 'approve' },
-    labels: ['strat-creator-auto-created'],
-    runId: '20260419-013035',
-    runTimestamp: '2026-04-19T01:30:35Z',
-    reviewedAt: '2026-04-19T12:00:00Z',
-    ...overrides
+    fetchedAt: '2026-04-19T12:00:00Z',
+    schemaVersion: 'v2',
+    featureCount: features.length,
+    features
   };
 }
 
-function makeEmptyData() {
-  return { lastSyncedAt: null, totalFeatures: 0, features: {} };
+function makeFeatureFile(overrides = {}) {
+  return {
+    key: 'RHAISTRAT-1168',
+    summary: 'GPU-as-a-Service Observability',
+    status: 'Refined',
+    priority: 'Major',
+    labels: ['strat-creator-auto-created'],
+    aiReview: {
+      title: 'GPU-as-a-Service Observability',
+      sourceRfe: 'RHAIRFE-262',
+      size: 'L',
+      recommendation: 'approve',
+      needsAttention: false,
+      humanReviewStatus: 'approved',
+      scores: { feasibility: 1, testability: 1, scope: 2, architecture: 2, total: 6 },
+      reviewers: { feasibility: 'approve', testability: 'revise', scope: 'approve', architecture: 'approve' },
+      reviewedAt: '2026-04-19T12:00:00Z',
+      history: [
+        { scores: { feasibility: 1, testability: 1, scope: 1, architecture: 1, total: 4 }, recommendation: 'revise', needsAttention: true, humanReviewStatus: 'needs-review', reviewedAt: '2026-04-10T00:00:00Z' }
+      ],
+      ...overrides
+    }
+  };
 }
 
 describe('readFeatures', () => {
-  it('returns empty state when storage returns null', () => {
+  it('returns features from releases index when aiReview data exists', () => {
+    const indexEntry = {
+      key: 'RHAISTRAT-1168',
+      summary: 'GPU-as-a-Service Observability',
+      status: 'Refined',
+      priority: 'Major',
+      labels: ['strat-creator-auto-created'],
+      aiReview: {
+        recommendation: 'approve',
+        scores: { feasibility: 1, testability: 1, scope: 2, architecture: 2, total: 6 },
+        humanReviewStatus: 'approved',
+        needsAttention: false,
+        reviewedAt: '2026-04-19T12:00:00Z'
+      }
+    };
+    const featureFile = makeFeatureFile();
+    const read = vi.fn(function(key) {
+      if (key === 'releases/execution/index.json') return makeReleasesIndex([indexEntry]);
+      if (key === 'releases/execution/features/RHAISTRAT-1168.json') return featureFile;
+      return null;
+    });
+
+    const result = readFeatures(read);
+    expect(result.totalFeatures).toBe(1);
+    expect(result.features['RHAISTRAT-1168']).toBeDefined();
+    expect(result.features['RHAISTRAT-1168'].latest.recommendation).toBe('approve');
+    expect(result.features['RHAISTRAT-1168'].history).toHaveLength(1);
+  });
+
+  it('falls back to legacy store when no releases index', () => {
+    const legacyData = {
+      lastSyncedAt: '2026-04-19T12:00:00Z',
+      totalFeatures: 1,
+      features: { A: { latest: { key: 'A' }, history: [] } }
+    };
+    const read = vi.fn(function(key) {
+      if (key === 'releases/execution/index.json') return null;
+      if (key === 'ai-impact/features.json') return legacyData;
+      return null;
+    });
+
+    const result = readFeatures(read);
+    expect(result).toBe(legacyData);
+  });
+
+  it('falls back to legacy store when releases index has no aiReview features', () => {
+    const legacyData = {
+      lastSyncedAt: '2026-04-19T12:00:00Z',
+      totalFeatures: 1,
+      features: { A: { latest: { key: 'A' }, history: [] } }
+    };
+    const read = vi.fn(function(key) {
+      if (key === 'releases/execution/index.json') return makeReleasesIndex([{ key: 'X', summary: 'No AI' }]);
+      if (key === 'ai-impact/features.json') return legacyData;
+      return null;
+    });
+
+    const result = readFeatures(read);
+    expect(result).toBe(legacyData);
+  });
+
+  it('returns empty state when both stores are empty', () => {
     const read = vi.fn().mockReturnValue(null);
     expect(readFeatures(read)).toEqual({ lastSyncedAt: null, totalFeatures: 0, features: {} });
   });
 
-  it('returns empty state when storage returns undefined', () => {
-    const read = vi.fn().mockReturnValue(undefined);
-    expect(readFeatures(read)).toEqual({ lastSyncedAt: null, totalFeatures: 0, features: {} });
-  });
-
-  it('returns empty state when data is malformed (missing features key)', () => {
-    const read = vi.fn().mockReturnValue({ lastSyncedAt: 'x' });
-    expect(readFeatures(read)).toEqual({ lastSyncedAt: null, totalFeatures: 0, features: {} });
-  });
-
-  it('returns empty state when data is a non-object', () => {
-    const read = vi.fn().mockReturnValue('null');
-    expect(readFeatures(read)).toEqual({ lastSyncedAt: null, totalFeatures: 0, features: {} });
-  });
-
-  it('returns valid data unchanged', () => {
-    const data = { lastSyncedAt: '2026-04-19T12:00:00Z', totalFeatures: 5, features: { A: {} } };
-    const read = vi.fn().mockReturnValue(data);
-    expect(readFeatures(read)).toBe(data);
-  });
-});
-
-describe('trimForHistory', () => {
-  it('keeps only scores, recommendation, needsAttention, humanReviewStatus, reviewedAt', () => {
-    const full = makeFeature();
-    const trimmed = trimForHistory(full);
-    expect(trimmed).toEqual({
-      scores: full.scores,
-      recommendation: full.recommendation,
-      needsAttention: full.needsAttention,
-      humanReviewStatus: full.humanReviewStatus,
-      reviewedAt: full.reviewedAt
+  it('returns empty state when releases index exists but no features', () => {
+    const read = vi.fn(function(key) {
+      if (key === 'releases/execution/index.json') return makeReleasesIndex([]);
+      return null;
     });
-    expect(trimmed.key).toBeUndefined();
-    expect(trimmed.title).toBeUndefined();
-    expect(trimmed.labels).toBeUndefined();
-    expect(trimmed.reviewers).toBeUndefined();
-  });
-});
-
-describe('upsertFeature', () => {
-  it('creates a new entry', () => {
-    const data = makeEmptyData();
-    const status = upsertFeature(data, 'RHAISTRAT-1', makeFeature());
-    expect(status).toBe('created');
-    expect(data.features['RHAISTRAT-1']).toBeDefined();
-    expect(data.features['RHAISTRAT-1'].latest.scores.total).toBe(6);
-    expect(data.features['RHAISTRAT-1'].history).toEqual([]);
+    expect(readFeatures(read)).toEqual({ lastSyncedAt: null, totalFeatures: 0, features: {} });
   });
 
-  it('returns unchanged for same reviewedAt (idempotent)', () => {
-    const data = makeEmptyData();
-    upsertFeature(data, 'A', makeFeature({ reviewedAt: '2026-04-19T12:00:00Z' }));
-    const status = upsertFeature(data, 'A', makeFeature({ reviewedAt: '2026-04-19T12:00:00Z' }));
-    expect(status).toBe('unchanged');
-  });
+  it('skips features without aiReview in releases index', () => {
+    const indexEntries = [
+      { key: 'A', summary: 'With AI', aiReview: { recommendation: 'approve', scores: {}, humanReviewStatus: 'approved', needsAttention: false, reviewedAt: '2026-04-19T12:00:00Z' } },
+      { key: 'B', summary: 'Without AI' }
+    ];
+    const read = vi.fn(function(key) {
+      if (key === 'releases/execution/index.json') return makeReleasesIndex(indexEntries);
+      if (key === 'releases/execution/features/A.json') return { key: 'A', aiReview: { recommendation: 'approve', reviewedAt: '2026-04-19T12:00:00Z', history: [] } };
+      return null;
+    });
 
-  it('updates with newer feature, rotating old latest to history', () => {
-    const data = makeEmptyData();
-    upsertFeature(data, 'A', makeFeature({ reviewedAt: '2026-04-10T00:00:00Z' }));
-    const status = upsertFeature(data, 'A', makeFeature({ reviewedAt: '2026-04-20T00:00:00Z' }));
-    expect(status).toBe('updated');
-    expect(data.features['A'].latest.reviewedAt).toBe('2026-04-20T00:00:00Z');
-    expect(data.features['A'].history).toHaveLength(1);
-    expect(data.features['A'].history[0].reviewedAt).toBe('2026-04-10T00:00:00Z');
-    // History entry should be trimmed
-    expect(data.features['A'].history[0].key).toBeUndefined();
-    expect(data.features['A'].history[0].title).toBeUndefined();
-  });
-
-  it('inserts older feature into history at correct position', () => {
-    const data = makeEmptyData();
-    upsertFeature(data, 'A', makeFeature({ reviewedAt: '2026-04-20T00:00:00Z' }));
-    const status = upsertFeature(data, 'A', makeFeature({ reviewedAt: '2026-04-15T00:00:00Z' }));
-    expect(status).toBe('updated');
-    expect(data.features['A'].latest.reviewedAt).toBe('2026-04-20T00:00:00Z');
-    expect(data.features['A'].history).toHaveLength(1);
-    expect(data.features['A'].history[0].reviewedAt).toBe('2026-04-15T00:00:00Z');
-  });
-
-  it('returns unchanged for duplicate history entry', () => {
-    const data = makeEmptyData();
-    upsertFeature(data, 'A', makeFeature({ reviewedAt: '2026-04-20T00:00:00Z' }));
-    upsertFeature(data, 'A', makeFeature({ reviewedAt: '2026-04-15T00:00:00Z' }));
-    const status = upsertFeature(data, 'A', makeFeature({ reviewedAt: '2026-04-15T00:00:00Z' }));
-    expect(status).toBe('unchanged');
-  });
-
-  it('caps history at MAX_HISTORY entries', () => {
-    const data = makeEmptyData();
-    upsertFeature(data, 'A', makeFeature({ reviewedAt: '2026-12-01T00:00:00Z' }));
-    for (let i = 0; i < MAX_HISTORY + 5; i++) {
-      upsertFeature(data, 'A', makeFeature({
-        reviewedAt: `2026-${String(Math.floor(i / 28) + 1).padStart(2, '0')}-${String((i % 28) + 1).padStart(2, '0')}T00:00:00Z`
-      }));
-    }
-    expect(data.features['A'].history.length).toBeLessThanOrEqual(MAX_HISTORY);
-  });
-
-  it('discards old feature when history is at cap and incoming is older than oldest', () => {
-    const data = makeEmptyData();
-    upsertFeature(data, 'A', makeFeature({ reviewedAt: '2026-12-01T00:00:00Z' }));
-    for (let i = 0; i < MAX_HISTORY; i++) {
-      upsertFeature(data, 'A', makeFeature({
-        reviewedAt: `2026-06-${String(i + 1).padStart(2, '0')}T00:00:00Z`
-      }));
-    }
-    expect(data.features['A'].history).toHaveLength(MAX_HISTORY);
-
-    const status = upsertFeature(data, 'A', makeFeature({ reviewedAt: '2025-01-01T00:00:00Z' }));
-    expect(status).toBe('unchanged');
-    expect(data.features['A'].history).toHaveLength(MAX_HISTORY);
+    const result = readFeatures(read);
+    expect(result.totalFeatures).toBe(1);
+    expect(result.features['A']).toBeDefined();
+    expect(result.features['B']).toBeUndefined();
   });
 });
 
@@ -161,8 +139,23 @@ describe('getLatestProjection', () => {
       totalFeatures: 1,
       features: {
         'A': {
-          latest: makeFeature(),
-          history: [{ scores: {}, recommendation: 'revise', needsAttention: false, humanReviewStatus: 'needs-review', reviewedAt: '2026-04-10T00:00:00Z' }]
+          latest: {
+            key: 'RHAISTRAT-1',
+            title: 'Test',
+            sourceRfe: 'RHAIRFE-1',
+            priority: 'Major',
+            status: 'New',
+            size: 'M',
+            recommendation: 'approve',
+            needsAttention: false,
+            humanReviewStatus: 'approved',
+            scores: { feasibility: 2, testability: 2, scope: 2, architecture: 2, total: 8 },
+            reviewers: { feasibility: 'approve', testability: 'approve', scope: 'approve', architecture: 'approve' },
+            labels: ['some-label'],
+            runId: 'run-1',
+            reviewedAt: '2026-04-19T12:00:00Z'
+          },
+          history: []
         }
       }
     };
@@ -177,7 +170,6 @@ describe('getLatestProjection', () => {
     // Should NOT have these fields
     expect(proj.features['A'].labels).toBeUndefined();
     expect(proj.features['A'].runId).toBeUndefined();
-    expect(proj.features['A'].runTimestamp).toBeUndefined();
     expect(proj.features['A'].history).toBeUndefined();
   });
 });

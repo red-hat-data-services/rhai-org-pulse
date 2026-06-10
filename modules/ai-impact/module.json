@@ -34,5 +34,5 @@
     ]
   },
   "defaultEnabled": true,
-  "requires": []
+  "requires": ["releases"]
 }

@@ -55,6 +55,7 @@ npm run dev:full       # Starts Vite (5173) + Express (3001)
 - **Composite keys**: Teams = `orgKey::teamName` (e.g., `shgriffi::Model Serving`).
 - **Field options**: `data/team-data/field-options/<name>.json` — named allowed-value sets, referenced by `optionsRef`.
 - **Messages**: `data/messages.json` — admin announcements, merged with computed provider messages.
+- **Unified feature store**: `data/releases/execution/features/{KEY}.json` — canonical per-feature files owned by releases. Contains pipeline metrics, Jira fields, and optional `aiReview` namespace (AI Impact review scores, history). Index at `data/releases/execution/index.json`. AI Impact pushes review data via internal API (`POST /api/modules/releases/execution/ai-review/bulk`). AI Impact reads from releases store and reshapes for backward-compatible API responses.
 - **Data file formats**: See `docs/DATA-FORMATS.md`. Demo fixtures must match production format.
 
 ### Roster Sync (`shared/server/roster-sync/`)

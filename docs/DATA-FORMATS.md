@@ -659,7 +659,13 @@ Quality assessment data pushed from the rfe-quality-dashboard CI pipeline. Store
 - The file is written atomically (write-to-temp-then-rename) to prevent corruption from mid-write crashes.
 - On DELETE, the file is written as `{ "lastSyncedAt": null, "totalAssessed": 0, "assessments": {} }` (never `null`).
 
-## AI Impact — Features (`data/ai-impact/features.json`)
+## AI Impact — Features (`data/ai-impact/features.json`) — DEPRECATED
+
+> **Deprecated.** Feature review data is now stored in the unified releases
+> execution store at `data/releases/execution/features/{KEY}.json` under the
+> `aiReview` namespace. See [Releases — Execution Feature Detail](#releases--execution-feature-detail-datareleasesexecutionfeatureskeysjson)
+> for the current schema. This legacy file is kept only as a migration source
+> and demo-mode fallback.
 
 Feature review data pushed from the strat creator pipeline. Stores the latest review and score history for each RHAISTRAT feature.
 
@@ -994,6 +1000,68 @@ Unified per-feature file combining data from pipeline (GitLab CI), Jira enrichme
 - `_sources` timestamps indicate data freshness per source; features with only `pipeline` have not been Jira-enriched yet
 - `statusNotes` (pipeline) and `statusSummary` (Jira) are different fields with different formats
 - Jira-owned fields are authoritative when present; pipeline-owned fields (`metrics`, `topology`) are preserved across Jira syncs
+- `aiReview` is optional; only present for features that have been scored by the AI review pipeline
+
+**Optional — AI Review (`aiReview`):**
+
+AI review scores and metadata pushed by the strat-creator pipeline via the AI Impact module. Stored under a single `aiReview` namespace to avoid field collisions. `humanReviewStatus` is derived from Jira labels during enrichment; sign-off details (`approvedBy`, `approvedAt`) are backfilled from the Jira changelog.
+
+```json
+{
+  "aiReview": {
+    "title": "Feature title from AI pipeline",
+    "sourceRfe": "RHAIRFE-456",
+    "size": "M",
+    "recommendation": "approve",
+    "needsAttention": false,
+    "humanReviewStatus": "approved",
+    "approvedBy": "Jane Doe",
+    "approvedAt": "2026-06-01T00:00:00Z",
+    "scores": {
+      "feasibility": 2,
+      "testability": 1,
+      "scope": 2,
+      "architecture": 2,
+      "total": 7
+    },
+    "reviewers": {
+      "feasibility": "approve",
+      "testability": "revise",
+      "scope": "approve",
+      "architecture": "approve"
+    },
+    "labels": ["strat-creator-auto-created", "strat-creator-human-sign-off"],
+    "reviewedAt": "2026-05-15T00:00:00Z",
+    "runId": "run-abc-123",
+    "history": [
+      {
+        "scores": { "feasibility": 1, "testability": 1, "scope": 2, "architecture": 1, "total": 5 },
+        "recommendation": "revise",
+        "needsAttention": true,
+        "humanReviewStatus": "awaiting-review",
+        "reviewedAt": "2026-05-01T00:00:00Z"
+      }
+    ]
+  }
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `title` | string | AI pipeline's title (may differ from Jira `summary`) |
+| `sourceRfe` | string | Source RFE key (e.g. `RHAIRFE-456`) |
+| `size` | `S\|M\|L\|XL\|null` | T-shirt size estimate |
+| `recommendation` | `approve\|revise\|reject` | Overall recommendation |
+| `needsAttention` | boolean | Whether human attention is needed |
+| `humanReviewStatus` | `approved\|needs-review\|awaiting-review` | Derived from Jira labels |
+| `approvedBy` | string\|null | Who added the sign-off label |
+| `approvedAt` | string\|null | When the sign-off label was added |
+| `scores` | object | Per-dimension scores (0-2) plus `total` (0-8) |
+| `reviewers` | object | Per-dimension verdicts (`approve\|revise\|reject`) |
+| `labels` | string[] | Label snapshot from the AI pipeline push |
+| `reviewedAt` | string | ISO 8601 timestamp of this review |
+| `runId` | string | Pipeline run identifier |
+| `history` | array | Previous review snapshots (max 20, newest first) |
 
 **Optional — Traffic Signals (`trafficSignals`):**
 

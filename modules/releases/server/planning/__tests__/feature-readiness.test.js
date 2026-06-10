@@ -40,10 +40,117 @@ function makeFeaturesStore(features) {
   return { lastSyncedAt: '2026-01-01T00:00:00.000Z', totalFeatures: Object.keys(features).length, features }
 }
 
+/**
+ * Convert feature store format ({ features: { key: { latest, history } } })
+ * into unified releases execution storage entries (index + per-feature files).
+ * Returns a flat object of storage keys to spread into makeReadFromStorage.
+ */
+function convertToUnifiedFormat(aiData) {
+  if (!aiData || !aiData.features) return {}
+
+  var result = {}
+  var indexFeatures = []
+
+  var keys = Object.keys(aiData.features)
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i]
+    var entry = aiData.features[key]
+    if (!entry || !entry.latest) continue
+    var latest = entry.latest
+
+    // Build unified feature file
+    var featureFile = {
+      key: key,
+      summary: latest.title || '',
+      status: latest.status || null,
+      priority: latest.priority || null,
+      components: latest.components || [],
+      labels: latest.labels || [],
+      riceScore: latest.riceScore != null ? latest.riceScore : null,
+      linkedRfeKey: latest.sourceRfe || null,
+      aiReview: {
+        title: latest.title || '',
+        sourceRfe: latest.sourceRfe || null,
+        size: latest.size || null,
+        recommendation: latest.recommendation || null,
+        needsAttention: latest.needsAttention || false,
+        humanReviewStatus: latest.humanReviewStatus || null,
+        scores: latest.scores || {},
+        reviewers: latest.reviewers || {},
+        reviewedAt: latest.reviewedAt || null,
+        approvedBy: latest.approvedBy || null,
+        approvedAt: latest.approvedAt || null,
+        labels: latest.labels || [],
+        components: latest.components || [],
+        history: entry.history || []
+      }
+    }
+    result['releases/execution/features/' + key + '.json'] = featureFile
+
+    // Build index entry with slim aiReview
+    indexFeatures.push({
+      key: key,
+      summary: latest.title || '',
+      status: latest.status || null,
+      statusCategory: null,
+      priority: latest.priority || null,
+      assignee: null,
+      fixVersions: [],
+      labels: latest.labels || [],
+      completionPct: 0,
+      epicCount: 0,
+      issueCount: 0,
+      blockerCount: 0,
+      health: null,
+      lastUpdated: null,
+      targetVersions: null,
+      pm: null,
+      architect: null,
+      parentKey: null,
+      colorStatus: null,
+      ownerStatusColor: null,
+      aiReview: {
+        recommendation: latest.recommendation || null,
+        scores: latest.scores || {},
+        humanReviewStatus: latest.humanReviewStatus || null,
+        needsAttention: latest.needsAttention || false,
+        reviewedAt: latest.reviewedAt || null
+      }
+    })
+  }
+
+  result['releases/execution/index.json'] = {
+    fetchedAt: aiData.lastSyncedAt || '2026-01-01T00:00:00.000Z',
+    schemaVersion: 'v2',
+    featureCount: indexFeatures.length,
+    features: indexFeatures
+  }
+
+  return result
+}
+
 function makeReadFromStorage(overrides) {
+  var effective = Object.assign({}, overrides)
+  // Merge index features when multiple sources contribute entries
+  // (e.g., convertToUnifiedFormat entries + explicit index entries)
+  if (effective['releases/execution/index.json']) {
+    var idx = effective['releases/execution/index.json']
+    if (idx.features) {
+      var seen = new Set()
+      var deduped = []
+      for (var di = 0; di < idx.features.length; di++) {
+        if (!seen.has(idx.features[di].key)) {
+          seen.add(idx.features[di].key)
+          deduped.push(idx.features[di])
+        }
+      }
+      idx.features = deduped
+      idx.featureCount = deduped.length
+    }
+  }
   return function(key) {
-    if (Object.prototype.hasOwnProperty.call(overrides, key)) {
-      return overrides[key]
+    if (Object.prototype.hasOwnProperty.call(effective, key)) {
+      return effective[key]
     }
     return null
   }
@@ -474,9 +581,9 @@ describe('buildFeatureReadiness', function() {
       expect(result.meta).toEqual({ total: 0, pendingReviewCount: 0, readyCount: 0, versions: [], lastSyncedAt: null })
     })
 
-    it('returns empty buckets when features object is missing', function() {
+    it('returns empty buckets when no features with aiReview exist', function() {
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': { lastSyncedAt: '2026-01-01T00:00:00.000Z' }
+        ...convertToUnifiedFormat({ lastSyncedAt: '2026-01-01T00:00:00.000Z' })
       })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.pendingReview).toEqual([])
@@ -489,7 +596,7 @@ describe('buildFeatureReadiness', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
-      var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
+      var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.ready).toHaveLength(1)
       expect(result.ready[0].key).toBe('RHAISTRAT-1')
@@ -500,7 +607,7 @@ describe('buildFeatureReadiness', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'awaiting-review' }) }
       })
-      var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
+      var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.pendingReview).toHaveLength(1)
       expect(result.ready).toHaveLength(0)
@@ -510,7 +617,7 @@ describe('buildFeatureReadiness', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'needs-review' }) }
       })
-      var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
+      var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.pendingReview).toHaveLength(1)
       expect(result.ready).toHaveLength(0)
@@ -520,7 +627,7 @@ describe('buildFeatureReadiness', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: null }) }
       })
-      var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
+      var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.pendingReview).toHaveLength(1)
       expect(result.ready).toHaveLength(0)
@@ -531,7 +638,7 @@ describe('buildFeatureReadiness', function() {
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) },
         'RHAISTRAT-2': {}
       })
-      var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
+      var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.ready).toHaveLength(1)
       expect(result.pendingReview).toHaveLength(0)
@@ -547,7 +654,7 @@ describe('buildFeatureReadiness', function() {
         data: { features: [{ issueKey: 'RHAISTRAT-1', tier: 1, fixVersion: '3.6.0' }] }
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/candidates-cache-3.6.json': candidateCache
       })
@@ -559,7 +666,7 @@ describe('buildFeatureReadiness', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
-      var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
+      var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.ready[0].confidence).toBe('ready')
     })
@@ -568,7 +675,7 @@ describe('buildFeatureReadiness', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: null }) }
       })
-      var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
+      var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.pendingReview[0].confidence).toBe('not-ready')
     })
@@ -579,7 +686,7 @@ describe('buildFeatureReadiness', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
-      var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
+      var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.ready[0].readinessGates).toBeDefined()
       expect(result.ready[0].readinessGates.noBlockingViolations).toBe(true)
@@ -594,7 +701,7 @@ describe('buildFeatureReadiness', function() {
         }]
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
@@ -615,7 +722,7 @@ describe('buildFeatureReadiness', function() {
       }
       var healthCache = { features: [{ key: 'RHAISTRAT-1', priorityScore: null }] }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/health-cache-3.6-all.json': healthCache,
         'releases/hygiene/features-3.6.json': hygieneCache
@@ -634,7 +741,7 @@ describe('buildFeatureReadiness', function() {
       }
       var healthCache = { features: [{ key: 'RHAISTRAT-1', priorityScore: null }] }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/health-cache-3.6-all.json': healthCache,
         'releases/hygiene/features-3.6.json': hygieneCache
@@ -655,7 +762,7 @@ describe('buildFeatureReadiness', function() {
       }
       var healthCache = { features: [{ key: 'RHAISTRAT-1', priorityScore: null }] }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/health-cache-3.6-all.json': healthCache,
         'releases/hygiene/features-3.6.json': hygieneCache
@@ -678,7 +785,7 @@ describe('buildFeatureReadiness', function() {
         features: { 'AIPCC-100': { key: 'AIPCC-100', team: 'Beta', violations: violations } }
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/health-cache-3.6-all.json': healthCache,
         'releases/hygiene/features-3.6.json': hygieneCache
@@ -695,7 +802,7 @@ describe('buildFeatureReadiness', function() {
         'RHAISTRAT-LOW': { latest: makeLatest({ humanReviewStatus: 'approved', priority: 'Minor', scores: { feasibility: 1, testability: 1, scope: 1, architecture: 1 } }) },
         'RHAISTRAT-HIGH': { latest: makeLatest({ humanReviewStatus: 'approved', priority: 'Blocker', scores: { feasibility: 2, testability: 2, scope: 2, architecture: 2 } }) }
       })
-      var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
+      var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.ready[0].key).toBe('RHAISTRAT-HIGH')
       expect(result.ready[1].key).toBe('RHAISTRAT-LOW')
@@ -706,7 +813,7 @@ describe('buildFeatureReadiness', function() {
         'RHAISTRAT-LOWTOTAL': { latest: makeLatest({ key: 'RHAISTRAT-LOWTOTAL', humanReviewStatus: 'approved', priority: 'Normal', scores: { feasibility: 1, testability: 1, scope: 1, architecture: 1 } }) },
         'RHAISTRAT-HIGHTOTAL': { latest: makeLatest({ key: 'RHAISTRAT-HIGHTOTAL', humanReviewStatus: 'approved', priority: 'Normal', scores: { feasibility: 2, testability: 2, scope: 2, architecture: 2 } }) }
       })
-      var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
+      var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
       var result = buildFeatureReadiness(readFromStorage)
       var highIdx = result.ready.findIndex(function(f) { return f.key === 'RHAISTRAT-HIGHTOTAL' })
       var lowIdx = result.ready.findIndex(function(f) { return f.key === 'RHAISTRAT-LOWTOTAL' })
@@ -720,7 +827,7 @@ describe('buildFeatureReadiness', function() {
         'RHAISTRAT-LOW': { latest: makeLatest({ key: 'RHAISTRAT-LOW', humanReviewStatus: null, priority: 'Minor', scores: { feasibility: 0, testability: 0, scope: 0, architecture: 0 } }) },
         'RHAISTRAT-HIGH': { latest: makeLatest({ key: 'RHAISTRAT-HIGH', humanReviewStatus: null, priority: 'Blocker', scores: { feasibility: 0, testability: 0, scope: 0, architecture: 0 } }) }
       })
-      var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
+      var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.pendingReview[0].key).toBe('RHAISTRAT-HIGH')
       expect(result.pendingReview[1].key).toBe('RHAISTRAT-LOW')
@@ -731,7 +838,7 @@ describe('buildFeatureReadiness', function() {
         'RHAISTRAT-A': { latest: makeLatest({ key: 'RHAISTRAT-A', humanReviewStatus: null, priority: 'Normal', size: null, scores: { feasibility: 2, testability: 1, scope: 0, architecture: 0 } }) },
         'RHAISTRAT-B': { latest: makeLatest({ key: 'RHAISTRAT-B', humanReviewStatus: null, priority: 'Normal', size: null, scores: { feasibility: 1, testability: 0, scope: 0, architecture: 0 } }) }
       })
-      var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
+      var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.pendingReview[0].key).toBe('RHAISTRAT-A')
     })
@@ -748,7 +855,7 @@ describe('buildFeatureReadiness', function() {
         ]
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
@@ -774,7 +881,7 @@ describe('buildFeatureReadiness', function() {
         }
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         [candidatesKey]: candidateCache
       })
@@ -797,7 +904,7 @@ describe('buildFeatureReadiness', function() {
         features: [{ key: 'RHAISTRAT-1', priorityScore: null }]
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         [candidatesKey]: candidateCache,
         'releases/planning/health-cache-3.6-all.json': healthCache
@@ -818,7 +925,7 @@ describe('buildFeatureReadiness', function() {
         data: { features: [{ issueKey: 'RHAISTRAT-1', tier: 2 }] }
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         [candidatesKey]: candidateCache
       })
@@ -833,7 +940,7 @@ describe('buildFeatureReadiness', function() {
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6
       })
       var result = buildFeatureReadiness(readFromStorage)
@@ -845,7 +952,7 @@ describe('buildFeatureReadiness', function() {
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store
+        ...convertToUnifiedFormat(store)
       })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.ready).toHaveLength(1)
@@ -867,7 +974,7 @@ describe('buildFeatureReadiness', function() {
         }]
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
@@ -891,7 +998,7 @@ describe('buildFeatureReadiness', function() {
         features: [{ key: 'RHAISTRAT-1', tier: 'T3', bigRock: 'Platform', targetRelease: 'rhoai-3.6-health', fixVersions: '3.6.0-health', priorityScore: null }]
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/candidates-cache-3.6.json': candidateCache,
         'releases/planning/health-cache-3.6-all.json': healthCache
@@ -912,7 +1019,7 @@ describe('buildFeatureReadiness', function() {
         features: [{ key: 'RHAISTRAT-1', components: 'Serving, Training', priorityScore: null }]
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
@@ -932,7 +1039,7 @@ describe('buildFeatureReadiness', function() {
         features: [{ key: 'RHAISTRAT-1', priorityScore: 87, priorityBreakdown: { rice: 50, bigRock: 100 } }]
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         [healthKey]: healthCache
       })
@@ -954,7 +1061,7 @@ describe('buildFeatureReadiness', function() {
         features: [{ key: 'RHAISTRAT-999', priorityScore: 50 }]
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/candidates-cache-3.6.json': candidateCache,
         [healthKey]: healthCache
@@ -975,7 +1082,7 @@ describe('buildFeatureReadiness', function() {
         features: [{ key: 'RHAISTRAT-1', priorityScore: 70, priorityBreakdown: breakdown }]
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         [healthKey]: healthCache
       })
@@ -999,7 +1106,7 @@ describe('buildFeatureReadiness', function() {
         }
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/candidates-cache-3.6.json': candidateCache
       })
@@ -1030,7 +1137,7 @@ describe('buildFeatureReadiness', function() {
         }
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/health-cache-3.6-all.json': healthCache,
         'releases/hygiene/features-3.6.json': hygieneCache
@@ -1046,7 +1153,7 @@ describe('buildFeatureReadiness', function() {
       var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'wrong-owner', priorityScore: null }] }
       var hygieneCache = { features: { 'RHAISTRAT-1': { key: 'RHAISTRAT-1', team: 'Real Team' } } }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/health-cache-3.6-all.json': healthCache,
         'releases/hygiene/features-3.6.json': hygieneCache
@@ -1072,7 +1179,7 @@ describe('buildFeatureReadiness', function() {
         ]
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
@@ -1087,7 +1194,7 @@ describe('buildFeatureReadiness', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
-      var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
+      var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.meta.versions).toEqual([])
     })
@@ -1102,7 +1209,7 @@ describe('buildFeatureReadiness', function() {
           scores: { feasibility: 3, testability: 2, scope: 1, architecture: 2 }
         }) }
       })
-      var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
+      var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.ready[0].rubricTotal).toBe(8)
     })
@@ -1114,7 +1221,7 @@ describe('buildFeatureReadiness', function() {
           scores: { feasibility: 2 }
         }) }
       })
-      var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
+      var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.ready[0].rubricTotal).toBe(2)
     })
@@ -1130,7 +1237,7 @@ describe('buildFeatureReadiness', function() {
         features: [{ key: 'RHAISTRAT-IN', priorityScore: 80 }]
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
@@ -1144,7 +1251,7 @@ describe('buildFeatureReadiness', function() {
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) },
         'RHAISTRAT-2': { latest: makeLatest({ key: 'RHAISTRAT-2', humanReviewStatus: null }) }
       })
-      var readFromStorage = makeReadFromStorage({ 'ai-impact/features.json': store })
+      var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.ready).toHaveLength(1)
       expect(result.pendingReview).toHaveLength(1)
@@ -1159,7 +1266,7 @@ describe('buildFeatureReadiness', function() {
       })
       var config = { releases: { '3.5': { release: '3.5' }, '3.6': { release: '3.6' } } }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': config,
         'releases/planning/health-cache-3.5-all.json': { features: [{ key: 'RHAISTRAT-1', priorityScore: 80 }] },
         'releases/planning/health-cache-3.6-all.json': { features: [{ key: 'RHAISTRAT-2', priorityScore: 60 }] }
@@ -1175,7 +1282,7 @@ describe('buildFeatureReadiness', function() {
       })
       var config = { releases: { '3.5': { release: '3.5' }, '3.6': { release: '3.6' } } }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': config,
         'releases/planning/candidates-cache-3.5.json': { data: { features: [{ issueKey: 'RHAISTRAT-1', tier: 1, bigRock: 'First' }] } },
         'releases/planning/candidates-cache-3.6.json': { data: { features: [{ issueKey: 'RHAISTRAT-1', tier: 2, bigRock: 'Second' }] } }
@@ -1192,7 +1299,7 @@ describe('buildFeatureReadiness', function() {
       })
       var config = { releases: { '3.4': { release: '3.4' }, '3.5': { release: '3.5' }, '3.6': { release: '3.6' } } }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': config
       })
       var result = buildFeatureReadiness(readFromStorage)
@@ -1263,7 +1370,7 @@ describe('buildFeatureReadiness', function() {
         features: [{ key: 'AIPCC-100', summary: 'AIPCC Feature', status: 'In Progress', priority: 'Major', deliveryOwner: 'Alice', blockerCount: 0, targetRelease: 'rhoai-3.6' }]
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
@@ -1285,7 +1392,7 @@ describe('buildFeatureReadiness', function() {
         }]
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
@@ -1303,7 +1410,7 @@ describe('buildFeatureReadiness', function() {
         }]
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
@@ -1320,7 +1427,7 @@ describe('buildFeatureReadiness', function() {
         features: [{ key: 'RHAISTRAT-1', priorityScore: 70 }]
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
@@ -1339,7 +1446,7 @@ describe('buildFeatureReadiness', function() {
         ]
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
@@ -1361,7 +1468,7 @@ describe('buildFeatureReadiness', function() {
         }]
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
@@ -1384,7 +1491,7 @@ describe('buildFeatureReadiness', function() {
         data: { features: [{ issueKey: 'AIPCC-600', tier: 1 }] }
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/health-cache-3.6-all.json': healthCache,
         'releases/planning/candidates-cache-3.6.json': candidateCache
@@ -1404,7 +1511,7 @@ describe('buildFeatureReadiness', function() {
         }]
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
@@ -1417,7 +1524,7 @@ describe('buildFeatureReadiness', function() {
       expect(feat.readinessGates.noBlockingViolations).toBe(true)
     })
 
-    it('works when ai-impact/features.json is null', function() {
+    it('works when no AI review data exists', function() {
       var healthCache = {
         features: [{
           key: 'AIPCC-900', summary: 'No ai-impact', status: 'In Progress',
@@ -1425,7 +1532,6 @@ describe('buildFeatureReadiness', function() {
         }]
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': null,
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
@@ -1445,7 +1551,7 @@ describe('buildFeatureReadiness', function() {
         ]
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
@@ -1471,7 +1577,7 @@ describe('buildFeatureReadiness', function() {
         ]
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/health-cache-3.6-all.json': healthCache,
         'releases/registry.json': registryData,
@@ -1496,7 +1602,7 @@ describe('buildFeatureReadiness', function() {
         ]
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/health-cache-3.6-all.json': healthCache,
         'releases/registry.json': registryData,
@@ -1520,7 +1626,7 @@ describe('buildFeatureReadiness', function() {
         ]
       }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/health-cache-3.6-all.json': healthCache,
         'releases/registry.json': registryData,
@@ -1541,7 +1647,7 @@ describe('buildFeatureReadiness', function() {
       var config = { releases: { '3.5': { release: '3.5' }, '3.6': { release: '3.6' } } }
       var healthCache = { features: [{ key: 'RHAISTRAT-1', priorityScore: null }] }
       var readFromStorage = makeReadFromStorage({
-        'ai-impact/features.json': store,
+        ...convertToUnifiedFormat(store),
         'releases/planning/config.json': config,
         'releases/planning/health-cache-3.5-all.json': healthCache,
         'releases/planning/health-cache-3.6-all.json': healthCache,
@@ -1661,7 +1767,7 @@ describe('buildFeatureReadiness — pass 3 (execution index)', function() {
 
   it('includes execution index features not in caches or ai-impact', function() {
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/execution/index.json': makeExecIndex([
         makeExecFeature('RHAISTRAT-999')
@@ -1679,7 +1785,7 @@ describe('buildFeatureReadiness — pass 3 (execution index)', function() {
 
   it('execution feature with sign-off label and all gates passing is ready', function() {
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/execution/index.json': makeExecIndex([
         makeExecFeature('RHAISTRAT-888', {
@@ -1699,7 +1805,7 @@ describe('buildFeatureReadiness — pass 3 (execution index)', function() {
 
   it('execution feature in Refinement status is not ready', function() {
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/execution/index.json': makeExecIndex([
         makeExecFeature('RHAISTRAT-777', {
@@ -1716,7 +1822,7 @@ describe('buildFeatureReadiness — pass 3 (execution index)', function() {
 
   it('skips closed features from execution index', function() {
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/execution/index.json': makeExecIndex([
         makeExecFeature('RHAISTRAT-666', { status: 'Closed' }),
@@ -1735,7 +1841,7 @@ describe('buildFeatureReadiness — pass 3 (execution index)', function() {
       'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
     })
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': store,
+      ...convertToUnifiedFormat(store),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/execution/index.json': makeExecIndex([
         makeExecFeature('RHAISTRAT-1')
@@ -1749,7 +1855,7 @@ describe('buildFeatureReadiness — pass 3 (execution index)', function() {
 
   it('does not duplicate features already in health-pipeline pass', function() {
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/planning/health-cache-3.6-all.json': {
         features: [{ key: 'RHAISTRAT-50', summary: 'Health Feature', status: 'In Progress', priority: 'Major' }]
@@ -1768,7 +1874,7 @@ describe('buildFeatureReadiness — pass 3 (execution index)', function() {
 
   it('populates filter metadata from execution features', function() {
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/execution/index.json': makeExecIndex([
         makeExecFeature('RHAISTRAT-444', {
@@ -1789,7 +1895,7 @@ describe('buildFeatureReadiness — pass 3 (execution index)', function() {
 
   it('execution feature with fix version gets committed confidence', function() {
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/execution/index.json': makeExecIndex([
         makeExecFeature('RHAISTRAT-333', {
@@ -1809,7 +1915,7 @@ describe('buildFeatureReadiness — pass 3 (execution index)', function() {
 
   it('handles string components from execution index', function() {
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/execution/index.json': makeExecIndex([
         makeExecFeature('RHAISTRAT-222', { components: 'UI, API, Docs' })
@@ -1822,7 +1928,7 @@ describe('buildFeatureReadiness — pass 3 (execution index)', function() {
 
   it('handles multiple execution features sorted by priority score', function() {
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/execution/index.json': makeExecIndex([
         makeExecFeature('RHAISTRAT-A', { priority: 'Minor' }),
@@ -1839,7 +1945,7 @@ describe('buildFeatureReadiness — pass 3 (execution index)', function() {
 
   it('handles empty execution index gracefully', function() {
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/execution/index.json': makeExecIndex([])
     })
@@ -1850,7 +1956,7 @@ describe('buildFeatureReadiness — pass 3 (execution index)', function() {
 
   it('handles missing execution index gracefully', function() {
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6
     })
 
@@ -1913,7 +2019,7 @@ describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
       makeJiraFeature('RHAISTRAT-900')
     ])
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/execution/index.json': makeExecIndex([])
     })
@@ -1927,7 +2033,7 @@ describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
 
   it('falls back to execution index when jiraFeatures is null', function() {
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/execution/index.json': makeExecIndex([
         makeExecFeature('RHAISTRAT-800')
@@ -1942,7 +2048,7 @@ describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
 
   it('falls back to execution index when jiraFeatures is empty Map', function() {
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/execution/index.json': makeExecIndex([
         makeExecFeature('RHAISTRAT-700')
@@ -1963,7 +2069,7 @@ describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
       makeJiraFeature('RHAISTRAT-1')
     ])
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': store,
+      ...convertToUnifiedFormat(store),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/execution/index.json': makeExecIndex([])
     })
@@ -1978,7 +2084,7 @@ describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
       makeJiraFeature('RHAISTRAT-50')
     ])
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/planning/health-cache-3.6-all.json': {
         features: [{ key: 'RHAISTRAT-50', summary: 'Health Feature', status: 'In Progress', priority: 'Major' }]
@@ -1998,7 +2104,7 @@ describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
       makeJiraFeature('RHAISTRAT-600', { riceScore: null })
     ])
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/execution/index.json': makeExecIndex([
         makeExecFeature('RHAISTRAT-600', { riceScore: 250, blockerCount: 3 })
@@ -2029,7 +2135,7 @@ describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
       })
     ])
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/execution/index.json': makeExecIndex([])
     })
@@ -2051,7 +2157,7 @@ describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
       })
     ])
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/execution/index.json': makeExecIndex([])
     })
@@ -2068,7 +2174,7 @@ describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
       makeJiraFeature('RHAISTRAT-C3', { status: 'In Progress' })
     ])
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/execution/index.json': makeExecIndex([])
     })
@@ -2086,7 +2192,7 @@ describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
       })
     ])
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/execution/index.json': makeExecIndex([])
     })
@@ -2106,7 +2212,7 @@ describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
       })
     ])
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/execution/index.json': makeExecIndex([])
     })
@@ -2123,7 +2229,7 @@ describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
       makeJiraFeature('RHAISTRAT-RICE', { riceScore: 100 })
     ])
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/execution/index.json': makeExecIndex([
         makeExecFeature('RHAISTRAT-RICE', { riceScore: 50 })
@@ -2140,7 +2246,7 @@ describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
       makeJiraFeature('RHAISTRAT-RICE2', { riceScore: null })
     ])
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/execution/index.json': makeExecIndex([
         makeExecFeature('RHAISTRAT-RICE2', { riceScore: 75 })
@@ -2157,7 +2263,7 @@ describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
       makeJiraFeature('RHAISTRAT-JONLY', { summary: 'Jira only feature' })
     ])
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/execution/index.json': makeExecIndex([])
     })
@@ -2174,7 +2280,7 @@ describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
       makeJiraFeature('RHAISTRAT-J3', { priority: 'Major' })
     ])
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/execution/index.json': makeExecIndex([])
     })
@@ -2193,7 +2299,7 @@ describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
       })
     ])
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/execution/index.json': makeExecIndex([])
     })
@@ -2211,7 +2317,7 @@ describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
       })
     ])
     var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
+      ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
       'releases/execution/index.json': makeExecIndex([])
     })

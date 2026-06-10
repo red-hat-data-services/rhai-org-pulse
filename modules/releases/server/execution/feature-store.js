@@ -29,6 +29,9 @@ const PIPELINE_INDEX_FIELDS = [
   'architect', 'parentKey', 'targetVersions'
 ];
 
+// AI-review-owned fields — preserved across pipeline/Jira merges
+const AI_REVIEW_FIELDS = ['aiReview'];
+
 /**
  * Merge data from existing store, pipeline ingest, and Jira enrichment.
  * All three inputs are optional (may be null).
@@ -93,6 +96,15 @@ function mergeFeatureData(existing, pipelineData, jiraData) {
     if (jiraUpdated === latestUpdated) merged.updated = jira.updated;
     else if (pipelineUpdated === latestUpdated) merged.updated = pipeline.updated;
     // else keep existing
+  }
+
+  // AI-review-owned fields: preserve across pipeline/Jira merges
+  // aiReview is never overwritten by pipeline or Jira — only by the AI review bulk endpoint
+  if (jiraData && jiraData.aiReview) {
+    merged.aiReview = {
+      ...(base.aiReview || {}),
+      ...jiraData.aiReview
+    };
   }
 
   // _sources metadata
@@ -197,7 +209,15 @@ async function rebuildIndex(storage) {
       colorStatus: feature.colorStatus || null,
       ownerStatusColor: feature.colorStatus || null, // backward compat alias
       team: feature.team || null,
-      components: feature.components || []
+      components: feature.components || [],
+      // AI review summary (slim — only fields needed for list/readiness views)
+      aiReview: feature.aiReview ? {
+        recommendation: feature.aiReview.recommendation,
+        scores: feature.aiReview.scores,
+        humanReviewStatus: feature.aiReview.humanReviewStatus,
+        needsAttention: feature.aiReview.needsAttention,
+        reviewedAt: feature.aiReview.reviewedAt
+      } : null
     };
 
     features.push(indexEntry);
@@ -218,5 +238,6 @@ module.exports = {
   DATA_PREFIX,
   JIRA_FIELDS,
   PIPELINE_FIELDS,
-  PIPELINE_INDEX_FIELDS
+  PIPELINE_INDEX_FIELDS,
+  AI_REVIEW_FIELDS
 };

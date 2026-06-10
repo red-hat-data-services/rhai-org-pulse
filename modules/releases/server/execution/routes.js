@@ -5,6 +5,7 @@
  * Storage paths migrated to releases/execution/ (Phase 5).
  */
 
+const express = require('express');
 const scheduler = require('./scheduler');
 const {
   getToken,
@@ -15,8 +16,11 @@ const {
   setOnCadenceChange
 } = scheduler;
 const { logAudit } = require('../planning/audit-log');
+const { mergeAiReview } = require('./ai-review-merge');
+const { writeFeatures } = require('./feature-store');
 
 const DATA_PREFIX = 'releases/execution';
+const jsonLimit = express.json({ limit: '10mb' });
 
 function stripZStream(value) {
   if (!value) return value
@@ -384,6 +388,125 @@ module.exports = function registerExecutionRoutes(router, context) {
       ) ? 400 : 500;
       res.status(status).json({ status: 'error', message: err.message });
     }
+  });
+
+  // ─── AI Review internal API ───
+
+  /**
+   * @openapi
+   * /api/modules/releases/execution/ai-review/bulk:
+   *   post:
+   *     summary: Bulk upsert AI review data into unified feature store
+   *     tags: [Releases - Execution]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               features:
+   *                 type: array
+   *                 items:
+   *                   type: object
+   *                   properties:
+   *                     key: { type: string }
+   *                     aiReview: { type: object }
+   *     responses:
+   *       200:
+   *         description: Upsert results with created/updated/unchanged counts
+   */
+  router.post('/ai-review/bulk', context.requireAdmin, requireScope('releases:write'), jsonLimit, async function(req, res) {
+    const { features } = req.body;
+    if (!Array.isArray(features)) {
+      return res.status(400).json({ error: 'features must be an array' });
+    }
+    if (features.length > 5000) {
+      return res.status(400).json({ error: 'Bulk payload exceeds maximum of 5000 entries' });
+    }
+
+    try {
+      const counts = { created: 0, updated: 0, unchanged: 0 };
+      const toWrite = [];
+
+      const KEY_RE = /^[A-Z][A-Z0-9]+-\d+$/;
+
+      for (let i = 0; i < features.length; i++) {
+        const entry = features[i];
+        if (!entry || !entry.key || !entry.aiReview) {
+          continue;
+        }
+        if (!KEY_RE.test(entry.key)) {
+          continue;
+        }
+
+        const existing = readDataFile('features/' + entry.key + '.json');
+        const { aiReview, status } = mergeAiReview(
+          existing ? existing.aiReview : null,
+          entry.aiReview
+        );
+
+        counts[status]++;
+
+        if (status !== 'unchanged') {
+          const feature = existing || { key: entry.key, summary: entry.aiReview.title || '' };
+          feature.aiReview = aiReview;
+          feature._sources = feature._sources || {};
+          feature._sources.aiReview = new Date().toISOString();
+          toWrite.push(feature);
+        }
+      }
+
+      if (toWrite.length > 0) {
+        await writeFeatures(storage, toWrite);
+      }
+
+      res.json(counts);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/modules/releases/execution/ai-review:
+   *   delete:
+   *     summary: Remove AI review data from all features (async)
+   *     tags: [Releases - Execution]
+   *     responses:
+   *       200:
+   *         description: Deletion started
+   */
+  router.delete('/ai-review', context.requireAdmin, requireScope('releases:write'), function(req, res) {
+    res.json({ status: 'started', message: 'AI review data removal started' });
+
+    // Process in background
+    (async function() {
+      try {
+        const fileNames = storage.listStorageFiles(DATA_PREFIX + '/features');
+        if (!fileNames || fileNames.length === 0) return;
+
+        const toWrite = [];
+        for (let i = 0; i < fileNames.length; i++) {
+          if (!fileNames[i].endsWith('.json')) continue;
+          const feature = storage.readFromStorage(DATA_PREFIX + '/features/' + fileNames[i]);
+          if (feature && feature.aiReview) {
+            delete feature.aiReview;
+            if (feature._sources) {
+              delete feature._sources.aiReview;
+            }
+            toWrite.push(feature);
+          }
+        }
+
+        if (toWrite.length > 0) {
+          await writeFeatures(storage, toWrite);
+        }
+        console.log('[execution] Removed AI review data from ' + toWrite.length + ' features');
+      } catch (err) {
+        console.error('[execution] AI review data removal failed:', err.message);
+      }
+    })();
   });
 
   // Diagnostics

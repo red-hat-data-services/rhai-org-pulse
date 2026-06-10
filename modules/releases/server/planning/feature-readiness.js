@@ -3,6 +3,7 @@ var { loadIndex } = require('./cache-reader')
 var { CLOSED_STATUSES } = require('./constants')
 var { evaluateHygiene } = require('../hygiene/hygiene-rules')
 var { loadConfig: loadHygieneConfig } = require('../hygiene/config')
+var { deriveHumanReviewStatus: sharedDeriveStatus } = require('../execution/ai-review-fields')
 
 var RICE_MAX = 16900 // 13 × 13 × 100 ÷ 1 (theoretical max: max Reach × max Impact × max Confidence ÷ min Effort)
 
@@ -147,16 +148,48 @@ function collectFilterMeta(feature, allComponents, allPriorities, allBigRocks, a
 }
 
 function deriveHumanReviewStatusFromLabels(labels) {
-  if (!labels || !Array.isArray(labels)) return 'awaiting-review'
-  if (labels.indexOf('strat-creator-human-sign-off') !== -1) return 'approved'
-  if (labels.indexOf('strat-creator-needs-attention') !== -1) return 'needs-review'
-  return 'awaiting-review'
+  return sharedDeriveStatus(labels)
 }
 
 function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) {
-  var raw = readFromStorage('ai-impact/features.json')
-  if (!raw || !raw.features) {
-    raw = { features: {} }
+  // Read AI review data from the unified releases execution store
+  var execIndexData = loadIndex(readFromStorage)
+  var aiReviewFeatures = {}
+  var execFeatures = execIndexData.features || []
+  for (var ari = 0; ari < execFeatures.length; ari++) {
+    var arEntry = execFeatures[ari]
+    if (arEntry.key && arEntry.aiReview) {
+      // Read full feature file for complete aiReview data
+      var fullFeature = readFromStorage('releases/execution/features/' + arEntry.key + '.json')
+      if (fullFeature && fullFeature.aiReview) {
+        aiReviewFeatures[arEntry.key] = {
+          latest: {
+            key: arEntry.key,
+            title: fullFeature.aiReview.title || fullFeature.summary || arEntry.key,
+            sourceRfe: fullFeature.aiReview.sourceRfe || fullFeature.linkedRfeKey || null,
+            priority: fullFeature.priority || arEntry.priority || 'Undefined',
+            status: fullFeature.status || arEntry.status || null,
+            size: fullFeature.aiReview.size || null,
+            recommendation: fullFeature.aiReview.recommendation || null,
+            needsAttention: fullFeature.aiReview.needsAttention || false,
+            humanReviewStatus: fullFeature.aiReview.humanReviewStatus || null,
+            scores: fullFeature.aiReview.scores || {},
+            reviewers: fullFeature.aiReview.reviewers || {},
+            reviewedAt: fullFeature.aiReview.reviewedAt || null,
+            components: fullFeature.components || (fullFeature.aiReview.components || []),
+            approvedBy: fullFeature.aiReview.approvedBy || null,
+            approvedAt: fullFeature.aiReview.approvedAt || null,
+            riceScore: fullFeature.riceScore || null,
+            labels: fullFeature.labels || []
+          },
+          history: fullFeature.aiReview.history || []
+        }
+      }
+    }
+  }
+  var raw = {
+    features: aiReviewFeatures,
+    lastSyncedAt: execIndexData.fetchedAt || null
   }
 
   var processedKeys = new Set()
@@ -279,7 +312,7 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
   var allFixVersions = new Set()
   var allTeams = new Set()
 
-  // First pass: strat-creator features (from ai-impact/features.json)
+  // First pass: strat-creator features (from unified releases execution store)
   var keys = Object.keys(raw.features)
   for (var i = 0; i < keys.length; i++) {
     var key = keys[i]
@@ -391,7 +424,7 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
     collectFilterMeta(feature, allComponents, allPriorities, allBigRocks, allTargetVersions, allFixVersions, allTeams)
   }
 
-  // Second pass: features in health/candidates caches but not in ai-impact (health-pipeline-only)
+  // Second pass: features in health/candidates caches but not in strat-creator data (health-pipeline-only)
   var cacheKeys = Array.from(healthIndex.keys())
   for (var ci3 = 0; ci3 < cacheKeys.length; ci3++) {
     var ckey = cacheKeys[ci3]
@@ -491,9 +524,8 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
   }
 
   // Third pass: Jira features as primary source, execution index as fallback
-  var execIndex = loadIndex(readFromStorage)
+  // Reuse execIndexData loaded at the top (for AI review data)
   var execMap = new Map()
-  var execFeatures = execIndex.features || []
   for (var emi = 0; emi < execFeatures.length; emi++) {
     if (execFeatures[emi].key) execMap.set(execFeatures[emi].key, execFeatures[emi])
   }

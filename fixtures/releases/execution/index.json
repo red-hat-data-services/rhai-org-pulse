@@ -7188,7 +7188,14 @@
       "architect": null,
       "parentKey": null,
       "colorStatus": "Yellow",
-      "ownerStatusColor": "Yellow"
+      "ownerStatusColor": "Yellow",
+      "aiReview": {
+        "recommendation": "approve",
+        "scores": { "feasibility": 2, "testability": 1, "scope": 2, "architecture": 2, "total": 7 },
+        "humanReviewStatus": "approved",
+        "needsAttention": false,
+        "reviewedAt": "2026-04-19T01:30:35Z"
+      }
     },
     {
       "key": "TEST1-1169",
@@ -7238,7 +7245,14 @@
       "architect": null,
       "parentKey": null,
       "colorStatus": null,
-      "ownerStatusColor": null
+      "ownerStatusColor": null,
+      "aiReview": {
+        "recommendation": "approve",
+        "scores": { "feasibility": 2, "testability": 2, "scope": 1, "architecture": 2, "total": 7 },
+        "humanReviewStatus": "awaiting-review",
+        "needsAttention": false,
+        "reviewedAt": "2026-04-19T01:30:35Z"
+      }
     },
     {
       "key": "TEST1-1173",
@@ -7287,7 +7301,14 @@
       "architect": null,
       "parentKey": null,
       "colorStatus": "Yellow",
-      "ownerStatusColor": "Yellow"
+      "ownerStatusColor": "Yellow",
+      "aiReview": {
+        "recommendation": "reject",
+        "scores": { "feasibility": 0, "testability": 1, "scope": 0, "architecture": 1, "total": 2 },
+        "humanReviewStatus": "needs-review",
+        "needsAttention": true,
+        "reviewedAt": "2026-04-19T01:30:35Z"
+      }
     },
     {
       "key": "TEST1-1176",

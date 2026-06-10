@@ -27,9 +27,12 @@ These are non-negotiable. Every PR should be checked against them.
 
 ### 1. No cross-module imports
 
-Modules import only from `@shared`. Cross-module data access goes through
-`readFromStorage()` for files listed in another module's `module.json > export.files`,
-or through API calls at `/api/modules/<slug>/`. Never import directly from
+Modules import only from `@shared`. Cross-module data **reads** go through
+`readFromStorage()` for files listed in another module's `module.json > export.files`.
+Cross-module **writes** go through localhost HTTP calls to the owning module's
+API endpoint (internal API pattern), ensuring the owning module's write
+coordination (mutexes, index rebuilding) is respected. The dependency must be
+declared in `module.json` via `"requires"`. Never import directly from
 another module's directory. See `shared/API.md` for the stability contract.
 
 ### 2. Use storage abstractions for all data

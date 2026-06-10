@@ -97,6 +97,12 @@ For example, the `health-metrics` module reads `team-data/registry.json` and `te
 - Treat exported data as read-only; do not write to another module's data files
 - If the exporting module changes its data format, coordinate via a shared PR
 
+### Cross-Module Writes via Internal API
+
+When one module needs to **write** data owned by another module, it uses a localhost HTTP call to the owning module's API endpoint. This ensures the owning module's write coordination (mutexes, index rebuilding) is respected.
+
+Example: AI Impact pushes review scores to the releases execution store via `POST /api/modules/releases/execution/ai-review/bulk`. The dependency is declared explicitly in `module.json` (`"requires": ["releases"]`). Internal API calls use `eslint-disable-next-line org-pulse/no-cross-module-imports` with a justification comment.
+
 ## Versioning
 
 This project does not use semver for shared code. Instead:

@@ -1,6 +1,5 @@
-const DIMENSIONS = ['feasibility', 'testability', 'scope', 'architecture'];
-const PRIORITIES = ['Blocker', 'Critical', 'Major', 'Minor', 'Normal', 'Undefined'];
-const RECOMMENDATIONS = ['approve', 'revise', 'reject'];
+const SIGN_OFF_LABEL = 'strat-creator-human-sign-off';
+const NEEDS_ATTENTION_LABEL = 'strat-creator-needs-attention';
 
 /**
  * Derive humanReviewStatus from strat-creator pipeline labels.
@@ -8,10 +7,15 @@ const RECOMMENDATIONS = ['approve', 'revise', 'reject'];
  * @returns {'approved' | 'needs-review' | 'awaiting-review'}
  */
 function deriveHumanReviewStatus(labels) {
-  if (labels.includes('strat-creator-human-sign-off')) return 'approved';
-  if (labels.includes('strat-creator-needs-attention')) return 'needs-review';
+  if (!labels || !Array.isArray(labels)) return 'awaiting-review';
+  if (labels.includes(SIGN_OFF_LABEL)) return 'approved';
+  if (labels.includes(NEEDS_ATTENTION_LABEL)) return 'needs-review';
   return 'awaiting-review';
 }
+
+const DIMENSIONS = ['feasibility', 'testability', 'scope', 'architecture'];
+const PRIORITIES = ['Blocker', 'Critical', 'Major', 'Minor', 'Normal', 'Undefined'];
+const RECOMMENDATIONS = ['approve', 'revise', 'reject'];
 
 /**
  * Validate and normalize a feature request body.

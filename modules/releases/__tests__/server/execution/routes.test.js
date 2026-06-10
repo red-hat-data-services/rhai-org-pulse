@@ -13,18 +13,26 @@ function makeStorage(data = {}) {
     },
     writeToStorage(key, value) {
       store[key] = value
+    },
+    listStorageFiles(prefix) {
+      return Object.keys(store)
+        .filter(k => k.startsWith(prefix + '/'))
+        .map(k => k.slice(prefix.length + 1))
     }
   }
 }
 
 function makeRouter() {
-  const routes = { get: {}, post: {} }
+  const routes = { get: {}, post: {}, delete: {} }
   return {
     get: vi.fn(function (path, ...handlers) {
       routes.get[path] = handlers
     }),
     post: vi.fn(function (path, ...handlers) {
       routes.post[path] = handlers
+    }),
+    delete: vi.fn(function (path, ...handlers) {
+      routes.delete[path] = handlers
     }),
     _routes: routes
   }
