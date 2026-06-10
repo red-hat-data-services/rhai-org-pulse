@@ -3,8 +3,18 @@ import { reactive, computed } from 'vue'
 
 const props = defineProps({
   groups: { type: Array, default: () => [] },
-  componentLeads: { type: Object, default: () => ({}) }
+  componentLeads: { type: Object, default: () => ({}) },
+  velocity: { type: Object, default: null }
 })
+
+function getComponentVelocity(componentName) {
+  if (!props.velocity || !props.velocity.components) return null
+  var comps = props.velocity.components
+  for (var i = 0; i < comps.length; i++) {
+    if (comps[i].component === componentName) return comps[i]
+  }
+  return null
+}
 
 const JIRA_BASE = 'https://redhat.atlassian.net/browse'
 
@@ -225,6 +235,11 @@ defineExpose({ expandAll, collapseAll })
                     ? 'bg-red-100 dark:bg-red-800/40 text-red-700 dark:text-red-300'
                     : 'bg-gray-100 dark:bg-gray-700/60 text-gray-400 dark:text-gray-500'"
                 >{{ comp.blockedCount }} blocked</span>
+                <span
+                  v-if="getComponentVelocity(comp.component)"
+                  class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300"
+                  :title="getComponentVelocity(comp.component).isPartialYear ? 'Less than a year of data' : ''"
+                >{{ getComponentVelocity(comp.component).avgPerRelease }} avg/rel<span v-if="getComponentVelocity(comp.component).isPartialYear" class="ml-0.5 text-gray-400 dark:text-gray-500">*</span></span>
               </div>
               <div v-if="getLeads(comp.component)" class="flex items-center gap-5 mt-2 ml-[38px]">
                 <div v-if="getLeads(comp.component).pmLead" class="flex items-center gap-1.5">

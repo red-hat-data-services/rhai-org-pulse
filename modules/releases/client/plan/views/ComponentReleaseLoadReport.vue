@@ -331,6 +331,7 @@
       ref="tableRef"
       :groups="clientFilteredGroups"
       :componentLeads="componentLeads"
+      :velocity="velocity"
     />
 
     <!-- Pillar config panel -->
