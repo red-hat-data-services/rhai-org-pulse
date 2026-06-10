@@ -45,10 +45,10 @@ const scorecard = computed(() => data.value?.scorecard || [])
 const metadata = computed(() => data.value?.metadata || null)
 
 const zeroComponents = computed(() =>
-  backlogHalfLife.value.filter(c => c.months_to_clear === Infinity)
+  backlogHalfLife.value.filter(c => c.months_to_clear === Infinity || c.months_to_clear === 'Infinity' || c.months_to_clear === null)
 )
 const activeComponents = computed(() =>
-  backlogHalfLife.value.filter(c => c.months_to_clear !== Infinity)
+  backlogHalfLife.value.filter(c => c.months_to_clear !== Infinity && c.months_to_clear !== 'Infinity' && c.months_to_clear !== null)
 )
 
 /** Top 5 components by combined demand (feature net + RFE pending) */
@@ -60,13 +60,13 @@ const hotSpots = computed(() => {
 })
 
 function formatRatio(val) {
-  if (val === Infinity || val === 'Infinity') return 'INF'
+  if (val === Infinity || val === 'Infinity' || val === null) return 'INF'
   if (typeof val === 'number') return val.toFixed(2)
   return val
 }
 
 function formatMonths(val) {
-  if (val === Infinity || val === 'Infinity') return 'Never'
+  if (val === Infinity || val === 'Infinity' || val === null) return 'Never'
   if (typeof val === 'number') return val.toFixed(1) + ' mo'
   return val
 }

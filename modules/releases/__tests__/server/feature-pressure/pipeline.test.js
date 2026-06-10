@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 
 const {
+  normalizeIssue,
   normalizeFeature,
   normalizeRfe,
   toMonth,
@@ -16,6 +17,7 @@ const {
   computeScorecard,
   jqlUrl,
   quoteComponent,
+  sanitizeInfinity,
   STATUS_DONE,
   RFE_ACCEPTED,
   RFE_PENDING
@@ -809,5 +811,87 @@ describe('status constants', function () {
     expect(RFE_PENDING).toContain('Stakeholder review')
     expect(RFE_PENDING).toContain('Stakeholder Feedback')
     expect(RFE_PENDING).toContain('Pending Approval')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// normalizeIssue (shared normaliser)
+// ---------------------------------------------------------------------------
+
+describe('normalizeIssue', function () {
+  it('normalizeFeature and normalizeRfe are aliases for normalizeIssue', function () {
+    expect(normalizeFeature).toBe(normalizeIssue)
+    expect(normalizeRfe).toBe(normalizeIssue)
+  })
+
+  it('returns the same result regardless of which alias is used', function () {
+    var issue = makeIssue({ key: 'TEST-1' })
+    expect(normalizeFeature(issue)).toEqual(normalizeRfe(issue))
+  })
+})
+
+// ---------------------------------------------------------------------------
+// sanitizeInfinity
+// ---------------------------------------------------------------------------
+
+describe('sanitizeInfinity', function () {
+  it('replaces Infinity with "Infinity" string in flat objects', function () {
+    var obj = { a: 1, b: Infinity, c: 'hello' }
+    sanitizeInfinity(obj)
+    expect(obj.b).toBe('Infinity')
+    expect(obj.a).toBe(1)
+    expect(obj.c).toBe('hello')
+  })
+
+  it('replaces Infinity in nested objects', function () {
+    var obj = { nested: { val: Infinity } }
+    sanitizeInfinity(obj)
+    expect(obj.nested.val).toBe('Infinity')
+  })
+
+  it('replaces Infinity in arrays', function () {
+    var obj = { arr: [1, Infinity, 3] }
+    sanitizeInfinity(obj)
+    expect(obj.arr).toEqual([1, 'Infinity', 3])
+  })
+
+  it('survives JSON round-trip after sanitisation', function () {
+    var obj = { months_to_clear: Infinity }
+    sanitizeInfinity(obj)
+    var json = JSON.stringify(obj)
+    var parsed = JSON.parse(json)
+    expect(parsed.months_to_clear).toBe('Infinity')
+  })
+
+  it('handles null and non-object inputs gracefully', function () {
+    expect(sanitizeInfinity(null)).toBeNull()
+    expect(sanitizeInfinity(42)).toBe(42)
+    expect(sanitizeInfinity('hello')).toBe('hello')
+  })
+
+  it('handles computeBacklogHalfLife output with stalled components', function () {
+    var pressure = [{ component: 'Stuck', created: 5, resolved: 0, open: 10, net: 5, pressure_ratio: Infinity, open_jql: 'https://test' }]
+    var result = computeBacklogHalfLife(pressure, 12)
+    expect(result[0].months_to_clear).toBe(Infinity)
+
+    sanitizeInfinity(result)
+    expect(result[0].months_to_clear).toBe('Infinity')
+    expect(JSON.parse(JSON.stringify(result))[0].months_to_clear).toBe('Infinity')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// quoteComponent escaping
+// ---------------------------------------------------------------------------
+
+describe('quoteComponent edge cases', function () {
+  it('escapes backslashes before double quotes', function () {
+    var result = quoteComponent('test\\name')
+    expect(result).toBe('"test\\\\name"')
+  })
+
+  it('escapes both backslashes and quotes', function () {
+    var result = quoteComponent('test\\"name')
+    expect(result).toBe('"test\\\\\\"name"')
   })
 })

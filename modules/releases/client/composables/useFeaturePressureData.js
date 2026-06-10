@@ -1,11 +1,11 @@
-import { ref } from 'vue'
+import { ref, shallowRef } from 'vue'
 import { apiRequest } from '@shared/client'
 
 const MAX_POLL_RETRIES = 24 // 24 x 5s = 2 minutes max
 
 /** Feature pressure data fetching, refresh, and polling. */
 export function useFeaturePressureData() {
-  const data = ref(null)
+  const data = shallowRef(null)
   const loading = ref(true)
   const error = ref(null)
   const refreshing = ref(false)

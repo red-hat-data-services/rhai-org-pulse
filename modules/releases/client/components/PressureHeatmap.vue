@@ -5,14 +5,15 @@ const props = defineProps({
   heatmap: { type: Object, required: true },
 })
 
+/** Max absolute value across the entire matrix — precomputed once per data change. */
+const maxAbsValue = computed(() =>
+  Math.max(...(props.heatmap.matrix || []).flat().map(v => Math.abs(v)), 1)
+)
+
 /** Map a net-flow value to a CSS background colour (green = burning, red = growing). */
 function cellColor(val) {
   if (val === 0) return ''
-  const maxAbs = Math.max(
-    ...props.heatmap.matrix.flat().map(v => Math.abs(v)),
-    1
-  )
-  const norm = Math.min(Math.abs(val) / maxAbs, 1)
+  const norm = Math.min(Math.abs(val) / maxAbsValue.value, 1)
   const alpha = Math.round(norm * 60 + 10) // 10–70% opacity
   if (val > 0) return `rgba(239, 68, 68, ${alpha / 100})`   // red — growing
   return `rgba(34, 197, 94, ${alpha / 100})`                 // green — burning down

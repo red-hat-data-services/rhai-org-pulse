@@ -16,6 +16,9 @@ const JIRA_SEARCH = JIRA_HOST + '/issues/?jql='
 const CACHE_KEY = 'releases/feature-pressure.json'
 const CACHE_MAX_AGE_MS = 60 * 60 * 1000 // 1 hour
 const REFRESH_COOLDOWN_MS = 5 * 60 * 1000 // 5 minutes
+const FETCH_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes — abort if Jira fetch hangs
+const HEATMAP_MIN_ACTIVITY = 3 // minimum total created+resolved to appear in heatmap
+const HEATMAP_MAX_COMPONENTS = 25 // cap for readability
 
 const FEATURE_PROJECT = 'RHAISTRAT'
 const RFE_PROJECT = 'RHAIRFE'
@@ -40,16 +43,42 @@ function jqlUrl(jql) {
   return JIRA_SEARCH + encodeURIComponent(jql)
 }
 
-/** Quote a component name for JQL */
+/** Quote a component name for JQL (escape backslashes first, then quotes) */
 function quoteComponent(name) {
-  return '"' + name.replace(/"/g, '\\"') + '"'
+  return '"' + name.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"'
+}
+
+// ---------------------------------------------------------------------------
+// JSON serialisation helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Replace Infinity values with the string "Infinity" so JSON.stringify
+ * doesn't silently turn them into null.  Mutates in place.
+ */
+function sanitizeInfinity(obj) {
+  if (obj === null || typeof obj !== 'object') return obj
+  if (Array.isArray(obj)) {
+    for (var i = 0; i < obj.length; i++) {
+      if (obj[i] === Infinity) obj[i] = 'Infinity'
+      else if (typeof obj[i] === 'object' && obj[i] !== null) sanitizeInfinity(obj[i])
+    }
+  } else {
+    var keys = Object.keys(obj)
+    for (var k = 0; k < keys.length; k++) {
+      if (obj[keys[k]] === Infinity) obj[keys[k]] = 'Infinity'
+      else if (typeof obj[keys[k]] === 'object' && obj[keys[k]] !== null) sanitizeInfinity(obj[keys[k]])
+    }
+  }
+  return obj
 }
 
 // ---------------------------------------------------------------------------
 // Issue normalisation
 // ---------------------------------------------------------------------------
 
-function normalizeFeature(issue) {
+/** Shared normaliser for both Features and RFEs (identical field shape). */
+function normalizeIssue(issue) {
   var fields = issue.fields || {}
 
   var components = []
@@ -73,29 +102,9 @@ function normalizeFeature(issue) {
   }
 }
 
-function normalizeRfe(issue) {
-  var fields = issue.fields || {}
-
-  var components = []
-  if (Array.isArray(fields.components)) {
-    components = fields.components.map(function (c) { return c.name || '' }).filter(Boolean)
-  }
-
-  var status = ''
-  if (fields.status) {
-    status = fields.status.name || ''
-  }
-
-  return {
-    key: issue.key,
-    url: JIRA_BROWSE + '/' + issue.key,
-    summary: String(fields.summary || '').slice(0, 120),
-    status: status,
-    components: components,
-    created: fields.created || null,
-    resolved: fields.resolutiondate || null
-  }
-}
+// Backward-compatible aliases
+var normalizeFeature = normalizeIssue
+var normalizeRfe = normalizeIssue
 
 // ---------------------------------------------------------------------------
 // Date helpers
@@ -414,7 +423,7 @@ function buildHeatmapMatrix(features, lookbackMonths) {
       var rvals = Object.values(compMonthResolved[comp])
       for (var rv = 0; rv < rvals.length; rv++) total += rvals[rv]
     }
-    return total >= 3
+    return total >= HEATMAP_MIN_ACTIVITY
   })
 
   // Sort by total net (worst first)
@@ -429,8 +438,8 @@ function buildHeatmapMatrix(features, lookbackMonths) {
     return netB - netA
   })
 
-  // Limit to top 25 for readability
-  compNames = compNames.slice(0, 25)
+  // Limit to top N for readability
+  compNames = compNames.slice(0, HEATMAP_MAX_COMPONENTS)
 
   // Build matrix
   var matrix = []
@@ -524,7 +533,9 @@ function computeTrend(features, lookbackMonths) {
 
 /**
  * Combined scorecard — composite risk score per component.
- * Merges feature pressure, RFE demand, backlog half-life, and trend.
+ * Score is computed from three signals: net feature inflow, open backlog size,
+ * and pending RFE demand.  Backlog half-life and trend are included as display
+ * columns but do not affect the score calculation.
  *
  * Risk score = (net/5, cap 10) x 0.4 + (open/10, cap 10) x 0.3 + (rfePending/5, cap 10) x 0.3
  * Risk levels: low (<2.5), medium (2.5-5), high (5-7.5), critical (>7.5)
@@ -591,16 +602,23 @@ function computeScorecard(componentPressure, rfePipeline, backlogHalfLife, trend
 async function fetchAndAnalyze(lookbackMonths, storage) {
   var fetchTimestamp = new Date().toISOString()
 
-  // Fetch features and RFEs in parallel
+  // Fetch features and RFEs in parallel with timeout guard
   var featureJql = 'project = ' + FEATURE_PROJECT + ' AND issuetype = Feature'
   var rfeJql = 'project = ' + RFE_PROJECT + ' AND issuetype = "Feature Request"'
 
   console.log('[releases/feature-pressure] Fetching features: ' + featureJql)
   console.log('[releases/feature-pressure] Fetching RFEs: ' + rfeJql)
 
-  var results = await Promise.all([
-    fetchAllJqlResults(jiraRequest, featureJql, FEATURE_FIELDS),
-    fetchAllJqlResults(jiraRequest, rfeJql, RFE_FIELDS)
+  var timeout = new Promise(function (_, reject) {
+    setTimeout(function () { reject(new Error('Jira fetch timed out after ' + (FETCH_TIMEOUT_MS / 1000) + 's')) }, FETCH_TIMEOUT_MS)
+  })
+
+  var results = await Promise.race([
+    Promise.all([
+      fetchAllJqlResults(jiraRequest, featureJql, FEATURE_FIELDS),
+      fetchAllJqlResults(jiraRequest, rfeJql, RFE_FIELDS)
+    ]),
+    timeout
   ])
 
   var rawFeatures = results[0]
@@ -678,6 +696,9 @@ async function fetchAndAnalyze(lookbackMonths, storage) {
     trend: trend,
     scorecard: scorecard
   }
+
+  // Sanitise Infinity before caching — JSON.stringify(Infinity) produces null
+  sanitizeInfinity(result)
 
   // Cache
   storage.writeToStorage(CACHE_KEY, result)
@@ -848,6 +869,7 @@ function registerRoutes(router, context) {
 // ---------------------------------------------------------------------------
 
 module.exports = registerRoutes
+module.exports.normalizeIssue = normalizeIssue
 module.exports.normalizeFeature = normalizeFeature
 module.exports.normalizeRfe = normalizeRfe
 module.exports.toMonth = toMonth
@@ -867,3 +889,4 @@ module.exports.STATUS_DONE = STATUS_DONE
 module.exports.RFE_ACCEPTED = RFE_ACCEPTED
 module.exports.RFE_PENDING = RFE_PENDING
 module.exports.CACHE_KEY = CACHE_KEY
+module.exports.sanitizeInfinity = sanitizeInfinity
