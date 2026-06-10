@@ -313,7 +313,6 @@ const autofixPipelineLabels = [
   { name: 'jira-autofix-merged', color: 'green', desc: 'MR/PR has been merged' },
   { name: 'jira-autofix-rejected', color: 'red', desc: 'MR/PR closed without merge' },
   { name: 'jira-autofix-max-retries', color: 'amber', desc: 'Bot hit its iteration limit, needs human takeover' },
-  { name: 'jira-autofix-researched', color: 'purple', desc: 'Research findings posted (spike tickets), no MR created' },
   { name: 'jira-autofix-blocked', color: 'amber', desc: 'Bot needs more information (e.g. missing repo URL)' },
   { name: 'no-autofix', color: 'gray', desc: 'Permanently excludes this ticket from triage and autofix' },
 ]
@@ -1664,13 +1663,6 @@ function labelColorClasses(color) {
               </div>
               <div class="w-px h-8 bg-gray-200 dark:bg-gray-600"></div>
               <div class="text-sm text-gray-700 dark:text-gray-300">Implement the feature as described</div>
-            </div>
-            <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-              <div class="w-20 text-right flex-shrink-0">
-                <span class="text-sm font-bold text-gray-900 dark:text-white">Spike</span>
-              </div>
-              <div class="w-px h-8 bg-gray-200 dark:bg-gray-600"></div>
-              <div class="text-sm text-gray-700 dark:text-gray-300">Research only: post findings as a Jira comment, no MR/PR</div>
             </div>
           </div>
         </div>
