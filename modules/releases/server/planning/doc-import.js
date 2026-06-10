@@ -101,6 +101,12 @@ function executeDocImport(readFromStorage, writeToStorage, version, docIdOrUrl, 
     throw Object.assign(new Error('Release ' + version + ' not found'), { statusCode: 404 })
   }
 
+  // Load pillar options from PM Hub config for validation
+  var pillarConfig = readFromStorage('releases/pm-hub/pillar-config.json')
+  var pillarOptions = (pillarConfig && Array.isArray(pillarConfig.pillars))
+    ? pillarConfig.pillars.map(function(p) { return p.name }).filter(Boolean)
+    : []
+
   const releaseData = loadReleaseData(readFromStorage, version)
   const bigRocks = mode === 'replace' ? [] : (releaseData.bigRocks || []).slice()
   const existingNames = new Set(bigRocks.map(function(r) { return r.name }))
@@ -120,7 +126,8 @@ function executeDocImport(readFromStorage, writeToStorage, version, docIdOrUrl, 
     }
 
     const validation = validateBigRock(rock, {
-      existingNames: Array.from(existingNames)
+      existingNames: Array.from(existingNames),
+      pillarOptions: pillarOptions
     })
     if (!validation.valid) {
       validationErrors.push({ name: rock.name, errors: validation.errors })

@@ -94,6 +94,53 @@ describe('validateBigRock', () => {
     expect(result.errors.name).toContain('already exists')
   })
 
+  // Comma rejection
+  it('rejects name containing a comma', () => {
+    const result = validateBigRock(makeValidRock({ name: 'Inference, Training' }))
+    expect(result.valid).toBe(false)
+    expect(result.errors.name).toContain('commas')
+  })
+
+  it('accepts name without commas', () => {
+    const result = validateBigRock(makeValidRock({ name: 'Inference' }))
+    expect(result.valid).toBe(true)
+  })
+
+  // Pillar options validation
+  it('rejects pillar not in allowed options', () => {
+    const result = validateBigRock(makeValidRock({ pillar: 'Unknown' }), {
+      pillarOptions: ['Inference', 'Platform']
+    })
+    expect(result.valid).toBe(false)
+    expect(result.errors.pillar).toContain('must be one of')
+  })
+
+  it('accepts pillar in allowed options', () => {
+    const result = validateBigRock(makeValidRock({ pillar: 'Inference' }), {
+      pillarOptions: ['Inference', 'Platform']
+    })
+    expect(result.valid).toBe(true)
+  })
+
+  it('accepts empty pillar when options are configured (pillar is optional)', () => {
+    const result = validateBigRock(makeValidRock({ pillar: '' }), {
+      pillarOptions: ['Inference', 'Platform']
+    })
+    expect(result.valid).toBe(true)
+  })
+
+  it('accepts any pillar when no options configured', () => {
+    const result = validateBigRock(makeValidRock({ pillar: 'Anything' }))
+    expect(result.valid).toBe(true)
+  })
+
+  it('accepts any pillar when pillarOptions is empty array', () => {
+    const result = validateBigRock(makeValidRock({ pillar: 'Anything' }), {
+      pillarOptions: []
+    })
+    expect(result.valid).toBe(true)
+  })
+
   // String field max lengths
   it('rejects fullName exceeding max length', () => {
     const result = validateBigRock(makeValidRock({ fullName: 'x'.repeat(201) }))

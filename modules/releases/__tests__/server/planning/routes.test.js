@@ -168,6 +168,7 @@ describe('release-planning routes', function() {
         'GET /refresh/status',
         'GET /config',
         'GET /permissions',
+        'GET /pillar-options',
         'PUT /releases/:version/big-rocks/reorder',
         'PUT /releases/:version/big-rocks/:name',
         'POST /releases/:version/big-rocks',
@@ -661,6 +662,140 @@ describe('release-planning routes', function() {
     it('includes blockDuringImpersonation middleware on POST import/doc', function() {
       const handlers = router._routes['POST /releases/:version/import/doc']
       expect(handlers.length).toBeGreaterThanOrEqual(4)
+    })
+  })
+
+  // ─── GET /pillar-options ───
+
+  describe('GET /pillar-options', function() {
+    it('returns pillar names from PM Hub config', function() {
+      storage._store['releases/pm-hub/pillar-config.json'] = {
+        pillars: [
+          { name: 'Inference', components: [] },
+          { name: 'Platform', components: [] }
+        ]
+      }
+      const req = makeReq()
+      const res = callRoute(router._routes, 'GET', '/pillar-options', req)
+      expect(res._json.options).toEqual(['Inference', 'Platform'])
+    })
+
+    it('returns empty array when no PM Hub config exists', function() {
+      const req = makeReq()
+      const res = callRoute(router._routes, 'GET', '/pillar-options', req)
+      expect(res._json.options).toEqual([])
+    })
+
+    it('filters out empty pillar names', function() {
+      storage._store['releases/pm-hub/pillar-config.json'] = {
+        pillars: [
+          { name: 'Inference', components: [] },
+          { name: '', components: [] },
+          { name: 'Platform', components: [] }
+        ]
+      }
+      const req = makeReq()
+      const res = callRoute(router._routes, 'GET', '/pillar-options', req)
+      expect(res._json.options).toEqual(['Inference', 'Platform'])
+    })
+  })
+
+  // ─── Comma rejection in create/update ───
+
+  describe('comma rejection', function() {
+    it('rejects creating a big rock with comma in name', async function() {
+      const req = makeReq({
+        params: { version: '3.5' },
+        body: Object.assign({}, VALID_ROCK, { name: 'Inference, Training' })
+      })
+      const res = await callRoute(router._routes, 'POST', '/releases/:version/big-rocks', req)
+      expect(res._status).toBe(400)
+      expect(res._json.fields.name).toContain('commas')
+    })
+
+    it('rejects renaming a big rock to a name with comma', async function() {
+      setupVersion(storage._store, '3.5', [VALID_ROCK])
+      const req = makeReq({
+        params: { version: '3.5', name: 'Test Rock' },
+        body: Object.assign({}, VALID_ROCK, { name: 'Test, Rock' })
+      })
+      const res = await callRoute(router._routes, 'PUT', '/releases/:version/big-rocks/:name', req)
+      expect(res._status).toBe(400)
+      expect(res._json.fields.name).toContain('commas')
+    })
+  })
+
+  // ─── Pillar validation in create/update ───
+
+  describe('pillar validation against PM Hub config', function() {
+    it('rejects invalid pillar when PM Hub config exists', async function() {
+      storage._store['releases/pm-hub/pillar-config.json'] = {
+        pillars: [
+          { name: 'Inference', components: [] },
+          { name: 'Platform', components: [] }
+        ]
+      }
+      const req = makeReq({
+        params: { version: '3.5' },
+        body: Object.assign({}, VALID_ROCK, { name: 'New Rock', pillar: 'NotAPillar' })
+      })
+      const res = await callRoute(router._routes, 'POST', '/releases/:version/big-rocks', req)
+      expect(res._status).toBe(400)
+      expect(res._json.fields.pillar).toContain('must be one of')
+    })
+
+    it('accepts valid pillar when PM Hub config exists', async function() {
+      storage._store['releases/pm-hub/pillar-config.json'] = {
+        pillars: [
+          { name: 'Inference', components: [] },
+          { name: 'Platform', components: [] }
+        ]
+      }
+      const req = makeReq({
+        params: { version: '3.5' },
+        body: Object.assign({}, VALID_ROCK, { name: 'New Rock', pillar: 'Inference' })
+      })
+      const res = await callRoute(router._routes, 'POST', '/releases/:version/big-rocks', req)
+      expect(res._status).toBe(201)
+    })
+
+    it('accepts any pillar when no PM Hub config exists', async function() {
+      const req = makeReq({
+        params: { version: '3.5' },
+        body: Object.assign({}, VALID_ROCK, { name: 'New Rock', pillar: 'Anything' })
+      })
+      const res = await callRoute(router._routes, 'POST', '/releases/:version/big-rocks', req)
+      expect(res._status).toBe(201)
+    })
+  })
+
+  // ─── Rename audit log ───
+
+  describe('rename audit log', function() {
+    it('logs rename in audit summary when name changes', async function() {
+      setupVersion(storage._store, '3.5', [VALID_ROCK])
+      const req = makeReq({
+        params: { version: '3.5', name: 'Test Rock' },
+        body: Object.assign({}, VALID_ROCK, { name: 'New Name' })
+      })
+      await callRoute(router._routes, 'PUT', '/releases/:version/big-rocks/:name', req)
+      const log = storage._store['releases/audit-log.json']
+      expect(log.entries[0].summary).toContain('Renamed Big Rock')
+      expect(log.entries[0].summary).toContain('Test Rock')
+      expect(log.entries[0].summary).toContain('New Name')
+      expect(log.entries[0].details.newName).toBe('New Name')
+    })
+
+    it('uses standard summary when name does not change', async function() {
+      setupVersion(storage._store, '3.5', [VALID_ROCK])
+      const req = makeReq({
+        params: { version: '3.5', name: 'Test Rock' },
+        body: Object.assign({}, VALID_ROCK, { notes: 'Updated' })
+      })
+      await callRoute(router._routes, 'PUT', '/releases/:version/big-rocks/:name', req)
+      const log = storage._store['releases/audit-log.json']
+      expect(log.entries[0].summary).toBe('Updated Big Rock "Test Rock"')
+      expect(log.entries[0].details.newName).toBeUndefined()
     })
   })
 

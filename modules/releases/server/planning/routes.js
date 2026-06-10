@@ -523,6 +523,34 @@ module.exports = function registerPlanningRoutes(router, context) {
     })
   })
 
+  // ─── Pillar Options Helper ───
+
+  function loadPillarOptions() {
+    var pillarConfig = readFromStorage('releases/pm-hub/pillar-config.json')
+    if (pillarConfig && Array.isArray(pillarConfig.pillars)) {
+      return pillarConfig.pillars.map(function(p) { return p.name }).filter(Boolean)
+    }
+    return []
+  }
+
+  /**
+   * @openapi
+   * /api/modules/releases/planning/pillar-options:
+   *   get:
+   *     tags: [releases-planning]
+   *     summary: Get allowed pillar values for Big Rock editing
+   *     description: >
+   *       Derives pillar names from the PM Hub pillar configuration.
+   *       Returns an empty array if no pillar config exists.
+   *     security: [{ bearerAuth: [] }]
+   *     responses:
+   *       200:
+   *         description: Array of pillar name strings
+   */
+  router.get('/pillar-options', requireAuth, requireScope('releases:read'), function(req, res) {
+    res.json({ options: loadPillarOptions() })
+  })
+
   /**
    * @openapi
    * /api/modules/releases/planning/releases/{version}/big-rocks/reorder:
@@ -626,9 +654,11 @@ module.exports = function registerPlanningRoutes(router, context) {
           existingRockSnapshot = JSON.parse(JSON.stringify(existingRockSnapshot))
         }
 
+        var pillarOpts = loadPillarOptions()
         const validation = validateBigRock(req.body, {
           existingNames: existingNames,
-          originalName: name
+          originalName: name,
+          pillarOptions: pillarOpts
         })
         if (!validation.valid) {
           throw Object.assign(new Error('Validation failed'), { statusCode: 400, fields: validation.errors })
@@ -637,12 +667,15 @@ module.exports = function registerPlanningRoutes(router, context) {
         return saveBigRock(readFromStorage, writeToStorage, version, name, req.body)
       })
 
+      var isRename = req.body.name && req.body.name.trim() !== name
       logAudit(readFromStorage, writeToStorage, {
         version: version,
         action: 'update_rock',
         user: req.auditActor || req.userEmail,
-        summary: 'Updated Big Rock "' + name + '"',
-        details: { rockName: name, changes: computeFieldDiff(existingRockSnapshot, req.body) }
+        summary: isRename
+          ? 'Renamed Big Rock "' + name + '" to "' + req.body.name.trim() + '"'
+          : 'Updated Big Rock "' + name + '"',
+        details: { rockName: name, newName: isRename ? req.body.name.trim() : undefined, changes: computeFieldDiff(existingRockSnapshot, req.body) }
       })
       invalidateCache(version)
       res.json(result)
@@ -685,8 +718,10 @@ module.exports = function registerPlanningRoutes(router, context) {
         const existingRocks = loadBigRocks(readFromStorage, version)
         const existingNames = existingRocks.map(function(r) { return r.name })
 
+        var pillarOpts = loadPillarOptions()
         const validation = validateBigRock(req.body, {
-          existingNames: existingNames
+          existingNames: existingNames,
+          pillarOptions: pillarOpts
         })
         if (!validation.valid) {
           throw Object.assign(new Error('Validation failed'), { statusCode: 400, fields: validation.errors })

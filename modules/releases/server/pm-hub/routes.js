@@ -7,6 +7,7 @@
  */
 
 const { CUSTOM_FIELDS, transformIssue } = require('../hygiene/jira-fetch')
+const { blockDuringImpersonation } = require('../../../../shared/server/auth')
 
 const PM_HUB_PROJECTS = ['RHAIENG', 'RHOAIENG', 'INFERENG', 'AIPCC', 'RHAISTRAT', 'RHAIRFE']
 const PILLAR_CONFIG_FILE = 'releases/pm-hub/pillar-config.json'
@@ -330,7 +331,7 @@ module.exports = function registerPmHubRoutes(router, context) {
    *       400:
    *         description: Invalid config shape
    */
-  router.put('/pillar-config', context.requireAuth, context.requireScope('releases:write'), function(req, res) {
+  router.put('/pillar-config', context.requireAuth, blockDuringImpersonation, context.requireScope('releases:write'), function(req, res) {
     var err = validatePillarConfig(req.body)
     if (err) {
       return res.status(400).json({ error: err })

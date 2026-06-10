@@ -16,6 +16,7 @@ import NewReleaseDialog from '../components/NewReleaseDialog.vue'
 import FilterBar from '../components/FilterBar.vue'
 import ReleaseSelector from '../components/ReleaseSelector.vue'
 import RecentActivity from '../components/RecentActivity.vue'
+import Toast from '@shared/client/components/Toast.vue'
 
 const {
   candidates, loading, error, refreshing, cacheStale, permissions,
@@ -31,7 +32,8 @@ const { healthData, healthLoading, loadHealth } = useReleaseHealth()
 const {
   formData, editingRock, isNewRock,
   openForEdit, openForNew, close: closeEditPanel,
-  setSaving, setSaveError, setFieldErrors
+  setSaving, setSaveError, setFieldErrors,
+  loadPillarOptions
 } = useBigRockEditor()
 
 const selectedVersion = ref('')
@@ -47,6 +49,11 @@ const newReleaseDialogOpen = ref(false)
 
 // Seed state
 const seeding = ref(false)
+
+// Toast state
+const toastMessage = ref('')
+const toastType = ref('success')
+const showToast = ref(false)
 
 // Refresh polling -- composable handles watch + cleanup
 useRefreshPolling(refreshing, checkRefreshStatus, function() {
@@ -159,6 +166,14 @@ async function handleSave() {
     if (result.bigRocks) {
       updateBigRocksInPlace(result.bigRocks)
     }
+
+    // Show toast for rename
+    if (!isNewRock.value && editingRock.value && formData.value.name !== editingRock.value.name) {
+      toastMessage.value = 'Rock renamed. Health data is refreshing and will appear shortly.'
+      toastType.value = 'success'
+      showToast.value = true
+    }
+
     closeEditPanel()
   } catch (err) {
     if (err.status === 400 && err.data && err.data.fields) {
@@ -285,6 +300,7 @@ useClickOutside(null, function() {
 
 onMounted(async function() {
   loadPermissions()
+  loadPillarOptions()
   await loadReleases()
   if (releases.value.length > 0) {
     selectedVersion.value = releases.value[0].version
@@ -542,5 +558,12 @@ onMounted(async function() {
       @close="newReleaseDialogOpen = false"
     />
 
+    <!-- Toast notification -->
+    <Toast
+      v-if="showToast"
+      :message="toastMessage"
+      :type="toastType"
+      @close="showToast = false"
+    />
   </div>
 </template>

@@ -42,6 +42,8 @@ function validateBigRock(data, options) {
       errors.name = `Name must be ${FIELD_LIMITS.name} characters or fewer`
     } else if (RESERVED_NAMES.includes(name.toLowerCase())) {
       errors.name = `"${name}" is a reserved name and cannot be used`
+    } else if (name.includes(',')) {
+      errors.name = 'Name cannot contain commas (commas are used as delimiters in the pipeline)'
     } else {
       // Check uniqueness (case-sensitive), excluding the original name when editing
       const isDuplicate = existingNames.some(function(n) {
@@ -82,6 +84,12 @@ function validateBigRock(data, options) {
     if (!Number.isInteger(data.priority) || data.priority < 1) {
       errors.priority = 'Priority must be a positive integer'
     }
+  }
+
+  // Pillar: if pillarOptions provided, validate against allowed values
+  var pillarOptions = options.pillarOptions || []
+  if (pillarOptions.length > 0 && data.pillar && !pillarOptions.includes(data.pillar)) {
+    errors.pillar = 'Pillar must be one of: ' + pillarOptions.join(', ')
   }
 
   return {

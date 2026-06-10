@@ -134,6 +134,29 @@ describe('saveBigRock', () => {
       expect(result.bigRocks[0].name).toBe('NewName')
     })
 
+    it('renames a rock while other rocks are unaffected', () => {
+      const { readFromStorage, writeToStorage } = createStorage(
+        { '3.5': { release: '3.5' } },
+        { '3.5': makeReleaseFile([
+          { priority: 1, name: 'A', fullName: '', pillar: 'Inference', state: '', owner: '', outcomeKeys: [], notes: '', description: '' },
+          { priority: 2, name: 'B', fullName: '', pillar: 'Platform', state: '', owner: '', outcomeKeys: [], notes: '', description: '' },
+          { priority: 3, name: 'C', fullName: '', pillar: 'Data', state: '', owner: '', outcomeKeys: [], notes: '', description: '' }
+        ]) }
+      )
+
+      const result = saveBigRock(readFromStorage, writeToStorage, '3.5', 'A', {
+        name: 'RenamedA'
+      })
+
+      expect(result.bigRock.name).toBe('RenamedA')
+      expect(result.bigRocks.map(function(r) { return r.name })).toEqual(['RenamedA', 'B', 'C'])
+      // Other rocks unaffected
+      expect(result.bigRocks[1].pillar).toBe('Platform')
+      expect(result.bigRocks[2].pillar).toBe('Data')
+      // Old name should not exist
+      expect(result.bigRocks.some(function(r) { return r.name === 'A' })).toBe(false)
+    })
+
     it('throws when the original name is not found', () => {
       const { readFromStorage, writeToStorage } = createStorage(
         { '3.5': { release: '3.5' } },
