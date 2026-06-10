@@ -88,7 +88,7 @@ const FIXTURE_DATA = {
     ]
   },
   backlog_half_life: [
-    { component: 'Stuck', open: 10, open_jql: 'https://test/hl-1', resolved_per_month: 0, months_to_clear: Infinity },
+    { component: 'Stuck', open: 10, open_jql: 'https://test/hl-1', resolved_per_month: 0, months_to_clear: 'Infinity' },
     { component: 'AI Core Dashboard', open: 163, open_jql: 'https://test/hl-2', resolved_per_month: 10.25, months_to_clear: 15.9 }
   ],
   heatmap: {

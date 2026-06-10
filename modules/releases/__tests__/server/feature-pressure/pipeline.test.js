@@ -28,37 +28,40 @@ const {
 // ---------------------------------------------------------------------------
 
 function makeIssue(overrides) {
+  var fields = Object.assign({
+    summary: 'Test feature',
+    status: { name: 'In Progress', statusCategory: { name: 'In Progress' } },
+    components: [{ name: 'Dashboard' }],
+    created: '2026-03-15T10:00:00.000Z',
+    resolutiondate: null
+  }, (overrides && overrides.fields) || {})
   return Object.assign({
     key: 'RHAISTRAT-100',
-    fields: Object.assign({
-      summary: 'Test feature',
-      status: { name: 'In Progress' },
-      components: [{ name: 'Dashboard' }],
-      created: '2026-03-15T10:00:00.000Z',
-      resolutiondate: null
-    }, (overrides && overrides.fields) || {})
+    fields: fields
   }, overrides ? { key: overrides.key || 'RHAISTRAT-100' } : {})
 }
 
 function makeRfeIssue(overrides) {
+  var fields = Object.assign({
+    summary: 'Test RFE',
+    status: { name: 'New', statusCategory: { name: 'To Do' } },
+    components: [{ name: 'Serving' }],
+    created: '2026-03-10T10:00:00.000Z',
+    resolutiondate: null
+  }, (overrides && overrides.fields) || {})
   return Object.assign({
     key: 'RHAIRFE-200',
-    fields: Object.assign({
-      summary: 'Test RFE',
-      status: { name: 'New' },
-      components: [{ name: 'Serving' }],
-      created: '2026-03-10T10:00:00.000Z',
-      resolutiondate: null
-    }, (overrides && overrides.fields) || {})
+    fields: fields
   }, overrides ? { key: overrides.key || 'RHAIRFE-200' } : {})
 }
 
-function makeFeature(key, comp, created, resolved, status) {
+function makeFeature(key, comp, created, resolved, status, statusCategory) {
   return {
     key: key,
     url: 'https://redhat.atlassian.net/browse/' + key,
     summary: 'Feature ' + key,
     status: status || 'In Progress',
+    statusCategory: statusCategory || 'In Progress',
     components: Array.isArray(comp) ? comp : [comp],
     created: created,
     resolved: resolved || null
@@ -71,6 +74,7 @@ function makeRfe(key, comp, status, created) {
     url: 'https://redhat.atlassian.net/browse/' + key,
     summary: 'RFE ' + key,
     status: status,
+    statusCategory: 'To Do',
     components: Array.isArray(comp) ? comp : [comp],
     created: created || '2026-03-01T00:00:00.000Z',
     resolved: null
@@ -264,7 +268,7 @@ describe('classifyByMonth', function () {
     var now = new Date()
     var thisMonth = now.getFullYear() + '-' + (now.getMonth() + 1 < 10 ? '0' : '') + (now.getMonth() + 1)
     var features = [
-      makeFeature('F-1', 'A', '2020-01-01T00:00:00.000Z', now.toISOString(), 'Closed')
+      makeFeature('F-1', 'A', '2020-01-01T00:00:00.000Z', now.toISOString(), 'Closed', 'Done')
     ]
     var result = classifyByMonth(features, 3)
     var thisRow = result.months.find(function (m) { return m.month === thisMonth })
@@ -277,7 +281,7 @@ describe('classifyByMonth', function () {
     var features = [
       makeFeature('F-1', 'A', now.toISOString(), null),
       makeFeature('F-2', 'A', now.toISOString(), null),
-      makeFeature('F-3', 'A', '2020-01-01T00:00:00.000Z', now.toISOString(), 'Closed')
+      makeFeature('F-3', 'A', '2020-01-01T00:00:00.000Z', now.toISOString(), 'Closed', 'Done')
     ]
     var result = classifyByMonth(features, 3)
     var thisRow = result.months.find(function (m) { return m.month === thisMonth })
@@ -330,7 +334,7 @@ describe('computeComponentPressure', function () {
     var now = new Date()
     var features = [
       makeFeature('F-1', 'Dashboard', now.toISOString(), null),
-      makeFeature('F-2', 'Dashboard', now.toISOString(), now.toISOString(), 'Closed'),
+      makeFeature('F-2', 'Dashboard', now.toISOString(), now.toISOString(), 'Closed', 'Done'),
       makeFeature('F-3', 'Serving', now.toISOString(), null)
     ]
     var result = computeComponentPressure(features, 12)
@@ -358,7 +362,7 @@ describe('computeComponentPressure', function () {
     var features = [
       makeFeature('F-1', 'X', now.toISOString(), null),
       makeFeature('F-2', 'X', now.toISOString(), null),
-      makeFeature('F-3', 'X', '2020-01-01T00:00:00.000Z', now.toISOString(), 'Closed')
+      makeFeature('F-3', 'X', '2020-01-01T00:00:00.000Z', now.toISOString(), 'Closed', 'Done')
     ]
     var result = computeComponentPressure(features, 12)
     var x = result.find(function (r) { return r.component === 'X' })
@@ -398,7 +402,7 @@ describe('computeComponentPressure', function () {
   it('sorts by net descending', function () {
     var now = new Date()
     var features = [
-      makeFeature('F-1', 'Low', now.toISOString(), now.toISOString(), 'Closed'),
+      makeFeature('F-1', 'Low', now.toISOString(), now.toISOString(), 'Closed', 'Done'),
       makeFeature('F-2', 'High', now.toISOString(), null),
       makeFeature('F-3', 'High', now.toISOString(), null)
     ]
@@ -579,7 +583,7 @@ describe('buildHeatmapMatrix', function () {
     var features = [
       makeFeature('F-1', 'A', now.toISOString(), null),
       makeFeature('F-2', 'A', now.toISOString(), null),
-      makeFeature('F-3', 'A', now.toISOString(), now.toISOString(), 'Closed')
+      makeFeature('F-3', 'A', now.toISOString(), now.toISOString(), 'Closed', 'Done')
     ]
     var result = buildHeatmapMatrix(features, 3)
     var monthIdx = result.months.indexOf(thisMonth)
@@ -641,7 +645,7 @@ describe('computeTrend', function () {
 
     var features = [
       // First half: 1 created, 1 resolved (net 0)
-      makeFeature('F-1', 'A', sixMonthsAgo.toISOString(), sixMonthsAgo.toISOString(), 'Closed'),
+      makeFeature('F-1', 'A', sixMonthsAgo.toISOString(), sixMonthsAgo.toISOString(), 'Closed', 'Done'),
       // Second half: 3 created, 0 resolved (net 3)
       makeFeature('F-2', 'A', now.toISOString(), null),
       makeFeature('F-3', 'A', now.toISOString(), null),
@@ -664,7 +668,7 @@ describe('computeTrend', function () {
       makeFeature('F-2', 'B', nineMonthsAgo.toISOString(), null),
       makeFeature('F-3', 'B', nineMonthsAgo.toISOString(), null),
       // Second half: 0 created, 1 resolved (net -1)
-      makeFeature('F-4', 'B', '2020-01-01T00:00:00.000Z', now.toISOString(), 'Closed')
+      makeFeature('F-4', 'B', '2020-01-01T00:00:00.000Z', now.toISOString(), 'Closed', 'Done')
     ]
     var result = computeTrend(features, 12)
     var b = result.find(function (r) { return r.component === 'B' })
@@ -690,7 +694,7 @@ describe('computeTrend', function () {
   it('sorts by delta descending (worst first)', function () {
     var now = new Date()
     var features = [
-      makeFeature('F-1', 'Better', '2020-01-01T00:00:00.000Z', now.toISOString(), 'Closed'),
+      makeFeature('F-1', 'Better', '2020-01-01T00:00:00.000Z', now.toISOString(), 'Closed', 'Done'),
       makeFeature('F-2', 'Worse', now.toISOString(), null),
       makeFeature('F-3', 'Worse', now.toISOString(), null)
     ]

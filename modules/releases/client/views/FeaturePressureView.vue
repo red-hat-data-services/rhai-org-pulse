@@ -211,9 +211,9 @@ onBeforeUnmount(() => { cleanup() })
         <div class="mt-2 flex flex-wrap gap-4 text-xs text-gray-500 dark:text-gray-400">
           <span>Burn rate: <strong class="text-gray-700 dark:text-gray-300">{{ summary.monthly_burn_rate }}/mo</strong></span>
           <span>Time to clear: <strong :class="{
-            'text-green-600 dark:text-green-400': summary.months_to_clear < 6,
-            'text-yellow-600 dark:text-yellow-400': summary.months_to_clear >= 6 && summary.months_to_clear < 12,
-            'text-red-600 dark:text-red-400': summary.months_to_clear >= 12,
+            'text-green-600 dark:text-green-400': typeof summary.months_to_clear === 'number' && summary.months_to_clear < 6,
+            'text-yellow-600 dark:text-yellow-400': typeof summary.months_to_clear === 'number' && summary.months_to_clear >= 6 && summary.months_to_clear < 12,
+            'text-red-600 dark:text-red-400': summary.months_to_clear === 'Infinity' || summary.months_to_clear === null || (typeof summary.months_to_clear === 'number' && summary.months_to_clear >= 12),
           }">{{ formatMonths(summary.months_to_clear) }}</strong></span>
           <span>Backlog: <strong :class="{
             'text-red-600 dark:text-red-400': summary.backlog_trend === 'growing',
@@ -338,7 +338,7 @@ onBeforeUnmount(() => { cleanup() })
                   <tr
                     v-for="comp in filteredComponents"
                     :key="comp.component"
-                    class="border-b dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
+                    class="border-b dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                   >
                     <td class="px-3 py-2 font-medium text-gray-800 dark:text-gray-200 whitespace-nowrap">{{ comp.component }}</td>
                     <td class="px-3 py-2"><ClickableCount :count="comp.created" :jql="comp.created_jql" /></td>

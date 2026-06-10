@@ -92,8 +92,10 @@ function normalizeIssue(issue) {
   }
 
   var status = ''
+  var statusCategory = ''
   if (fields.status) {
     status = fields.status.name || ''
+    statusCategory = (fields.status.statusCategory && fields.status.statusCategory.name) || ''
   }
 
   return {
@@ -101,6 +103,7 @@ function normalizeIssue(issue) {
     url: JIRA_BROWSE + '/' + issue.key,
     summary: String(fields.summary || '').slice(0, 120),
     status: status,
+    statusCategory: statusCategory,
     components: components,
     created: fields.created || null,
     resolved: fields.resolutiondate || null
@@ -230,7 +233,7 @@ function computeComponentPressure(features, lookbackMonths) {
       if (feat.resolved && feat.resolved >= cutoff) {
         compMap[comp].resolved++
       }
-      if (STATUS_DONE.indexOf(feat.status) === -1) {
+      if (feat.statusCategory !== 'Done') {
         compMap[comp].open++
       }
     }
@@ -657,7 +660,7 @@ async function fetchAndAnalyze(lookbackMonths, storage) {
   var pendingStatusJql = 'status in (New, Draft, "Stakeholder review", "Stakeholder Feedback", "Pending Approval")'
   var acceptedStatusJql = 'status in (Approved, "In Progress", Refinement, Planning, Review, Resolved)'
 
-  var totalOpen = features.filter(function (f) { return STATUS_DONE.indexOf(f.status) === -1 }).length
+  var totalOpen = features.filter(function (f) { return f.statusCategory !== 'Done' }).length
   var totalCreated = features.filter(function (f) { return f.created && f.created >= cutoff }).length
   var totalResolved = features.filter(function (f) { return f.resolved && f.resolved >= cutoff }).length
   var burnRate = Math.round(100 * totalResolved / lookbackMonths) / 100

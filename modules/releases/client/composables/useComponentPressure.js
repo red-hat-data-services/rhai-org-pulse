@@ -32,9 +32,9 @@ export function useComponentPressure(data, searchQuery, sortField, sortAsc) {
           : String(vb).localeCompare(String(va))
       }
 
-      // Handle Infinity
-      if (va === Infinity) va = Number.MAX_SAFE_INTEGER
-      if (vb === Infinity) vb = Number.MAX_SAFE_INTEGER
+      // Handle Infinity (native or string from JSON round-trip)
+      if (va === Infinity || va === 'Infinity') va = Number.MAX_SAFE_INTEGER
+      if (vb === Infinity || vb === 'Infinity') vb = Number.MAX_SAFE_INTEGER
 
       return asc ? va - vb : vb - va
     })

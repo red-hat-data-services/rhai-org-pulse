@@ -115,6 +115,22 @@ describe('useComponentPressure', function () {
     expect(result.filteredComponents.value).toHaveLength(0)
   })
 
+  it('sorts string "Infinity" values correctly (from JSON round-trip)', function () {
+    var data = makeData([
+      { component: 'Finite', pressure_ratio: 2.5 },
+      { component: 'Infinite', pressure_ratio: 'Infinity' },
+      { component: 'Zero', pressure_ratio: 0 }
+    ])
+    var search = ref('')
+    var sortField = ref('pressure_ratio')
+    var sortAsc = ref(false)
+    var result = useComponentPressure(data, search, sortField, sortAsc)
+    // "Infinity" string should sort as largest value
+    expect(result.filteredComponents.value[0].component).toBe('Infinite')
+    expect(result.filteredComponents.value[1].component).toBe('Finite')
+    expect(result.filteredComponents.value[2].component).toBe('Zero')
+  })
+
   it('is reactive to search changes', function () {
     var data = makeData()
     var search = ref('')
