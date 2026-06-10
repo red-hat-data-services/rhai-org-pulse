@@ -37,7 +37,7 @@
     "googleapis": "^173.0.0",
     "https-proxy-agent": "^9.1.0",
     "ldapjs": "^3.0.7",
-    "lucide-vue-next": "^0.577.0",
+    "lucide-vue-next": "^1.0.0",
     "marked": "^18.0.5",
     "node-fetch": "^2.7.0",
     "swagger-jsdoc": "^6.3.0",
