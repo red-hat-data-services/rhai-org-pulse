@@ -163,7 +163,7 @@ const confidenceTooltip = computed(() => {
 
     <!-- Team -->
     <td class="px-3 py-2.5 whitespace-nowrap max-w-[10rem]">
-      <span class="text-xs text-gray-700 dark:text-gray-300 block truncate" :title="feature.team || ''">{{ feature.team || '—' }}</span>
+      <span class="text-xs text-gray-700 dark:text-gray-300 block truncate" :title="feature.team || undefined">{{ feature.team || '—' }}</span>
     </td>
 
     <!-- Rubric (compact dots) -->
