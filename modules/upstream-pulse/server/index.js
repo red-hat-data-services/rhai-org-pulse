@@ -513,6 +513,9 @@ module.exports = function registerRoutes(router, context) {
    */
   router.get('/github-access', requireScope('upstream-pulse:read'), async function(req, res) {
     try {
+      if (DEMO_MODE) {
+        return res.json({ write: 12, triage: 8, total: 45 });
+      }
       const data = await fetchPytorchAccess();
       if (!data) {
         return res.status(503).json({ error: 'GitLab token not configured' });
@@ -520,7 +523,7 @@ module.exports = function registerRoutes(router, context) {
       res.json(data);
     } catch (err) {
       console.error('[upstream-pulse] PyTorch access fetch failed:', err.message);
-      res.status(502).json({ error: 'Failed to fetch access data', message: err.message });
+      res.status(502).json({ error: 'Failed to fetch access data' });
     }
   });
 
