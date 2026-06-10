@@ -258,9 +258,10 @@ test.describe('Feature Pressure - Executive Summary @feature-pressure', () => {
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
     // Check for key values in the split Features / RFEs summary
+    const summarySection = page.locator('section').first();
     await expect(page.locator('text=Features (RHAISTRAT)')).toBeVisible();
     await expect(page.locator('text=Feature Requests (RHAIRFE)')).toBeVisible();
-    await expect(page.locator('text=Open')).toBeVisible();
+    await expect(summarySection.locator('text=Open').first()).toBeVisible();
     await expect(page.locator('text=Burn rate:')).toBeVisible();
     await expect(page.locator('text=Time to clear:')).toBeVisible();
     expect(relevantErrors(page)).toHaveLength(0);
@@ -285,7 +286,7 @@ test.describe('Feature Pressure - Executive Summary @feature-pressure', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    await expect(page.locator('text=growing')).toBeVisible();
+    await expect(page.locator('text=growing').first()).toBeVisible();
     expect(relevantErrors(page)).toHaveLength(0);
   });
 });
@@ -306,9 +307,10 @@ test.describe('Feature Pressure - Component Table @feature-pressure', () => {
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
     await expect(page.locator('text=Pressure by Component')).toBeVisible();
-    // Table should have rows for fixture components
-    await expect(page.locator('text=AI Core Dashboard')).toBeVisible();
-    await expect(page.locator('text=Documentation')).toBeVisible();
+    // Table should have rows for fixture components — scope to the component table section
+    const pressureSection = page.locator('details:has(summary:has-text("Feature Pressure by Component"))');
+    await expect(pressureSection.locator('text=AI Core Dashboard')).toBeVisible();
+    await expect(pressureSection.locator('text=Documentation')).toBeVisible();
     expect(relevantErrors(page)).toHaveLength(0);
   });
 
@@ -330,13 +332,14 @@ test.describe('Feature Pressure - Component Table @feature-pressure', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    const searchInput = page.locator('input[placeholder*="Filter"]');
+    const pressureSection = page.locator('details:has(summary:has-text("Feature Pressure by Component"))');
+    const searchInput = pressureSection.locator('input[placeholder*="Filter"]');
     await searchInput.fill('UXD');
     await page.waitForTimeout(500);
 
-    await expect(page.locator('td:has-text("UXD")')).toBeVisible();
-    // Other components should be filtered out
-    await expect(page.locator('td:has-text("AI Core Dashboard")')).not.toBeVisible();
+    await expect(pressureSection.locator('td:has-text("UXD")')).toBeVisible();
+    // Other components should be filtered out from the pressure table
+    await expect(pressureSection.locator('td:has-text("AI Core Dashboard")')).not.toBeVisible();
     expect(relevantErrors(page)).toHaveLength(0);
   });
 });
