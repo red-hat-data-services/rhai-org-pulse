@@ -642,6 +642,9 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
       if (execFeature && execFeature.epicCount) {
         features[fi].epicCount = execFeature.epicCount
       }
+      if (execFeature && typeof execFeature.completionPct === 'number') {
+        features[fi].completionPct = execFeature.completionPct
+      }
     }
   }
 

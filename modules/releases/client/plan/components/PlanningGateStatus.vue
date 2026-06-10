@@ -83,7 +83,7 @@ function stratBadgeLabel(detail) {
 <template>
   <div class="space-y-3">
     <div class="flex items-center justify-between">
-      <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">Planning Status</span>
+      <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">Status</span>
       <span
         v-if="planningStatus"
         class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold"

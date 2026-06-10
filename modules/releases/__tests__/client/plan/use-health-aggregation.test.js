@@ -258,6 +258,11 @@ describe('useHealthAggregation', function() {
       expect(rf[0].jiraUrl).toBe('https://issues.redhat.com/browse/FEAT-1')
       expect(rf[0].override).toBe(null)
       expect(rf[0].status).toBe('In Progress')
+      expect(rf[0].fixVersions).toBe('')
+      expect(rf[0].targetRelease).toBe('')
+      expect(rf[0].versionStatus).toBe('none')
+      expect(rf[0].completionPct).toBe(0)
+      expect(rf[0].planningChecks).toBe(null)
 
       expect(rf[1].key).toBe('FEAT-2')
       expect(rf[1].level).toBe('red')
@@ -271,6 +276,11 @@ describe('useHealthAggregation', function() {
       expect(rf[1].jiraUrl).toBe('https://issues.redhat.com/browse/FEAT-2')
       expect(rf[1].override).toBe(null)
       expect(rf[1].status).toBe('In Progress')
+      expect(rf[1].fixVersions).toBe('')
+      expect(rf[1].targetRelease).toBe('')
+      expect(rf[1].versionStatus).toBe('none')
+      expect(rf[1].completionPct).toBe(0)
+      expect(rf[1].planningChecks).toBe(null)
     })
 
     it('defaults to green when feature has no health data', function() {
@@ -322,6 +332,11 @@ describe('useHealthAggregation', function() {
       expect(unknown.jiraUrl).toBe('')
       expect(unknown.override).toBe(null)
       expect(unknown.status).toBe('')
+      expect(unknown.fixVersions).toBe('')
+      expect(unknown.targetRelease).toBe('')
+      expect(unknown.versionStatus).toBe('none')
+      expect(unknown.completionPct).toBe(0)
+      expect(unknown.planningChecks).toBe(null)
     })
 
     it('splits merged bigRock names into separate entries', function() {

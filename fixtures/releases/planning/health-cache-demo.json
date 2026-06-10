@@ -131,11 +131,41 @@
       },
       "planningChecks": {
         "checks": [
-          { "id": "DoR-P1", "label": "Components Set", "passed": true, "severity": "hard-blocker", "detail": "Model Serving" },
-          { "id": "DoR-P2", "label": "Product Manager Assigned", "passed": true, "severity": "hard-blocker", "detail": "Sarah Chen" },
-          { "id": "DoR-P3", "label": "Release Type Set", "passed": true, "severity": "hard-blocker", "detail": "GA" },
-          { "id": "DoR-P4", "label": "Child Epics Created", "passed": true, "severity": "hard-blocker", "detail": "4 epic(s)" },
-          { "id": "DoR-P5", "label": "RFE Linked", "passed": true, "severity": "hard-blocker", "detail": "RHAISTRAT-100" }
+          {
+            "id": "DoR-P1",
+            "label": "Components Set",
+            "passed": true,
+            "severity": "hard-blocker",
+            "detail": "Model Serving"
+          },
+          {
+            "id": "DoR-P2",
+            "label": "Product Manager Assigned",
+            "passed": true,
+            "severity": "hard-blocker",
+            "detail": "Sarah Chen"
+          },
+          {
+            "id": "DoR-P3",
+            "label": "Release Type Set",
+            "passed": true,
+            "severity": "hard-blocker",
+            "detail": "GA"
+          },
+          {
+            "id": "DoR-P4",
+            "label": "Child Epics Created",
+            "passed": true,
+            "severity": "hard-blocker",
+            "detail": "4 epic(s)"
+          },
+          {
+            "id": "DoR-P5",
+            "label": "RFE Linked",
+            "passed": true,
+            "severity": "hard-blocker",
+            "detail": "RHAISTRAT-100"
+          }
         ],
         "passedCount": 5,
         "totalCount": 5,
@@ -169,7 +199,9 @@
       },
       "planningStatus": "ready-for-execution",
       "issueType": "Feature",
-      "versionStatus": "committed"
+      "versionStatus": "committed",
+      "fixVersions": "rhoai-3.5",
+      "targetRelease": "rhoai-3.5"
     },
     {
       "key": "RHOAIENG-1002",
@@ -263,7 +295,9 @@
       },
       "planningStatus": "ready-for-execution",
       "issueType": "Feature",
-      "versionStatus": "targeted"
+      "versionStatus": "targeted",
+      "fixVersions": "",
+      "targetRelease": "rhoai-3.5"
     },
     {
       "key": "RHOAIENG-1003",
@@ -366,7 +400,9 @@
       },
       "planningStatus": "ready-for-execution",
       "issueType": "Feature",
-      "versionStatus": "committed"
+      "versionStatus": "committed",
+      "fixVersions": "rhoai-3.5, rhoai-3.5-EA2",
+      "targetRelease": "rhoai-3.5"
     },
     {
       "key": "RHOAIENG-1004",
@@ -466,7 +502,9 @@
       },
       "planningStatus": "ready-for-execution",
       "issueType": "Feature",
-      "versionStatus": "targeted"
+      "versionStatus": "targeted",
+      "fixVersions": "",
+      "targetRelease": "rhoai-3.5"
     },
     {
       "key": "RHOAIENG-1005",
@@ -574,7 +612,9 @@
       },
       "planningStatus": "in-planning",
       "issueType": "Feature",
-      "versionStatus": "committed"
+      "versionStatus": "committed",
+      "fixVersions": "rhoai-3.5",
+      "targetRelease": "rhoai-3.5"
     },
     {
       "key": "RHOAIENG-1006",
@@ -659,18 +699,60 @@
       },
       "planningChecks": {
         "checks": [
-          { "id": "DoR-P1", "label": "Components Set", "passed": true, "severity": "hard-blocker", "detail": "Operator" },
-          { "id": "DoR-P2", "label": "Product Manager Assigned", "passed": true, "severity": "hard-blocker", "detail": "Tom Wilson" },
-          { "id": "DoR-P3", "label": "Release Type Set", "passed": true, "severity": "hard-blocker", "detail": "GA" },
-          { "id": "DoR-P4", "label": "Child Epics Created", "passed": false, "severity": "hard-blocker", "detail": "No child epics linked" },
-          { "id": "DoR-P5", "label": "RFE Linked", "passed": false, "severity": "hard-blocker", "detail": "No source RFE linked" }
+          {
+            "id": "DoR-P1",
+            "label": "Components Set",
+            "passed": true,
+            "severity": "hard-blocker",
+            "detail": "Operator"
+          },
+          {
+            "id": "DoR-P2",
+            "label": "Product Manager Assigned",
+            "passed": true,
+            "severity": "hard-blocker",
+            "detail": "Tom Wilson"
+          },
+          {
+            "id": "DoR-P3",
+            "label": "Release Type Set",
+            "passed": true,
+            "severity": "hard-blocker",
+            "detail": "GA"
+          },
+          {
+            "id": "DoR-P4",
+            "label": "Child Epics Created",
+            "passed": false,
+            "severity": "hard-blocker",
+            "detail": "No child epics linked"
+          },
+          {
+            "id": "DoR-P5",
+            "label": "RFE Linked",
+            "passed": false,
+            "severity": "hard-blocker",
+            "detail": "No source RFE linked"
+          }
         ],
         "passedCount": 3,
         "totalCount": 5,
         "hasHardBlockers": true,
         "hardBlockersFailed": [
-          { "id": "DoR-P4", "label": "Child Epics Created", "passed": false, "severity": "hard-blocker", "detail": "No child epics linked" },
-          { "id": "DoR-P5", "label": "RFE Linked", "passed": false, "severity": "hard-blocker", "detail": "No source RFE linked" }
+          {
+            "id": "DoR-P4",
+            "label": "Child Epics Created",
+            "passed": false,
+            "severity": "hard-blocker",
+            "detail": "No child epics linked"
+          },
+          {
+            "id": "DoR-P5",
+            "label": "RFE Linked",
+            "passed": false,
+            "severity": "hard-blocker",
+            "detail": "No source RFE linked"
+          }
         ]
       },
       "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1006",
@@ -700,7 +782,9 @@
       },
       "planningStatus": "in-planning",
       "issueType": "Feature",
-      "versionStatus": "none"
+      "versionStatus": "none",
+      "fixVersions": "",
+      "targetRelease": ""
     },
     {
       "key": "RHOAIENG-1007",
@@ -786,20 +870,74 @@
       "rice": null,
       "planningChecks": {
         "checks": [
-          { "id": "DoR-P1", "label": "Components Set", "passed": false, "severity": "hard-blocker", "detail": "No components assigned" },
-          { "id": "DoR-P2", "label": "Product Manager Assigned", "passed": false, "severity": "hard-blocker", "detail": null },
-          { "id": "DoR-P3", "label": "Release Type Set", "passed": true, "severity": "hard-blocker", "detail": "TP" },
-          { "id": "DoR-P4", "label": "Child Epics Created", "passed": false, "severity": "hard-blocker", "detail": "No child epics linked" },
-          { "id": "DoR-P5", "label": "RFE Linked", "passed": false, "severity": "hard-blocker", "detail": "No source RFE linked" }
+          {
+            "id": "DoR-P1",
+            "label": "Components Set",
+            "passed": false,
+            "severity": "hard-blocker",
+            "detail": "No components assigned"
+          },
+          {
+            "id": "DoR-P2",
+            "label": "Product Manager Assigned",
+            "passed": false,
+            "severity": "hard-blocker",
+            "detail": null
+          },
+          {
+            "id": "DoR-P3",
+            "label": "Release Type Set",
+            "passed": true,
+            "severity": "hard-blocker",
+            "detail": "TP"
+          },
+          {
+            "id": "DoR-P4",
+            "label": "Child Epics Created",
+            "passed": false,
+            "severity": "hard-blocker",
+            "detail": "No child epics linked"
+          },
+          {
+            "id": "DoR-P5",
+            "label": "RFE Linked",
+            "passed": false,
+            "severity": "hard-blocker",
+            "detail": "No source RFE linked"
+          }
         ],
         "passedCount": 1,
         "totalCount": 5,
         "hasHardBlockers": true,
         "hardBlockersFailed": [
-          { "id": "DoR-P1", "label": "Components Set", "passed": false, "severity": "hard-blocker", "detail": "No components assigned" },
-          { "id": "DoR-P2", "label": "Product Manager Assigned", "passed": false, "severity": "hard-blocker", "detail": null },
-          { "id": "DoR-P4", "label": "Child Epics Created", "passed": false, "severity": "hard-blocker", "detail": "No child epics linked" },
-          { "id": "DoR-P5", "label": "RFE Linked", "passed": false, "severity": "hard-blocker", "detail": "No source RFE linked" }
+          {
+            "id": "DoR-P1",
+            "label": "Components Set",
+            "passed": false,
+            "severity": "hard-blocker",
+            "detail": "No components assigned"
+          },
+          {
+            "id": "DoR-P2",
+            "label": "Product Manager Assigned",
+            "passed": false,
+            "severity": "hard-blocker",
+            "detail": null
+          },
+          {
+            "id": "DoR-P4",
+            "label": "Child Epics Created",
+            "passed": false,
+            "severity": "hard-blocker",
+            "detail": "No child epics linked"
+          },
+          {
+            "id": "DoR-P5",
+            "label": "RFE Linked",
+            "passed": false,
+            "severity": "hard-blocker",
+            "detail": "No source RFE linked"
+          }
         ]
       },
       "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1007",
@@ -829,7 +967,9 @@
       },
       "planningStatus": "in-planning",
       "issueType": "Feature",
-      "versionStatus": "targeted"
+      "versionStatus": "targeted",
+      "fixVersions": "",
+      "targetRelease": "rhoai-3.5"
     },
     {
       "key": "RHOAIENG-1008",
@@ -941,7 +1081,9 @@
       },
       "planningStatus": "ready-for-execution",
       "issueType": "Feature",
-      "versionStatus": "committed"
+      "versionStatus": "committed",
+      "fixVersions": "rhoai-3.5",
+      "targetRelease": "rhoai-3.5"
     },
     {
       "key": "RHAISTRAT-2001",
@@ -1044,7 +1186,9 @@
       },
       "planningStatus": "in-planning",
       "issueType": "Feature",
-      "versionStatus": "committed"
+      "versionStatus": "committed",
+      "fixVersions": "rhoai-3.5-EA1",
+      "targetRelease": "rhoai-3.5"
     },
     {
       "key": "RHAISTRAT-2006",
@@ -1138,7 +1282,9 @@
       },
       "planningStatus": "in-planning",
       "issueType": "Initiative",
-      "versionStatus": "targeted"
+      "versionStatus": "targeted",
+      "fixVersions": "",
+      "targetRelease": "rhoai-3.5"
     },
     {
       "key": "RHAISTRAT-2013",
@@ -1246,7 +1392,9 @@
       },
       "planningStatus": "in-planning",
       "issueType": "Feature",
-      "versionStatus": "none"
+      "versionStatus": "none",
+      "fixVersions": "",
+      "targetRelease": ""
     },
     {
       "key": "RHAISTRAT-2030",
@@ -1346,7 +1494,9 @@
       },
       "planningStatus": "in-planning",
       "issueType": "Feature",
-      "versionStatus": "committed"
+      "versionStatus": "committed",
+      "fixVersions": "rhoai-3.5",
+      "targetRelease": "rhoai-3.5"
     },
     {
       "key": "RHAISTRAT-2016",
@@ -1452,7 +1602,9 @@
       },
       "planningStatus": "in-planning",
       "issueType": "Feature",
-      "versionStatus": "committed"
+      "versionStatus": "committed",
+      "fixVersions": "rhoai-3.5-EA1",
+      "targetRelease": "rhoai-3.5"
     }
   ],
   "enrichmentStatus": {

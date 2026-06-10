@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+import VersionSummaryPopover from './VersionSummaryPopover.vue'
 
 const props = defineProps({
   rock: { type: Object, required: true },
@@ -154,6 +155,17 @@ function handleBadgeKeydown(event) {
       <span class="text-[10px] font-medium text-gray-500 dark:text-gray-400">Eng. Lead</span>
       <span class="text-xs text-gray-700 dark:text-gray-300 ml-1">{{ rock.architect || '-' }}</span>
     </div>
+  </td>
+  <td v-if="hasHealth" class="px-3 py-2 border border-gray-300 dark:border-gray-600">
+    <VersionSummaryPopover
+      v-if="health"
+      :versionedCount="health.versionedCount || 0"
+      :missingVersionCount="health.missingVersionCount || 0"
+      :committedCount="health.committedCount || 0"
+      :targetedCount="health.targetedCount || 0"
+      :distinctVersions="health.distinctVersions || []"
+    />
+    <span v-else class="text-gray-400 dark:text-gray-600 text-xs">-</span>
   </td>
   <td class="px-3 py-2 text-center border border-gray-300 dark:border-gray-600">
     <span class="font-semibold text-gray-700 dark:text-gray-300">{{ rock.featureCount }}</span>

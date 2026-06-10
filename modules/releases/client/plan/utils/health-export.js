@@ -198,7 +198,7 @@ export function exportHealthCsv({ version, phase, features }) {
 
   // Header row
   rows.push([
-    'Feature', 'Summary', 'Status', 'Risk', 'Planning Status', 'Priority Score',
+    'Feature', 'Summary', 'Status', 'Risk', 'Gate Status', 'Priority Score',
     'RICE Score', 'Big Rock', 'Component', 'PM', 'Delivery Owner',
     'Fix Version', 'Target Release', 'Completion %', 'Blockers', 'Risk Flags'
   ])

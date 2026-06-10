@@ -85,7 +85,7 @@ describe('PlanningGateStatus', function() {
     var wrapper = mount(PlanningGateStatus, {
       props: { dor: makeDor(), dod: null, planningStatus: 'in-planning' }
     })
-    expect(wrapper.text()).toContain('Planning Status')
+    expect(wrapper.text()).toContain('Status')
   })
 
   // ─── DoR Blockers ───
@@ -237,7 +237,7 @@ describe('PlanningGateStatus', function() {
     var wrapper = mount(PlanningGateStatus, {
       props: { dor: null, dod: makeDod(), planningStatus: 'in-planning' }
     })
-    expect(wrapper.text()).toContain('Planning Status')
+    expect(wrapper.text()).toContain('Status')
     expect(wrapper.text()).not.toContain('Definition of Ready')
   })
 
