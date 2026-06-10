@@ -24,5 +24,11 @@ export const reports = [
     label: 'TV vs FV Delta',
     description: 'Target Version (PM intent) vs Fix Version (engineering commitment) — alignment, mismatches, and component breakdown.',
     component: defineAsyncComponent(() => import('../views/TvFvDeltaView.vue'))
+  },
+  {
+    id: 'feature-pressure',
+    label: 'Feature Pressure',
+    description: 'Where feature inflow exceeds capacity to burn down — RHAI-wide pressure by component, with RFE pipeline and risk scorecard.',
+    component: defineAsyncComponent(() => import('../views/FeaturePressureView.vue'))
   }
 ]
