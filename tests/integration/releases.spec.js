@@ -267,6 +267,62 @@ test.describe('Releases PM Hub @releases', () => {
 });
 
 /**
+ * Unified Feature Store — AI Review endpoints
+ *
+ * Verify that the releases execution store serves feature data with aiReview
+ * fields populated from demo fixtures.
+ */
+test.describe('Releases Unified Feature Store @releases', () => {
+  test('execution features API returns aiReview data in index', async ({ request }) => {
+    const res = await request.get('/api/modules/releases/execution/features');
+    expect(res.ok()).toBe(true);
+    const body = await res.json();
+    expect(body).toHaveProperty('features');
+    expect(Array.isArray(body.features)).toBe(true);
+
+    // Demo fixtures include features with aiReview summaries
+    const withAiReview = body.features.filter(f => f.aiReview);
+    expect(withAiReview.length).toBeGreaterThan(0);
+
+    // Verify aiReview shape on first match
+    const sample = withAiReview[0].aiReview;
+    expect(sample).toHaveProperty('recommendation');
+    expect(sample).toHaveProperty('scores');
+    expect(sample).toHaveProperty('humanReviewStatus');
+  });
+
+  test('execution feature detail includes full aiReview data', async ({ request }) => {
+    // TEST1-1168 is a fixture feature with aiReview + history
+    const res = await request.get('/api/modules/releases/execution/features/TEST1-1168');
+    expect(res.ok()).toBe(true);
+    const feature = await res.json();
+    expect(feature).toHaveProperty('aiReview');
+    expect(feature.aiReview).toHaveProperty('recommendation');
+    expect(feature.aiReview).toHaveProperty('scores');
+    expect(feature.aiReview).toHaveProperty('humanReviewStatus');
+    expect(feature.aiReview).toHaveProperty('reviewedAt');
+  });
+
+  test('AI Impact features API reads from unified store', async ({ request }) => {
+    const res = await request.get('/api/modules/ai-impact/features');
+    expect(res.ok()).toBe(true);
+    const body = await res.json();
+    expect(body).toHaveProperty('features');
+    expect(body).toHaveProperty('totalFeatures');
+    expect(body.totalFeatures).toBeGreaterThan(0);
+
+    // Verify backward-compatible shape: { [key]: { key, title, recommendation, ... } }
+    const keys = Object.keys(body.features);
+    expect(keys.length).toBeGreaterThan(0);
+    const sample = body.features[keys[0]];
+    expect(sample).toHaveProperty('key');
+    expect(sample).toHaveProperty('recommendation');
+    expect(sample).toHaveProperty('scores');
+    expect(sample).toHaveProperty('humanReviewStatus');
+  });
+});
+
+/**
  * Planning Health Checks
  *
  * Verify planning health UI renders correctly in demo mode.

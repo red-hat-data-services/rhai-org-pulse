@@ -1727,6 +1727,7 @@ const enabledSlugs = new Set(Object.entries(effectiveState).filter(([, v]) => v)
   }
 
   // Rebuild index after migration
+  // rebuildIndex is synchronous (reads feature files + writes index.json) — safe to call without await
   if (migrated > 0) {
     try {
       const { rebuildIndex } = require('../modules/releases/server/execution/feature-store');

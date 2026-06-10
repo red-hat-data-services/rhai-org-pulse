@@ -426,7 +426,7 @@ module.exports = function registerExecutionRoutes(router, context) {
     }
 
     try {
-      const counts = { created: 0, updated: 0, unchanged: 0 };
+      const counts = { created: 0, updated: 0, unchanged: 0, skipped: 0 };
       const toWrite = [];
 
       const KEY_RE = /^[A-Z][A-Z0-9]+-\d+$/;
@@ -434,9 +434,11 @@ module.exports = function registerExecutionRoutes(router, context) {
       for (let i = 0; i < features.length; i++) {
         const entry = features[i];
         if (!entry || !entry.key || !entry.aiReview) {
+          counts.skipped++;
           continue;
         }
         if (!KEY_RE.test(entry.key)) {
+          counts.skipped++;
           continue;
         }
 
