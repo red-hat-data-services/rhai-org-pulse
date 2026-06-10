@@ -12,7 +12,7 @@ deployed on OpenShift via ArgoCD.
 
 ## Architecture
 
-- **Frontend**: Vue 3 SPA (`<script setup>`), Vite 6, Tailwind CSS 3, Chart.js 4
+- **Frontend**: Vue 3 SPA (`<script setup>`), Vite 8, Tailwind CSS 3, Chart.js 4
 - **Backend**: Express (port 3001), single `server/dev-server.js` for dev + prod
 - **Modules**: Built-in modules in `modules/<slug>/` with `module.json` manifests, auto-discovered
 - **Auth**: OpenShift OAuth proxy in prod; no auth locally (uses `ADMIN_EMAILS`)
