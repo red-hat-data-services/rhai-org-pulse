@@ -43,11 +43,11 @@ describe('mergeFeatureData — aiReview handling', function() {
     expect(merged.aiReview.approvedBy).toBe('Alice')
   })
 
-  it('creates aiReview from Jira when no existing aiReview', function() {
+  it('does not create aiReview from Jira when no existing aiReview', function() {
     const existing = { key: 'TEST-1' }
     const jiraData = { key: 'TEST-1', aiReview: { humanReviewStatus: 'awaiting-review' } }
     const merged = mergeFeatureData(existing, null, jiraData)
-    expect(merged.aiReview).toEqual({ humanReviewStatus: 'awaiting-review' })
+    expect(merged.aiReview).toBeUndefined()
   })
 
   it('does not create aiReview when Jira data has no aiReview', function() {

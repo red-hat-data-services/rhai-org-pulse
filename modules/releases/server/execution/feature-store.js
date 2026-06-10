@@ -98,11 +98,14 @@ function mergeFeatureData(existing, pipelineData, jiraData) {
     // else keep existing
   }
 
-  // AI-review-owned fields: preserve across pipeline/Jira merges
-  // aiReview is never overwritten by pipeline or Jira — only by the AI review bulk endpoint
-  if (jiraData && jiraData.aiReview) {
+  // AI-review-owned fields: preserve across pipeline/Jira merges.
+  // Only update aiReview on features that already have it (pushed by the AI review bulk endpoint).
+  // Without the base.aiReview guard, every Jira-enriched feature would get an empty aiReview
+  // (since transformForEnrichment always returns humanReviewStatus), causing all features
+  // to appear in the AI Impact view.
+  if (jiraData && jiraData.aiReview && base.aiReview) {
     merged.aiReview = {
-      ...(base.aiReview || {}),
+      ...base.aiReview,
       ...jiraData.aiReview
     };
   }
