@@ -914,7 +914,9 @@ Derived summary index of all features in the unified feature store. Rebuilt auto
       "architect": "Architect Name",
       "parentKey": "RHAISTRAT-100",
       "colorStatus": "Green",
-      "ownerStatusColor": "Green"
+      "ownerStatusColor": "Green",
+      "team": "Model Serving",
+      "components": ["API", "Dashboard"]
     }
   ]
 }
@@ -924,6 +926,7 @@ Derived summary index of all features in the unified feature store. Rebuilt auto
 - `assignee` is a string in the index (flattened from the detail object shape)
 - `colorStatus` and `ownerStatusColor` are identical (backward compat alias)
 - `pm` is flattened to a string from the detail object shape
+- `team` and `components` are Jira-sourced fields surfaced in the index for filtering
 - Metrics fields (`completionPct`, `epicCount`, etc.) are derived from the detail `metrics` object
 
 ## Releases — Execution Feature Detail (`data/releases/execution/features/{KEY}.json`)
