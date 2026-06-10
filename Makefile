@@ -9,7 +9,7 @@ CORE_FRONTEND_RUNTIME_IMAGE ?= core-frontend-runtime-smoke-local
 CORE_TAG ?= local
 FRONTEND_CONTAINER := frontend-smoke-local
 BACKEND_CONTAINER := backend-smoke-local
-PLAYWRIGHT_IMAGE := mcr.microsoft.com/playwright:v1.60.0
+PLAYWRIGHT_IMAGE := quay.io/browser/playwright-chromium:playwright-1.60.0
 BACKEND_PORT := 3001
 FRONTEND_PORT := 8080
 WORKSPACE := /workspace
@@ -23,13 +23,15 @@ OS := $(shell uname -s)
 # instead of downloading them at runtime (saves time, ensures consistency)
 COMMON_ENV := \
 	-e HOME=/tmp \
-	-e PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
+	-e PLAYWRIGHT_BROWSERS_PATH=/root/.cache/ms-playwright \
 	-e XDG_CACHE_HOME=/tmp/.cache \
 	-e npm_config_cache=/tmp/.npm \
 	-e BASE_URL=http://localhost:$(FRONTEND_PORT)
 
 CONTAINER_FLAGS := --rm -t \
 	--network host \
+	--entrypoint "" \
+	--user 0:0 \
 	-v $(CURDIR):$(WORKSPACE):z \
 	-w $(WORKSPACE)
 

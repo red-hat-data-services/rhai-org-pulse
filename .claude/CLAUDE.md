@@ -173,9 +173,9 @@ Smoke tests verify:
 - Client-side routing functions (hash-based navigation)
 - Basic accessibility (semantic landmarks present)
 
-Playwright runs in a container (`mcr.microsoft.com/playwright:v1.60.0`), so no local browser installation needed. Works on any OS (RHEL/Podman, macOS/Docker, Ubuntu). The Makefile auto-detects the container runtime (prefers Podman on RHEL).
+Playwright runs in a container (`quay.io/browser/playwright-chromium`), so no local browser installation needed. Works on any OS (RHEL/Podman, macOS/Docker, Ubuntu). The Makefile auto-detects the container runtime (prefers Podman on RHEL).
 
-**IMPORTANT:** The Playwright version must match between `package.json` (`@playwright/test`) and `Makefile` (`PLAYWRIGHT_IMAGE`). When updating Playwright, change both files to the same version to prevent browser binary mismatches.
+**IMPORTANT:** The Playwright version must match between `package.json` (`@playwright/test`) and `Makefile` (`PLAYWRIGHT_IMAGE`). When updating Playwright, change both files to the same version to prevent browser binary mismatches. The Quay image uses `playwright-<version>` tags (e.g., `playwright-1.60.0`).
 
 CI workflow (`build-images.yml`):
 1. Builds core images (backend, frontend, frontend-builder, frontend-runtime) with smoke test
