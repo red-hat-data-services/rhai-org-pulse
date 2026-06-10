@@ -47,6 +47,12 @@ function getTabFromParams() {
 
 const activeTab = ref(getTabFromParams())
 
+watch(activeTab, function(tab) {
+  if (moduleNav && moduleNav.updateParams) {
+    moduleNav.updateParams({ tab: tab }, { push: false })
+  }
+})
+
 if (moduleNav && moduleNav.params) {
   watch(moduleNav.params, function() {
     var tab = getTabFromParams()

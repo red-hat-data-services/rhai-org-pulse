@@ -36,7 +36,7 @@
 </template>
 
 <script setup>
-import { ref, defineAsyncComponent } from 'vue'
+import { ref, inject, watch, defineAsyncComponent } from 'vue'
 
 const reports = [
   {
@@ -47,5 +47,29 @@ const reports = [
   }
 ]
 
-const selectedReport = ref(null)
+var moduleNav = inject('moduleNav', null)
+
+function getReportFromParams() {
+  var params = moduleNav && moduleNav.params ? moduleNav.params.value : {}
+  var reportId = params.report
+  if (reportId) return reports.find(function(r) { return r.id === reportId }) || null
+  return null
+}
+
+const selectedReport = ref(getReportFromParams())
+
+watch(selectedReport, function(report) {
+  if (moduleNav && moduleNav.updateParams) {
+    moduleNav.updateParams({ report: report ? report.id : null }, { push: false })
+  }
+})
+
+if (moduleNav && moduleNav.params) {
+  watch(moduleNav.params, function() {
+    var report = getReportFromParams()
+    var currentId = selectedReport.value ? selectedReport.value.id : null
+    var newId = report ? report.id : null
+    if (currentId !== newId) selectedReport.value = report
+  })
+}
 </script>

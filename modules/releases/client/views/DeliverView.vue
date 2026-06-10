@@ -32,7 +32,7 @@
 </template>
 
 <script setup>
-import { ref, computed, provide, defineAsyncComponent } from 'vue'
+import { ref, computed, provide, inject, watch, defineAsyncComponent } from 'vue'
 import { useReleaseAnalysis } from '../deliver/composables/useReleaseAnalysis.js'
 import { useReleaseFilter } from '../deliver/composables/useReleaseFilter.js'
 import ReleaseChipBar from '../deliver/components/ReleaseChipBar.vue'
@@ -56,7 +56,30 @@ const tabs = [
   { id: 'post-release-defects', label: 'Post-Release Defects' },
 ]
 
-const activeTab = ref('risk-dashboard')
+var moduleNav = inject('moduleNav', null)
+var validTabIds = tabs.map(function(t) { return t.id })
+
+function getTabFromParams() {
+  var params = moduleNav && moduleNav.params ? moduleNav.params.value : {}
+  var tab = params.tab
+  if (tab && validTabIds.indexOf(tab) !== -1) return tab
+  return 'risk-dashboard'
+}
+
+const activeTab = ref(getTabFromParams())
+
+watch(activeTab, function(tab) {
+  if (moduleNav && moduleNav.updateParams) {
+    moduleNav.updateParams({ tab: tab }, { push: false })
+  }
+})
+
+if (moduleNav && moduleNav.params) {
+  watch(moduleNav.params, function() {
+    var tab = getTabFromParams()
+    if (tab !== activeTab.value) activeTab.value = tab
+  })
+}
 
 const componentMap = {
   'risk-dashboard': RiskDashboard,
