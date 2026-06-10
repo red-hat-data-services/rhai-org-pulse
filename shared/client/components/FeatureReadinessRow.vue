@@ -30,24 +30,6 @@ function recommendationLabel(rec) {
   }
 }
 
-function reviewStatusClass(status) {
-  switch (status) {
-    case 'approved':        return 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200'
-    case 'needs-review':    return 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200'
-    case 'awaiting-review': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200'
-    default:                return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
-  }
-}
-
-function reviewStatusLabel(status) {
-  switch (status) {
-    case 'approved':        return 'Approved'
-    case 'needs-review':    return 'Flagged'
-    case 'awaiting-review': return 'Awaiting Sign-off'
-    default:                return 'Awaiting Sign-off'
-  }
-}
-
 const priorityDisplay = computed(() => {
   const score = props.feature.effectivePriorityScore
   if (score == null) return '—'
@@ -180,8 +162,8 @@ const confidenceTooltip = computed(() => {
     </td>
 
     <!-- Team -->
-    <td class="px-3 py-2.5 whitespace-nowrap">
-      <span class="text-xs text-gray-700 dark:text-gray-300">{{ feature.team || '—' }}</span>
+    <td class="px-3 py-2.5 whitespace-nowrap max-w-[10rem]">
+      <span class="text-xs text-gray-700 dark:text-gray-300 block truncate" :title="feature.team || ''">{{ feature.team || '—' }}</span>
     </td>
 
     <!-- Rubric (compact dots) -->
@@ -198,20 +180,9 @@ const confidenceTooltip = computed(() => {
       >{{ recommendationLabel(feature.recommendation) }}</span>
     </td>
 
-    <!-- Status -->
+    <!-- Status (Jira workflow status) -->
     <td class="px-3 py-2.5 whitespace-nowrap">
-      <template v-if="isHealthPipeline">
-        <span
-          class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
-          :class="confidenceClass"
-        >{{ confidenceLabel }}</span>
-      </template>
-      <template v-else>
-        <span
-          class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
-          :class="reviewStatusClass(feature.humanReviewStatus)"
-        >{{ reviewStatusLabel(feature.humanReviewStatus) }}</span>
-      </template>
+      <span class="text-xs text-gray-700 dark:text-gray-300">{{ feature.status || '—' }}</span>
     </td>
 
     <!-- Priority -->

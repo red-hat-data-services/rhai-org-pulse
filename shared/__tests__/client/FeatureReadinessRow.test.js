@@ -75,9 +75,9 @@ describe('FeatureReadinessRow', () => {
       expect(wrapper.find('.italic').exists()).toBe(false)
     })
 
-    it('shows humanReviewStatus badge in status column', () => {
-      const wrapper = mountRow(makeFeature({ humanReviewStatus: 'approved' }))
-      expect(wrapper.text()).toContain('Approved')
+    it('shows Jira status in status column', () => {
+      const wrapper = mountRow(makeFeature({ status: 'In Progress' }))
+      expect(wrapper.text()).toContain('In Progress')
     })
 
     it('shows recommendation label', () => {
@@ -85,14 +85,14 @@ describe('FeatureReadinessRow', () => {
       expect(wrapper.text()).toContain('Approve')
     })
 
-    it('shows Awaiting Sign-off for awaiting-review status', () => {
-      const wrapper = mountRow(makeFeature({ humanReviewStatus: 'awaiting-review' }))
-      expect(wrapper.text()).toContain('Awaiting Sign-off')
+    it('shows Refinement status', () => {
+      const wrapper = mountRow(makeFeature({ status: 'Refinement' }))
+      expect(wrapper.text()).toContain('Refinement')
     })
 
-    it('shows Flagged for needs-review status', () => {
-      const wrapper = mountRow(makeFeature({ humanReviewStatus: 'needs-review' }))
-      expect(wrapper.text()).toContain('Flagged')
+    it('shows dash for missing status', () => {
+      const wrapper = mountRow(makeFeature({ status: null }))
+      expect(wrapper.text()).toContain('—')
     })
   })
 
