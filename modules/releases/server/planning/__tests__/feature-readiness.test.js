@@ -1858,3 +1858,360 @@ describe('buildFeatureReadiness — pass 3 (execution index)', function() {
     expect(result.meta.total).toBe(0)
   })
 })
+
+// ---------------------------------------------------------------------------
+// Pass 3: Jira features as primary source
+// ---------------------------------------------------------------------------
+
+describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
+  function makeExecIndex(features) {
+    return { features: features, fetchedAt: '2026-06-09T00:00:00Z', schemaVersion: 'v2', featureCount: features.length }
+  }
+
+  function makeExecFeature(key, overrides) {
+    return Object.assign({
+      key: key,
+      summary: 'Exec Feature ' + key,
+      status: 'In Progress',
+      priority: 'Major',
+      assignee: 'Jane Doe',
+      components: ['UI'],
+      labels: [],
+      targetVersions: ['rhoai-3.6'],
+      fixVersions: [],
+      team: 'Platform'
+    }, overrides)
+  }
+
+  function makeJiraMap(features) {
+    var map = new Map()
+    for (var i = 0; i < features.length; i++) {
+      map.set(features[i].key, features[i])
+    }
+    return map
+  }
+
+  function makeJiraFeature(key, overrides) {
+    return Object.assign({
+      key: key,
+      summary: 'Jira Feature ' + key,
+      status: 'In Progress',
+      issueType: 'Feature',
+      assignee: 'Alice',
+      team: 'Platform',
+      components: ['Dashboard'],
+      labels: [],
+      fixVersions: [],
+      targetVersions: ['rhoai-3.6'],
+      priority: 'Major',
+      riceScore: null
+    }, overrides)
+  }
+
+  it('uses jiraFeatures as pass 3 source when provided', function() {
+    var jiraFeatures = makeJiraMap([
+      makeJiraFeature('RHAISTRAT-900')
+    ])
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/execution/index.json': makeExecIndex([])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+    expect(result.meta.total).toBe(1)
+    expect(result.pendingReview[0].key).toBe('RHAISTRAT-900')
+    expect(result.pendingReview[0].dataSource).toBe('jira')
+    expect(result.pendingReview[0].title).toBe('Jira Feature RHAISTRAT-900')
+  })
+
+  it('falls back to execution index when jiraFeatures is null', function() {
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/execution/index.json': makeExecIndex([
+        makeExecFeature('RHAISTRAT-800')
+      ])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, null)
+    expect(result.meta.total).toBe(1)
+    expect(result.pendingReview[0].key).toBe('RHAISTRAT-800')
+    expect(result.pendingReview[0].dataSource).toBe('execution')
+  })
+
+  it('falls back to execution index when jiraFeatures is empty Map', function() {
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/execution/index.json': makeExecIndex([
+        makeExecFeature('RHAISTRAT-700')
+      ])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, new Map())
+    expect(result.meta.total).toBe(1)
+    expect(result.pendingReview[0].key).toBe('RHAISTRAT-700')
+    expect(result.pendingReview[0].dataSource).toBe('execution')
+  })
+
+  it('does not duplicate features already in strat-creator pass', function() {
+    var store = makeFeaturesStore({
+      'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
+    })
+    var jiraFeatures = makeJiraMap([
+      makeJiraFeature('RHAISTRAT-1')
+    ])
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': store,
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/execution/index.json': makeExecIndex([])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+    var keys = result.pendingReview.concat(result.ready).map(function(f) { return f.key })
+    expect(new Set(keys).size).toBe(keys.length)
+  })
+
+  it('does not duplicate features already in health-pipeline pass', function() {
+    var jiraFeatures = makeJiraMap([
+      makeJiraFeature('RHAISTRAT-50')
+    ])
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/planning/health-cache-3.6-all.json': {
+        features: [{ key: 'RHAISTRAT-50', summary: 'Health Feature', status: 'In Progress', priority: 'Major' }]
+      },
+      'releases/execution/index.json': makeExecIndex([])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+    var keys = result.pendingReview.concat(result.ready).map(function(f) { return f.key })
+    expect(new Set(keys).size).toBe(keys.length)
+    var feature = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-50' })
+    expect(feature.dataSource).toBe('health-pipeline')
+  })
+
+  it('enriches Jira features with execution index data when available', function() {
+    var jiraFeatures = makeJiraMap([
+      makeJiraFeature('RHAISTRAT-600', { riceScore: null })
+    ])
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/execution/index.json': makeExecIndex([
+        makeExecFeature('RHAISTRAT-600', { riceScore: 250, blockerCount: 3 })
+      ])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+    expect(result.meta.total).toBe(1)
+    var feature = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-600' })
+    expect(feature.dataSource).toBe('jira')
+    expect(feature.riceScore).toBe(250)
+    expect(feature.readinessGates.notBlocked).toBe(false)
+  })
+
+  it('Jira feature with sign-off and all gates passing is ready', function() {
+    var jiraFeatures = makeJiraMap([
+      makeJiraFeature('RHAISTRAT-500', {
+        labels: ['strat-creator-human-sign-off'],
+        assignee: 'Alice',
+        status: 'In Progress',
+        targetVersions: ['rhoai-3.6']
+      })
+    ])
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/execution/index.json': makeExecIndex([])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+    expect(result.ready.length).toBe(1)
+    expect(result.ready[0].confidence).toBe('ready')
+    expect(result.ready[0].humanReviewStatus).toBe('approved')
+  })
+
+  it('Jira feature with fix version gets committed confidence', function() {
+    var jiraFeatures = makeJiraMap([
+      makeJiraFeature('RHAISTRAT-400', {
+        labels: ['strat-creator-human-sign-off'],
+        fixVersions: ['rhoai-3.6'],
+        assignee: 'Alice',
+        status: 'In Progress',
+        targetVersions: ['rhoai-3.6']
+      })
+    ])
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/execution/index.json': makeExecIndex([])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+    expect(result.ready[0].confidence).toBe('committed')
+    expect(result.ready[0].fixVersion).toBe('rhoai-3.6')
+  })
+
+  it('skips closed Jira features', function() {
+    var jiraFeatures = makeJiraMap([
+      makeJiraFeature('RHAISTRAT-C1', { status: 'Closed' }),
+      makeJiraFeature('RHAISTRAT-C2', { status: 'Resolved' }),
+      makeJiraFeature('RHAISTRAT-C3', { status: 'In Progress' })
+    ])
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/execution/index.json': makeExecIndex([])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+    expect(result.meta.total).toBe(1)
+    expect(result.pendingReview[0].key).toBe('RHAISTRAT-C3')
+  })
+
+  it('Jira feature in Refinement status is not ready', function() {
+    var jiraFeatures = makeJiraMap([
+      makeJiraFeature('RHAISTRAT-REF', {
+        labels: ['strat-creator-human-sign-off'],
+        status: 'Refinement'
+      })
+    ])
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/execution/index.json': makeExecIndex([])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+    expect(result.pendingReview.length).toBe(1)
+    expect(result.pendingReview[0].readinessGates.pastRefinement).toBe(false)
+  })
+
+  it('populates filter metadata from Jira features', function() {
+    var jiraFeatures = makeJiraMap([
+      makeJiraFeature('RHAISTRAT-META', {
+        components: ['NewJiraComp'],
+        team: 'JiraTeam',
+        priority: 'Critical',
+        targetVersions: ['rhoai-4.0']
+      })
+    ])
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/execution/index.json': makeExecIndex([])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+    expect(result.filterMeta.components).toContain('NewJiraComp')
+    expect(result.filterMeta.teams).toContain('JiraTeam')
+    expect(result.filterMeta.priorities).toContain('Critical')
+    expect(result.filterMeta.targetVersions).toContain('rhoai-4.0')
+  })
+
+  it('prefers Jira riceScore over execution index riceScore', function() {
+    var jiraFeatures = makeJiraMap([
+      makeJiraFeature('RHAISTRAT-RICE', { riceScore: 100 })
+    ])
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/execution/index.json': makeExecIndex([
+        makeExecFeature('RHAISTRAT-RICE', { riceScore: 50 })
+      ])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+    var feature = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-RICE' })
+    expect(feature.riceScore).toBe(100)
+  })
+
+  it('uses execution index riceScore when Jira riceScore is null', function() {
+    var jiraFeatures = makeJiraMap([
+      makeJiraFeature('RHAISTRAT-RICE2', { riceScore: null })
+    ])
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/execution/index.json': makeExecIndex([
+        makeExecFeature('RHAISTRAT-RICE2', { riceScore: 75 })
+      ])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+    var feature = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-RICE2' })
+    expect(feature.riceScore).toBe(75)
+  })
+
+  it('includes Jira features not present in execution index', function() {
+    var jiraFeatures = makeJiraMap([
+      makeJiraFeature('RHAISTRAT-JONLY', { summary: 'Jira only feature' })
+    ])
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/execution/index.json': makeExecIndex([])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+    expect(result.meta.total).toBe(1)
+    expect(result.pendingReview[0].title).toBe('Jira only feature')
+  })
+
+  it('handles multiple Jira features sorted by priority score', function() {
+    var jiraFeatures = makeJiraMap([
+      makeJiraFeature('RHAISTRAT-J1', { priority: 'Minor' }),
+      makeJiraFeature('RHAISTRAT-J2', { priority: 'Blocker' }),
+      makeJiraFeature('RHAISTRAT-J3', { priority: 'Major' })
+    ])
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/execution/index.json': makeExecIndex([])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+    expect(result.pendingReview.length).toBe(3)
+    expect(result.pendingReview[0].key).toBe('RHAISTRAT-J2')
+    expect(result.pendingReview[result.pendingReview.length - 1].key).toBe('RHAISTRAT-J1')
+  })
+
+  it('Jira feature without assignee fails ownerAssigned gate', function() {
+    var jiraFeatures = makeJiraMap([
+      makeJiraFeature('RHAISTRAT-NOOWN', {
+        assignee: null,
+        labels: ['strat-creator-human-sign-off']
+      })
+    ])
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/execution/index.json': makeExecIndex([])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+    expect(result.pendingReview.length).toBe(1)
+    expect(result.pendingReview[0].readinessGates.ownerAssigned).toBe(false)
+  })
+
+  it('Jira feature without target version fails hasTargetVersion gate', function() {
+    var jiraFeatures = makeJiraMap([
+      makeJiraFeature('RHAISTRAT-NOTV', {
+        targetVersions: [],
+        labels: ['strat-creator-human-sign-off']
+      })
+    ])
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/execution/index.json': makeExecIndex([])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+    expect(result.pendingReview.length).toBe(1)
+    expect(result.pendingReview[0].readinessGates.hasTargetVersion).toBe(false)
+  })
+})

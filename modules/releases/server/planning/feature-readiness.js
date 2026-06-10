@@ -151,7 +151,7 @@ function deriveHumanReviewStatusFromLabels(labels) {
   return 'awaiting-review'
 }
 
-function buildFeatureReadiness(readFromStorage) {
+function buildFeatureReadiness(readFromStorage, jiraFeatures) {
   var raw = readFromStorage('ai-impact/features.json')
   if (!raw || !raw.features) {
     raw = { features: {} }
@@ -456,15 +456,27 @@ function buildFeatureReadiness(readFromStorage) {
     collectFilterMeta(hpFeature, allComponents, allPriorities, allBigRocks, allTargetVersions, allFixVersions, allTeams)
   }
 
-  // Third pass: features from execution index not processed in passes 1 or 2
+  // Third pass: Jira features as primary source, execution index as fallback
   var execIndex = loadIndex(readFromStorage)
+  var execMap = new Map()
   var execFeatures = execIndex.features || []
-  for (var ei = 0; ei < execFeatures.length; ei++) {
-    var ef = execFeatures[ei]
+  for (var emi = 0; emi < execFeatures.length; emi++) {
+    if (execFeatures[emi].key) execMap.set(execFeatures[emi].key, execFeatures[emi])
+  }
+
+  var pass3Source = jiraFeatures && jiraFeatures.size > 0
+    ? Array.from(jiraFeatures.values())
+    : execFeatures
+  var pass3DataSource = jiraFeatures && jiraFeatures.size > 0 ? 'jira' : 'execution'
+
+  for (var ei = 0; ei < pass3Source.length; ei++) {
+    var ef = pass3Source[ei]
     if (!ef.key || processedKeys.has(ef.key)) continue
     if (ef.status && CLOSED_STATUSES.indexOf(ef.status) !== -1) continue
 
     processedKeys.add(ef.key)
+
+    var execData = execMap.get(ef.key) || null
 
     var efLabels = Array.isArray(ef.labels) ? ef.labels : []
     var efHumanReviewStatus = deriveHumanReviewStatusFromLabels(efLabels)
@@ -486,10 +498,12 @@ function buildFeatureReadiness(readFromStorage) {
     var efBigRock = efCandidateData ? efCandidateData.bigRock || null : null
     var efRockPriority = efCandidateData ? efCandidateData.rockPriority || null : null
 
+    var efRiceScore = ef.riceScore != null ? ef.riceScore : (execData && execData.riceScore != null ? execData.riceScore : null)
+
     var efEffective = computeBestAvailableScore({
       tier: efTier,
       priority: ef.priority || null,
-      riceScore: ef.riceScore != null ? ef.riceScore : null,
+      riceScore: efRiceScore,
       rubricTotal: 0,
       rockPriority: efRockPriority,
       targetVersions: efTargetVersions
@@ -500,6 +514,7 @@ function buildFeatureReadiness(readFromStorage) {
     var efHasOwner = !!efAssignee
     var efPastRefinement = !!ef.status && EARLY_STATUSES.indexOf(ef.status) === -1
     var efHasTargetVersion = efTargetVersions.length > 0
+    var efBlockerCount = execData ? (execData.blockerCount || 0) : (ef.blockerCount || 0)
     var efIsReady = efIsApproved && !efBlockedByHygiene && efHasOwner && efPastRefinement && efHasTargetVersion
     var efConfidence = computeConfidence(efIsReady, efFixVersion)
 
@@ -513,7 +528,7 @@ function buildFeatureReadiness(readFromStorage) {
       recommendation: null,
       needsAttention: false,
       humanReviewStatus: efHumanReviewStatus,
-      riceScore: ef.riceScore != null ? ef.riceScore : null,
+      riceScore: efRiceScore,
       rubricTotal: 0,
       scores: {},
       reviewers: {},
@@ -536,11 +551,11 @@ function buildFeatureReadiness(readFromStorage) {
       actionRequired: efHumanReviewStatus !== 'approved'
         ? 'Open the Jira issue and add the strat-creator-human-sign-off label when ready'
         : null,
-      dataSource: 'execution',
+      dataSource: pass3DataSource,
       confidence: efConfidence,
       readinessGates: {
         ownerAssigned: efHasOwner,
-        notBlocked: !(ef.blockerCount > 0),
+        notBlocked: !(efBlockerCount > 0),
         pastRefinement: efPastRefinement,
         hasTargetVersion: efHasTargetVersion,
         noBlockingViolations: !efBlockedByHygiene
