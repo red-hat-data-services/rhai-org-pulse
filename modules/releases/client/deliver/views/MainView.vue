@@ -127,6 +127,19 @@ function onSettingsSaved() {
   refreshAnalysis()
 }
 
+// All release numbers configured in any portfolio (enabled or disabled)
+const configuredReleaseNumbers = computed(function () {
+  var configured = {}
+  var portfolios = portfolioReleases.value
+  for (var i = 0; i < portfolios.length; i++) {
+    var releases = portfolios[i].releases || []
+    for (var j = 0; j < releases.length; j++) {
+      if (releases[j]) configured[releases[j]] = true
+    }
+  }
+  return configured
+})
+
 // Build a set of release numbers belonging to disabled portfolios (hidden entirely)
 const hiddenReleaseNumbers = computed(function () {
   var hidden = {}
@@ -164,6 +177,7 @@ const allReleases = computed(() => {
   const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
 
   return releases.filter(r => {
+    if (!configuredReleaseNumbers.value[r.releaseNumber]) return false
     if (hiddenReleaseNumbers.value[r.releaseNumber]) return false
     const due = new Date(`${r.dueDate}T00:00:00Z`)
     if (Number.isNaN(due.getTime())) return true
