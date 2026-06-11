@@ -652,10 +652,12 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
         console.error('[feature-tracking] Schedule API failed for version:', version, schedErr.message)
       }
 
-      // User-entered date takes priority over Product Pages
+      // User-entered date takes priority over Product Pages for ALL products
+      var userFreezeOverride = null
       if (tConfig.releases && tConfig.releases[version]) {
         var overrideDate = tConfig.releases[version].planningFreezeOverride
         if (overrideDate) {
+          userFreezeOverride = overrideDate
           freezeDates.earliest = overrideDate
           scheduleSource = 'user-override' + (scheduleSource !== 'none' ? ' (PP: ' + scheduleSource + ')' : '')
           console.log('[feature-tracking] Using user-entered freeze date for', version, ':', overrideDate)
@@ -668,7 +670,7 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
 
         let features = await fetchFeaturesByFixVersion(pv.fixVersions, jiraRequest, fetchAllJqlResults)
 
-        const productFreezeDate = freezeDates.byProduct[normalizeVersionName(pv.fixVersions[0])] || null
+        const productFreezeDate = userFreezeOverride || freezeDates.byProduct[normalizeVersionName(pv.fixVersions[0])] || freezeDates.earliest || null
         for (let fi = 0; fi < features.length; fi++) {
           features[fi].scopeChange = classifyFeature(features[fi], productFreezeDate)
         }
