@@ -233,7 +233,7 @@ const roleStore = createRoleStore(readFromStorage, writeToStorage, {
   },
   roleRegistry
 });
-const { authMiddleware, requireAdmin, requireTeamAdmin, requireRole, requireScope, seedRoles } = createAuthMiddleware(readFromStorage, writeToStorage, {
+const { authMiddleware, requireAuth, requireAdmin, requireTeamAdmin, requireRole, requireScope, seedRoles } = createAuthMiddleware(readFromStorage, writeToStorage, {
   tokenValidator: apiTokens,
   roleStore
 });
@@ -2188,7 +2188,7 @@ function exportRateLimit(req, res, next) {
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-app.get('/api/export/test-data', requireAdmin, requireScope('admin:manage'), exportRateLimit, function(req, res) {
+app.get('/api/export/test-data', requireAuth, exportRateLimit, function(req, res) {
   handleExport(req, res, storageModule, exportRegistry);
 });
 
