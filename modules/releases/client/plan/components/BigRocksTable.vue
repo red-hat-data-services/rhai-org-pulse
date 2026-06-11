@@ -11,14 +11,15 @@ const props = defineProps({
   rockFeatures: { type: Object, default: () => ({}) },
   loading: { type: Boolean, default: false },
   healthLoading: { type: Boolean, default: false },
-  releasePhaseMode: { type: String, default: 'unknown' }
+  releasePhaseMode: { type: String, default: 'unknown' },
+  exportMenuOpen: { type: Boolean, default: false }
 })
 
 const hasHealth = computed(function() {
   return Object.keys(props.rockHealth).length > 0
 })
 
-const emit = defineEmits(['editRock', 'addRock', 'deleteRock', 'reorder'])
+const emit = defineEmits(['editRock', 'addRock', 'deleteRock', 'reorder', 'toggleExport', 'closeExport', 'exportMarkdown', 'exportCsv'])
 
 // Expansion state — plain object for reliable Vue reactivity
 var expandedRocks = reactive({})
@@ -129,18 +130,59 @@ function handleDeleteClick(event, rock) {
 
 <template>
   <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
-    <!-- Toolbar -->
-    <div v-if="canEdit" class="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30">
-      <span class="text-xs text-gray-500 dark:text-gray-400">Drag to reorder.</span>
-      <button
-        @click="emit('addRock')"
-        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-primary-600 text-white hover:bg-primary-700"
-      >
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-        </svg>
-        Add Big Rock
-      </button>
+    <!-- Toolbar (always visible) -->
+    <div class="flex items-center justify-between px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30">
+      <span v-if="canEdit" class="text-xs text-gray-500 dark:text-gray-400">Drag to reorder.</span>
+      <span v-else></span>
+
+      <div class="flex items-center gap-2">
+        <!-- Export dropdown -->
+        <div class="relative" @click.stop @keydown.escape="emit('closeExport')">
+          <button
+            @click="emit('toggleExport')"
+            :aria-expanded="exportMenuOpen"
+            aria-haspopup="menu"
+            aria-label="Export data"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Export
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <div
+            v-if="exportMenuOpen"
+            role="menu"
+            class="absolute right-0 mt-1 w-40 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-600 py-1 z-10"
+          >
+            <button
+              role="menuitem"
+              @click="emit('exportMarkdown')"
+              class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >Markdown (.md)</button>
+            <button
+              role="menuitem"
+              @click="emit('exportCsv')"
+              class="w-full text-left px-3 py-1.5 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >CSV (.csv)</button>
+          </div>
+        </div>
+
+        <!-- Add Big Rock (edit mode only) -->
+        <button
+          v-if="canEdit"
+          @click="emit('addRock')"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-primary-600 text-white hover:bg-primary-700"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Add Big Rock
+        </button>
+      </div>
     </div>
 
     <div class="overflow-x-auto">
