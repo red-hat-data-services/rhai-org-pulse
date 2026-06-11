@@ -39,6 +39,10 @@ You have full Edit and Write access to all files in the repo.
    enforces a minimum operation count; adding a route without its annotation
    will cause the build to fail.
 
+7. **Export hooks** — Modules that persist data via `writeToStorage` must
+   have an `export` section in `module.json` and a registered export hook
+   that anonymizes PII. CI enforces this via `validate:modules`.
+
 ## Integration Test Coverage Validation
 
 As part of the pull request review, you must actively assess whether the developer has introduced module changes that mandate integration test verification.

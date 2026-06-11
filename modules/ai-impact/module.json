@@ -33,6 +33,19 @@
       }
     ]
   },
+  "export": {
+    "files": [
+      { "path": "ai-impact/rfe-data.json", "notes": "Anonymized RFE issues from Jira" },
+      { "path": "ai-impact/autofix-data.json", "notes": "Anonymized autofix-tagged issues" },
+      { "path": "ai-impact/doc-data.json", "notes": "Anonymized documentation contribution data" },
+      { "path": "ai-impact/doc-mr-kpi-data.json", "notes": "Anonymized GitLab MR KPI data" },
+      { "path": "ai-impact/config.json", "notes": "Module configuration (no PII)" },
+      { "path": "ai-impact/assessments.json", "notes": "Anonymized RFE quality assessments" },
+      { "path": "ai-impact/test-plans.json", "notes": "Anonymized test plan reviews" },
+      { "path": "ai-impact/features.json", "notes": "Anonymized feature reviews (legacy store)" },
+      { "path": "ai-impact/component-onboarding-data.json", "notes": "Anonymized component onboarding data" }
+    ]
+  },
   "defaultEnabled": true,
   "requires": ["releases"]
 }
