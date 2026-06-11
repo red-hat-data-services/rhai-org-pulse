@@ -1,0 +1,129 @@
+[
+  {
+    "id": "rfe-001",
+    "sourceInteractionId": "int-001",
+    "component": "platform",
+    "title": "Simplified GPU Resource Scheduling and Allocation",
+    "businessJustification": "Multiple large enterprise customers (8+) are struggling with GPU resource allocation complexity, which is blocking production deployments. Current manual GPU scheduling requires deep Kubernetes knowledge, creating a barrier for data science teams. Estimated $2.4M ARR impact across affected accounts.",
+    "technicalDetails": "Implement intelligent GPU scheduler with: (1) Automatic GPU time-slicing for multi-tenant workloads, (2) Dynamic GPU allocation based on workload priority, (3) Resource quota dashboards showing GPU utilization, (4) Auto-scaling policies for GPU nodes. Requires integration with Kubernetes scheduler and NVIDIA GPU operator.",
+    "useCases": "- Banking: Real-time fraud detection models requiring guaranteed GPU access\n- Healthcare: Medical imaging inference with variable GPU demand\n- Manufacturing: Predictive maintenance models with batch processing needs",
+    "customerCompany": "Acme Financial Corp, GlobalTech Industries, CloudScale Corp",
+    "industryVertical": "Banking & Financial Services",
+    "priority": "High",
+    "arrImpact": 2400000,
+    "status": "In Progress",
+    "createdAt": "2026-03-15T10:00:00Z",
+    "createdBy": "sarah.chen@redhat.com",
+    "jiraIssue": {
+      "key": "RHOAIENG-1955",
+      "summary": "GPU Resource Management Improvements",
+      "url": "https://issues.redhat.com/browse/RHOAIENG-1955"
+    }
+  },
+  {
+    "id": "rfe-002",
+    "sourceInteractionId": "int-003",
+    "component": "platform",
+    "title": "Air-Gapped Deployment Documentation and Automation",
+    "businessJustification": "Federal and Telecom customers require air-gapped deployments due to security policies. Current process is manual, error-prone, and poorly documented. This is blocking $3.2M in Federal deals and slowing expansion in regulated industries.",
+    "technicalDetails": "Develop comprehensive air-gapped deployment solution including: (1) Automated image mirroring script for all dependencies, (2) Offline installation guide with step-by-step validation, (3) Disconnected operations playbook for updates and patches, (4) Air-gap validation testing suite. Must work with RHEL 8+ disconnected repositories.",
+    "useCases": "- Federal: Classified networks with no internet connectivity\n- Telecom: Network cores with strict isolation requirements\n- Banking: Production environments with air-gap security policies",
+    "customerCompany": "Federal Agency Alpha, TelcoSecure, Banking Global",
+    "industryVertical": "Federal & Public Sector",
+    "priority": "High",
+    "arrImpact": 3200000,
+    "status": "In Progress",
+    "createdAt": "2026-03-20T14:30:00Z",
+    "createdBy": "michael.torres@redhat.com",
+    "jiraIssue": {
+      "key": "RHODS-3201",
+      "summary": "Air-Gapped Deployment Documentation",
+      "url": "https://issues.redhat.com/browse/RHODS-3201"
+    }
+  },
+  {
+    "id": "rfe-003",
+    "component": "navigator",
+    "title": "MLOps Monitoring with Drift Detection and Auto-Retraining",
+    "businessJustification": "Production ML deployments require continuous monitoring for model performance degradation. Customers report manual monitoring is time-consuming and drift often goes undetected until production issues occur. 9 customers requesting this capability.",
+    "technicalDetails": "Build integrated MLOps platform with: (1) Model metrics collection framework (accuracy, latency, throughput), (2) Statistical drift detection algorithms (KS test, PSI, etc.), (3) Alerting and notification system for drift events, (4) Auto-retraining pipeline templates with A/B testing support, (5) Model versioning and rollback capabilities.",
+    "useCases": "- Retail: Price optimization models affected by market changes\n- Finance: Credit scoring models with data distribution drift\n- Manufacturing: Quality prediction models with seasonal variations",
+    "customerCompany": "RetailCorp, FinServe Global, Manufacturing Co",
+    "industryVertical": "Retail & E-commerce",
+    "priority": "Medium",
+    "arrImpact": 2700000,
+    "status": "In Progress",
+    "createdAt": "2026-04-01T09:00:00Z",
+    "createdBy": "david.lin@redhat.com",
+    "jiraIssue": {
+      "key": "RHOAIENG-2100",
+      "summary": "MLOps Platform Features",
+      "url": "https://issues.redhat.com/browse/RHOAIENG-2100"
+    }
+  },
+  {
+    "id": "rfe-004",
+    "component": "navigator",
+    "title": "LLM Fine-Tuning Workflow with LoRA/QLoRA Support",
+    "businessJustification": "Enterprises need to fine-tune foundation models for domain-specific use cases. Current process requires ML expertise and custom infrastructure setup. 6 customers actively requesting simplified fine-tuning workflows, representing $1.9M ARR.",
+    "technicalDetails": "Develop guided LLM fine-tuning workflow: (1) LoRA and QLoRA implementation for parameter-efficient fine-tuning, (2) UI-driven workflow for dataset upload, hyperparameter selection, and training job submission, (3) Cost estimation tool before training, (4) Hyperparameter tuning automation, (5) Model evaluation and comparison dashboards.",
+    "useCases": "- Customer Support: Fine-tune LLMs on company documentation\n- Legal: Domain-specific legal document analysis\n- Healthcare: Medical literature summarization",
+    "customerCompany": "AI Research Lab, StartupAI, DataDriven Inc",
+    "industryVertical": "Technology",
+    "priority": "High",
+    "arrImpact": 1900000,
+    "status": "In Progress",
+    "createdAt": "2026-04-10T11:15:00Z",
+    "createdBy": "sarah.chen@redhat.com",
+    "jiraIssue": {
+      "key": "RHOAIENG-2250",
+      "summary": "LLM Fine-Tuning Support",
+      "url": "https://issues.redhat.com/browse/RHOAIENG-2250"
+    }
+  },
+  {
+    "id": "rfe-005",
+    "component": "platform",
+    "title": "Compliance Toolkit for HIPAA, FedRAMP, and EU AI Act",
+    "businessJustification": "Regulated industries require compliance certifications that are time-consuming and expensive. Pre-built compliance templates and automation would accelerate deals in healthcare, federal, and EU markets. $4.1M ARR opportunity across 6 customers.",
+    "technicalDetails": "Create compliance acceleration toolkit: (1) HIPAA compliance configuration templates and audit scripts, (2) FedRAMP documentation package with security controls mapping, (3) EU AI Act risk assessment toolkit and documentation, (4) Automated audit logging and compliance reporting, (5) Data privacy controls (encryption, access logs, data retention).",
+    "useCases": "- Healthcare: HIPAA-compliant AI for patient data\n- Federal: FedRAMP certified ML platforms\n- EU Financial: AI Act compliant risk management",
+    "customerCompany": "HealthFirst, Federal Agency Beta, EU Financial Services",
+    "industryVertical": "Healthcare & Life Sciences",
+    "priority": "High",
+    "arrImpact": 4100000,
+    "status": "Not Started",
+    "createdAt": "2026-04-15T15:45:00Z",
+    "createdBy": "jennifer.park@redhat.com"
+  },
+  {
+    "id": "rfe-006",
+    "component": "platform",
+    "title": "Cost Optimization Dashboard with Usage Recommendations",
+    "businessJustification": "Cloud costs for AI workloads (especially LLMs) are a major concern. Customers lack visibility into cost drivers and optimization opportunities. 4 customers requesting cost management tools.",
+    "technicalDetails": "Build cost visibility and optimization platform: (1) Real-time cost attribution by team, project, and workload, (2) Cost breakdown dashboards (compute, GPU, storage, egress), (3) Optimization recommendations engine (right-sizing, spot instances, scheduling), (4) Budget alerts and spending limits, (5) Cost benchmarking against industry standards.",
+    "useCases": "- Startups: Managing cloud spend with limited budgets\n- Enterprises: Multi-team cost allocation and chargeback",
+    "customerCompany": "CloudScale Corp, StartupAI, RetailCorp",
+    "industryVertical": "Technology",
+    "priority": "Medium",
+    "arrImpact": 1200000,
+    "status": "Not Started",
+    "createdAt": "2026-04-22T10:30:00Z",
+    "createdBy": "sarah.chen@redhat.com"
+  },
+  {
+    "id": "rfe-007",
+    "component": "autox",
+    "title": "Advanced GPU Scheduling with Multi-Tenancy Support",
+    "businessJustification": "Large organizations need to share GPU resources across multiple teams while ensuring fair allocation and priority. Current basic GPU assignment doesn't support quotas, priorities, or fair-share scheduling.",
+    "technicalDetails": "Extend GPU scheduler with enterprise multi-tenancy features: (1) Team-based GPU quotas and reservations, (2) Priority-based scheduling with preemption, (3) Fair-share scheduling algorithm, (4) GPU utilization reporting per team, (5) Overcommit and time-slicing for non-critical workloads.",
+    "useCases": "- Large enterprises with multiple AI teams sharing infrastructure\n- Universities with research groups requiring fair GPU access",
+    "customerCompany": "GlobalTech Industries",
+    "industryVertical": "Technology",
+    "priority": "Medium",
+    "arrImpact": 800000,
+    "status": "Draft",
+    "createdAt": "2026-05-01T09:00:00Z",
+    "createdBy": "alex.kumar@redhat.com"
+  }
+]

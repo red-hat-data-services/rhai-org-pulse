@@ -2027,6 +2027,103 @@ app.post('/api/admin/secrets/validate', requireAdmin, requireScope('admin:manage
   }
 });
 
+/**
+ * @openapi
+ * /api/admin/secrets/update:
+ *   post:
+ *     tags: [Admin]
+ *     summary: Update secret values
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - secrets
+ *             properties:
+ *               secrets:
+ *                 type: object
+ *                 additionalProperties:
+ *                   type: string
+ *                 description: Map of secret keys to new values
+ *     responses:
+ *       200:
+ *         description: Secrets updated successfully
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ */
+app.post('/api/admin/secrets/update', requireAdmin, requireScope('admin:manage'), async function(req, res) {
+  try {
+    const { secrets } = req.body;
+
+    if (!secrets || typeof secrets !== 'object') {
+      return res.status(400).json({ error: 'Invalid request: secrets object required' });
+    }
+
+    // Update each secret using the secret registry
+    const fs = require('fs');
+    const path = require('path');
+    const envPath = path.join(__dirname, '..', '.env');
+
+    // Read existing .env file
+    let envContent = '';
+    if (fs.existsSync(envPath)) {
+      envContent = fs.readFileSync(envPath, 'utf8');
+    }
+
+    // Parse existing env vars
+    const envVars = {};
+    envContent.split('\n').forEach(line => {
+      const match = line.match(/^([^=]+)=(.*)$/);
+      if (match) {
+        envVars[match[1]] = match[2];
+      }
+    });
+
+    // Update with new secrets
+    for (const [key, value] of Object.entries(secrets)) {
+      if (value) {
+        envVars[key] = value;
+        // Also set in current process.env so it takes effect immediately
+        process.env[key] = value;
+      }
+    }
+
+    // Write back to .env file
+    const newEnvContent = Object.entries(envVars)
+      .map(([key, value]) => `${key}=${value}`)
+      .join('\n');
+
+    fs.writeFileSync(envPath, newEnvContent + '\n', 'utf8');
+
+    // Log the update
+    auditLog.log({
+      actor: req.user?.email || 'unknown',
+      action: 'secrets.update',
+      resource: Object.keys(secrets).join(', '),
+      outcome: 'success'
+    });
+
+    res.json({
+      success: true,
+      message: `Updated ${Object.keys(secrets).length} secret(s)`,
+      updated: Object.keys(secrets)
+    });
+  } catch (err) {
+    console.error('Failed to update secrets:', err);
+    auditLog.log({
+      actor: req.user?.email || 'unknown',
+      action: 'secrets.update',
+      outcome: 'failure',
+      error: err.message
+    });
+    res.status(500).json({ error: 'Failed to update secrets: ' + err.message });
+  }
+});
+
 // ─── Must-Gather: Diagnostic data download ───
 
 const mustGather = require('./must-gather');

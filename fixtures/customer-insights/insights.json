@@ -1,0 +1,37 @@
+{
+  "generatedAt": "2026-06-05T02:15:00Z",
+  "painPoints": [
+    "Deployment complexity is the #1 blocker (mentioned by 5 customers) - customers struggle with Kubernetes complexity and multi-step deployment processes",
+    "Air-gapped environment support is inadequate (3 customers) - particularly affecting Federal and Telecom verticals with strict security requirements",
+    "Compliance and regulatory requirements (3 customers) - HIPAA, FedRAMP, and EU AI Act compliance features are needed",
+    "Documentation gaps for enterprise use cases (3 customers) - especially for air-gapped deployments and production best practices",
+    "Performance concerns at scale (2 customers) - latency issues for real-time inference and cost concerns for high-volume workloads"
+  ],
+  "requestedFeatures": [
+    "Simplified deployment workflow with guided setup or operators - reduces time to value",
+    "Comprehensive air-gapped installation and operation guide - critical for Federal and regulated industries",
+    "Compliance toolkits for HIPAA, FedRAMP, and EU AI Act - accelerates enterprise adoption",
+    "Better GPU scheduling and resource management - blocks multiple large accounts",
+    "Model monitoring, drift detection, and auto-retraining pipelines - needed for production ML at scale",
+    "Cost optimization tools and guidance - especially for cloud deployments and LLM workloads"
+  ],
+  "sentiment": "Generally positive with strong interest in the platform capabilities, but frustrated by operational complexity and gaps in enterprise readiness. Customers appreciate the technical power but need better tooling, documentation, and compliance support to move from POC to production at scale.",
+  "recommendations": [
+    "Prioritize deployment simplification initiative - consider building a guided setup wizard, operator, or deployment automation tools. This is blocking multiple high-value accounts across all verticals.",
+    "Create dedicated air-gapped deployment documentation and tooling - this is a key differentiator vs cloud-native platforms and critical for Federal/Telco expansion.",
+    "Invest in compliance acceleration - build toolkits or templates for HIPAA, FedRAMP, and EU AI Act. Partner with legal/compliance teams. This directly impacts deal velocity in regulated industries.",
+    "Enhance production ML operations features - monitoring, drift detection, auto-retraining are frequently mentioned alongside deployment. Consider bundled MLOps solution.",
+    "Establish regular field feedback loop - surface common pain points faster to engineering. Consider monthly PM ↔ SSA sync to prioritize issues by customer impact."
+  ],
+  "competitiveSignals": [
+    "Cloud providers (AWS SageMaker, GCP Vertex AI) cited for better documentation and ease of deployment",
+    "Customers evaluating based on air-gapped capabilities - opportunity to differentiate from cloud-only competitors",
+    "Cost comparison mentions indicate pricing sensitivity for LLM/GenAI workloads"
+  ],
+  "dataGaps": [
+    "Limited recent feedback from LATAM region - no interactions in last 60 days",
+    "Missing technical details on specific Kubernetes pain points - need deeper discovery on deployment blockers",
+    "No data on smaller accounts (<50 users) - current sample skewed toward enterprise",
+    "Insufficient feedback on Inferencing module - only 1 customer interaction vs 3+ for other modules"
+  ]
+}

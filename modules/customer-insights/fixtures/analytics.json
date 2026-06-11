@@ -1,0 +1,72 @@
+{
+  "generatedAt": "2026-06-05T02:00:00Z",
+  "byGeo": {
+    "NA": 6,
+    "EMEA": 2,
+    "APAC": 2,
+    "LATAM": 0
+  },
+  "byIndustry": {
+    "Banking & Financial Services": 2,
+    "Telco": 1,
+    "Federal": 1,
+    "Healthcare": 1,
+    "Manufacturing": 1,
+    "Retail": 1,
+    "Energy": 1,
+    "Media & Entertainment": 1,
+    "Insurance": 1
+  },
+  "byEnvironment": {
+    "On-Prem (non Air-gapped)": 4,
+    "Customer Managed (GCP/AWS/Azure)": 4,
+    "On-Prem (Air-gapped)": 2
+  },
+  "byStatus": {
+    "Lead": 1,
+    "Discovery": 3,
+    "Evaluating": 3,
+    "Feedback Received": 2,
+    "Closed": 1
+  },
+  "byCustomerType": {
+    "SSA": 7,
+    "CAI": 3
+  },
+  "topTools": {
+    "PyTorch": 6,
+    "TensorFlow": 5,
+    "Jupyter": 3,
+    "MLflow": 3,
+    "scikit-learn": 2,
+    "XGBoost": 2
+  },
+  "topWishlist": {
+    "Better GPU scheduling": 2,
+    "Simplified deployment workflow": 2,
+    "Air-gapped documentation": 2,
+    "Cost optimization tools": 2,
+    "Model monitoring": 2,
+    "HIPAA compliance toolkit": 1,
+    "FedRAMP certification": 1
+  },
+  "painPointKeywords": {
+    "complexity": 5,
+    "deployment": 4,
+    "documentation": 3,
+    "air-gapped": 3,
+    "compliance": 3,
+    "performance": 2,
+    "cost": 2
+  },
+  "useCaseCategories": {
+    "Fraud Detection": 2,
+    "Predictive Analytics": 2,
+    "Computer Vision": 1,
+    "NLP/Text": 1,
+    "Conversational AI": 1,
+    "Time Series": 1,
+    "Recommendation Systems": 1,
+    "Network Analytics": 1
+  }
+}
