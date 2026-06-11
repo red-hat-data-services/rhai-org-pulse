@@ -17,11 +17,12 @@
       <!-- Body -->
       <div class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
         <p class="text-xs text-gray-500 dark:text-gray-400">
-          Configure release version names for each RHAI product and set fallback dates.
+          Manage the releases shown on the Risk Dashboard. Each entry maps a Jira release number
+          to a portfolio name and optional schedule dates that override Product Pages.
         </p>
 
         <div v-for="(entry, idx) in draft" :key="idx" class="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <!-- Release header -->
+          <!-- Release header row -->
           <div class="flex items-center gap-2 px-3 py-2.5 bg-gray-50 dark:bg-gray-800">
             <button
               type="button"
@@ -33,13 +34,14 @@
               </svg>
             </button>
             <input
-              v-model="entry.version"
+              v-model="entry.releaseNumber"
               class="flex-1 text-sm font-semibold bg-transparent border-none outline-none text-gray-900 dark:text-gray-100 placeholder-gray-400"
-              placeholder="Portfolio version (e.g. 3.7)"
+              placeholder="Release number (e.g. rhoai-3.7)"
             />
-            <span class="text-[10px] text-gray-400 dark:text-gray-500 font-medium uppercase">
-              {{ productCount(entry) }} products
-            </span>
+            <span
+              v-if="entry.productName"
+              class="text-[10px] text-gray-400 dark:text-gray-500 font-medium uppercase truncate max-w-[100px]"
+            >{{ entry.productName }}</span>
             <button
               type="button"
               @click="removeEntry(idx)"
@@ -54,12 +56,14 @@
 
           <!-- Release details (expandable) -->
           <div v-if="expanded[idx]" class="border-t border-gray-100 dark:border-gray-700 px-4 py-3 space-y-3">
-            <div v-for="product in PRODUCT_KEYS" :key="product" class="flex items-center gap-2">
-              <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase w-14 flex-shrink-0">{{ product }}</label>
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5">
+                Portfolio / Product Name
+              </label>
               <input
-                v-model="entry.products[product]"
-                class="flex-1 text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded px-2.5 py-1.5 text-gray-700 dark:text-gray-300 outline-none focus:ring-1 focus:ring-primary-400 placeholder-gray-300 dark:placeholder-gray-600"
-                :placeholder="product.toLowerCase() + '-' + (entry.version || 'x.y')"
+                v-model="entry.productName"
+                class="w-full text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded px-2.5 py-1.5 text-gray-700 dark:text-gray-300 outline-none focus:ring-1 focus:ring-primary-400 placeholder-gray-300 dark:placeholder-gray-600"
+                placeholder="e.g. RHOAI"
               />
             </div>
 
@@ -128,8 +132,6 @@
 import { ref, watch } from 'vue'
 import { getApiBase } from '@shared/client/services/api'
 
-var PRODUCT_KEYS = ['RHOAI', 'RHELAI', 'RHAII']
-
 var props = defineProps({
   open: { type: Boolean, default: false }
 })
@@ -142,85 +144,33 @@ var saving = ref(false)
 var saveError = ref(null)
 var saveSuccess = ref(false)
 
-function productCount(entry) {
-  var count = 0
-  for (var i = 0; i < PRODUCT_KEYS.length; i++) {
-    if ((entry.products[PRODUCT_KEYS[i]] || '').trim()) count++
-  }
-  return count
-}
-
-function emptyProducts() {
-  var products = {}
-  for (var i = 0; i < PRODUCT_KEYS.length; i++) {
-    products[PRODUCT_KEYS[i]] = ''
-  }
-  return products
-}
-
-/**
- * Reverse-engineer portfolio entries from flat per-release metadata.
- * Groups releases by extracted version number (e.g. "rhoai-3.7" → "3.7").
- */
 function metadataToArray(metadata) {
   var keys = Object.keys(metadata || {})
-  if (!keys.length) return []
-
-  var versionMap = {}
+  var entries = []
   for (var i = 0; i < keys.length; i++) {
     var releaseNumber = keys[i]
     var meta = metadata[releaseNumber] || {}
-    var versionMatch = releaseNumber.match(/(\d+\.\d+)/)
-    var version = versionMatch ? versionMatch[1] : releaseNumber
-
-    if (!versionMap[version]) {
-      versionMap[version] = { version: version, products: emptyProducts(), dueDate: '', codeFreezeDate: '' }
-    }
-    var entry = versionMap[version]
-
-    var productName = (meta.productName || '').toUpperCase()
-    for (var pi = 0; pi < PRODUCT_KEYS.length; pi++) {
-      var pk = PRODUCT_KEYS[pi]
-      if (productName === pk || releaseNumber.toLowerCase().indexOf(pk.toLowerCase()) === 0) {
-        entry.products[pk] = releaseNumber
-        break
-      }
-    }
-
-    if (meta.dueDate && !entry.dueDate) entry.dueDate = meta.dueDate
-    if (meta.codeFreezeDate && !entry.codeFreezeDate) entry.codeFreezeDate = meta.codeFreezeDate
+    entries.push({
+      releaseNumber: releaseNumber,
+      productName: meta.productName || '',
+      dueDate: meta.dueDate || '',
+      codeFreezeDate: meta.codeFreezeDate || ''
+    })
   }
-
-  var result = []
-  var versions = Object.keys(versionMap)
-  versions.sort(function(a, b) {
-    var pa = a.split('.').map(Number)
-    var pb = b.split('.').map(Number)
-    return pa[0] !== pb[0] ? pa[0] - pb[0] : (pa[1] || 0) - (pb[1] || 0)
-  })
-  for (var vi = 0; vi < versions.length; vi++) {
-    result.push(versionMap[versions[vi]])
-  }
-  return result
+  entries.sort(function(a, b) { return a.releaseNumber.localeCompare(b.releaseNumber) })
+  return entries
 }
 
-/**
- * Expand portfolio entries into flat per-release metadata.
- * Each non-empty product release name becomes its own metadata entry.
- */
 function arrayToMetadata(arr) {
   var metadata = {}
   for (var i = 0; i < arr.length; i++) {
     var entry = arr[i]
-    for (var pi = 0; pi < PRODUCT_KEYS.length; pi++) {
-      var pk = PRODUCT_KEYS[pi]
-      var releaseNumber = (entry.products[pk] || '').trim()
-      if (!releaseNumber) continue
-      metadata[releaseNumber] = {
-        productName: pk,
-        dueDate: entry.dueDate || null,
-        codeFreezeDate: entry.codeFreezeDate || null
-      }
+    var releaseNumber = (entry.releaseNumber || '').trim()
+    if (!releaseNumber) continue
+    metadata[releaseNumber] = {
+      productName: (entry.productName || '').trim() || null,
+      dueDate: entry.dueDate || null,
+      codeFreezeDate: entry.codeFreezeDate || null
     }
   }
   return metadata
@@ -251,7 +201,7 @@ function toggleExpand(idx) {
 }
 
 function addEntry() {
-  draft.value.push({ version: '', products: emptyProducts(), dueDate: '', codeFreezeDate: '' })
+  draft.value.push({ releaseNumber: '', productName: '', dueDate: '', codeFreezeDate: '' })
   expanded.value = Object.assign({}, expanded.value, { [draft.value.length - 1]: true })
 }
 
