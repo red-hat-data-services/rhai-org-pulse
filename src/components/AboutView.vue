@@ -158,7 +158,28 @@
               {{ cat.slackChannel.name }}
             </a>
           </h3>
-          <div class="flex flex-wrap gap-4">
+          <template v-if="cat.resolvedLinkGroups">
+            <div v-for="group in cat.resolvedLinkGroups" :key="group.date" class="mb-4 last:mb-0">
+              <span class="inline-block mb-2 px-2.5 py-0.5 text-xs font-semibold rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300">
+                {{ group.date }}
+              </span>
+              <div class="flex flex-wrap gap-4">
+                <a
+                  v-for="link in group.links"
+                  :key="link.url"
+                  :href="link.url"
+                  target="_blank"
+                  rel="noopener"
+                  class="flex items-center gap-2.5 px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/50 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 hover:border-gray-300 dark:hover:border-gray-500 transition-all duration-200"
+                >
+                  <component :is="link.icon" :size="18" :stroke-width="1.7" class="flex-shrink-0 text-gray-500 dark:text-gray-400" />
+                  <span>{{ link.label }}</span>
+                  <ExternalLink :size="14" class="flex-shrink-0 text-gray-400 dark:text-gray-500" />
+                </a>
+              </div>
+            </div>
+          </template>
+          <div v-else class="flex flex-wrap gap-4">
             <a
               v-for="link in cat.resolvedLinks"
               :key="link.url"
@@ -521,7 +542,13 @@ const docsSections = enablementSections.map(s => ({
     .filter(c => c.section === s.id)
     .map(c => ({
       ...c,
-      resolvedLinks: c.links.map(l => ({ ...l, icon: resolveIcon(l.icon) })),
+      resolvedLinks: c.links ? c.links.map(l => ({ ...l, icon: resolveIcon(l.icon) })) : null,
+      resolvedLinkGroups: c.linkGroups
+        ? c.linkGroups.map(g => ({
+          ...g,
+          links: g.links.map(l => ({ ...l, icon: resolveIcon(l.icon) })),
+        }))
+        : null,
     })),
 }))
 

@@ -69,10 +69,24 @@ export const enablementCategories = [
     title: 'Jira Autofix',
     section: 'ai-workflows',
     slackChannel: { name: '#wg-rhai-ai-first-code-autofix', url: 'https://app.slack.com/client/E030G10V24F/C0ASJ32PJ0N' },
-    links: [
-      { label: 'Enablement Recording', icon: 'Video', url: 'https://drive.google.com/file/d/1b-PZD3OiPAA8LOZ8lWmfcNZBByUa0Nel/view?ts=69e8ff07' },
-      { label: 'Enablement Slides', icon: 'Presentation', url: 'https://docs.google.com/presentation/d/1_UaHAI65K1P5Y2pAhZ4ie2KY-tHiSrqbnWN0UUqvsYs/edit?slide=id.g3d84ce2c2ca_1_0#slide=id.g3d84ce2c2ca_1_0' },
-      { label: 'Enablement Notes', icon: 'StickyNote', url: 'https://docs.google.com/document/d/1O3i5Ijoo3fi-gPHG0e9ON70Nfij2EUdfU18KOrVQADY/edit?tab=t.4ih80ylpl5y1' },
+    linkGroups: [
+      {
+        date: '2026JUN11',
+        links: [
+          { label: 'Enablement Recording', icon: 'Video', url: 'https://drive.google.com/file/d/1B3TYRfH2J8AtMXE4SsNuOl39hu4Z5boY/view' },
+          { label: 'Enablement Slides', icon: 'Presentation', url: 'https://docs.google.com/presentation/d/1m0TEwUxyuouEt8MK5F42mXS0PMuYt6IBcM3BKZUcvdU/edit?slide=id.g3dc5b8ade0b_0_14#slide=id.g3dc5b8ade0b_0_14' },
+          { label: 'Enablement Notes', icon: 'StickyNote', url: 'https://docs.google.com/document/d/1Md24Vb77hbz4aP0Cu-RRdArJcfupAxPkcdoPjHfHims/edit?tab=t.xjqu48g1l03j' },
+          { label: 'Enablement Chat', icon: 'MessageSquare', url: 'https://drive.google.com/file/d/1h-CGNO2tSteblI0mls49yXtjiJdShh4g/view' },
+        ],
+      },
+      {
+        date: '2026APR22',
+        links: [
+          { label: 'Enablement Recording', icon: 'Video', url: 'https://drive.google.com/file/d/1b-PZD3OiPAA8LOZ8lWmfcNZBByUa0Nel/view?ts=69e8ff07' },
+          { label: 'Enablement Slides', icon: 'Presentation', url: 'https://docs.google.com/presentation/d/1_UaHAI65K1P5Y2pAhZ4ie2KY-tHiSrqbnWN0UUqvsYs/edit?slide=id.g3d84ce2c2ca_1_0#slide=id.g3d84ce2c2ca_1_0' },
+          { label: 'Enablement Notes', icon: 'StickyNote', url: 'https://docs.google.com/document/d/1O3i5Ijoo3fi-gPHG0e9ON70Nfij2EUdfU18KOrVQADY/edit?tab=t.4ih80ylpl5y1' },
+        ],
+      },
     ],
   },
   {
