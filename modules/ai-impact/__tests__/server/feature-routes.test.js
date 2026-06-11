@@ -1,6 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// Mock fs before importing routes (for writeFeaturesAtomic)
+// Mock fs before importing routes
 vi.mock('fs', () => ({
   existsSync: vi.fn().mockReturnValue(true),
   mkdirSync: vi.fn(),
@@ -30,8 +30,7 @@ function makeValidBody() {
 function makeContext(storageData = null) {
   return {
     storage: {
-      readFromStorage: vi.fn().mockReturnValue(storageData),
-      writeToStorageAtomic: vi.fn()
+      readFromStorage: vi.fn().mockReturnValue(storageData)
     },
     requireAdmin: (req, res, next) => next(),
     requireScope: () => (req, res, next) => next()
@@ -67,6 +66,21 @@ async function callHandler(routes, method, path, body = {}, params = {}) {
   await handler(req, res);
   return { req, res };
 }
+
+// Mock fetch for internal API calls
+let fetchMock;
+beforeEach(() => {
+  fetchMock = vi.fn().mockResolvedValue({
+    ok: true,
+    json: () => Promise.resolve({ created: 0, updated: 0, unchanged: 0 }),
+    text: () => Promise.resolve('')
+  });
+  globalThis.fetch = fetchMock;
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('feature routes registration order', () => {
   it('registers static routes before parameterized routes', () => {
@@ -185,12 +199,22 @@ describe('GET /features/:key', () => {
 });
 
 describe('PUT /features/:key', () => {
-  it('creates a new feature and returns created status', async () => {
+  it('forwards to releases and returns status', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ created: 1, updated: 0, unchanged: 0 }),
+      text: () => Promise.resolve('')
+    });
+
     const { router, routes } = createRouter();
     registerFeatureRoutes(router, makeContext(null));
 
     const { res } = await callHandler(routes, 'PUT', '/features/:key', makeValidBody(), { key: 'RHAISTRAT-1168' });
     expect(res.json).toHaveBeenCalledWith({ status: 'created' });
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringContaining('/api/modules/releases/execution/ai-review/bulk'),
+      expect.objectContaining({ method: 'POST' })
+    );
   });
 
   it('returns 400 for invalid body', async () => {
@@ -200,10 +224,30 @@ describe('PUT /features/:key', () => {
     const { res } = await callHandler(routes, 'PUT', '/features/:key', { bad: true }, { key: 'RHAISTRAT-1' });
     expect(res.status).toHaveBeenCalledWith(400);
   });
+
+  it('returns 502 when releases API fails', async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 500,
+      text: () => Promise.resolve('Internal Server Error')
+    });
+
+    const { router, routes } = createRouter();
+    registerFeatureRoutes(router, makeContext(null));
+
+    const { res } = await callHandler(routes, 'PUT', '/features/:key', makeValidBody(), { key: 'RHAISTRAT-1168' });
+    expect(res.status).toHaveBeenCalledWith(502);
+  });
 });
 
 describe('POST /features/bulk', () => {
-  it('processes valid bulk payload', async () => {
+  it('forwards valid features to releases', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ created: 2, updated: 0, unchanged: 0 }),
+      text: () => Promise.resolve('')
+    });
+
     const { router, routes } = createRouter();
     registerFeatureRoutes(router, makeContext(null));
 
@@ -238,6 +282,12 @@ describe('POST /features/bulk', () => {
   });
 
   it('handles partial success (valid + invalid entries)', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ created: 1, updated: 0, unchanged: 0 }),
+      text: () => Promise.resolve('')
+    });
+
     const { router, routes } = createRouter();
     registerFeatureRoutes(router, makeContext(null));
 
@@ -255,6 +305,12 @@ describe('POST /features/bulk', () => {
   });
 
   it('accepts snake_case strat_id in bulk entries', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ created: 1, updated: 0, unchanged: 0 }),
+      text: () => Promise.resolve('')
+    });
+
     const { router, routes } = createRouter();
     registerFeatureRoutes(router, makeContext(null));
 
@@ -268,10 +324,25 @@ describe('POST /features/bulk', () => {
     expect(payload.created).toBe(1);
     expect(payload.errors).toEqual([]);
   });
+
+  it('returns 502 when releases API fails', async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 500,
+      text: () => Promise.resolve('Internal Server Error')
+    });
+
+    const { router, routes } = createRouter();
+    registerFeatureRoutes(router, makeContext(null));
+
+    const body = { features: [makeValidBody()] };
+    const { res } = await callHandler(routes, 'POST', '/features/bulk', body);
+    expect(res.status).toHaveBeenCalledWith(502);
+  });
 });
 
 describe('DELETE /features', () => {
-  it('clears feature data', async () => {
+  it('forwards delete to releases and returns cleared', async () => {
     const { router, routes } = createRouter();
     registerFeatureRoutes(router, makeContext(null));
 

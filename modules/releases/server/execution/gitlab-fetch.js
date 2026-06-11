@@ -15,12 +15,16 @@ const DATA_PREFIX = 'releases/execution';
 
 /**
  * Fetch artifacts from GitLab CI and write to storage.
+ * After extraction, optionally enriches features from Jira and writes
+ * unified feature files via the feature store.
+ *
  * @param {object} storage - storage abstraction
  * @param {object} config - fetch configuration
  * @param {string} token - GitLab PAT
+ * @param {object} [jira] - Jira client ({ jiraRequest, fetchAllJqlResults }), optional
  * @returns {object} fetch result summary
  */
-async function fetchArtifacts(storage, config, token) {
+async function fetchArtifacts(storage, config, token, jira) {
   const {
     gitlabBaseUrl = 'https://gitlab.com',
     projectPath,
@@ -129,19 +133,79 @@ async function fetchArtifacts(storage, config, token) {
     throw new Error('Artifact archive missing index.json. Existing data preserved.');
   }
 
-  // Atomic write: features first, index.json last
+  // Separate pipeline index from feature files
   const indexData = staged.get('index.json');
   staged.delete('index.json');
 
-  let fileCount = 0;
+  // Build pipeline index lookup for pipeline-index-only fields
+  const pipelineIndexMap = new Map();
+  if (indexData && Array.isArray(indexData.features)) {
+    for (let i = 0; i < indexData.features.length; i++) {
+      const entry = indexData.features[i];
+      if (entry.key) pipelineIndexMap.set(entry.key, entry);
+    }
+  }
+
+  // Collect pipeline feature data, keyed by issue key
+  const pipelineFeatures = new Map();
+  const nonFeatureFiles = new Map();
+
   for (const [filePath, data] of staged) {
+    if (filePath.startsWith('features/') && filePath.endsWith('.json')) {
+      const key = filePath.replace('features/', '').replace('.json', '');
+      // Merge pipeline-index-only fields onto the feature data
+      const indexEntry = pipelineIndexMap.get(key);
+      if (indexEntry) {
+        if (indexEntry.pm !== undefined) data.pm = indexEntry.pm;
+        if (indexEntry.architect !== undefined) data.architect = indexEntry.architect;
+        if (indexEntry.parentKey !== undefined) data.parentKey = indexEntry.parentKey;
+        if (indexEntry.targetVersions !== undefined) data.targetVersions = indexEntry.targetVersions;
+      }
+      pipelineFeatures.set(key, data);
+    } else {
+      nonFeatureFiles.set(filePath, data);
+    }
+  }
+
+  // Write non-feature files directly (e.g., config files in the artifact)
+  let fileCount = 0;
+  for (const [filePath, data] of nonFeatureFiles) {
     storage.writeToStorage(`${DATA_PREFIX}/${filePath}`, data);
     fileCount++;
   }
 
-  // Write index.json last
-  storage.writeToStorage(`${DATA_PREFIX}/index.json`, indexData);
-  fileCount++;
+  // Enrich pipeline features from Jira (fail-safe)
+  const featureKeys = Array.from(pipelineFeatures.keys());
+  let enrichmentMap = new Map();
+
+  if (jira && featureKeys.length > 0) {
+    try {
+      const { enrichFeatures } = require('./jira-enrich');
+      enrichmentMap = await enrichFeatures(
+        featureKeys,
+        jira.jiraRequest,
+        jira.fetchAllJqlResults
+      );
+      console.log(`[releases/execution] Post-ingest enrichment: ${enrichmentMap.size}/${featureKeys.length} features enriched`);
+    } catch (err) {
+      console.warn('[releases/execution] Post-ingest Jira enrichment failed (pipeline data preserved):', err.message);
+    }
+  }
+
+  // Merge pipeline + jira + existing data via feature store
+  const { mergeFeatureData, writeFeatures } = require('./feature-store');
+  const mergedFeatures = [];
+
+  for (const [key, pipelineData] of pipelineFeatures) {
+    const existing = storage.readFromStorage(`${DATA_PREFIX}/features/${key}.json`);
+    const jiraData = enrichmentMap.get(key) || null;
+    const merged = mergeFeatureData(existing, pipelineData, jiraData);
+    mergedFeatures.push(merged);
+  }
+
+  // Write merged features + rebuild derived index
+  await writeFeatures(storage, mergedFeatures);
+  fileCount += mergedFeatures.length + 1; // features + index.json
 
   const duration = Date.now() - startTime;
   console.log(`[releases/execution] Fetch complete: ${fileCount} files in ${duration}ms`);
@@ -155,6 +219,7 @@ async function fetchArtifacts(storage, config, token) {
     timestamp: new Date().toISOString(),
     duration,
     fileCount,
+    enrichedCount: enrichmentMap.size,
     warnings: warnings.length > 0 ? warnings : undefined
   };
 

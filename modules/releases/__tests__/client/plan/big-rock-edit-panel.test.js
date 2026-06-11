@@ -64,18 +64,19 @@ describe('BigRockEditPanel', function() {
       wrapper.unmount()
     })
 
-    it('shows rock name as read-only', function() {
+    it('shows rock name as editable input in edit mode', function() {
       var wrapper = mountPanel()
-      expect(wrapper.text()).toContain('MaaS')
-      // Name should not be an input when editing
       var nameInput = wrapper.find('#rock-name')
-      expect(nameInput.exists()).toBe(false)
+      expect(nameInput.exists()).toBe(true)
+      expect(nameInput.element.value).toBe('MaaS')
       wrapper.unmount()
     })
 
-    it('shows pillar as read-only when present', function() {
+    it('shows pillar as editable field when present', function() {
       var wrapper = mountPanel()
-      expect(wrapper.text()).toContain('Inference')
+      // Either a select or input should be present with id rock-pillar
+      var pillarField = wrapper.find('#rock-pillar')
+      expect(pillarField.exists()).toBe(true)
       wrapper.unmount()
     })
 
@@ -621,6 +622,78 @@ describe('BigRockEditPanel', function() {
 
       // Should not have been added directly (browser default paste behavior)
       expect(editor.formData.value.outcomeKeys).toEqual([])
+      wrapper.unmount()
+    })
+  })
+
+  describe('name and pillar editability', function() {
+    it('shows rename helper text when name is changed in edit mode', async function() {
+      editor.openForEdit(sampleRock)
+      var wrapper = mountPanel()
+
+      var nameInput = wrapper.find('#rock-name')
+      await nameInput.setValue('NewRockName')
+      await nextTick()
+
+      expect(wrapper.text()).toContain('Renaming will trigger a data refresh')
+      wrapper.unmount()
+    })
+
+    it('does not show rename helper text when name is unchanged', function() {
+      editor.openForEdit(sampleRock)
+      var wrapper = mountPanel()
+      expect(wrapper.text()).not.toContain('Renaming will trigger a data refresh')
+      wrapper.unmount()
+    })
+
+    it('renders pillar as dropdown when pillarOptions are available', async function() {
+      editor.openForEdit(sampleRock)
+      editor.pillarOptions.value = ['Inference', 'Platform', 'Data']
+      await nextTick()
+
+      var wrapper = mountPanel()
+      var select = wrapper.find('select#rock-pillar')
+      expect(select.exists()).toBe(true)
+      var options = select.findAll('option')
+      // placeholder + 3 pillar options
+      expect(options.length).toBe(4)
+      expect(options[0].text()).toBe('-- Select pillar --')
+      expect(options[1].text()).toBe('Inference')
+      wrapper.unmount()
+    })
+
+    it('renders pillar as text input when no pillarOptions', function() {
+      editor.openForEdit(sampleRock)
+      // pillarOptions is empty by default after reset
+      var wrapper = mountPanel()
+      var input = wrapper.find('input#rock-pillar')
+      expect(input.exists()).toBe(true)
+      var select = wrapper.find('select#rock-pillar')
+      expect(select.exists()).toBe(false)
+      wrapper.unmount()
+    })
+
+    it('shows pillar field error', async function() {
+      editor.openForEdit(sampleRock)
+      editor.setFieldErrors({ pillar: 'Pillar must be one of: Inference, Platform' })
+      await nextTick()
+
+      var wrapper = mountPanel()
+      expect(wrapper.text()).toContain('Pillar must be one of')
+      wrapper.unmount()
+    })
+
+    it('shows name input in both create and edit modes', function() {
+      // Edit mode
+      editor.openForEdit(sampleRock)
+      var wrapper = mountPanel()
+      expect(wrapper.find('#rock-name').exists()).toBe(true)
+      wrapper.unmount()
+
+      // Create mode
+      editor.openForNew()
+      wrapper = mountPanel()
+      expect(wrapper.find('#rock-name').exists()).toBe(true)
       wrapper.unmount()
     })
   })

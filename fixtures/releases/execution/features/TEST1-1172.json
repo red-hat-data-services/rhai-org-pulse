@@ -107,5 +107,26 @@
   },
   "topology": {
     "repos": []
-  }
+  },
+  "_sources": {
+    "pipeline": "2026-04-10T06:09:29.084Z",
+    "jira": "2026-04-10T07:00:00.000Z",
+    "aiReview": "2026-04-19T01:30:35.000Z"
+  },
+  "aiReview": {
+    "title": "Red Hat AI Inference UI MVP",
+    "sourceRfe": "RHAIRFE-1056",
+    "size": "M",
+    "recommendation": "approve",
+    "needsAttention": false,
+    "humanReviewStatus": "awaiting-review",
+    "scores": { "feasibility": 2, "testability": 2, "scope": 1, "architecture": 2, "total": 7 },
+    "reviewers": { "feasibility": "approve", "testability": "approve", "scope": "revise", "architecture": "approve" },
+    "labels": ["strat-creator-auto-created", "strat-creator-rubric-pass"],
+    "reviewedAt": "2026-04-19T01:30:35Z",
+    "runId": "20260419-013035",
+    "history": []
+  },
+  "colorStatus": "Green",
+  "ownerStatusColor": "Green"
 }

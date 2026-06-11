@@ -176,6 +176,33 @@ test.describe('AI Impact Views @ai-impact', () => {
     await testView(page, 'feature-review', 'Feature Review');
   });
 
+  test('Feature Review view loads data from unified store', async ({ page }) => {
+    // Monitor API requests — Feature Review reads from ai-impact/features
+    // which internally reads from the releases execution store
+    const apiResponses = [];
+    page.on('response', response => {
+      if (response.url().includes('/api/modules/ai-impact/features')) {
+        apiResponses.push({
+          url: response.url(),
+          status: response.status()
+        });
+      }
+    });
+
+    await page.goto('/#/ai-impact/feature-review');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Verify the features API was called and returned data
+    const featuresResponse = apiResponses.find(r =>
+      r.url.endsWith('/features') || r.url.includes('/features?')
+    );
+    expect(featuresResponse).toBeDefined();
+    expect(featuresResponse.status).toBe(200);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
   test('should load Documentation view', async ({ page }) => {
     await testView(page, 'documentation', 'Documentation');
   });

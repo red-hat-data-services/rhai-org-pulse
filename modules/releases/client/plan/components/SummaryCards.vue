@@ -101,7 +101,7 @@ var totalFeatures = computed(function() {
 
     <!-- Card 2: Tier 1 Health -->
     <div class="p-4 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30">
-      <div class="text-sm font-semibold text-amber-700 dark:text-amber-400">Outcome Health</div>
+      <div class="text-sm font-semibold text-amber-700 dark:text-amber-400">Big Rock Health</div>
       <div class="mt-2 text-sm text-amber-700 dark:text-amber-400">
         <span class="font-bold">{{ summary.tier1 ? summary.tier1.features : 0 }}</span>
         <span class="text-amber-600/70 dark:text-amber-400/70 ml-1">features tracked</span>

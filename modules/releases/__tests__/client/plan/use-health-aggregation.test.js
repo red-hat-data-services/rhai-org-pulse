@@ -6,8 +6,8 @@ function makeHealthData(features) {
   return { features: features, summary: { total: features.length } }
 }
 
-function makeFeature(key, rfe, bigRock, tier) {
-  return { issueKey: key, rfe: rfe || null, bigRock: bigRock || null, tier: tier || null }
+function makeFeature(key, rfe, bigRock, tier, phase) {
+  return { issueKey: key, rfe: rfe || null, bigRock: bigRock || null, tier: tier || null, phase: phase || '' }
 }
 
 function makeHealthFeature(key, level, flags, override, extras) {
@@ -187,6 +187,93 @@ describe('useHealthAggregation', function() {
       var result = useHealthAggregation(ref(null), ref([]), ref([]), ref([]))
       expect(result.rockHealth.value).toEqual({})
     })
+
+    it('splits merged bigRock names into separate entries', function() {
+      var hd = ref(makeHealthData([
+        makeHealthFeature('FEAT-1', 'yellow', [{ category: 'DOR_INCOMPLETE' }])
+      ]))
+      var features = ref([
+        makeFeature('FEAT-1', null, 'Rock A, Rock B')
+      ])
+
+      var result = useHealthAggregation(hd, features, ref([]), ref([]))
+      expect(result.rockHealth.value['Rock A']).toBeDefined()
+      expect(result.rockHealth.value['Rock B']).toBeDefined()
+      expect(result.rockHealth.value['Rock A, Rock B']).toBeUndefined()
+      expect(result.rockHealth.value['Rock A'].worstLevel).toBe('yellow')
+      expect(result.rockHealth.value['Rock B'].worstLevel).toBe('yellow')
+      expect(result.rockHealth.value['Rock A'].featureCount).toBe(1)
+      expect(result.rockHealth.value['Rock B'].featureCount).toBe(1)
+    })
+
+    it('worst-of aggregation works across split rocks', function() {
+      var hd = ref(makeHealthData([
+        makeHealthFeature('FEAT-1', 'red', [{ category: 'BLOCKED' }])
+      ]))
+      var features = ref([
+        makeFeature('FEAT-1', null, 'Rock A, Rock B')
+      ])
+
+      var result = useHealthAggregation(hd, features, ref([]), ref([]))
+      expect(result.rockHealth.value['Rock A'].worstLevel).toBe('red')
+      expect(result.rockHealth.value['Rock B'].worstLevel).toBe('red')
+    })
+
+    it('empty bigRock string is skipped', function() {
+      var hd = ref(makeHealthData([
+        makeHealthFeature('FEAT-1', 'red', [])
+      ]))
+      var features = ref([
+        makeFeature('FEAT-1', null, '')
+      ])
+
+      var result = useHealthAggregation(hd, features, ref([]), ref([]))
+      expect(Object.keys(result.rockHealth.value)).toEqual([])
+    })
+
+    it('aggregates releaseTypes from feature phase values (DP/TP/GA only)', function() {
+      var hd = ref(makeHealthData([
+        makeHealthFeature('FEAT-1', 'green', []),
+        makeHealthFeature('FEAT-2', 'green', []),
+        makeHealthFeature('FEAT-3', 'green', [])
+      ]))
+      var features = ref([
+        makeFeature('FEAT-1', null, 'Rock A', null, 'TP'),
+        makeFeature('FEAT-2', null, 'Rock A', null, 'GA'),
+        makeFeature('FEAT-3', null, 'Rock A', null, 'EA1')
+      ])
+
+      var result = useHealthAggregation(hd, features, ref([]), ref([]))
+      // EA1 is excluded; TP and GA are included, sorted by maturity order
+      expect(result.rockHealth.value['Rock A'].releaseTypes).toEqual(['TP', 'GA'])
+    })
+
+    it('returns empty releaseTypes when no features have qualifying phase', function() {
+      var hd = ref(makeHealthData([
+        makeHealthFeature('FEAT-1', 'green', [])
+      ]))
+      var features = ref([
+        makeFeature('FEAT-1', null, 'Rock A', null, 'EA2')
+      ])
+
+      var result = useHealthAggregation(hd, features, ref([]), ref([]))
+      expect(result.rockHealth.value['Rock A'].releaseTypes).toEqual([])
+    })
+
+    it('collects releaseTypes even for features without health data', function() {
+      var hd = ref(makeHealthData([
+        makeHealthFeature('FEAT-1', 'green', [])
+        // FEAT-2 has no health entry
+      ]))
+      var features = ref([
+        makeFeature('FEAT-1', null, 'Rock A', null, 'GA'),
+        makeFeature('FEAT-2', null, 'Rock A', null, 'DP')
+      ])
+
+      var result = useHealthAggregation(hd, features, ref([]), ref([]))
+      // Both DP and GA should be collected even though FEAT-2 has no health data
+      expect(result.rockHealth.value['Rock A'].releaseTypes).toEqual(['DP', 'GA'])
+    })
   })
 
   describe('rockFeatures', function() {
@@ -215,6 +302,11 @@ describe('useHealthAggregation', function() {
       expect(rf[0].jiraUrl).toBe('https://issues.redhat.com/browse/FEAT-1')
       expect(rf[0].override).toBe(null)
       expect(rf[0].status).toBe('In Progress')
+      expect(rf[0].fixVersions).toBe('')
+      expect(rf[0].targetRelease).toBe('')
+      expect(rf[0].versionStatus).toBe('none')
+      expect(rf[0].completionPct).toBe(0)
+      expect(rf[0].planningChecks).toBe(null)
 
       expect(rf[1].key).toBe('FEAT-2')
       expect(rf[1].level).toBe('red')
@@ -228,6 +320,11 @@ describe('useHealthAggregation', function() {
       expect(rf[1].jiraUrl).toBe('https://issues.redhat.com/browse/FEAT-2')
       expect(rf[1].override).toBe(null)
       expect(rf[1].status).toBe('In Progress')
+      expect(rf[1].fixVersions).toBe('')
+      expect(rf[1].targetRelease).toBe('')
+      expect(rf[1].versionStatus).toBe('none')
+      expect(rf[1].completionPct).toBe(0)
+      expect(rf[1].planningChecks).toBe(null)
     })
 
     it('defaults to green when feature has no health data', function() {
@@ -279,6 +376,59 @@ describe('useHealthAggregation', function() {
       expect(unknown.jiraUrl).toBe('')
       expect(unknown.override).toBe(null)
       expect(unknown.status).toBe('')
+      expect(unknown.fixVersions).toBe('')
+      expect(unknown.targetRelease).toBe('')
+      expect(unknown.versionStatus).toBe('none')
+      expect(unknown.completionPct).toBe(0)
+      expect(unknown.planningChecks).toBe(null)
+    })
+
+    it('splits merged bigRock names into separate entries', function() {
+      var hd = ref(makeHealthData([
+        makeHealthFeature('FEAT-1', 'yellow', [{ category: 'DOR_INCOMPLETE' }])
+      ]))
+      var features = ref([
+        makeFeature('FEAT-1', null, 'Rock A, Rock B')
+      ])
+
+      var result = useHealthAggregation(hd, features, ref([]), ref([]))
+      expect(result.rockFeatures.value['Rock A']).toBeDefined()
+      expect(result.rockFeatures.value['Rock B']).toBeDefined()
+      expect(result.rockFeatures.value['Rock A, Rock B']).toBeUndefined()
+      expect(result.rockFeatures.value['Rock A']).toHaveLength(1)
+      expect(result.rockFeatures.value['Rock B']).toHaveLength(1)
+      expect(result.rockFeatures.value['Rock A'][0].key).toBe('FEAT-1')
+      expect(result.rockFeatures.value['Rock B'][0].key).toBe('FEAT-1')
+      expect(result.rockFeatures.value['Rock A'][0].bigRock).toBe('Rock A, Rock B')
+      expect(result.rockFeatures.value['Rock B'][0].bigRock).toBe('Rock A, Rock B')
+    })
+
+    it('includes bigRock field in rockFeatures projection', function() {
+      var hd = ref(makeHealthData([
+        makeHealthFeature('FEAT-1', 'green', [])
+      ]))
+      var features = ref([
+        makeFeature('FEAT-1', null, 'Single Rock')
+      ])
+
+      var result = useHealthAggregation(hd, features, ref([]), ref([]))
+      expect(result.rockFeatures.value['Single Rock'][0].bigRock).toBe('Single Rock')
+    })
+
+    it('includes releaseType from feature phase in rockFeatures projection', function() {
+      var hd = ref(makeHealthData([
+        makeHealthFeature('FEAT-1', 'green', []),
+        makeHealthFeature('FEAT-2', 'green', [])
+      ]))
+      var features = ref([
+        makeFeature('FEAT-1', null, 'Rock A', null, 'TP'),
+        makeFeature('FEAT-2', null, 'Rock A', null, '')
+      ])
+
+      var result = useHealthAggregation(hd, features, ref([]), ref([]))
+      var rf = result.rockFeatures.value['Rock A']
+      expect(rf[0].releaseType).toBe('TP')
+      expect(rf[1].releaseType).toBe('')
     })
 
     it('green count never exceeds total count (fraction consistency)', function() {

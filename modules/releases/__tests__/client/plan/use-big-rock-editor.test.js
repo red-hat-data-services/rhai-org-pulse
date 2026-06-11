@@ -166,6 +166,32 @@ describe('isDirty', function() {
       expect(editor.isDirty.value).toBe(false)
     })
 
+    it('is dirty when name changes', function() {
+      editor.openForEdit(sampleRock)
+      editor.formData.value.name = 'NewName'
+      expect(editor.isDirty.value).toBe(true)
+    })
+
+    it('is not dirty when name reverts to original', function() {
+      editor.openForEdit(sampleRock)
+      editor.formData.value.name = 'NewName'
+      expect(editor.isDirty.value).toBe(true)
+      editor.formData.value.name = 'MaaS'
+      expect(editor.isDirty.value).toBe(false)
+    })
+
+    it('is dirty when fullName changes', function() {
+      editor.openForEdit(sampleRock)
+      editor.formData.value.fullName = 'New Full Name'
+      expect(editor.isDirty.value).toBe(true)
+    })
+
+    it('is dirty when pillar changes', function() {
+      editor.openForEdit(sampleRock)
+      editor.formData.value.pillar = 'Platform'
+      expect(editor.isDirty.value).toBe(true)
+    })
+
     it('is dirty when owner changes', function() {
       editor.openForEdit(sampleRock)
       editor.formData.value.owner = 'new-owner@redhat.com'
@@ -269,5 +295,23 @@ describe('reset', function() {
     expect(editor.saving.value).toBe(false)
     expect(editor.saveError.value).toBe(null)
     expect(editor.fieldErrors.value).toEqual({})
+  })
+
+  it('resets pillarOptions', function() {
+    editor.pillarOptions.value = ['Inference', 'Platform']
+    editor.reset()
+    expect(editor.pillarOptions.value).toEqual([])
+  })
+})
+
+describe('pillarOptions', function() {
+  it('starts with empty array', function() {
+    expect(editor.pillarOptions.value).toEqual([])
+  })
+
+  it('is a ref that can be updated', function() {
+    editor.pillarOptions.value = ['Inference', 'Platform']
+    expect(editor.pillarOptions.value).toEqual(['Inference', 'Platform'])
+    editor.reset()
   })
 })

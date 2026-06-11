@@ -33,8 +33,13 @@
       "linkedStatus": "Approved"
     }
   ],
-  "targetVersions": ["rhoai-3.5"],
-  "pm": {"displayName": "Jane PM", "accountId": "pm-001"},
+  "targetVersions": [
+    "rhoai-3.5"
+  ],
+  "pm": {
+    "displayName": "Jane PM",
+    "accountId": "pm-001"
+  },
   "architect": null,
   "parentKey": "TEST1-1016",
   "epics": [],
@@ -58,5 +63,11 @@
   },
   "topology": {
     "repos": []
-  }
+  },
+  "_sources": {
+    "pipeline": "2026-04-10T06:09:29.084Z",
+    "jira": "2026-04-10T07:00:00.000Z"
+  },
+  "colorStatus": "Red",
+  "ownerStatusColor": "Red"
 }

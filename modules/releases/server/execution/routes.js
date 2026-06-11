@@ -5,6 +5,7 @@
  * Storage paths migrated to releases/execution/ (Phase 5).
  */
 
+const express = require('express');
 const scheduler = require('./scheduler');
 const {
   getToken,
@@ -12,11 +13,14 @@ const {
   loadConfig,
   manualRefresh,
   onConfigSave,
-  initScheduler
+  setOnCadenceChange
 } = scheduler;
 const { logAudit } = require('../planning/audit-log');
+const { mergeAiReview } = require('./ai-review-merge');
+const { writeFeatures } = require('./feature-store');
 
 const DATA_PREFIX = 'releases/execution';
+const jsonLimit = express.json({ limit: '10mb' });
 
 function stripZStream(value) {
   if (!value) return value
@@ -122,18 +126,38 @@ function stripZStream(value) {
  *         description: Save result
  */
 
+/**
+ * @openapi
+ * /api/modules/releases/execution/features/{key}/refresh:
+ *   post:
+ *     summary: On-demand single-feature refresh from Jira
+ *     tags: [Releases - Execution]
+ *     parameters:
+ *       - in: path
+ *         name: key
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Refreshed feature
+ *       400:
+ *         description: Invalid key format
+ *       404:
+ *         description: Feature not found
+ *       429:
+ *         description: Per-key cooldown active
+ */
+
 module.exports = function registerExecutionRoutes(router, context) {
-  // Initialize scheduler with secrets
-  if (context.secrets) scheduler.init(context.secrets);
+  // Initialize scheduler with secrets and jira client
+  const jira = context.jira || null;
+  if (context.secrets) scheduler.init(context.secrets, jira);
 
   const { storage, requireAuth, requireScope } = context;
 
   function readDataFile(relativePath) {
     return storage.readFromStorage(`${DATA_PREFIX}/${relativePath}`);
   }
-
-  // Initialize scheduler on module load (staggered: planning=0s, execution=5s, delivery=10s)
-  setTimeout(function() { initScheduler(storage); }, 5000);
 
   // GET /features — list all features with summary metrics
   router.get('/features', requireAuth, requireScope('releases:read'), function(req, res) {
@@ -205,6 +229,51 @@ module.exports = function registerExecutionRoutes(router, context) {
     }
 
     res.json(feature);
+  });
+
+  // POST /features/:key/refresh — on-demand single-feature refresh from Jira
+  const perKeyLastRefresh = new Map();
+  const PER_KEY_COOLDOWN_MS = 60 * 1000;
+
+  router.post('/features/:key/refresh', requireAuth, requireScope('releases:read'), async function(req, res) {
+    const key = req.params.key.toUpperCase();
+
+    if (!/^[A-Z][A-Z0-9]+-\d+$/.test(key)) {
+      return res.status(400).json({ error: 'Invalid feature key format' });
+    }
+
+    const existing = readDataFile(`features/${key}.json`);
+    if (!existing) {
+      return res.status(404).json({ error: `Feature ${key} not found` });
+    }
+
+    // Per-key cooldown
+    const lastRefresh = perKeyLastRefresh.get(key) || 0;
+    const elapsed = Date.now() - lastRefresh;
+    if (lastRefresh > 0 && elapsed < PER_KEY_COOLDOWN_MS) {
+      const retryAfter = Math.ceil((PER_KEY_COOLDOWN_MS - elapsed) / 1000);
+      return res.status(429).json({ status: 'cooldown', retryAfter });
+    }
+
+    if (!jira) {
+      return res.status(503).json({ error: 'Jira client not configured' });
+    }
+
+    try {
+      const { enrichFeatures } = require('./jira-enrich');
+      const { mergeFeatureData, writeFeatures } = require('./feature-store');
+
+      const enrichmentMap = await enrichFeatures([key], jira.jiraRequest, jira.fetchAllJqlResults);
+      const jiraData = enrichmentMap.get(key) || null;
+      const merged = mergeFeatureData(existing, null, jiraData);
+
+      await writeFeatures(storage, [merged]);
+      perKeyLastRefresh.set(key, Date.now());
+
+      res.json(merged);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
   });
 
   // GET /status — data freshness and sync info
@@ -321,6 +390,127 @@ module.exports = function registerExecutionRoutes(router, context) {
     }
   });
 
+  // ─── AI Review internal API ───
+
+  /**
+   * @openapi
+   * /api/modules/releases/execution/ai-review/bulk:
+   *   post:
+   *     summary: Bulk upsert AI review data into unified feature store
+   *     tags: [Releases - Execution]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               features:
+   *                 type: array
+   *                 items:
+   *                   type: object
+   *                   properties:
+   *                     key: { type: string }
+   *                     aiReview: { type: object }
+   *     responses:
+   *       200:
+   *         description: Upsert results with created/updated/unchanged counts
+   */
+  router.post('/ai-review/bulk', context.requireAdmin, requireScope('releases:write'), jsonLimit, async function(req, res) {
+    const { features } = req.body;
+    if (!Array.isArray(features)) {
+      return res.status(400).json({ error: 'features must be an array' });
+    }
+    if (features.length > 5000) {
+      return res.status(400).json({ error: 'Bulk payload exceeds maximum of 5000 entries' });
+    }
+
+    try {
+      const counts = { created: 0, updated: 0, unchanged: 0, skipped: 0 };
+      const toWrite = [];
+
+      const KEY_RE = /^[A-Z][A-Z0-9]+-\d+$/;
+
+      for (let i = 0; i < features.length; i++) {
+        const entry = features[i];
+        if (!entry || !entry.key || !entry.aiReview) {
+          counts.skipped++;
+          continue;
+        }
+        if (!KEY_RE.test(entry.key)) {
+          counts.skipped++;
+          continue;
+        }
+
+        const existing = readDataFile('features/' + entry.key + '.json');
+        const { aiReview, status } = mergeAiReview(
+          existing ? existing.aiReview : null,
+          entry.aiReview
+        );
+
+        counts[status]++;
+
+        if (status !== 'unchanged') {
+          const feature = existing || { key: entry.key, summary: entry.aiReview.title || '' };
+          feature.aiReview = aiReview;
+          feature._sources = feature._sources || {};
+          feature._sources.aiReview = new Date().toISOString();
+          toWrite.push(feature);
+        }
+      }
+
+      if (toWrite.length > 0) {
+        await writeFeatures(storage, toWrite);
+      }
+
+      res.json(counts);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/modules/releases/execution/ai-review:
+   *   delete:
+   *     summary: Remove AI review data from all features (async)
+   *     tags: [Releases - Execution]
+   *     responses:
+   *       200:
+   *         description: Deletion started
+   */
+  router.delete('/ai-review', context.requireAdmin, requireScope('releases:write'), function(req, res) {
+    res.json({ status: 'started', message: 'AI review data removal started' });
+
+    // Process in background
+    (async function() {
+      try {
+        const fileNames = storage.listStorageFiles(DATA_PREFIX + '/features');
+        if (!fileNames || fileNames.length === 0) return;
+
+        const toWrite = [];
+        for (let i = 0; i < fileNames.length; i++) {
+          if (!fileNames[i].endsWith('.json')) continue;
+          const feature = storage.readFromStorage(DATA_PREFIX + '/features/' + fileNames[i]);
+          if (feature && feature.aiReview) {
+            delete feature.aiReview;
+            if (feature._sources) {
+              delete feature._sources.aiReview;
+            }
+            toWrite.push(feature);
+          }
+        }
+
+        if (toWrite.length > 0) {
+          await writeFeatures(storage, toWrite);
+        }
+        console.log('[execution] Removed AI review data from ' + toWrite.length + ' features');
+      } catch (err) {
+        console.error('[execution] AI review data removal failed:', err.message);
+      }
+    })();
+  });
+
   // Diagnostics
   if (context.registerDiagnostics) {
     context.registerDiagnostics(async function() {
@@ -337,18 +527,82 @@ module.exports = function registerExecutionRoutes(router, context) {
     });
   }
 
-  if (context.registerRefresh) {
-    context.registerRefresh('execution', {
-      order: 70,
-      timeout: 600000,
-      handler: async function(options) {
-        options = options || {};
-        if (options.skipCooldown) {
-          const { runFetch } = require('./scheduler');
-          return runFetch(storage);
-        }
-        return manualRefresh(storage);
+  // Handler config defined once — single source of truth
+  const handlerConfig = {
+    order: 70,
+    timeout: 600000,
+    description: 'Fetches execution pipeline data from GitLab CI artifacts for release tracking.',
+    handler: async function(options) {
+      options = options || {};
+      if (options.skipCooldown) {
+        const { runFetch } = require('./scheduler');
+        return runFetch(storage);
       }
+      return manualRefresh(storage);
+    }
+  };
+
+  if (context.registerRefresh) {
+    const initialConfig = loadConfig(storage);
+    context.registerRefresh('execution', {
+      ...handlerConfig,
+      cadence: initialConfig.refreshIntervalHours + 'h'
     });
+
+    // Wire config save to re-register with updated cadence
+    setOnCadenceChange(function(newCadenceStr) {
+      context.registerRefresh('execution', {
+        ...handlerConfig,
+        cadence: newCadenceStr
+      });
+    });
+
+    // Register Jira enrichment periodic sync (Phase 3)
+    if (jira) {
+      const { syncAllFeatures, discoverFromJira, reconcileTrackingData } = require('./jira-sync');
+
+      const enrichmentConfig = initialConfig.jiraEnrichment || {};
+      const syncIntervalHours = enrichmentConfig.syncIntervalHours || 6;
+
+      const enrichmentHandler = async function() {
+        const config = loadConfig(storage);
+        const jiraEnrichConfig = config.jiraEnrichment || {};
+        if (!jiraEnrichConfig.enabled) {
+          return { status: 'skipped', message: 'Jira enrichment disabled' };
+        }
+
+        const result = await syncAllFeatures(storage, jira.jiraRequest, jira.fetchAllJqlResults);
+
+        // Feature discovery (Phase 4)
+        if (jiraEnrichConfig.discoveryEnabled) {
+          try {
+            const discovery = await discoverFromJira(
+              storage, jira.jiraRequest, jira.fetchAllJqlResults, jiraEnrichConfig
+            );
+            result.discovery = discovery;
+          } catch (err) {
+            console.warn('[execution] Feature discovery failed:', err.message);
+          }
+        }
+
+        // Tracking data reconciliation
+        try {
+          const reconciliation = await reconcileTrackingData(storage);
+          result.reconciliation = reconciliation;
+        } catch (err) {
+          console.warn('[execution] Tracking reconciliation failed:', err.message);
+        }
+
+        return result;
+      };
+
+      context.registerRefresh('jira-enrichment', {
+        order: 75,
+        cadence: syncIntervalHours + 'h',
+        timeout: 120000,
+        description: 'Enriches execution data with Jira issue details, status transitions, and tracking reconciliation.',
+        handler: enrichmentHandler
+      });
+    }
   }
 };

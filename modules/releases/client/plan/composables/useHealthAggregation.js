@@ -71,30 +71,92 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
   })
 
   /**
+   * Planning readiness data from the health API summary.
+   * Null when not in planning mode or enablePlanningChecks is off.
+   */
+  var planningReadiness = computed(function() {
+    if (!healthData.value || !healthData.value.summary) return null
+    return healthData.value.summary.planningReadiness || null
+  })
+
+  /**
+   * Release phase mode from the health API response.
+   * 'planning' = before GA freeze, 'execution' = at/past GA freeze, 'unknown' = cannot determine.
+   */
+  var releasePhaseMode = computed(function() {
+    return healthData.value ? healthData.value.releasePhaseMode || 'unknown' : 'unknown'
+  })
+
+  /**
    * Per-big-rock aggregated health: worst risk level, total flags, feature count.
-   * Respects risk overrides.
+   * Respects risk overrides. In planning mode, also aggregates planning check data.
    */
   var rockHealth = computed(function() {
     if (Object.keys(healthByKey.value).length === 0) return {}
     var result = {}
+    var isPlanningMode = releasePhaseMode.value === 'planning'
     for (var i = 0; i < features.value.length; i++) {
       var f = features.value[i]
-      var rockName = f.bigRock
-      if (!rockName) continue
-      var h = healthByKey.value[f.issueKey]
-      if (!h || !h.risk) continue
+      var rockNames = f.bigRock ? f.bigRock.split(', ') : []
+      if (rockNames.length === 0) continue
 
-      if (!result[rockName]) {
-        result[rockName] = { worstLevel: 'green', totalFlags: 0, featureCount: 0, dorPassedCount: 0, dodPassedCount: 0 }
+      for (var ri = 0; ri < rockNames.length; ri++) {
+        var rockName = rockNames[ri]
+        if (!result[rockName]) {
+          result[rockName] = { worstLevel: 'green', totalFlags: 0, featureCount: 0, dorPassedCount: 0, dodPassedCount: 0, planningReady: 0, planningTotal: 0, planningBlockers: 0, versionedCount: 0, missingVersionCount: 0, committedCount: 0, targetedCount: 0, distinctVersions: new Set(), releaseTypes: new Set() }
+        }
+
+        // Collect release type from candidates data (available on all features)
+        var featurePhase = f.phase || ''
+        if (['DP', 'TP', 'GA'].indexOf(featurePhase) !== -1) {
+          result[rockName].releaseTypes.add(featurePhase)
+        }
+
+        // Health-specific aggregation below — skips features without health data
+        var h = healthByKey.value[f.issueKey]
+        if (!h || !h.risk) continue
+
+        result[rockName].featureCount++
+        result[rockName].totalFlags += (h.risk.score || 0)
+        if (h.dor && h.dor.passed) result[rockName].dorPassedCount++
+        if (h.dod && h.dod.passed) result[rockName].dodPassedCount++
+        var level = effectiveLevel(h)
+        if (isWorse(level, result[rockName].worstLevel)) {
+          result[rockName].worstLevel = level
+        }
+        // Planning mode aggregation
+        if (isPlanningMode && h.planningChecks) {
+          result[rockName].planningTotal++
+          if (!h.planningChecks.hasHardBlockers) {
+            result[rockName].planningReady++
+          } else {
+            result[rockName].planningBlockers++
+          }
+        }
+        // Version aggregation
+        var vs = h.versionStatus || 'none'
+        if (vs === 'committed' || vs === 'targeted') {
+          result[rockName].versionedCount++
+          if (vs === 'committed') result[rockName].committedCount++
+          else result[rockName].targetedCount++
+        } else {
+          result[rockName].missingVersionCount++
+        }
+        if (h.fixVersions) {
+          var fvParts = typeof h.fixVersions === 'string' ? h.fixVersions.split(', ') : []
+          for (var fvi = 0; fvi < fvParts.length; fvi++) {
+            if (fvParts[fvi]) result[rockName].distinctVersions.add(fvParts[fvi])
+          }
+        }
       }
-      result[rockName].featureCount++
-      result[rockName].totalFlags += (h.risk.score || 0)
-      if (h.dor && h.dor.passed) result[rockName].dorPassedCount++
-      if (h.dod && h.dod.passed) result[rockName].dodPassedCount++
-      var level = effectiveLevel(h)
-      if (isWorse(level, result[rockName].worstLevel)) {
-        result[rockName].worstLevel = level
-      }
+    }
+    // Convert Sets to arrays before returning
+    var MATURITY_ORDER = { DP: 0, TP: 1, GA: 2 }
+    var resultKeys = Object.keys(result)
+    for (var rni = 0; rni < resultKeys.length; rni++) {
+      result[resultKeys[rni]].distinctVersions = Array.from(result[resultKeys[rni]].distinctVersions)
+      result[resultKeys[rni]].releaseTypes = Array.from(result[resultKeys[rni]].releaseTypes)
+        .sort(function(a, b) { return (MATURITY_ORDER[a] !== undefined ? MATURITY_ORDER[a] : 99) - (MATURITY_ORDER[b] !== undefined ? MATURITY_ORDER[b] : 99) })
     }
     return result
   })
@@ -108,26 +170,36 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
     var result = {}
     for (var i = 0; i < features.value.length; i++) {
       var f = features.value[i]
-      var rockName = f.bigRock
-      if (!rockName) continue
+      var rockNames = f.bigRock ? f.bigRock.split(', ') : []
+      if (rockNames.length === 0) continue
       var h = healthByKey.value[f.issueKey]
-      if (!result[rockName]) result[rockName] = []
-      var level = h && h.risk ? effectiveLevel(h) : 'green'
-      var flags = h && h.risk ? h.risk.flags || [] : []
-      result[rockName].push({
-        key: f.issueKey,
-        level: level,
-        flagCount: flags.length,
-        flagCategories: flags.map(function(fl) { return fl.category }),
-        summary: h ? (h.summary || '') : '',
-        dorPassed: h && h.dor ? h.dor.passed : null,
-        dodPassed: h && h.dod ? h.dod.passed : null,
-        planningStatus: h ? (h.planningStatus || '') : '',
-        deliveryOwner: h ? (h.deliveryOwner || '') : '',
-        jiraUrl: h ? (h.jiraUrl || '') : '',
-        override: h && h.risk ? (h.risk.override || null) : null,
-        status: h ? (h.status || '') : ''
-      })
+      for (var ri = 0; ri < rockNames.length; ri++) {
+        var rockName = rockNames[ri]
+        if (!result[rockName]) result[rockName] = []
+        var level = h && h.risk ? effectiveLevel(h) : 'green'
+        var flags = h && h.risk ? h.risk.flags || [] : []
+        result[rockName].push({
+          key: f.issueKey,
+          bigRock: f.bigRock || '',
+          releaseType: f.phase || '',
+          level: level,
+          flagCount: flags.length,
+          flagCategories: flags.map(function(fl) { return fl.category }),
+          summary: h ? (h.summary || '') : '',
+          dorPassed: h && h.dor ? h.dor.passed : null,
+          dodPassed: h && h.dod ? h.dod.passed : null,
+          planningStatus: h ? (h.planningStatus || '') : '',
+          deliveryOwner: h ? (h.deliveryOwner || '') : '',
+          jiraUrl: h ? (h.jiraUrl || '') : '',
+          override: h && h.risk ? (h.risk.override || null) : null,
+          status: h ? (h.status || '') : '',
+          fixVersions: h ? (h.fixVersions || '') : '',
+          targetRelease: h ? (h.targetRelease || '') : '',
+          versionStatus: h ? (h.versionStatus || 'none') : 'none',
+          completionPct: h ? (h.completionPct || 0) : 0,
+          planningChecks: h && h.planningChecks ? h.planningChecks : null
+        })
+      }
     }
     return result
   })
@@ -160,6 +232,8 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
     rockHealth: rockHealth,
     rockFeatures: rockFeatures,
     healthSummary: healthSummary,
-    tier1HealthSummary: tier1HealthSummary
+    tier1HealthSummary: tier1HealthSummary,
+    planningReadiness: planningReadiness,
+    releasePhaseMode: releasePhaseMode
   }
 }

@@ -152,6 +152,92 @@ function applyBlockerEscalation(healthFeatures) {
   return escalatedCount
 }
 
+/**
+ * Compute planning-phase readiness checks (DoR-P series).
+ * These checks evaluate whether a feature has the required fields set
+ * for planning readiness, per the "Feature Definition of Ready" flowchart.
+ *
+ * All 5 checks are hard-blockers per stakeholder decision (2026-06-09).
+ *
+ * @param {object} feature - Health feature object
+ * @returns {{ checks: Array, passedCount: number, totalCount: number, hasHardBlockers: boolean, hardBlockersFailed: Array }}
+ */
+function computePlanningChecks(feature) {
+  var checks = []
+
+  // DoR-P1: Components set
+  var components = feature.components || []
+  var hasComponents = Array.isArray(components)
+    ? components.length > 0
+    : (typeof components === 'string' && components.trim().length > 0)
+  checks.push({
+    id: 'DoR-P1',
+    label: 'Components Set',
+    passed: hasComponents,
+    severity: 'hard-blocker',
+    detail: hasComponents
+      ? (Array.isArray(components) ? components.join(', ') : components)
+      : 'No components assigned'
+  })
+
+  // DoR-P2: Product Manager assigned
+  var pm = feature.pm || ''
+  var hasPM = typeof pm === 'object' ? !!(pm.displayName || pm.name) : pm.length > 0
+  checks.push({
+    id: 'DoR-P2',
+    label: 'Product Manager Assigned',
+    passed: hasPM,
+    severity: 'hard-blocker',
+    detail: hasPM ? (typeof pm === 'object' ? pm.displayName || pm.name : pm) : null
+  })
+
+  // DoR-P3: Release type set
+  var phase = feature.phase || feature.releaseType || ''
+  checks.push({
+    id: 'DoR-P3',
+    label: 'Release Type Set',
+    passed: phase.length > 0,
+    severity: 'hard-blocker',
+    detail: phase || 'No release type (DP/TP/GA) specified'
+  })
+
+  // DoR-P4: Child epics created
+  var epicCount = feature.epicCount || 0
+  checks.push({
+    id: 'DoR-P4',
+    label: 'Child Epics Created',
+    passed: epicCount > 0,
+    severity: 'hard-blocker',
+    detail: epicCount > 0
+      ? epicCount + ' epic(s)'
+      : 'No child epics linked'
+  })
+
+  // DoR-P5: RFE linked
+  var hasRfe = !!(feature.rfe || feature.parentKey)
+  checks.push({
+    id: 'DoR-P5',
+    label: 'RFE Linked',
+    passed: hasRfe,
+    severity: 'hard-blocker',
+    detail: hasRfe
+      ? (feature.rfe || feature.parentKey)
+      : 'No source RFE linked'
+  })
+
+  var hardBlockersFailed = checks.filter(function(c) {
+    return c.severity === 'hard-blocker' && !c.passed
+  })
+
+  return {
+    checks: checks,
+    passedCount: checks.filter(function(c) { return c.passed }).length,
+    totalCount: checks.length,
+    hasHardBlockers: hardBlockersFailed.length > 0,
+    hardBlockersFailed: hardBlockersFailed
+  }
+}
+
 function derivePlanningStatus(dorResult, dodResult) {
   if (!dorResult.passed) return 'not-ready'
   if (!dodResult.passed) return 'in-planning'
@@ -161,6 +247,7 @@ function derivePlanningStatus(dorResult, dodResult) {
 module.exports = {
   computeDoD: computeDoD,
   computeDoR: computeDoR,
+  computePlanningChecks: computePlanningChecks,
   derivePlanningStatus: derivePlanningStatus,
   parseStratCreatorStatus: parseStratCreatorStatus,
   applyBlockerEscalation: applyBlockerEscalation,

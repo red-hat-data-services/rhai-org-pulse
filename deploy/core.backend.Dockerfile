@@ -17,6 +17,14 @@ WORKDIR /app
 
 RUN microdnf install -y git-core ca-certificates python3 make gcc gcc-c++ && microdnf clean all
 
+# Collect shared libraries needed by git-remote-https (for HTTPS clone/fetch)
+# The runtime image is distroless-like and lacks libcurl + transitive deps
+RUN mkdir -p /git-libs && \
+    ldd /usr/libexec/git-core/git-remote-https | \
+    awk '/=>/ { print $3 }' | \
+    grep -v -E '/(libc|libpthread|libdl|libm|librt|libresolv|libnss|libgcc_s|libstdc\+\+)\.' | \
+    xargs -I{} cp -L {} /git-libs/
+
 # Trust internal CA
 COPY deploy/certs/internal-root-ca.pem /etc/pki/ca-trust/source/anchors/internal-root-ca.pem
 RUN update-ca-trust
@@ -32,13 +40,21 @@ USER 0
 
 WORKDIR /app
 
-# Copy git binary and libexec helpers from build stage
+# Copy git, tar, and gzip binaries from build stage
 COPY --from=build /usr/bin/git /usr/bin/git
 COPY --from=build /usr/libexec/git-core /usr/libexec/git-core
+COPY --from=build /usr/bin/tar /usr/bin/tar
+COPY --from=build /usr/bin/gzip /usr/bin/gzip
+
+# Copy shared libraries required by git-remote-https (collected via ldd in build stage)
+COPY --from=build /git-libs/ /usr/lib64/
 
 # Copy CA trust bundle (internal CA baked in via update-ca-trust)
 COPY --from=build /etc/pki/ca-trust/extracted /etc/pki/ca-trust/extracted
 COPY --from=build /etc/pki/ca-trust/source/anchors/internal-root-ca.pem /etc/pki/ca-trust/source/anchors/internal-root-ca.pem
+# Symlink ca-bundle.crt where libcurl/git expect it (the target was copied above)
+RUN mkdir -p /etc/pki/tls/certs && \
+    ln -s /etc/pki/ca-trust/extracted/pem/tls-ca-bundle.pem /etc/pki/tls/certs/ca-bundle.crt
 ENV NODE_EXTRA_CA_CERTS=/etc/pki/ca-trust/source/anchors/internal-root-ca.pem
 
 # Copy node_modules from build stage

@@ -19,7 +19,7 @@ Core team owns `shared/` via CODEOWNERS. Changes require core team review.
 | Export | Description |
 |--------|-------------|
 | `useRoster()` | Reactive roster data (orgs, teams, members) with fetch/refresh |
-| `useAuth()` | Current user info, admin status, team-admin status, roles. Exports `isAdmin`, `isTeamAdmin`, `roles`, `refresh()`. |
+| `useAuth()` | Current user info, admin status, team-admin status, roles. Exports `isAdmin`, `isTeamAdmin`, `roles`, `apiBaseUrl`, `refresh()`. |
 | `useGithubStats()` | GitHub contribution data with fetch/refresh |
 | `useGitlabStats()` | GitLab contribution data with fetch/refresh. Exports `getProfileUrls(gitlabUsername)` returning `[{ baseUrl, label, url }]` for per-instance profile links. |
 | `usePermissions()` | Reactive permission state: roles, managed UIDs, `isAdmin`, `isTeamAdmin`, `isManager`, `canEdit(uid)`, `canEditTeam(teamId)` |
@@ -56,6 +56,9 @@ Core team owns `shared/` via CODEOWNERS. Changes require core team review.
 | `PermissionBadge.vue` | `@shared/client/components/PermissionBadge.vue` | Small badge showing user's role |
 | `PersonReferenceField.vue` | `@shared/client/components/PersonReferenceField.vue` | Renders person references (linked -> clickable, unlinked -> plain text) |
 | `AppMessages.vue` | `@shared/client/components/AppMessages.vue` | Stacked app-wide message banners (warning/info/error) with dismiss |
+| `FeatureReadinessRow.vue` | `@shared/client/components/FeatureReadinessRow.vue` | Table row for feature readiness with priority score, rubric, and status columns |
+| `FeatureReadinessDrawer.vue` | `@shared/client/components/FeatureReadinessDrawer.vue` | Slide-out detail panel for feature readiness (rubric bars, blocking dims, metadata) |
+| `RubricScoreBadge.vue` | `@shared/client/components/RubricScoreBadge.vue` | Compact badge displaying AI rubric score with color coding |
 
 ## Server Exports (`@shared/server`)
 
@@ -75,7 +78,7 @@ Core team owns `shared/` via CODEOWNERS. Changes require core team review.
 | `role-registry` | `{ createRoleRegistry }` — dynamic role registry. Modules register roles via `context.registerRole()`. Methods: `register(id, config)`, `isValid(id)`, `getAll()`, `get(id)`. |
 | `scope-registry` | `{ createScopeRegistry }` — dynamic scope registry for API tokens. Modules register scopes via `context.registerScopes()`. Methods: `register(key, config)`, `isValid(key)`, `getAll()`, `getValidKeys()`. |
 | `module-context` | `{ buildModuleContext, createTestContext }` — builds per-module frozen context with scoped registration hooks. Context includes `secrets` (frozen object), `resolveSecret(envVarName)`, and `registerSecretValidator(key, fn)`. `createTestContext(overrides)` provides a mock context for unit tests (defaults: `secrets: {}`, `resolveSecret: () => undefined`). |
-| `refresh-registry` | `{ createRefreshRegistry }` — ordered execution of module refresh handlers. Registry with `register`, `get`, `getAll`, `runAll` (sequential, sorted by `order`), `getStatus`. |
+| `refresh-registry` | `{ createRefreshRegistry, parseCadence }` — ordered execution of module refresh handlers with per-handler cadence. Registry with `register`, `get`, `getAll`, `runAll` (sequential by order, cadence-aware), `runModule` (ignores cadence), `getStatus` (includes cadence info), `isRunning`, `setCadenceOverride`, `getCadenceOverrides`, `parseCadence`. `parseCadence(str)` converts cadence strings (`'15m'`, `'12h'`, `'1d'`) to milliseconds. `register(id, config)` accepts optional `cadence` (default `'24h'`). `runAll({ force })` skips cadence checks when `force: true`; returns `{ counts, execution? }` where `counts = { total, due, skipped }`. `setCadenceOverride(handlerId, cadence)` sets admin override (min `'15m'`, `null` to clear), persisted in `refresh-cadence-overrides.json`. |
 | `export-registry` | `{ createExportRegistry }` — module data export hooks. Registry with `register`, `getAll`, `run` (iterates with error isolation). |
 | `platform-secrets` | Array of platform secret group definitions (`{ id, label, description, secrets[] }`). Groups: `jira`, `github`, `gitlab`, `ipa`, `google`. |
 | `secret-registry` | `{ SecretRegistry }` — central registry for module secret declaration, resolution, validation, and diagnostics. Methods: `registerModuleSecrets(slug, declaration)`, `resolve()`, `getModuleSecrets(slug)`, `resolveSecret(envVarName)`, `registerValidator(key, fn)`, `validateAll()`, `validateKeys(keys)`, `getStatus()`, `getModuleStatus(slug)`. `validateKeys(keys)` runs only validators whose key is in the provided array. |
@@ -93,6 +96,12 @@ For example, the `health-metrics` module reads `team-data/registry.json` and `te
 - Use `readFromStorage()` — never construct raw filesystem paths
 - Treat exported data as read-only; do not write to another module's data files
 - If the exporting module changes its data format, coordinate via a shared PR
+
+### Cross-Module Writes via Internal API
+
+When one module needs to **write** data owned by another module, it uses a localhost HTTP call to the owning module's API endpoint. This ensures the owning module's write coordination (mutexes, index rebuilding) is respected.
+
+Example: AI Impact pushes review scores to the releases execution store via `POST /api/modules/releases/execution/ai-review/bulk`. The dependency is declared explicitly in `module.json` (`"requires": ["releases"]`). Internal API calls use `eslint-disable-next-line org-pulse/no-cross-module-imports` with a justification comment.
 
 ## Versioning
 

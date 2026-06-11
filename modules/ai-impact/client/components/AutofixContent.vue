@@ -519,49 +519,89 @@ function buildJiraLabelUrl(jiraLabels, excludeLabels) {
       <template v-else>
         <!-- Summary Stats -->
         <div class="p-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center"
-            :title="`Total issues with triage or autofix labels${selectedProject !== 'all' ? ' in ' + selectedProject : ''} (${metrics.totalIssues} issues)`"
-          >
+          <div class="relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center">
+            <div class="absolute top-2 right-2 group">
+              <svg class="h-3.5 w-3.5 text-gray-400 dark:text-gray-500 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div class="absolute right-0 top-6 z-20 hidden group-hover:block w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/50 p-3 text-xs text-gray-700 dark:text-gray-300 text-left">
+                Count of all Jira issues carrying triage or autofix pipeline labels{{ selectedProject !== 'all' ? ' in ' + selectedProject : '' }}, created within the selected time window.
+              </div>
+            </div>
             <div class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ metrics.windowTotal }}</div>
             <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase tracking-wide">{{ selectedProject !== 'all' ? selectedProject + ' Issues' : 'Total Issues' }}</div>
             <div v-if="metrics.totalIssues !== metrics.windowTotal" class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">{{ metrics.totalIssues }} all time</div>
           </div>
-          <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center"
-            :title="`Percentage of triaged issues that qualified for autofix. ${metrics.triageVerdicts.ready || 0} out of ${metrics.triageTotal} triaged issues were deemed fixable by the AI triage bot.`"
-          >
+          <div class="relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center">
+            <div class="absolute top-2 right-2 group">
+              <svg class="h-3.5 w-3.5 text-gray-400 dark:text-gray-500 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div class="absolute right-0 top-6 z-20 hidden group-hover:block w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/50 p-3 text-xs text-gray-700 dark:text-gray-300 text-left">
+                Percentage of triaged issues that qualified for autofix. Calculated as: <span class="font-medium">eligible ÷ total triaged × 100</span>. The AI triage bot evaluates each issue and labels it as fixable or not.
+              </div>
+            </div>
             <div class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
               {{ metrics.triageTotal > 0 ? Math.round((metrics.triageVerdicts.ready || 0) / metrics.triageTotal * 100) : 0 }}%
             </div>
             <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase tracking-wide">Eligibility Rate</div>
             <div class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">{{ metrics.triageVerdicts.ready || 0 }} of {{ metrics.triageTotal }} triaged</div>
           </div>
-          <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center"
-            :title="`Percentage of successfully merged autofixes out of all terminal outcomes. Calculated as: merged / (merged + rejected + max-retries). In-progress issues are excluded. Researched spikes are excluded (they don't produce MRs). ${metrics.autofixStates.merged || 0} merged, ${metrics.autofixStates.rejected || 0} rejected, ${metrics.autofixStates.maxRetries || 0} max retries.`"
-          >
+          <div class="relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center">
+            <div class="absolute top-2 right-2 group">
+              <svg class="h-3.5 w-3.5 text-gray-400 dark:text-gray-500 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div class="absolute right-0 top-6 z-20 hidden group-hover:block w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/50 p-3 text-xs text-gray-700 dark:text-gray-300 text-left">
+                Percentage of successfully merged autofixes out of all terminal outcomes. Calculated as: <span class="font-medium">merged ÷ (merged + rejected + max-retries) × 100</span>. In-progress and researched issues are excluded since they haven't reached a final outcome.
+              </div>
+            </div>
             <div class="text-2xl font-bold" :class="metrics.successRate >= 50 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'">
               {{ metrics.successRate }}%
             </div>
             <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase tracking-wide">Success Rate</div>
             <div class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">{{ metrics.autofixStates.merged || 0 }} of {{ (metrics.autofixStates.merged || 0) + (metrics.autofixStates.rejected || 0) + (metrics.autofixStates.maxRetries || 0) }} resolved</div>
           </div>
-          <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center"
-            :title="`Issues where the autofix bot has created an MR/PR and is iterating on review feedback and CI failures. ${metrics.autofixStates.review || 0} issues currently in review.`"
-          >
+          <div class="relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center">
+            <div class="absolute top-2 right-2 group">
+              <svg class="h-3.5 w-3.5 text-gray-400 dark:text-gray-500 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div class="absolute right-0 top-6 z-20 hidden group-hover:block w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/50 p-3 text-xs text-gray-700 dark:text-gray-300 text-left">
+                Issues where the autofix bot has created an MR/PR and is actively iterating on review feedback and CI failures.
+              </div>
+            </div>
             <div class="text-2xl font-bold text-blue-600 dark:text-blue-400">{{ metrics.autofixStates.review || 0 }}</div>
             <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase tracking-wide">In Review</div>
           </div>
-          <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center"
-            :title="`Issues where human action can help. Missing Info: ${metrics.triageVerdicts.missingInfo || 0}, Stale: ${metrics.triageVerdicts.stale || 0}, CI Failing: ${metrics.autofixStates.ciFailing || 0}, Blocked: ${metrics.autofixStates.blocked || 0}, Max Retries: ${metrics.autofixStates.maxRetries || 0}.`"
-          >
+          <div class="relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center">
+            <div class="absolute top-2 right-2 group">
+              <svg class="h-3.5 w-3.5 text-gray-400 dark:text-gray-500 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div class="absolute right-0 top-6 z-20 hidden group-hover:block w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/50 p-3 text-xs text-gray-700 dark:text-gray-300 text-left">
+                Issues where human action can help unblock progress. Includes:
+                <div class="mt-1.5 space-y-0.5">
+                  <div><span class="font-medium">Triage:</span> missing info, stale (no response 14+ days)</div>
+                  <div><span class="font-medium">Autofix:</span> CI failing, blocked, max retries exhausted</div>
+                </div>
+              </div>
+            </div>
             <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
               {{ (metrics.triageVerdicts.missingInfo || 0) + (metrics.triageVerdicts.stale || 0) + (metrics.autofixStates.ciFailing || 0) + (metrics.autofixStates.blocked || 0) + (metrics.autofixStates.maxRetries || 0) }}
             </div>
             <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 uppercase tracking-wide">Needs Attention</div>
             <div class="text-[10px] text-gray-400 dark:text-gray-500 mt-0.5">{{ (metrics.triageVerdicts.missingInfo || 0) + (metrics.triageVerdicts.stale || 0) }} triage · {{ (metrics.autofixStates.ciFailing || 0) + (metrics.autofixStates.blocked || 0) + (metrics.autofixStates.maxRetries || 0) }} autofix</div>
           </div>
-          <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center"
-            title="Trend compares autofix completion rate between the first and second half of the selected time window."
-          >
+          <div class="relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 text-center">
+            <div class="absolute top-2 right-2 group">
+              <svg class="h-3.5 w-3.5 text-gray-400 dark:text-gray-500 cursor-help" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div class="absolute right-0 top-6 z-20 hidden group-hover:block w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-gray-900/50 p-3 text-xs text-gray-700 dark:text-gray-300 text-left">
+                Compares the <span class="font-medium">merged ÷ triaged</span> rate between the first and second half of the time window. Growing (&gt;5% increase), Declining (&gt;5% decrease), or Stable.
+              </div>
+            </div>
             <div class="flex items-center justify-center gap-1.5">
               <svg v-if="trendStatus.icon === 'up'" class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
               <svg v-else-if="trendStatus.icon === 'down'" class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" /></svg>

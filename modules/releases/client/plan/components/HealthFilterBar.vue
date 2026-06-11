@@ -7,9 +7,11 @@ var props = defineProps({
   searchQuery: { type: String, default: '' },
   planningStatusFilter: { type: String, default: '' },
   riskLevelFilter: { type: String, default: '' },
+  planningCheckFilter: { type: String, default: '' },
   bigRocks: { type: Array, default: () => [] },
   components: { type: Array, default: () => [] },
-  hasActiveFilters: { type: Boolean, default: false }
+  hasActiveFilters: { type: Boolean, default: false },
+  releasePhaseMode: { type: String, default: 'unknown' }
 })
 
 var emit = defineEmits([
@@ -18,6 +20,7 @@ var emit = defineEmits([
   'update:searchQuery',
   'update:planningStatusFilter',
   'update:riskLevelFilter',
+  'update:planningCheckFilter',
   'clearFilters'
 ])
 
@@ -107,6 +110,23 @@ onUnmounted(function() {
       <option value="green">Green</option>
       <option value="yellow">Yellow</option>
       <option value="red">Red</option>
+    </select>
+
+    <select
+      v-if="releasePhaseMode === 'planning'"
+      :value="planningCheckFilter"
+      @change="$emit('update:planningCheckFilter', $event.target.value)"
+      :class="selectClass"
+      aria-label="Filter by planning check"
+    >
+      <option value="">All Planning Checks</option>
+      <option value="has-blockers">Has Blockers</option>
+      <option value="all-clear">All Clear</option>
+      <option value="missing-components">Missing Components</option>
+      <option value="missing-pm">Missing PM</option>
+      <option value="missing-release-type">Missing Release Type</option>
+      <option value="missing-epics">Missing Epics</option>
+      <option value="missing-rfe">Missing RFE</option>
     </select>
 
     <!-- Component multi-select with chips -->

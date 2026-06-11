@@ -158,14 +158,27 @@ watch(
               </td>
               <td class="px-4 py-3 whitespace-nowrap">
                 <span
+                  v-if="row.score !== ''"
                   class="font-medium"
                   :class="scoreClass(row.score)"
                 >
                   {{ row.score }}
                 </span>
+                <span
+                  v-else
+                  class="text-xs text-gray-400 dark:text-gray-500 italic"
+                >
+                  Pending
+                </span>
               </td>
               <td class="px-4 py-3 text-gray-600 dark:text-gray-300">
-                {{ row.gaps }}
+                <template v-if="row.gaps !== ''">{{ row.gaps }}</template>
+                <span
+                  v-else
+                  class="text-xs text-gray-400 dark:text-gray-500 italic"
+                >
+                  Awaiting scan
+                </span>
               </td>
             </tr>
           </tbody>
@@ -181,11 +194,50 @@ watch(
         {{ selected.label }}
       </p>
       <iframe
+        v-if="selected.reportUrl"
         :src="selected.reportUrl"
         :title="`Quality report: ${selected.label}`"
         class="w-full border-0 bg-white block"
         style="min-height: calc(100vh - 11rem)"
       />
+      <div
+        v-else
+        class="flex flex-col items-center justify-center py-20 px-6 text-center"
+      >
+        <div class="w-14 h-14 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4">
+          <svg class="w-7 h-7 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Zm3.75 11.625a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+          </svg>
+        </div>
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+          No quality report available
+        </h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 max-w-md mb-6">
+          A quality scan has not been generated for
+          <span class="font-medium text-gray-700 dark:text-gray-300">{{ selected.label }}</span>
+          yet. Reports are produced by a scheduled pipeline that analyzes each repository's CI, testing, and security practices.
+        </p>
+        <div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 px-5 py-4 text-left text-sm max-w-md w-full">
+          <p class="font-medium text-gray-700 dark:text-gray-300 mb-2">Troubleshooting</p>
+          <ul class="space-y-1.5 text-gray-500 dark:text-gray-400 list-disc list-inside">
+            <li>The repository may have been recently added to the registry</li>
+            <li>The scan pipeline may not have run since this repo was added</li>
+            <li>The repository could be private or inaccessible to the scanner</li>
+          </ul>
+        </div>
+        <a
+          v-if="selected.githubUrl"
+          :href="selected.githubUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="mt-4 inline-flex items-center gap-1.5 text-sm text-primary-600 dark:text-primary-400 hover:underline"
+        >
+          View repository on GitHub
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+          </svg>
+        </a>
+      </div>
     </div>
   </div>
 </template>

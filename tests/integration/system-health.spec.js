@@ -171,6 +171,42 @@ test.describe('System Health Views @system-health', () => {
     await testView(page, 'quality-analysis', 'Quality Analysis');
   });
 
+  test('should show empty state for repos without scan data', async ({ page }) => {
+    await page.goto('/#/system-health/quality-analysis');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Find a "Pending" indicator — these appear for repos without scan data
+    const pendingLabels = page.locator('table td span').filter({ hasText: 'Pending' });
+    const pendingCount = await pendingLabels.count();
+    if (pendingCount === 0) {
+      console.log('No unscanned repos found — all repos have scan data, skipping empty state test');
+      return;
+    }
+
+    // The same row should also show "Awaiting scan" in the gaps column
+    const pendingRow = pendingLabels.first().locator('xpath=ancestor::tr');
+    await expect(pendingRow.locator('text=Awaiting scan')).toBeVisible();
+
+    // Click the repo name button in that row to open the detail view
+    await pendingRow.locator('button').first().click();
+    await page.waitForTimeout(1000);
+
+    // Should show the empty state heading instead of an iframe
+    const heading = page.locator('h2').filter({ hasText: 'No quality report available' });
+    await expect(heading).toBeVisible();
+
+    // Should show the troubleshooting section
+    const troubleshooting = page.locator('text=Troubleshooting');
+    await expect(troubleshooting).toBeVisible();
+
+    // Should NOT render an iframe
+    const iframe = page.locator('iframe');
+    expect(await iframe.count()).toBe(0);
+
+    expect(page.errors).toHaveLength(0);
+  });
+
   test('should display table with required columns in Quality Analysis', async ({ page }) => {
     await page.goto('/#/system-health/quality-analysis');
     await page.waitForLoadState('networkidle');

@@ -17,6 +17,7 @@ const DEFAULT_CONFIG = {
   healthConfig: {
     enableRice: false,
     enableStratCreator: false,
+    enablePlanningChecks: false,
     enableJiraEnrichment: true,
     enrichmentBatchSize: 40,
     enrichmentThrottleMs: 1000,

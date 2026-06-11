@@ -2592,61 +2592,6 @@ module.exports = function registerRoutes(router, context) {
 
   /**
    * @openapi
-   * /api/modules/team-tracker/teams:
-   *   get:
-   *     tags: ['TT: Sprints']
-   *     summary: Get sprint board team config
-   *     responses:
-   *       200:
-   *         description: Sprint board team configuration
-   */
-  router.get('/teams', requireScope('roster:read'), function(req, res) {
-    try {
-      const data = readFromStorage('teams.json');
-      if (!data) {
-        return res.json({ teams: [] });
-      }
-      res.json(data);
-    } catch (error) {
-      console.error('Read teams error:', error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  /**
-   * @openapi
-   * /api/modules/team-tracker/teams:
-   *   post:
-   *     tags: ['TT: Sprints']
-   *     summary: Save sprint board team config
-   *     requestBody:
-   *       required: true
-   *       content:
-   *         application/json:
-   *           schema:
-   *             type: object
-   *     responses:
-   *       200:
-   *         description: Team config saved
-   *       403:
-   *         description: Forbidden — admin access required
-   */
-  router.post('/teams', requireAdmin, requireScope('roster:write'), function(req, res) {
-    try {
-      const { teams } = req.body;
-      if (!teams || !Array.isArray(teams)) {
-        return res.status(400).json({ error: 'Request must include "teams" array' });
-      }
-      writeToStorage('teams.json', { teams });
-      res.json({ success: true, teams });
-    } catch (error) {
-      console.error('Save teams error:', error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  /**
-   * @openapi
    * /api/modules/team-tracker/dashboard-summary:
    *   get:
    *     tags: ['TT: Sprints']
@@ -4296,6 +4241,7 @@ module.exports = function registerRoutes(router, context) {
     context.registerRefresh('roster-sync', {
       order: 10,
       timeout: 600000,
+      description: 'Syncs the team roster from IPA LDAP and Google Sheets, enriching with GitHub/GitLab usernames.',
       handler: async function() {
         if (DEMO_MODE) return;
         await consolidatedSync.runConsolidatedSync(storage, { ...context.secrets, resolveSecret: context.resolveSecret });
@@ -4308,6 +4254,7 @@ module.exports = function registerRoutes(router, context) {
     context.registerRefresh('metrics', {
       order: 20,
       timeout: 1800000,
+      description: 'Refreshes per-person Jira metrics (resolved issues, story points) with a 365-day lookback.',
       handler: async function() {
         await refreshAllMetrics();
       },
@@ -4324,6 +4271,7 @@ module.exports = function registerRoutes(router, context) {
     context.registerRefresh('github', {
       order: 30,
       timeout: 600000,
+      description: 'Fetches GitHub contribution stats (commits, PRs, reviews) for all roster members via GraphQL.',
       handler: async function() {
         await refreshAllGithub();
       }
@@ -4332,6 +4280,7 @@ module.exports = function registerRoutes(router, context) {
     context.registerRefresh('gitlab', {
       order: 30,
       timeout: 600000,
+      description: 'Fetches GitLab contribution stats for all roster members across configured instances.',
       handler: async function() {
         await refreshAllGitlab();
       }
@@ -4340,6 +4289,7 @@ module.exports = function registerRoutes(router, context) {
     context.registerRefresh('snapshots', {
       order: 80,
       timeout: 300000,
+      description: 'Generates daily team snapshots for historical trend tracking.',
       handler: async function() {
         await generateAllSnapshots();
       }

@@ -19,6 +19,11 @@ const ACTION_META = {
   clone_release: { icon: 'copy', label: 'Cloned', color: 'text-indigo-600 dark:text-indigo-400' },
   delete_release: { icon: 'trash', label: 'Deleted', color: 'text-red-600 dark:text-red-400' },
   import_doc: { icon: 'upload', label: 'Imported', color: 'text-amber-600 dark:text-amber-400' },
+  set_risk_override: { icon: 'pencil', label: 'Override', color: 'text-amber-600 dark:text-amber-400' },
+  remove_risk_override: { icon: 'trash', label: 'Override removed', color: 'text-gray-600 dark:text-gray-400' },
+  committed_snapshot: { icon: 'dot', label: 'Snapshot', color: 'text-indigo-600 dark:text-indigo-400' },
+  committed_list_change: { icon: 'arrows', label: 'Committed list', color: 'text-purple-600 dark:text-purple-400' },
+  update_health_config: { icon: 'pencil', label: 'Config', color: 'text-blue-600 dark:text-blue-400' },
   add_pm: { icon: 'user-plus', label: 'Added PM', color: 'text-green-600 dark:text-green-400' },
   remove_pm: { icon: 'user-minus', label: 'Removed PM', color: 'text-red-600 dark:text-red-400' },
   seed: { icon: 'database', label: 'Seeded', color: 'text-amber-600 dark:text-amber-400' }
@@ -46,6 +51,13 @@ function shortUser(email) {
   if (!email) return 'System'
   const at = email.indexOf('@')
   return at > 0 ? email.substring(0, at) : email
+}
+
+function diffSummary(entry) {
+  if (entry.action !== 'update_rock' || !entry.details || !entry.details.changes) return ''
+  var keys = Object.keys(entry.details.changes)
+  if (keys.length === 0) return ''
+  return 'changed ' + keys.join(', ')
 }
 
 const recentEntries = computed(function() {
@@ -146,7 +158,7 @@ watch(function() { return props.version }, function(v) {
           </span>
 
           <!-- Summary -->
-          <span class="text-gray-700 dark:text-gray-300 truncate flex-1">{{ entry.summary }}</span>
+          <span class="text-gray-700 dark:text-gray-300 truncate flex-1">{{ entry.summary }}<span v-if="diffSummary(entry)" class="text-gray-400 dark:text-gray-500"> -- {{ diffSummary(entry) }}</span></span>
 
           <!-- User -->
           <span class="text-gray-400 dark:text-gray-500 flex-shrink-0">{{ shortUser(entry.user) }}</span>

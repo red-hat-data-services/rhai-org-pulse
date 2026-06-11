@@ -274,8 +274,8 @@ function runPipeline(config, bigRocks, release, readFromStorage, opts) {
   const perRockStats = {}
   for (let si = 0; si < rocksWithOutcomes.length; si++) {
     const statRock = rocksWithOutcomes[si]
-    const rockFeatures = tier1Features.filter(function(c) { return c.bigRock.split(', ')[0] === statRock.name }).length
-    const rockRfes = tier1Rfes.filter(function(c) { return c.bigRock.split(', ')[0] === statRock.name }).length
+    const rockFeatures = tier1Features.filter(function(c) { return c.bigRock && c.bigRock.split(', ').includes(statRock.name) }).length
+    const rockRfes = tier1Rfes.filter(function(c) { return c.bigRock && c.bigRock.split(', ').includes(statRock.name) }).length
     perRockStats[statRock.name] = { features: rockFeatures, rfes: rockRfes }
   }
 

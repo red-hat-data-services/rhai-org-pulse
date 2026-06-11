@@ -26,9 +26,10 @@ describe('upstream-pulse server module', () => {
     expect(paths).toContain('/leadership')
     expect(paths).toContain('/projects')
     expect(paths).toContain('/orgs')
+    expect(paths).toContain('/github-access')
     expect(paths).toContain('/project-jobs')
     expect(paths).toContain('/repo-info')
-    expect(paths).toHaveLength(8)
+    expect(paths).toHaveLength(9)
   })
 
   it('registers admin POST routes for projects and roster-push', () => {

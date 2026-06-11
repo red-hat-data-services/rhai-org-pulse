@@ -17,20 +17,46 @@
     </div>
     <div class="p-6">
       <DashboardView v-if="activeTab === 'outcomes'" />
-      <HealthDashboardView v-else-if="activeTab === 'health'" />
+      <FeatureReadinessView v-else-if="activeTab === 'feature-readiness'" />
+      <PmHubView v-else-if="activeTab === 'pm-hub'" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, inject, watch } from 'vue'
 import DashboardView from '../plan/views/DashboardView.vue'
-import HealthDashboardView from '../plan/views/HealthDashboardView.vue'
+import FeatureReadinessView from '../plan/views/FeatureReadinessView.vue'
+import PmHubView from '../plan/views/PmHubView.vue'
 
 const tabs = [
-  { id: 'outcomes', label: 'Outcomes' },
-  { id: 'health', label: 'Health' },
+  { id: 'outcomes', label: 'Big Rocks' },
+  { id: 'feature-readiness', label: 'Features List (1-n)' },
+  { id: 'pm-hub', label: 'PM Hub' },
 ]
 
-const activeTab = ref('outcomes')
+var moduleNav = inject('moduleNav', null)
+var validTabIds = tabs.map(function(t) { return t.id })
+
+function getTabFromParams() {
+  var params = moduleNav && moduleNav.params ? moduleNav.params.value : {}
+  var tab = params.tab
+  if (tab && validTabIds.indexOf(tab) !== -1) return tab
+  return 'outcomes'
+}
+
+const activeTab = ref(getTabFromParams())
+
+watch(activeTab, function(tab) {
+  if (moduleNav && moduleNav.updateParams) {
+    moduleNav.updateParams({ tab: tab }, { push: false })
+  }
+})
+
+if (moduleNav && moduleNav.params) {
+  watch(moduleNav.params, function() {
+    var tab = getTabFromParams()
+    if (tab !== activeTab.value) activeTab.value = tab
+  })
+}
 </script>

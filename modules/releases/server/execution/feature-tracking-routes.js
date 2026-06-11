@@ -3,7 +3,7 @@
  *
  * Queries Jira directly by fixVersion (e.g. fixVersion = "rhoai-3.5.EA1")
  * to list all features committed to a release. Uses the Jira changelog to
- * detect when fixVersion was applied — features added after the Feature
+ * detect when fixVersion was applied — features added after the Planning
  * Freeze date are flagged as "Late Additions".
  *
  * Grouped by portfolio release (e.g. 3.5.EA1) across products (RHOAI,
@@ -12,11 +12,12 @@
  */
 
 const { readRegistry } = require('../registry')
-const { fetchFeatureFreezeDatesFromSchedule } = require('../delivery/product-pages')
+const { fetchPlanningFreezeDatesFromSchedule } = require('../delivery/product-pages')
 const { CUSTOM_FIELDS, transformIssue } = require('../hygiene/jira-fetch')
 
 const PP_CACHE_FILE = 'releases/delivery/product-pages-releases-cache.json'
 const PLANNING_CONFIG_FILE = 'releases/planning/config.json'
+const TRACKING_CONFIG_FILE = 'releases/execution/feature-tracking-config.json'
 const TRACKING_CACHE_PREFIX = 'releases/execution/tracking-data-'
 const CACHE_TTL_MS = 10 * 60 * 1000
 const DEFAULT_PRODUCTS = ['rhoai', 'rhelai', 'RHAII']
@@ -106,12 +107,34 @@ const VERSIONS_CACHE_TTL_MS = 15 * 60 * 1000
  * conventions across products, collecting ALL matching fixVersions per product
  * (e.g. both "rhelai-3.5EA2" and "rhelai-3.5 EA2 release" for rhelai).
  */
-async function resolveProductVersionsFromJira(portfolioVersion, jiraRequestFn) {
+async function resolveProductVersionsFromJira(portfolioVersion, jiraRequestFn, trackingConfig) {
   const { fetchProjectVersions } = require('../../../../shared/server/jira')
 
   if (!jiraVersionsCache.versions || Date.now() - jiraVersionsCache.fetchedAt > VERSIONS_CACHE_TTL_MS) {
     jiraVersionsCache.versions = await fetchProjectVersions(jiraRequestFn, DEFAULT_PROJECTS)
     jiraVersionsCache.fetchedAt = Date.now()
+  }
+
+  // If the tracking config has explicit product version names, use them
+  var configEntry = trackingConfig && trackingConfig.releases && trackingConfig.releases[portfolioVersion]
+  if (configEntry && configEntry.products) {
+    var configProducts = configEntry.products
+    var configKeys = Object.keys(configProducts)
+    if (configKeys.length > 0) {
+      var configResult = []
+      for (var ci = 0; ci < configKeys.length; ci++) {
+        var productKey = configKeys[ci]
+        var versionName = configProducts[productKey]
+        if (versionName && versionName.trim()) {
+          configResult.push({
+            product: productKey.toLowerCase(),
+            releaseNumber: versionName,
+            fixVersions: [versionName]
+          })
+        }
+      }
+      if (configResult.length > 0) return configResult
+    }
   }
 
   const allVersions = jiraVersionsCache.versions
@@ -356,15 +379,14 @@ function getFeatureFreezeDatesFromCache(portfolioVersion, readFromStorage) {
   for (let i = 0; i < ppReleases.length; i++) {
     const rel = ppReleases[i]
     const relVersion = normalizeVersionName(rel.releaseNumber).replace(/^[a-z]+-/, '')
-    if (relVersion === normalizedPortfolio && rel.featureFreezeDate) {
+    var freezeDate = rel.planningFreezeDate || rel.featureFreezeDate
+    if (relVersion === normalizedPortfolio && freezeDate) {
       const key = normalizeVersionName(rel.releaseNumber)
-      // Prefer the earliest date per product to avoid parent GA dates
-      // overriding EA-specific dates from expanded entries
-      if (!byProduct[key] || rel.featureFreezeDate < byProduct[key]) {
-        byProduct[key] = rel.featureFreezeDate
+      if (!byProduct[key] || freezeDate < byProduct[key]) {
+        byProduct[key] = freezeDate
       }
-      if (!earliest || rel.featureFreezeDate < earliest) {
-        earliest = rel.featureFreezeDate
+      if (!earliest || freezeDate < earliest) {
+        earliest = freezeDate
       }
     }
   }
@@ -405,6 +427,70 @@ function getFeatureFreezeDatesFromCache(portfolioVersion, readFromStorage) {
  *       200:
  *         description: Array of portfolio versions
  */
+
+/**
+ * @openapi
+ * /api/modules/releases/execution/tracking/config:
+ *   get:
+ *     summary: Get feature tracking configuration (release names, freeze overrides)
+ *     tags: [Releases - Feature Tracking]
+ *     responses:
+ *       200:
+ *         description: Feature tracking config object
+ *   put:
+ *     summary: Update feature tracking configuration
+ *     tags: [Releases - Feature Tracking]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               releases:
+ *                 type: object
+ *     responses:
+ *       200:
+ *         description: Updated config
+ *       400:
+ *         description: Validation error
+ */
+
+function validateTrackingConfig(body) {
+  if (!body || typeof body !== 'object') return 'Body must be an object'
+  if (!body.releases || typeof body.releases !== 'object' || Array.isArray(body.releases)) {
+    return 'releases must be an object'
+  }
+  var keys = Object.keys(body.releases)
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i]
+    if (!key.trim()) return 'Release key must be a non-empty string'
+    var entry = body.releases[key]
+    if (!entry || typeof entry !== 'object') return 'Each release entry must be an object'
+    if (entry.products) {
+      if (typeof entry.products !== 'object' || Array.isArray(entry.products)) {
+        return 'products must be an object with string values'
+      }
+      var pKeys = Object.keys(entry.products)
+      for (var pi = 0; pi < pKeys.length; pi++) {
+        if (typeof entry.products[pKeys[pi]] !== 'string') {
+          return 'products.' + pKeys[pi] + ' must be a string'
+        }
+      }
+    }
+    if (entry.planningFreezeOverride !== undefined && entry.planningFreezeOverride !== null) {
+      if (typeof entry.planningFreezeOverride !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(entry.planningFreezeOverride)) {
+        return 'planningFreezeOverride must be null or a YYYY-MM-DD string'
+      }
+    }
+  }
+  return null
+}
+
+function loadTrackingConfig(readFromStorage) {
+  var config = readFromStorage(TRACKING_CONFIG_FILE)
+  return config || { releases: {} }
+}
 
 module.exports = function registerFeatureTrackingRoutes(router, context) {
   const storage = context.storage
@@ -454,17 +540,48 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
       }
     }
 
+    // Source 4: feature tracking config (user-defined releases)
+    const trackingConfig = loadTrackingConfig(storage.readFromStorage)
+    if (trackingConfig.releases) {
+      const trackingVersions = Object.keys(trackingConfig.releases)
+      for (let ti = 0; ti < trackingVersions.length; ti++) {
+        const tv = trackingVersions[ti]
+        if (!versionMap[tv] && !EXCLUDE_VERSION_RE.test(tv)) {
+          versionMap[tv] = { version: tv, products: [] }
+        }
+        // Add products from config entries
+        var entry = trackingConfig.releases[tv]
+        if (entry && entry.products) {
+          var productKeys = Object.keys(entry.products)
+          for (var pk = 0; pk < productKeys.length; pk++) {
+            var pName = productKeys[pk].toLowerCase()
+            if (!versionMap[tv]) versionMap[tv] = { version: tv, products: [] }
+            if (versionMap[tv].products.indexOf(pName) === -1) {
+              versionMap[tv].products.push(pName)
+            }
+          }
+        }
+      }
+    }
+
     const versions = Object.keys(versionMap).map(function (k) { return versionMap[k] })
 
     for (let vi = 0; vi < versions.length; vi++) {
-      const fd = getFeatureFreezeDatesFromCache(versions[vi].version, storage.readFromStorage)
-      versions[vi].featureFreezeDate = fd.earliest || null
+      var vKey = versions[vi].version
+      // User-entered date takes priority over Product Pages
+      var userDate = (trackingConfig.releases && trackingConfig.releases[vKey] && trackingConfig.releases[vKey].planningFreezeOverride) || null
+      if (userDate) {
+        versions[vi].planningFreezeDate = userDate
+      } else {
+        const fd = getFeatureFreezeDatesFromCache(vKey, storage.readFromStorage)
+        versions[vi].planningFreezeDate = fd.earliest || null
+      }
     }
 
     versions.sort(function (a, b) {
-      if (a.featureFreezeDate && b.featureFreezeDate) return a.featureFreezeDate.localeCompare(b.featureFreezeDate)
-      if (a.featureFreezeDate && !b.featureFreezeDate) return -1
-      if (!a.featureFreezeDate && b.featureFreezeDate) return 1
+      if (a.planningFreezeDate && b.planningFreezeDate) return a.planningFreezeDate.localeCompare(b.planningFreezeDate)
+      if (a.planningFreezeDate && !b.planningFreezeDate) return -1
+      if (!a.planningFreezeDate && b.planningFreezeDate) return 1
       return b.version.localeCompare(a.version)
     })
 
@@ -486,6 +603,9 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
         if (cached && cached.fetchedAt) {
           const age = Date.now() - new Date(cached.fetchedAt).getTime()
           if (age < CACHE_TTL_MS) {
+            if (!cached.planningFreezeDate && cached.featureFreezeDate) {
+              cached.planningFreezeDate = cached.featureFreezeDate
+            }
             return res.json(cached)
           }
         }
@@ -495,7 +615,8 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
       const jiraRequest = jira.jiraRequest
       const fetchAllJqlResults = jira.fetchAllJqlResults
 
-      const productVersions = await resolveProductVersionsFromJira(version, jiraRequest)
+      const tConfig = loadTrackingConfig(storage.readFromStorage)
+      const productVersions = await resolveProductVersionsFromJira(version, jiraRequest, tConfig)
       const freezeDates = getFeatureFreezeDatesFromCache(version, storage.readFromStorage)
       const cacheDates = Object.assign({}, freezeDates.byProduct)
 
@@ -507,11 +628,11 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
         const ppConfig = {
           productPagesBaseUrl: process.env.PRODUCT_PAGES_BASE_URL || 'https://productpages.redhat.com'
         }
-        const scheduleDates = await fetchFeatureFreezeDatesFromSchedule(version, DEFAULT_PRODUCTS, ppConfig)
+        const scheduleDates = await fetchPlanningFreezeDatesFromSchedule(version, DEFAULT_PRODUCTS, ppConfig)
         const schedEntries = Object.entries(scheduleDates.byProduct)
         if (schedEntries.length > 0) {
           scheduleSource = 'schedule-api'
-          console.log('[feature-tracking] Schedule API returned freeze dates:', JSON.stringify(scheduleDates.byProduct))
+          console.log('[feature-tracking] Schedule API returned planning freeze dates:', JSON.stringify(scheduleDates.byProduct))
           for (const [key, date] of schedEntries) {
             const normKey = normalizeVersionName(key)
             freezeDates.byProduct[normKey] = date
@@ -524,11 +645,21 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
           }
         } else {
           scheduleSource = 'cache-only (schedule returned empty)'
-          console.warn('[feature-tracking] Schedule API returned no freeze dates for version:', version)
+          console.warn('[feature-tracking] Schedule API returned no planning freeze dates for version:', version)
         }
       } catch (schedErr) {
         scheduleSource = 'cache-only (' + schedErr.message + ')'
         console.error('[feature-tracking] Schedule API failed for version:', version, schedErr.message)
+      }
+
+      // User-entered date takes priority over Product Pages
+      if (tConfig.releases && tConfig.releases[version]) {
+        var overrideDate = tConfig.releases[version].planningFreezeOverride
+        if (overrideDate) {
+          freezeDates.earliest = overrideDate
+          scheduleSource = 'user-override' + (scheduleSource !== 'none' ? ' (PP: ' + scheduleSource + ')' : '')
+          console.log('[feature-tracking] Using user-entered freeze date for', version, ':', overrideDate)
+        }
       }
 
       const groups = []
@@ -565,7 +696,7 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
           label: pv.product.toUpperCase() + ': ' + pv.releaseNumber,
           product: pv.product,
           releaseNumber: pv.releaseNumber,
-          featureFreezeDate: productFreezeDate,
+          planningFreezeDate: productFreezeDate,
           featureCount: features.filter(function (f) { return f.scopeChange !== 'dropped' }).length,
           features: features.map(function (f) {
             return {
@@ -588,7 +719,7 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
 
       const responseData = {
         portfolioVersion: version,
-        featureFreezeDate: freezeDates.earliest,
+        planningFreezeDate: freezeDates.earliest,
         fetchedAt: new Date().toISOString(),
         groups: groups,
         _freezeDateSource: scheduleSource,
@@ -605,6 +736,20 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
     }
   })
 
+  // GET /tracking/config
+  router.get('/tracking/config', requireAuth, requireScope('releases:read'), function (req, res) {
+    res.json(loadTrackingConfig(storage.readFromStorage))
+  })
+
+  // PUT /tracking/config
+  router.put('/tracking/config', requireAuth, requireScope('releases:write'), function (req, res) {
+    var err = validateTrackingConfig(req.body)
+    if (err) return res.status(400).json({ error: err })
+    var config = { releases: req.body.releases }
+    storage.writeToStorage(TRACKING_CONFIG_FILE, config)
+    res.json(config)
+  })
+
 }
 
 module.exports.findFixVersionAddedDate = findFixVersionAddedDate
@@ -613,3 +758,5 @@ module.exports.classifyFeature = classifyFeature
 module.exports.extractProduct = extractProduct
 module.exports.normalizeVersionName = normalizeVersionName
 module.exports.resolveProductVersionsFromJira = resolveProductVersionsFromJira
+module.exports.validateTrackingConfig = validateTrackingConfig
+module.exports.loadTrackingConfig = loadTrackingConfig

@@ -7,8 +7,8 @@ export const routes = {
   'rhel-ai': ProductView,
   'base-images': ProductView,
   'builder-images': ProductView,
-  'wheel-collections': ProductView,
   'series-detail': defineAsyncComponent(() => import('./views/SeriesDetailView.vue')),
+  'wheel-collections': defineAsyncComponent(() => import('./views/WheelCollectionsView.vue')),
   'drop-detail': defineAsyncComponent(() => import('./views/DropDetailView.vue')),
   'artifact-detail': defineAsyncComponent(() => import('./views/ArtifactDetailView.vue')),
 }

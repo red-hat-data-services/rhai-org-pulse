@@ -31,6 +31,7 @@ export function useAuth() {
   const isTeamAdmin = computed(() => user.value?.isTeamAdmin === true || user.value?.isAdmin === true)
   const roles = computed(() => user.value?.roles || [])
   const isManager = computed(() => user.value?.isManager === true)
+  const apiBaseUrl = computed(() => user.value?.apiBaseUrl || window.location.origin)
 
   function hasRole(role) {
     return roles.value.includes(role)
@@ -44,6 +45,7 @@ export function useAuth() {
     isManager,
     roles,
     hasRole,
+    apiBaseUrl,
     refresh
   }
 }

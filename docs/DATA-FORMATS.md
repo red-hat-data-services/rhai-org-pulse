@@ -659,7 +659,13 @@ Quality assessment data pushed from the rfe-quality-dashboard CI pipeline. Store
 - The file is written atomically (write-to-temp-then-rename) to prevent corruption from mid-write crashes.
 - On DELETE, the file is written as `{ "lastSyncedAt": null, "totalAssessed": 0, "assessments": {} }` (never `null`).
 
-## AI Impact — Features (`data/ai-impact/features.json`)
+## AI Impact — Features (`data/ai-impact/features.json`) — DEPRECATED
+
+> **Deprecated.** Feature review data is now stored in the unified releases
+> execution store at `data/releases/execution/features/{KEY}.json` under the
+> `aiReview` namespace. See [Releases — Execution Feature Detail](#releases--execution-feature-detail-datareleasesexecutionfeatureskeysjson)
+> for the current schema. This legacy file is kept only as a migration source
+> and demo-mode fallback.
 
 Feature review data pushed from the strat creator pipeline. Stores the latest review and score history for each RHAISTRAT feature.
 
@@ -886,55 +892,176 @@ Stores hashed API tokens for bearer-token authentication. Created on first token
 
 ## Releases — Execution Index (`data/releases/execution/index.json`)
 
-Summary index of all tracked features, produced by the GitLab CI pipeline (formerly Feature Traffic).
+Derived summary index of all features in the unified feature store. Rebuilt automatically after each feature write batch (pipeline ingest, Jira sync, or discovery).
 
 ```json
 {
   "fetchedAt": "2026-04-08T06:00:00Z",
-  "schemaVersion": "1.0",
+  "schemaVersion": "v2",
   "featureCount": 42,
   "features": [
     {
       "key": "RHAISTRAT-123",
       "summary": "Implement model serving autoscaling",
       "status": "In Progress",
-      "health": "green",
+      "statusCategory": "In Progress",
+      "priority": "Normal",
+      "assignee": "Alice Smith",
+      "fixVersions": ["RHOAI 2.16", "RHOAI 2.17"],
+      "labels": ["core"],
       "completionPct": 75,
       "epicCount": 5,
       "issueCount": 30,
       "blockerCount": 1,
-      "fixVersions": ["RHOAI 2.16", "RHOAI 2.17"]
+      "health": "GREEN",
+      "lastUpdated": "2026-06-01T00:00:00Z",
+      "targetVersions": ["3.5"],
+      "pm": "Product Manager",
+      "architect": "Architect Name",
+      "parentKey": "RHAISTRAT-100",
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green",
+      "team": "Model Serving",
+      "components": ["API", "Dashboard"]
     }
   ]
 }
 ```
 
+**Notes:**
+- `assignee` is a string in the index (flattened from the detail object shape)
+- `colorStatus` and `ownerStatusColor` are identical (backward compat alias)
+- `pm` is flattened to a string from the detail object shape
+- `team` and `components` are Jira-sourced fields surfaced in the index for filtering
+- Metrics fields (`completionPct`, `epicCount`, etc.) are derived from the detail `metrics` object
+
 ## Releases — Execution Feature Detail (`data/releases/execution/features/{KEY}.json`)
 
-Per-feature detail file with epic breakdown.
+Unified per-feature file combining data from pipeline (GitLab CI), Jira enrichment, and tracking data. The `_sources` field tracks when each source last contributed.
 
 ```json
 {
   "key": "RHAISTRAT-123",
   "summary": "Implement model serving autoscaling",
+
+  "_sources": {
+    "pipeline": "2026-06-04T12:00:00Z",
+    "jira": "2026-06-05T08:30:00Z"
+  },
+
   "status": "In Progress",
-  "health": "green",
-  "completionPct": 75,
-  "epicCount": 5,
-  "issueCount": 30,
-  "blockerCount": 1,
-  "fixVersions": ["RHOAI 2.16"],
+  "statusCategory": "In Progress",
+  "colorStatus": "Green",
+  "ownerStatusColor": "Green",
+  "statusNotes": "On track for EA2 delivery",
+  "statusSummary": "<p>On track for EA2 delivery</p>",
+  "priority": "Normal",
+  "assignee": { "displayName": "Alice Smith", "accountId": "5e41b8c03df51b0c937390ec" },
+  "pm": { "displayName": "Jane PM" },
+  "team": "Model Serving",
+  "releaseType": "Feature",
+  "fixVersions": ["rhoai-3.5"],
+  "labels": ["core"],
+  "components": ["Model Serving"],
+  "docsRequired": "Yes",
+  "targetEnd": "2026-07-01",
+  "riceScore": 42,
+  "riceStatus": "complete",
+  "isBlocked": false,
+  "linkedRfeKey": "RHAIRFE-1234",
+
+  "issueLinks": [
+    { "type": "Cloners", "direction": "outward", "linkedKey": "RHAIRFE-1234", "linkedSummary": "...", "linkedStatus": "Approved" }
+  ],
   "epics": [
-    {
-      "key": "RHOAIENG-456",
-      "summary": "Epic: Autoscaling backend",
-      "status": "In Progress",
-      "assignee": "Alice Smith",
-      "accountId": "5e41b8c03df51b0c937390ec"
-    }
-  ]
+    { "key": "RHOAIENG-456", "summary": "Epic: Autoscaling backend", "status": "In Progress" }
+  ],
+  "architect": "Architect Name",
+  "parentKey": "RHAISTRAT-100",
+  "targetVersions": ["3.5"],
+
+  "metrics": {
+    "totalEpics": 5,
+    "totalIssues": 30,
+    "completionPct": 75,
+    "blockerCount": 1,
+    "health": "GREEN"
+  },
+  "topology": { "repos": [] },
+
+  "created": "2026-02-26T14:49:47.944+0000",
+  "updated": "2026-06-05T08:30:00.000+0000"
 }
 ```
+
+**Notes:**
+- `assignee` is an object `{ displayName, accountId }` in the detail (flattened to string in the index)
+- `colorStatus` and `ownerStatusColor` are identical (backward compat alias during migration)
+- `_sources` timestamps indicate data freshness per source; features with only `pipeline` have not been Jira-enriched yet
+- `statusNotes` (pipeline) and `statusSummary` (Jira) are different fields with different formats
+- Jira-owned fields are authoritative when present; pipeline-owned fields (`metrics`, `topology`) are preserved across Jira syncs
+- `aiReview` is optional; only present for features that have been scored by the AI review pipeline
+
+**Optional — AI Review (`aiReview`):**
+
+AI review scores and metadata pushed by the strat-creator pipeline via the AI Impact module. Stored under a single `aiReview` namespace to avoid field collisions. `humanReviewStatus` is derived from Jira labels during enrichment; sign-off details (`approvedBy`, `approvedAt`) are backfilled from the Jira changelog.
+
+```json
+{
+  "aiReview": {
+    "title": "Feature title from AI pipeline",
+    "sourceRfe": "RHAIRFE-456",
+    "size": "M",
+    "recommendation": "approve",
+    "needsAttention": false,
+    "humanReviewStatus": "approved",
+    "approvedBy": "Jane Doe",
+    "approvedAt": "2026-06-01T00:00:00Z",
+    "scores": {
+      "feasibility": 2,
+      "testability": 1,
+      "scope": 2,
+      "architecture": 2,
+      "total": 7
+    },
+    "reviewers": {
+      "feasibility": "approve",
+      "testability": "revise",
+      "scope": "approve",
+      "architecture": "approve"
+    },
+    "labels": ["strat-creator-auto-created", "strat-creator-human-sign-off"],
+    "reviewedAt": "2026-05-15T00:00:00Z",
+    "runId": "run-abc-123",
+    "history": [
+      {
+        "scores": { "feasibility": 1, "testability": 1, "scope": 2, "architecture": 1, "total": 5 },
+        "recommendation": "revise",
+        "needsAttention": true,
+        "humanReviewStatus": "awaiting-review",
+        "reviewedAt": "2026-05-01T00:00:00Z"
+      }
+    ]
+  }
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `title` | string | AI pipeline's title (may differ from Jira `summary`) |
+| `sourceRfe` | string | Source RFE key (e.g. `RHAIRFE-456`) |
+| `size` | `S\|M\|L\|XL\|null` | T-shirt size estimate |
+| `recommendation` | `approve\|revise\|reject` | Overall recommendation |
+| `needsAttention` | boolean | Whether human attention is needed |
+| `humanReviewStatus` | `approved\|needs-review\|awaiting-review` | Derived from Jira labels |
+| `approvedBy` | string\|null | Who added the sign-off label |
+| `approvedAt` | string\|null | When the sign-off label was added |
+| `scores` | object | Per-dimension scores (0-2) plus `total` (0-8) |
+| `reviewers` | object | Per-dimension verdicts (`approve\|revise\|reject`) |
+| `labels` | string[] | Label snapshot from the AI pipeline push |
+| `reviewedAt` | string | ISO 8601 timestamp of this review |
+| `runId` | string | Pipeline run identifier |
+| `history` | array | Previous review snapshots (max 20, newest first) |
 
 **Optional — Traffic Signals (`trafficSignals`):**
 
@@ -979,7 +1106,7 @@ Heuristic narrative signals for the Feature detail **Traffic Signals** panel (bl
 
 ## Releases — Execution Config (`data/releases/execution/config.json`)
 
-Admin-configurable settings for GitLab CI artifact fetching (formerly Feature Traffic config).
+Admin-configurable settings for GitLab CI artifact fetching and Jira enrichment.
 
 ```json
 {
@@ -989,13 +1116,41 @@ Admin-configurable settings for GitLab CI artifact fetching (formerly Feature Tr
   "branch": "main",
   "artifactPath": "output",
   "refreshIntervalHours": 12,
-  "enabled": false
+  "enabled": false,
+  "jiraEnrichment": {
+    "enabled": false,
+    "syncIntervalHours": 6,
+    "discoveryEnabled": false,
+    "discoveryJql": "project = RHAISTRAT AND issuetype IN (Feature, Initiative) AND created >= -365d"
+  }
 }
 ```
 
 **Notes:**
 - `enabled` defaults to `false`. Module does nothing until an admin enables it in Settings.
 - `artifactPath` is the directory prefix stripped from zip entry paths (e.g., `output/index.json` becomes `index.json`).
+- `jiraEnrichment.enabled` enables periodic Jira sync of feature data (6h default cadence).
+- `jiraEnrichment.discoveryEnabled` enables Jira JQL discovery of features not yet in the store.
+- `jiraEnrichment.discoveryJql` is bounded by `created >= -365d` by default to prevent unbounded results.
+
+## Releases — Execution Last Enrichment (`data/releases/execution/last-enrichment.json`)
+
+Metadata from the most recent Jira enrichment sync.
+
+```json
+{
+  "status": "success",
+  "timestamp": "2026-06-05T08:30:00Z",
+  "featureCount": 632,
+  "enrichedCount": 630,
+  "duration": 24500,
+  "lastKey": "RHAISTRAT-1500"
+}
+```
+
+**Notes:**
+- `enrichedCount` may be less than `featureCount` if some Jira lookups failed (partial failure handling).
+- `lastKey` is for diagnostics only.
 
 ## Releases — Execution Last Fetch (`data/releases/execution/last-fetch.json`)
 
@@ -1017,6 +1172,70 @@ Metadata from the most recent fetch attempt.
 - `warnings` is only present when there were non-fatal issues (e.g., unparseable JSON files)
 - On error: `{ "status": "error", "message": "...", "timestamp": "..." }`
 - On artifact expiration: `{ "status": "artifact_expired", "message": "...", "timestamp": "..." }`
+
+---
+
+## Release Health Cache — `data/releases/planning/health-cache-{version}-{phase}.json`
+
+Generated by the health pipeline (`runHealthPipeline()`). Version 3 adds planning-phase support.
+
+```json
+{
+  "healthCacheVersion": 3,
+  "cachedAt": "2026-06-09T14:30:00.000Z",
+  "version": "3.5",
+  "releasePhaseMode": "planning",
+  "milestones": { "ea1Freeze": "...", "gaFreeze": "..." },
+  "summary": {
+    "totalFeatures": 45,
+    "byRisk": { "green": 30, "yellow": 10, "red": 5 },
+    "planningReadiness": {
+      "totalChecked": 45,
+      "fullyReady": 30,
+      "withHardBlockers": 10,
+      "withWarnings": 5,
+      "byCheck": { "DoR-P1": 40, "DoR-P2": 42, "DoR-P3": 45, "DoR-P4": 35, "DoR-P5": 38 }
+    }
+  },
+  "features": [
+    {
+      "key": "RHOAIENG-1001",
+      "planningChecks": {
+        "checks": [
+          { "id": "DoR-P1", "label": "Components Set", "passed": true, "severity": "hard-blocker", "detail": "Model Serving" }
+        ],
+        "passedCount": 5,
+        "totalCount": 5,
+        "hasHardBlockers": false,
+        "hardBlockersFailed": []
+      }
+    }
+  ]
+}
+```
+
+| Field | Type | Added In | Description |
+|-------|------|----------|-------------|
+| `healthCacheVersion` | number | v1 | Schema version (bumped from 2 to 3 for planning checks) |
+| `releasePhaseMode` | `"planning"` / `"execution"` / `"unknown"` | v3 | Derived from `computeMilestoneInfo().currentPhase`. `"planning"` = before GA Freeze. |
+| `summary.planningReadiness` | object / null | v3 | Aggregated planning check results. Null when not in planning mode or `enablePlanningChecks` is false. |
+| `summary.planningReadiness.byCheck` | object | v3 | Map of check ID to count of features passing that check (e.g., `{ "DoR-P1": 40 }`). |
+| `features[].planningChecks` | object / null | v3 | Per-feature planning readiness checks (DoR-P series). Null when checks are disabled or mode is not `"planning"`. |
+| `features[].planningChecks.checks[]` | array | v3 | Array of `{ id, label, passed, severity, detail }` objects. All checks have `severity: "hard-blocker"`. |
+| `features[].planningChecks.hasHardBlockers` | boolean | v3 | True if any hard-blocker check failed. |
+| `features[].planningChecks.hardBlockersFailed` | array | v3 | Subset of `checks` where `severity === "hard-blocker"` and `passed === false`. |
+
+**Planning check IDs:**
+
+| ID | Label | Data Source |
+|----|-------|-------------|
+| DoR-P1 | Components Set | `feature.components` |
+| DoR-P2 | Product Manager Assigned | `feature.pm` |
+| DoR-P3 | Release Type Set | `feature.phase` / `feature.releaseType` |
+| DoR-P4 | Child Epics Created | `feature.epicCount` (enriched from execution index) |
+| DoR-P5 | RFE Linked | `feature.rfe` / `feature.parentKey` |
+
+**Graceful degradation:** If `releasePhaseMode` is missing, treat as `"unknown"` (show execution-mode view). If `planningChecks` is null on a feature, show `"--"` in the planning checks column. If `planningReadiness` is null in summary, hide the planning readiness banner.
 
 ---
 

@@ -208,13 +208,13 @@
       </section>
 
       <!-- Team Leadership -->
-      <section v-if="leadership" class="mb-8">
+      <section v-if="leadership || githubAccess" class="mb-8">
         <div class="flex items-center justify-between mb-6">
           <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Team Leadership</h3>
           <p class="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">Team maintainership in this project</p>
         </div>
 
-        <div class="grid grid-cols-1 gap-4 mb-4" :class="governanceCards.length > 1 ? 'sm:grid-cols-2' : ''">
+        <div class="grid grid-cols-1 gap-4 mb-4" :class="(governanceCards.length + (githubAccess ? 1 : 0)) > 1 ? 'sm:grid-cols-2' : ''">
           <LeadershipCard
             v-for="card in governanceCards"
             :key="card.positionType"
@@ -228,6 +228,28 @@
             :percent="card.total > 0 ? (card.team / card.total) * 100 : 0"
             :percentThreshold="card.positionType === 'reviewer' ? 5 : 10"
           />
+          <!-- PyTorch repo access card -->
+          <div v-if="githubAccess" class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700/60 p-5 hover:shadow-md hover:border-gray-200 dark:hover:border-gray-600 transition-all duration-200">
+            <div class="flex items-center gap-3 mb-3">
+              <div class="p-2 rounded-lg bg-purple-50 dark:bg-purple-900/20">
+                <UsersIcon :size="16" class="text-purple-600 dark:text-purple-400" />
+              </div>
+              <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Repository Access</span>
+            </div>
+            <div class="flex items-center gap-6">
+              <div>
+                <span class="text-2xl font-bold text-gray-900 dark:text-gray-100 tabular-nums">{{ githubAccess.write ?? 0 }}</span>
+                <span class="text-sm text-gray-500 dark:text-gray-400 ml-1">/ {{ githubAccess.total ?? 0 }}</span>
+                <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Write</p>
+              </div>
+              <div class="w-px h-10 bg-gray-200 dark:bg-gray-700"></div>
+              <div>
+                <span class="text-2xl font-bold text-gray-900 dark:text-gray-100 tabular-nums">{{ githubAccess.triage ?? 0 }}</span>
+                <span class="text-sm text-gray-500 dark:text-gray-400 ml-1">/ {{ githubAccess.total ?? 0 }}</span>
+                <p class="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Triage</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Top maintainers -->
@@ -462,6 +484,7 @@ const dashboard = ref(null)
 const contributors = ref([])
 const contributorsExpanded = ref(false)
 const leadership = ref(null)
+const githubAccess = ref(null)
 const membersExpanded = ref(false)
 const projectInfo = ref(null)
 const orgDisplayName = ref('')
@@ -571,11 +594,12 @@ async function loadData() {
   }
 
   try {
-    const [dashData, contribData, leaderData, projectsData] = await Promise.all([
+    const [dashData, contribData, leaderData, projectsData, accessData] = await Promise.all([
       apiRequest(`${MODULE_API}/dashboard?days=${selectedDays.value}&projectId=${encodeURIComponent(pid)}`),
       apiRequest(`${MODULE_API}/contributors?days=${selectedDays.value}&limit=10&projectId=${encodeURIComponent(pid)}`),
       apiRequest(`${MODULE_API}/leadership?projectId=${encodeURIComponent(pid)}`).catch(() => null),
       apiRequest(`${MODULE_API}/projects`),
+      apiRequest(`${MODULE_API}/github-access`).catch(() => null),
     ])
 
     dashboard.value = dashData
@@ -583,6 +607,10 @@ async function loadData() {
     leadership.value = leaderData
 
     const match = projectsData.projects?.find(p => p.id === pid)
+    // PyTorch governance is expressed through GitHub repo permissions, not CODEOWNERS.
+    // Only fetch access data for PyTorch projects since no other project uses this model.
+    const isPytorch = match?.githubOrg === 'pytorch'
+    githubAccess.value = isPytorch ? accessData : null
     projectInfo.value = match || null
 
     if (fromOrg.value && !orgDisplayName.value) {

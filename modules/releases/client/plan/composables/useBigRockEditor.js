@@ -1,9 +1,12 @@
 import { ref, computed } from 'vue'
+import { apiRequest } from '@shared/client/services/api'
 
 /**
  * Edit panel state management for Big Rock editing.
  * Handles open/close, dirty tracking, and form state.
  */
+
+const API_BASE = '/modules/releases/planning'
 
 const isOpen = ref(false)
 const editingRock = ref(null)  // null = adding new, object = editing existing
@@ -11,6 +14,7 @@ const formData = ref(createEmptyForm())
 const saving = ref(false)
 const saveError = ref(null)
 const fieldErrors = ref({})
+const pillarOptions = ref([])
 
 function createEmptyForm() {
   return {
@@ -42,7 +46,10 @@ export function useBigRockEditor() {
     }
     // Editing existing -- dirty if any field differs from original
     const orig = editingRock.value
-    return formData.value.owner !== (orig.owner || '') ||
+    return formData.value.name !== (orig.name || '') ||
+      formData.value.fullName !== (orig.fullName || '') ||
+      formData.value.pillar !== (orig.pillar || '') ||
+      formData.value.owner !== (orig.owner || '') ||
       formData.value.architect !== (orig.architect || '') ||
       JSON.stringify(formData.value.outcomeKeys) !== JSON.stringify(orig.outcomeKeys || []) ||
       formData.value.notes !== (orig.notes || '')
@@ -95,6 +102,15 @@ export function useBigRockEditor() {
     fieldErrors.value = errors || {}
   }
 
+  async function loadPillarOptions() {
+    try {
+      const data = await apiRequest(API_BASE + '/pillar-options')
+      pillarOptions.value = data.options || []
+    } catch {
+      pillarOptions.value = []
+    }
+  }
+
   /** Reset all state. Intended for test isolation. */
   function reset() {
     isOpen.value = false
@@ -103,6 +119,7 @@ export function useBigRockEditor() {
     saving.value = false
     saveError.value = null
     fieldErrors.value = {}
+    pillarOptions.value = []
   }
 
   return {
@@ -112,6 +129,7 @@ export function useBigRockEditor() {
     saving,
     saveError,
     fieldErrors,
+    pillarOptions,
     isNewRock,
     isDirty,
     openForEdit,
@@ -120,6 +138,7 @@ export function useBigRockEditor() {
     setSaving,
     setSaveError,
     setFieldErrors,
+    loadPillarOptions,
     reset
   }
 }

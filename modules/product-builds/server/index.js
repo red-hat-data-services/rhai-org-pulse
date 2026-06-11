@@ -288,6 +288,92 @@ module.exports = function registerRoutes(router, context) {
 
   /**
    * @openapi
+   * /api/modules/product-builds/artifacts/build-sequences:
+   *   get:
+   *     tags: [Product Builds]
+   *     summary: Get build sequence summaries for a batch of artifacts
+   *     description: Returns build_sequence_summary JSON strings for up to 50 artifact keys. Used by list views to populate package detail columns on demand.
+   *     parameters:
+   *       - name: keys
+   *         in: query
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Comma-separated list of artifact keys (max 50)
+   *     responses:
+   *       200:
+   *         description: Object mapping each key to its build_sequence_summary string (or null)
+   *       400:
+   *         description: Too many keys (over 50)
+   */
+  router.get('/artifacts/build-sequences', function(req, res) {
+    upstream('/artifacts/build-sequences', req, res);
+  });
+
+  /**
+   * @openapi
+   * /api/modules/product-builds/artifacts/wheels-collections/filters:
+   *   get:
+   *     tags: [Product Builds]
+   *     summary: Get wheel collection filter options
+   *     description: Returns available product keys and variants for wheel-collection artifacts, used to populate filter dropdowns.
+   *     responses:
+   *       200:
+   *         description: Object with product_keys (string[]) and variants (string[])
+   */
+  router.get('/artifacts/wheels-collections/filters', function(req, res) {
+    upstream('/artifacts/wheels-collections/filters', req, res);
+  });
+
+  /**
+   * @openapi
+   * /api/modules/product-builds/artifacts/wheels/build-history/{packageName}:
+   *   get:
+   *     tags: [Product Builds]
+   *     summary: Search wheel collections by package name
+   *     description: Finds wheel-collection artifacts that contain the specified Python package in their build sequence.
+   *     parameters:
+   *       - name: packageName
+   *         in: path
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Python package name to search for (e.g. vllm, transformers)
+   *       - name: product_key
+   *         in: query
+   *         schema:
+   *           type: string
+   *         description: Filter by product key
+   *       - name: series
+   *         in: query
+   *         schema:
+   *           type: string
+   *         description: Filter by version series (requires product_key)
+   *       - name: variant_filter
+   *         in: query
+   *         schema:
+   *           type: string
+   *         description: Filter by variant
+   *       - name: limit
+   *         in: query
+   *         schema:
+   *           type: integer
+   *           default: 20
+   *       - name: offset
+   *         in: query
+   *         schema:
+   *           type: integer
+   *           default: 0
+   *     responses:
+   *       200:
+   *         description: Array of objects with artifact_key, variant, package_version, created_at
+   */
+  router.get('/artifacts/wheels/build-history/:packageName', function(req, res) {
+    upstream(`/artifacts/wheels/build-history/${encodeURIComponent(req.params.packageName)}`, req, res);
+  });
+
+  /**
+   * @openapi
    * /api/modules/product-builds/artifacts:
    *   get:
    *     tags: [Product Builds]

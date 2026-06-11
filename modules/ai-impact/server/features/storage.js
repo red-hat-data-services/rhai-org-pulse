@@ -1,108 +1,91 @@
-const STORAGE_KEY = 'ai-impact/features.json';
-const MAX_HISTORY = 20;
+/**
+ * AI Impact feature storage — response-shaping transforms.
+ *
+ * Reads from the unified releases execution store and reshapes data
+ * for backward-compatible AI Impact API responses.
+ *
+ * The canonical feature store is owned by releases. AI Impact pushes
+ * review data via the internal API (POST /api/modules/releases/execution/ai-review/bulk).
+ */
+
+const RELEASES_INDEX_KEY = 'releases/execution/index.json';
+const RELEASES_FEATURE_PREFIX = 'releases/execution/features/';
+const LEGACY_STORAGE_KEY = 'ai-impact/features.json';
 
 /**
- * Read features from storage with null/malformed data guard.
+ * Read features from the unified releases store and reshape into the
+ * AI Impact format ({ features: { [key]: { latest, history } }, ... }).
+ *
+ * Falls back to the legacy ai-impact/features.json if no releases data
+ * has aiReview entries yet (pre-migration).
+ *
  * @param {Function} readFromStorage - The storage read function
  * @returns {object} Features data object (never null)
  */
 function readFeatures(readFromStorage) {
-  const data = readFromStorage(STORAGE_KEY);
-  if (!data || typeof data !== 'object' || !data.features) {
+  const index = readFromStorage(RELEASES_INDEX_KEY);
+  if (!index || !Array.isArray(index.features)) {
+    // Fallback to legacy store
+    const legacy = readFromStorage(LEGACY_STORAGE_KEY);
+    if (legacy && typeof legacy === 'object' && legacy.features) {
+      return legacy;
+    }
     return { lastSyncedAt: null, totalFeatures: 0, features: {} };
   }
-  return data;
-}
 
-/**
- * Atomic write via the shared storage abstraction.
- * @param {Function} writeToStorageAtomic - The storage atomic write function
- * @param {object} data - The features data object to write
- */
-function writeFeaturesAtomic(writeToStorageAtomic, data) {
-  writeToStorageAtomic(STORAGE_KEY, data);
-}
-
-/**
- * Trim a full feature down to history-sized payload.
- * @param {object} feature - Full feature object
- * @returns {object} Trimmed object
- */
-function trimForHistory(feature) {
-  return {
-    scores: feature.scores,
-    recommendation: feature.recommendation,
-    needsAttention: feature.needsAttention,
-    humanReviewStatus: feature.humanReviewStatus,
-    reviewedAt: feature.reviewedAt
-  };
-}
-
-/**
- * Upsert a single feature into the data object (mutates in place).
- * @param {object} data - The full features data object
- * @param {string} key - The feature key (e.g. "RHAISTRAT-123")
- * @param {object} feature - The validated feature data
- * @returns {'created' | 'updated' | 'unchanged'}
- */
-function upsertFeature(data, key, feature) {
-  const existing = data.features[key];
-
-  if (!existing) {
-    data.features[key] = {
-      latest: feature,
-      history: []
-    };
-    return 'created';
-  }
-
-  // Idempotent: same timestamp means unchanged
-  if (existing.latest.reviewedAt === feature.reviewedAt) {
-    return 'unchanged';
-  }
-
-  const incomingDate = new Date(feature.reviewedAt);
-  const latestDate = new Date(existing.latest.reviewedAt);
-
-  if (incomingDate > latestDate) {
-    // Incoming is newer: rotate current latest into history
-    const history = [trimForHistory(existing.latest), ...existing.history];
-    existing.history = history.slice(0, MAX_HISTORY);
-    existing.latest = feature;
-    return 'updated';
-  }
-
-  // Incoming is older: check if it already exists in history
-  const existsInHistory = existing.history.some(h => h.reviewedAt === feature.reviewedAt);
-  if (existsInHistory) {
-    return 'unchanged';
-  }
-
-  // Smart eviction: only insert if it would survive the cap
-  if (existing.history.length >= MAX_HISTORY) {
-    const oldestInHistory = existing.history[existing.history.length - 1];
-    const oldestDate = new Date(oldestInHistory.reviewedAt);
-    if (incomingDate <= oldestDate) {
-      return 'unchanged';
+  // Filter to only features that have aiReview data
+  const aiFeatures = index.features.filter(function(f) { return f.aiReview; });
+  if (aiFeatures.length === 0) {
+    // Check legacy store as fallback
+    const legacy = readFromStorage(LEGACY_STORAGE_KEY);
+    if (legacy && typeof legacy === 'object' && legacy.features && Object.keys(legacy.features).length > 0) {
+      return legacy;
     }
+    return { lastSyncedAt: null, totalFeatures: 0, features: {} };
   }
 
-  // Insert at correct position (newest-first) and cap
-  const trimmed = trimForHistory(feature);
-  const insertIdx = existing.history.findIndex(h => new Date(h.reviewedAt) < incomingDate);
-  if (insertIdx === -1) {
-    existing.history.push(trimmed);
-  } else {
-    existing.history.splice(insertIdx, 0, trimmed);
+  const features = {};
+  for (var i = 0; i < aiFeatures.length; i++) {
+    var entry = aiFeatures[i];
+    // Read the full feature file for history
+    var featureFile = readFromStorage(RELEASES_FEATURE_PREFIX + entry.key + '.json');
+    var aiReview = featureFile && featureFile.aiReview ? featureFile.aiReview : {};
+
+    features[entry.key] = {
+      latest: {
+        key: entry.key,
+        title: aiReview.title || entry.summary || '',
+        sourceRfe: aiReview.sourceRfe || null,
+        priority: entry.priority || 'Undefined',
+        status: entry.status || '',
+        size: aiReview.size || null,
+        recommendation: aiReview.recommendation || null,
+        needsAttention: aiReview.needsAttention || false,
+        humanReviewStatus: aiReview.humanReviewStatus || (entry.aiReview && entry.aiReview.humanReviewStatus) || 'awaiting-review',
+        scores: aiReview.scores || (entry.aiReview && entry.aiReview.scores) || null,
+        reviewers: aiReview.reviewers || null,
+        labels: entry.labels || [],
+        components: aiReview.components || [],
+        reviewedAt: aiReview.reviewedAt || (entry.aiReview && entry.aiReview.reviewedAt) || null,
+        runId: aiReview.runId || undefined,
+        approvedBy: aiReview.approvedBy || null,
+        approvedAt: aiReview.approvedAt || null
+      },
+      history: aiReview.history || []
+    };
   }
-  existing.history = existing.history.slice(0, MAX_HISTORY);
-  return 'updated';
+
+  return {
+    lastSyncedAt: index.fetchedAt || null,
+    totalFeatures: aiFeatures.length,
+    features
+  };
 }
 
 /**
  * Get a slim projection of all latest features for list views.
  * Strips labels, runId, runTimestamp from each entry.
- * @param {object} data - The full features data object
+ * @param {object} data - The features data object (from readFeatures)
  * @returns {object} Projected data with slim feature entries
  */
 function getLatestProjection(data) {
@@ -135,7 +118,7 @@ function getLatestProjection(data) {
 
 /**
  * Count total history entries across all features.
- * @param {object} data - The full features data object
+ * @param {object} data - The features data object (from readFeatures)
  * @returns {number}
  */
 function countHistoryEntries(data) {
@@ -147,12 +130,10 @@ function countHistoryEntries(data) {
 }
 
 module.exports = {
-  STORAGE_KEY,
-  MAX_HISTORY,
+  RELEASES_INDEX_KEY,
+  RELEASES_FEATURE_PREFIX,
+  LEGACY_STORAGE_KEY,
   readFeatures,
-  writeFeaturesAtomic,
-  trimForHistory,
-  upsertFeature,
   getLatestProjection,
   countHistoryEntries
 };

@@ -487,7 +487,7 @@ async function fetchHygieneFeatures(jiraRequestFn, fetchAllJqlResultsFn, version
       if (bi > 0) await sleep(THROTTLE_MS)
 
       const batchKeys = batches[bi]
-      const batchJql = 'key in (' + batchKeys.join(', ') + ')'
+      const batchJql = 'key in (' + batchKeys.map(k => '"' + k + '"').join(', ') + ')'
 
       try {
         const changelogIssues = await fetchAllJqlResultsFn(

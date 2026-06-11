@@ -3,6 +3,8 @@ name: CI
 on:
   pull_request:
     branches: [main]
+  merge_group:
+  workflow_dispatch:
 
 jobs:
   test:
@@ -20,7 +22,20 @@ jobs:
       - name: Detect changed paths
         id: changes
         run: |
-          CHANGED=$(git diff --name-only ${{ github.event.pull_request.base.sha }} HEAD)
+          if [ "${{ github.event_name }}" = "merge_group" ]; then
+            BASE_SHA="${{ github.event.merge_group.base_sha }}"
+          elif [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          else
+            BASE_SHA="origin/main"
+          fi
+
+          if [ -z "$BASE_SHA" ]; then
+            echo "::error::BASE_SHA is empty — cannot detect changes"
+            exit 1
+          fi
+
+          CHANGED=$(git diff --name-only ${BASE_SHA} HEAD)
           if echo "$CHANGED" | grep -qE '^(src/|server/|modules/|shared/|scripts/validate|package|vite\.config|tailwind\.config|postcss\.config|vitest\.config|index\.html|public/|tests/smoke/|playwright\.config|Makefile)'; then
             echo "app=true" >> "$GITHUB_OUTPUT"
           fi
@@ -125,7 +140,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Build core base images (needed for AI Eng FROM)
         run: make build-core-base-images
@@ -143,33 +158,18 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     needs: [test, smoke-test-core, smoke-test-ai-eng]
-    permissions:
-      statuses: write
     steps:
-      - name: Set commit status
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          REPO: ${{ github.repository }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      - name: Evaluate smoke test results
         run: |
           if [ "${{ needs.test.outputs.app }}" != "true" ]; then
-            STATE="success"
-            DESC="No code changes — smoke tests skipped"
+            echo "No code changes — smoke tests skipped"
           elif [ "${{ needs.test.result }}" != "success" ]; then
-            STATE="failure"
-            DESC="Test & Build failed — smoke tests did not run"
+            echo "Test & Build failed — smoke tests did not run"
+            exit 1
           elif [ "${{ needs.smoke-test-core.result }}" = "success" ] && \
                [ "${{ needs.smoke-test-ai-eng.result }}" = "success" ]; then
-            STATE="success"
-            DESC="All smoke tests passed"
+            echo "All smoke tests passed"
           else
-            STATE="failure"
-            DESC="Smoke tests failed"
+            echo "Smoke tests failed"
+            exit 1
           fi
-
-          gh api "repos/${REPO}/statuses/${HEAD_SHA}" \
-            -f state="$STATE" \
-            -f context="Smoke Tests" \
-            -f description="$DESC" \
-            -f target_url="$RUN_URL"

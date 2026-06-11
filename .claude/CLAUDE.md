@@ -55,6 +55,7 @@ npm run dev:full       # Starts Vite (5173) + Express (3001)
 - **Composite keys**: Teams = `orgKey::teamName` (e.g., `shgriffi::Model Serving`).
 - **Field options**: `data/team-data/field-options/<name>.json` — named allowed-value sets, referenced by `optionsRef`.
 - **Messages**: `data/messages.json` — admin announcements, merged with computed provider messages.
+- **Unified feature store**: `data/releases/execution/features/{KEY}.json` — canonical per-feature files owned by releases. Contains pipeline metrics, Jira fields, and optional `aiReview` namespace (AI Impact review scores, history). Index at `data/releases/execution/index.json`. AI Impact pushes review data via internal API (`POST /api/modules/releases/execution/ai-review/bulk`). AI Impact reads from releases store and reshapes for backward-compatible API responses.
 - **Data file formats**: See `docs/DATA-FORMATS.md`. Demo fixtures must match production format.
 
 ### Roster Sync (`shared/server/roster-sync/`)
@@ -148,7 +149,7 @@ Kustomize layers: `base/` (core platform + team-tracker) → `overlays/ai-eng/` 
 - `GH_PAT` — Personal access token with admin bypass, used by CI to create and auto-merge image tag update PRs
 - `GCP_SA_KEY` — GCP service account JSON key for Vertex AI auth (Claude code review)
 
-**Daily CronJob** (`deploy/openshift/base/cronjob-sync-refresh.yaml`): Runs at 6:00 AM UTC, triggers roster sync then full metrics refresh via the backend API. Uses `CRON_ADMIN_EMAIL` from ConfigMap. S3 backup step is conditional on `AWS_BACKUP_BUCKET`.
+**CronJob** (`deploy/openshift/base/cronjob-sync-refresh.yaml`): Fires every 15 minutes (`*/15 * * * *`), triggers cadence-aware `POST /api/admin/refresh-all`. Each handler declares its own cadence (e.g., `24h` for roster sync, `12h` for execution pipeline). Handlers that have run within their cadence window are skipped — most ticks complete in seconds. Backup runs as a refresh handler (`platform:backup`, cadence `24h`), not as a separate CronJob step. Uses `CRON_ADMIN_EMAIL` from ConfigMap.
 
 ### Testing
 
@@ -173,9 +174,9 @@ Smoke tests verify:
 - Client-side routing functions (hash-based navigation)
 - Basic accessibility (semantic landmarks present)
 
-Playwright runs in a container (`mcr.microsoft.com/playwright:v1.60.0`), so no local browser installation needed. Works on any OS (RHEL/Podman, macOS/Docker, Ubuntu). The Makefile auto-detects the container runtime (prefers Podman on RHEL).
+Playwright runs in a container (`quay.io/browser/playwright-chromium`), so no local browser installation needed. Works on any OS (RHEL/Podman, macOS/Docker, Ubuntu). The Makefile auto-detects the container runtime (prefers Podman on RHEL).
 
-**IMPORTANT:** The Playwright version must match between `package.json` (`@playwright/test`) and `Makefile` (`PLAYWRIGHT_IMAGE`). When updating Playwright, change both files to the same version to prevent browser binary mismatches.
+**IMPORTANT:** The Playwright version must match between `package.json` (`@playwright/test`) and `Makefile` (`PLAYWRIGHT_IMAGE`). When updating Playwright, change both files to the same version to prevent browser binary mismatches. The Quay image uses `playwright-<version>` tags (e.g., `playwright-1.60.0`).
 
 CI workflow (`build-images.yml`):
 1. Builds core images (backend, frontend, frontend-builder, frontend-runtime) with smoke test

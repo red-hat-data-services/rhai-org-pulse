@@ -40,7 +40,7 @@
           <li>Tokens can have an optional expiration (30 days, 90 days, or 1 year).</li>
           <li>Scopes control which API endpoints a token can access.</li>
           <li>Revoke tokens at any time from this page.</li>
-          <li>In production, use the dedicated API route hostname for token-authenticated requests.</li>
+          <li>Send token-authenticated requests to <code class="font-mono text-xs">{{ apiBaseUrl }}</code> — the main application URL uses browser-based OAuth and will reject token auth.</li>
         </ul>
         <p class="text-xs">
           See <a href="/api/docs" target="_blank" rel="noopener" class="underline hover:text-blue-900 dark:hover:text-blue-100">API Docs</a> for the full endpoint reference.
@@ -337,6 +337,7 @@
 import { ref, computed, onMounted, h } from 'vue'
 import { Plus, Info, ChevronUp, ChevronDown, Copy, X, CheckCircle, Shield, AlertTriangle } from 'lucide-vue-next'
 import { useApiTokens } from '../composables/useApiTokens'
+import { useAuth } from '@shared/client/composables/useAuth'
 
 const badgeClass = 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium'
 const ScopeBadge = {
@@ -399,7 +400,7 @@ const editSelectedScopes = ref([])
 const editScopesError = ref(null)
 const savingScopes = ref(false)
 
-const apiBaseUrl = window.location.origin
+const { apiBaseUrl } = useAuth()
 
 const scopeCatalog = computed(() => {
   if (!availableScopes.value) return null

@@ -10,6 +10,7 @@ const labelsExpanded = ref(false)
 const featureLabelsExpanded = ref(false)
 const testPlanLabelsExpanded = ref(false)
 const buildReleaseLabelsExpanded = ref(false)
+const autofixLabelsExpanded = ref(false)
 
 let updatingFromUrl = false
 
@@ -58,6 +59,10 @@ const phaseInfo = {
     desc: 'Agentic CI pipeline that onboards new components into the build system by raising PRs/MRs across 6+ repos, triggered by a Jira ticket.',
     color: 'rose',
   },
+  'jira-autofix': {
+    desc: 'AI agents that triage Jira bug tickets, generate code fixes, and create MRs/PRs with iterative review feedback.',
+    color: 'emerald',
+  },
 }
 
 // Color utility for phase accents
@@ -68,7 +73,8 @@ const phaseColorMap = {
   cyan: { circle: 'bg-cyan-50 dark:bg-cyan-950 border-cyan-500', text: 'text-cyan-400', connector: 'from-cyan-500 to-amber-500' },
   amber: { circle: 'bg-amber-50 dark:bg-amber-950 border-amber-500', text: 'text-amber-400', connector: 'from-amber-500 to-teal-500' },
   teal: { circle: 'bg-teal-50 dark:bg-teal-950 border-teal-500', text: 'text-teal-400', connector: 'from-teal-500 to-rose-500' },
-  rose: { circle: 'bg-rose-50 dark:bg-rose-950 border-rose-500', text: 'text-rose-400', connector: '' },
+  rose: { circle: 'bg-rose-50 dark:bg-rose-950 border-rose-500', text: 'text-rose-400', connector: 'from-rose-500 to-emerald-500' },
+  emerald: { circle: 'bg-emerald-50 dark:bg-emerald-950 border-emerald-500', text: 'text-emerald-400', connector: '' },
 }
 
 function getPhaseColors(phaseId) {
@@ -282,6 +288,43 @@ const buildReleaseCommunityLinks = [
   { label: '#forum-rhai-ai-first', icon: HelpCircle, url: 'https://app.slack.com/client/E030G10V24F/C0APP9DDB2R' },
 ]
 
+// Jira Autofix data
+const autofixSteps = [
+  { name: 'Bug Filed', desc: 'A bug is filed in Jira with a repository URL and description of the issue', ai: false },
+  { name: 'AI Triage', desc: 'Bot scans new tickets, evaluates if they have enough info for an AI agent to fix, and labels accordingly', ai: true },
+  { name: 'Autofix', desc: 'Bot clones the repo, creates a branch, runs Claude Code to analyze and fix the issue, and creates an MR/PR', ai: true },
+  { name: 'Review Iteration', desc: 'Bot addresses review feedback and CI failures on each scheduled cycle (~30 min), pushing fixes and resolving threads (up to 10 iterations)', ai: true },
+  { name: 'Human Review', desc: 'Engineers review and merge the MR/PR, or leave feedback for the bot to address on its next iteration', ai: false },
+]
+
+const autofixTriageLabels = [
+  { name: 'jira-triage-pending', color: 'blue', desc: 'Triage bot is processing the ticket' },
+  { name: 'jira-triage-missing-info', color: 'amber', desc: 'Ticket needs more information from the reporter' },
+  { name: 'jira-triage-not-fixable', color: 'gray', desc: 'Not suitable for automated fixing' },
+  { name: 'jira-triage-external', color: 'amber', desc: 'External reporter, needs Red Hat engineer approval' },
+  { name: 'jira-triage-stale', color: 'gray', desc: 'No response for 14 days' },
+]
+
+const autofixPipelineLabels = [
+  { name: 'jira-autofix', color: 'green', desc: 'Ticket is ready for the bot to pick up' },
+  { name: 'jira-autofix-pending', color: 'blue', desc: 'Bot is currently processing the ticket' },
+  { name: 'jira-autofix-review', color: 'blue', desc: 'MR/PR created, bot is iterating on review feedback' },
+  { name: 'jira-autofix-ci-failing', color: 'red', desc: 'Pipeline broken on the MR/PR, bot will retry' },
+  { name: 'jira-autofix-merged', color: 'green', desc: 'MR/PR has been merged' },
+  { name: 'jira-autofix-rejected', color: 'red', desc: 'MR/PR closed without merge' },
+  { name: 'jira-autofix-max-retries', color: 'amber', desc: 'Bot hit its iteration limit, needs human takeover' },
+  { name: 'jira-autofix-blocked', color: 'amber', desc: 'Bot can\'t proceed (e.g., missing repo URL, unfixable CI failure)' },
+  { name: 'no-autofix', color: 'gray', desc: 'Permanently excludes this ticket from triage and autofix' },
+]
+
+const autofixToolLinks = [
+  { label: 'Autofix repo', icon: Code, url: 'https://gitlab.com/redhat/rhel-ai/agentic-ci/autofix' },
+]
+
+const autofixCommunityLinks = [
+  { label: '#forum-rhai-ai-first', icon: HelpCircle, url: 'https://app.slack.com/client/E030G10V24F/C0APP9DDB2R' },
+]
+
 function scopeBadgeClasses(scope) {
   const map = {
     both: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300',
@@ -338,7 +381,7 @@ function labelColorClasses(color) {
         <!-- Pipeline stages — vertical spine -->
         <div class="relative">
           <!-- Gradient spine -->
-          <div class="absolute left-[19px] top-0 bottom-14 w-0.5 bg-gradient-to-b from-blue-500 via-purple-500 via-cyan-500 via-amber-500 to-rose-500 opacity-30 dark:opacity-30"></div>
+          <div class="absolute left-[19px] top-0 bottom-14 w-0.5 bg-gradient-to-b from-blue-500 via-purple-500 via-cyan-500 via-amber-500 to-emerald-500 opacity-30 dark:opacity-30"></div>
 
           <template v-for="(phase, idx) in PHASES" :key="phase.id">
             <!-- Stage card -->
@@ -1505,6 +1548,284 @@ function labelColorClasses(color) {
           <div class="flex gap-2 flex-wrap">
             <a
               v-for="link in buildReleaseCommunityLinks"
+              :key="link.label"
+              :href="link.url"
+              target="_blank"
+              rel="noopener"
+              class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-xs text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+            >
+              <component :is="link.icon" :size="14" class="text-gray-400 dark:text-gray-500" />
+              {{ link.label }}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── Jira Autofix Detail ─── -->
+    <div v-else-if="selectedPhase.id === 'jira-autofix'" class="flex-1 overflow-auto p-6 lg:p-8">
+      <div class="max-w-3xl mx-auto">
+        <!-- Back -->
+        <button
+          @click="closeDetail"
+          class="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 mb-4 cursor-pointer"
+        >
+          <ArrowLeft :size="16" />
+          Back to Pipeline Overview
+        </button>
+
+        <!-- Header -->
+        <div class="flex items-start justify-between mb-8">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-emerald-500/10 border-2 border-emerald-500 flex items-center justify-center">
+              <span class="text-emerald-600 dark:text-emerald-400 text-sm font-bold">8</span>
+            </div>
+            <div>
+              <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Jira Autofix</h2>
+              <p class="text-sm text-gray-500 dark:text-gray-400">AI agents running in GitLab CI that triage bug tickets, generate fixes, and create MRs/PRs, iterating on review feedback until merged or escalated.</p>
+            </div>
+          </div>
+          <button
+            @click="goToPage('autofix')"
+            class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors flex-shrink-0 ml-4"
+          >
+            Go to Jira AutoFix
+            <ChevronRight :size="16" />
+          </button>
+        </div>
+
+        <!-- How it works -->
+        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 mb-6">
+          <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-4">How it works</h3>
+          <div class="relative ml-1">
+            <div class="absolute left-[15px] top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700"></div>
+            <div v-for="(step, i) in autofixSteps" :key="step.name" class="flex items-start gap-4 relative" :class="i < autofixSteps.length - 1 ? 'pb-5' : ''">
+              <div
+                class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 z-[1]"
+                :class="step.ai
+                  ? 'bg-emerald-500/10 border-2 border-emerald-500'
+                  : 'bg-gray-100 dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600'"
+              >
+                <Sparkles v-if="step.ai" :size="16" class="text-emerald-600 dark:text-emerald-400" />
+                <User v-else :size="16" class="text-gray-400 dark:text-gray-500" />
+              </div>
+              <div>
+                <div class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ step.name }}</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ step.desc }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Triage verdicts -->
+        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 mb-6">
+          <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Triage verdicts</h3>
+          <p class="text-xs text-gray-400 dark:text-gray-500 mb-4">The triage bot evaluates three questions: Can the agent start? Can the agent find and fix it? Should an agent fix this?</p>
+          <div class="space-y-2">
+            <div class="flex items-start gap-3 p-3 bg-green-500/5 border border-green-200 dark:border-green-500/20 rounded-lg">
+              <span class="text-base mt-px">&#x2705;</span>
+              <div>
+                <span class="text-sm font-semibold text-green-600 dark:text-green-400">READY</span>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Ticket gets the <code class="px-1.5 py-0.5 bg-green-100 dark:bg-green-500/15 text-green-700 dark:text-green-400 text-xs rounded font-mono">jira-autofix</code> label and enters the autofix pipeline</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-amber-500/5 border border-amber-200 dark:border-amber-500/20 rounded-lg">
+              <span class="text-base mt-px">&#x26A0;&#xFE0F;</span>
+              <div>
+                <span class="text-sm font-semibold text-amber-600 dark:text-amber-400">NEEDS INFO</span>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Bot comments with specific questions. Add the info and remove <code class="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 text-xs rounded font-mono">jira-triage-missing-info</code> to retry</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-red-500/5 border border-red-200 dark:border-red-500/20 rounded-lg">
+              <span class="text-base mt-px">&#x274C;</span>
+              <div>
+                <span class="text-sm font-semibold text-red-600 dark:text-red-400">NOT FIXABLE</span>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Ticket requires design decisions, infrastructure changes, or runtime investigation. Labeled and skipped, still needs human attention</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ticket types -->
+        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 mb-6">
+          <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Ticket types</h3>
+          <div class="space-y-2">
+            <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+              <div class="w-20 text-right flex-shrink-0">
+                <span class="text-sm font-bold text-gray-900 dark:text-white">Bug</span>
+              </div>
+              <div class="w-px h-8 bg-gray-200 dark:bg-gray-600"></div>
+              <div class="text-sm text-gray-700 dark:text-gray-300">Fix the bug and add a reproducing test</div>
+            </div>
+            <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+              <div class="w-20 text-right flex-shrink-0">
+                <span class="text-sm font-bold text-gray-900 dark:text-white">Story</span>
+              </div>
+              <div class="w-px h-8 bg-gray-200 dark:bg-gray-600"></div>
+              <div class="text-sm text-gray-700 dark:text-gray-300">Implement the feature as described</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Iteration loop callout -->
+        <div class="bg-emerald-50 dark:bg-emerald-500/5 border border-emerald-200 dark:border-emerald-500/20 rounded-xl p-5 mb-6">
+          <div class="flex items-start gap-3">
+            <RefreshCw :size="20" class="text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <div class="text-sm font-semibold text-gray-900 dark:text-white">Iteration Loop (~30 min cycles)</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">After creating an MR/PR, the bot checks for unresolved review threads and CI failures on each scheduled cycle. It re-runs Claude Code with the feedback as context, pushes fixes, and resolves addressed threads. Up to 10 iterations, then escalates to human.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- What you need to do (writing a good ticket) -->
+        <div class="bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 rounded-xl p-6 mb-6">
+          <h3 class="text-sm font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide mb-3">Writing a good ticket</h3>
+          <ul class="space-y-3">
+            <li class="flex items-start gap-3">
+              <Code :size="20" class="text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
+              <span class="text-sm text-gray-700 dark:text-gray-300"><strong class="text-gray-900 dark:text-white">Include the repository URL</strong>: a direct link to the GitHub or GitLab repo. This is required</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <FileText :size="20" class="text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
+              <span class="text-sm text-gray-700 dark:text-gray-300"><strong class="text-gray-900 dark:text-white">Describe the incorrect behavior</strong>: include error messages, stack traces, or steps to reproduce</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <Eye :size="20" class="text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
+              <span class="text-sm text-gray-700 dark:text-gray-300"><strong class="text-gray-900 dark:text-white">State the expected behavior</strong>: the more specific, the better</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <Search :size="20" class="text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
+              <span class="text-sm text-gray-700 dark:text-gray-300"><strong class="text-gray-900 dark:text-white">Point to the relevant code</strong>: if you know the file, function, or module, mention it</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <AlertTriangle :size="20" class="text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
+              <span class="text-sm text-gray-700 dark:text-gray-300"><strong class="text-gray-900 dark:text-white">Keep it focused</strong>: one bug per ticket. Multi-issue tickets are harder for the bot</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- If the bot is stuck -->
+        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 mb-6">
+          <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">If the bot is stuck</h3>
+          <div class="space-y-3">
+            <div class="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+              <Code :size="20" class="text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <div class="text-sm font-semibold text-gray-900 dark:text-white">Missing repo URL</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Ticket gets <code class="px-1.5 py-0.5 bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 text-xs rounded font-mono">jira-autofix-blocked</code>. Add a repository URL and remove the label to retry</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+              <RefreshCw :size="20" class="text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <div class="text-sm font-semibold text-gray-900 dark:text-white">Max iterations reached</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">The bot has done its best. Review the MR/PR and either merge, leave more comments, or take over manually</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+              <AlertTriangle :size="20" class="text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <div class="text-sm font-semibold text-gray-900 dark:text-white">CI keeps failing</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Check whether the failure is in the bot's changes or a pre-existing issue. The bot can only fix failures caused by its own code. If the bot determines a CI failure is unfixable (e.g., a pre-existing issue or infrastructure problem), it will block the ticket itself rather than burning iterations</div>
+              </div>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+              <GitPullRequest :size="20" class="text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <div class="text-sm font-semibold text-gray-900 dark:text-white">Bad fix quality</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Leave review comments on the MR/PR. The bot reads unresolved threads on its next iteration and attempts to address them</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Security callout -->
+        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 mb-6">
+          <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Security</h3>
+          <div class="space-y-2">
+            <div class="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+              <AlertTriangle :size="18" class="text-amber-500 flex-shrink-0 mt-0.5" />
+              <span class="text-xs text-gray-600 dark:text-gray-300"><strong class="text-gray-900 dark:text-white">External reporter gate</strong>: tickets from non-<code class="text-xs">@redhat.com</code> reporters are blocked until a Red Hat engineer adds <code class="px-1 py-0.5 bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 text-xs rounded font-mono">jira-triage-external-ok</code></span>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+              <AlertTriangle :size="18" class="text-amber-500 flex-shrink-0 mt-0.5" />
+              <span class="text-xs text-gray-600 dark:text-gray-300"><strong class="text-gray-900 dark:text-white">Secret scanning</strong>: gitleaks runs before every push. If secrets are detected, the push is blocked and the ticket transitions to <code class="px-1 py-0.5 bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 text-xs rounded font-mono">jira-autofix-blocked</code></span>
+            </div>
+            <div class="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+              <AlertTriangle :size="18" class="text-amber-500 flex-shrink-0 mt-0.5" />
+              <span class="text-xs text-gray-600 dark:text-gray-300"><strong class="text-gray-900 dark:text-white">Comment filtering</strong>: only comments from <code class="text-xs">@redhat.com</code> email addresses are fed to the AI agent. All bot comments are restricted to "Red Hat Employee" visibility</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Opting out -->
+        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6 mb-6">
+          <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">Opting out</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-300">
+            Add the <code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300 text-xs rounded font-mono">no-autofix</code> label to any ticket to exclude it from both triage and autofix. The bot will never scan, assess, or attempt to fix tickets with this label.
+          </p>
+        </div>
+
+        <!-- Jira labels (collapsible) -->
+        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl mb-6">
+          <button
+            @click="autofixLabelsExpanded = !autofixLabelsExpanded"
+            class="flex items-center justify-between w-full p-5"
+          >
+            <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Jira Labels Reference</h3>
+            <ChevronDown
+              :size="16"
+              class="text-gray-400 dark:text-gray-500 transition-transform"
+              :class="autofixLabelsExpanded ? 'rotate-180' : ''"
+            />
+          </button>
+          <div v-if="autofixLabelsExpanded" class="px-5 pb-5 -mt-1">
+            <h4 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Triage</h4>
+            <div class="space-y-2 mb-4">
+              <div v-for="l in autofixTriageLabels" :key="l.name" class="flex items-center gap-3 p-2.5 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+                <code class="text-xs px-2 py-0.5 rounded whitespace-nowrap font-mono" :class="labelColorClasses(l.color)">{{ l.name }}</code>
+                <span class="text-xs text-gray-500 dark:text-gray-400">{{ l.desc }}</span>
+              </div>
+            </div>
+            <h4 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-2">Autofix</h4>
+            <div class="space-y-2">
+              <div v-for="l in autofixPipelineLabels" :key="l.name" class="flex items-center gap-3 p-2.5 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+                <code class="text-xs px-2 py-0.5 rounded whitespace-nowrap font-mono" :class="labelColorClasses(l.color)">{{ l.name }}</code>
+                <span class="text-xs text-gray-500 dark:text-gray-400">{{ l.desc }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Links -->
+        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+          <h4 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">Tools &amp; Resources</h4>
+          <div class="flex gap-2 flex-wrap mb-5">
+            <a
+              v-for="link in autofixToolLinks"
+              :key="link.label"
+              :href="link.url"
+              target="_blank"
+              rel="noopener"
+              class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-xs text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+            >
+              <component :is="link.icon" :size="14" class="text-gray-400 dark:text-gray-500" />
+              {{ link.label }}
+            </a>
+            <button
+              @click="goToPage('autofix')"
+              class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-xs text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+            >
+              <Eye :size="14" class="text-gray-400 dark:text-gray-500" />
+              Jira AutoFix Dashboard
+            </button>
+          </div>
+
+          <h4 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">Community</h4>
+          <div class="flex gap-2 flex-wrap">
+            <a
+              v-for="link in autofixCommunityLinks"
               :key="link.label"
               :href="link.url"
               target="_blank"

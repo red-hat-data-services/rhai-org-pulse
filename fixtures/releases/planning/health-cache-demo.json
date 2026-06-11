@@ -1,17 +1,18 @@
 {
   "cachedAt": "2026-04-25T14:30:00.000Z",
   "version": "3.5",
+  "releasePhaseMode": "planning",
   "milestones": {
     "ea1Freeze": "2026-05-01",
     "ea1Target": "2026-05-15",
     "ea2Freeze": "2026-06-15",
     "ea2Target": "2026-07-01",
-    "gaFreeze": "2026-08-01",
-    "gaTarget": "2026-08-15"
+    "gaFreeze": "2099-12-31",
+    "gaTarget": "2099-12-31"
   },
   "phase": "all",
   "summary": {
-    "totalFeatures": 12,
+    "totalFeatures": 13,
     "byRisk": {
       "green": 3,
       "yellow": 4,
@@ -25,6 +26,19 @@
     "planningDeadline": {
       "date": "2026-04-24",
       "daysRemaining": -2
+    },
+    "planningReadiness": {
+      "totalChecked": 12,
+      "fullyReady": 8,
+      "withHardBlockers": 4,
+      "withWarnings": 0,
+      "byCheck": {
+        "DoR-P1": 10,
+        "DoR-P2": 11,
+        "DoR-P3": 12,
+        "DoR-P4": 9,
+        "DoR-P5": 10
+      }
     },
     "byPlanningStatus": {
       "not-ready": 0,
@@ -115,6 +129,49 @@
       "rice": {
         "score": 675
       },
+      "planningChecks": {
+        "checks": [
+          {
+            "id": "DoR-P1",
+            "label": "Components Set",
+            "passed": true,
+            "severity": "hard-blocker",
+            "detail": "Model Serving"
+          },
+          {
+            "id": "DoR-P2",
+            "label": "Product Manager Assigned",
+            "passed": true,
+            "severity": "hard-blocker",
+            "detail": "Sarah Chen"
+          },
+          {
+            "id": "DoR-P3",
+            "label": "Release Type Set",
+            "passed": true,
+            "severity": "hard-blocker",
+            "detail": "GA"
+          },
+          {
+            "id": "DoR-P4",
+            "label": "Child Epics Created",
+            "passed": true,
+            "severity": "hard-blocker",
+            "detail": "4 epic(s)"
+          },
+          {
+            "id": "DoR-P5",
+            "label": "RFE Linked",
+            "passed": true,
+            "severity": "hard-blocker",
+            "detail": "RHAISTRAT-100"
+          }
+        ],
+        "passedCount": 5,
+        "totalCount": 5,
+        "hasHardBlockers": false,
+        "hardBlockersFailed": []
+      },
       "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1001",
       "dod": {
         "gate": "dod",
@@ -142,7 +199,9 @@
       },
       "planningStatus": "ready-for-execution",
       "issueType": "Feature",
-      "versionStatus": "committed"
+      "versionStatus": "committed",
+      "fixVersions": "rhoai-3.5",
+      "targetRelease": "rhoai-3.5"
     },
     {
       "key": "RHOAIENG-1002",
@@ -236,7 +295,9 @@
       },
       "planningStatus": "ready-for-execution",
       "issueType": "Feature",
-      "versionStatus": "targeted"
+      "versionStatus": "targeted",
+      "fixVersions": "",
+      "targetRelease": "rhoai-3.5"
     },
     {
       "key": "RHOAIENG-1003",
@@ -339,7 +400,9 @@
       },
       "planningStatus": "ready-for-execution",
       "issueType": "Feature",
-      "versionStatus": "committed"
+      "versionStatus": "committed",
+      "fixVersions": "rhoai-3.5, rhoai-3.5-EA2",
+      "targetRelease": "rhoai-3.5"
     },
     {
       "key": "RHOAIENG-1004",
@@ -439,7 +502,9 @@
       },
       "planningStatus": "ready-for-execution",
       "issueType": "Feature",
-      "versionStatus": "targeted"
+      "versionStatus": "targeted",
+      "fixVersions": "",
+      "targetRelease": "rhoai-3.5"
     },
     {
       "key": "RHOAIENG-1005",
@@ -547,7 +612,9 @@
       },
       "planningStatus": "in-planning",
       "issueType": "Feature",
-      "versionStatus": "committed"
+      "versionStatus": "committed",
+      "fixVersions": "rhoai-3.5",
+      "targetRelease": "rhoai-3.5"
     },
     {
       "key": "RHOAIENG-1006",
@@ -630,6 +697,64 @@
       "rice": {
         "score": 450
       },
+      "planningChecks": {
+        "checks": [
+          {
+            "id": "DoR-P1",
+            "label": "Components Set",
+            "passed": true,
+            "severity": "hard-blocker",
+            "detail": "Operator"
+          },
+          {
+            "id": "DoR-P2",
+            "label": "Product Manager Assigned",
+            "passed": true,
+            "severity": "hard-blocker",
+            "detail": "Tom Wilson"
+          },
+          {
+            "id": "DoR-P3",
+            "label": "Release Type Set",
+            "passed": true,
+            "severity": "hard-blocker",
+            "detail": "GA"
+          },
+          {
+            "id": "DoR-P4",
+            "label": "Child Epics Created",
+            "passed": false,
+            "severity": "hard-blocker",
+            "detail": "No child epics linked"
+          },
+          {
+            "id": "DoR-P5",
+            "label": "RFE Linked",
+            "passed": false,
+            "severity": "hard-blocker",
+            "detail": "No source RFE linked"
+          }
+        ],
+        "passedCount": 3,
+        "totalCount": 5,
+        "hasHardBlockers": true,
+        "hardBlockersFailed": [
+          {
+            "id": "DoR-P4",
+            "label": "Child Epics Created",
+            "passed": false,
+            "severity": "hard-blocker",
+            "detail": "No child epics linked"
+          },
+          {
+            "id": "DoR-P5",
+            "label": "RFE Linked",
+            "passed": false,
+            "severity": "hard-blocker",
+            "detail": "No source RFE linked"
+          }
+        ]
+      },
       "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1006",
       "dod": {
         "gate": "dod",
@@ -657,7 +782,9 @@
       },
       "planningStatus": "in-planning",
       "issueType": "Feature",
-      "versionStatus": "none"
+      "versionStatus": "none",
+      "fixVersions": "",
+      "targetRelease": ""
     },
     {
       "key": "RHOAIENG-1007",
@@ -741,6 +868,78 @@
         ]
       },
       "rice": null,
+      "planningChecks": {
+        "checks": [
+          {
+            "id": "DoR-P1",
+            "label": "Components Set",
+            "passed": false,
+            "severity": "hard-blocker",
+            "detail": "No components assigned"
+          },
+          {
+            "id": "DoR-P2",
+            "label": "Product Manager Assigned",
+            "passed": false,
+            "severity": "hard-blocker",
+            "detail": null
+          },
+          {
+            "id": "DoR-P3",
+            "label": "Release Type Set",
+            "passed": true,
+            "severity": "hard-blocker",
+            "detail": "TP"
+          },
+          {
+            "id": "DoR-P4",
+            "label": "Child Epics Created",
+            "passed": false,
+            "severity": "hard-blocker",
+            "detail": "No child epics linked"
+          },
+          {
+            "id": "DoR-P5",
+            "label": "RFE Linked",
+            "passed": false,
+            "severity": "hard-blocker",
+            "detail": "No source RFE linked"
+          }
+        ],
+        "passedCount": 1,
+        "totalCount": 5,
+        "hasHardBlockers": true,
+        "hardBlockersFailed": [
+          {
+            "id": "DoR-P1",
+            "label": "Components Set",
+            "passed": false,
+            "severity": "hard-blocker",
+            "detail": "No components assigned"
+          },
+          {
+            "id": "DoR-P2",
+            "label": "Product Manager Assigned",
+            "passed": false,
+            "severity": "hard-blocker",
+            "detail": null
+          },
+          {
+            "id": "DoR-P4",
+            "label": "Child Epics Created",
+            "passed": false,
+            "severity": "hard-blocker",
+            "detail": "No child epics linked"
+          },
+          {
+            "id": "DoR-P5",
+            "label": "RFE Linked",
+            "passed": false,
+            "severity": "hard-blocker",
+            "detail": "No source RFE linked"
+          }
+        ]
+      },
       "jiraUrl": "https://issues.redhat.com/browse/RHOAIENG-1007",
       "dod": {
         "gate": "dod",
@@ -768,7 +967,9 @@
       },
       "planningStatus": "in-planning",
       "issueType": "Feature",
-      "versionStatus": "targeted"
+      "versionStatus": "targeted",
+      "fixVersions": "",
+      "targetRelease": "rhoai-3.5"
     },
     {
       "key": "RHOAIENG-1008",
@@ -880,7 +1081,9 @@
       },
       "planningStatus": "ready-for-execution",
       "issueType": "Feature",
-      "versionStatus": "committed"
+      "versionStatus": "committed",
+      "fixVersions": "rhoai-3.5",
+      "targetRelease": "rhoai-3.5"
     },
     {
       "key": "RHAISTRAT-2001",
@@ -983,7 +1186,9 @@
       },
       "planningStatus": "in-planning",
       "issueType": "Feature",
-      "versionStatus": "committed"
+      "versionStatus": "committed",
+      "fixVersions": "rhoai-3.5-EA1",
+      "targetRelease": "rhoai-3.5"
     },
     {
       "key": "RHAISTRAT-2006",
@@ -1077,7 +1282,9 @@
       },
       "planningStatus": "in-planning",
       "issueType": "Initiative",
-      "versionStatus": "targeted"
+      "versionStatus": "targeted",
+      "fixVersions": "",
+      "targetRelease": "rhoai-3.5"
     },
     {
       "key": "RHAISTRAT-2013",
@@ -1185,7 +1392,111 @@
       },
       "planningStatus": "in-planning",
       "issueType": "Feature",
-      "versionStatus": "none"
+      "versionStatus": "none",
+      "fixVersions": "",
+      "targetRelease": ""
+    },
+    {
+      "key": "RHAISTRAT-2030",
+      "summary": "Shared outcome feature for multi-rock testing",
+      "status": "In Progress",
+      "priority": "Major",
+      "phase": "EA1",
+      "bigRock": "Rock Alpha, Rock Beta",
+      "tier": 1,
+      "pm": "Test PM",
+      "deliveryOwner": "Test Owner",
+      "components": [
+        "Platform"
+      ],
+      "completionPct": 50,
+      "epicCount": 2,
+      "issueCount": 10,
+      "blockerCount": 0,
+      "health": "",
+      "risk": {
+        "level": "yellow",
+        "score": 1,
+        "flags": [
+          {
+            "category": "DOR_INCOMPLETE",
+            "severity": "medium",
+            "message": "DoR completion at 60% (below 80% threshold)"
+          }
+        ],
+        "override": null
+      },
+      "dor": {
+        "gate": "dor",
+        "passed": true,
+        "blockers": [
+          {
+            "id": "DoR-B1",
+            "label": "Strategy Human Sign-off",
+            "passed": true,
+            "detail": "strat-creator-disabled"
+          },
+          {
+            "id": "DoR-B2",
+            "label": "RICE Score Present",
+            "passed": true,
+            "detail": "rice-disabled"
+          }
+        ],
+        "warnings": [
+          {
+            "id": "DoR-W1",
+            "label": "Owner Assigned",
+            "passed": true,
+            "detail": "Test Owner"
+          },
+          {
+            "id": "DoR-W2",
+            "label": "Version Set",
+            "passed": true,
+            "detail": "committed"
+          },
+          {
+            "id": "DoR-W3",
+            "label": "Blockers Resolved",
+            "passed": true,
+            "detail": null
+          }
+        ]
+      },
+      "rice": {
+        "score": 400
+      },
+      "jiraUrl": "https://redhat.atlassian.net/browse/RHAISTRAT-2030",
+      "dod": {
+        "gate": "dod",
+        "passed": true,
+        "checks": [
+          {
+            "id": "DoD-1",
+            "label": "Owner Assigned",
+            "passed": true,
+            "detail": "Test Owner"
+          },
+          {
+            "id": "DoD-2",
+            "label": "Fix Version Set",
+            "passed": true,
+            "detail": null
+          },
+          {
+            "id": "DoD-3",
+            "label": "Blockers Resolved",
+            "passed": true,
+            "detail": null
+          }
+        ]
+      },
+      "planningStatus": "in-planning",
+      "issueType": "Feature",
+      "versionStatus": "committed",
+      "fixVersions": "rhoai-3.5",
+      "targetRelease": "rhoai-3.5"
     },
     {
       "key": "RHAISTRAT-2016",
@@ -1291,7 +1602,9 @@
       },
       "planningStatus": "in-planning",
       "issueType": "Feature",
-      "versionStatus": "committed"
+      "versionStatus": "committed",
+      "fixVersions": "rhoai-3.5-EA1",
+      "targetRelease": "rhoai-3.5"
     }
   ],
   "enrichmentStatus": {
@@ -1301,5 +1614,5 @@
     "riceAvailable": true,
     "warnings": []
   },
-  "healthCacheVersion": 2
+  "healthCacheVersion": 3
 }

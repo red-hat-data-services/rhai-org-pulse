@@ -53,10 +53,10 @@ function mountRow(props) {
 
 describe('BigRockRow', function() {
   describe('column structure', function() {
-    it('renders 7 td elements when health is shown', function() {
+    it('renders 9 td elements when health is shown', function() {
       var wrapper = mountRow()
       var tds = wrapper.findAll('td')
-      expect(tds.length).toBe(7)
+      expect(tds.length).toBe(9)
     })
 
     it('renders 6 td elements when health is not shown', function() {

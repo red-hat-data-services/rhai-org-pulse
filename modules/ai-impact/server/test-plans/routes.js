@@ -314,6 +314,7 @@ module.exports = function registerTestPlanRoutes(router, context) {
     context.registerRefresh('test-plan-sync', {
       order: 60,
       timeout: 600000,
+      description: 'Syncs test plan data from Jira, updating local test plan records.',
       handler: async function() {
         if (DEMO_MODE) return;
         await runSync(readFromStorage, writeToStorageAtomic);

@@ -18,7 +18,7 @@ const { loadIndex, loadFeatureDetail } = require('../cache-reader')
 const { getConfig } = require('../config')
 const { JIRA_BROWSE_URL, CLOSED_STATUSES, PLANNING_DEADLINE_OFFSET_DAYS, VALID_PHASES } = require('../constants')
 const { enrichFeatures } = require('./jira-enrichment')
-const { computeDoR, computeDoD, derivePlanningStatus, applyBlockerEscalation, parseStratCreatorStatus } = require('./planning-gates')
+const { computeDoR, computeDoD, computePlanningChecks, derivePlanningStatus, applyBlockerEscalation, parseStratCreatorStatus } = require('./planning-gates')
 const { computeFeatureRisk } = require('./risk-engine')
 const { computePriorityScores } = require('./priority-scorer')
 const smartsheetClient = require('../../../../../shared/server/smartsheet')
@@ -576,6 +576,26 @@ function computeMilestoneInfo(milestones, today) {
 }
 
 /**
+ * Phases considered "planning" -- before the GA code freeze.
+ * Derived from computeMilestoneInfo().currentPhase.
+ */
+var PLANNING_PHASES = ['Pre-EA1', 'EA1 Freeze', 'Post-EA1', 'EA2 Freeze', 'Post-EA2']
+
+/**
+ * Derive the release phase mode from the current milestone phase.
+ * Returns 'planning' if we are before GA Freeze, 'execution' if at or past GA Freeze,
+ * or 'unknown' if the phase cannot be determined.
+ *
+ * @param {string|null} currentPhase - From computeMilestoneInfo().currentPhase
+ * @returns {'planning'|'execution'|'unknown'}
+ */
+function deriveReleasePhaseMode(currentPhase) {
+  if (!currentPhase || currentPhase === 'Unknown') return 'unknown'
+  if (PLANNING_PHASES.indexOf(currentPhase) !== -1) return 'planning'
+  return 'execution'
+}
+
+/**
  * Run the health pipeline for a release version.
  *
  * @param {string} version - Release version (e.g., '3.5')
@@ -609,6 +629,25 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
 
   console.log('[health] Found ' + features.length + ' features for version ' + version + ' phase ' + phaseKey)
 
+  // Step 1b: Enrich epicCount from execution index
+  // mapCandidateToHealthFeature() does not map epicCount; source it from execution index
+  var execIndex = loadIndex(readFromStorage)
+  if (execIndex && execIndex.features) {
+    var execByKey = {}
+    for (var ei = 0; ei < execIndex.features.length; ei++) {
+      execByKey[execIndex.features[ei].key] = execIndex.features[ei]
+    }
+    for (var fi = 0; fi < features.length; fi++) {
+      var execFeature = execByKey[features[fi].key]
+      if (execFeature && execFeature.epicCount) {
+        features[fi].epicCount = execFeature.epicCount
+      }
+      if (execFeature && typeof execFeature.completionPct === 'number') {
+        features[fi].completionPct = execFeature.completionPct
+      }
+    }
+  }
+
   // Step 2: Load milestone dates (Product Pages → Smartsheet fallback → derived from targets)
   var milestones = loadMilestones(readFromStorage, version)
   var fallbackResult = await backfillFreezeDatesFromSmartsheet(milestones, version)
@@ -635,6 +674,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
   // Step 5: Build per-feature health assessments
   var planningDeadline = computePlanningDeadline(milestones, phase, prevGaFreeze)
   var milestoneInfo = computeMilestoneInfo(milestones, today)
+  var releasePhaseMode = deriveReleasePhaseMode(milestoneInfo.currentPhase)
   var healthFeatures = []
   var riskCounts = { green: 0, yellow: 0, red: 0 }
   var totalRiceScore = 0
@@ -664,13 +704,22 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
     // Build a feature object with phase for risk engine
     var featureForRisk = Object.assign({}, feature, { phase: featurePhase })
 
+    // Compute planning checks (only in planning mode when enabled)
+    var planningChecksResult = null
+    if (releasePhaseMode === 'planning' && healthConfig.enablePlanningChecks) {
+      planningChecksResult = computePlanningChecks(feature)
+    }
+
     // Compute risk
     var riskResult = computeFeatureRisk(featureForRisk, milestones, enrichment, {
       riskThresholds: healthConfig.riskThresholds,
       phaseCompletionExpectations: healthConfig.phaseCompletionExpectations,
       today: today,
       planningDeadline: planningDeadline,
-      planningStatus: planningStatus
+      planningStatus: planningStatus,
+      releasePhaseMode: releasePhaseMode,
+      enablePlanningChecks: !!healthConfig.enablePlanningChecks,
+      planningChecks: planningChecksResult
     })
 
     // Apply manual override if present
@@ -683,8 +732,8 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
     riskCounts[effectiveRisk] = (riskCounts[effectiveRisk] || 0) + 1
 
     // Count specific risk types
-    for (var fi = 0; fi < riskResult.flags.length; fi++) {
-      if (riskResult.flags[fi].category === 'BLOCKED') blockedCount++
+    for (var rf = 0; rf < riskResult.flags.length; rf++) {
+      if (riskResult.flags[rf].category === 'BLOCKED') blockedCount++
     }
 
     // RICE score
@@ -728,6 +777,7 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
       dod: dodResult,
       planningStatus: planningStatus,
       rice: riceResult,
+      planningChecks: planningChecksResult,
       issueType: feature.issueType || '',
       versionStatus: (feature.fixVersions && feature.fixVersions.length > 0) ? 'committed'
         : (feature.targetVersions && feature.targetVersions.length > 0) ? 'targeted' : 'none',
@@ -786,10 +836,38 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
   // Step 6: Build summary
   var averageRice = riceCount > 0 ? Math.round(totalRiceScore / riceCount) : null
 
+  // Aggregate planning readiness from per-feature planning checks
+  var planningReadiness = null
+  if (releasePhaseMode === 'planning' && healthConfig.enablePlanningChecks) {
+    var fullyReadyCount = 0
+    var hardBlockerCount = 0
+    var warningCount = 0 // reserved for future warning-severity checks; currently all checks are hard-blockers
+    var planningCheckSummary = {}
+    for (var pci = 0; pci < healthFeatures.length; pci++) {
+      var pc = healthFeatures[pci].planningChecks
+      if (!pc) continue
+      if (!pc.hasHardBlockers) fullyReadyCount++
+      else hardBlockerCount++
+      for (var pcj = 0; pcj < pc.checks.length; pcj++) {
+        var ck = pc.checks[pcj]
+        if (!planningCheckSummary[ck.id]) planningCheckSummary[ck.id] = 0
+        if (ck.passed) planningCheckSummary[ck.id]++
+      }
+    }
+    planningReadiness = {
+      totalChecked: healthFeatures.length,
+      fullyReady: fullyReadyCount,
+      withHardBlockers: hardBlockerCount,
+      withWarnings: warningCount,
+      byCheck: planningCheckSummary
+    }
+  }
+
   var cache = {
-    healthCacheVersion: 2,
+    healthCacheVersion: 3,
     cachedAt: today.toISOString(),
     version: version,
+    releasePhaseMode: releasePhaseMode,
     warnings: warnings,
     milestones: milestones ? {
       ea1Freeze: milestones.ea1Freeze,
@@ -816,7 +894,8 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
       currentPhase: milestoneInfo.currentPhase,
       daysToNextMilestone: milestoneInfo.daysToNextMilestone,
       nextMilestone: milestoneInfo.nextMilestone,
-      planningDeadline: planningDeadline
+      planningDeadline: planningDeadline,
+      planningReadiness: planningReadiness
     },
     features: healthFeatures,
     enrichmentStatus: {
@@ -843,9 +922,10 @@ async function runHealthPipeline(version, readFromStorage, writeToStorage, jiraR
  */
 function buildEmptyCache(version, warnings) {
   return {
-    healthCacheVersion: 2,
+    healthCacheVersion: 3,
     cachedAt: new Date().toISOString(),
     version: version,
+    releasePhaseMode: 'unknown',
     milestones: null,
     summary: {
       totalFeatures: 0,
@@ -883,6 +963,7 @@ module.exports = {
   deriveFreezeDates: deriveFreezeDates,
   computeMilestoneInfo: computeMilestoneInfo,
   computePlanningDeadline: computePlanningDeadline,
+  deriveReleasePhaseMode: deriveReleasePhaseMode,
   getFeaturePhase: getFeaturePhase,
   buildEmptyCache: buildEmptyCache,
   splitCommaString: splitCommaString,

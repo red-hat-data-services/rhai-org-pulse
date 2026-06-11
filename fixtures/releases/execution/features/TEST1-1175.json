@@ -53,5 +53,26 @@
   },
   "topology": {
     "repos": []
-  }
+  },
+  "_sources": {
+    "pipeline": "2026-04-10T06:09:29.084Z",
+    "jira": "2026-04-10T07:00:00.000Z",
+    "aiReview": "2026-04-19T01:30:35.000Z"
+  },
+  "aiReview": {
+    "title": "Distributed Training Pipeline Orchestration",
+    "sourceRfe": "RHAIRFE-1009",
+    "size": "L",
+    "recommendation": "reject",
+    "needsAttention": true,
+    "humanReviewStatus": "needs-review",
+    "scores": { "feasibility": 0, "testability": 1, "scope": 0, "architecture": 1, "total": 2 },
+    "reviewers": { "feasibility": "reject", "testability": "revise", "scope": "reject", "architecture": "revise" },
+    "labels": ["strat-creator-auto-created", "strat-creator-needs-attention"],
+    "reviewedAt": "2026-04-19T01:30:35Z",
+    "runId": "20260419-013035",
+    "history": []
+  },
+  "colorStatus": "Red",
+  "ownerStatusColor": "Red"
 }

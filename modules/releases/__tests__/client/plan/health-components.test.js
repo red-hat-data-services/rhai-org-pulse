@@ -469,19 +469,10 @@ describe('BigRockExpandedRow', function() {
     expect(featureLinks[0].attributes('target')).toBe('_blank')
   })
 
-  it('shows risk flag categories or -- for no flags', function() {
+  it('shows risk-colored dots but not risk flag text (risk column removed)', function() {
     var wrapper = mountExpanded({ features: sampleFeatures })
-    expect(wrapper.text()).toContain('--')
-    expect(wrapper.text()).toContain('VELOCITY_LAG')
-    expect(wrapper.text()).toContain('BLOCKED, MILESTONE_MISS')
-  })
-
-  it('renders "View all in Features tab" link', function() {
-    var wrapper = mountExpanded({ features: sampleFeatures, rockName: 'MaaS' })
-    var viewLink = wrapper.findAll('a').filter(function(a) { return a.text().includes('View all in Features tab') })
-    expect(viewLink.length).toBe(1)
-    expect(viewLink[0].attributes('href')).toContain('#/releases/plan?tab=health')
-    expect(viewLink[0].attributes('href')).toContain('bigRock=MaaS')
+    expect(wrapper.text()).not.toContain('VELOCITY_LAG')
+    expect(wrapper.text()).not.toContain('BLOCKED, MILESTONE_MISS')
   })
 
   it('shows override indicator (M) when feature has override', function() {
@@ -505,9 +496,9 @@ describe('BigRockExpandedRow', function() {
     expect(td.attributes('colspan')).toBe('8')
   })
 
-  it('has 4 column headers in the inner table', function() {
+  it('has 7 column headers in the inner table', function() {
     var wrapper = mountExpanded({ features: sampleFeatures })
     var headers = wrapper.findAll('th')
-    expect(headers.length).toBe(4)
+    expect(headers.length).toBe(7)
   })
 })

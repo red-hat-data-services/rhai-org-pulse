@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useReleaseHealth } from '../composables/useReleaseHealth'
 import { useReleases } from '../composables/useReleasePlanning'
-import { useAuth, formatDate } from '@shared/client'
+import { formatDate } from '@shared/client'
 import { passesPhaseFilter } from '../utils/phase-filter'
 import ReleaseSelector from '../components/ReleaseSelector.vue'
 import MilestoneTimeline from '../components/MilestoneTimeline.vue'
@@ -19,7 +19,6 @@ var {
 } = useReleaseHealth()
 
 var { releases, loadReleases } = useReleases()
-var { isAdmin } = useAuth()
 
 var selectedVersion = ref('')
 
@@ -35,6 +34,7 @@ var selectedComponents = ref([])
 var searchQuery = ref('')
 var planningStatusFilter = ref('')
 var riskLevelFilter = ref('')
+var planningCheckFilter = ref('')
 
 // Refresh polling
 var refreshPollTimer = null
@@ -46,7 +46,7 @@ var creatingSnapshot = ref(false)
 
 var canEdit = computed(function() {
   if (healthData.value && healthData.value.demoMode) return false
-  return isAdmin.value
+  return true
 })
 
 var demoMode = computed(function() {
@@ -85,6 +85,15 @@ var summaryCardCounts = computed(function() {
 
 var planningDeadline = computed(function() {
   return healthData.value && healthData.value.summary ? healthData.value.summary.planningDeadline : null
+})
+
+var releasePhaseMode = computed(function() {
+  return healthData.value ? healthData.value.releasePhaseMode || 'unknown' : 'unknown'
+})
+
+var planningReadiness = computed(function() {
+  if (!healthData.value || !healthData.value.summary) return null
+  return healthData.value.summary.planningReadiness || null
 })
 
 // ─── Phase tabs ───
@@ -188,8 +197,12 @@ function phaseFeatureCount(tabId) {
 var bigRockOptions = computed(function() {
   var rocks = {}
   for (var i = 0; i < features.value.length; i++) {
-    var rock = features.value[i].bigRock
-    if (rock) rocks[rock] = true
+    var raw = features.value[i].bigRock
+    if (!raw) continue
+    var parts = raw.split(', ')
+    for (var j = 0; j < parts.length; j++) {
+      rocks[parts[j]] = true
+    }
   }
   return Object.keys(rocks).sort()
 })
@@ -199,7 +212,9 @@ var componentOptions = computed(function() {
   var feats = features.value || []
   for (var i = 0; i < feats.length; i++) {
     if (feats[i].components) {
-      var parts = feats[i].components.split(/\s*,\s*/).filter(Boolean)
+      var parts = Array.isArray(feats[i].components)
+            ? feats[i].components
+            : feats[i].components.split(/\s*,\s*/).filter(Boolean)
       for (var j = 0; j < parts.length; j++) {
         set.add(parts[j])
       }
@@ -216,12 +231,15 @@ var filteredFeatures = computed(function() {
 
   return list.filter(function(f) {
     // Big Rock filter
-    if (bigRockFilter.value && f.bigRock !== bigRockFilter.value) return false
+    if (bigRockFilter.value) {
+      var fRocks = f.bigRock ? f.bigRock.split(', ') : []
+      if (!fRocks.includes(bigRockFilter.value)) return false
+    }
 
     // Component filter (multi-select with comma split)
     if (selectedComponents.value.length > 0) {
       var featureComps = f.components
-        ? f.components.split(/\s*,\s*/).filter(Boolean)
+        ? (Array.isArray(f.components) ? f.components : f.components.split(/\s*,\s*/).filter(Boolean))
         : []
       var hasMatch = selectedComponents.value.some(function(comp) {
         return featureComps.includes(comp)
@@ -245,12 +263,30 @@ var filteredFeatures = computed(function() {
       if (effectiveLevel !== riskLevelFilter.value) return false
     }
 
+    // Planning check filter
+    if (planningCheckFilter.value) {
+      var pc = f.planningChecks
+      if (!pc) return false
+      var checkIdMap = { 'missing-components': 'DoR-P1', 'missing-pm': 'DoR-P2', 'missing-release-type': 'DoR-P3', 'missing-epics': 'DoR-P4', 'missing-rfe': 'DoR-P5' }
+      if (planningCheckFilter.value === 'has-blockers') {
+        if (!pc.hasHardBlockers) return false
+      } else if (planningCheckFilter.value === 'all-clear') {
+        if (pc.hasHardBlockers) return false
+      } else {
+        var checkId = checkIdMap[planningCheckFilter.value]
+        if (checkId && pc.checks) {
+          var found = pc.checks.find(function(c) { return c.id === checkId })
+          if (!found || found.passed) return false
+        }
+      }
+    }
+
     return true
   })
 })
 
 var hasActiveFilters = computed(function() {
-  return !!(bigRockFilter.value || selectedComponents.value.length > 0 || searchQuery.value || planningStatusFilter.value || riskLevelFilter.value)
+  return !!(bigRockFilter.value || selectedComponents.value.length > 0 || searchQuery.value || planningStatusFilter.value || riskLevelFilter.value || planningCheckFilter.value)
 })
 
 function clearFilters() {
@@ -259,6 +295,11 @@ function clearFilters() {
   searchQuery.value = ''
   planningStatusFilter.value = ''
   riskLevelFilter.value = ''
+  planningCheckFilter.value = ''
+}
+
+function handleCardFilter(filterKey) {
+  planningCheckFilter.value = filterKey
 }
 
 // ─── Data refresh ───
@@ -345,6 +386,7 @@ onUnmounted(function() {
           v-if="releases.length > 0"
           :releases="releases"
           v-model="selectedVersion"
+          :canEdit="canEdit"
         />
         <button
           v-if="selectedVersion && !demoMode"
@@ -413,8 +455,24 @@ onUnmounted(function() {
       <!-- Milestone Timeline -->
       <MilestoneTimeline :milestones="milestones" :planningFreezes="planningFreezes" />
 
+      <!-- Planning mode banner -->
+      <div v-if="releasePhaseMode === 'planning'" class="bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/30 border-l-4 border-l-indigo-500 dark:border-l-indigo-400 rounded-lg px-4 py-3">
+        <div class="flex items-center gap-2 text-sm text-indigo-700 dark:text-indigo-400">
+          <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+          </svg>
+          <span class="font-semibold">Planning Phase</span>
+          <span v-if="milestones && milestones.gaFreeze" class="font-normal text-indigo-600/70 dark:text-indigo-400/70">
+            &mdash; GA Code Freeze: {{ milestones.gaFreeze }}
+          </span>
+        </div>
+        <div class="text-xs text-indigo-600/70 dark:text-indigo-400/70 mt-0.5 ml-6">
+          Showing planning readiness checks.
+        </div>
+      </div>
+
       <!-- Summary Cards -->
-      <HealthSummaryCards :cardCounts="summaryCardCounts" :planningDeadline="planningDeadline" />
+      <HealthSummaryCards :cardCounts="summaryCardCounts" :planningDeadline="planningDeadline" :releasePhaseMode="releasePhaseMode" :planningReadiness="planningReadiness" @filterByCheck="handleCardFilter" />
 
       <!-- Phase Tabs -->
       <div>
@@ -505,9 +563,11 @@ onUnmounted(function() {
         v-model:searchQuery="searchQuery"
         v-model:planningStatusFilter="planningStatusFilter"
         v-model:riskLevelFilter="riskLevelFilter"
+        v-model:planningCheckFilter="planningCheckFilter"
         :bigRocks="bigRockOptions"
         :components="componentOptions"
         :hasActiveFilters="hasActiveFilters"
+        :releasePhaseMode="releasePhaseMode"
         @clearFilters="clearFilters"
       />
 
@@ -519,6 +579,7 @@ onUnmounted(function() {
         :addedKeys="addedFeatureKeys"
         :removedFeatures="removedFeatures"
         :showChanges="showChanges"
+        :releasePhaseMode="releasePhaseMode"
         @removeOverride="handleRemoveOverride"
       />
     </template>
@@ -548,7 +609,7 @@ onUnmounted(function() {
     <!-- No releases configured -->
     <div v-else-if="!healthLoading && releases.length === 0" class="text-center py-12">
       <p class="text-gray-500 dark:text-gray-400">No releases configured.</p>
-      <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Configure releases in the Outcomes view first.</p>
+      <p class="text-sm text-gray-400 dark:text-gray-500 mt-1">Configure releases in the Big Rocks view first.</p>
     </div>
 
     <!-- No data yet, not loading -->

@@ -376,5 +376,11 @@
         "lane": "midstream"
       }
     ]
-  }
+  },
+  "_sources": {
+    "pipeline": "2026-04-10T06:09:29.084Z",
+    "jira": "2026-04-10T07:00:00.000Z"
+  },
+  "colorStatus": "Green",
+  "ownerStatusColor": "Green"
 }

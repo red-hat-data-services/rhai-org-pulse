@@ -542,8 +542,8 @@ onBeforeUnmount(() => document.removeEventListener('click', handleOutsideClick))
                       <StatusBadge :status="f.status" />
                     </div>
                     <StatusBadge
-                      v-if="normalizeOwnerStatusColor(f.ownerStatusColor)"
-                      :health="normalizeOwnerStatusColor(f.ownerStatusColor)"
+                      v-if="normalizeOwnerStatusColor(f.colorStatus || f.ownerStatusColor)"
+                      :health="normalizeOwnerStatusColor(f.colorStatus || f.ownerStatusColor)"
                     />
                     <StatusBadge v-else status="Status color missing" />
                   </div>

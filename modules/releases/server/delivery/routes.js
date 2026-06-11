@@ -2093,6 +2093,7 @@ module.exports = function registerRoutes(router, context) {
     context.registerRefresh('delivery', {
       order: 70,
       timeout: 600000,
+      description: 'Refreshes delivery analysis data — team velocity, completion rates, and delivery trends.',
       handler: async function() {
         if (DEMO_MODE) return { status: 'skipped', message: 'Refresh disabled in demo mode' }
         return runDeliveryRefresh()

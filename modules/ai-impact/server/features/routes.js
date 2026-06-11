@@ -2,12 +2,9 @@ const express = require('express');
 const { validateFeature } = require('./validation');
 const {
   readFeatures,
-  writeFeaturesAtomic,
-  upsertFeature,
   getLatestProjection,
   countHistoryEntries
 } = require('./storage');
-const { syncFeaturesFromJira, acquireLock, releaseLock } = require('./jira-sync');
 
 const DEMO_MODE = process.env.DEMO_MODE === 'true';
 const jsonLimit = express.json({ limit: '10mb' });
@@ -15,47 +12,96 @@ const jsonLimit = express.json({ limit: '10mb' });
 // Max entries in a single bulk request
 const BULK_CAP = 5000;
 
-// ─── Sync state (in-memory) ───
-
-const syncState = {
-  running: false,
-  startedAt: null,
-  lastResult: null
-};
+// Port for localhost internal API calls
+const API_PORT = process.env.API_PORT || 3001;
 
 /**
- * Run the Jira sync in the background. Updates syncState.
- * @param {Function} readFromStorage
+ * Build auth headers for internal localhost API calls.
+ * Uses PROXY_AUTH_SECRET (shared pod-internal config) to pass proxySecretGuard.
  */
-async function runSync(readFromStorage, writeToStorageAtomic) {
-  if (syncState.running) return;
-  if (!acquireLock()) {
-    console.warn('[ai-impact] Feature sync skipped: write lock held');
-    return;
-  }
+function internalHeaders(contentType) {
+  const headers = {};
+  if (contentType) headers['Content-Type'] = contentType;
+  const proxySecret = process.env.PROXY_AUTH_SECRET;
+  if (proxySecret) headers['X-Proxy-Secret'] = proxySecret;
+  return headers;
+}
 
-  syncState.running = true;
-  syncState.startedAt = new Date().toISOString();
-
-  try {
-    const result = await syncFeaturesFromJira(readFromStorage, writeToStorageAtomic);
-    syncState.lastResult = {
-      status: result.errors.length > 0 ? 'partial' : 'success',
-      message: `Synced ${result.synced} features: ${result.updated} updated (${result.statusChanged} review status changes), ${result.notFound} not found in Jira`,
-      errors: result.errors.length > 0 ? result.errors : undefined,
-      completedAt: new Date().toISOString()
-    };
-  } catch (err) {
-    console.error('[ai-impact] Feature Jira sync failed:', err);
-    syncState.lastResult = {
-      status: 'error',
-      message: err.message,
-      completedAt: new Date().toISOString()
-    };
-  } finally {
-    syncState.running = false;
-    releaseLock();
+/**
+ * Forward validated AI review data to the releases execution store.
+ * @param {object[]} features - Array of { key, aiReview } objects
+ * @returns {Promise<{ created: number, updated: number, unchanged: number }>}
+ */
+async function forwardToReleases(features) {
+  // eslint-disable-next-line org-pulse/no-cross-module-imports -- sanctioned internal API (Option B)
+  const url = 'http://localhost:' + API_PORT + '/api/modules/releases/execution/ai-review/bulk';
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: internalHeaders('application/json'),
+    body: JSON.stringify({ features })
+  });
+  if (!resp.ok) {
+    const body = await resp.text();
+    throw new Error('Releases API error (' + resp.status + '): ' + body);
   }
+  return resp.json();
+}
+
+/**
+ * Forward a delete request to remove AI review data from releases store.
+ * @returns {Promise<void>}
+ */
+async function forwardDeleteToReleases() {
+  // eslint-disable-next-line org-pulse/no-cross-module-imports -- sanctioned internal API (Option B)
+  const url = 'http://localhost:' + API_PORT + '/api/modules/releases/execution/ai-review';
+  const resp = await fetch(url, {
+    method: 'DELETE',
+    headers: internalHeaders()
+  });
+  if (!resp.ok) {
+    const body = await resp.text();
+    throw new Error('Releases API delete error (' + resp.status + '): ' + body);
+  }
+}
+
+/**
+ * Trigger a one-time Jira enrichment on the releases module.
+ * Fire-and-forget — errors are logged but not surfaced.
+ */
+function triggerJiraEnrichment() {
+  const url = 'http://localhost:' + API_PORT + '/api/admin/refresh-all';
+  fetch(url, {
+    method: 'POST',
+    headers: internalHeaders('application/json'),
+    body: JSON.stringify({ handlers: ['jira-enrichment'] })
+  }).catch(function(err) {
+    console.warn('[ai-impact] Post-bulk Jira enrichment trigger failed:', err.message);
+  });
+}
+
+/**
+ * Transform validated feature data into aiReview namespace format.
+ * @param {object} validated - Validated feature data from validateFeature
+ * @returns {object} { key, aiReview }
+ */
+function toAiReviewPayload(validated) {
+  return {
+    key: validated.key,
+    aiReview: {
+      title: validated.title,
+      sourceRfe: validated.sourceRfe,
+      size: validated.size,
+      recommendation: validated.recommendation,
+      needsAttention: validated.needsAttention,
+      humanReviewStatus: validated.humanReviewStatus,
+      scores: validated.scores,
+      reviewers: validated.reviewers,
+      labels: validated.labels,
+      components: validated.components,
+      reviewedAt: validated.reviewedAt,
+      runId: validated.runId
+    }
+  };
 }
 
 /**
@@ -67,7 +113,7 @@ async function runSync(readFromStorage, writeToStorageAtomic) {
  */
 module.exports = function registerFeatureRoutes(router, context) {
   const { storage, requireAdmin, requireScope } = context;
-  const { readFromStorage, writeToStorageAtomic } = storage;
+  const { readFromStorage } = storage;
 
   // ─── 1. Static routes FIRST ───
 
@@ -84,24 +130,26 @@ module.exports = function registerFeatureRoutes(router, context) {
 
   // GET /features/sync/status — sync state for polling
   router.get('/features/sync/status', requireScope('ai-impact:read'), function(req, res) {
-    res.json(syncState);
+    res.json({
+      running: false,
+      startedAt: null,
+      lastResult: null
+    });
   });
 
-  // POST /features/sync (Admin) — trigger Jira label sync
-  router.post('/features/sync', requireAdmin, requireScope('ai-impact:write'), async function(req, res) {
+  // POST /features/sync (Admin) — Jira sync is now handled by releases jira-enrichment
+  router.post('/features/sync', requireAdmin, requireScope('ai-impact:write'), function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Sync disabled in demo mode' });
     }
-    if (syncState.running || context.isRefreshRunning()) {
-      return res.json({ status: 'already_running' });
-    }
-
-    res.json({ status: 'started' });
-    runSync(readFromStorage, writeToStorageAtomic);
+    res.json({
+      status: 'unified',
+      message: 'Feature Jira sync is now handled by the releases jira-enrichment handler. Use POST /api/admin/refresh-all to trigger.'
+    });
   });
 
-  // POST /features/bulk (Admin) — bulk upsert features
-  router.post('/features/bulk', requireAdmin, requireScope('ai-impact:write'), jsonLimit, function(req, res) {
+  // POST /features/bulk (Admin) — bulk upsert features, forwarded to releases
+  router.post('/features/bulk', requireAdmin, requireScope('ai-impact:write'), jsonLimit, async function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Feature ingest disabled in demo mode' });
     }
@@ -114,9 +162,9 @@ module.exports = function registerFeatureRoutes(router, context) {
       return res.status(400).json({ error: `Bulk payload exceeds maximum of ${BULK_CAP} entries` });
     }
 
-    const data = readFeatures(readFromStorage);
     const counts = { created: 0, updated: 0, unchanged: 0 };
     const errors = [];
+    const releasesPayload = [];
 
     for (const entry of features) {
       if (!entry || typeof entry !== 'object' || (!entry.key && !entry.strat_id)) {
@@ -130,14 +178,29 @@ module.exports = function registerFeatureRoutes(router, context) {
         continue;
       }
 
-      const status = upsertFeature(data, result.data.key, result.data);
-      counts[status]++;
+      releasesPayload.push(toAiReviewPayload(result.data));
     }
 
-    data.lastSyncedAt = new Date().toISOString();
-    data.totalFeatures = Object.keys(data.features).length;
+    // Forward all validated data to the releases store
+    if (releasesPayload.length > 0) {
+      try {
+        const result = await forwardToReleases(releasesPayload);
+        counts.created = result.created || 0;
+        counts.updated = result.updated || 0;
+        counts.unchanged = result.unchanged || 0;
 
-    writeFeaturesAtomic(writeToStorageAtomic, data);
+        // Trigger Jira enrichment for newly created features
+        if (counts.created > 0) {
+          triggerJiraEnrichment();
+        }
+      } catch (err) {
+        console.error('[ai-impact] Forward to releases failed:', err.message);
+        return res.status(502).json({
+          error: 'Failed to write to unified feature store',
+          detail: err.message
+        });
+      }
+    }
 
     res.json({
       created: counts.created,
@@ -145,24 +208,19 @@ module.exports = function registerFeatureRoutes(router, context) {
       unchanged: counts.unchanged,
       errors
     });
-
-    // Fire-and-forget: sync labels from Jira after bulk ingest.
-    // Delay to allow remaining batches from the same pipeline push to complete.
-    if (counts.created > 0 || counts.updated > 0) {
-      setTimeout(() => {
-        console.log('[ai-impact] Triggering post-ingest Jira sync');
-        runSync(readFromStorage, writeToStorageAtomic);
-      }, 10000);
-    }
   });
 
-  // DELETE /features (Admin) — clear all feature data
-  router.delete('/features', requireAdmin, requireScope('ai-impact:write'), function(req, res) {
+  // DELETE /features (Admin) — clear AI review data from releases store
+  router.delete('/features', requireAdmin, requireScope('ai-impact:write'), async function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Feature ingest disabled in demo mode' });
     }
 
-    writeFeaturesAtomic(writeToStorageAtomic, { lastSyncedAt: null, totalFeatures: 0, features: {} });
+    // Forward delete to releases (async, don't block response)
+    forwardDeleteToReleases().catch(function(err) {
+      console.error('[ai-impact] Forward delete to releases failed:', err.message);
+    });
+
     res.json({ status: 'cleared' });
   });
 
@@ -187,20 +245,8 @@ module.exports = function registerFeatureRoutes(router, context) {
     });
   });
 
-  // ─── Refresh registry ───
-
-  if (context.registerRefresh) {
-    context.registerRefresh('feature-sync', {
-      order: 60,
-      timeout: 600000,
-      handler: async function() {
-        await runSync(readFromStorage, writeToStorageAtomic);
-      }
-    });
-  }
-
-  // PUT /features/:key (Admin) — upsert single feature
-  router.put('/features/:key', requireAdmin, requireScope('ai-impact:write'), jsonLimit, function(req, res) {
+  // PUT /features/:key (Admin) — upsert single feature, forwarded to releases
+  router.put('/features/:key', requireAdmin, requireScope('ai-impact:write'), jsonLimit, async function(req, res) {
     if (DEMO_MODE) {
       return res.json({ status: 'skipped', message: 'Feature ingest disabled in demo mode' });
     }
@@ -210,13 +256,17 @@ module.exports = function registerFeatureRoutes(router, context) {
       return res.status(400).json({ errors: result.errors });
     }
 
-    const data = readFeatures(readFromStorage);
-    const status = upsertFeature(data, req.params.key, result.data);
-
-    data.lastSyncedAt = new Date().toISOString();
-    data.totalFeatures = Object.keys(data.features).length;
-
-    writeFeaturesAtomic(writeToStorageAtomic, data);
-    res.json({ status });
+    // Forward to releases store
+    try {
+      const fwdResult = await forwardToReleases([toAiReviewPayload(result.data)]);
+      const status = fwdResult.created > 0 ? 'created' : fwdResult.updated > 0 ? 'updated' : 'unchanged';
+      res.json({ status });
+    } catch (err) {
+      console.error('[ai-impact] Forward to releases failed:', err.message);
+      return res.status(502).json({
+        error: 'Failed to write to unified feature store',
+        detail: err.message
+      });
+    }
   });
 };

@@ -18,6 +18,13 @@ function makeStorage() {
   return {
     writeToStorage(key, data) { written[key] = data },
     readFromStorage(key) { return written[key] || null },
+    listStorageFiles(dir) {
+      const prefix = dir + '/'
+      return Object.keys(written)
+        .filter(k => k.startsWith(prefix))
+        .map(k => k.slice(prefix.length))
+        .filter(k => !k.includes('/'))
+    },
     _written: written
   }
 }

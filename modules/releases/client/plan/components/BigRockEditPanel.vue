@@ -5,7 +5,7 @@ import { useFocusTrap } from '../composables/useFocusTrap'
 
 const emit = defineEmits(['save', 'cancel'])
 
-const { isOpen, formData, saving, saveError, fieldErrors, isNewRock, isDirty } = useBigRockEditor()
+const { isOpen, formData, saving, saveError, fieldErrors, isNewRock, isDirty, pillarOptions, editingRock } = useBigRockEditor()
 
 const outcomeKeyInput = ref('')
 const panelRef = ref(null)
@@ -141,12 +141,8 @@ function handleRetry() {
 
       <!-- Form body -->
       <div class="flex-1 overflow-y-auto px-5 py-4 space-y-4">
-        <!-- Name (read-only) -->
-        <div v-if="!isNewRock">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name</label>
-          <p class="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-md">{{ formData.name }}</p>
-        </div>
-        <div v-else>
+        <!-- Name -->
+        <div>
           <label for="rock-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Name <span class="text-red-500">*</span>
           </label>
@@ -160,12 +156,33 @@ function handleRetry() {
             placeholder="e.g., MaaS"
           />
           <p v-if="fieldErrors.name" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ fieldErrors.name }}</p>
+          <p v-if="!isNewRock && editingRock && formData.name !== editingRock.name" class="mt-1 text-xs text-amber-600 dark:text-amber-400">Renaming will trigger a data refresh.</p>
         </div>
 
-        <!-- Pillar (read-only) -->
-        <div v-if="formData.pillar">
-          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pillar</label>
-          <p class="px-3 py-2 text-sm text-gray-900 dark:text-gray-100 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-md">{{ formData.pillar }}</p>
+        <!-- Pillar -->
+        <div>
+          <label for="rock-pillar" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Pillar</label>
+          <select
+            v-if="pillarOptions.length > 0"
+            id="rock-pillar"
+            v-model="formData.pillar"
+            class="w-full px-3 py-2 border rounded-md text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            :class="fieldErrors.pillar ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'"
+          >
+            <option value="">-- Select pillar --</option>
+            <option v-for="p in pillarOptions" :key="p" :value="p">{{ p }}</option>
+          </select>
+          <input
+            v-else
+            id="rock-pillar"
+            v-model="formData.pillar"
+            type="text"
+            maxlength="100"
+            class="w-full px-3 py-2 border rounded-md text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            :class="fieldErrors.pillar ? 'border-red-300 dark:border-red-500' : 'border-gray-300 dark:border-gray-600'"
+            placeholder="e.g., Inference"
+          />
+          <p v-if="fieldErrors.pillar" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ fieldErrors.pillar }}</p>
         </div>
 
         <!-- Owner -->

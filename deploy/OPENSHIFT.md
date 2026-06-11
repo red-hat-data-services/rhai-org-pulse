@@ -267,3 +267,12 @@ oc rollout restart deployment/backend -n team-tracker
 │  Volume: /app/data (PVC: team-tracker-data)     │
 └─────────────────────────────────────────────────┘
 ```
+
+## CronJob
+
+The `team-tracker-sync-refresh` CronJob fires every 15 minutes (`*/15 * * * *`) and triggers a cadence-aware refresh via `POST /api/admin/refresh-all`. Each handler has a declared cadence (e.g., `24h` for roster sync, `12h` for execution pipeline). Handlers that have run within their cadence window are skipped — most ticks complete in seconds.
+
+- `concurrencyPolicy: Forbid` prevents overlapping runs
+- `activeDeadlineSeconds: 1800` (30 min) accommodates the heaviest handler (`team-tracker:metrics`)
+- Poll timeout exits 0 (the backend completes independently)
+- Backup runs as a refresh handler (`platform:backup`, cadence `24h`), not as a separate script step

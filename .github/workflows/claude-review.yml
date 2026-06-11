@@ -10,6 +10,7 @@ on:
     types: [opened, synchronize, reopened]
   issue_comment:
     types: [created]
+  merge_group:
   workflow_dispatch:
 
 concurrency:
@@ -23,26 +24,50 @@ permissions:
   id-token: write
 
 jobs:
+  # Merge queue no-op: the real review already ran on the PR. The queue just
+  # needs the "Claude Review" check name to exist and pass.
+  merge-queue-pass:
+    name: Claude Review
+    if: github.event_name == 'merge_group'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Merge queue — skipping review (already passed on PR)"
+
+  # When the Claude review pushes an autofix commit via the GitHub App token,
+  # the synchronize event fires with actor=rhai-org-pulse[bot]. We don't want
+  # to re-run the full review (infinite loop), but "Claude Review" is a
+  # required check — so we need this no-op job to satisfy the gate.
+  autofix-pass:
+    name: Claude Review
+    if: |
+      github.event_name != 'merge_group' &&
+      (github.actor == 'rhai-org-pulse[bot]' || github.actor == 'github-actions[bot]')
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Autofix push by ${{ github.actor }} — review already passed, skipping re-review"
+
   claude-review:
     name: Claude Review
     timeout-minutes: 20
     if: |
-      (github.event_name == 'pull_request' &&
+      github.event_name != 'merge_group' &&
+      ((github.event_name == 'pull_request' &&
        github.event.pull_request.head.repo.full_name == github.repository &&
        github.event.pull_request.draft != true &&
        github.actor != 'github-actions[bot]' &&
-       github.actor != 'dependabot[bot]') ||
+       github.actor != 'rhai-org-pulse[bot]') ||
       (github.event_name == 'pull_request_target' &&
        github.event.pull_request.head.repo.full_name != github.repository &&
        github.event.pull_request.draft != true &&
-       github.actor != 'github-actions[bot]') ||
+       github.actor != 'github-actions[bot]' &&
+       github.actor != 'rhai-org-pulse[bot]') ||
       (github.event_name == 'issue_comment' &&
        github.event.issue.pull_request &&
        contains(github.event.comment.body, '@claude') &&
        github.event.comment.author_association != 'NONE' &&
        github.event.comment.author_association != 'FIRST_TIMER' &&
        github.event.comment.author_association != 'FIRST_TIME_CONTRIBUTOR') ||
-      (github.event_name == 'workflow_dispatch')
+      (github.event_name == 'workflow_dispatch'))
     runs-on: ubuntu-latest
     steps:
       - name: Determine review context
@@ -106,11 +131,23 @@ jobs:
 
       # --- Same-repo setup (full checkout, Node.js, git identity) ---
 
+      # Generate a GitHub App token so that autofix pushes trigger downstream
+      # workflows (CI, Integration Tests, etc.). The default GITHUB_TOKEN does
+      # not trigger other workflows — this is a GitHub anti-recursion safeguard.
+      - name: Generate GitHub App token
+        if: steps.check-paths.outputs.needs_review == 'true' && steps.context.outputs.is_fork != 'true' && steps.fork-guard.outputs.is_fork != 'true'
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - name: Checkout code
         if: steps.check-paths.outputs.needs_review == 'true' && steps.context.outputs.is_fork != 'true' && steps.fork-guard.outputs.is_fork != 'true'
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Set up Node.js
         if: steps.check-paths.outputs.needs_review == 'true' && steps.context.outputs.is_fork != 'true' && steps.fork-guard.outputs.is_fork != 'true'
@@ -240,9 +277,6 @@ jobs:
                  - Issues found and fixed (with brief descriptions)
                  - Issues found but NOT fixed (with explanations of why)
                  - If no issues were found, say so briefly
-               - NOTE: CI (the "Test & Build" check) will NOT automatically run on
-                 your autofix commit. Mention this in your summary so the PR author
-                 knows to re-run CI if needed.
 
             5. **Set review verdict**: Follow the "Verdict rules" section in
                `.github/instructions/review.instructions.md` to populate the

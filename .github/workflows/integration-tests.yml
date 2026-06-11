@@ -3,6 +3,7 @@ name: Integration Tests
 on:
   pull_request:
     branches: [main]
+  merge_group:
 
 concurrency:
   group: integration-tests-${{ github.ref }}
@@ -21,8 +22,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
+      # For PRs, use dorny/paths-filter (GitHub API mode, fast)
       - uses: dorny/paths-filter@v4
+        if: github.event_name == 'pull_request'
         id: filter
         with:
           # This determines which keys get added to the 'changes' output array
@@ -43,6 +48,14 @@ jobs:
             upstream-pulse:
               - 'modules/upstream-pulse/**'
               - 'tests/integration/upstream-pulse.spec.js'
+            releases:
+              - 'modules/releases/server/execution/**'
+              - 'modules/releases/server/planning/**'
+              - 'modules/releases/client/views/FeatureDetailView.vue'
+              - 'modules/releases/client/execute/**'
+              - 'modules/releases/client/plan/**'
+              - 'tests/integration/execution-data.spec.js'
+              - 'tests/integration/releases.spec.js'
             tv-fv-delta:
               - 'modules/releases/server/tv-fv-delta/**'
               - 'modules/releases/server/index.js'
@@ -53,15 +66,79 @@ jobs:
               - 'modules/releases/client/components/FeatureTable.vue'
               - 'modules/releases/client/components/ClickableCount.vue'
               - 'tests/integration/tv-fv-delta.spec.js'
+            feature-pressure:
+              - 'modules/releases/server/feature-pressure/**'
+              - 'modules/releases/server/index.js'
+              - 'modules/releases/client/views/FeaturePressureView.vue'
+              - 'modules/releases/client/composables/useFeaturePressureData.js'
+              - 'modules/releases/client/composables/useComponentPressure.js'
+              - 'modules/releases/client/components/PressureHeatmap.vue'
+              - 'modules/releases/client/components/MonthlyFlowChart.vue'
+              - 'modules/releases/client/components/ClickableCount.vue'
+              - 'tests/integration/feature-pressure.spec.js'
+
+      # For merge_group events, dorny/paths-filter doesn't support this event type.
+      # Use git diff directly, mirroring the filter definitions above.
+      - name: Detect changes via git diff
+        if: github.event_name == 'merge_group'
+        id: git-filter
+        run: |
+          BASE_SHA="${{ github.event.merge_group.base_sha }}"
+          if [ -z "$BASE_SHA" ]; then
+            echo "::error::BASE_SHA is empty — cannot detect changes"
+            exit 1
+          fi
+
+          CHANGED=$(git diff --name-only ${BASE_SHA} HEAD)
+          echo "Changed files:"
+          echo "$CHANGED"
+
+          ALL_MODULES='["ai-impact", "system-health", "people-teams", "upstream-pulse", "releases", "tv-fv-delta", "feature-pressure"]'
+
+          # If shared test infrastructure changed, test all modules
+          if echo "$CHANGED" | grep -qE '^tests/integration/(constants|helpers)\.js$'; then
+            echo "modules=$ALL_MODULES" >> "$GITHUB_OUTPUT"
+            echo "Shared test files changed — testing all modules"
+            exit 0
+          fi
+
+          MODULES="[]"
+
+          check_module() {
+            local name="$1"
+            local pattern="$2"
+            if echo "$CHANGED" | grep -qE "$pattern"; then
+              MODULES=$(echo "$MODULES" | jq -c ". + [\"$name\"]")
+            fi
+          }
+
+          check_module "ai-impact" \
+            "^(modules/ai-impact/|tests/integration/ai-impact\.spec\.js)"
+          check_module "system-health" \
+            "^(modules/system-health/|tests/integration/system-health\.spec\.js)"
+          check_module "people-teams" \
+            "^(modules/team-tracker/|tests/integration/people-teams\.spec\.js)"
+          check_module "upstream-pulse" \
+            "^(modules/upstream-pulse/|tests/integration/upstream-pulse\.spec\.js)"
+          check_module "releases" \
+            "^(modules/releases/server/(execution|planning)/|modules/releases/client/views/FeatureDetailView\.vue|modules/releases/client/(execute|plan)/|tests/integration/(execution-data|releases)\.spec\.js)"
+          check_module "tv-fv-delta" \
+            "^(modules/releases/server/(tv-fv-delta/|index\.js)|modules/releases/client/views/TvFvDeltaView\.vue|modules/releases/client/composables/use.*(TvFv|ReleasePicker|ComponentBreakdown)\.js|modules/releases/client/components/(FeatureTable|ClickableCount)\.vue|tests/integration/tv-fv-delta\.spec\.js)"
+          check_module "feature-pressure" \
+            "^(modules/releases/server/(feature-pressure/|index\.js)|modules/releases/client/views/FeaturePressureView\.vue|modules/releases/client/composables/use(FeaturePressureData|ComponentPressure)\.js|modules/releases/client/components/(PressureHeatmap|MonthlyFlowChart|ClickableCount)\.vue|tests/integration/feature-pressure\.spec\.js)"
+
+          echo "modules=$MODULES" >> "$GITHUB_OUTPUT"
+          echo "Testing modules: $MODULES"
 
       - name: Build module matrix
         id: build-matrix
         run: |
-          # If shared test files changed, then test all modules
-          if [ "${{ steps.filter.outputs.shared-test-files }}" == "true" ]; then
-            MODULES='["ai-impact", "system-health", "people-teams", "upstream-pulse", "tv-fv-delta"]'
+          if [ "${{ github.event_name }}" = "merge_group" ]; then
+            MODULES='${{ steps.git-filter.outputs.modules }}'
+          elif [ "${{ steps.filter.outputs.shared-test-files }}" == "true" ]; then
+            MODULES='["ai-impact", "system-health", "people-teams", "upstream-pulse", "releases", "tv-fv-delta", "feature-pressure"]'
           else
-            # Otherwise, use the modules that have direct changes
+            # Use the modules that have direct changes
             MODULES='${{ steps.filter.outputs.changes }}'
             # Remove 'shared-test-files' from the array if it's present
             MODULES=$(echo "$MODULES" | jq -c 'map(select(. != "shared-test-files"))')
@@ -96,33 +173,17 @@ jobs:
     runs-on: ubuntu-latest
     if: always()
     needs: [detect-changes, run-tests]
-    permissions:
-      statuses: write
     steps:
-      - name: Set commit status
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          REPO: ${{ github.repository }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      - name: Evaluate integration test results
         run: |
           MODULES='${{ needs.detect-changes.outputs.enabled-modules }}'
           if [ "$MODULES" = "[]" ] || [ -z "$MODULES" ]; then
-            STATE="success"
-            DESC="No module changes — integration tests skipped"
+            echo "No module changes — integration tests skipped"
           elif [ "${{ needs.run-tests.result }}" = "success" ]; then
-            STATE="success"
-            DESC="All integration tests passed"
+            echo "All integration tests passed"
           elif [ "${{ needs.run-tests.result }}" = "skipped" ]; then
-            STATE="success"
-            DESC="No module changes — integration tests skipped"
+            echo "No module changes — integration tests skipped"
           else
-            STATE="failure"
-            DESC="Integration tests failed"
+            echo "Integration tests failed"
+            exit 1
           fi
-
-          gh api "repos/${REPO}/statuses/${HEAD_SHA}" \
-            -f state="$STATE" \
-            -f context="Integration Tests" \
-            -f description="$DESC" \
-            -f target_url="$RUN_URL"

@@ -25,6 +25,10 @@ vi.mock('../../../server/planning/doc-import', () => ({
   executeDocImport: vi.fn()
 }))
 
+vi.mock('../../../../../shared/server/auth', () => ({
+  blockDuringImpersonation: function(req, res, next) { next() }
+}))
+
 vi.mock('../../../../../shared/server/smartsheet', () => ({
   isConfigured: vi.fn().mockReturnValue(false),
   discoverReleases: vi.fn()
@@ -164,6 +168,7 @@ describe('release-planning routes', function() {
         'GET /refresh/status',
         'GET /config',
         'GET /permissions',
+        'GET /pillar-options',
         'PUT /releases/:version/big-rocks/reorder',
         'PUT /releases/:version/big-rocks/:name',
         'POST /releases/:version/big-rocks',
@@ -187,7 +192,7 @@ describe('release-planning routes', function() {
       expect(handlers.length).toBeGreaterThan(1)
     })
 
-    it('uses requireReleaseManager on POST /releases/:version/refresh', function() {
+    it('uses requireAuth on POST /releases/:version/refresh', function() {
       expect(router.post).toHaveBeenCalledWith(
         '/releases/:version/refresh',
         expect.any(Function),
@@ -484,10 +489,10 @@ describe('release-planning routes', function() {
       expect(res._json.canEdit).toBe(true)
     })
 
-    it('returns canEdit false for regular user', function() {
+    it('returns canEdit true for regular user', function() {
       const req = makeReq({ isAdmin: false, isReleaseManager: false, userEmail: 'user@test.com' })
       const res = callRoute(router._routes, 'GET', '/permissions', req)
-      expect(res._json.canEdit).toBe(false)
+      expect(res._json.canEdit).toBe(true)
     })
   })
 
@@ -596,6 +601,227 @@ describe('release-planning routes', function() {
       const res = callRoute(router._routes, 'GET', '/refresh/status', req)
       expect(res._json.running).toBe(false)
       expect(res._json.lastResult).toBe(null)
+    })
+  })
+
+  // ─── Open Access ───
+
+  describe('open access for authenticated users', function() {
+    it('allows non-admin, non-release-manager to create big rocks', async function() {
+      const req = makeReq({
+        isAdmin: false,
+        isReleaseManager: false,
+        userEmail: 'user@test.com',
+        params: { version: '3.5' },
+        body: VALID_ROCK
+      })
+      const res = await callRoute(router._routes, 'POST', '/releases/:version/big-rocks', req)
+      expect(res._status).toBe(201)
+    })
+
+    it('allows non-admin, non-release-manager to update big rocks', async function() {
+      setupVersion(storage._store, '3.5', [VALID_ROCK])
+      const req = makeReq({
+        isAdmin: false,
+        isReleaseManager: false,
+        userEmail: 'user@test.com',
+        params: { version: '3.5', name: 'Test Rock' },
+        body: Object.assign({}, VALID_ROCK, { notes: 'User updated' })
+      })
+      const res = await callRoute(router._routes, 'PUT', '/releases/:version/big-rocks/:name', req)
+      expect(res._status).toBe(200)
+    })
+
+    it('allows non-admin, non-release-manager to delete big rocks', async function() {
+      setupVersion(storage._store, '3.5', [VALID_ROCK])
+      const req = makeReq({
+        isAdmin: false,
+        isReleaseManager: false,
+        userEmail: 'user@test.com',
+        params: { version: '3.5', name: 'Test Rock' }
+      })
+      const res = await callRoute(router._routes, 'DELETE', '/releases/:version/big-rocks/:name', req)
+      expect(res._status).toBe(200)
+    })
+  })
+
+  // ─── Impersonation Safety ───
+
+  describe('blockDuringImpersonation on destructive routes', function() {
+    it('includes blockDuringImpersonation middleware on DELETE big-rocks', function() {
+      const handlers = router._routes['DELETE /releases/:version/big-rocks/:name']
+      // Should have at least 4 middleware: requireAuth, blockDuringImpersonation, requireScope, handler
+      expect(handlers.length).toBeGreaterThanOrEqual(4)
+    })
+
+    it('includes blockDuringImpersonation middleware on POST /releases', function() {
+      const handlers = router._routes['POST /releases']
+      expect(handlers.length).toBeGreaterThanOrEqual(4)
+    })
+
+    it('includes blockDuringImpersonation middleware on POST import/doc', function() {
+      const handlers = router._routes['POST /releases/:version/import/doc']
+      expect(handlers.length).toBeGreaterThanOrEqual(4)
+    })
+  })
+
+  // ─── GET /pillar-options ───
+
+  describe('GET /pillar-options', function() {
+    it('returns pillar names from PM Hub config', function() {
+      storage._store['releases/pm-hub/pillar-config.json'] = {
+        pillars: [
+          { name: 'Inference', components: [] },
+          { name: 'Platform', components: [] }
+        ]
+      }
+      const req = makeReq()
+      const res = callRoute(router._routes, 'GET', '/pillar-options', req)
+      expect(res._json.options).toEqual(['Inference', 'Platform'])
+    })
+
+    it('returns empty array when no PM Hub config exists', function() {
+      const req = makeReq()
+      const res = callRoute(router._routes, 'GET', '/pillar-options', req)
+      expect(res._json.options).toEqual([])
+    })
+
+    it('filters out empty pillar names', function() {
+      storage._store['releases/pm-hub/pillar-config.json'] = {
+        pillars: [
+          { name: 'Inference', components: [] },
+          { name: '', components: [] },
+          { name: 'Platform', components: [] }
+        ]
+      }
+      const req = makeReq()
+      const res = callRoute(router._routes, 'GET', '/pillar-options', req)
+      expect(res._json.options).toEqual(['Inference', 'Platform'])
+    })
+  })
+
+  // ─── Comma rejection in create/update ───
+
+  describe('comma rejection', function() {
+    it('rejects creating a big rock with comma in name', async function() {
+      const req = makeReq({
+        params: { version: '3.5' },
+        body: Object.assign({}, VALID_ROCK, { name: 'Inference, Training' })
+      })
+      const res = await callRoute(router._routes, 'POST', '/releases/:version/big-rocks', req)
+      expect(res._status).toBe(400)
+      expect(res._json.fields.name).toContain('commas')
+    })
+
+    it('rejects renaming a big rock to a name with comma', async function() {
+      setupVersion(storage._store, '3.5', [VALID_ROCK])
+      const req = makeReq({
+        params: { version: '3.5', name: 'Test Rock' },
+        body: Object.assign({}, VALID_ROCK, { name: 'Test, Rock' })
+      })
+      const res = await callRoute(router._routes, 'PUT', '/releases/:version/big-rocks/:name', req)
+      expect(res._status).toBe(400)
+      expect(res._json.fields.name).toContain('commas')
+    })
+  })
+
+  // ─── Pillar validation in create/update ───
+
+  describe('pillar validation against PM Hub config', function() {
+    it('rejects invalid pillar when PM Hub config exists', async function() {
+      storage._store['releases/pm-hub/pillar-config.json'] = {
+        pillars: [
+          { name: 'Inference', components: [] },
+          { name: 'Platform', components: [] }
+        ]
+      }
+      const req = makeReq({
+        params: { version: '3.5' },
+        body: Object.assign({}, VALID_ROCK, { name: 'New Rock', pillar: 'NotAPillar' })
+      })
+      const res = await callRoute(router._routes, 'POST', '/releases/:version/big-rocks', req)
+      expect(res._status).toBe(400)
+      expect(res._json.fields.pillar).toContain('must be one of')
+    })
+
+    it('accepts valid pillar when PM Hub config exists', async function() {
+      storage._store['releases/pm-hub/pillar-config.json'] = {
+        pillars: [
+          { name: 'Inference', components: [] },
+          { name: 'Platform', components: [] }
+        ]
+      }
+      const req = makeReq({
+        params: { version: '3.5' },
+        body: Object.assign({}, VALID_ROCK, { name: 'New Rock', pillar: 'Inference' })
+      })
+      const res = await callRoute(router._routes, 'POST', '/releases/:version/big-rocks', req)
+      expect(res._status).toBe(201)
+    })
+
+    it('accepts any pillar when no PM Hub config exists', async function() {
+      const req = makeReq({
+        params: { version: '3.5' },
+        body: Object.assign({}, VALID_ROCK, { name: 'New Rock', pillar: 'Anything' })
+      })
+      const res = await callRoute(router._routes, 'POST', '/releases/:version/big-rocks', req)
+      expect(res._status).toBe(201)
+    })
+  })
+
+  // ─── Rename audit log ───
+
+  describe('rename audit log', function() {
+    it('logs rename in audit summary when name changes', async function() {
+      setupVersion(storage._store, '3.5', [VALID_ROCK])
+      const req = makeReq({
+        params: { version: '3.5', name: 'Test Rock' },
+        body: Object.assign({}, VALID_ROCK, { name: 'New Name' })
+      })
+      await callRoute(router._routes, 'PUT', '/releases/:version/big-rocks/:name', req)
+      const log = storage._store['releases/audit-log.json']
+      expect(log.entries[0].summary).toContain('Renamed Big Rock')
+      expect(log.entries[0].summary).toContain('Test Rock')
+      expect(log.entries[0].summary).toContain('New Name')
+      expect(log.entries[0].details.newName).toBe('New Name')
+    })
+
+    it('uses standard summary when name does not change', async function() {
+      setupVersion(storage._store, '3.5', [VALID_ROCK])
+      const req = makeReq({
+        params: { version: '3.5', name: 'Test Rock' },
+        body: Object.assign({}, VALID_ROCK, { notes: 'Updated' })
+      })
+      await callRoute(router._routes, 'PUT', '/releases/:version/big-rocks/:name', req)
+      const log = storage._store['releases/audit-log.json']
+      expect(log.entries[0].summary).toBe('Updated Big Rock "Test Rock"')
+      expect(log.entries[0].details.newName).toBeUndefined()
+    })
+  })
+
+  // ─── Audit Actor ───
+
+  describe('audit actor tracking', function() {
+    it('uses auditActor in audit log when set', async function() {
+      const req = makeReq({
+        params: { version: '3.5' },
+        body: VALID_ROCK,
+        auditActor: 'target@test.com (impersonated by admin@test.com)'
+      })
+      await callRoute(router._routes, 'POST', '/releases/:version/big-rocks', req)
+      const log = storage._store['releases/audit-log.json']
+      expect(log.entries[0].user).toBe('target@test.com (impersonated by admin@test.com)')
+    })
+
+    it('falls back to userEmail when auditActor is not set', async function() {
+      const req = makeReq({
+        params: { version: '3.5' },
+        body: VALID_ROCK,
+        userEmail: 'regular@test.com'
+      })
+      await callRoute(router._routes, 'POST', '/releases/:version/big-rocks', req)
+      const log = storage._store['releases/audit-log.json']
+      expect(log.entries[0].user).toBe('regular@test.com')
     })
   })
 })

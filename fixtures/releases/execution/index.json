@@ -24,7 +24,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-39",
@@ -50,7 +52,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-44",
@@ -73,7 +77,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-47",
@@ -93,7 +99,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-52",
@@ -117,7 +125,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-53",
@@ -137,7 +147,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-55",
@@ -161,7 +173,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-56",
@@ -187,7 +201,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-58",
@@ -214,7 +230,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-59",
@@ -238,7 +256,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-64",
@@ -264,7 +284,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-65",
@@ -287,7 +309,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-66",
@@ -307,7 +331,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-67",
@@ -327,7 +353,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-68",
@@ -347,7 +375,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-69",
@@ -367,7 +397,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-70",
@@ -387,7 +419,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-71",
@@ -407,7 +441,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-72",
@@ -427,7 +463,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-73",
@@ -447,7 +485,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-74",
@@ -469,7 +509,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-82",
@@ -494,7 +536,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-85",
@@ -514,7 +558,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-87",
@@ -537,7 +583,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-90",
@@ -557,7 +605,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-96",
@@ -577,7 +627,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-97",
@@ -600,7 +652,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-99",
@@ -625,7 +679,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-102",
@@ -650,7 +706,9 @@
       ],
       "pm": "Jane PM",
       "architect": "Bob Arch",
-      "parentKey": "TEST1-1016"
+      "parentKey": "TEST1-1016",
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-104",
@@ -679,7 +737,9 @@
       ],
       "pm": "Jane PM",
       "architect": null,
-      "parentKey": "TEST1-1016"
+      "parentKey": "TEST1-1016",
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-121",
@@ -699,7 +759,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-128",
@@ -719,7 +781,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-129",
@@ -742,7 +806,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-130",
@@ -768,7 +834,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-131",
@@ -791,7 +859,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-133",
@@ -816,7 +886,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-138",
@@ -843,7 +915,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-143",
@@ -865,7 +939,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-150",
@@ -894,7 +970,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-152",
@@ -917,7 +995,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-156",
@@ -937,7 +1017,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-157",
@@ -959,7 +1041,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-158",
@@ -981,7 +1065,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-159",
@@ -1003,7 +1089,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-160",
@@ -1029,7 +1117,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-161",
@@ -1054,7 +1144,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-164",
@@ -1081,7 +1173,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-170",
@@ -1105,7 +1199,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-171",
@@ -1129,7 +1225,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-172",
@@ -1158,7 +1256,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-174",
@@ -1184,7 +1284,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-178",
@@ -1208,7 +1310,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-179",
@@ -1228,7 +1332,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-182",
@@ -1250,7 +1356,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-183",
@@ -1270,7 +1378,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-185",
@@ -1293,7 +1403,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-187",
@@ -1313,7 +1425,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-190",
@@ -1336,7 +1450,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-193",
@@ -1360,7 +1476,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-194",
@@ -1383,7 +1501,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-200",
@@ -1405,7 +1525,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-201",
@@ -1427,7 +1549,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-208",
@@ -1449,7 +1573,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-210",
@@ -1475,7 +1601,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-211",
@@ -1498,7 +1626,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-223",
@@ -1520,7 +1650,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-239",
@@ -1543,7 +1675,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-240",
@@ -1565,7 +1699,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-241",
@@ -1589,7 +1725,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-248",
@@ -1615,7 +1753,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-254",
@@ -1637,7 +1777,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-262",
@@ -1659,7 +1801,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-263",
@@ -1683,7 +1827,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-264",
@@ -1705,7 +1851,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-273",
@@ -1729,7 +1877,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-274",
@@ -1751,7 +1901,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-284",
@@ -1775,7 +1927,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-289",
@@ -1799,7 +1953,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-293",
@@ -1821,7 +1977,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-294",
@@ -1844,7 +2002,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-296",
@@ -1864,7 +2024,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-297",
@@ -1892,7 +2054,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-298",
@@ -1917,7 +2081,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-300",
@@ -1941,7 +2107,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-301",
@@ -1966,7 +2134,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-302",
@@ -1991,7 +2161,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-304",
@@ -2014,7 +2186,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-305",
@@ -2036,7 +2210,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-309",
@@ -2060,7 +2236,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-313",
@@ -2087,7 +2265,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-316",
@@ -2109,7 +2289,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-317",
@@ -2129,7 +2311,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-322",
@@ -2151,7 +2335,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-323",
@@ -2173,7 +2359,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-332",
@@ -2198,7 +2386,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-335",
@@ -2220,7 +2410,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-343",
@@ -2240,7 +2432,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-349",
@@ -2266,7 +2460,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-350",
@@ -2286,7 +2482,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-354",
@@ -2308,7 +2506,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-367",
@@ -2328,7 +2528,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-372",
@@ -2348,7 +2550,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-387",
@@ -2372,7 +2576,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-392",
@@ -2394,7 +2600,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-400",
@@ -2414,7 +2622,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-404",
@@ -2438,7 +2648,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-405",
@@ -2460,7 +2672,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-408",
@@ -2483,7 +2697,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-414",
@@ -2503,7 +2719,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-420",
@@ -2528,7 +2746,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-423",
@@ -2548,7 +2768,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-432",
@@ -2575,7 +2797,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-434",
@@ -2598,7 +2822,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-437",
@@ -2618,7 +2844,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-441",
@@ -2641,7 +2869,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-448",
@@ -2661,7 +2891,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-449",
@@ -2683,7 +2915,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-450",
@@ -2706,7 +2940,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-462",
@@ -2728,7 +2964,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-464",
@@ -2748,7 +2986,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-465",
@@ -2768,7 +3008,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-469",
@@ -2788,7 +3030,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-476",
@@ -2808,7 +3052,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-483",
@@ -2828,7 +3074,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-488",
@@ -2851,7 +3099,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-489",
@@ -2873,7 +3123,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-495",
@@ -2900,7 +3152,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-496",
@@ -2920,7 +3174,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-497",
@@ -2946,7 +3202,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-499",
@@ -2970,7 +3228,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-502",
@@ -2990,7 +3250,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-503",
@@ -3012,7 +3274,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-506",
@@ -3034,7 +3298,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-510",
@@ -3054,7 +3320,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-512",
@@ -3077,7 +3345,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-514",
@@ -3099,7 +3369,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-516",
@@ -3119,7 +3391,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-520",
@@ -3139,7 +3413,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-523",
@@ -3162,7 +3438,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-536",
@@ -3185,7 +3463,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-544",
@@ -3207,7 +3487,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-545",
@@ -3239,7 +3521,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-547",
@@ -3259,7 +3543,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-548",
@@ -3284,7 +3570,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-549",
@@ -3304,7 +3592,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-559",
@@ -3324,7 +3614,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-563",
@@ -3344,7 +3636,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-576",
@@ -3364,7 +3658,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-577",
@@ -3384,7 +3680,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-581",
@@ -3411,7 +3709,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-583",
@@ -3434,7 +3734,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-585",
@@ -3456,7 +3758,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-587",
@@ -3478,7 +3782,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-588",
@@ -3500,7 +3806,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-589",
@@ -3520,7 +3828,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-590",
@@ -3544,7 +3854,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-591",
@@ -3564,7 +3876,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-596",
@@ -3586,7 +3900,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-597",
@@ -3608,7 +3924,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-601",
@@ -3628,7 +3946,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-604",
@@ -3648,7 +3968,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-605",
@@ -3668,7 +3990,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-611",
@@ -3691,7 +4015,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-612",
@@ -3714,7 +4040,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-614",
@@ -3734,7 +4062,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-615",
@@ -3757,7 +4087,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-619",
@@ -3777,7 +4109,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-622",
@@ -3797,7 +4131,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-623",
@@ -3817,7 +4153,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-628",
@@ -3837,7 +4175,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-630",
@@ -3859,7 +4199,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-647",
@@ -3879,7 +4221,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-649",
@@ -3899,7 +4243,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-651",
@@ -3919,7 +4265,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-656",
@@ -3939,7 +4287,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-662",
@@ -3959,7 +4309,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-664",
@@ -3979,7 +4331,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-665",
@@ -3999,7 +4353,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-668",
@@ -4019,7 +4375,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-680",
@@ -4039,7 +4397,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-689",
@@ -4059,7 +4419,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-693",
@@ -4079,7 +4441,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-694",
@@ -4102,7 +4466,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-695",
@@ -4129,7 +4495,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-696",
@@ -4154,7 +4522,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-699",
@@ -4177,7 +4547,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-709",
@@ -4203,7 +4575,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-713",
@@ -4223,7 +4597,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-718",
@@ -4245,7 +4621,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-719",
@@ -4267,7 +4645,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-720",
@@ -4289,7 +4669,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-723",
@@ -4311,7 +4693,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-725",
@@ -4333,7 +4717,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-728",
@@ -4353,7 +4739,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-732",
@@ -4376,7 +4764,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-737",
@@ -4398,7 +4788,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-738",
@@ -4418,7 +4810,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-739",
@@ -4438,7 +4832,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-747",
@@ -4458,7 +4854,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-752",
@@ -4481,7 +4879,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-754",
@@ -4503,7 +4903,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-765",
@@ -4525,7 +4927,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-767",
@@ -4545,7 +4949,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-773",
@@ -4569,7 +4975,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-775",
@@ -4589,7 +4997,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-776",
@@ -4609,7 +5019,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-786",
@@ -4629,7 +5041,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-813",
@@ -4655,7 +5069,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-814",
@@ -4675,7 +5091,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-842",
@@ -4695,7 +5113,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-844",
@@ -4719,7 +5139,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-845",
@@ -4741,7 +5163,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-848",
@@ -4761,7 +5185,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-853",
@@ -4783,7 +5209,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-854",
@@ -4805,7 +5233,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-855",
@@ -4825,7 +5255,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-860",
@@ -4845,7 +5277,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-930",
@@ -4870,7 +5304,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-940",
@@ -4894,7 +5330,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-948",
@@ -4916,7 +5354,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-949",
@@ -4940,7 +5380,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-951",
@@ -4962,7 +5404,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-955",
@@ -4984,7 +5428,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-958",
@@ -5008,7 +5454,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-960",
@@ -5037,7 +5485,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-965",
@@ -5060,7 +5510,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-968",
@@ -5084,7 +5536,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-969",
@@ -5107,7 +5561,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-970",
@@ -5131,7 +5587,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-971",
@@ -5158,7 +5616,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-973",
@@ -5182,7 +5642,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-974",
@@ -5206,7 +5668,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-976",
@@ -5229,7 +5693,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-978",
@@ -5251,7 +5717,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-979",
@@ -5277,7 +5745,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-980",
@@ -5299,7 +5769,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-983",
@@ -5324,7 +5796,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-988",
@@ -5348,7 +5822,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-989",
@@ -5371,7 +5847,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-991",
@@ -5393,7 +5871,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-992",
@@ -5415,7 +5895,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-993",
@@ -5437,7 +5919,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-995",
@@ -5460,7 +5944,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1016",
@@ -5482,7 +5968,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1045",
@@ -5505,7 +5993,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1047",
@@ -5529,7 +6019,9 @@
       ],
       "pm": null,
       "architect": null,
-      "parentKey": "TEST1-1045"
+      "parentKey": "TEST1-1045",
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1051",
@@ -5561,7 +6053,9 @@
       ],
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1053",
@@ -5583,7 +6077,9 @@
       ],
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1054",
@@ -5610,7 +6106,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1059",
@@ -5635,7 +6133,9 @@
       ],
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1061",
@@ -5660,7 +6160,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1062",
@@ -5683,7 +6185,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1064",
@@ -5705,7 +6209,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1065",
@@ -5727,7 +6233,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1078",
@@ -5750,7 +6258,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1079",
@@ -5774,7 +6284,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1082",
@@ -5798,7 +6310,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1084",
@@ -5830,7 +6344,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1085",
@@ -5853,7 +6369,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1089",
@@ -5877,7 +6395,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1104",
@@ -5901,7 +6421,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1109",
@@ -5925,7 +6447,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1111",
@@ -5950,7 +6474,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1112",
@@ -5981,7 +6507,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1115",
@@ -6006,7 +6534,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1117",
@@ -6033,7 +6563,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1119",
@@ -6055,7 +6587,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1120",
@@ -6082,7 +6616,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1121",
@@ -6106,7 +6642,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1129",
@@ -6128,7 +6666,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1130",
@@ -6151,7 +6691,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1131",
@@ -6174,7 +6716,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1132",
@@ -6197,7 +6741,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1134",
@@ -6225,7 +6771,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1136",
@@ -6252,7 +6800,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1143",
@@ -6272,7 +6822,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1144",
@@ -6292,7 +6844,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1145",
@@ -6312,7 +6866,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1146",
@@ -6332,7 +6888,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1147",
@@ -6354,7 +6912,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1148",
@@ -6377,7 +6937,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1149",
@@ -6411,7 +6973,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1150",
@@ -6440,7 +7004,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1153",
@@ -6462,7 +7028,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1159",
@@ -6486,7 +7054,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1161",
@@ -6513,7 +7083,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1164",
@@ -6537,7 +7109,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1165",
@@ -6557,7 +7131,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1167",
@@ -6584,7 +7160,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1168",
@@ -6608,7 +7186,16 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow",
+      "aiReview": {
+        "recommendation": "approve",
+        "scores": { "feasibility": 2, "testability": 1, "scope": 2, "architecture": 2, "total": 7 },
+        "humanReviewStatus": "approved",
+        "needsAttention": false,
+        "reviewedAt": "2026-04-19T01:30:35Z"
+      }
     },
     {
       "key": "TEST1-1169",
@@ -6630,7 +7217,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1172",
@@ -6654,7 +7243,16 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null,
+      "aiReview": {
+        "recommendation": "approve",
+        "scores": { "feasibility": 2, "testability": 2, "scope": 1, "architecture": 2, "total": 7 },
+        "humanReviewStatus": "awaiting-review",
+        "needsAttention": false,
+        "reviewedAt": "2026-04-19T01:30:35Z"
+      }
     },
     {
       "key": "TEST1-1173",
@@ -6679,7 +7277,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1175",
@@ -6699,7 +7299,16 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow",
+      "aiReview": {
+        "recommendation": "reject",
+        "scores": { "feasibility": 0, "testability": 1, "scope": 0, "architecture": 1, "total": 2 },
+        "humanReviewStatus": "needs-review",
+        "needsAttention": true,
+        "reviewedAt": "2026-04-19T01:30:35Z"
+      }
     },
     {
       "key": "TEST1-1176",
@@ -6725,7 +7334,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1178",
@@ -6751,7 +7362,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1179",
@@ -6778,7 +7391,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1180",
@@ -6804,7 +7419,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1181",
@@ -6827,7 +7444,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1182",
@@ -6853,7 +7472,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1183",
@@ -6877,7 +7498,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1190",
@@ -6897,7 +7520,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1191",
@@ -6924,7 +7549,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1192",
@@ -6946,7 +7573,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1195",
@@ -6968,7 +7597,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1196",
@@ -6991,7 +7622,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1197",
@@ -7011,7 +7644,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1199",
@@ -7035,7 +7670,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1201",
@@ -7061,7 +7698,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1202",
@@ -7081,7 +7720,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1203",
@@ -7105,7 +7746,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1204",
@@ -7133,7 +7776,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1208",
@@ -7161,7 +7806,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1209",
@@ -7184,7 +7831,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1213",
@@ -7210,7 +7859,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1214",
@@ -7234,7 +7885,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1215",
@@ -7257,7 +7910,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1216",
@@ -7283,7 +7938,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1218",
@@ -7309,7 +7966,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1219",
@@ -7329,7 +7988,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1220",
@@ -7349,7 +8010,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1222",
@@ -7372,7 +8035,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1226",
@@ -7392,7 +8057,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1228",
@@ -7417,7 +8084,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1230",
@@ -7441,7 +8110,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1231",
@@ -7465,7 +8136,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1232",
@@ -7487,7 +8160,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1235",
@@ -7513,7 +8188,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1236",
@@ -7535,7 +8212,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1237",
@@ -7557,7 +8236,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1238",
@@ -7579,7 +8260,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1239",
@@ -7604,7 +8287,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1243",
@@ -7626,7 +8311,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1244",
@@ -7648,7 +8335,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1245",
@@ -7670,7 +8359,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1246",
@@ -7693,7 +8384,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1247",
@@ -7718,7 +8411,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1248",
@@ -7742,7 +8437,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1250",
@@ -7764,7 +8461,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1251",
@@ -7786,7 +8485,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1252",
@@ -7809,7 +8510,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1254",
@@ -7834,7 +8537,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1255",
@@ -7854,7 +8559,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1256",
@@ -7874,7 +8581,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1258",
@@ -7899,7 +8608,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1259",
@@ -7923,7 +8634,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1260",
@@ -7950,7 +8663,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1262",
@@ -7973,7 +8688,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1265",
@@ -7993,7 +8710,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1266",
@@ -8015,7 +8734,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1267",
@@ -8039,7 +8760,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1275",
@@ -8064,7 +8787,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1276",
@@ -8090,7 +8815,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1277",
@@ -8116,7 +8843,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1278",
@@ -8136,7 +8865,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1280",
@@ -8159,7 +8890,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1281",
@@ -8179,7 +8912,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1282",
@@ -8202,7 +8937,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1283",
@@ -8222,7 +8959,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1284",
@@ -8246,7 +8985,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1285",
@@ -8270,7 +9011,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1286",
@@ -8293,7 +9036,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1287",
@@ -8313,7 +9058,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1288",
@@ -8333,7 +9080,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1290",
@@ -8358,7 +9107,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1291",
@@ -8378,7 +9129,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1295",
@@ -8401,7 +9154,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1297",
@@ -8421,7 +9176,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1299",
@@ -8449,7 +9206,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1301",
@@ -8469,7 +9228,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1302",
@@ -8491,7 +9252,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1306",
@@ -8518,7 +9281,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1309",
@@ -8540,7 +9305,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1311",
@@ -8562,7 +9329,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1314",
@@ -8584,7 +9353,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1315",
@@ -8607,7 +9378,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1316",
@@ -8630,7 +9403,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1318",
@@ -8650,7 +9425,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1319",
@@ -8670,7 +9447,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1320",
@@ -8693,7 +9472,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1321",
@@ -8716,7 +9497,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1322",
@@ -8738,7 +9521,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1326",
@@ -8762,7 +9547,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1328",
@@ -8787,7 +9574,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1340",
@@ -8807,7 +9596,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1341",
@@ -8827,7 +9618,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1342",
@@ -8854,7 +9647,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1358",
@@ -8878,7 +9673,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1361",
@@ -8902,7 +9699,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1362",
@@ -8926,7 +9725,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1363",
@@ -8946,7 +9747,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1364",
@@ -8966,7 +9769,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1365",
@@ -8989,7 +9794,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1366",
@@ -9014,7 +9821,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1367",
@@ -9037,7 +9846,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1368",
@@ -9060,7 +9871,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1369",
@@ -9082,7 +9895,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1370",
@@ -9104,7 +9919,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1371",
@@ -9126,7 +9943,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1372",
@@ -9149,7 +9968,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1373",
@@ -9173,7 +9994,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1374",
@@ -9197,7 +10020,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1375",
@@ -9220,7 +10045,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1376",
@@ -9244,7 +10071,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1377",
@@ -9268,7 +10097,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1378",
@@ -9292,7 +10123,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1379",
@@ -9314,7 +10147,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1381",
@@ -9338,7 +10173,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1383",
@@ -9362,7 +10199,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1384",
@@ -9387,7 +10226,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1385",
@@ -9407,7 +10248,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1386",
@@ -9427,7 +10270,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1388",
@@ -9449,7 +10294,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1389",
@@ -9474,7 +10321,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1390",
@@ -9496,7 +10345,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1392",
@@ -9518,7 +10369,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1393",
@@ -9538,7 +10391,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1394",
@@ -9560,7 +10415,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1395",
@@ -9584,7 +10441,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1397",
@@ -9607,7 +10466,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1398",
@@ -9629,7 +10490,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1399",
@@ -9649,7 +10512,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1400",
@@ -9671,7 +10536,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1404",
@@ -9695,7 +10562,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1406",
@@ -9719,7 +10588,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1407",
@@ -9742,7 +10613,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1408",
@@ -9764,7 +10637,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1409",
@@ -9787,7 +10662,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1410",
@@ -9810,7 +10687,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1412",
@@ -9830,7 +10709,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1413",
@@ -9853,7 +10734,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1414",
@@ -9877,7 +10760,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1415",
@@ -9901,7 +10786,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1416",
@@ -9926,7 +10813,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1418",
@@ -9950,7 +10839,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1420",
@@ -9973,7 +10864,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1422",
@@ -9996,7 +10889,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1424",
@@ -10020,7 +10915,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1425",
@@ -10044,7 +10941,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1426",
@@ -10068,7 +10967,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1427",
@@ -10091,7 +10992,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1429",
@@ -10114,7 +11017,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1431",
@@ -10139,7 +11044,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1432",
@@ -10164,7 +11071,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1433",
@@ -10188,7 +11097,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1434",
@@ -10210,7 +11121,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1436",
@@ -10240,7 +11153,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1437",
@@ -10264,7 +11179,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1440",
@@ -10289,7 +11206,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1441",
@@ -10311,7 +11230,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1443",
@@ -10335,7 +11256,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1444",
@@ -10355,7 +11278,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1445",
@@ -10379,7 +11304,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1451",
@@ -10404,7 +11331,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1452",
@@ -10428,7 +11357,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1453",
@@ -10452,7 +11383,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1455",
@@ -10475,7 +11408,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     },
     {
       "key": "TEST1-1456",
@@ -10501,7 +11436,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Yellow",
+      "ownerStatusColor": "Yellow"
     },
     {
       "key": "TEST1-1457",
@@ -10521,7 +11458,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": "Red",
+      "ownerStatusColor": "Red"
     },
     {
       "key": "TEST1-1461",
@@ -10545,7 +11484,9 @@
       "targetVersions": null,
       "pm": null,
       "architect": null,
-      "parentKey": null
+      "parentKey": null,
+      "colorStatus": null,
+      "ownerStatusColor": null
     },
     {
       "key": "TEST1-1057",
@@ -10571,9 +11512,11 @@
       ],
       "pm": null,
       "architect": null,
-      "parentKey": "TEST1-1016"
+      "parentKey": "TEST1-1016",
+      "colorStatus": "Green",
+      "ownerStatusColor": "Green"
     }
-      ],
+  ],
   "rfes": [
     {
       "key": "RHAIRFE-101",
@@ -10627,6 +11570,6 @@
       ],
       "lastUpdated": "2025-12-01T10:00:00.000+0000"
     }
-      ],
+  ],
   "rfeCount": 4
 }

@@ -64,7 +64,9 @@
       "linkedStatus": "New"
     }
   ],
-  "targetVersions": ["rhoai-3.5"],
+  "targetVersions": [
+    "rhoai-3.5"
+  ],
   "pm": null,
   "architect": null,
   "parentKey": null,
@@ -331,5 +333,11 @@
         "lane": "upstream"
       }
     ]
-  }
+  },
+  "_sources": {
+    "pipeline": "2026-04-10T06:09:29.084Z",
+    "jira": "2026-04-10T07:00:00.000Z"
+  },
+  "colorStatus": "Yellow",
+  "ownerStatusColor": "Yellow"
 }
