@@ -266,7 +266,9 @@ async function toggleCard(date) {
       const data = await apiRequest(`/modules/product-builds/package-reports/${date}`)
       cardData.value = { ...cardData.value, [date]: data }
     } catch {
-      // silently fail
+      const collapse = new Set(expandedCards.value)
+      collapse.delete(date)
+      expandedCards.value = collapse
     } finally {
       const done = new Set(cardLoading.value)
       done.delete(date)
