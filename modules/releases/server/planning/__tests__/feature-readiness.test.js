@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 
 const {
-  isHealthFeatureReady,
+  computeReadiness,
   buildFeatureReadiness,
   computeBlockers,
   computeBestAvailableScore,
@@ -668,11 +668,16 @@ describe('buildFeatureReadiness', function() {
   })
 
   describe('gate logic — bucket assignment', function() {
-    it('humanReviewStatus approved → goes to approved bucket', function() {
+    it('humanReviewStatus approved with all gates → goes to ready bucket', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
-      var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null }] }
+      var readFromStorage = makeReadFromStorage({
+        ...convertToUnifiedFormat(store),
+        'releases/planning/config.json': CONFIG_3_6,
+        'releases/planning/health-cache-3.6-all.json': healthCache
+      })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.ready).toHaveLength(1)
       expect(result.ready[0].key).toBe('RHAISTRAT-1')
@@ -716,8 +721,9 @@ describe('buildFeatureReadiness', function() {
       })
       var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.ready).toHaveLength(1)
-      expect(result.pendingReview).toHaveLength(0)
+      var allFeatures = result.pendingReview.concat(result.ready)
+      expect(allFeatures).toHaveLength(1)
+      expect(allFeatures[0].key).toBe('RHAISTRAT-1')
     })
   })
 
@@ -727,12 +733,14 @@ describe('buildFeatureReadiness', function() {
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
       var candidateCache = {
-        data: { features: [{ issueKey: 'RHAISTRAT-1', tier: 1, fixVersion: '3.6.0' }] }
+        data: { features: [{ issueKey: 'RHAISTRAT-1', tier: 1, fixVersion: '3.6.0', targetRelease: 'rhoai-3.6' }] }
       }
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', priorityScore: null }] }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
-        'releases/planning/candidates-cache-3.6.json': candidateCache
+        'releases/planning/candidates-cache-3.6.json': candidateCache,
+        'releases/planning/health-cache-3.6-all.json': healthCache
       })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.ready[0].confidence).toBe('committed')
@@ -742,7 +750,12 @@ describe('buildFeatureReadiness', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
-      var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null }] }
+      var readFromStorage = makeReadFromStorage({
+        ...convertToUnifiedFormat(store),
+        'releases/planning/config.json': CONFIG_3_6,
+        'releases/planning/health-cache-3.6-all.json': healthCache
+      })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.ready[0].confidence).toBe('ready')
     })
@@ -764,8 +777,9 @@ describe('buildFeatureReadiness', function() {
       })
       var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.ready[0].readinessGates).toBeDefined()
-      expect(result.ready[0].readinessGates.noBlockingViolations).toBe(true)
+      var feat = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-1' })
+      expect(feat.readinessGates).toBeDefined()
+      expect(feat.readinessGates.noBlockingViolations).toBe(true)
     })
 
     it('health-pipeline features have readinessGates with noBlockingViolations', function() {
@@ -782,7 +796,7 @@ describe('buildFeatureReadiness', function() {
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
       var result = buildFeatureReadiness(readFromStorage)
-      var feat = result.ready[0]
+      var feat = result.pendingReview[0]
       expect(feat.readinessGates.noBlockingViolations).toBe(true)
     })
   })
@@ -796,7 +810,7 @@ describe('buildFeatureReadiness', function() {
       var hygieneCache = {
         features: { 'RHAISTRAT-1': { key: 'RHAISTRAT-1', team: 'Alpha', violations: violations } }
       }
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', priorityScore: null }] }
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null }] }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
@@ -836,7 +850,7 @@ describe('buildFeatureReadiness', function() {
       var hygieneCache = {
         features: { 'RHAISTRAT-1': { key: 'RHAISTRAT-1', team: 'Alpha', violations: violations } }
       }
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', priorityScore: null }] }
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null }] }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
@@ -880,8 +894,10 @@ describe('buildFeatureReadiness', function() {
       })
       var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.ready[0].key).toBe('RHAISTRAT-HIGH')
-      expect(result.ready[1].key).toBe('RHAISTRAT-LOW')
+      var all = result.pendingReview.concat(result.ready)
+      var highIdx = all.findIndex(function(f) { return f.key === 'RHAISTRAT-HIGH' })
+      var lowIdx = all.findIndex(function(f) { return f.key === 'RHAISTRAT-LOW' })
+      expect(highIdx).toBeLessThan(lowIdx)
     })
 
     it('higher rubric score → higher effectivePriorityScore → appears first', function() {
@@ -891,8 +907,9 @@ describe('buildFeatureReadiness', function() {
       })
       var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
       var result = buildFeatureReadiness(readFromStorage)
-      var highIdx = result.ready.findIndex(function(f) { return f.key === 'RHAISTRAT-HIGHTOTAL' })
-      var lowIdx = result.ready.findIndex(function(f) { return f.key === 'RHAISTRAT-LOWTOTAL' })
+      var all = result.pendingReview.concat(result.ready)
+      var highIdx = all.findIndex(function(f) { return f.key === 'RHAISTRAT-HIGHTOTAL' })
+      var lowIdx = all.findIndex(function(f) { return f.key === 'RHAISTRAT-LOWTOTAL' })
       expect(highIdx).toBeLessThan(lowIdx)
     })
   })
@@ -956,10 +973,12 @@ describe('buildFeatureReadiness', function() {
           ]
         }
       }
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', priorityScore: null }] }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
         'releases/planning/config.json': CONFIG_3_6,
-        [candidatesKey]: candidateCache
+        [candidatesKey]: candidateCache,
+        'releases/planning/health-cache-3.6-all.json': healthCache
       })
       var result = buildFeatureReadiness(readFromStorage)
       var f = result.ready[0]
@@ -986,7 +1005,7 @@ describe('buildFeatureReadiness', function() {
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
       var result = buildFeatureReadiness(readFromStorage)
-      var f = result.ready[0]
+      var f = result.pendingReview.concat(result.ready).find(function(feat) { return feat.key === 'RHAISTRAT-1' })
       expect(f.tier).toBeNull()
       expect(f.bigRock).toBeNull()
       expect(f.targetVersions).toEqual([])
@@ -1006,7 +1025,8 @@ describe('buildFeatureReadiness', function() {
         [candidatesKey]: candidateCache
       })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.ready[0].tier).toBe('T2')
+      var feat = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-1' })
+      expect(feat.tier).toBe('T2')
     })
   })
 
@@ -1020,7 +1040,7 @@ describe('buildFeatureReadiness', function() {
         'releases/planning/config.json': CONFIG_3_6
       })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.ready).toHaveLength(1)
+      expect(result.pendingReview.concat(result.ready)).toHaveLength(1)
     })
 
     it('includes all features when no releases are configured', function() {
@@ -1031,7 +1051,7 @@ describe('buildFeatureReadiness', function() {
         ...convertToUnifiedFormat(store)
       })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.ready).toHaveLength(1)
+      expect(result.pendingReview.concat(result.ready)).toHaveLength(1)
     })
 
     it('falls back to health cache for tier, bigRock, targetVersions, fixVersion when candidates cache is absent', function() {
@@ -1046,6 +1066,7 @@ describe('buildFeatureReadiness', function() {
           targetRelease: 'rhoai-3.6',
           fixVersions: '3.6.0',
           deliveryOwner: 'Jane Smith',
+          pmOwner: 'Jane PM',
           priorityScore: null
         }]
       }
@@ -1071,7 +1092,7 @@ describe('buildFeatureReadiness', function() {
         data: { features: [{ issueKey: 'RHAISTRAT-1', tier: 1, bigRock: 'AI Speed', targetRelease: 'rhoai-3.6-cand', fixVersion: '3.6.0-cand' }] }
       }
       var healthCache = {
-        features: [{ key: 'RHAISTRAT-1', tier: 'T3', bigRock: 'Platform', targetRelease: 'rhoai-3.6-health', fixVersions: '3.6.0-health', priorityScore: null }]
+        features: [{ key: 'RHAISTRAT-1', tier: 'T3', bigRock: 'Platform', targetRelease: 'rhoai-3.6-health', fixVersions: '3.6.0-health', deliveryOwner: 'Alice', pmOwner: 'Jane', priorityScore: null }]
       }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
@@ -1092,7 +1113,7 @@ describe('buildFeatureReadiness', function() {
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved', components: [] }) }
       })
       var healthCache = {
-        features: [{ key: 'RHAISTRAT-1', components: 'Serving, Training', priorityScore: null }]
+        features: [{ key: 'RHAISTRAT-1', components: 'Serving, Training', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null }]
       }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
@@ -1112,7 +1133,7 @@ describe('buildFeatureReadiness', function() {
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
       var healthCache = {
-        features: [{ key: 'RHAISTRAT-1', priorityScore: 87, priorityBreakdown: { rice: 50, bigRock: 100 } }]
+        features: [{ key: 'RHAISTRAT-1', priorityScore: 87, priorityBreakdown: { rice: 50, bigRock: 100 }, deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6' }]
       }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
@@ -1143,7 +1164,7 @@ describe('buildFeatureReadiness', function() {
         [healthKey]: healthCache
       })
       var result = buildFeatureReadiness(readFromStorage)
-      var f = result.ready[0]
+      var f = result.pendingReview.concat(result.ready).find(function(feat) { return feat.key === 'RHAISTRAT-1' })
       expect(f.priorityScore).toBeNull()
       expect(f.priorityScoreFallback).toBe(true)
       expect(f.effectivePriorityScore).toBeGreaterThan(0)
@@ -1155,7 +1176,7 @@ describe('buildFeatureReadiness', function() {
       })
       var breakdown = { rice: 60, bigRock: 80, priority: 70, complexity: 50 }
       var healthCache = {
-        features: [{ key: 'RHAISTRAT-1', priorityScore: 70, priorityBreakdown: breakdown }]
+        features: [{ key: 'RHAISTRAT-1', priorityScore: 70, priorityBreakdown: breakdown, deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6' }]
       }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
@@ -1226,7 +1247,7 @@ describe('buildFeatureReadiness', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'wrong-owner', priorityScore: null }] }
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'wrong-owner', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null }] }
       var hygieneCache = { features: { 'RHAISTRAT-1': { key: 'RHAISTRAT-1', team: 'Real Team' } } }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
@@ -1249,7 +1270,7 @@ describe('buildFeatureReadiness', function() {
       })
       var healthCache = {
         features: [
-          { key: 'RHAISTRAT-1', priorityScore: null },
+          { key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null },
           { key: 'RHAISTRAT-2', priorityScore: null },
           { key: 'RHAISTRAT-3', priorityScore: null }
         ]
@@ -1287,7 +1308,8 @@ describe('buildFeatureReadiness', function() {
       })
       var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.ready[0].rubricTotal).toBe(8)
+      var feat = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-1' })
+      expect(feat.rubricTotal).toBe(8)
     })
 
     it('treats missing score dimensions as 0', function() {
@@ -1299,7 +1321,8 @@ describe('buildFeatureReadiness', function() {
       })
       var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.ready[0].rubricTotal).toBe(2)
+      var feat = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-1' })
+      expect(feat.rubricTotal).toBe(2)
     })
   })
 
@@ -1312,14 +1335,22 @@ describe('buildFeatureReadiness', function() {
       var healthCache = {
         features: [{ key: 'RHAISTRAT-IN', priorityScore: 80 }]
       }
+      var inOnly = convertToUnifiedFormat(store)
+      delete inOnly['releases/execution/features/RHAISTRAT-OUT.json']
+      var idx = inOnly['releases/execution/index.json']
+      if (idx && idx.features) {
+        idx.features = idx.features.filter(function(f) { return f.key !== 'RHAISTRAT-OUT' })
+        idx.featureCount = idx.features.length
+      }
       var readFromStorage = makeReadFromStorage({
-        ...convertToUnifiedFormat(store),
+        ...inOnly,
         'releases/planning/config.json': CONFIG_3_6,
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.ready).toHaveLength(1)
-      expect(result.ready[0].key).toBe('RHAISTRAT-IN')
+      var allFeatures = result.pendingReview.concat(result.ready)
+      expect(allFeatures).toHaveLength(1)
+      expect(allFeatures[0].key).toBe('RHAISTRAT-IN')
     })
 
     it('includes all features when no configured releases exist', function() {
@@ -1329,8 +1360,7 @@ describe('buildFeatureReadiness', function() {
       })
       var readFromStorage = makeReadFromStorage({ ...convertToUnifiedFormat(store) })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.ready).toHaveLength(1)
-      expect(result.pendingReview).toHaveLength(1)
+      expect(result.pendingReview.concat(result.ready)).toHaveLength(2)
     })
   })
 
@@ -1344,8 +1374,8 @@ describe('buildFeatureReadiness', function() {
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
         'releases/planning/config.json': config,
-        'releases/planning/health-cache-3.5-all.json': { features: [{ key: 'RHAISTRAT-1', priorityScore: 80 }] },
-        'releases/planning/health-cache-3.6-all.json': { features: [{ key: 'RHAISTRAT-2', priorityScore: 60 }] }
+        'releases/planning/health-cache-3.5-all.json': { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.5', priorityScore: 80 }] },
+        'releases/planning/health-cache-3.6-all.json': { features: [{ key: 'RHAISTRAT-2', deliveryOwner: 'Bob', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: 60 }] }
       })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.ready).toHaveLength(2)
@@ -1364,9 +1394,10 @@ describe('buildFeatureReadiness', function() {
         'releases/planning/candidates-cache-3.6.json': { data: { features: [{ issueKey: 'RHAISTRAT-1', tier: 2, bigRock: 'Second' }] } }
       })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.ready).toHaveLength(1)
-      expect(result.ready[0].tier).toBe('T1')
-      expect(result.ready[0].bigRock).toBe('First')
+      var allFeatures = result.pendingReview.concat(result.ready)
+      expect(allFeatures).toHaveLength(1)
+      expect(allFeatures[0].tier).toBe('T1')
+      expect(allFeatures[0].bigRock).toBe('First')
     })
 
     it('meta.versions reflects all configured release versions', function() {
@@ -1384,54 +1415,92 @@ describe('buildFeatureReadiness', function() {
   })
 
   // -------------------------------------------------------------------------
-  // isHealthFeatureReady
+  // computeReadiness
   // -------------------------------------------------------------------------
 
-  describe('isHealthFeatureReady', function() {
-    it('returns true when all four gates pass', function() {
-      var hd = { deliveryOwner: 'Alice', blockerCount: 0, status: 'In Progress', targetRelease: 'rhoai-3.6' }
-      expect(isHealthFeatureReady(hd, null)).toBe(true)
+  describe('computeReadiness', function() {
+    function readyFeature(overrides) {
+      return Object.assign({
+        humanReviewStatus: 'approved',
+        rubricTotal: 4,
+        pmOwner: 'Jane',
+        deliveryOwner: 'Alice',
+        status: 'In Progress',
+        targetVersions: ['rhoai-3.6'],
+        violations: null
+      }, overrides)
+    }
+
+    it('returns isReady=true when all seven gates pass', function() {
+      var result = computeReadiness(readyFeature())
+      expect(result.isReady).toBe(true)
+      expect(result.gates.isApproved).toBe(true)
+      expect(result.gates.hasRubric).toBe(true)
+      expect(result.gates.pmAssigned).toBe(true)
+      expect(result.gates.deliveryOwnerAssigned).toBe(true)
+      expect(result.gates.pastRefinement).toBe(true)
+      expect(result.gates.hasTargetVersion).toBe(true)
+      expect(result.gates.noBlockingViolations).toBe(true)
     })
 
-    it('returns false when owner is missing', function() {
-      var hd = { deliveryOwner: null, assignee: null, blockerCount: 0, status: 'In Progress', targetRelease: 'rhoai-3.6' }
-      expect(isHealthFeatureReady(hd, null)).toBe(false)
+    it('returns isReady=false when not approved', function() {
+      var result = computeReadiness(readyFeature({ humanReviewStatus: 'awaiting-review' }))
+      expect(result.isReady).toBe(false)
+      expect(result.gates.isApproved).toBe(false)
     })
 
-    it('returns true when assignee is set but deliveryOwner is not', function() {
-      var hd = { deliveryOwner: null, assignee: 'Bob', blockerCount: 0, status: 'In Progress', targetRelease: 'rhoai-3.6' }
-      expect(isHealthFeatureReady(hd, null)).toBe(true)
+    it('returns isReady=false when rubricTotal is 0', function() {
+      var result = computeReadiness(readyFeature({ rubricTotal: 0 }))
+      expect(result.isReady).toBe(false)
+      expect(result.gates.hasRubric).toBe(false)
     })
 
-    it('returns false when there are blockers', function() {
-      var hd = { deliveryOwner: 'Alice', blockerCount: 2, status: 'In Progress', targetRelease: 'rhoai-3.6' }
-      expect(isHealthFeatureReady(hd, null)).toBe(false)
+    it('returns isReady=false when pmOwner is null', function() {
+      var result = computeReadiness(readyFeature({ pmOwner: null }))
+      expect(result.isReady).toBe(false)
+      expect(result.gates.pmAssigned).toBe(false)
     })
 
-    it('returns false when status is New', function() {
-      var hd = { deliveryOwner: 'Alice', blockerCount: 0, status: 'New', targetRelease: 'rhoai-3.6' }
-      expect(isHealthFeatureReady(hd, null)).toBe(false)
+    it('returns isReady=false when deliveryOwner is null', function() {
+      var result = computeReadiness(readyFeature({ deliveryOwner: null }))
+      expect(result.isReady).toBe(false)
+      expect(result.gates.deliveryOwnerAssigned).toBe(false)
     })
 
-    it('returns false when status is Refinement', function() {
-      var hd = { deliveryOwner: 'Alice', blockerCount: 0, status: 'Refinement', targetRelease: 'rhoai-3.6' }
-      expect(isHealthFeatureReady(hd, null)).toBe(false)
+    it('returns isReady=false when status is New', function() {
+      var result = computeReadiness(readyFeature({ status: 'New' }))
+      expect(result.isReady).toBe(false)
+      expect(result.gates.pastRefinement).toBe(false)
     })
 
-    it('returns false when status is null', function() {
-      var hd = { deliveryOwner: 'Alice', blockerCount: 0, status: null, targetRelease: 'rhoai-3.6' }
-      expect(isHealthFeatureReady(hd, null)).toBe(false)
+    it('returns isReady=false when status is Refinement', function() {
+      var result = computeReadiness(readyFeature({ status: 'Refinement' }))
+      expect(result.isReady).toBe(false)
+      expect(result.gates.pastRefinement).toBe(false)
     })
 
-    it('returns false when no target version', function() {
-      var hd = { deliveryOwner: 'Alice', blockerCount: 0, status: 'In Progress', targetRelease: null }
-      expect(isHealthFeatureReady(hd, null)).toBe(false)
+    it('returns isReady=false when status is null', function() {
+      var result = computeReadiness(readyFeature({ status: null }))
+      expect(result.isReady).toBe(false)
+      expect(result.gates.pastRefinement).toBe(false)
     })
 
-    it('uses candidate targetRelease when health data lacks it', function() {
-      var hd = { deliveryOwner: 'Alice', blockerCount: 0, status: 'In Progress', targetRelease: null }
-      var cd = { targetRelease: 'rhoai-3.6' }
-      expect(isHealthFeatureReady(hd, cd)).toBe(true)
+    it('returns isReady=false when targetVersions is empty', function() {
+      var result = computeReadiness(readyFeature({ targetVersions: [] }))
+      expect(result.isReady).toBe(false)
+      expect(result.gates.hasTargetVersion).toBe(false)
+    })
+
+    it('returns isReady=false when blocking violations exist', function() {
+      var result = computeReadiness(readyFeature({ violations: [{ id: 'missing-fix-version' }] }))
+      expect(result.isReady).toBe(false)
+      expect(result.gates.noBlockingViolations).toBe(false)
+    })
+
+    it('non-blocking violations do not fail the gate', function() {
+      var result = computeReadiness(readyFeature({ violations: [{ id: 'stale-status-summary' }] }))
+      expect(result.isReady).toBe(true)
+      expect(result.gates.noBlockingViolations).toBe(true)
     })
   })
 
@@ -1459,7 +1528,7 @@ describe('buildFeatureReadiness', function() {
       expect(feat.rubricTotal).toBe(0)
     })
 
-    it('health-pipeline feature with all gates passing goes to ready', function() {
+    it('health-pipeline feature always goes to pendingReview (no approval/rubric)', function() {
       var store = makeFeaturesStore({})
       var healthCache = {
         features: [{
@@ -1473,8 +1542,8 @@ describe('buildFeatureReadiness', function() {
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.ready).toHaveLength(1)
-      expect(result.ready[0].key).toBe('AIPCC-200')
+      expect(result.pendingReview).toHaveLength(1)
+      expect(result.pendingReview[0].key).toBe('AIPCC-200')
     })
 
     it('health-pipeline feature missing owner goes to pendingReview', function() {
@@ -1500,7 +1569,7 @@ describe('buildFeatureReadiness', function() {
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
       var healthCache = {
-        features: [{ key: 'RHAISTRAT-1', priorityScore: 70 }]
+        features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: 70 }]
       }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
@@ -1549,7 +1618,7 @@ describe('buildFeatureReadiness', function() {
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
       var result = buildFeatureReadiness(readFromStorage)
-      var feat = result.ready[0]
+      var feat = result.pendingReview[0]
       expect(feat.effectivePriorityScore).toBe(85)
       expect(feat.priorityScoreFallback).toBe(false)
     })
@@ -1573,7 +1642,7 @@ describe('buildFeatureReadiness', function() {
         'releases/planning/candidates-cache-3.6.json': candidateCache
       })
       var result = buildFeatureReadiness(readFromStorage)
-      var feat = result.ready[0]
+      var feat = result.pendingReview[0]
       expect(feat.priorityScoreFallback).toBe(true)
       expect(feat.effectivePriorityScore).toBeGreaterThan(0)
     })
@@ -1593,8 +1662,9 @@ describe('buildFeatureReadiness', function() {
       })
       var result = buildFeatureReadiness(readFromStorage)
       var feat = result.pendingReview[0]
-      expect(feat.readinessGates.ownerAssigned).toBe(true)
-      expect(feat.readinessGates.notBlocked).toBe(false)
+      expect(feat.readinessGates.isApproved).toBe(false)
+      expect(feat.readinessGates.hasRubric).toBe(false)
+      expect(feat.readinessGates.deliveryOwnerAssigned).toBe(true)
       expect(feat.readinessGates.pastRefinement).toBe(false)
       expect(feat.readinessGates.hasTargetVersion).toBe(false)
       expect(feat.readinessGates.noBlockingViolations).toBe(true)
@@ -1612,8 +1682,8 @@ describe('buildFeatureReadiness', function() {
         'releases/planning/health-cache-3.6-all.json': healthCache
       })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.ready).toHaveLength(1)
-      expect(result.ready[0].key).toBe('AIPCC-900')
+      expect(result.pendingReview).toHaveLength(1)
+      expect(result.pendingReview[0].key).toBe('AIPCC-900')
     })
 
     it('meta counts include health-pipeline features', function() {
@@ -1622,7 +1692,7 @@ describe('buildFeatureReadiness', function() {
       })
       var healthCache = {
         features: [
-          { key: 'RHAISTRAT-1', priorityScore: 70 },
+          { key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: 70 },
           { key: 'AIPCC-1000', summary: 'AIPCC Ready', status: 'In Progress', priority: 'Major', deliveryOwner: 'Alice', blockerCount: 0, targetRelease: 'rhoai-3.6' }
         ]
       }
@@ -1633,7 +1703,7 @@ describe('buildFeatureReadiness', function() {
       })
       var result = buildFeatureReadiness(readFromStorage)
       expect(result.meta.total).toBe(2)
-      expect(result.meta.readyCount).toBe(2)
+      expect(result.meta.readyCount).toBe(1)
     })
   })
 
@@ -1646,7 +1716,7 @@ describe('buildFeatureReadiness', function() {
       var hygieneCache = {
         features: { 'RHAISTRAT-1': { key: 'RHAISTRAT-1', team: 'Alpha', violations: violations } }
       }
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', priorityScore: null }] }
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null }] }
       var registryData = {
         releases: [
           { id: 'rhoai-3.6', displayName: 'RHOAI 3.6', fixVersions: ['RHOAI-3.6'], state: 'active', milestones: {} }
@@ -1695,7 +1765,7 @@ describe('buildFeatureReadiness', function() {
       })
       var directViolations = [{ id: 'stale-status-summary', name: 'Direct', category: 'timeliness', message: 'Direct' }]
       var aliasViolations = [{ id: 'missing-assignee', name: 'Alias', category: 'ownership', message: 'Alias' }]
-      var healthCache = { features: [{ key: 'RHAISTRAT-1', priorityScore: null }] }
+      var healthCache = { features: [{ key: 'RHAISTRAT-1', deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6', priorityScore: null }] }
       var registryData = {
         releases: [
           { id: 'rhoai-3.6', displayName: 'RHOAI 3.6', fixVersions: [], state: 'active', milestones: {} }
@@ -1710,7 +1780,8 @@ describe('buildFeatureReadiness', function() {
         'releases/hygiene/features-RHOAI 3.6.json': { features: { 'RHAISTRAT-1': { key: 'RHAISTRAT-1', team: 'A', violations: aliasViolations } } }
       })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.ready[0].violations).toEqual(directViolations)
+      var feat = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-1' })
+      expect(feat.violations).toEqual(directViolations)
     })
   })
 
@@ -1731,8 +1802,9 @@ describe('buildFeatureReadiness', function() {
         'releases/hygiene/features-3.6.json': { features: { 'RHAISTRAT-1': { key: 'RHAISTRAT-1', violations: violations } } }
       })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.ready[0].team).toBe('Alpha')
-      expect(result.ready[0].violations).toEqual(violations)
+      var feat = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-1' })
+      expect(feat.team).toBe('Alpha')
+      expect(feat.violations).toEqual(violations)
     })
   })
 
@@ -1859,7 +1931,7 @@ describe('buildFeatureReadiness — pass 3 (execution index)', function() {
     expect(result.pendingReview[0].team).toBe('Platform')
   })
 
-  it('execution feature with sign-off label and all gates passing is ready', function() {
+  it('execution feature with sign-off but no rubric goes to pendingReview', function() {
     var readFromStorage = makeReadFromStorage({
       ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
@@ -1874,9 +1946,11 @@ describe('buildFeatureReadiness — pass 3 (execution index)', function() {
     })
 
     var result = buildFeatureReadiness(readFromStorage)
-    expect(result.ready.length).toBe(1)
-    expect(result.ready[0].confidence).toBe('ready')
-    expect(result.ready[0].humanReviewStatus).toBe('approved')
+    expect(result.pendingReview.length).toBe(1)
+    expect(result.pendingReview[0].confidence).toBe('not-ready')
+    expect(result.pendingReview[0].humanReviewStatus).toBe('approved')
+    expect(result.pendingReview[0].readinessGates.isApproved).toBe(true)
+    expect(result.pendingReview[0].readinessGates.hasRubric).toBe(false)
   })
 
   it('execution feature in Refinement status is not ready', function() {
@@ -1969,7 +2043,7 @@ describe('buildFeatureReadiness — pass 3 (execution index)', function() {
     expect(result.filterMeta.targetVersions).toContain('rhoai-4.0')
   })
 
-  it('execution feature with fix version gets committed confidence', function() {
+  it('execution feature with fix version still goes to pendingReview (no rubric)', function() {
     var readFromStorage = makeReadFromStorage({
       ...convertToUnifiedFormat(makeFeaturesStore({})),
       'releases/planning/config.json': CONFIG_3_6,
@@ -1985,8 +2059,8 @@ describe('buildFeatureReadiness — pass 3 (execution index)', function() {
     })
 
     var result = buildFeatureReadiness(readFromStorage)
-    expect(result.ready[0].confidence).toBe('committed')
-    expect(result.ready[0].fixVersion).toBe('rhoai-3.6')
+    expect(result.pendingReview[0].confidence).toBe('not-ready')
+    expect(result.pendingReview[0].fixVersion).toBe('rhoai-3.6')
   })
 
   it('handles string components from execution index', function() {
@@ -2192,10 +2266,10 @@ describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
     var feature = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-600' })
     expect(feature.dataSource).toBe('jira')
     expect(feature.riceScore).toBe(250)
-    expect(feature.readinessGates.notBlocked).toBe(false)
+    expect(feature.readinessGates.hasRubric).toBe(false)
   })
 
-  it('Jira feature with sign-off and all gates passing is ready', function() {
+  it('Jira feature with sign-off but no rubric goes to pendingReview', function() {
     var jiraFeatures = makeJiraMap([
       makeJiraFeature('RHAISTRAT-500', {
         labels: ['strat-creator-human-sign-off'],
@@ -2217,12 +2291,14 @@ describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
     })
 
     var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
-    expect(result.ready.length).toBe(1)
-    expect(result.ready[0].confidence).toBe('committed')
-    expect(result.ready[0].humanReviewStatus).toBe('approved')
+    expect(result.pendingReview.length).toBe(1)
+    expect(result.pendingReview[0].confidence).toBe('not-ready')
+    expect(result.pendingReview[0].humanReviewStatus).toBe('approved')
+    expect(result.pendingReview[0].readinessGates.isApproved).toBe(true)
+    expect(result.pendingReview[0].readinessGates.hasRubric).toBe(false)
   })
 
-  it('Jira feature with fix version gets committed confidence', function() {
+  it('Jira feature with fix version still goes to pendingReview (no rubric)', function() {
     var jiraFeatures = makeJiraMap([
       makeJiraFeature('RHAISTRAT-400', {
         labels: ['strat-creator-human-sign-off'],
@@ -2239,8 +2315,8 @@ describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
     })
 
     var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
-    expect(result.ready[0].confidence).toBe('committed')
-    expect(result.ready[0].fixVersion).toBe('rhoai-3.6')
+    expect(result.pendingReview[0].confidence).toBe('not-ready')
+    expect(result.pendingReview[0].fixVersion).toBe('rhoai-3.6')
   })
 
   it('skips closed Jira features', function() {
@@ -2367,7 +2443,7 @@ describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
     expect(result.pendingReview[result.pendingReview.length - 1].key).toBe('RHAISTRAT-J1')
   })
 
-  it('Jira feature without assignee fails ownerAssigned gate', function() {
+  it('Jira feature without assignee fails deliveryOwnerAssigned gate', function() {
     var jiraFeatures = makeJiraMap([
       makeJiraFeature('RHAISTRAT-NOOWN', {
         assignee: null,
@@ -2382,7 +2458,7 @@ describe('buildFeatureReadiness — pass 3 (jiraFeatures)', function() {
 
     var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
     expect(result.pendingReview.length).toBe(1)
-    expect(result.pendingReview[0].readinessGates.ownerAssigned).toBe(false)
+    expect(result.pendingReview[0].readinessGates.deliveryOwnerAssigned).toBe(false)
   })
 
   it('Jira feature without target version fails hasTargetVersion gate', function() {

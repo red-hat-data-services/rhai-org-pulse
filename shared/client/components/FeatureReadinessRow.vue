@@ -36,23 +36,10 @@ const priorityDisplay = computed(() => {
   return props.feature.priorityScoreFallback ? `~${score}` : String(score)
 })
 
-const scoreTooltip = computed(() => {
+const scoreBreakdown = computed(() => {
   const bd = props.feature.priorityScoreBreakdown
-  if (!bd || !bd.signals) {
-    return props.feature.priorityScoreFallback ? 'Estimated score (fallback)' : 'Computed priority score'
-  }
-  const lines = [`Score: ${bd.score} / 100`]
-  for (const s of bd.signals) {
-    const pct = Math.round(s.value * 100)
-    lines.push(`${s.name}: ${pct}% × ${s.weight}w`)
-  }
-  if (bd.completenessMultiplier < 1) {
-    lines.push(`Raw: ${bd.rawScore} × ${bd.completenessMultiplier} (${bd.signalCount}/${bd.maxSignals} signals)`)
-  }
-  if (bd.missing && bd.missing.length > 0) {
-    lines.push(`Missing: ${bd.missing.join(', ')}`)
-  }
-  return lines.join('\n')
+  if (!bd || !bd.signals) return null
+  return bd
 })
 
 const confidenceClass = computed(() => {
@@ -96,13 +83,34 @@ const confidenceTooltip = computed(() => {
 
     <!-- Score -->
     <td class="px-3 py-2.5 whitespace-nowrap text-center">
-      <span
-        class="text-xs font-semibold tabular-nums"
-        :class="feature.priorityScoreFallback
-          ? 'text-amber-600 dark:text-amber-400'
-          : 'text-gray-800 dark:text-gray-200'"
-        :title="scoreTooltip"
-      >{{ priorityDisplay }}</span>
+      <span class="relative group inline-flex items-center">
+        <span
+          class="text-xs font-semibold tabular-nums cursor-help"
+          :class="feature.priorityScoreFallback
+            ? 'text-amber-600 dark:text-amber-400'
+            : 'text-gray-800 dark:text-gray-200'"
+        >{{ priorityDisplay }}</span>
+        <div
+          v-if="scoreBreakdown"
+          class="absolute z-50 top-full mt-1 left-1/2 -translate-x-1/2 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 text-xs text-left font-normal hidden group-hover:block"
+        >
+          <p class="font-semibold text-gray-700 dark:text-gray-200 mb-1.5">
+            Score: {{ scoreBreakdown.score }} / 100
+          </p>
+          <div class="space-y-1">
+            <div v-for="signal in scoreBreakdown.signals" :key="signal.name" class="flex items-center justify-between">
+              <span class="text-gray-600 dark:text-gray-300">{{ signal.name }}</span>
+              <span class="text-gray-400 dark:text-gray-500 tabular-nums">{{ Math.round(signal.value * 100) }}% &times; {{ signal.weight }}w</span>
+            </div>
+          </div>
+          <div v-if="scoreBreakdown.completenessMultiplier < 1" class="mt-1.5 pt-1.5 border-t border-gray-100 dark:border-gray-700 text-gray-400 dark:text-gray-500">
+            Raw {{ scoreBreakdown.rawScore }} &times; {{ scoreBreakdown.completenessMultiplier }} ({{ scoreBreakdown.signalCount }}/{{ scoreBreakdown.maxSignals }} signals)
+          </div>
+          <div v-if="scoreBreakdown.missing && scoreBreakdown.missing.length" class="mt-1 text-gray-400 dark:text-gray-500">
+            Missing: {{ scoreBreakdown.missing.join(', ') }}
+          </div>
+        </div>
+      </span>
     </td>
 
     <!-- Readiness (confidence-colored) -->
