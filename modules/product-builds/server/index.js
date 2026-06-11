@@ -490,6 +490,10 @@ module.exports = function registerRoutes(router, context) {
   router.get('/artifacts/:key/containers', function(req, res) {
     upstream(`/artifacts/${encodeURIComponent(req.params.key)}/containers`, req, res);
   });
+
+  if (context.registerExport) {
+    context.registerExport(require('./export'));
+  }
 };
 
 module.exports.getConfig = getConfig;

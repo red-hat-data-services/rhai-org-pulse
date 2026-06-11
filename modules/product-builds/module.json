@@ -24,5 +24,10 @@
   },
   "server": {
     "entry": "./server/index.js"
+  },
+  "export": {
+    "files": [
+      { "path": "product-builds/config.json", "notes": "Module configuration (no PII)" }
+    ]
   }
 }

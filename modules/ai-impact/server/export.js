@@ -95,6 +95,18 @@ async function exportDocData(addFile, readFromStorage, mapping) {
   if (Array.isArray(anonymized.completedIssues)) {
     anonymized.completedIssues = anonymized.completedIssues.map(issue => anonymizeIssue(issue, mapping));
   }
+  if (Array.isArray(anonymized.labelEvents)) {
+    anonymized.labelEvents = anonymized.labelEvents.map(e => ({
+      ...e,
+      issueKey: e.issueKey ? mapping.anonymizeJiraKey(e.issueKey) : e.issueKey
+    }));
+  }
+  if (Array.isArray(anonymized.activityEvents)) {
+    anonymized.activityEvents = anonymized.activityEvents.map(e => ({
+      ...e,
+      issueKey: e.issueKey ? mapping.anonymizeJiraKey(e.issueKey) : e.issueKey
+    }));
+  }
   addFile(`${PREFIX}/doc-data.json`, anonymized);
 }
 
