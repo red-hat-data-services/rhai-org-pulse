@@ -660,6 +660,7 @@ module.exports = function registerRoutes(router, context) {
   });
 
   context.registerRefresh('package-analysis', {
+    description: 'Generate daily AIPCC package analysis report from JIRA (after 6am UTC)',
     order: 200,
     timeout: 600000,
     handler: async function() {
