@@ -216,7 +216,10 @@ const groupedByVersion = computed(() => {
     if (!pfReleases.length) continue
     var pfGroupKey = 'portfolio-' + pf.id
     var pfVersion = pfReleases[0] ? extractVersion(pfReleases[0].releaseNumber) : pf.name
-    groups.push(buildGroupFromReleases(pfGroupKey, pfVersion, pfReleases, pf.name))
+    var pfGroup = buildGroupFromReleases(pfGroupKey, pfVersion, pfReleases, pf.name)
+    if (pf.codeFreezeDate) pfGroup.earliestCodeFreeze = pf.codeFreezeDate
+    if (pf.dueDate) pfGroup.earliestRelease = pf.dueDate
+    groups.push(pfGroup)
   }
 
   groups.sort((a, b) => (a.displayName || a.version).localeCompare(b.displayName || b.version, undefined, { numeric: true }))

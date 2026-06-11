@@ -2139,6 +2139,14 @@ module.exports = function registerRoutes(router, context) {
    *                         type: string
    *                       minItems: 3
    *                       maxItems: 3
+   *                     codeFreezeDate:
+   *                       type: string
+   *                       format: date
+   *                       nullable: true
+   *                     dueDate:
+   *                       type: string
+   *                       format: date
+   *                       nullable: true
    *                     enabled:
    *                       type: boolean
    *     responses:
@@ -2167,6 +2175,12 @@ module.exports = function registerRoutes(router, context) {
         }
         if (typeof p.enabled !== 'boolean') {
           return res.status(400).json({ error: 'Portfolio "' + p.name + '" must have a boolean enabled field' })
+        }
+        if (p.codeFreezeDate != null && typeof p.codeFreezeDate !== 'string') {
+          return res.status(400).json({ error: 'Portfolio "' + p.name + '" codeFreezeDate must be a string or null' })
+        }
+        if (p.dueDate != null && typeof p.dueDate !== 'string') {
+          return res.status(400).json({ error: 'Portfolio "' + p.name + '" dueDate must be a string or null' })
         }
       }
       writeToStorage('releases/delivery/risk-dashboard-config.json', config)
