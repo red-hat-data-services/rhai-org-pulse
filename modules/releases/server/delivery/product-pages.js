@@ -279,6 +279,49 @@ function extractFeatureFreezeDate(release, eaTag) {
 }
 
 /**
+ * Extracts the planning freeze date from a Product Pages release object.
+ * Searches major_milestones and all_ga_tasks for entries matching
+ * "planning freeze" (case-insensitive, with optional hyphen/space).
+ *
+ * For EA-specific releases, pass an optional eaTag (e.g. "EA1") to prefer
+ * a milestone scoped to that EA over a generic one.
+ */
+function extractPlanningFreezeDate(release, eaTag) {
+  const freezePattern = /planning[.\-_\s]*freeze/i
+
+  const milestones = release.major_milestones
+  if (Array.isArray(milestones) && milestones.length > 0) {
+    let bestMatch = null
+    for (const m of milestones) {
+      if (m.draft) continue
+      const name = m.name || ''
+      if (!freezePattern.test(name)) continue
+      if (eaTag && new RegExp(`\\b${eaTag}\\b`, 'i').test(name)) {
+        return m.date_finish || null
+      }
+      bestMatch = m
+    }
+    if (bestMatch?.date_finish) return bestMatch.date_finish
+  }
+
+  const tasks = release.all_ga_tasks
+  if (Array.isArray(tasks) && tasks.length > 0) {
+    let bestMatch = null
+    for (const t of tasks) {
+      const name = t.name || ''
+      if (!freezePattern.test(name)) continue
+      if (eaTag && new RegExp(`\\b${eaTag}\\b`, 'i').test(name)) {
+        return t.date_finish || null
+      }
+      bestMatch = t
+    }
+    if (bestMatch?.date_finish) return bestMatch.date_finish
+  }
+
+  return null
+}
+
+/**
  * Returns the auth status string for the settings UI badge.
  */
 function getAuthStatus() {
@@ -352,7 +395,8 @@ function expandReleaseMilestones(r, productName) {
       releaseNumber,
       dueDate: m.date_finish,
       codeFreezeDate: extractCodeFreezeDate(r, eaTag) || null,
-      featureFreezeDate: extractFeatureFreezeDate(r, eaTag) || null
+      featureFreezeDate: extractFeatureFreezeDate(r, eaTag) || null,
+      planningFreezeDate: extractPlanningFreezeDate(r, eaTag) || null
     }
   })
 }
@@ -460,7 +504,8 @@ async function fetchProductsByShortname(shortnames, config) {
           releaseNumber,
           dueDate,
           codeFreezeDate: extractCodeFreezeDate(r, eaTag) || null,
-          featureFreezeDate: extractFeatureFreezeDate(r, eaTag) || null
+          featureFreezeDate: extractFeatureFreezeDate(r, eaTag) || null,
+          planningFreezeDate: extractPlanningFreezeDate(r, eaTag) || null
         })
       }
     } catch (err) {
@@ -712,6 +757,139 @@ async function fetchFeatureFreezeDatesFromSchedule(portfolioVersion, productShor
   return { byProduct, earliest }
 }
 
+async function fetchPlanningFreezeDatesFromSchedule(portfolioVersion, productShortnames, config) {
+  const version = Array.isArray(portfolioVersion) ? portfolioVersion[0] : portfolioVersion
+  const versionStr = String(version || '')
+  if (!versionStr) return { byProduct: {}, earliest: null }
+
+  const token = await getProductPagesToken(config)
+  if (!token) {
+    console.warn('[product-pages] fetchPlanningFreezeDatesFromSchedule: no auth token available')
+    return { byProduct: {}, earliest: null }
+  }
+
+  const baseUrl = (config.productPagesBaseUrl || 'https://productpages.redhat.com').replace(/\/+$/, '')
+
+  const eaMatch = versionStr.match(/\b(EA\d?)\b/i)
+  const eaTag = eaMatch ? eaMatch[1].toUpperCase() : null
+  let baseVersion = versionStr
+  if (eaMatch) {
+    baseVersion = versionStr.slice(0, eaMatch.index).replace(/[\s._-]+$/, '') +
+      versionStr.slice(eaMatch.index + eaMatch[0].length).replace(/^[\s._-]+/, '')
+  }
+  baseVersion = baseVersion.replace(/^[\s.]+/, '').replace(/[\s.]+$/, '')
+
+  const byProduct = {}
+  let earliest = null
+  const headers = { Accept: 'application/json', Authorization: `Bearer ${token}` }
+
+  for (const shortname of productShortnames) {
+    try {
+      const releasesUrl = `${baseUrl}/api/v7/releases/?product__shortname=${encodeURIComponent(shortname)}`
+      let relResponse = await fetch(releasesUrl, { headers, signal: AbortSignal.timeout(15000) })
+
+      if (relResponse.status === 401) {
+        cachedToken = { token: null, expiresAt: 0 }
+        const newToken = await getProductPagesToken(config)
+        if (newToken) {
+          headers.Authorization = `Bearer ${newToken}`
+          relResponse = await fetch(releasesUrl, { headers, signal: AbortSignal.timeout(15000) })
+        }
+      }
+
+      if (!relResponse.ok) {
+        console.warn(`[product-pages] Releases API returned HTTP ${relResponse.status} for "${shortname}"`)
+        continue
+      }
+
+      const relPayload = await relResponse.json()
+      const rows = Array.isArray(relPayload) ? relPayload : (relPayload.results || relPayload.releases || relPayload.items || [])
+
+      const candidates = []
+      if (eaTag) {
+        candidates.push(`${shortname}-${baseVersion}.${eaTag}`)
+        candidates.push(`${shortname}-${baseVersion}${eaTag}`)
+        candidates.push(`${shortname}-${baseVersion} ${eaTag}`)
+      }
+      candidates.push(`${shortname}-${baseVersion}`)
+
+      let releaseId = null
+      let matchedShortname = null
+      let matchedExactEa = false
+
+      for (const candidate of candidates) {
+        const norm = candidate.toLowerCase().replace(/[\s._-]+/g, '')
+        for (const r of rows) {
+          if (!r.id) continue
+          const rn = (r.shortname || '').toLowerCase().replace(/[\s._-]+/g, '')
+          if (rn === norm) {
+            releaseId = r.id
+            matchedShortname = r.shortname || candidate
+            matchedExactEa = eaTag ? /ea\d?/i.test(r.shortname || '') : false
+            break
+          }
+        }
+        if (releaseId) break
+      }
+
+      if (!releaseId) {
+        console.warn(`[product-pages] No release entity found for "${shortname}" matching version "${versionStr}" (planning freeze)`)
+        continue
+      }
+
+      const schedUrl = `${baseUrl}/api/v7/schedule-tasks/?entity_id=${releaseId}&q=${encodeURIComponent('planning freeze')}`
+      const schedResponse = await fetch(schedUrl, { headers, signal: AbortSignal.timeout(15000) })
+      if (!schedResponse.ok) {
+        console.warn(`[product-pages] Schedule tasks API returned HTTP ${schedResponse.status} for entity ${releaseId} (planning freeze)`)
+        continue
+      }
+
+      const schedPayload = await schedResponse.json()
+      const tasks = Array.isArray(schedPayload)
+        ? schedPayload
+        : (schedPayload.data || schedPayload.results || schedPayload.result || [])
+
+      const freezePattern = /planning[.\-_\s]*freeze/i
+      let bestDate = null
+
+      for (const task of tasks) {
+        if (task.draft) continue
+        const name = task.name || ''
+        if (!freezePattern.test(name)) continue
+
+        if (eaTag && !matchedExactEa) {
+          const nameUpper = name.toUpperCase()
+          const eaIdx = nameUpper.indexOf(eaTag)
+          if (eaIdx !== -1) {
+            const before = eaIdx === 0 || /\W/.test(name[eaIdx - 1])
+            const after = eaIdx + eaTag.length >= name.length || /\W/.test(name[eaIdx + eaTag.length])
+            if (before && after) {
+              bestDate = task.date_finish || null
+              break
+            }
+          }
+        }
+        if (!bestDate && task.date_finish) {
+          bestDate = task.date_finish
+        }
+      }
+
+      if (bestDate) {
+        const key = (matchedExactEa ? matchedShortname : `${shortname}-${baseVersion}${eaTag ? '.' + eaTag : ''}`).toLowerCase()
+        byProduct[key] = bestDate
+        if (!earliest || bestDate < earliest) earliest = bestDate
+        console.log(`[product-pages] Planning freeze date for "${key}": ${bestDate}`)
+      } else {
+        console.warn(`[product-pages] No "planning freeze" task found in ${tasks.length} schedule tasks for entity ${releaseId} ("${matchedShortname}")`)
+      }
+    } catch (err) {
+      console.error(`[product-pages] Planning freeze schedule fetch failed for "${shortname}":`, err.message)
+    }
+  }
+
+  return { byProduct, earliest }
+}
+
 function _resetForTesting() {
   cachedToken = { token: null, expiresAt: 0 }
   pendingTokenRequest = null
@@ -723,12 +901,14 @@ module.exports = {
   getProductPagesToken,
   fetchProductsByShortname,
   fetchFeatureFreezeDatesFromSchedule,
+  fetchPlanningFreezeDatesFromSchedule,
   fetchAllProducts,
   getAuthStatus,
   extractGaDate,
   extractReleaseDueDate,
   extractCodeFreezeDate,
   extractFeatureFreezeDate,
+  extractPlanningFreezeDate,
   expandReleaseMilestones,
   milestoneToReleaseNumber,
   _resetForTesting
