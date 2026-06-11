@@ -54,16 +54,23 @@ var sampleRfes = [
 // ─── exportMarkdown ───
 
 describe('exportMarkdown', function() {
-  it('exports big rocks as markdown table', function() {
+  it('exports big rocks as markdown table with Release Type column', function() {
+    var sampleRockHealth = {
+      MaaS: { releaseTypes: ['TP', 'GA'] },
+      Training: { releaseTypes: [] }
+    }
     exportMarkdown({
       activeTab: 'big-rocks',
       selectedVersion: '3.5',
       bigRocks: sampleBigRocks,
       filteredFeatures: [],
-      filteredRfes: []
+      filteredRfes: [],
+      rockHealth: sampleRockHealth
     })
 
     expect(capturedContent).toContain('# Big Rocks - 3.5')
+    expect(capturedContent).toContain('Release Type')
+    expect(capturedContent).toContain('TP, GA')
     expect(capturedContent).toContain('MaaS')
     expect(capturedContent).toContain('Training')
     expect(capturedFilename).toBe('big-rocks-3.5.md')
@@ -133,16 +140,22 @@ describe('exportMarkdown', function() {
 // ─── exportCsv ───
 
 describe('exportCsv', function() {
-  it('exports big rocks as CSV', function() {
+  it('exports big rocks as CSV with Release Type column', function() {
+    var sampleRockHealth = {
+      MaaS: { releaseTypes: ['TP', 'GA'] },
+      Training: { releaseTypes: [] }
+    }
     exportCsv({
       activeTab: 'big-rocks',
       selectedVersion: '3.5',
       bigRocks: sampleBigRocks,
       filteredFeatures: [],
-      filteredRfes: []
+      filteredRfes: [],
+      rockHealth: sampleRockHealth
     })
 
-    expect(capturedContent).toContain('Priority,Pillar,Big Rock')
+    expect(capturedContent).toContain('Priority,Pillar,Big Rock,Release Type')
+    expect(capturedContent).toContain('"TP, GA"')
     expect(capturedContent).toContain('MaaS')
     expect(capturedFilename).toBe('big-rocks-3.5.csv')
   })

@@ -37,6 +37,16 @@ function truncate(text, max) {
   return text.length > max ? text.slice(0, max) + '...' : text
 }
 
+var RELEASE_TYPE_STYLES = {
+  DP: 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-400',
+  TP: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400',
+  GA: 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400'
+}
+
+function releaseTypeBadgeClass(rt) {
+  return RELEASE_TYPE_STYLES[rt] || 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+}
+
 function completionBarColor(pct) {
   if (pct >= 80) return 'bg-green-500'
   if (pct >= 50) return 'bg-yellow-500'
@@ -73,6 +83,7 @@ function completionBarColor(pct) {
               <StatusInfoPopover />
             </th>
             <th class="px-2 py-1 text-left text-gray-600 dark:text-gray-400 font-semibold">Owner</th>
+            <th class="px-2 py-1 text-left text-gray-600 dark:text-gray-400 font-semibold">Release Type</th>
             <th class="px-2 py-1 text-left text-gray-600 dark:text-gray-400 font-semibold">Target</th>
             <th class="px-2 py-1 text-left text-gray-600 dark:text-gray-400 font-semibold">Fix Version</th>
           </tr>
@@ -131,6 +142,14 @@ function completionBarColor(pct) {
             </td>
             <td class="px-2 py-1.5 text-gray-600 dark:text-gray-400">
               {{ f.deliveryOwner || '-' }}
+            </td>
+            <td class="px-2 py-1.5">
+              <span
+                v-if="f.releaseType && ['DP', 'TP', 'GA'].includes(f.releaseType)"
+                class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold"
+                :class="releaseTypeBadgeClass(f.releaseType)"
+              >{{ f.releaseType }}</span>
+              <span v-else class="text-gray-400 text-[10px]">--</span>
             </td>
             <td class="px-2 py-1.5">
               <span v-if="f.targetRelease" class="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300">

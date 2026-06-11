@@ -153,6 +153,7 @@ function handleDeleteClick(event, rock) {
             <th scope="col" class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Pillar</th>
             <th scope="col" class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Big Rock</th>
             <th scope="col" class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Outcome(s)</th>
+            <th v-if="hasHealth" scope="col" class="px-3 py-2 text-center text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Release Type</th>
             <th v-if="hasHealth" scope="col" class="px-3 py-2 text-center text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Health</th>
             <th scope="col" class="px-3 py-2 text-left text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Owners</th>
             <th v-if="hasHealth" scope="col" class="px-3 py-2 text-center text-gray-700 dark:text-gray-200 font-semibold uppercase text-xs tracking-wide border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-900/80">Versions</th>
@@ -207,7 +208,7 @@ function handleDeleteClick(event, rock) {
             <tr v-if="isExpanded(rock.name)" :key="rock.name + '-edit-expanded'" @dragover.prevent>
               <BigRockExpandedRow
                 :features="rockFeatures[rock.name] || []"
-                :colspan="hasHealth ? 10 : 8"
+                :colspan="hasHealth ? 11 : 8"
                 :loading="healthLoading"
                 :rockName="rock.name"
                 :releasePhaseMode="releasePhaseMode"
@@ -219,7 +220,7 @@ function handleDeleteClick(event, rock) {
           <!-- Skeleton loading rows -->
           <template v-if="loading">
             <tr v-for="n in 3" :key="'skeleton-' + n">
-              <td :colspan="hasHealth ? 8 : 6" class="px-3 py-4 border border-gray-300 dark:border-gray-600">
+              <td :colspan="hasHealth ? 9 : 6" class="px-3 py-4 border border-gray-300 dark:border-gray-600">
                 <div class="animate-pulse flex items-center gap-4">
                   <div class="h-4 w-8 bg-gray-200 dark:bg-gray-700 rounded" />
                   <div class="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded" />
@@ -249,7 +250,7 @@ function handleDeleteClick(event, rock) {
               <tr v-if="isExpanded(rock.name)" :key="rock.name + '-expanded'">
                 <BigRockExpandedRow
                   :features="rockFeatures[rock.name] || []"
-                  :colspan="hasHealth ? 8 : 6"
+                  :colspan="hasHealth ? 9 : 6"
                   :loading="healthLoading"
                   :rockName="rock.name"
                   :releasePhaseMode="releasePhaseMode"
@@ -259,7 +260,7 @@ function handleDeleteClick(event, rock) {
           </template>
           <!-- Empty state -->
           <tr v-else>
-            <td :colspan="hasHealth ? 8 : 6" class="px-3 py-8 text-center text-gray-500 border border-gray-300 dark:border-gray-600">
+            <td :colspan="hasHealth ? 9 : 6" class="px-3 py-8 text-center text-gray-500 border border-gray-300 dark:border-gray-600">
               No Big Rocks configured.
             </td>
           </tr>

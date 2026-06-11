@@ -41,7 +41,7 @@ describe('SummaryCards', () => {
   it('renders all three summary cards', () => {
     const wrapper = mount(SummaryCards, { props: { summary, tier1HealthSummary: null, releaseDistribution: null } })
     expect(wrapper.text()).toContain('Feature Summary')
-    expect(wrapper.text()).toContain('Outcome Health')
+    expect(wrapper.text()).toContain('Big Rock Health')
     expect(wrapper.text()).toContain('Milestone Coverage')
     // Should have exactly 3 card root elements in the grid
     const cards = wrapper.findAll('.p-4.rounded-lg')
@@ -84,7 +84,7 @@ describe('SummaryCards', () => {
     const wrapper = mount(SummaryCards, {
       props: { summary, tier1HealthSummary, releaseDistribution: null }
     })
-    expect(wrapper.text()).toContain('Outcome Health')
+    expect(wrapper.text()).toContain('Big Rock Health')
     expect(wrapper.text()).toContain('features tracked')
     // Health section with aria-label
     const healthSection = wrapper.find('[aria-label*="on track"]')

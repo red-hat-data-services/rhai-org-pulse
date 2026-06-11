@@ -47,6 +47,16 @@ var planningProgressPct = computed(function() {
   return Math.round((props.health.planningReady / props.health.planningTotal) * 100)
 })
 
+var RELEASE_TYPE_STYLES = {
+  DP: 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-400',
+  TP: 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400',
+  GA: 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400'
+}
+
+function releaseTypeBadgeClass(rt) {
+  return RELEASE_TYPE_STYLES[rt] || 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+}
+
 function handleBadgeClick(event) {
   event.stopPropagation()
   emit('toggle-expand')
@@ -85,6 +95,17 @@ function handleBadgeKeydown(event) {
       </div>
     </template>
     <span v-else class="text-xs text-gray-400 dark:text-gray-500 italic">TBD</span>
+  </td>
+  <td v-if="hasHealth" class="px-3 py-2 text-center border border-gray-300 dark:border-gray-600">
+    <template v-if="health && health.releaseTypes && health.releaseTypes.length > 0">
+      <span
+        v-for="rt in health.releaseTypes"
+        :key="rt"
+        class="inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold mr-0.5"
+        :class="releaseTypeBadgeClass(rt)"
+      >{{ rt }}</span>
+    </template>
+    <span v-else class="text-gray-400 dark:text-gray-500 text-xs">--</span>
   </td>
   <td v-if="hasHealth" class="px-3 py-2 text-center border border-gray-300 dark:border-gray-600">
     <template v-if="health && rockFeatures.length > 0">

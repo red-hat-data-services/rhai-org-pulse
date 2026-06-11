@@ -123,7 +123,8 @@ function getExportData() {
     selectedVersion: selectedVersion.value,
     bigRocks: filteredBigRocks.value,
     filteredFeatures: filteredFeatures.value,
-    filteredRfes: filteredRfes.value
+    filteredRfes: filteredRfes.value,
+    rockHealth: rockHealth.value
   }
 }
 
@@ -319,7 +320,7 @@ onMounted(async function() {
     <!-- Header -->
     <div class="flex items-center justify-between flex-wrap gap-4">
       <div>
-        <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">Outcomes Dashboard</h1>
+        <h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">Big Rocks Dashboard</h1>
         <p v-if="candidates && candidates.lastRefreshed" class="text-sm text-gray-500 dark:text-gray-400 mt-1">
           Data from {{ formatDate(candidates.lastRefreshed) }}
         </p>

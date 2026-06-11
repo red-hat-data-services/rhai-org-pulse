@@ -496,9 +496,9 @@ describe('BigRockExpandedRow', function() {
     expect(td.attributes('colspan')).toBe('8')
   })
 
-  it('has 6 column headers in the inner table', function() {
+  it('has 7 column headers in the inner table', function() {
     var wrapper = mountExpanded({ features: sampleFeatures })
     var headers = wrapper.findAll('th')
-    expect(headers.length).toBe(6)
+    expect(headers.length).toBe(7)
   })
 })

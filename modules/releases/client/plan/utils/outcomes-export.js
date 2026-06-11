@@ -10,21 +10,24 @@ import { escapeCell, escapeCsv, triggerDownload } from './health-export'
  * @param {Array}  opts.filteredFeatures
  * @param {Array}  opts.filteredRfes
  */
-export function exportMarkdown({ activeTab, selectedVersion, bigRocks, filteredFeatures, filteredRfes }) {
+export function exportMarkdown({ activeTab, selectedVersion, bigRocks, filteredFeatures, filteredRfes, rockHealth }) {
   var lines = []
   var filename
 
   if (activeTab === 'big-rocks') {
     lines.push('# Big Rocks - ' + selectedVersion)
     lines.push('')
-    lines.push('| **Priority** | **Pillar** | **Big Rock** | **Owner** | **Engineering Lead** | **Features** | **RFEs** | **Notes** |')
-    lines.push('|:--------:|--------|----------|-------|-----------|:--------:|:----:|-------|')
+    lines.push('| **Priority** | **Pillar** | **Big Rock** | **Release Type** | **Owner** | **Engineering Lead** | **Features** | **RFEs** | **Notes** |')
+    lines.push('|:--------:|--------|----------|:--------:|-------|-----------|:--------:|:----:|-------|')
     for (var i = 0; i < bigRocks.length; i++) {
       var rock = bigRocks[i]
+      var health = (rockHealth || {})[rock.name] || {}
+      var releaseType = (health.releaseTypes || []).join(', ') || '--'
       lines.push('| ' + [
         rock.priority,
         escapeCell(rock.pillar || '-'),
         escapeCell(rock.name),
+        escapeCell(releaseType),
         escapeCell(rock.owner || '-'),
         escapeCell(rock.architect || '-'),
         rock.featureCount,
@@ -91,18 +94,21 @@ export function exportMarkdown({ activeTab, selectedVersion, bigRocks, filteredF
  * @param {Array}  opts.filteredFeatures
  * @param {Array}  opts.filteredRfes
  */
-export function exportCsv({ activeTab, selectedVersion, bigRocks, filteredFeatures, filteredRfes }) {
+export function exportCsv({ activeTab, selectedVersion, bigRocks, filteredFeatures, filteredRfes, rockHealth }) {
   var rows = []
   var filename
 
   if (activeTab === 'big-rocks') {
-    rows.push(['Priority', 'Pillar', 'Big Rock', 'Owner', 'Engineering Lead', 'Features', 'RFEs', 'Notes'])
+    rows.push(['Priority', 'Pillar', 'Big Rock', 'Release Type', 'Owner', 'Engineering Lead', 'Features', 'RFEs', 'Notes'])
     for (var i = 0; i < bigRocks.length; i++) {
       var rock = bigRocks[i]
+      var health = (rockHealth || {})[rock.name] || {}
+      var releaseType = (health.releaseTypes || []).join(', ') || '--'
       rows.push([
         rock.priority,
         rock.pillar || '',
         rock.name,
+        releaseType,
         rock.owner || '',
         rock.architect || '',
         rock.featureCount,

@@ -337,7 +337,7 @@ test.describe('Releases Planning Health @releases', () => {
     logCapturedErrors(page, testInfo);
   });
 
-  test('Outcomes tab shows planning readiness banner when in planning mode', async ({ page }) => {
+  test('Big Rocks tab shows planning readiness banner when in planning mode', async ({ page }) => {
     await page.goto('/#/releases/plan');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);

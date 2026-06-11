@@ -99,14 +99,23 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
       var f = features.value[i]
       var rockNames = f.bigRock ? f.bigRock.split(', ') : []
       if (rockNames.length === 0) continue
-      var h = healthByKey.value[f.issueKey]
-      if (!h || !h.risk) continue
 
       for (var ri = 0; ri < rockNames.length; ri++) {
         var rockName = rockNames[ri]
         if (!result[rockName]) {
-          result[rockName] = { worstLevel: 'green', totalFlags: 0, featureCount: 0, dorPassedCount: 0, dodPassedCount: 0, planningReady: 0, planningTotal: 0, planningBlockers: 0, versionedCount: 0, missingVersionCount: 0, committedCount: 0, targetedCount: 0, distinctVersions: new Set() }
+          result[rockName] = { worstLevel: 'green', totalFlags: 0, featureCount: 0, dorPassedCount: 0, dodPassedCount: 0, planningReady: 0, planningTotal: 0, planningBlockers: 0, versionedCount: 0, missingVersionCount: 0, committedCount: 0, targetedCount: 0, distinctVersions: new Set(), releaseTypes: new Set() }
         }
+
+        // Collect release type from candidates data (available on all features)
+        var featurePhase = f.phase || ''
+        if (['DP', 'TP', 'GA'].indexOf(featurePhase) !== -1) {
+          result[rockName].releaseTypes.add(featurePhase)
+        }
+
+        // Health-specific aggregation below — skips features without health data
+        var h = healthByKey.value[f.issueKey]
+        if (!h || !h.risk) continue
+
         result[rockName].featureCount++
         result[rockName].totalFlags += (h.risk.score || 0)
         if (h.dor && h.dor.passed) result[rockName].dorPassedCount++
@@ -142,9 +151,12 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
       }
     }
     // Convert Sets to arrays before returning
+    var MATURITY_ORDER = { DP: 0, TP: 1, GA: 2 }
     var resultKeys = Object.keys(result)
     for (var rni = 0; rni < resultKeys.length; rni++) {
       result[resultKeys[rni]].distinctVersions = Array.from(result[resultKeys[rni]].distinctVersions)
+      result[resultKeys[rni]].releaseTypes = Array.from(result[resultKeys[rni]].releaseTypes)
+        .sort(function(a, b) { return (MATURITY_ORDER[a] !== undefined ? MATURITY_ORDER[a] : 99) - (MATURITY_ORDER[b] !== undefined ? MATURITY_ORDER[b] : 99) })
     }
     return result
   })
@@ -169,6 +181,7 @@ export function useHealthAggregation(healthData, features, _rfes, _bigRocks) {
         result[rockName].push({
           key: f.issueKey,
           bigRock: f.bigRock || '',
+          releaseType: f.phase || '',
           level: level,
           flagCount: flags.length,
           flagCategories: flags.map(function(fl) { return fl.category }),
