@@ -79,7 +79,7 @@
             <div class="space-y-5">
               <ReleaseVersionGroup
                 v-for="group in groupedByVersion"
-                :key="group.version"
+                :key="group.groupKey"
                 :group="group"
                 :mc-inputs-map="mcInputsMap"
                 :get-mc-target="getMcTarget"
@@ -102,8 +102,9 @@
 </template>
 
 <script setup>
-import { ref, computed, reactive, inject } from 'vue'
+import { ref, computed, reactive, inject, onMounted } from 'vue'
 import { extractVersion, normalizeVersionKey } from '../composables/release-utils'
+import { useRiskDashboardConfig } from '../composables/useRiskDashboardConfig'
 import ReleaseVersionGroup from '../components/ReleaseVersionGroup.vue'
 import RiskDashboardSettingsPanel from '../components/RiskDashboardSettingsPanel.vue'
 
@@ -111,31 +112,83 @@ const filter = inject('releaseFilter')
 const analysisState = inject('analysisState')
 const { loading, refreshing, error, analysis, refreshAnalysis } = analysisState
 
+const { loadConfig, portfolioReleases, clearCache: clearDashboardConfigCache } = useRiskDashboardConfig()
+
+onMounted(function () {
+  loadConfig()
+})
+
 const settingsOpen = ref(false)
 
 function onSettingsSaved() {
   settingsOpen.value = false
+  clearDashboardConfigCache()
+  loadConfig(true)
   refreshAnalysis()
 }
+
+// Build a set of release numbers belonging to disabled portfolios (hidden entirely)
+const hiddenReleaseNumbers = computed(function () {
+  var hidden = {}
+  var portfolios = portfolioReleases.value
+  for (var i = 0; i < portfolios.length; i++) {
+    if (!portfolios[i].enabled) {
+      var releases = portfolios[i].releases || []
+      for (var j = 0; j < releases.length; j++) {
+        if (releases[j]) hidden[releases[j]] = true
+      }
+    }
+  }
+  return hidden
+})
+
+// Build a set of release numbers belonging to enabled portfolios (grouped separately)
+const portfolioMemberSet = computed(function () {
+  var members = {}
+  var portfolios = portfolioReleases.value
+  for (var i = 0; i < portfolios.length; i++) {
+    if (portfolios[i].enabled) {
+      var releases = portfolios[i].releases || []
+      for (var j = 0; j < releases.length; j++) {
+        if (releases[j]) members[releases[j]] = true
+      }
+    }
+  }
+  return members
+})
 
 const allReleases = computed(() => {
   const releases = filter.filteredReleases.value
 
-  // Filter to current/future releases only (hide past-due releases like 3.4)
   const now = new Date()
   const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()))
 
   return releases.filter(r => {
+    if (hiddenReleaseNumbers.value[r.releaseNumber]) return false
     const due = new Date(`${r.dueDate}T00:00:00Z`)
-    if (Number.isNaN(due.getTime())) return true // Keep if no date
-    return due >= today // Hide if due date passed
+    if (Number.isNaN(due.getTime())) return true
+    return due >= today
   })
 })
 
 const groupedByVersion = computed(() => {
+  var members = portfolioMemberSet.value
+  var nonPortfolioReleases = []
+  var portfolioReleasesMap = {}
+
+  for (var ri = 0; ri < allReleases.value.length; ri++) {
+    var r = allReleases.value[ri]
+    if (members[r.releaseNumber]) {
+      portfolioReleasesMap[r.releaseNumber] = r
+    } else {
+      nonPortfolioReleases.push(r)
+    }
+  }
+
+  // Standard version grouping for non-portfolio releases
   const map = new Map()
   const displayVersion = new Map()
-  for (const r of allReleases.value) {
+  for (const r of nonPortfolioReleases) {
     const rawVer = extractVersion(r.releaseNumber)
     const groupKey = normalizeVersionKey(rawVer)
     if (!map.has(groupKey)) {
@@ -147,63 +200,84 @@ const groupedByVersion = computed(() => {
 
   const groups = []
   for (const [groupKey, releases] of map) {
-    const version = displayVersion.get(groupKey)
-    const earliest = releases.reduce((min, r) => {
-      const d = new Date(r.dueDate)
-      return d < min ? d : min
-    }, new Date('9999-12-31'))
-
-    const cfDates = releases.map(r => r.codeFreezeDate).filter(Boolean)
-    const earliestCodeFreeze = cfDates.length
-      ? cfDates.reduce((min, d) => (new Date(d) < new Date(min) ? d : min))
-      : null
-
-    const dueDates = releases.map(r => r.dueDate).filter(Boolean)
-    const earliestRelease = dueDates.length
-      ? dueDates.reduce((min, d) => (new Date(d) < new Date(min) ? d : min))
-      : null
-
-    const products = [...new Set(releases.map(r => {
-      const s = (r.releaseNumber || '').toLowerCase()
-      const dash = s.indexOf('-')
-      return dash > 0 ? s.slice(0, dash) : s
-    }))]
-
-    let risk = 'green'
-    if (releases.some(r => r.risk === 'red')) risk = 'red'
-    else if (releases.some(r => r.risk === 'yellow')) risk = 'yellow'
-
-    const totals = { to_do: 0, doing: 0, done: 0, remaining: 0, total: 0, issues: 0, issues_to_do: 0, issues_doing: 0, issues_done: 0 }
-    for (const r of releases) {
-      const t = r.totals || {}
-      totals.to_do += t.to_do || 0
-      totals.doing += t.doing || 0
-      totals.done += t.done || 0
-      totals.remaining += t.remaining || 0
-      totals.total += t.total || 0
-      totals.issues += t.issues || 0
-      totals.issues_to_do += t.issues_to_do || 0
-      totals.issues_doing += t.issues_doing || 0
-      totals.issues_done += t.issues_done || 0
-    }
-
-    groups.push({
-      version,
-      releases,
-      risk,
-      totals,
-      earliestDue: earliest,
-      earliestCodeFreeze,
-      earliestRelease,
-      productCount: products.length,
-      productNames: products,
-      releaseCount: releases.length
-    })
+    groups.push(buildGroupFromReleases(groupKey, displayVersion.get(groupKey), releases, null))
   }
 
-  groups.sort((a, b) => a.version.localeCompare(b.version, undefined, { numeric: true }))
+  // Portfolio groups from enabled portfolios
+  var portfolios = portfolioReleases.value
+  for (var pi = 0; pi < portfolios.length; pi++) {
+    var pf = portfolios[pi]
+    if (!pf.enabled) continue
+    var pfReleases = []
+    for (var pj = 0; pj < pf.releases.length; pj++) {
+      var releaseObj = portfolioReleasesMap[pf.releases[pj]]
+      if (releaseObj) pfReleases.push(releaseObj)
+    }
+    if (!pfReleases.length) continue
+    var pfGroupKey = 'portfolio-' + pf.id
+    var pfVersion = pfReleases[0] ? extractVersion(pfReleases[0].releaseNumber) : pf.name
+    groups.push(buildGroupFromReleases(pfGroupKey, pfVersion, pfReleases, pf.name))
+  }
+
+  groups.sort((a, b) => (a.displayName || a.version).localeCompare(b.displayName || b.version, undefined, { numeric: true }))
   return groups
 })
+
+function buildGroupFromReleases(groupKey, version, releases, displayName) {
+  const earliest = releases.reduce((min, r) => {
+    const d = new Date(r.dueDate)
+    return d < min ? d : min
+  }, new Date('9999-12-31'))
+
+  const cfDates = releases.map(r => r.codeFreezeDate).filter(Boolean)
+  const earliestCodeFreeze = cfDates.length
+    ? cfDates.reduce((min, d) => (new Date(d) < new Date(min) ? d : min))
+    : null
+
+  const dueDates = releases.map(r => r.dueDate).filter(Boolean)
+  const earliestRelease = dueDates.length
+    ? dueDates.reduce((min, d) => (new Date(d) < new Date(min) ? d : min))
+    : null
+
+  const products = [...new Set(releases.map(r => {
+    const s = (r.releaseNumber || '').toLowerCase()
+    const dash = s.indexOf('-')
+    return dash > 0 ? s.slice(0, dash) : s
+  }))]
+
+  let risk = 'green'
+  if (releases.some(r => r.risk === 'red')) risk = 'red'
+  else if (releases.some(r => r.risk === 'yellow')) risk = 'yellow'
+
+  const totals = { to_do: 0, doing: 0, done: 0, remaining: 0, total: 0, issues: 0, issues_to_do: 0, issues_doing: 0, issues_done: 0 }
+  for (const r of releases) {
+    const t = r.totals || {}
+    totals.to_do += t.to_do || 0
+    totals.doing += t.doing || 0
+    totals.done += t.done || 0
+    totals.remaining += t.remaining || 0
+    totals.total += t.total || 0
+    totals.issues += t.issues || 0
+    totals.issues_to_do += t.issues_to_do || 0
+    totals.issues_doing += t.issues_doing || 0
+    totals.issues_done += t.issues_done || 0
+  }
+
+  return {
+    groupKey,
+    version,
+    displayName: displayName || null,
+    releases,
+    risk,
+    totals,
+    earliestDue: earliest,
+    earliestCodeFreeze,
+    earliestRelease,
+    productCount: products.length,
+    productNames: products,
+    releaseCount: releases.length
+  }
+}
 
 // ── Monte Carlo state ──
 

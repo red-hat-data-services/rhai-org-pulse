@@ -12,7 +12,7 @@
         <div class="flex items-center gap-2">
           <span
             class="text-lg font-bold tabular-nums text-gray-900 dark:text-gray-100"
-          >RHAI {{ group.version }}</span>
+          >{{ group.displayName || 'RHAI ' + group.version }}</span>
           <span
             class="inline-flex h-3 w-3 shrink-0 rounded-full ring-2 ring-white dark:ring-gray-900"
             :class="riskDotClass"
