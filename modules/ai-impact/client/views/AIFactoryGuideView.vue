@@ -293,7 +293,7 @@ const autofixSteps = [
   { name: 'Bug Filed', desc: 'A bug is filed in Jira with a repository URL and description of the issue', ai: false },
   { name: 'AI Triage', desc: 'Bot scans new tickets, evaluates if they have enough info for an AI agent to fix, and labels accordingly', ai: true },
   { name: 'Autofix', desc: 'Bot clones the repo, creates a branch, runs Claude Code to analyze and fix the issue, and creates an MR/PR', ai: true },
-  { name: 'Review Iteration', desc: 'Bot addresses review feedback and CI failures on each scheduled cycle (~30 min), pushing fixes and resolving threads (up to 36 iterations)', ai: true },
+  { name: 'Review Iteration', desc: 'Bot addresses review feedback and CI failures on each scheduled cycle (~30 min), pushing fixes and resolving threads (up to 10 iterations)', ai: true },
   { name: 'Human Review', desc: 'Engineers review and merge the MR/PR, or leave feedback for the bot to address on its next iteration', ai: false },
 ]
 
@@ -313,7 +313,7 @@ const autofixPipelineLabels = [
   { name: 'jira-autofix-merged', color: 'green', desc: 'MR/PR has been merged' },
   { name: 'jira-autofix-rejected', color: 'red', desc: 'MR/PR closed without merge' },
   { name: 'jira-autofix-max-retries', color: 'amber', desc: 'Bot hit its iteration limit, needs human takeover' },
-  { name: 'jira-autofix-blocked', color: 'amber', desc: 'Bot needs more information (e.g. missing repo URL)' },
+  { name: 'jira-autofix-blocked', color: 'amber', desc: 'Bot can\'t proceed (e.g., missing repo URL, unfixable CI failure)' },
   { name: 'no-autofix', color: 'gray', desc: 'Permanently excludes this ticket from triage and autofix' },
 ]
 
@@ -1673,7 +1673,7 @@ function labelColorClasses(color) {
             <RefreshCw :size="20" class="text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
             <div>
               <div class="text-sm font-semibold text-gray-900 dark:text-white">Iteration Loop (~30 min cycles)</div>
-              <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">After creating an MR/PR, the bot checks for unresolved review threads and CI failures on each scheduled cycle. It re-runs Claude Code with the feedback as context, pushes fixes, and resolves addressed threads. Up to 36 iterations, then escalates to human.</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">After creating an MR/PR, the bot checks for unresolved review threads and CI failures on each scheduled cycle. It re-runs Claude Code with the feedback as context, pushes fixes, and resolves addressed threads. Up to 10 iterations, then escalates to human.</div>
             </div>
           </div>
         </div>
@@ -1727,7 +1727,7 @@ function labelColorClasses(color) {
               <AlertTriangle :size="20" class="text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5" />
               <div>
                 <div class="text-sm font-semibold text-gray-900 dark:text-white">CI keeps failing</div>
-                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Check whether the failure is in the bot's changes or a pre-existing issue. The bot can only fix failures caused by its own code</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Check whether the failure is in the bot's changes or a pre-existing issue. The bot can only fix failures caused by its own code. If the bot determines a CI failure is unfixable (e.g., a pre-existing issue or infrastructure problem), it will block the ticket itself rather than burning iterations</div>
               </div>
             </div>
             <div class="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
