@@ -139,7 +139,7 @@
               </span>
               <label class="relative inline-flex items-center cursor-pointer" @click.stop>
                 <input type="checkbox" v-model="pf.enabled" class="sr-only peer" />
-                <div class="w-8 h-4.5 bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-600 peer-checked:bg-primary-600 transition-colors">
+                <div class="w-8 h-[18px] bg-gray-200 peer-focus:outline-none rounded-full peer dark:bg-gray-600 peer-checked:bg-primary-600 transition-colors">
                   <div class="absolute top-[2px] left-[2px] bg-white rounded-full h-3.5 w-3.5 transition-transform peer-checked:translate-x-3.5 shadow" />
                 </div>
               </label>
