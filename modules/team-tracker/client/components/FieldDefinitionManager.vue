@@ -157,7 +157,7 @@ async function toggleVisibility(field) {
 <template>
   <div class="space-y-4">
     <div class="flex items-center justify-between">
-      <h3 class="text-lg font-medium text-gray-900">Field Definitions</h3>
+      <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Field Definitions</h3>
       <button
         class="px-4 py-2 bg-primary-600 text-white text-sm rounded hover:bg-primary-700"
         @click="openCreateModal"
