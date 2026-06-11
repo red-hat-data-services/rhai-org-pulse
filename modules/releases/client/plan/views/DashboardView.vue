@@ -96,8 +96,6 @@ const {
 
 const moduleNav = inject('moduleNav', null)
 
-const _bigRockCount = computed(() => filteredBigRocks.value.length)
-
 const exportMenuOpen = ref(false)
 
 function closeExportMenu() {
