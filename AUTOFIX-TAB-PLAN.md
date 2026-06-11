@@ -33,7 +33,7 @@ at `ai-impact/autofix-data.json`. Each issue has:
 
 **Autofix states:** `autofix-ready`, `autofix-pending`, `autofix-review`,
 `autofix-ci-failing`, `autofix-merged`, `autofix-rejected`, `autofix-max-retries`,
-`autofix-researched`, `autofix-blocked`
+`autofix-blocked`
 
 ### Team-to-Component Mapping
 
@@ -183,7 +183,6 @@ issues. Color-coded (colors defined locally in `TeamAutofixTab.vue` — see
 - CI Failing: orange
 - Blocked: yellow
 - Max Retries: red
-- Researched: teal
 
 ### Trend Chart
 
