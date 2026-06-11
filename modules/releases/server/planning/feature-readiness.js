@@ -234,7 +234,6 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
 
   var configuredVersions = getConfiguredReleases(readFromStorage).map(function(r) { return r.version })
 
-
   for (var cvi = 0; cvi < configuredVersions.length; cvi++) {
     var cv = configuredVersions[cvi]
     if (!versionAliasMap[cv]) {
