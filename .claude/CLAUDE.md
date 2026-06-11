@@ -142,11 +142,12 @@ Kustomize layers: `base/` (core platform + team-tracker) → `overlays/ai-eng/` 
 **Branch protection** uses a GitHub repository ruleset on `main`:
 - Requires PRs (no direct pushes)
 - Requires "Test & Build" status check
-- Admin role has bypass (used by `GH_PAT` secret for CI auto-merge PRs)
+- GitHub App (`APP_ID`/`APP_PRIVATE_KEY`) has bypass for CI commits (version bumps, deploy tag updates)
 
 **Repo secrets:**
 - `QUAY_USERNAME` / `QUAY_PASSWORD` — Quay.io registry credentials for image push
-- `GH_PAT` — Personal access token with admin bypass, used by CI to create and auto-merge image tag update PRs
+- `APP_ID` / `APP_PRIVATE_KEY` — GitHub App credentials with branch protection bypass, used by CI for version bumps and deploy commits
+- `GH_PAT` — Personal access token, used by Claude issue workflows
 - `GCP_SA_KEY` — GCP service account JSON key for Vertex AI auth (Claude code review)
 
 **CronJob** (`deploy/openshift/base/cronjob-sync-refresh.yaml`): Fires every 15 minutes (`*/15 * * * *`), triggers cadence-aware `POST /api/admin/refresh-all`. Each handler declares its own cadence (e.g., `24h` for roster sync, `12h` for execution pipeline). Handlers that have run within their cadence window are skipped — most ticks complete in seconds. Backup runs as a refresh handler (`platform:backup`, cadence `24h`), not as a separate CronJob step. Uses `CRON_ADMIN_EMAIL` from ConfigMap.
