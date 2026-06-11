@@ -136,7 +136,7 @@ Kustomize layers: `base/` (core platform + team-tracker) → `overlays/ai-eng/` 
 
 ### CI/CD
 - **`ci.yml`** — PRs + main: lint, test, build, kustomize validate. Required check: "Test & Build".
-- **`build-images.yml`** — main pushes: builds core images first (backend, frontend, frontend-builder, frontend-runtime), then AI Eng images FROM core, runs smoke tests, pushes to Quay (`:<sha>` + `:latest`), creates PR to update prod image tags, auto-merges.
+- **`build-images.yml`** — main pushes: builds core images first (backend, frontend, frontend-builder, frontend-runtime), then AI Eng images FROM core, runs smoke tests, pushes to Quay (`:<sha>` + `:latest`), commits prod image tag update directly to main (`[skip ci]`).
 - ConfigMap changes auto-trigger rollouts via kustomize `configMapGenerator` — ConfigMap names include a content hash suffix (e.g., `team-tracker-config-5h2f9k`), so any data change produces a new name and triggers a pod rollout automatically.
 
 **Branch protection** uses a GitHub repository ruleset on `main`:
@@ -182,7 +182,7 @@ CI workflow (`build-images.yml`):
 1. Builds core images (backend, frontend, frontend-builder, frontend-runtime) with smoke test
 2. Builds AI Eng images FROM core (backend extends core-backend, frontend uses core-builder + core-runtime)
 3. Runs Playwright smoke tests against AI Eng images
-4. Pushes all images to Quay, creates PR to update prod image tags
+4. Pushes all images to Quay, commits prod image tag update directly to main
 
 **Integration tests** use Playwright to verify module-specific functionality against production containers in demo mode. Located in `tests/integration/<module>.spec.js`:
 
