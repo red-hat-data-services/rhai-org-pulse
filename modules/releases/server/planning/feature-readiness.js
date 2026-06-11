@@ -123,15 +123,29 @@ function computeBlockers(feature, productPath) {
   return { blockingDimensions: blockingDimensions, actionRequired: actionRequired }
 }
 
-function isHealthFeatureReady(hd, cd) {
-  var hasOwner = !!(hd.deliveryOwner || hd.assignee)
-  var notBlocked = !(hd.blockerCount > 0)
-  var pastRefinement = !!hd.status && EARLY_STATUSES.indexOf(hd.status) === -1
-  var hasTargetVersion = !!(
-    (hd.targetRelease && hd.targetRelease.length > 0) ||
-    (cd && cd.targetRelease)
-  )
-  return hasOwner && notBlocked && pastRefinement && hasTargetVersion
+function computeReadiness(feature) {
+  var isApproved = feature.humanReviewStatus === 'approved'
+  var hasRubric = (feature.rubricTotal || 0) > 0
+  var hasPM = !!feature.pmOwner
+  var hasDeliveryOwner = !!feature.deliveryOwner
+  var pastRefinement = !!feature.status && EARLY_STATUSES.indexOf(feature.status) === -1
+  var hasTargetVersion = (feature.targetVersions || []).length > 0
+  var noBlockingViolations = !hasBlockingViolations(feature.violations)
+
+  var gates = {
+    isApproved: isApproved,
+    hasRubric: hasRubric,
+    pmAssigned: hasPM,
+    deliveryOwnerAssigned: hasDeliveryOwner,
+    pastRefinement: pastRefinement,
+    hasTargetVersion: hasTargetVersion,
+    noBlockingViolations: noBlockingViolations
+  }
+
+  var isReady = isApproved && hasRubric && hasPM && hasDeliveryOwner
+    && pastRefinement && hasTargetVersion && noBlockingViolations
+
+  return { isReady: isReady, gates: gates }
 }
 
 function hasBlockingViolations(violations) {
@@ -380,18 +394,22 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
       : (healthComponents.length > 0 ? healthComponents : jiraComponents)
 
     var violations = hygieneIndex.get(key) || null
-    var isApproved = latest.humanReviewStatus === 'approved'
-    var blockedByHygiene = hasBlockingViolations(violations)
-    var isReady = isApproved && !blockedByHygiene
-    var confidence = computeConfidence(isReady, fixVersion)
+    var pmOwner = (healthData ? healthData.pmOwner || null : null)
+      || (jiraFeatures && jiraFeatures.has(key) ? jiraFeatures.get(key).pmOwner : null)
+      || null
 
-    var readinessGates = {
-      ownerAssigned: !!(deliveryOwner || (healthData && healthData.assignee) || latest.approvedBy),
-      notBlocked: blockerResult.blockingDimensions.length === 0,
-      pastRefinement: !!latest.status && EARLY_STATUSES.indexOf(latest.status) === -1,
-      hasTargetVersion: targetVersions.length > 0,
-      noBlockingViolations: !blockedByHygiene
-    }
+    var readinessResult = computeReadiness({
+      humanReviewStatus: latest.humanReviewStatus,
+      rubricTotal: rubricTotal,
+      pmOwner: pmOwner,
+      deliveryOwner: deliveryOwner,
+      status: latest.status,
+      targetVersions: targetVersions,
+      violations: violations
+    })
+    var isReady = readinessResult.isReady
+    var confidence = computeConfidence(isReady, fixVersion)
+    var readinessGates = readinessResult.gates
 
     var feature = {
       key: key,
@@ -409,6 +427,7 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
       reviewers: latest.reviewers || {},
       components: componentsList,
       deliveryOwner: deliveryOwner,
+      pmOwner: pmOwner,
       team: team,
       reviewedAt: latest.reviewedAt,
       approvedBy: latest.approvedBy || null,
@@ -479,9 +498,16 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
     var hpPriorityBreakdown = hpFallback ? hpFallbackResult : (hd.priorityBreakdown || null)
 
     var hpViolations = hygieneIndex.get(ckey) || null
-    var hpGatesReady = isHealthFeatureReady(hd, cd)
-    var hpBlockedByHygiene = hasBlockingViolations(hpViolations)
-    var hpReady = hpGatesReady && !hpBlockedByHygiene
+    var hpReadinessResult = computeReadiness({
+      humanReviewStatus: null,
+      rubricTotal: 0,
+      pmOwner: hd.pmOwner || null,
+      deliveryOwner: hd.deliveryOwner || hd.assignee || null,
+      status: hd.status,
+      targetVersions: hpTargetVersions,
+      violations: hpViolations
+    })
+    var hpReady = hpReadinessResult.isReady
     var hpConfidence = computeConfidence(hpReady, hpFixVersion)
 
     var hpFeature = {
@@ -500,6 +526,7 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
       reviewers: {},
       components: hpComponents,
       deliveryOwner: hd.deliveryOwner || null,
+      pmOwner: hd.pmOwner || null,
       team: hpTeam,
       reviewedAt: null,
       approvedBy: null,
@@ -517,16 +544,7 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
       actionRequired: null,
       dataSource: 'health-pipeline',
       confidence: hpConfidence,
-      readinessGates: {
-        ownerAssigned: !!(hd.deliveryOwner || hd.assignee),
-        notBlocked: !(hd.blockerCount > 0),
-        pastRefinement: !!hd.status && EARLY_STATUSES.indexOf(hd.status) === -1,
-        hasTargetVersion: !!(
-          (hd.targetRelease && hd.targetRelease.length > 0) ||
-          (cd && cd.targetRelease)
-        ),
-        noBlockingViolations: !hpBlockedByHygiene
-      },
+      readinessGates: hpReadinessResult.gates,
       violations: hpViolations
     }
 
@@ -592,13 +610,19 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
     }, configuredVersions)
     var efEffective = efFallbackResult.score
 
-    var efBlockedByHygiene = hasBlockingViolations(efViolations)
-    var efIsApproved = efHumanReviewStatus === 'approved'
-    var efHasOwner = !!efAssignee
-    var efPastRefinement = !!ef.status && EARLY_STATUSES.indexOf(ef.status) === -1
-    var efHasTargetVersion = efTargetVersions.length > 0
-    var efBlockerCount = execData ? (execData.blockerCount || 0) : (ef.blockerCount || 0)
-    var efIsReady = efIsApproved && !efBlockedByHygiene && efHasOwner && efPastRefinement && efHasTargetVersion
+    var efPmOwner = (jiraFeatures && jiraFeatures.has(ef.key))
+      ? jiraFeatures.get(ef.key).pmOwner || null : null
+
+    var efReadinessResult = computeReadiness({
+      humanReviewStatus: efHumanReviewStatus,
+      rubricTotal: 0,
+      pmOwner: efPmOwner,
+      deliveryOwner: efAssignee,
+      status: ef.status,
+      targetVersions: efTargetVersions,
+      violations: efViolations
+    })
+    var efIsReady = efReadinessResult.isReady
     var efConfidence = computeConfidence(efIsReady, efFixVersion)
 
     var efFeature = {
@@ -617,6 +641,7 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
       reviewers: {},
       components: efComponents,
       deliveryOwner: efAssignee,
+      pmOwner: efPmOwner,
       team: efTeam,
       reviewedAt: null,
       approvedBy: null,
@@ -636,13 +661,7 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
         : null,
       dataSource: pass3DataSource,
       confidence: efConfidence,
-      readinessGates: {
-        ownerAssigned: efHasOwner,
-        notBlocked: !(efBlockerCount > 0),
-        pastRefinement: efPastRefinement,
-        hasTargetVersion: efHasTargetVersion,
-        noBlockingViolations: !efBlockedByHygiene
-      },
+      readinessGates: efReadinessResult.gates,
       violations: efViolations
     }
 
@@ -687,4 +706,4 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
   return { pendingReview: pendingReview, ready: ready, filterMeta: filterMeta, meta: meta }
 }
 
-module.exports = { buildFeatureReadiness: buildFeatureReadiness, computeBlockers: computeBlockers, computeBestAvailableScore: computeBestAvailableScore, isHealthFeatureReady: isHealthFeatureReady, computeTierScore: computeTierScore, computeTargetVersionScore: computeTargetVersionScore, hasBlockingViolations: hasBlockingViolations, computeConfidence: computeConfidence, collectFilterMeta: collectFilterMeta, deriveHumanReviewStatusFromLabels: deriveHumanReviewStatusFromLabels, BLOCKING_HYGIENE_RULES: BLOCKING_HYGIENE_RULES, COMPLETENESS_MULTIPLIERS: COMPLETENESS_MULTIPLIERS, MAX_SIGNALS: MAX_SIGNALS }
+module.exports = { buildFeatureReadiness: buildFeatureReadiness, computeBlockers: computeBlockers, computeBestAvailableScore: computeBestAvailableScore, computeReadiness: computeReadiness, computeTierScore: computeTierScore, computeTargetVersionScore: computeTargetVersionScore, hasBlockingViolations: hasBlockingViolations, computeConfidence: computeConfidence, collectFilterMeta: collectFilterMeta, deriveHumanReviewStatusFromLabels: deriveHumanReviewStatusFromLabels, BLOCKING_HYGIENE_RULES: BLOCKING_HYGIENE_RULES, COMPLETENESS_MULTIPLIERS: COMPLETENESS_MULTIPLIERS, MAX_SIGNALS: MAX_SIGNALS }
