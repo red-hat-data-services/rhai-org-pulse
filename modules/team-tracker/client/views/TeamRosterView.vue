@@ -610,10 +610,7 @@ const editingBoards = ref(false)
 const editBoardsList = ref([])
 const savingBoards = ref(false)
 
-const canEditBoards = computed(() => {
-  if (!team.value?.teamId) return false
-  return canEditTeam(team.value.teamId)
-})
+const canEditBoards = computed(() => canManageMembers.value)
 
 function startEditingBoards() {
   const boards = teamDetail.value?.boards || []
