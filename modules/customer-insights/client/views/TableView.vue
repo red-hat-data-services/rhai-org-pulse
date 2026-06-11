@@ -44,7 +44,7 @@
         <tbody class="bg-white divide-y divide-gray-200">
           <tr v-if="interactions.length === 0">
             <td colspan="6" class="px-6 py-12 text-center text-gray-500">
-              No interactions found
+              Coming Soon
             </td>
           </tr>
           <tr

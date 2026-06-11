@@ -153,13 +153,8 @@
     <!-- No Data State -->
     <div v-else class="bg-white rounded-lg shadow p-12 text-center">
       <div class="text-gray-500 mb-4">
-        <p class="font-medium text-lg mb-2">No insights available yet</p>
-        <p class="text-sm">AI analysis requires configuration of the GitLab CI pipeline or manual generation via the button above.</p>
-      </div>
-      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
-        <p class="text-sm text-blue-800">
-          <strong>Note:</strong> The "Generate Insights with AI" button uses the models.corp API (Gemini) to analyze customer feedback and generate strategic recommendations.
-        </p>
+        <p class="font-medium text-lg mb-2">Coming Soon</p>
+        <p class="text-sm">Click "Generate Insights with AI" above to analyze customer feedback.</p>
       </div>
     </div>
   </div>

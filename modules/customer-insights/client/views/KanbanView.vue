@@ -77,7 +77,7 @@
           </div>
 
           <div v-if="!interactionsByStatus[status]?.length" class="text-sm text-gray-400 text-center py-4">
-            No interactions
+            Coming Soon
           </div>
         </div>
       </div>

@@ -31,13 +31,8 @@
     <!-- No Data State -->
     <div v-else-if="!analytics || Object.keys(analytics).length === 0" class="bg-white rounded-lg shadow p-12 text-center">
       <div class="text-gray-500 mb-4">
-        <p class="font-medium text-lg mb-2">No analytics data available</p>
+        <p class="font-medium text-lg mb-2">Coming Soon</p>
         <p class="text-sm">Analytics will appear once customer interactions are imported.</p>
-      </div>
-      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
-        <p class="text-sm text-blue-800">
-          <strong>Get Started:</strong> Import customer interactions via the Import tab to see aggregated analytics and trends.
-        </p>
       </div>
     </div>
 

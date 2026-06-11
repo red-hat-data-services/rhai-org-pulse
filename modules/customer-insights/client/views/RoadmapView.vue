@@ -397,13 +397,8 @@
     <!-- No Data State -->
     <div v-else class="bg-white rounded-lg shadow p-12 text-center">
       <div class="text-gray-500 mb-4">
-        <p class="font-medium text-lg mb-2">No roadmap data available</p>
+        <p class="font-medium text-lg mb-2">Coming Soon</p>
         <p class="text-sm">Roadmap data is populated from customer interactions and RFEs.</p>
-      </div>
-      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
-        <p class="text-sm text-blue-800">
-          <strong>Note:</strong> AI-powered roadmap recommendations will appear here once customer interactions and feedback data are imported.
-        </p>
       </div>
     </div>
 
