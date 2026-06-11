@@ -17,6 +17,27 @@ function warn(msg) {
   console.warn(`  WARN: ${msg}`)
 }
 
+function serverUsesStorage(serverDir) {
+  const files = []
+  function collect(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (entry.isDirectory()) {
+        collect(path.join(dir, entry.name))
+      } else if (entry.name.endsWith('.js')) {
+        files.push(path.join(dir, entry.name))
+      }
+    }
+  }
+  collect(serverDir)
+
+  const pattern = /writeToStorage(?:Atomic)?\s*\(/
+  for (const file of files) {
+    const content = fs.readFileSync(file, 'utf8')
+    if (pattern.test(content)) return true
+  }
+  return false
+}
+
 function validate() {
   if (!fs.existsSync(MODULES_DIR)) {
     console.log('No modules/ directory found — nothing to validate.')
@@ -180,6 +201,30 @@ function validate() {
         if (!item.label) warn(`NavItem "${item.id}" missing "label"`)
         if (!item.icon) warn(`NavItem "${item.id}" missing "icon"`)
       }
+    }
+  }
+
+  // ─── Export hook validation ───
+  console.log('\nValidating export hooks...')
+
+  for (const dir of dirs) {
+    const manifestPath = path.join(MODULES_DIR, dir, 'module.json')
+    if (!fs.existsSync(manifestPath)) continue
+
+    let manifest
+    try {
+      manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'))
+    } catch { continue }
+
+    if (manifest.export) continue
+
+    const serverDir = path.join(MODULES_DIR, dir, 'server')
+    if (!fs.existsSync(serverDir)) continue
+
+    if (serverUsesStorage(serverDir)) {
+      error(`Module "${dir}" writes to storage but has no "export" section in module.json. ` +
+        'Modules that persist data must implement an export hook for anonymized test data. ' +
+        'See docs/MODULES.md "Export Hook" section.')
     }
   }
 

@@ -145,6 +145,21 @@ test.describe('Frontend Smoke Tests', () => {
     expect(page.errors).toHaveLength(0);
   });
 
+  test('should export test data successfully', async ({ page }) => {
+    const response = await page.request.get('/api/export/test-data');
+
+    expect(response.status()).toBe(200);
+    expect(response.headers()['content-type']).toContain('application/octet-stream');
+    expect(response.headers()['content-disposition']).toContain('org-pulse-test-data.tgz');
+
+    const body = await response.body();
+    expect(body.length).toBeGreaterThan(0);
+
+    // Verify gzip magic bytes (1f 8b)
+    expect(body[0]).toBe(0x1f);
+    expect(body[1]).toBe(0x8b);
+  });
+
   test('should render without critical accessibility violations', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
