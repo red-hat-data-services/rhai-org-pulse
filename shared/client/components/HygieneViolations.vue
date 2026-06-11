@@ -4,6 +4,13 @@ import { computed } from 'vue'
 const props = defineProps({
   violations: { type: Array, default: () => [] },
   loading: { type: Boolean, default: false },
+  featureKey: { type: String, default: null },
+  jiraBaseUrl: { type: String, default: 'https://issues.redhat.com/browse' }
+})
+
+const jiraUrl = computed(() => {
+  if (!props.featureKey) return null
+  return `${props.jiraBaseUrl}/${props.featureKey}`
 })
 
 const CATEGORY_COLORS = {
@@ -94,8 +101,19 @@ const grouped = computed(() => {
               class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium"
               :class="categoryBadgeClass(group.category)"
             >{{ categoryLabel(group.category) }}</span>
+            <a
+              v-if="jiraUrl"
+              :href="jiraUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="ml-auto inline-flex items-center gap-1 text-[11px] font-medium text-primary-600 dark:text-blue-400 hover:text-primary-700 dark:hover:text-blue-300 hover:underline transition-colors shrink-0"
+              :aria-label="'Fix ' + v.name + ' in Jira'"
+            >Fix in Jira
+              <svg class="h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+            </a>
           </div>
           <p class="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">{{ v.message }}</p>
+          <p v-if="v.remediation" class="text-xs text-gray-500 dark:text-gray-500 leading-relaxed mt-1 italic">{{ v.remediation }}</p>
         </div>
       </div>
     </div>

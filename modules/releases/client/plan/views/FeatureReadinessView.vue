@@ -2,6 +2,8 @@
 import { ref, computed, onMounted, inject } from 'vue'
 import { useFeatureReadiness } from '../composables/useFeatureReadiness'
 import { useReleases } from '../composables/useReleasePlanning'
+import { useRefreshPolling } from '../composables/useRefreshPolling'
+import { apiRequest } from '@shared/client/services/api'
 import FeatureReadinessFilterBar from '../components/FeatureReadinessFilterBar.vue'
 import FeatureReadinessRow from '@shared/client/components/FeatureReadinessRow.vue'
 import FeatureReadinessDrawer from '@shared/client/components/FeatureReadinessDrawer.vue'
@@ -15,6 +17,34 @@ function navigateToFeature(key) {
 
 const { pendingReview, ready, filterMeta, meta, loading, error, loadFeatureReadiness } = useFeatureReadiness()
 const { releases, loadReleases } = useReleases()
+
+const refreshing = ref(false)
+const refreshStatus = ref('')
+
+async function triggerHygieneRefresh() {
+  refreshing.value = true
+  refreshStatus.value = 'Starting hygiene refresh...'
+  try {
+    await apiRequest('/modules/releases/hygiene/refresh-all', { method: 'POST' })
+  } catch {
+    refreshStatus.value = 'Refresh failed'
+    refreshing.value = false
+  }
+}
+
+async function checkRefreshStatus() {
+  var data = await apiRequest('/modules/releases/hygiene/refresh/status')
+  if (data.running) {
+    refreshStatus.value = (data.progress && data.progress.message) || 'Refreshing...'
+  }
+  return data
+}
+
+useRefreshPolling(refreshing, checkRefreshStatus, function() {
+  refreshing.value = false
+  refreshStatus.value = ''
+  loadFeatureReadiness()
+})
 
 onMounted(function() {
   loadFeatureReadiness()
@@ -150,6 +180,12 @@ function formatSyncDate(dateStr) {
         <span>{{ readyCounts.total }} features</span>
         <span class="text-green-600 dark:text-green-400">{{ readyCounts.ready }} ready</span>
         <span class="text-red-600 dark:text-red-400">{{ readyCounts.notReady }} not ready</span>
+        <button
+          @click="triggerHygieneRefresh"
+          :disabled="refreshing"
+          class="ml-2 px-3 py-1 text-xs font-medium rounded-md bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          :title="refreshing ? refreshStatus : 'Refresh hygiene data from Jira'"
+        >{{ refreshing ? 'Refreshing...' : 'Refresh Hygiene' }}</button>
       </div>
     </div>
 

@@ -1,8 +1,6 @@
 var { getConfiguredReleases } = require('./config')
 var { loadIndex } = require('./cache-reader')
 var { CLOSED_STATUSES } = require('./constants')
-var { evaluateHygiene } = require('../hygiene/hygiene-rules')
-var { loadConfig: loadHygieneConfig } = require('../hygiene/config')
 var { deriveHumanReviewStatus: sharedDeriveStatus } = require('../execution/ai-review-fields')
 
 var RICE_MAX = 16900 // 13 × 13 × 100 ÷ 1 (theoretical max: max Reach × max Impact × max Confidence ÷ min Effort)
@@ -236,13 +234,6 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
 
   var configuredVersions = getConfiguredReleases(readFromStorage).map(function(r) { return r.version })
 
-  var hygieneRulesConfig = {}
-  try {
-    var hConfig = loadHygieneConfig({ readFromStorage: readFromStorage })
-    hygieneRulesConfig = hConfig.rules || {}
-  } catch {
-    // hygiene config not available
-  }
 
   for (var cvi = 0; cvi < configuredVersions.length; cvi++) {
     var cv = configuredVersions[cvi]
@@ -390,23 +381,6 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
       : (healthComponents.length > 0 ? healthComponents : jiraComponents)
 
     var violations = hygieneIndex.get(key) || null
-    if (!violations && jiraFeatures && jiraFeatures.has(key)) {
-      try {
-        var jf = jiraFeatures.get(key)
-        violations = evaluateHygiene({
-          key: key, summary: jf.summary || latest.title, status: jf.status || latest.status,
-          issueType: jf.issueType, assignee: jf.assignee, team: team,
-          components: componentsList, fixVersions: jf.fixVersions || [],
-          labels: jf.labels || [], statusSummary: jf.statusSummary || null,
-          colorStatus: jf.colorStatus || null, releaseType: jf.releaseType || null,
-          docsRequired: jf.docsRequired || null, targetEnd: jf.targetEnd || null,
-          riceScore: jf.riceScore || null
-        }, hygieneRulesConfig)
-        if (violations && violations.length === 0) violations = null
-      } catch {
-        // dynamic evaluation failed, leave violations as null
-      }
-    }
     var isApproved = latest.humanReviewStatus === 'approved'
     var blockedByHygiene = hasBlockingViolations(violations)
     var isReady = isApproved && !blockedByHygiene
@@ -506,23 +480,6 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
     var hpPriorityBreakdown = hpFallback ? hpFallbackResult : (hd.priorityBreakdown || null)
 
     var hpViolations = hygieneIndex.get(ckey) || null
-    if (!hpViolations && jiraFeatures && jiraFeatures.has(ckey)) {
-      try {
-        var hpJf = jiraFeatures.get(ckey)
-        hpViolations = evaluateHygiene({
-          key: ckey, summary: hpJf.summary || hd.summary, status: hpJf.status || hd.status,
-          issueType: hpJf.issueType, assignee: hpJf.assignee || hd.assignee,
-          team: hpTeam, components: hpComponents, fixVersions: hpJf.fixVersions || [],
-          labels: hpJf.labels || [], statusSummary: hpJf.statusSummary || null,
-          colorStatus: hpJf.colorStatus || null, releaseType: hpJf.releaseType || null,
-          docsRequired: hpJf.docsRequired || null, targetEnd: hpJf.targetEnd || null,
-          riceScore: hpJf.riceScore || null
-        }, hygieneRulesConfig)
-        if (hpViolations && hpViolations.length === 0) hpViolations = null
-      } catch {
-        // dynamic evaluation failed, leave violations as null
-      }
-    }
     var hpGatesReady = isHealthFeatureReady(hd, cd)
     var hpBlockedByHygiene = hasBlockingViolations(hpViolations)
     var hpReady = hpGatesReady && !hpBlockedByHygiene
@@ -618,30 +575,6 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
     var efAssignee = typeof ef.assignee === 'string' ? ef.assignee : (ef.assignee && ef.assignee.displayName ? ef.assignee.displayName : null)
     var efTeam = teamIndex.get(ef.key) || ef.team || null
     var efViolations = hygieneIndex.get(ef.key) || null
-    if (!efViolations && pass3DataSource === 'jira') {
-      try {
-        efViolations = evaluateHygiene({
-          key: ef.key,
-          summary: ef.summary,
-          status: ef.status,
-          issueType: ef.issueType,
-          assignee: efAssignee,
-          team: efTeam,
-          components: efComponents,
-          fixVersions: efFixVersions,
-          labels: efLabels,
-          statusSummary: ef.statusSummary || null,
-          colorStatus: ef.colorStatus || null,
-          releaseType: ef.releaseType || null,
-          docsRequired: ef.docsRequired || null,
-          targetEnd: ef.targetEnd || null,
-          riceScore: ef.riceScore || null
-        }, hygieneRulesConfig)
-        if (efViolations && efViolations.length === 0) efViolations = null
-      } catch {
-        // dynamic evaluation failed, leave as null
-      }
-    }
 
     var efCandidateData = candidateIndex.get(ef.key) || null
     var efTier = efCandidateData && efCandidateData.tier != null ? 'T' + efCandidateData.tier : null

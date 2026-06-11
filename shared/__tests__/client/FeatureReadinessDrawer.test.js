@@ -405,4 +405,27 @@ describe('FeatureReadinessDrawer', () => {
       expect(wrapper.text()).toContain('Target Version')
     })
   })
+
+  describe('Fix in Jira link in hygiene violations', () => {
+    it('renders "Fix in Jira" links when violations exist', () => {
+      const wrapper = mountDrawer(makeStratFeature({
+        key: 'RHAISTRAT-42',
+        violations: [
+          { id: 'missing-assignee', name: 'Missing Assignee', category: 'ownership', message: 'No assignee' }
+        ]
+      }))
+      const links = wrapper.findAll('a').filter(a => a.text().includes('Fix in Jira'))
+      expect(links.length).toBe(1)
+      expect(links[0].attributes('href')).toBe('https://issues.redhat.com/browse/RHAISTRAT-42')
+    })
+
+    it('shows remediation text in hygiene violation cards', () => {
+      const wrapper = mountDrawer(makeStratFeature({
+        violations: [
+          { id: 'missing-assignee', name: 'Missing Assignee', category: 'ownership', message: 'No assignee', remediation: 'Set the Assignee field' }
+        ]
+      }))
+      expect(wrapper.text()).toContain('Set the Assignee field')
+    })
+  })
 })

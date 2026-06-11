@@ -399,7 +399,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
               </svg>
             </button>
             <div v-if="hygieneExpanded">
-              <HygieneViolations :violations="violationsList" />
+              <HygieneViolations :violations="violationsList" :feature-key="feature?.key" :jira-base-url="jiraBaseUrl" />
             </div>
           </section>
 

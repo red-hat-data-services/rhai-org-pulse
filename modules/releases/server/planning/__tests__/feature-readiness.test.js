@@ -2703,10 +2703,10 @@ describe('buildFeatureReadiness - Jira data fallback enrichment', function() {
 })
 
 // ---------------------------------------------------------------------------
-// Dynamic hygiene evaluation in pass 3
+// Hygiene violations from cache (hygieneIndex)
 // ---------------------------------------------------------------------------
 
-describe('buildFeatureReadiness - dynamic hygiene evaluation', function() {
+describe('buildFeatureReadiness - hygiene violations from cache', function() {
   function makeExecIndex(features) {
     return { features: features, fetchedAt: '2026-06-09T00:00:00Z', schemaVersion: 'v2', featureCount: features.length }
   }
@@ -2741,32 +2741,7 @@ describe('buildFeatureReadiness - dynamic hygiene evaluation', function() {
     }, overrides)
   }
 
-  it('dynamically evaluates hygiene for Jira pass 3 features not in hygieneIndex', function() {
-    var jiraFeatures = makeJiraMap([
-      makeJiraFeature('RHAISTRAT-DYN1', {
-        status: 'In Progress',
-        assignee: null,
-        team: null
-      })
-    ])
-
-    var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
-      'releases/planning/config.json': { releases: { '3.6': { release: '3.6' } } },
-      'releases/execution/index.json': makeExecIndex([])
-    })
-
-    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
-    var feature = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-DYN1' })
-    expect(feature).toBeDefined()
-    expect(feature.violations).not.toBeNull()
-    expect(feature.violations.length).toBeGreaterThan(0)
-    var violationIds = feature.violations.map(function(v) { return v.id })
-    expect(violationIds).toContain('missing-assignee')
-    expect(violationIds).toContain('missing-team')
-  })
-
-  it('does not dynamically evaluate when hygieneIndex already has violations', function() {
+  it('attaches cached violations from hygieneIndex', function() {
     var jiraFeatures = makeJiraMap([
       makeJiraFeature('RHAISTRAT-DYN2', {
         status: 'In Progress',
@@ -2794,7 +2769,28 @@ describe('buildFeatureReadiness - dynamic hygiene evaluation', function() {
     expect(feature.violations).toEqual([{ id: 'cached-violation', name: 'Cached Violation' }])
   })
 
-  it('does not dynamically evaluate for execution index source', function() {
+  it('returns null violations for features not in hygieneIndex', function() {
+    var jiraFeatures = makeJiraMap([
+      makeJiraFeature('RHAISTRAT-DYN1', {
+        status: 'In Progress',
+        assignee: null,
+        team: null
+      })
+    ])
+
+    var readFromStorage = makeReadFromStorage({
+      'ai-impact/features.json': makeFeaturesStore({}),
+      'releases/planning/config.json': { releases: { '3.6': { release: '3.6' } } },
+      'releases/execution/index.json': makeExecIndex([])
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+    var feature = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-DYN1' })
+    expect(feature).toBeDefined()
+    expect(feature.violations).toBeNull()
+  })
+
+  it('returns null violations for execution index features', function() {
     var readFromStorage = makeReadFromStorage({
       'ai-impact/features.json': makeFeaturesStore({}),
       'releases/planning/config.json': { releases: { '3.6': { release: '3.6' } } },
@@ -2816,29 +2812,5 @@ describe('buildFeatureReadiness - dynamic hygiene evaluation', function() {
     var feature = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-DYN3' })
     expect(feature).toBeDefined()
     expect(feature.violations).toBeNull()
-  })
-
-  it('detects missing-color-status for In Progress feature without colorStatus', function() {
-    var jiraFeatures = makeJiraMap([
-      makeJiraFeature('RHAISTRAT-DYN4', {
-        status: 'In Progress',
-        assignee: 'Owner',
-        team: 'MyTeam',
-        colorStatus: null
-      })
-    ])
-
-    var readFromStorage = makeReadFromStorage({
-      'ai-impact/features.json': makeFeaturesStore({}),
-      'releases/planning/config.json': { releases: { '3.6': { release: '3.6' } } },
-      'releases/execution/index.json': makeExecIndex([])
-    })
-
-    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
-    var feature = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-DYN4' })
-    expect(feature).toBeDefined()
-    expect(feature.violations).not.toBeNull()
-    var violationIds = feature.violations.map(function(v) { return v.id })
-    expect(violationIds).toContain('missing-color-status')
   })
 })
