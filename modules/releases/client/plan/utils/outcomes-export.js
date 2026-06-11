@@ -9,6 +9,7 @@ import { escapeCell, escapeCsv, triggerDownload } from './health-export'
  * @param {Array}  opts.bigRocks
  * @param {Array}  opts.filteredFeatures
  * @param {Array}  opts.filteredRfes
+ * @param {Object} [opts.rockHealth]
  */
 export function exportMarkdown({ activeTab, selectedVersion, bigRocks, filteredFeatures, filteredRfes, rockHealth }) {
   var lines = []
@@ -93,6 +94,7 @@ export function exportMarkdown({ activeTab, selectedVersion, bigRocks, filteredF
  * @param {Array}  opts.bigRocks
  * @param {Array}  opts.filteredFeatures
  * @param {Array}  opts.filteredRfes
+ * @param {Object} [opts.rockHealth]
  */
 export function exportCsv({ activeTab, selectedVersion, bigRocks, filteredFeatures, filteredRfes, rockHealth }) {
   var rows = []
