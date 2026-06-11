@@ -24,8 +24,10 @@ function makeFeature(overrides = {}) {
     dataSource: 'strat-creator',
     confidence: 'committed',
     readinessGates: {
-      ownerAssigned: true,
-      notBlocked: true,
+      isApproved: true,
+      hasRubric: true,
+      pmAssigned: true,
+      deliveryOwnerAssigned: true,
       pastRefinement: true,
       hasTargetVersion: true,
       noBlockingViolations: true
@@ -45,8 +47,10 @@ function makeHealthFeature(overrides = {}) {
     reviewers: {},
     confidence: 'ready',
     readinessGates: {
-      ownerAssigned: true,
-      notBlocked: true,
+      isApproved: true,
+      hasRubric: true,
+      pmAssigned: true,
+      deliveryOwnerAssigned: true,
       pastRefinement: true,
       hasTargetVersion: true,
       noBlockingViolations: true
@@ -184,7 +188,7 @@ describe('FeatureReadinessRow', () => {
       expect(wrapper.find('[title="Needs attention"]').exists()).toBe(true)
     })
 
-    it('shows score breakdown tooltip when priorityScoreBreakdown is present', () => {
+    it('shows score breakdown popover when priorityScoreBreakdown is present', () => {
       const breakdown = {
         score: 62,
         rawScore: 88,
@@ -203,24 +207,23 @@ describe('FeatureReadinessRow', () => {
         priorityScoreBreakdown: breakdown
       }))
       const scoreTd = wrapper.findAll('td').at(1)
-      const scoreSpan = scoreTd.find('span')
-      const title = scoreSpan.attributes('title')
-      expect(title).toContain('Score: 62 / 100')
-      expect(title).toContain('Rubric')
-      expect(title).toContain('Priority')
-      expect(title).toContain('0.7')
-      expect(title).toContain('Missing')
+      const popover = scoreTd.find('div.absolute')
+      expect(popover.exists()).toBe(true)
+      expect(popover.text()).toContain('Score: 62 / 100')
+      expect(popover.text()).toContain('Rubric')
+      expect(popover.text()).toContain('Priority')
+      expect(popover.text()).toContain('0.7')
+      expect(popover.text()).toContain('Missing')
     })
 
-    it('shows simple tooltip when no breakdown available', () => {
+    it('does not show popover when no breakdown available', () => {
       const wrapper = mountRow(makeFeature({
         effectivePriorityScore: 72,
         priorityScoreFallback: false,
         priorityScoreBreakdown: null
       }))
       const scoreTd = wrapper.findAll('td').at(1)
-      const scoreSpan = scoreTd.find('span')
-      expect(scoreSpan.attributes('title')).toBe('Computed priority score')
+      expect(scoreTd.find('div.absolute').exists()).toBe(false)
     })
   })
 })
