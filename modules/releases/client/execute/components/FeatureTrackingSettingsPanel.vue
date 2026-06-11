@@ -65,7 +65,7 @@
 
             <div class="pt-2 border-t border-gray-100 dark:border-gray-700">
               <label class="block text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1.5">
-                Planning Freeze (fallback)
+                Planning Freeze Date
               </label>
               <input
                 type="date"
@@ -73,7 +73,7 @@
                 class="text-sm bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded px-2.5 py-1.5 text-gray-700 dark:text-gray-300 outline-none focus:ring-1 focus:ring-primary-400"
               />
               <p class="text-[10px] text-gray-400 dark:text-gray-500 mt-1">
-                Used only when Product Pages returns no planning freeze date
+                Overrides the date from Product Pages when set
               </p>
             </div>
           </div>

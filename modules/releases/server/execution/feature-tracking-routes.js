@@ -567,13 +567,15 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
     const versions = Object.keys(versionMap).map(function (k) { return versionMap[k] })
 
     for (let vi = 0; vi < versions.length; vi++) {
-      const fd = getFeatureFreezeDatesFromCache(versions[vi].version, storage.readFromStorage)
-      var ppDate = fd.earliest || null
-      // Apply tracking config fallback if PP returned nothing
-      if (!ppDate && trackingConfig.releases && trackingConfig.releases[versions[vi].version]) {
-        ppDate = trackingConfig.releases[versions[vi].version].planningFreezeOverride || null
+      var vKey = versions[vi].version
+      // User-entered date takes priority over Product Pages
+      var userDate = (trackingConfig.releases && trackingConfig.releases[vKey] && trackingConfig.releases[vKey].planningFreezeOverride) || null
+      if (userDate) {
+        versions[vi].planningFreezeDate = userDate
+      } else {
+        const fd = getFeatureFreezeDatesFromCache(vKey, storage.readFromStorage)
+        versions[vi].planningFreezeDate = fd.earliest || null
       }
-      versions[vi].planningFreezeDate = ppDate
     }
 
     versions.sort(function (a, b) {
@@ -650,13 +652,13 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
         console.error('[feature-tracking] Schedule API failed for version:', version, schedErr.message)
       }
 
-      // Apply tracking config fallback if no freeze date resolved
-      if (!freezeDates.earliest && tConfig.releases && tConfig.releases[version]) {
+      // User-entered date takes priority over Product Pages
+      if (tConfig.releases && tConfig.releases[version]) {
         var overrideDate = tConfig.releases[version].planningFreezeOverride
         if (overrideDate) {
           freezeDates.earliest = overrideDate
-          scheduleSource = (scheduleSource === 'none' ? '' : scheduleSource + ' + ') + 'config-fallback'
-          console.log('[feature-tracking] Using config fallback freeze date for', version, ':', overrideDate)
+          scheduleSource = 'user-override' + (scheduleSource !== 'none' ? ' (PP: ' + scheduleSource + ')' : '')
+          console.log('[feature-tracking] Using user-entered freeze date for', version, ':', overrideDate)
         }
       }
 
