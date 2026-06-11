@@ -29,9 +29,10 @@ test.describe('Package Analysis @package-analysis', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
 
-    const moduleNav = page.locator('aside nav').filter({ hasText: 'Product Builds' });
-    const count = await moduleNav.count();
-    expect(count).toBeGreaterThan(0);
+    const moduleHeader = page.locator('aside nav button').filter({ hasText: 'Product Builds' }).first();
+    await expect(moduleHeader).toBeVisible();
+    await moduleHeader.click();
+    await page.waitForTimeout(500);
 
     const packageAnalysisLink = page.locator('aside nav a, aside nav button').filter({ hasText: 'Package Analysis' });
     await expect(packageAnalysisLink.first()).toBeVisible();

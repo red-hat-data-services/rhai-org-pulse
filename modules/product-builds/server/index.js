@@ -664,6 +664,7 @@ module.exports = function registerRoutes(router, context) {
       description: 'Generate daily AIPCC package analysis report from JIRA (after 6am UTC)',
       order: 200,
       timeout: 600000,
+      cadence: '24h',
       handler: async function() {
         if (DEMO_MODE) return;
         const now = new Date();
