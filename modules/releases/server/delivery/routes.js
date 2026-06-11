@@ -2162,8 +2162,8 @@ module.exports = function registerRoutes(router, context) {
         if (!p.name || typeof p.name !== 'string' || !p.name.trim()) {
           return res.status(400).json({ error: 'Portfolio at index ' + i + ' must have a non-empty name' })
         }
-        if (!Array.isArray(p.releases) || p.releases.length !== 3) {
-          return res.status(400).json({ error: 'Portfolio "' + p.name + '" must have exactly 3 releases' })
+        if (!Array.isArray(p.releases) || p.releases.length !== 3 || p.releases.some(function(r) { return typeof r !== 'string' || !r.trim() })) {
+          return res.status(400).json({ error: 'Portfolio "' + p.name + '" must have exactly 3 non-empty release strings' })
         }
         if (typeof p.enabled !== 'boolean') {
           return res.status(400).json({ error: 'Portfolio "' + p.name + '" must have a boolean enabled field' })

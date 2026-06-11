@@ -421,6 +421,8 @@ async function save() {
   }
 
   try {
+    await saveConfig({ portfolioReleases: validPortfolios })
+
     var metaResponse = await fetch(getApiBase() + '/modules/releases/delivery/releases-metadata', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -430,8 +432,6 @@ async function save() {
       var metaErr = await metaResponse.json().catch(function() { return {} })
       throw new Error(metaErr.error || 'HTTP ' + metaResponse.status)
     }
-
-    await saveConfig({ portfolioReleases: validPortfolios })
 
     saveSuccess.value = true
     emit('saved')
