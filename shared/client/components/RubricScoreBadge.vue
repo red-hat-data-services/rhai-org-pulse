@@ -10,10 +10,10 @@ const props = defineProps({
 })
 
 const DIMENSIONS = [
-  { key: 'feasibility', label: 'F' },
-  { key: 'testability', label: 'T' },
-  { key: 'scope', label: 'S' },
-  { key: 'architecture', label: 'A' }
+  { key: 'feasibility', label: 'Feasibility' },
+  { key: 'testability', label: 'Testability' },
+  { key: 'scope', label: 'Scope' },
+  { key: 'architecture', label: 'Architecture' }
 ]
 
 function scoreClass(score) {

@@ -152,11 +152,13 @@ describe('FeatureReadinessRow', () => {
       expect(wrapper.emitted('select')[0][0]).toEqual(feature)
     })
 
-    it('renders Jira link with correct href', () => {
+    it('renders feature key as navigate button with Jira external link', () => {
       const wrapper = mountRow(makeFeature({ key: 'RHAISTRAT-42' }))
-      const link = wrapper.find('a')
-      expect(link.attributes('href')).toBe('https://issues.redhat.com/browse/RHAISTRAT-42')
-      expect(link.text()).toBe('RHAISTRAT-42')
+      const keyButton = wrapper.find('button')
+      expect(keyButton.text()).toBe('RHAISTRAT-42')
+      const jiraLink = wrapper.find('a[href="https://issues.redhat.com/browse/RHAISTRAT-42"]')
+      expect(jiraLink.exists()).toBe(true)
+      expect(jiraLink.attributes('target')).toBe('_blank')
     })
 
     it('shows tilde prefix for fallback priority score', () => {

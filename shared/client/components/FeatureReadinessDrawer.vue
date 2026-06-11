@@ -7,7 +7,7 @@ const props = defineProps({
   jiraBaseUrl: { type: String, default: 'https://issues.redhat.com/browse' }
 })
 
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'navigate'])
 
 const open = computed(() => props.feature !== null)
 
@@ -190,13 +190,25 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         <!-- Header -->
         <div class="px-4 pt-4 pb-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 shrink-0">
           <div class="flex items-start gap-2">
-            <a
-              :href="`${jiraBaseUrl}/${feature.key}`"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="font-mono text-xs font-bold text-primary-600 dark:text-blue-400 hover:underline shrink-0 mt-0.5"
-              @click.stop
-            >{{ feature.key }}</a>
+            <span class="inline-flex items-center gap-1 shrink-0 mt-0.5">
+              <button
+                type="button"
+                class="font-mono text-xs font-bold text-primary-600 dark:text-blue-400 hover:underline"
+                @click.stop="emit('navigate', feature.key)"
+              >{{ feature.key }}</button>
+              <a
+                :href="`${jiraBaseUrl}/${feature.key}`"
+                target="_blank"
+                rel="noopener noreferrer"
+                :aria-label="`Open ${feature.key} in Jira`"
+                class="text-gray-400 dark:text-gray-500 hover:text-primary-600 dark:hover:text-blue-400 transition-colors"
+                @click.stop
+              >
+                <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </a>
+            </span>
             <p class="flex-1 text-sm font-semibold text-gray-900 dark:text-gray-100 leading-snug">
               {{ feature.title || '—' }}
             </p>
