@@ -100,10 +100,10 @@ function goToPage(phaseId) {
   moduleNav.navigateTo(phaseId)
 }
 
-const fromForYou = computed(() => moduleNav.params.value?.from === 'state-of-the-union')
+const fromForYou = computed(() => moduleNav.params.value?.from === 'sotu' || moduleNav.params.value?.from === 'state-of-the-union')
 
 function goBackToForYou() {
-  moduleNav.navigateTo('state-of-the-union')
+  window.location.hash = '#/'
 }
 
 // RFE Review scoring criteria

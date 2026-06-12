@@ -117,6 +117,18 @@ function validate() {
       }
     }
 
+    // SOTU component exists and matches naming convention
+    if (manifest.client?.sotuComponent) {
+      const sotuPath = path.join(MODULES_DIR, dir, manifest.client.sotuComponent)
+      if (!fs.existsSync(sotuPath)) {
+        error(`SOTU component "${manifest.client.sotuComponent}" not found`)
+      }
+      const normalized = manifest.client.sotuComponent.replace(/^\.\//, '')
+      if (!/^client\/components\/.*SotuTab\.vue$/.test(normalized)) {
+        error(`SOTU component "${manifest.client.sotuComponent}" must match pattern "client/components/*SotuTab.vue"`)
+      }
+    }
+
     // Secrets field validation
     if (manifest.secrets !== undefined) {
       if (typeof manifest.secrets !== 'object' || Array.isArray(manifest.secrets)) {

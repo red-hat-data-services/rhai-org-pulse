@@ -150,11 +150,11 @@ const fromPlan = computed(() => nav.params.value.from === 'plan')
 const fromPlanFeatures = computed(() => nav.params.value.from === 'plan-features')
 const fromFeatureStatus = computed(() => nav.params.value.from === 'feature-status')
 const fromHygieneReport = computed(() => nav.params.value.from === 'hygiene-report')
-const fromForYou = computed(() => nav.params.value.from === 'state-of-the-union')
+const fromForYou = computed(() => nav.params.value.from === 'sotu' || nav.params.value.from === 'state-of-the-union')
 
 function goBack() {
   if (fromForYou.value) {
-    crossNavigate('ai-impact', 'state-of-the-union')
+    window.location.hash = '#/'
   } else if (fromRfe.value) {
     crossNavigate('ai-impact', 'rfe-review', { select: fromRfe.value })
   } else if (fromFeatureReview.value) {

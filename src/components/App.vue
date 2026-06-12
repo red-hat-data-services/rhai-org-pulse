@@ -497,7 +497,10 @@ export default {
       return this.gitStaticModules.find(m => m.slug === this.activeModuleSlug) || null
     },
     currentPageTitle() {
-      if (this.activeModule === 'home') return 'Home'
+      if (this.activeModule === 'home') {
+        const hasSotu = this.builtInManifests.some(m => m.client?.sotuComponent)
+        return hasSotu ? 'State of the Union' : 'Home'
+      }
       if (this.activeModule === 'module-iframe') {
         return this.activeModuleConfig?.name || this.activeModuleSlug || 'Module'
       }
@@ -634,6 +637,12 @@ export default {
       }
       if (parts[0] === 'docs') {
         window.location.replace('#/about?tab=docs')
+        return
+      }
+
+      // Redirect legacy SOTU bookmarks to central landing page
+      if (parts[0] === 'ai-impact' && parts[1] === 'state-of-the-union') {
+        window.location.replace('#/')
         return
       }
 

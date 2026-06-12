@@ -6,9 +6,9 @@
   "order": 5,
   "client": {
     "entry": "./client/index.js",
+    "sotuComponent": "./client/components/AISotuTab.vue",
     "navItems": [
-      { "id": "state-of-the-union", "label": "State of the Union", "icon": "UserCircle" },
-      { "id": "ai-factory-guide", "label": "AI Factory Guide", "icon": "BookOpen", "default": true, "separatorBefore": true },
+      { "id": "ai-factory-guide", "label": "AI Factory Guide", "icon": "BookOpen", "default": true },
       { "id": "rfe-review", "label": "RFE Review", "icon": "ClipboardList", "separatorBefore": true },
       { "id": "feature-review", "label": "Feature Review", "icon": "Target" },
       { "id": "test-plan-review", "label": "Test Plan Review", "icon": "ClipboardCheck" },

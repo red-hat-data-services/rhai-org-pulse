@@ -6,6 +6,7 @@
   "order": 0,
   "client": {
     "entry": "./client/index.js",
+    "sotuComponent": "./client/components/TeamSotuTab.vue",
     "navItems": [
       { "id": "home", "label": "Team Directory", "icon": "Users", "default": true },
       { "id": "people", "label": "People", "icon": "User" },
