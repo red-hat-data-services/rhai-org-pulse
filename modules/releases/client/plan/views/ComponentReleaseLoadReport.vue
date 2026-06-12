@@ -699,15 +699,19 @@ var pillarAllowedComponents = computed(function() {
   return allowed
 })
 
+function normalizeComponentName(name) {
+  return name.toLowerCase().replace(/[^a-z0-9]/g, '')
+}
+
 function componentMatchesPillar(jiraName) {
   var allowed = pillarAllowedComponents.value
   if (!allowed) return true
-  var lower = jiraName.toLowerCase()
+  if (allowed.has(jiraName.toLowerCase())) return true
+  var normalized = normalizeComponentName(jiraName)
   var iter = allowed.values()
   var next = iter.next()
   while (!next.done) {
-    var entry = next.value
-    if (lower.includes(entry) || entry.includes(lower)) return true
+    if (normalizeComponentName(next.value) === normalized) return true
     next = iter.next()
   }
   return false
@@ -841,15 +845,22 @@ async function fetchComponents() {
   }
 }
 
+function getEffectiveComponents() {
+  if (selectedComponents.value.length > 0) return selectedComponents.value
+  if (pillarAllowedComponents.value) return pillarFilteredComponents.value
+  return []
+}
+
 async function loadData() {
-  if (selectedComponents.value.length === 0 && selectedVersions.value.length === 0) return
+  var effectiveComponents = getEffectiveComponents()
+  if (effectiveComponents.length === 0 && selectedVersions.value.length === 0) return
   loadingData.value = true
   dataError.value = null
   hasFetched.value = true
 
   try {
     var params = new URLSearchParams()
-    if (selectedComponents.value.length > 0) params.set('components', selectedComponents.value.join(','))
+    if (effectiveComponents.length > 0) params.set('components', effectiveComponents.join(','))
     if (selectedVersions.value.length > 0) {
       var jiraVersions = resolveJiraVersions(selectedVersions.value)
       params.set('versions', jiraVersions.join(','))
@@ -878,8 +889,9 @@ watch(selectedPillars, function() {
   })
 }, { deep: true })
 
-watch([selectedComponents, selectedVersions], function() {
-  if (selectedComponents.value.length === 0 && selectedVersions.value.length === 0) {
+watch([selectedComponents, selectedVersions, selectedPillars], function() {
+  var effectiveComponents = getEffectiveComponents()
+  if (effectiveComponents.length === 0 && selectedVersions.value.length === 0) {
     groups.value = []
     hasFetched.value = false
     return
