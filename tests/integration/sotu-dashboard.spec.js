@@ -25,15 +25,18 @@ test.describe('SOTU Widget Dashboard @sotu-dashboard', () => {
     logCapturedErrors(page, testInfo);
   });
 
-  test('should load default dashboard with widgets on landing page', async ({ page }) => {
+  test('should show empty dashboard with build CTA on first visit', async ({ page }) => {
     await page.goto('/', { waitUntil: 'networkidle' });
     await pageLoadComplete(page);
 
     // Should show the dashboard header
     await expect(page.locator('text=Your personalized overview')).toBeVisible({ timeout: DEFAULT_PAGE_WAIT_TIME });
 
-    // Should show Add Widgets button
-    await expect(page.locator('text=Add Widgets')).toBeVisible();
+    // Empty state should show Build Your Dashboard heading
+    await expect(page.locator('text=Build Your Dashboard')).toBeVisible();
+
+    // Should show Add Widgets CTA button in empty state
+    await expect(page.getByRole('button', { name: 'Add Widgets' }).first()).toBeVisible();
 
     // Should show Browse Modules button
     await expect(page.locator('text=Browse Modules')).toBeVisible();
