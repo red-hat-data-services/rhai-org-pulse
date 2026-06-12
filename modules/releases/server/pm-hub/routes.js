@@ -377,6 +377,36 @@ const FIELDS_TO_FETCH = [
   CUSTOM_FIELDS.productManager
 ].join(',')
 
+function buildFeatureObj(f, targetVersions) {
+  return {
+    key: f.key,
+    summary: f.summary || '',
+    status: f.status || null,
+    statusCategory: f.statusCategory || null,
+    colorStatus: f.colorStatus || null,
+    statusSummary: f.statusSummary || null,
+    releaseType: f.releaseType || null,
+    isBlocked: f.isBlocked || false,
+    components: f.components || [],
+    fixVersions: f.fixVersions || [],
+    targetVersions: targetVersions || [],
+    assignee: f.assignee || null,
+    pmOwner: f.pmOwner || null
+  }
+}
+
+function extractTargetVersions(rawIssue) {
+  var tvField = rawIssue.fields && rawIssue.fields[CUSTOM_FIELDS.targetVersion]
+  if (!tvField) return []
+  var arr = Array.isArray(tvField) ? tvField : [tvField]
+  var result = []
+  for (var i = 0; i < arr.length; i++) {
+    var name = arr[i] && (arr[i].name || arr[i].value)
+    if (name) result.push(String(name).trim())
+  }
+  return result
+}
+
 /**
  * @param {import('express').Router} router
  * @param {{ requireAuth: Function, requireScope: Function, jira: object, storage: object }} context
@@ -625,18 +655,6 @@ module.exports = function registerPmHubRoutes(router, context) {
         committedIssues = await jiraClient.fetchAllJqlResults(compJql, fieldsWithTv, { expand: 'renderedFields' })
       }
 
-      function extractTargetVersions(rawIssue) {
-        var tvField = rawIssue.fields && rawIssue.fields[CUSTOM_FIELDS.targetVersion]
-        if (!tvField) return []
-        var arr = Array.isArray(tvField) ? tvField : [tvField]
-        var result = []
-        for (var i = 0; i < arr.length; i++) {
-          var name = arr[i] && (arr[i].name || arr[i].value)
-          if (name) result.push(String(name).trim())
-        }
-        return result
-      }
-
       var versionGroups = {}
 
       function ensureGroup(vName, cName) {
@@ -656,22 +674,6 @@ module.exports = function registerPmHubRoutes(router, context) {
         return versionGroups[vName].components[cName]
       }
 
-      function buildFeatureObj(f) {
-        return {
-          key: f.key,
-          summary: f.summary || '',
-          status: f.status || null,
-          statusCategory: f.statusCategory || null,
-          colorStatus: f.colorStatus || null,
-          statusSummary: f.statusSummary || null,
-          releaseType: f.releaseType || null,
-          isBlocked: f.isBlocked || false,
-          components: f.components || [],
-          assignee: f.assignee || null,
-          pmOwner: f.pmOwner || null
-        }
-      }
-
       // Process requested issues (Target Version matches)
       for (var ri = 0; ri < requestedIssues.length; ri++) {
         var raw = requestedIssues[ri]
@@ -688,7 +690,7 @@ module.exports = function registerPmHubRoutes(router, context) {
             if (componentNames.length > 0 && componentNames.indexOf(cName) === -1) continue
             var group = ensureGroup(tvName, cName)
             if (!group.requestedFeatures.some(function(e) { return e.key === f.key })) {
-              group.requestedFeatures.push(buildFeatureObj(f))
+              group.requestedFeatures.push(buildFeatureObj(f, tvNames))
               group.requestedCount++
             }
           }
@@ -699,6 +701,7 @@ module.exports = function registerPmHubRoutes(router, context) {
       for (var cii = 0; cii < committedIssues.length; cii++) {
         var rawC = committedIssues[cii]
         var fc = transformIssue(rawC, {})
+        var tvNamesC = extractTargetVersions(rawC)
         var fvList = fc.fixVersions && fc.fixVersions.length > 0 ? fc.fixVersions : ['Unversioned']
         var compListC = fc.components && fc.components.length > 0 ? fc.components : ['No Component']
 
@@ -711,7 +714,7 @@ module.exports = function registerPmHubRoutes(router, context) {
             if (componentNames.length > 0 && componentNames.indexOf(cNameC) === -1) continue
             var groupC = ensureGroup(fvName, cNameC)
             if (!groupC.committedFeatures.some(function(e) { return e.key === fc.key })) {
-              groupC.committedFeatures.push(buildFeatureObj(fc))
+              groupC.committedFeatures.push(buildFeatureObj(fc, tvNamesC))
               groupC.committedCount++
               if (fc.isBlocked) groupC.blockedCount++
             }
@@ -773,3 +776,5 @@ module.exports.validatePillarConfig = validatePillarConfig
 module.exports.PILLAR_CONFIG_FILE = PILLAR_CONFIG_FILE
 module.exports.backfillLeads = backfillLeads
 module.exports.computeVelocity = computeVelocity
+module.exports.buildFeatureObj = buildFeatureObj
+module.exports.extractTargetVersions = extractTargetVersions
