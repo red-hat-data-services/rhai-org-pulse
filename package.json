@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.60",
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "scripts": {
     "dev": "vite",
@@ -54,7 +54,7 @@
     "@vitejs/plugin-vue": "^6.0.7",
     "@vue/test-utils": "^2.4.11",
     "autoprefixer": "^10.5.0",
-    "concurrently": "^9.2.1",
+    "concurrently": "^10.0.3",
     "dotenv": "^17.2.4",
     "eslint": "^10.0.3",
     "eslint-plugin-vue": "^10.8.0",
