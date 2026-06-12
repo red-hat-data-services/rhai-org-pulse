@@ -317,6 +317,32 @@ module.exports = function registerExecutionRoutes(router, context) {
       result.nextScheduledFetch = nextFetch.toISOString();
     }
 
+    // Jira enrichment status
+    const jiraEnrichConfig = config.jiraEnrichment || {};
+    const lastEnrichment = readDataFile('last-enrichment.json');
+    result.jiraEnrichment = {
+      enabled: jiraEnrichConfig.enabled !== false,
+      jiraConfigured: !!jira,
+      lastSync: lastEnrichment || null
+    };
+    // Warn if Jira enrichment hasn't run in >24h (2x the default 6h cadence)
+    if (result.jiraEnrichment.enabled && jira) {
+      const enrichTs = lastEnrichment?.timestamp ? new Date(lastEnrichment.timestamp).getTime() : 0;
+      const enrichAgeMs = enrichTs ? Date.now() - enrichTs : Infinity;
+      const enrichAgeHours = enrichAgeMs / (1000 * 60 * 60);
+      if (enrichAgeHours > 24) {
+        result.jiraEnrichment.stale = true;
+        if (enrichTs === 0) {
+          result.jiraEnrichment.warning = 'Jira enrichment has never run';
+        } else {
+          const ageDays = Math.floor(enrichAgeHours / 24);
+          result.jiraEnrichment.warning = 'Last Jira sync was ' + (ageDays === 1 ? '1 day' : ageDays + ' days') + ' ago';
+        }
+      }
+    } else if (!jira) {
+      result.jiraEnrichment.warning = 'Jira client not configured — enrichment cannot run';
+    }
+
     res.json(result);
   });
 
@@ -516,13 +542,23 @@ module.exports = function registerExecutionRoutes(router, context) {
     context.registerDiagnostics(async function() {
       const index = readDataFile('index.json');
       const lastFetch = readDataFile('last-fetch.json');
+      const lastEnrichment = readDataFile('last-enrichment.json');
+      const config = loadConfig(storage);
+      const jiraEnrichConfig = config.jiraEnrichment || {};
       return {
         dataAvailable: !!index,
         featureCount: index?.featureCount || 0,
         fetchedAt: index?.fetchedAt || null,
         schemaVersion: index?.schemaVersion || null,
         lastFetchStatus: lastFetch?.status || null,
-        configured: loadConfig(storage).enabled && !!getToken()
+        configured: config.enabled && !!getToken(),
+        jiraEnrichment: {
+          enabled: jiraEnrichConfig.enabled !== false,
+          jiraConfigured: !!jira,
+          lastSyncStatus: lastEnrichment?.status || null,
+          lastSyncTimestamp: lastEnrichment?.timestamp || null,
+          enrichedCount: lastEnrichment?.enrichedCount || 0
+        }
       };
     });
   }
@@ -567,8 +603,9 @@ module.exports = function registerExecutionRoutes(router, context) {
       const enrichmentHandler = async function() {
         const config = loadConfig(storage);
         const jiraEnrichConfig = config.jiraEnrichment || {};
-        if (!jiraEnrichConfig.enabled) {
-          return { status: 'skipped', message: 'Jira enrichment disabled' };
+        // Default to enabled — Jira enrichment should run unless explicitly disabled
+        if (jiraEnrichConfig.enabled === false) {
+          return { status: 'skipped', message: 'Jira enrichment disabled in config (jiraEnrichment.enabled = false)' };
         }
 
         const result = await syncAllFeatures(storage, jira.jiraRequest, jira.fetchAllJqlResults);
