@@ -50,14 +50,31 @@ spec:
 
                   # Step 1: Trigger unified refresh-all (cadence-aware)
                   echo "=== Triggering unified refresh-all ==="
-                  REFRESH_RESP=$(curl -sf -X POST "$BACKEND/api/admin/refresh-all" \
-                    -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" \
-                    -w "\n%{http_code}" 2>/dev/null) || true
-                  HTTP_CODE=$(echo "$REFRESH_RESP" | tail -1)
-                  BODY=$(echo "$REFRESH_RESP" | sed '$d')
+                  RETRY=0
+                  MAX_RETRIES=3
+                  HTTP_CODE=""
+                  BODY=""
+                  while [ $RETRY -lt $MAX_RETRIES ]; do
+                    REFRESH_RESP=$(curl -sf -X POST "$BACKEND/api/admin/refresh-all" \
+                      -H "$AUTH_HEADER" -H "$PROXY_SECRET_HEADER" \
+                      -w "\n%{http_code}" 2>/dev/null) || true
+                    HTTP_CODE=$(echo "$REFRESH_RESP" | tail -1)
+                    BODY=$(echo "$REFRESH_RESP" | sed '$d')
+                    if [ "$HTTP_CODE" != "000" ]; then
+                      break
+                    fi
+                    RETRY=$((RETRY + 1))
+                    echo "Backend unreachable (attempt $RETRY/$MAX_RETRIES), retrying in 10s..."
+                    sleep 10
+                  done
 
                   if [ "$HTTP_CODE" = "409" ]; then
-                    echo "ERROR: A refresh is already running"
+                    echo "Refresh already running — skipping (not an error)"
+                    echo "=== Sync and refresh completed successfully ==="
+                    exit 0
+                  fi
+                  if [ "$HTTP_CODE" = "000" ]; then
+                    echo "ERROR: Backend unreachable after $MAX_RETRIES attempts (likely during rollout)"
                     exit 1
                   fi
                   if [ "$HTTP_CODE" != "202" ]; then
