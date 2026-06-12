@@ -20,7 +20,8 @@ function persistSavedSets(sets) {
   } catch { /* localStorage unavailable */ }
 }
 
-export function useHygieneFilters(features) {
+export function useHygieneFilters(features, options = {}) {
+  const { productFilter, versionFilter, allVersions } = options
   const selectedTeams = ref([])
   const selectedComponents = ref([])
   const savedSets = ref(loadSavedSets())
@@ -71,7 +72,10 @@ export function useHygieneFilters(features) {
   })
 
   const isFiltered = computed(() => {
-    return selectedTeams.value.length > 0 || selectedComponents.value.length > 0
+    if (selectedTeams.value.length > 0 || selectedComponents.value.length > 0) return true
+    if (productFilter && productFilter.value.length > 0) return true
+    if (versionFilter && versionFilter.value.length > 0) return true
+    return false
   })
 
   function toggleTeam(team) {
@@ -95,6 +99,8 @@ export function useHygieneFilters(features) {
   function clearFilters() {
     selectedTeams.value = []
     selectedComponents.value = []
+    if (productFilter) productFilter.value = []
+    if (versionFilter) versionFilter.value = []
   }
 
   function saveCurrentSet(name) {
@@ -102,11 +108,14 @@ export function useHygieneFilters(features) {
     const trimmed = name.trim()
     if (savedSets.value.some(s => s.name === trimmed)) return false
     if (savedSets.value.length >= MAX_SAVED_SETS) return false
-    savedSets.value.push({
+    const set = {
       name: trimmed,
       teams: [...selectedTeams.value],
       components: [...selectedComponents.value]
-    })
+    }
+    if (productFilter) set.products = [...productFilter.value]
+    if (versionFilter) set.versions = [...versionFilter.value]
+    savedSets.value.push(set)
     persistSavedSets(savedSets.value)
     return true
   }
@@ -115,6 +124,11 @@ export function useHygieneFilters(features) {
     // Intersect with available values for stale detection
     selectedTeams.value = set.teams.filter(t => availableTeams.value.includes(t))
     selectedComponents.value = set.components.filter(c => availableComponents.value.includes(c))
+    if (productFilter && set.products) productFilter.value = [...set.products]
+    if (versionFilter && set.versions && allVersions) {
+      const valid = set.versions.filter(v => allVersions.value.includes(v))
+      if (valid.length > 0) versionFilter.value = valid
+    }
   }
 
   function deleteSet(name) {

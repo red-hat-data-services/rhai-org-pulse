@@ -62,8 +62,9 @@ async function loadVersions() {
     }
     if (params.version && allVersions.value.includes(params.version)) {
       selectedVersions.value = [params.version]
-    } else if (allVersions.value.length > 0 && selectedVersions.value.length === 0) {
-      selectedVersions.value = [allVersions.value[0]]
+    } else {
+      // No version param and no selection — load all versions
+      loadData([])
     }
   } catch {
     allVersions.value = []
@@ -71,7 +72,8 @@ async function loadVersions() {
 }
 
 async function loadData(versions) {
-  if (!versions || versions.length === 0) return
+  const effective = versions && versions.length > 0 ? versions : allVersions.value
+  if (effective.length === 0) return
   loading.value = true
   error.value = null
 
@@ -81,7 +83,7 @@ async function loadData(versions) {
     let mergedSummary = null
     const execByKey = {}
 
-    await Promise.all(versions.map(async (version) => {
+    await Promise.all(effective.map(async (version) => {
       const rel = registryReleases.value.find(r => r.displayName === version)
       const execVersion = (rel && rel.fixVersions && rel.fixVersions.length > 0)
         ? rel.fixVersions[0]
@@ -185,7 +187,7 @@ const hasData = computed(() => {
 })
 
 watch(selectedVersions, (v) => {
-  if (v.length > 0) loadData(v)
+  loadData(v)
 })
 
 onMounted(() => {
@@ -249,7 +251,11 @@ const {
   loadSet,
   deleteSet,
   setMatchCount
-} = useHygieneFilters(mergedFeatures)
+} = useHygieneFilters(mergedFeatures, {
+  productFilter: selectedProducts,
+  versionFilter: selectedVersions,
+  allVersions
+})
 
 const showSaveInput = ref(false)
 const saveFilterName = ref('')
@@ -306,14 +312,12 @@ const versionOptions = computed(() =>
         @update:modelValue="v => selectedVersions = v"
       />
       <HygieneSelect
-        v-if="availableTeams.length > 0"
         :modelValue="selectedTeams"
         :options="availableTeams"
         placeholder="All Teams"
         @update:modelValue="v => selectedTeams = v"
       />
       <HygieneSelect
-        v-if="availableComponents.length > 0"
         :modelValue="selectedComponents"
         :options="availableComponents"
         placeholder="All Components"
