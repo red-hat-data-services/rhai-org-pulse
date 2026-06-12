@@ -1,7 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { ref, computed } from 'vue'
-import TeamSotuTab from '../../client/components/TeamSotuTab.vue'
+import ManagedTeamsWidget from '../../client/widgets/ManagedTeamsWidget.vue'
+import MyTeamsWidget from '../../client/widgets/MyTeamsWidget.vue'
+import QuickLinksWidget from '../../client/widgets/QuickLinksWidget.vue'
 
 const mockNavigateTo = vi.fn()
 
@@ -71,7 +73,6 @@ vi.mock('../../client/composables/useManagerDashboard', () => ({
 }))
 
 function makeRosterData(orgTeams) {
-  // orgTeams: [{ orgKey, teams: { TeamName: { displayName, members, metadata } } }]
   return {
     orgs: orgTeams.map(o => ({
       key: o.orgKey,
@@ -101,114 +102,11 @@ beforeEach(() => {
   mockLoadManagerDashboard.mockImplementation(() => Promise.resolve())
 })
 
-describe('TeamSotuTab', () => {
-  it('shows loading skeleton while data loads', () => {
-    mockRosterLoading.value = true
-    const wrapper = mount(TeamSotuTab)
-    expect(wrapper.findAll('.animate-pulse').length).toBeGreaterThan(0)
-  })
-
-  describe('team member view (non-manager)', () => {
-    it('renders cards for teams the user belongs to', async () => {
-      mockRosterData.value = makeRosterData([{
-        orgKey: 'org',
-        teams: {
-          TeamA: { displayName: 'Team A', members: [{ uid: 'jsmith', email: 'jsmith@redhat.com', name: 'Jane Smith', customFields: {} }], metadata: {} },
-          TeamB: { displayName: 'Team B', members: [{ uid: 'other', email: 'other@redhat.com', name: 'Other', customFields: {} }], metadata: {} }
-        }
-      }])
-
-      const wrapper = mount(TeamSotuTab)
-      await flushPromises()
-
-      const buttons = wrapper.findAll('button')
-      const teamCards = buttons.filter(b => b.text().includes('Team A'))
-      expect(teamCards.length).toBe(1)
-      // Should not show Team B (user is not a member)
-      expect(wrapper.text()).not.toContain('Team B')
-    })
-
-    it('shows empty state when user has no teams', async () => {
-      mockRosterData.value = makeRosterData([{
-        orgKey: 'org',
-        teams: {
-          TeamB: { displayName: 'Team B', members: [{ uid: 'other', email: 'other@redhat.com', name: 'Other', customFields: {} }], metadata: {} }
-        }
-      }])
-
-      const wrapper = mount(TeamSotuTab)
-      await flushPromises()
-
-      expect(wrapper.text()).toContain('You are not assigned to any teams')
-    })
-
-    it('shows Engineering Speciality from primary display field', async () => {
-      mockDefinitions.value = makeFieldDefs({
-        personFields: [{ id: 'field_spec', label: 'Speciality', primaryDisplay: true, deleted: false }]
-      })
-      mockRosterData.value = makeRosterData([{
-        orgKey: 'org',
-        teams: {
-          TeamA: { displayName: 'Team A', members: [{ uid: 'jsmith', email: 'jsmith@redhat.com', name: 'Jane Smith', customFields: { field_spec: 'Backend Engineer' } }], metadata: {} }
-        }
-      }])
-
-      const wrapper = mount(TeamSotuTab)
-      await flushPromises()
-
-      expect(wrapper.text()).toContain('Speciality')
-      expect(wrapper.text()).toContain('Backend Engineer')
-    })
-
-    it('shows team components from metadata', async () => {
-      mockDefinitions.value = makeFieldDefs({
-        teamFields: [{ id: 'field_comp', label: 'Component', optionsRef: 'component', deleted: false }]
-      })
-      mockRosterData.value = makeRosterData([{
-        orgKey: 'org',
-        teams: {
-          TeamA: { displayName: 'Team A', members: [{ uid: 'jsmith', email: 'jsmith@redhat.com', name: 'Jane Smith', customFields: {} }], metadata: { field_comp: ['Model Serving', 'LLM-D'] } }
-        }
-      }])
-
-      const wrapper = mount(TeamSotuTab)
-      await flushPromises()
-
-      expect(wrapper.text()).toContain('Model Serving')
-      expect(wrapper.text()).toContain('LLM-D')
-    })
-
-    it('navigates to team-detail with from=sotu on card click', async () => {
-      mockRosterData.value = makeRosterData([{
-        orgKey: 'org',
-        teams: {
-          TeamA: { displayName: 'Team A', members: [{ uid: 'jsmith', email: 'jsmith@redhat.com', name: 'Jane Smith', customFields: {} }], metadata: {} }
-        }
-      }])
-
-      const wrapper = mount(TeamSotuTab)
-      await flushPromises()
-
-      const card = wrapper.findAll('button').find(b => b.text().includes('Team A'))
-      await card.trigger('click')
-
-      expect(mockNavigateTo).toHaveBeenCalledWith('team-tracker', 'team-detail', { teamKey: 'org::TeamA', from: 'sotu' })
-    })
-
-    it('matches user by email when uid is not available', async () => {
-      mockUserUid.value = null
-      mockRosterData.value = makeRosterData([{
-        orgKey: 'org',
-        teams: {
-          TeamA: { displayName: 'Team A', members: [{ uid: 'jsmith', email: 'jsmith@redhat.com', name: 'Jane Smith', customFields: {} }], metadata: {} }
-        }
-      }])
-
-      const wrapper = mount(TeamSotuTab)
-      await flushPromises()
-
-      expect(wrapper.text()).toContain('Team A')
-    })
+describe('ManagedTeamsWidget', () => {
+  it('shows non-manager message for ICs', async () => {
+    const wrapper = mount(ManagedTeamsWidget, { props: { size: 'full' } })
+    await flushPromises()
+    expect(wrapper.text()).toContain('This widget is for managers')
   })
 
   describe('manager view', () => {
@@ -221,68 +119,30 @@ describe('TeamSotuTab', () => {
       mockManagedTeams.value = [
         { id: 'team_1', name: 'Platform', orgKey: 'eng', directReportUids: ['a', 'b'], totalMemberCount: 5, metadata: {} }
       ]
-
-      const wrapper = mount(TeamSotuTab)
+      const wrapper = mount(ManagedTeamsWidget, { props: { size: 'full' } })
       await flushPromises()
-
       expect(wrapper.text()).toContain('Managed Teams')
       expect(wrapper.text()).toContain('Platform')
       expect(wrapper.text()).toContain('2 direct reports')
-      expect(wrapper.text()).toContain('5 total members')
+      expect(wrapper.text()).toContain('5 total')
     })
 
-    it('renders My Teams link card', async () => {
-      mockManagedTeams.value = []
-
-      const wrapper = mount(TeamSotuTab)
-      await flushPromises()
-
-      expect(wrapper.text()).toContain('My Teams')
-      expect(wrapper.text()).toContain('View your full manager dashboard')
-    })
-
-    it('navigates to manager-dashboard on My Teams click', async () => {
-      mockManagedTeams.value = []
-
-      const wrapper = mount(TeamSotuTab)
-      await flushPromises()
-
-      const myTeamsCard = wrapper.findAll('button').find(b => b.text().includes('View your full manager dashboard'))
-      await myTeamsCard.trigger('click')
-
-      expect(mockNavigateTo).toHaveBeenCalledWith('team-tracker', 'manager-dashboard', { from: 'sotu' })
-    })
-
-    it('navigates to team-detail on managed team card click', async () => {
+    it('navigates to team-detail on card click', async () => {
       mockManagedTeams.value = [
         { id: 'team_1', name: 'Platform', orgKey: 'eng', directReportUids: ['a'], totalMemberCount: 3, metadata: {} }
       ]
-
-      const wrapper = mount(TeamSotuTab)
+      const wrapper = mount(ManagedTeamsWidget, { props: { size: 'full' } })
       await flushPromises()
-
       const card = wrapper.findAll('button').find(b => b.text().includes('Platform'))
       await card.trigger('click')
-
       expect(mockNavigateTo).toHaveBeenCalledWith('team-tracker', 'team-detail', { teamKey: 'eng::Platform', from: 'sotu' })
     })
 
     it('shows error state when manager dashboard fails', async () => {
       mockLoadManagerDashboard.mockImplementation(() => Promise.reject(new Error('403')))
-
-      const wrapper = mount(TeamSotuTab)
+      const wrapper = mount(ManagedTeamsWidget, { props: { size: 'full' } })
       await flushPromises()
-
       expect(wrapper.text()).toContain('Unable to load managed teams')
-    })
-
-    it('resets includeIndirect before loading', async () => {
-      mockIncludeIndirect.value = true
-
-      mount(TeamSotuTab)
-      await flushPromises()
-
-      expect(mockIncludeIndirect.value).toBe(false)
     })
 
     it('shows components on managed team cards', async () => {
@@ -292,12 +152,93 @@ describe('TeamSotuTab', () => {
       mockManagedTeams.value = [
         { id: 'team_1', name: 'Platform', orgKey: 'eng', directReportUids: ['a'], totalMemberCount: 3, metadata: { field_comp: ['API', 'Auth'] } }
       ]
-
-      const wrapper = mount(TeamSotuTab)
+      const wrapper = mount(ManagedTeamsWidget, { props: { size: 'full' } })
       await flushPromises()
-
       expect(wrapper.text()).toContain('API')
       expect(wrapper.text()).toContain('Auth')
     })
+  })
+})
+
+describe('MyTeamsWidget', () => {
+  it('shows empty state when user has no teams', async () => {
+    mockRosterData.value = makeRosterData([{
+      orgKey: 'org',
+      teams: {
+        TeamB: { displayName: 'Team B', members: [{ uid: 'other', email: 'other@redhat.com', name: 'Other', customFields: {} }], metadata: {} }
+      }
+    }])
+    const wrapper = mount(MyTeamsWidget, { props: { size: 'half' } })
+    await flushPromises()
+    expect(wrapper.text()).toContain('You are not assigned to any teams')
+  })
+
+  it('renders cards for teams the user belongs to', async () => {
+    mockRosterData.value = makeRosterData([{
+      orgKey: 'org',
+      teams: {
+        TeamA: { displayName: 'Team A', members: [{ uid: 'jsmith', email: 'jsmith@redhat.com', name: 'Jane Smith', customFields: {} }], metadata: {} },
+        TeamB: { displayName: 'Team B', members: [{ uid: 'other', email: 'other@redhat.com', name: 'Other', customFields: {} }], metadata: {} }
+      }
+    }])
+    const wrapper = mount(MyTeamsWidget, { props: { size: 'half' } })
+    await flushPromises()
+    expect(wrapper.text()).toContain('Team A')
+    expect(wrapper.text()).not.toContain('Team B')
+  })
+
+  it('navigates to team-detail with from=sotu on card click', async () => {
+    mockRosterData.value = makeRosterData([{
+      orgKey: 'org',
+      teams: {
+        TeamA: { displayName: 'Team A', members: [{ uid: 'jsmith', email: 'jsmith@redhat.com', name: 'Jane Smith', customFields: {} }], metadata: {} }
+      }
+    }])
+    const wrapper = mount(MyTeamsWidget, { props: { size: 'half' } })
+    await flushPromises()
+    const card = wrapper.findAll('button').find(b => b.text().includes('Team A'))
+    await card.trigger('click')
+    expect(mockNavigateTo).toHaveBeenCalledWith('team-tracker', 'team-detail', { teamKey: 'org::TeamA', from: 'sotu' })
+  })
+
+  it('shows Engineering Speciality from primary display field', async () => {
+    mockDefinitions.value = makeFieldDefs({
+      personFields: [{ id: 'field_spec', label: 'Speciality', primaryDisplay: true, deleted: false }]
+    })
+    mockRosterData.value = makeRosterData([{
+      orgKey: 'org',
+      teams: {
+        TeamA: { displayName: 'Team A', members: [{ uid: 'jsmith', email: 'jsmith@redhat.com', name: 'Jane Smith', customFields: { field_spec: 'Backend Engineer' } }], metadata: {} }
+      }
+    }])
+    const wrapper = mount(MyTeamsWidget, { props: { size: 'half' } })
+    await flushPromises()
+    expect(wrapper.text()).toContain('Speciality')
+    expect(wrapper.text()).toContain('Backend Engineer')
+  })
+})
+
+describe('QuickLinksWidget', () => {
+  it('renders non-manager links for non-managers', () => {
+    const wrapper = mount(QuickLinksWidget, { props: { size: 'half' } })
+    expect(wrapper.text()).not.toContain('My Teams')
+    expect(wrapper.text()).toContain('Team Directory')
+    expect(wrapper.text()).toContain('People')
+  })
+
+  it('renders all links including My Teams for managers', () => {
+    mockUser.value = { ...mockUser.value, isManager: true }
+    const wrapper = mount(QuickLinksWidget, { props: { size: 'half' } })
+    expect(wrapper.text()).toContain('My Teams')
+    expect(wrapper.text()).toContain('Team Directory')
+    expect(wrapper.text()).toContain('People')
+  })
+
+  it('navigates on link click (manager)', async () => {
+    mockUser.value = { ...mockUser.value, isManager: true }
+    const wrapper = mount(QuickLinksWidget, { props: { size: 'half' } })
+    const myTeamsBtn = wrapper.findAll('button').find(b => b.text().includes('My Teams'))
+    await myTeamsBtn.trigger('click')
+    expect(mockNavigateTo).toHaveBeenCalledWith('team-tracker', 'manager-dashboard', { from: 'sotu' })
   })
 })

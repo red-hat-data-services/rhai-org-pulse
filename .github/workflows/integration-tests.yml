@@ -71,6 +71,15 @@ jobs:
               - 'modules/releases/client/components/FeatureTable.vue'
               - 'modules/releases/client/components/ClickableCount.vue'
               - 'tests/integration/tv-fv-delta.spec.js'
+            sotu-dashboard:
+              - 'src/components/LandingPage.vue'
+              - 'src/components/SotuWidget.vue'
+              - 'src/components/WidgetPicker.vue'
+              - 'src/composables/useSotuLayout.js'
+              - 'src/module-loader.js'
+              - 'modules/*/client/widgets/**'
+              - 'modules/*/module.json'
+              - 'tests/integration/sotu-dashboard.spec.js'
             feature-pressure:
               - 'modules/releases/server/feature-pressure/**'
               - 'modules/releases/server/index.js'
@@ -98,7 +107,7 @@ jobs:
           echo "Changed files:"
           echo "$CHANGED"
 
-          ALL_MODULES='["ai-impact", "system-health", "people-teams", "upstream-pulse", "package-analysis", "releases", "tv-fv-delta", "feature-pressure"]'
+          ALL_MODULES='["ai-impact", "system-health", "people-teams", "upstream-pulse", "package-analysis", "releases", "tv-fv-delta", "feature-pressure", "sotu-dashboard"]'
 
           # If shared test infrastructure changed, test all modules
           if echo "$CHANGED" | grep -qE '^tests/integration/(constants|helpers)\.js$'; then
@@ -133,6 +142,8 @@ jobs:
             "^(modules/releases/server/(tv-fv-delta/|index\.js)|modules/releases/client/views/TvFvDeltaView\.vue|modules/releases/client/composables/use.*(TvFv|ReleasePicker|ComponentBreakdown)\.js|modules/releases/client/components/(FeatureTable|ClickableCount)\.vue|tests/integration/tv-fv-delta\.spec\.js)"
           check_module "feature-pressure" \
             "^(modules/releases/server/(feature-pressure/|index\.js)|modules/releases/client/views/FeaturePressureView\.vue|modules/releases/client/composables/use(FeaturePressureData|ComponentPressure)\.js|modules/releases/client/components/(PressureHeatmap|MonthlyFlowChart|ClickableCount)\.vue|tests/integration/feature-pressure\.spec\.js)"
+          check_module "sotu-dashboard" \
+            "^(src/components/(LandingPage|SotuWidget|WidgetPicker)\.vue|src/composables/useSotuLayout\.js|src/module-loader\.js|modules/.*/client/widgets/|modules/.*/module\.json|tests/integration/sotu-dashboard\.spec\.js)"
 
           echo "modules=$MODULES" >> "$GITHUB_OUTPUT"
           echo "Testing modules: $MODULES"
@@ -143,7 +154,7 @@ jobs:
           if [ "${{ github.event_name }}" = "merge_group" ]; then
             MODULES='${{ steps.git-filter.outputs.modules }}'
           elif [ "${{ steps.filter.outputs.shared-test-files }}" == "true" ]; then
-            MODULES='["ai-impact", "system-health", "people-teams", "upstream-pulse", "package-analysis", "releases", "tv-fv-delta", "feature-pressure"]'
+            MODULES='["ai-impact", "system-health", "people-teams", "upstream-pulse", "package-analysis", "releases", "tv-fv-delta", "feature-pressure", "sotu-dashboard"]'
           else
             # Use the modules that have direct changes
             MODULES='${{ steps.filter.outputs.changes }}'

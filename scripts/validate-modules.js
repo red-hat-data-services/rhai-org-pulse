@@ -117,15 +117,58 @@ function validate() {
       }
     }
 
-    // SOTU component exists and matches naming convention
-    if (manifest.client?.sotuComponent) {
-      const sotuPath = path.join(MODULES_DIR, dir, manifest.client.sotuComponent)
-      if (!fs.existsSync(sotuPath)) {
-        error(`SOTU component "${manifest.client.sotuComponent}" not found`)
-      }
-      const normalized = manifest.client.sotuComponent.replace(/^\.\//, '')
-      if (!/^client\/components\/.*SotuTab\.vue$/.test(normalized)) {
-        error(`SOTU component "${manifest.client.sotuComponent}" must match pattern "client/components/*SotuTab.vue"`)
+    // SOTU widgets validation
+    if (manifest.client?.sotuWidgets) {
+      if (!Array.isArray(manifest.client.sotuWidgets)) {
+        error(`sotuWidgets must be an array`)
+      } else {
+        const widgetIds = new Set()
+        for (const widget of manifest.client.sotuWidgets) {
+          // Required fields
+          if (!widget.id || typeof widget.id !== 'string') {
+            error(`sotuWidgets entry missing required "id" string`)
+          }
+          if (!widget.name || typeof widget.name !== 'string') {
+            error(`sotuWidgets entry missing required "name" string`)
+          }
+          if (!widget.description || typeof widget.description !== 'string') {
+            error(`sotuWidgets entry missing required "description" string`)
+          }
+          if (!widget.component || typeof widget.component !== 'string') {
+            error(`sotuWidgets entry missing required "component" string`)
+          }
+
+          // Unique widget ID within module
+          if (widget.id) {
+            if (widgetIds.has(widget.id)) {
+              error(`Duplicate sotuWidgets id "${widget.id}" in module "${dir}"`)
+            }
+            widgetIds.add(widget.id)
+          }
+
+          // Component file must exist and match naming convention
+          if (widget.component) {
+            const widgetPath = path.join(MODULES_DIR, dir, widget.component.replace(/^\.\//, ''))
+            if (!fs.existsSync(widgetPath)) {
+              error(`Widget component "${widget.component}" not found for widget "${widget.id}"`)
+            }
+            const normalized = widget.component.replace(/^\.\//, '')
+            if (!/^client\/widgets\/.*Widget\.vue$/.test(normalized)) {
+              error(`Widget component "${widget.component}" must match pattern "client/widgets/*Widget.vue"`)
+            }
+          }
+
+          // defaultSize validation
+          if (widget.defaultSize !== undefined && widget.defaultSize !== 'half' && widget.defaultSize !== 'full') {
+            error(`sotuWidgets entry "${widget.id}" has invalid defaultSize "${widget.defaultSize}" (must be "half" or "full")`)
+          }
+
+          // requireRole validation
+          const validWidgetRoles = ['manager', 'team-admin']
+          if (widget.requireRole !== undefined && !validWidgetRoles.includes(widget.requireRole)) {
+            error(`sotuWidgets entry "${widget.id}" has invalid requireRole "${widget.requireRole}" (must be one of: ${validWidgetRoles.join(', ')})`)
+          }
+        }
       }
     }
 
@@ -287,6 +330,21 @@ function validate() {
           warn(`Module "${slug}" (defaultEnabled: true) requires "${req}" (defaultEnabled: false)`)
         }
       }
+    }
+  }
+
+  // Cross-module widget ID uniqueness
+  const globalWidgetIds = new Set()
+  for (const [slug, manifest] of Object.entries(allManifests)) {
+    const widgets = manifest.client?.sotuWidgets
+    if (!Array.isArray(widgets)) continue
+    for (const widget of widgets) {
+      if (!widget.id) continue
+      const qualifiedId = `${slug}:${widget.id}`
+      if (globalWidgetIds.has(qualifiedId)) {
+        error(`Duplicate globally-qualified widget ID "${qualifiedId}"`)
+      }
+      globalWidgetIds.add(qualifiedId)
     }
   }
 

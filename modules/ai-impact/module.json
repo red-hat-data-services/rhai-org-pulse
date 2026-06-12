@@ -6,7 +6,35 @@
   "order": 5,
   "client": {
     "entry": "./client/index.js",
-    "sotuComponent": "./client/components/AISotuTab.vue",
+    "sotuWidgets": [
+      {
+        "id": "rfe-actions",
+        "name": "RFE Action Items",
+        "description": "RFEs needing your attention, filtered by your components",
+        "component": "./client/widgets/RfeActionsWidget.vue",
+        "defaultSize": "full",
+        "icon": "ClipboardList",
+        "category": "action-items"
+      },
+      {
+        "id": "feature-board",
+        "name": "Feature Board",
+        "description": "Kanban view of features in your pipeline",
+        "component": "./client/widgets/FeatureBoardWidget.vue",
+        "defaultSize": "full",
+        "icon": "Columns",
+        "category": "boards"
+      },
+      {
+        "id": "pipeline-stats",
+        "name": "Pipeline Stats",
+        "description": "Summary stats for your RFE and feature pipeline",
+        "component": "./client/widgets/PipelineStatsWidget.vue",
+        "defaultSize": "half",
+        "icon": "BarChart3",
+        "category": "metrics"
+      }
+    ],
     "navItems": [
       { "id": "ai-factory-guide", "label": "AI Factory Guide", "icon": "BookOpen", "default": true },
       { "id": "rfe-review", "label": "RFE Review", "icon": "ClipboardList", "separatorBefore": true },

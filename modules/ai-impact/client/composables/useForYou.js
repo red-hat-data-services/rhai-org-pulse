@@ -1,4 +1,11 @@
 import { computed, ref } from 'vue'
+import { useAuth } from '@shared/client/composables/useAuth.js'
+import { useRoster } from '@shared/client/composables/useRoster.js'
+import { useFieldDefinitions } from '@shared/client/composables/useFieldDefinitions.js'
+import { useAIImpact } from './useAIImpact.js'
+import { useFeatures } from './useFeatures.js'
+import { useAssessments } from './useAssessments.js'
+import { useForYouPreferences } from './useForYouPreferences.js'
 
 const SCOPE_LABEL = 'strat-creator-3.5'
 
@@ -25,22 +32,11 @@ function classifyRfe(rfe) {
   const hasTechReviewed = labels.has('tech-reviewed')
   const hasScopeLabel = labels.has(SCOPE_LABEL)
 
-  // Skip RFEs that already have a linked feature — they're tracked on the feature side
   if (hasLinkedFeature) return null
-
-  // State 1: Needs Revision (needs-attention WITHOUT rubric-pass)
   if (hasNeedsAttention && !hasRubricPass) return RFE_STATES.NEEDS_REVISION
-
-  // State 2: Passed with Caveats (BOTH labels)
   if (hasRubricPass && hasNeedsAttention) return RFE_STATES.PASSED_WITH_CAVEATS
-
-  // State 3: Ready to Advance (quality gate passed, no scope label, no linkedFeature)
   if ((hasRubricPass || hasTechReviewed) && !hasScopeLabel) return RFE_STATES.READY_TO_ADVANCE
-
-  // State 4: Queued for Pipeline (quality gate + scope label, no linkedFeature)
   if ((hasRubricPass || hasTechReviewed) && hasScopeLabel) return RFE_STATES.QUEUED_FOR_PIPELINE
-
-  // State 0: Not Yet Assessed (catch-all)
   return RFE_STATES.NOT_ASSESSED
 }
 
@@ -49,23 +45,12 @@ function classifyFeature(feature) {
   const status = feature.humanReviewStatus
   const hasApproval = status === 'approved' || !!feature.approvedBy
 
-  // Edge cases: human overrode CI
   if (rec === 'revise' && hasApproval) return FEATURE_STATES.SIGNED_OFF
   if (rec === 'reject' && hasApproval) return FEATURE_STATES.SIGNED_OFF
-
-  // State 4: Signed Off
   if (hasApproval) return FEATURE_STATES.SIGNED_OFF
-
-  // State 1: Rejected
   if (rec === 'reject') return FEATURE_STATES.REJECTED
-
-  // State 2: Revise Required
   if (rec === 'revise') return FEATURE_STATES.REVISE_REQUIRED
-
-  // State 3: Awaiting Sign-off
   if (rec === 'approve') return FEATURE_STATES.AWAITING_SIGNOFF
-
-  // Fallback: unclassified
   return { id: 'unclassified', label: 'Unclassified', color: 'gray', order: 6 }
 }
 
@@ -120,7 +105,6 @@ function resolveUserComponents(rosterData, user, fieldDefinitions) {
 
   const displayName = person.name || person.jiraDisplayName || uid
 
-  // Find component field from definitions
   const personFields = fieldDefinitions?.personFields || []
   const componentField = personFields.find(f => f.optionsRef === 'component')
   if (!componentField) return { components: [], displayName, state: 'no-components' }
@@ -141,11 +125,34 @@ function filterByComponents(items, userComponents) {
   })
 }
 
-export function useForYou(rosterData, user, rfeData, features, assessments, fieldDefinitions, options = {}) {
-  const { mode = ref('auto'), manualComponents = ref([]) } = options
-  const stageFilter = ref([])
-  const priorityFilter = ref([])
-  const componentFilter = ref([])
+// Singleton refs for filter state
+const stageFilter = ref([])
+const priorityFilter = ref([])
+const componentFilter = ref([])
+let initialized = false
+
+export function useForYou(rosterDataArg, userArg, rfeDataArg, featuresArg, assessmentsArg, fieldDefinitionsArg, optionsArg) {
+  // Support both legacy parametric and new singleton usage
+  const { user } = userArg ? { user: userArg } : useAuth()
+  const { rosterData } = rosterDataArg ? { rosterData: rosterDataArg } : useRoster()
+  const { rfeData } = rfeDataArg ? { rfeData: rfeDataArg } : useAIImpact()
+  const { features } = featuresArg ? { features: featuresArg } : useFeatures()
+  const { assessments } = assessmentsArg ? { assessments: assessmentsArg } : useAssessments()
+  const { definitions: fieldDefinitions } = fieldDefinitionsArg ? { definitions: fieldDefinitionsArg } : useFieldDefinitions()
+
+  let mode, manualComponents
+  if (optionsArg) {
+    mode = optionsArg.mode || ref('auto')
+    manualComponents = optionsArg.manualComponents || ref([])
+  } else {
+    const prefs = useForYouPreferences()
+    mode = prefs.mode
+    manualComponents = prefs.manualComponents
+  }
+
+  if (!initialized) {
+    initialized = true
+  }
 
   const userResolution = computed(() => {
     if (mode.value === 'manual') {
@@ -165,15 +172,13 @@ export function useForYou(rosterData, user, rfeData, features, assessments, fiel
 
   const classifiedItems = computed(() => {
     const items = []
-
-    // Classify RFEs
     const rfes = rfeData.value?.issues || []
     const userComps = userComponents.value
     const filteredRfes = filterByComponents(rfes, userComps)
 
     for (const rfe of filteredRfes) {
       const state = classifyRfe(rfe)
-      if (!state) continue // Skip RFEs with linked features
+      if (!state) continue
       const assessment = assessments.value?.[rfe.key]
       const waitDays = computeWaitDays(
         { ...rfe, assessedAt: assessment?.assessedAt },
@@ -196,7 +201,6 @@ export function useForYou(rosterData, user, rfeData, features, assessments, fiel
       })
     }
 
-    // Classify Features
     const featureMap = features.value || {}
     const featureList = Object.values(featureMap)
     const filteredFeatures = filterByComponents(featureList, userComps)
@@ -321,23 +325,18 @@ export function useForYou(rosterData, user, rfeData, features, assessments, fiel
 
   const stats = computed(() => {
     const all = classifiedItems.value
-
     const reviseRfes = all.filter(i =>
       i.type === 'rfe' && ['needs-revision', 'passed-with-caveats'].includes(i.state.id)
     ).length
-
     const reviewFeatures = all.filter(i =>
       i.type === 'feature' && ['awaiting-signoff', 'revise-required'].includes(i.state.id)
     ).length
-
     const queuedForStrat = all.filter(i =>
       i.type === 'rfe' && i.state.id === 'ready-to-advance'
     ).length
-
     const signedOffFeatures = all.filter(i =>
       i.type === 'feature' && i.state.id === 'signed-off'
     ).length
-
     return { reviseRfes, reviewFeatures, queuedForStrat, signedOffFeatures }
   })
 

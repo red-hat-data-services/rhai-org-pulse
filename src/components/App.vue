@@ -498,7 +498,7 @@ export default {
     },
     currentPageTitle() {
       if (this.activeModule === 'home') {
-        const hasSotu = this.builtInManifests.some(m => m.client?.sotuComponent)
+        const hasSotu = this.builtInManifests.some(m => m.client?.sotuWidgets?.length > 0)
         return hasSotu ? 'State of the Union' : 'Home'
       }
       if (this.activeModule === 'module-iframe') {

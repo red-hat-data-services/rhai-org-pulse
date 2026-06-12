@@ -6,7 +6,45 @@
   "order": 0,
   "client": {
     "entry": "./client/index.js",
-    "sotuComponent": "./client/components/TeamSotuTab.vue",
+    "sotuWidgets": [
+      {
+        "id": "managed-teams",
+        "name": "Managed Teams",
+        "description": "Team cards for managers showing direct reports and components",
+        "component": "./client/widgets/ManagedTeamsWidget.vue",
+        "defaultSize": "full",
+        "icon": "UsersRound",
+        "category": "teams",
+        "requireRole": "manager"
+      },
+      {
+        "id": "my-teams",
+        "name": "My Teams",
+        "description": "Your team memberships with speciality and components",
+        "component": "./client/widgets/MyTeamsWidget.vue",
+        "defaultSize": "half",
+        "icon": "Users",
+        "category": "teams"
+      },
+      {
+        "id": "quick-links",
+        "name": "Quick Links",
+        "description": "Navigation shortcuts to Manager Dashboard, Team Directory, and People",
+        "component": "./client/widgets/QuickLinksWidget.vue",
+        "defaultSize": "half",
+        "icon": "Link2",
+        "category": "navigation"
+      },
+      {
+        "id": "person-lookup",
+        "name": "Person Lookup",
+        "description": "Search for a person by name and jump to their profile",
+        "component": "./client/widgets/PersonLookupWidget.vue",
+        "defaultSize": "half",
+        "icon": "Search",
+        "category": "navigation"
+      }
+    ],
     "navItems": [
       { "id": "home", "label": "Team Directory", "icon": "Users", "default": true },
       { "id": "people", "label": "People", "icon": "User" },

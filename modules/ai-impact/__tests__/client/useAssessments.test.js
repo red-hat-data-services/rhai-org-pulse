@@ -6,11 +6,12 @@ vi.mock('@shared/client/services/api.js', () => ({
   apiRequest: (...args) => mockApiRequest(...args)
 }));
 
-import { useAssessments } from '../../client/composables/useAssessments.js';
+import { useAssessments, _resetForTesting } from '../../client/composables/useAssessments.js';
 
 describe('useAssessments', () => {
   beforeEach(() => {
     mockApiRequest.mockReset();
+    _resetForTesting();
   });
 
   it('initializes with empty state', () => {

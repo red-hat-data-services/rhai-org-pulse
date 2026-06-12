@@ -3,7 +3,7 @@ import { defineAsyncComponent } from 'vue'
 const manifestModules = import.meta.glob('/modules/*/module.json', { eager: true })
 const clientEntries = import.meta.glob('/modules/*/client/index.js')
 const settingsComponents = import.meta.glob('/modules/*/client/components/*Settings.vue')
-const sotuComponents = import.meta.glob('/modules/*/client/components/*SotuTab.vue')
+const widgetComponents = import.meta.glob('/modules/*/client/widgets/*Widget.vue')
 
 export function loadModuleManifests() {
   const modules = []
@@ -36,15 +36,15 @@ export function loadModuleSettingsComponent(slug, settingsPath) {
   return defineAsyncComponent(loader)
 }
 
-export function loadModuleSotuComponent(slug, sotuPath) {
-  if (sotuPath.includes('..')) {
-    throw new Error(`Invalid SOTU component path for module "${slug}": path traversal not allowed`)
+export function loadModuleWidget(slug, widgetPath) {
+  if (widgetPath.includes('..')) {
+    throw new Error(`Invalid widget path for module "${slug}": path traversal not allowed`)
   }
-  const normalized = sotuPath.replace(/^\.\//, '')
+  const normalized = widgetPath.replace(/^\.\//, '')
   const globKey = `/modules/${slug}/${normalized}`
-  const loader = sotuComponents[globKey]
+  const loader = widgetComponents[globKey]
   if (!loader) {
-    throw new Error(`SOTU component not found for module "${slug}": ${globKey}`)
+    throw new Error(`Widget component not found for module "${slug}": ${globKey}`)
   }
   return defineAsyncComponent(loader)
 }
