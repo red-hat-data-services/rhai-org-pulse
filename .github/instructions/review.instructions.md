@@ -27,8 +27,9 @@ You have full Edit and Write access to all files in the repo.
    clarity over cleverness.
 
 4. **Project conventions** — Adherence to all conventions in `AGENTS.md`
-   (code style, module structure, import style, testing, etc.). If you haven't
-   already, read `AGENTS.md` now.
+   (code style, module structure, import style, testing, etc.) and
+   `docs/MODULES.md` (module-specific requirements including secrets, export
+   hooks, and the PR checklist). If you haven't already, read both now.
 
 5. **Performance** — Unnecessary re-renders, N+1 queries, unbounded data
    fetching, missing pagination, expensive operations in hot paths, memory

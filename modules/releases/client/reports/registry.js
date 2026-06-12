@@ -30,5 +30,11 @@ export const reports = [
     label: 'Feature Pressure',
     description: 'Where feature inflow exceeds capacity to burn down — RHAI-wide pressure by component, with RFE pipeline and risk scorecard.',
     component: defineAsyncComponent(() => import('../views/FeaturePressureView.vue'))
+  },
+  {
+    id: 'release-performance',
+    label: 'Release Performance',
+    description: 'Cross-releases, and competitive comparisons performance dashboard',
+    externalUrl: 'https://aidash.app.intlab.redhat.com/'
   }
 ]

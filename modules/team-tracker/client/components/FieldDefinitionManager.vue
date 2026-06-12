@@ -157,7 +157,7 @@ async function toggleVisibility(field) {
 <template>
   <div class="space-y-4">
     <div class="flex items-center justify-between">
-      <h3 class="text-lg font-medium text-gray-900">Field Definitions</h3>
+      <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Field Definitions</h3>
       <button
         class="px-4 py-2 bg-primary-600 text-white text-sm rounded hover:bg-primary-700"
         @click="openCreateModal"
@@ -189,49 +189,71 @@ async function toggleVisibility(field) {
 
     <!-- Field list -->
     <div v-if="loading" class="text-sm text-gray-500">Loading...</div>
-    <ul v-else class="divide-y divide-gray-200 border rounded">
-      <li v-for="field in activeFields" :key="field.id" :class="['flex items-center justify-between p-3', editingFieldId === field.id ? 'bg-blue-50 dark:bg-blue-900/20 border-l-2 border-l-blue-300 dark:border-l-blue-700' : '']">
-        <div v-if="editingFieldId === field.id" class="flex items-center gap-2 flex-1">
-          <input
-            v-model="editLabel"
-            class="block flex-1 rounded border-gray-300 shadow-sm text-sm"
-            @keyup.enter="saveEdit(field.id)"
-            @keyup.escape="editingFieldId = null"
-          >
-          <select
-            v-model="editType"
-            class="rounded border-gray-300 shadow-sm text-sm focus:ring-primary-500 focus:border-primary-500"
-          >
-            <option v-for="t in fieldTypes" :key="t.value" :value="t.value">{{ t.label }}</option>
-          </select>
-          <button class="px-2.5 py-1 text-xs font-medium text-white bg-primary-600 rounded hover:bg-primary-700 transition-colors" @click="saveEdit(field.id)">Save</button>
-          <button class="px-2.5 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" @click="editingFieldId = null">Cancel</button>
-        </div>
-        <div v-else class="flex-1">
-          <span class="font-medium text-gray-900">{{ field.label }}</span>
-          <span class="text-xs text-gray-500 ml-2">{{ fieldTypeLabels[field.type] || field.type }}</span>
-          <span v-if="field.type === 'constrained'" class="text-xs text-gray-400 ml-1">
-            ({{ (field.allowedValues || []).length }} options)
-          </span>
-          <span v-if="field.multiValue" class="text-xs text-primary-500 dark:text-primary-400 ml-1">(multi)</span>
-        </div>
-        <div v-if="editingFieldId !== field.id" class="flex items-center gap-2">
-          <button
-            class="text-xs"
-            :class="field.visible ? 'text-green-600' : 'text-gray-400'"
-            @click="toggleVisibility(field)"
-          >
-            {{ field.visible ? 'Visible' : 'Hidden' }}
-          </button>
-          <button v-if="field.type === 'constrained'" class="text-sm text-gray-500 hover:text-gray-700" @click="openOptionsModal(field)">Options</button>
-          <button class="text-sm text-gray-500 hover:text-gray-700" @click="startEdit(field)">Edit</button>
-          <button class="text-sm text-red-500 hover:text-red-700" @click="handleDelete(field.id)">Delete</button>
-        </div>
-      </li>
-      <li v-if="activeFields.length === 0" class="p-3 text-sm text-gray-500 text-center">
-        No fields defined yet
-      </li>
-    </ul>
+    <div v-else-if="activeFields.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
+      No fields defined yet
+    </div>
+    <div v-else class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <thead class="bg-gray-50 dark:bg-gray-800">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Label</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Type</th>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Visibility</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+          <tr v-for="field in activeFields" :key="field.id" :class="['hover:bg-gray-50 dark:hover:bg-gray-700/50', editingFieldId === field.id ? 'bg-blue-50 dark:bg-blue-900/20' : '']">
+            <td class="px-4 py-3 text-sm whitespace-nowrap">
+              <div v-if="editingFieldId === field.id" class="flex items-center gap-2">
+                <input
+                  v-model="editLabel"
+                  class="block flex-1 rounded border-gray-300 dark:border-gray-600 shadow-sm text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  @keyup.enter="saveEdit(field.id)"
+                  @keyup.escape="editingFieldId = null"
+                >
+                <button class="px-2.5 py-1 text-xs font-medium text-white bg-primary-600 rounded hover:bg-primary-700 transition-colors" @click="saveEdit(field.id)">Save</button>
+                <button class="px-2.5 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" @click="editingFieldId = null">Cancel</button>
+              </div>
+              <span v-else class="font-medium text-gray-900 dark:text-gray-100">{{ field.label }}</span>
+            </td>
+            <td class="px-4 py-3 text-sm whitespace-nowrap text-gray-600 dark:text-gray-400">
+              <template v-if="editingFieldId === field.id">
+                <select
+                  v-model="editType"
+                  class="rounded border-gray-300 dark:border-gray-600 shadow-sm text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-primary-500 focus:border-primary-500"
+                >
+                  <option v-for="t in fieldTypes" :key="t.value" :value="t.value">{{ t.label }}</option>
+                </select>
+              </template>
+              <template v-else>
+                {{ fieldTypeLabels[field.type] || field.type }}
+                <span v-if="field.type === 'constrained'" class="text-xs text-gray-400 dark:text-gray-500 ml-1">
+                  ({{ (field.allowedValues || []).length }} options)
+                </span>
+                <span v-if="field.multiValue" class="text-xs text-primary-500 dark:text-primary-400 ml-1">(multi)</span>
+              </template>
+            </td>
+            <td class="px-4 py-3 text-sm whitespace-nowrap">
+              <button
+                class="text-xs"
+                :class="field.visible ? 'text-green-600 dark:text-green-400' : 'text-gray-400 dark:text-gray-500'"
+                @click="toggleVisibility(field)"
+              >
+                {{ field.visible ? 'Visible' : 'Hidden' }}
+              </button>
+            </td>
+            <td class="px-4 py-3 text-sm text-right whitespace-nowrap">
+              <div v-if="editingFieldId !== field.id" class="flex items-center justify-end gap-2">
+                <button v-if="field.type === 'constrained'" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" @click="openOptionsModal(field)">Options</button>
+                <button class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" @click="startEdit(field)">Edit</button>
+                <button class="text-sm text-red-500 hover:text-red-700" @click="handleDelete(field.id)">Delete</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <!-- Create Field Modal -->
     <div v-if="showCreateModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click.self="showCreateModal = false">

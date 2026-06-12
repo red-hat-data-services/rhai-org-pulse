@@ -7,7 +7,7 @@ import { describe, it, expect } from 'vitest'
  * - associatedTeams on person detail
  * - stats exclude auxiliary from active count
  * - LDAP search route (503 when unavailable, 429 rate limit, demo mode)
- * - LDAP import route (creates auxiliary entry, idempotent, requires team-admin, audit log)
+ * - LDAP import route (creates auxiliary entry, idempotent, requires admin/team-admin/manager, audit log)
  */
 
 const { computeCoverage } = require('../../../../shared/server/roster-sync/lifecycle')

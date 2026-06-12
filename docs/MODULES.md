@@ -313,9 +313,9 @@ The CronJob (`deploy/openshift/base/cronjob-sync-refresh.yaml`, every 15 minutes
 
 ## Export Hook
 
-Modules can participate in the anonymized test data export by registering an export hook via `context.registerExport(fn)` and optionally declaring exported files in `module.json`.
+Modules that persist data via `writeToStorage` or `writeToStorageAtomic` **must** register an export hook via `context.registerExport(fn)` and declare exported files in `module.json`. This ensures all module data is included in the anonymized test data export (used for demo mode and testing). CI validation (`npm run validate:modules`) enforces this — modules that write to storage without an `export` section in `module.json` will fail the build.
 
-### module.json (optional)
+### module.json
 
 ```json
 {
@@ -654,3 +654,4 @@ The `org-pulse/no-module-process-env` ESLint rule prevents `process.env` access 
 - [ ] `npm test` passes
 - [ ] CODEOWNERS entry added
 - [ ] No imports from other modules (only `@shared`)
+- [ ] If module persists data (`writeToStorage`): export hook registered and `export.files` declared in `module.json`

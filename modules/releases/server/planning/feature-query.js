@@ -10,7 +10,8 @@ var QUERY_FIELDS = [
   CUSTOM_FIELDS.colorStatus,
   CUSTOM_FIELDS.releaseType,
   CUSTOM_FIELDS.docsRequired,
-  CUSTOM_FIELDS.targetEnd
+  CUSTOM_FIELDS.targetEnd,
+  CUSTOM_FIELDS.productManager
 ].join(',')
 
 var JQL = 'project = RHAISTRAT AND issuetype IN (Feature, Initiative) AND status NOT IN (Closed, Done, Resolved, Cancelled)'
@@ -39,6 +40,11 @@ function normalizeIssue(issue) {
     ? (typeof fields.issuetype === 'object' ? fields.issuetype.name || null : fields.issuetype)
     : null
 
+  var pmOwnerField = fields[CUSTOM_FIELDS.productManager]
+  var pmOwner = pmOwnerField
+    ? (typeof pmOwnerField === 'object' ? pmOwnerField.displayName || null : pmOwnerField)
+    : null
+
   return {
     key: issue.key,
     summary: fields.summary || '',
@@ -56,7 +62,8 @@ function normalizeIssue(issue) {
     colorStatus: serializeField(fields[CUSTOM_FIELDS.colorStatus]),
     releaseType: serializeField(fields[CUSTOM_FIELDS.releaseType]),
     docsRequired: serializeField(fields[CUSTOM_FIELDS.docsRequired]),
-    targetEnd: serializeField(fields[CUSTOM_FIELDS.targetEnd])
+    targetEnd: serializeField(fields[CUSTOM_FIELDS.targetEnd]),
+    pmOwner: pmOwner
   }
 }
 

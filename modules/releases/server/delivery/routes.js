@@ -2089,6 +2089,109 @@ module.exports = function registerRoutes(router, context) {
     }
   })
 
+  /**
+   * @openapi
+   * /api/modules/releases/delivery/risk-dashboard-config:
+   *   get:
+   *     tags: ['Releases: Delivery']
+   *     summary: Get Risk Dashboard configuration
+   *     description: Returns dashboard-scoped settings including portfolio release groupings
+   *     responses:
+   *       200:
+   *         description: Risk dashboard config object
+   */
+  router.get('/risk-dashboard-config', requireAuth, requireScope('releases:read'), function(req, res) {
+    try {
+      const config = readFromStorage('releases/delivery/risk-dashboard-config.json') || { portfolioReleases: [] }
+      res.json(config)
+    } catch (error) {
+      console.error('[releases/delivery] Get risk-dashboard-config error:', error)
+      res.status(500).json({ error: error.message })
+    }
+  })
+
+  /**
+   * @openapi
+   * /api/modules/releases/delivery/risk-dashboard-config:
+   *   post:
+   *     tags: ['Releases: Delivery']
+   *     summary: Save Risk Dashboard configuration
+   *     description: Stores dashboard-scoped settings including portfolio release groupings
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               portfolioReleases:
+   *                 type: array
+   *                 items:
+   *                   type: object
+   *                   properties:
+   *                     id:
+   *                       type: string
+   *                     name:
+   *                       type: string
+   *                     releases:
+   *                       type: array
+   *                       items:
+   *                         type: string
+   *                       minItems: 3
+   *                       maxItems: 3
+   *                     codeFreezeDate:
+   *                       type: string
+   *                       format: date
+   *                       nullable: true
+   *                     dueDate:
+   *                       type: string
+   *                       format: date
+   *                       nullable: true
+   *                     enabled:
+   *                       type: boolean
+   *     responses:
+   *       200:
+   *         description: Config saved successfully
+   *       400:
+   *         description: Invalid config
+   */
+  router.post('/risk-dashboard-config', requireAdmin, requireScope('releases:write'), function(req, res) {
+    try {
+      const config = req.body
+      if (typeof config !== 'object' || Array.isArray(config)) {
+        return res.status(400).json({ error: 'Config must be an object' })
+      }
+      const portfolios = config.portfolioReleases
+      if (!Array.isArray(portfolios)) {
+        return res.status(400).json({ error: 'portfolioReleases must be an array' })
+      }
+      for (let i = 0; i < portfolios.length; i++) {
+        const p = portfolios[i]
+        if (!p.name || typeof p.name !== 'string' || !p.name.trim()) {
+          return res.status(400).json({ error: 'Portfolio at index ' + i + ' must have a non-empty name' })
+        }
+        if (!Array.isArray(p.releases) || p.releases.length !== 3 || p.releases.some(function(r) { return typeof r !== 'string' || !r.trim() })) {
+          return res.status(400).json({ error: 'Portfolio "' + p.name + '" must have exactly 3 non-empty release strings' })
+        }
+        if (typeof p.enabled !== 'boolean') {
+          return res.status(400).json({ error: 'Portfolio "' + p.name + '" must have a boolean enabled field' })
+        }
+        var dateRe = /^\d{4}-\d{2}-\d{2}$/
+        if (p.codeFreezeDate != null && (typeof p.codeFreezeDate !== 'string' || !dateRe.test(p.codeFreezeDate))) {
+          return res.status(400).json({ error: 'Portfolio "' + p.name + '" codeFreezeDate must be a YYYY-MM-DD string or null' })
+        }
+        if (p.dueDate != null && (typeof p.dueDate !== 'string' || !dateRe.test(p.dueDate))) {
+          return res.status(400).json({ error: 'Portfolio "' + p.name + '" dueDate must be a YYYY-MM-DD string or null' })
+        }
+      }
+      writeToStorage('releases/delivery/risk-dashboard-config.json', config)
+      res.json({ success: true })
+    } catch (error) {
+      console.error('[releases/delivery] Save risk-dashboard-config error:', error)
+      res.status(500).json({ error: error.message })
+    }
+  })
+
   if (context.registerRefresh) {
     context.registerRefresh('delivery', {
       order: 70,

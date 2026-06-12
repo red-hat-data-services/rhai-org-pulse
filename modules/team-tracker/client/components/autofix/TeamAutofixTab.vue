@@ -291,14 +291,7 @@ const jiraHost = computed(() => rawData.value?.jiraHost || 'https://redhat.atlas
 
 const dataNotFetched = computed(() => fetched.value && !rawData.value?.fetchedAt)
 
-const teamComponentSet = computed(() => new Set(teamComponents.value))
-
-const teamIssues = computed(() => {
-  if (!rawData.value?.issues || teamComponentSet.value.size === 0) return []
-  return rawData.value.issues.filter(issue =>
-    (issue.components || []).some(c => teamComponentSet.value.has(c))
-  )
-})
+const teamIssues = computed(() => rawData.value?.issues || [])
 
 const metrics = computed(() => computeTeamMetrics(teamIssues.value, timeWindow.value))
 
@@ -453,7 +446,7 @@ async function fetchData() {
   try {
     await fetchAutofixData((data) => {
       rawData.value = data
-    })
+    }, { components: teamComponents.value })
     fetched.value = true
   } catch (err) {
     if (err?.status === 404) {

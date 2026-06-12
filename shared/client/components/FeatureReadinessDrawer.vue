@@ -338,36 +338,53 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
             <p class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide mb-3">Readiness Gates</p>
             <div class="space-y-2">
               <div class="flex items-center gap-2 text-xs">
-                <span :class="readinessGates.ownerAssigned ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'">
-                  {{ readinessGates.ownerAssigned ? '●' : '○' }}
+                <span :class="readinessGates.isApproved ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'">
+                  {{ readinessGates.isApproved ? '●' : '○' }}
                 </span>
-                <span class="text-gray-700 dark:text-gray-300">Owner assigned</span>
-                <span v-if="feature.deliveryOwner" class="text-gray-400 dark:text-gray-500 ml-auto">{{ feature.deliveryOwner }}</span>
+                <span class="text-gray-700 dark:text-gray-300">Approved</span>
+                <span class="text-gray-400 dark:text-gray-500 ml-auto">{{ readinessGates.isApproved ? 'Approved' : 'Awaiting sign-off' }}</span>
               </div>
               <div class="flex items-center gap-2 text-xs">
-                <span :class="readinessGates.notBlocked ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'">
-                  {{ readinessGates.notBlocked ? '●' : '○' }}
+                <span :class="readinessGates.hasRubric ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'">
+                  {{ readinessGates.hasRubric ? '●' : '○' }}
                 </span>
-                <span class="text-gray-700 dark:text-gray-300">No blockers</span>
+                <span class="text-gray-700 dark:text-gray-300">Rubric</span>
+                <span class="text-gray-400 dark:text-gray-500 ml-auto">{{ readinessGates.hasRubric ? rubricTotal + '/8' : 'Not scored' }}</span>
+              </div>
+              <div class="flex items-center gap-2 text-xs">
+                <span :class="readinessGates.pmAssigned ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'">
+                  {{ readinessGates.pmAssigned ? '●' : '○' }}
+                </span>
+                <span class="text-gray-700 dark:text-gray-300">Product Manager</span>
+                <span class="text-gray-400 dark:text-gray-500 ml-auto">{{ feature.pmOwner || 'Missing' }}</span>
+              </div>
+              <div class="flex items-center gap-2 text-xs">
+                <span :class="readinessGates.deliveryOwnerAssigned ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'">
+                  {{ readinessGates.deliveryOwnerAssigned ? '●' : '○' }}
+                </span>
+                <span class="text-gray-700 dark:text-gray-300">Delivery Owner</span>
+                <span class="text-gray-400 dark:text-gray-500 ml-auto">{{ feature.deliveryOwner || 'Missing' }}</span>
               </div>
               <div class="flex items-center gap-2 text-xs">
                 <span :class="readinessGates.pastRefinement ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'">
                   {{ readinessGates.pastRefinement ? '●' : '○' }}
                 </span>
-                <span class="text-gray-700 dark:text-gray-300">Status beyond Refinement</span>
-                <span v-if="feature.status" class="text-gray-400 dark:text-gray-500 ml-auto">{{ feature.status }}</span>
+                <span class="text-gray-700 dark:text-gray-300">Status</span>
+                <span class="text-gray-400 dark:text-gray-500 ml-auto">{{ feature.status || 'Unknown' }}</span>
               </div>
               <div class="flex items-center gap-2 text-xs">
                 <span :class="readinessGates.hasTargetVersion ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'">
                   {{ readinessGates.hasTargetVersion ? '●' : '○' }}
                 </span>
-                <span class="text-gray-700 dark:text-gray-300">Target version assigned</span>
+                <span class="text-gray-700 dark:text-gray-300">Target Version</span>
+                <span class="text-gray-400 dark:text-gray-500 ml-auto">{{ (feature.targetVersions || []).length ? feature.targetVersions.join(', ') : 'Missing' }}</span>
               </div>
               <div class="flex items-center gap-2 text-xs">
                 <span :class="readinessGates.noBlockingViolations ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'">
                   {{ readinessGates.noBlockingViolations ? '●' : '○' }}
                 </span>
-                <span class="text-gray-700 dark:text-gray-300">No blocking hygiene violations</span>
+                <span class="text-gray-700 dark:text-gray-300">Hygiene</span>
+                <span class="text-gray-400 dark:text-gray-500 ml-auto">{{ readinessGates.noBlockingViolations ? 'All clear' : violationCount + ' violations' }}</span>
               </div>
             </div>
           </section>
@@ -399,7 +416,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
               </svg>
             </button>
             <div v-if="hygieneExpanded">
-              <HygieneViolations :violations="violationsList" />
+              <HygieneViolations :violations="violationsList" :feature-key="feature?.key" :jira-base-url="jiraBaseUrl" />
             </div>
           </section>
 
@@ -520,6 +537,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
               <dt class="text-gray-400 dark:text-gray-500">Team</dt>
               <dd class="text-gray-700 dark:text-gray-300">{{ feature.team || '—' }}</dd>
+
+              <template v-if="feature.pmOwner">
+                <dt class="text-gray-400 dark:text-gray-500">Product Manager</dt>
+                <dd class="text-gray-700 dark:text-gray-300">{{ feature.pmOwner }}</dd>
+              </template>
 
               <template v-if="feature.deliveryOwner">
                 <dt class="text-gray-400 dark:text-gray-500">Delivery Owner</dt>

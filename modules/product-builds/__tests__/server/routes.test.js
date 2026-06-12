@@ -10,6 +10,11 @@ function makeStorage(data = {}) {
     },
     writeToStorage(key, value) {
       store[key] = value
+    },
+    listStorageFiles(prefix) {
+      return Object.keys(store)
+        .filter(k => k.startsWith(prefix))
+        .map(k => k.slice(prefix.length))
     }
   }
 }
@@ -47,7 +52,13 @@ describe('product-builds routes', () => {
     storage = makeStorage()
     router = makeRouter()
     requireAdmin = vi.fn()
-    context = { storage, requireAdmin }
+    context = {
+      storage,
+      requireAdmin,
+      secrets: {},
+      registerRefresh: vi.fn(),
+      registerDiagnostics: vi.fn(),
+    }
     registerRoutes(router, context)
   })
 
@@ -65,11 +76,16 @@ describe('product-builds routes', () => {
       expect(paths).toContain('/artifacts/:key')
       expect(paths).toContain('/artifacts/:key/wheels')
       expect(paths).toContain('/artifacts/:key/containers')
+      expect(paths).toContain('/package-reports')
+      expect(paths).toContain('/package-reports/latest')
+      expect(paths).toContain('/package-reports/onboarded')
+      expect(paths).toContain('/package-reports/:date')
     })
 
-    it('registers POST config route', () => {
+    it('registers POST routes', () => {
       const paths = Object.keys(router._routes.post)
       expect(paths).toContain('/config')
+      expect(paths).toContain('/package-reports/generate')
     })
 
     it('protects config routes with requireAdmin', () => {
@@ -135,6 +151,82 @@ describe('product-builds routes', () => {
       const res = makeRes()
       handler({ body: { baseUrl: 123 } }, res)
       expect(res._status).toBe(400)
+    })
+  })
+
+  describe('GET /package-reports', () => {
+    it('returns empty array when no index exists', () => {
+      const handler = router._routes.get['/package-reports'].at(-1)
+      const res = makeRes()
+      handler({}, res)
+      expect(res._json).toEqual([])
+    })
+
+    it('returns index from storage', () => {
+      const index = [{ report_date: '2026-06-07', summary: { open_epics: 10 } }]
+      storage.writeToStorage('product-builds/package-reports/index.json', index)
+      const handler = router._routes.get['/package-reports'].at(-1)
+      const res = makeRes()
+      handler({}, res)
+      expect(res._json).toEqual(index)
+    })
+  })
+
+  describe('GET /package-reports/latest', () => {
+    it('returns 404 when no reports exist', () => {
+      const handler = router._routes.get['/package-reports/latest'].at(-1)
+      const res = makeRes()
+      handler({}, res)
+      expect(res._status).toBe(404)
+    })
+
+    it('returns latest report from storage', () => {
+      const index = [{ report_date: '2026-06-07' }]
+      const report = { report_date: '2026-06-07', summary: {}, categories: {} }
+      storage.writeToStorage('product-builds/package-reports/index.json', index)
+      storage.writeToStorage('product-builds/package-reports/2026-06-07.json', report)
+      const handler = router._routes.get['/package-reports/latest'].at(-1)
+      const res = makeRes()
+      handler({}, res)
+      expect(res._json.report_date).toBe('2026-06-07')
+    })
+  })
+
+  describe('GET /package-reports/:date', () => {
+    it('returns 404 for missing report', () => {
+      const handler = router._routes.get['/package-reports/:date'].at(-1)
+      const res = makeRes()
+      handler({ params: { date: '2026-01-01' } }, res)
+      expect(res._status).toBe(404)
+    })
+
+    it('returns report for valid date', () => {
+      const report = { report_date: '2026-06-07', summary: {}, categories: {} }
+      storage.writeToStorage('product-builds/package-reports/2026-06-07.json', report)
+      const handler = router._routes.get['/package-reports/:date'].at(-1)
+      const res = makeRes()
+      handler({ params: { date: '2026-06-07' } }, res)
+      expect(res._json.report_date).toBe('2026-06-07')
+    })
+  })
+
+  describe('POST /package-reports/generate', () => {
+    it('requires admin', () => {
+      const handlers = router._routes.post['/package-reports/generate']
+      expect(handlers[0]).toBe(requireAdmin)
+    })
+  })
+
+  describe('registrations', () => {
+    it('registers refresh handler', () => {
+      expect(context.registerRefresh).toHaveBeenCalledWith('package-analysis', expect.objectContaining({
+        order: 200,
+        timeout: 600000,
+      }))
+    })
+
+    it('registers diagnostics', () => {
+      expect(context.registerDiagnostics).toHaveBeenCalled()
     })
   })
 })

@@ -34,6 +34,7 @@ const phase = PHASES.find(p => p.id === 'rfe-review')
 const metrics = computed(() => rfeData.value?.metrics || null)
 const trendData = computed(() => rfeData.value?.trendData || [])
 const breakdown = computed(() => rfeData.value?.breakdown || [])
+const pipelineFriction = computed(() => rfeData.value?.pipelineFriction || null)
 
 const timeWindowCutoff = computed(() => {
   const days = timeWindow.value === 'week' ? 7 : timeWindow.value === '3months' ? 90 : 30
@@ -174,6 +175,7 @@ watch([() => moduleNav.params.value, rfeData], ([params]) => {
       :statusFilter="statusFilter"
       :selectedRFE="selectedRFE"
       :rfeToFeature="rfeToFeature"
+      :pipelineFriction="pipelineFriction"
       @update:timeWindow="timeWindow = $event"
       @update:filter="filter = $event"
       @update:searchQuery="searchQuery = $event"

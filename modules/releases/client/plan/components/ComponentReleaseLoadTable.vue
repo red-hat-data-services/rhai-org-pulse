@@ -3,8 +3,18 @@ import { reactive, computed } from 'vue'
 
 const props = defineProps({
   groups: { type: Array, default: () => [] },
-  componentLeads: { type: Object, default: () => ({}) }
+  componentLeads: { type: Object, default: () => ({}) },
+  velocity: { type: Object, default: null }
 })
+
+function getComponentVelocity(componentName) {
+  if (!props.velocity || !props.velocity.components) return null
+  var comps = props.velocity.components
+  for (var i = 0; i < comps.length; i++) {
+    if (comps[i].component === componentName) return comps[i]
+  }
+  return null
+}
 
 const JIRA_BASE = 'https://redhat.atlassian.net/browse'
 
@@ -117,6 +127,8 @@ var componentGroups = computed(function() {
             releaseType: feat.releaseType,
             isBlocked: feat.isBlocked,
             components: feat.components,
+            fixVersions: feat.fixVersions || [],
+            targetVersions: feat.targetVersions || [],
             assignee: feat.assignee,
             pmOwner: feat.pmOwner,
             products: [],
@@ -202,7 +214,7 @@ defineExpose({ expandAll, collapseAll })
             :class="COMP_STYLE.border"
             @click="toggleComponent(comp.component)"
           >
-            <td colspan="9" class="px-4 py-3">
+            <td colspan="12" class="px-4 py-3">
               <div class="flex items-center gap-3">
                 <svg
                   class="w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform duration-200 flex-shrink-0"
@@ -225,6 +237,11 @@ defineExpose({ expandAll, collapseAll })
                     ? 'bg-red-100 dark:bg-red-800/40 text-red-700 dark:text-red-300'
                     : 'bg-gray-100 dark:bg-gray-700/60 text-gray-400 dark:text-gray-500'"
                 >{{ comp.blockedCount }} blocked</span>
+                <span
+                  v-if="getComponentVelocity(comp.component)"
+                  class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300"
+                  :title="getComponentVelocity(comp.component).isPartialYear ? 'Less than a year of data' : ''"
+                >{{ getComponentVelocity(comp.component).avgPerRelease }} avg/rel<span v-if="getComponentVelocity(comp.component).isPartialYear" class="ml-0.5 text-gray-400 dark:text-gray-500">*</span></span>
               </div>
               <div v-if="getLeads(comp.component)" class="flex items-center gap-5 mt-2 ml-[38px]">
                 <div v-if="getLeads(comp.component).pmLead" class="flex items-center gap-1.5">
@@ -259,7 +276,10 @@ defineExpose({ expandAll, collapseAll })
             <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">Product</th>
             <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24">Type</th>
             <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-28">Release Type</th>
-            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16">Status</th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24">Status</th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16">Color Status</th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">Fix Version</th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">Target Version</th>
             <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16">Blocked</th>
             <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">Delivery Owner</th>
             <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">PM Owner</th>
@@ -314,11 +334,38 @@ defineExpose({ expandAll, collapseAll })
               </td>
               <td class="px-3 py-2.5 text-center">
                 <span
+                  v-if="feature.status"
+                  class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 dark:bg-gray-700/60 text-gray-700 dark:text-gray-300"
+                >{{ feature.status }}</span>
+                <span v-else class="text-gray-300 dark:text-gray-600 text-xs">--</span>
+              </td>
+              <td class="px-3 py-2.5 text-center">
+                <span
                   v-if="feature.colorStatus"
                   class="inline-block w-3.5 h-3.5 rounded-full ring-2"
                   :class="[colorStatusClass(feature.colorStatus), colorStatusRing(feature.colorStatus)]"
                   :title="feature.colorStatus"
                 />
+                <span v-else class="text-gray-300 dark:text-gray-600 text-xs">--</span>
+              </td>
+              <td class="px-3 py-2.5 text-center">
+                <div v-if="feature.fixVersions && feature.fixVersions.length > 0" class="flex items-center justify-center gap-1 flex-wrap">
+                  <span
+                    v-for="fv in feature.fixVersions"
+                    :key="fv"
+                    class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300"
+                  >{{ fv }}</span>
+                </div>
+                <span v-else class="text-gray-300 dark:text-gray-600 text-xs">--</span>
+              </td>
+              <td class="px-3 py-2.5 text-center">
+                <div v-if="feature.targetVersions && feature.targetVersions.length > 0" class="flex items-center justify-center gap-1 flex-wrap">
+                  <span
+                    v-for="tv in feature.targetVersions"
+                    :key="tv"
+                    class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
+                  >{{ tv }}</span>
+                </div>
                 <span v-else class="text-gray-300 dark:text-gray-600 text-xs">--</span>
               </td>
               <td class="px-3 py-2.5 text-center">
@@ -346,7 +393,7 @@ defineExpose({ expandAll, collapseAll })
 
           <!-- Empty state -->
           <tr v-if="isComponentExpanded(comp.component) && comp.features.length === 0">
-            <td colspan="9" class="px-8 py-6 text-sm text-gray-400 dark:text-gray-500 italic text-center">
+            <td colspan="12" class="px-8 py-6 text-sm text-gray-400 dark:text-gray-500 italic text-center">
               No features found for {{ comp.component }}
             </td>
           </tr>
@@ -354,7 +401,7 @@ defineExpose({ expandAll, collapseAll })
 
         <!-- No results -->
         <tr v-if="componentGroups.length === 0">
-          <td colspan="9" class="px-8 py-10 text-sm text-gray-400 dark:text-gray-500 italic text-center">
+          <td colspan="12" class="px-8 py-10 text-sm text-gray-400 dark:text-gray-500 italic text-center">
             No features match the current filters.
           </td>
         </tr>

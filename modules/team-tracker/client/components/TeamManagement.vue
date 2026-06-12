@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, watch, inject } from 'vue'
 import { useTeams } from '@shared/client/composables/useTeams'
 import { useRoster } from '@shared/client/composables/useRoster'
+import { Search, X } from 'lucide-vue-next'
 import OrgSelector from './OrgSelector.vue'
 
 const nav = inject('moduleNav')
@@ -10,6 +11,7 @@ const { teams, loading, demoToast, fetchTeams, createTeam, renameTeam, deleteTea
 const { orgs, reloadRoster } = useRoster()
 
 const filterOrg = ref(null)
+const searchQuery = ref('')
 const showCreateModal = ref(false)
 const newTeamName = ref('')
 const newTeamOrg = ref('')
@@ -41,9 +43,16 @@ const orgDisplayMap = computed(() => {
 })
 
 const filteredTeams = computed(() => {
-  const list = filterOrg.value
+  let list = filterOrg.value
     ? teams.value.filter(t => (orgDisplayMap.value[t.orgKey] || t.orgKey) === filterOrg.value)
     : teams.value
+  if (searchQuery.value.trim()) {
+    const q = searchQuery.value.toLowerCase()
+    list = list.filter(t =>
+      t.name.toLowerCase().includes(q) ||
+      (orgDisplayMap.value[t.orgKey] || t.orgKey).toLowerCase().includes(q)
+    )
+  }
   return [...list].sort((a, b) => a.name.localeCompare(b.name))
 })
 
@@ -105,7 +114,7 @@ async function handleDelete(teamId) {
 <template>
   <div class="space-y-4">
     <div class="flex items-center justify-between">
-      <h3 class="text-lg font-medium text-gray-900">Team Management</h3>
+      <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Team Management</h3>
       <button
         class="px-4 py-2 bg-primary-600 text-white text-sm rounded hover:bg-primary-700"
         @click="openCreateModal"
@@ -128,36 +137,73 @@ async function handleDelete(teamId) {
       {{ error }}
     </div>
 
+    <!-- Search -->
+    <div class="relative">
+      <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500 pointer-events-none" />
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Search teams..."
+        class="w-full pl-9 pr-8 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+      >
+      <button
+        v-if="searchQuery"
+        @click="searchQuery = ''"
+        class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+      >
+        <X class="w-4 h-4" />
+      </button>
+    </div>
+
     <!-- Team list -->
     <div v-if="loading" class="text-sm text-gray-500">Loading teams...</div>
-    <ul v-else class="divide-y divide-gray-200 border rounded">
-      <li v-for="team in filteredTeams" :key="team.id" :class="['flex items-center justify-between p-3', editingTeamId === team.id ? 'bg-blue-50 dark:bg-blue-900/20 border-l-2 border-l-blue-300 dark:border-l-blue-700' : '']">
-        <div v-if="editingTeamId === team.id" class="flex items-center gap-2 flex-1">
-          <input
-            v-model="editName"
-            class="block flex-1 rounded border-gray-300 shadow-sm text-sm"
-            @keyup.enter="saveEdit(team.id)"
-            @keyup.escape="editingTeamId = null"
-          >
-          <button class="px-2.5 py-1 text-xs font-medium text-white bg-primary-600 rounded hover:bg-primary-700 transition-colors" @click="saveEdit(team.id)">Save</button>
-          <button class="px-2.5 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" @click="editingTeamId = null">Cancel</button>
-        </div>
-        <div v-else class="flex items-center gap-2 flex-1">
-          <a
-            class="font-medium text-primary-600 hover:text-primary-800 hover:underline cursor-pointer"
-            @click="nav.navigateTo('team-detail', { teamKey: `${team.orgKey}::${team.name}` })"
-          >{{ team.name }}</a>
-          <span v-if="showOrgBadge" class="text-xs text-gray-500 bg-gray-100 dark:bg-gray-700 dark:text-gray-400 px-1.5 py-0.5 rounded">{{ orgDisplayMap[team.orgKey] || team.orgKey }}</span>
-        </div>
-        <div v-if="editingTeamId !== team.id" class="flex items-center gap-2">
-          <button class="text-sm text-gray-500 hover:text-gray-700" @click="startEdit(team)">Rename</button>
-          <button class="text-sm text-red-500 hover:text-red-700" @click="handleDelete(team.id)">Delete</button>
-        </div>
-      </li>
-      <li v-if="filteredTeams.length === 0" class="p-3 text-sm text-gray-500 text-center">
-        No teams {{ filterOrg ? 'in this org' : 'created yet' }}
-      </li>
-    </ul>
+    <div v-else-if="searchQuery && filteredTeams.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
+      No teams match "{{ searchQuery }}"
+    </div>
+    <div v-else-if="filteredTeams.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
+      No teams {{ filterOrg ? 'in this org' : 'created yet' }}
+    </div>
+    <div v-else class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <thead class="bg-gray-50 dark:bg-gray-800">
+          <tr>
+            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
+            <th v-if="showOrgBadge" class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Org</th>
+            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+          <tr v-for="team in filteredTeams" :key="team.id" :class="['hover:bg-gray-50 dark:hover:bg-gray-700/50', editingTeamId === team.id ? 'bg-blue-50 dark:bg-blue-900/20' : '']">
+            <td class="px-4 py-3 text-sm whitespace-nowrap">
+              <div v-if="editingTeamId === team.id" class="flex items-center gap-2">
+                <input
+                  v-model="editName"
+                  class="block flex-1 rounded border-gray-300 dark:border-gray-600 shadow-sm text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  @keyup.enter="saveEdit(team.id)"
+                  @keyup.escape="editingTeamId = null"
+                >
+                <button class="px-2.5 py-1 text-xs font-medium text-white bg-primary-600 rounded hover:bg-primary-700 transition-colors" @click="saveEdit(team.id)">Save</button>
+                <button class="px-2.5 py-1 text-xs font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors" @click="editingTeamId = null">Cancel</button>
+              </div>
+              <a
+                v-else
+                class="font-medium text-primary-600 dark:text-primary-400 hover:text-primary-800 hover:underline cursor-pointer"
+                @click="nav.navigateTo('team-detail', { teamKey: `${team.orgKey}::${team.name}` })"
+              >{{ team.name }}</a>
+            </td>
+            <td v-if="showOrgBadge" class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+              {{ orgDisplayMap[team.orgKey] || team.orgKey }}
+            </td>
+            <td class="px-4 py-3 text-sm text-right whitespace-nowrap">
+              <div v-if="editingTeamId !== team.id" class="flex items-center justify-end gap-2">
+                <button class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" @click="startEdit(team)">Rename</button>
+                <button class="text-sm text-red-500 hover:text-red-700" @click="handleDelete(team.id)">Delete</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
     <!-- Create Team Modal -->
     <div v-if="showCreateModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50" @click.self="showCreateModal = false">

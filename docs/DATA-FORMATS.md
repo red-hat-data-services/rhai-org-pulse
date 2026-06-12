@@ -613,6 +613,35 @@ Cached RFE issues fetched from Jira. The module's primary data file.
 - `linkedFeature` is resolved from Jira issue links (type = "Cloners", outward to RHAISTRAT project). Can be `null` if no link exists.
 - `labels` is the raw Jira label array, preserved for reference
 
+## AI Impact — RFE Metrics API Response (`GET /api/modules/ai-impact/rfe-data`)
+
+The `/rfe-data` endpoint returns computed metrics alongside the cached issue list. The `pipelineFriction` object surfaces friction signals from Jira pipeline labels that are already present on every issue.
+
+```json
+{
+  "pipelineFriction": {
+    "needsAttentionPct": 18,
+    "needsAttentionChange": 3,
+    "needsAttentionTrend": "worsening",
+    "feasibilityBlockedPct": 9,
+    "feasibilityBlockedChange": -2,
+    "feasibilityBlockedTrend": "improving"
+  }
+}
+```
+
+**Fields:**
+- `needsAttentionPct`: % of AI-touched RFEs in the selected window with label `rfe-creator-needs-attention`
+- `needsAttentionChange`: percentage-point change vs the prior period (positive = more friction)
+- `needsAttentionTrend`: `"improving"` | `"stable"` | `"worsening"` — based on `trendThresholdPp` config (default 2pp); lower is improving for friction metrics
+- `feasibilityBlockedPct`: % of AI-touched RFEs with `rfe-creator-feasibility-fail` **or** `rfe-creator-feasibility-unknown` (each issue counted once)
+- `feasibilityBlockedChange`: pp change vs prior period
+- `feasibilityBlockedTrend`: same trend classification as above
+
+**Denominator:** AI-touched RFEs only (`aiInvolvement !== 'none'`), filtered by `issue.created` within the time window. Manual RFEs the pipeline never processed are excluded.
+
+**UI:** `needsAttentionPct` / `needsAttentionChange` render as sub-text under the "Created with AI" tile; `feasibilityBlockedPct` / `feasibilityBlockedChange` under "Revised with AI".
+
 ## AI Impact — Assessments (`data/ai-impact/assessments.json`)
 
 Quality assessment data pushed from the rfe-quality-dashboard CI pipeline. Stores the latest assessment and score history for each RFE.

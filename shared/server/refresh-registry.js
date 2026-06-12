@@ -468,6 +468,20 @@ function createRefreshRegistry(storage) {
         }
         handlers[id] = enriched
       }
+      // Include registered handlers that weren't in the last run (newly added)
+      for (var [newId, newConfig] of entries) {
+        if (!handlers[newId]) {
+          var { cadenceStr: newCadenceStr } = getEffectiveCadence(newId, newConfig)
+          handlers[newId] = {
+            state: 'pending',
+            order: newConfig.order,
+            cadence: newCadenceStr,
+            baseCadence: newConfig.cadence || DEFAULT_CADENCE,
+            cadenceOverride: cadenceOverrides[newId] || null,
+            description: newConfig.description || null
+          }
+        }
+      }
       return {
         running: false,
         completedAt: lastRun.completedAt,

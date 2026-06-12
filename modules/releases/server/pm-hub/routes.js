@@ -8,7 +8,9 @@
 
 const { CUSTOM_FIELDS, transformIssue } = require('../hygiene/jira-fetch')
 const { blockDuringImpersonation } = require('../../../../shared/server/auth')
+const { JIRA_HOST } = require('../../../../shared/server/jira')
 
+const JIRA_SEARCH = JIRA_HOST + '/issues/?jql='
 const PM_HUB_PROJECTS = ['RHAIENG', 'RHOAIENG', 'INFERENG', 'AIPCC', 'RHAISTRAT', 'RHAIRFE']
 const PILLAR_CONFIG_FILE = 'releases/pm-hub/pillar-config.json'
 
@@ -76,6 +78,100 @@ var DEFAULT_PILLAR_CONFIG = {
         { name: 'MLflow', pmLead: 'Myriam Fentanes Gutierrez', engLead: 'Lindani Phiri' },
         { name: 'AI Core Dashboard', pmLead: 'Jenny Yi', engLead: 'Eder Ignatowicz' }
       ]
+    },
+    {
+      name: 'Undefined',
+      components: [
+        { name: 'AAET DevOps', pmLead: '', engLead: '' },
+        { name: 'AI Core Platform Security', pmLead: '', engLead: '' },
+        { name: 'AI Eng Agilist', pmLead: '', engLead: '' },
+        { name: 'AI Evaluations', pmLead: '', engLead: '' },
+        { name: 'AI Field Enablement', pmLead: '', engLead: '' },
+        { name: 'AI First', pmLead: '', engLead: '' },
+        { name: 'AI Platform DevOps', pmLead: '', engLead: '' },
+        { name: 'AI Research + Community', pmLead: '', engLead: '' },
+        { name: 'AI Testing + Workflow Validation', pmLead: '', engLead: '' },
+        { name: 'AIPCC Ecosystems', pmLead: '', engLead: '' },
+        { name: 'AIPCC Productization', pmLead: '', engLead: '' },
+        { name: 'Accelerator Enablement', pmLead: '', engLead: '' },
+        { name: 'Accelerator Platform', pmLead: '', engLead: '' },
+        { name: 'Agentic', pmLead: '', engLead: '' },
+        { name: 'Agile Roadmap', pmLead: '', engLead: '' },
+        { name: 'AutoRAG', pmLead: '', engLead: '' },
+        { name: 'BSA', pmLead: '', engLead: '' },
+        { name: 'Build and Release', pmLead: '', engLead: '' },
+        { name: 'CI/CD', pmLead: '', engLead: '' },
+        { name: 'Compressed-Tensors', pmLead: '', engLead: '' },
+        { name: 'Customer Exploration & Test', pmLead: '', engLead: '' },
+        { name: 'DevOps', pmLead: '', engLead: '' },
+        { name: 'DevTestOps', pmLead: '', engLead: '' },
+        { name: 'Distributed Workloads', pmLead: '', engLead: '' },
+        { name: 'Documentation', pmLead: '', engLead: '' },
+        { name: 'Experiment Tracking', pmLead: '', engLead: '' },
+        { name: 'Explainability', pmLead: '', engLead: '' },
+        { name: 'Fine Tuning', pmLead: '', engLead: '' },
+        { name: 'Gen AI Studio', pmLead: '', engLead: '' },
+        { name: 'IBM P', pmLead: '', engLead: '' },
+        { name: 'IBM Z', pmLead: '', engLead: '' },
+        { name: 'INFERENG Midstream', pmLead: '', engLead: '' },
+        { name: 'Inference Extensions', pmLead: '', engLead: '' },
+        { name: 'Inference Gateway', pmLead: '', engLead: '' },
+        { name: 'Inference Research', pmLead: '', engLead: '' },
+        { name: 'Inference-Time Techniques', pmLead: '', engLead: '' },
+        { name: 'Infra Midstream', pmLead: '', engLead: '' },
+        { name: 'InfraOps', pmLead: '', engLead: '' },
+        { name: 'Integrations', pmLead: '', engLead: '' },
+        { name: 'Internal Processes & Documentation', pmLead: '', engLead: '' },
+        { name: 'KubeRay', pmLead: '', engLead: '' },
+        { name: 'Kubeflow Spark Operator', pmLead: '', engLead: '' },
+        { name: 'Kubeflow Unified SDK', pmLead: '', engLead: '' },
+        { name: 'LLM Compressor', pmLead: '', engLead: '' },
+        { name: 'Llama Stack Core', pmLead: '', engLead: '' },
+        { name: 'LlamaStack', pmLead: '', engLead: '' },
+        { name: 'MLR Speculative Decoding', pmLead: '', engLead: '' },
+        { name: 'Model Customization', pmLead: '', engLead: '' },
+        { name: 'Model Eval', pmLead: '', engLead: '' },
+        { name: 'Model Explainability', pmLead: '', engLead: '' },
+        { name: 'Model Runtimes', pmLead: '', engLead: '' },
+        { name: 'Model Server', pmLead: '', engLead: '' },
+        { name: 'Model Serving', pmLead: '', engLead: '' },
+        { name: 'Model and Agent Observability', pmLead: '', engLead: '' },
+        { name: 'Model as a Service', pmLead: '', engLead: '' },
+        { name: 'Monitoring', pmLead: '', engLead: '' },
+        { name: 'Notebooks', pmLead: '', engLead: '' },
+        { name: 'Notebooks Extensions', pmLead: '', engLead: '' },
+        { name: 'Notebooks Images', pmLead: '', engLead: '' },
+        { name: 'Notebooks Server', pmLead: '', engLead: '' },
+        { name: 'OGX Core', pmLead: '', engLead: '' },
+        { name: 'OpenShift AI Productization', pmLead: '', engLead: '' },
+        { name: 'PXE', pmLead: '', engLead: '' },
+        { name: 'PerfScale', pmLead: '', engLead: '' },
+        { name: 'Project Navigator', pmLead: '', engLead: '' },
+        { name: 'PyTorch', pmLead: '', engLead: '' },
+        { name: 'QE', pmLead: '', engLead: '' },
+        { name: 'RAG', pmLead: '', engLead: '' },
+        { name: 'RAG + Vector DB', pmLead: '', engLead: '' },
+        { name: 'RAG_Agentic', pmLead: '', engLead: '' },
+        { name: 'Security', pmLead: '', engLead: '' },
+        { name: 'Speculators', pmLead: '', engLead: '' },
+        { name: 'TestOps', pmLead: '', engLead: '' },
+        { name: 'Tooling Experience', pmLead: '', engLead: '' },
+        { name: 'Training', pmLead: '', engLead: '' },
+        { name: 'Training Kubeflow', pmLead: '', engLead: '' },
+        { name: 'TrustyAI', pmLead: '', engLead: '' },
+        { name: 'UXD', pmLead: '', engLead: '' },
+        { name: 'Update This Field With Components', pmLead: '', engLead: '' },
+        { name: 'Wheel Package Index', pmLead: '', engLead: '' },
+        { name: 'Wheel building', pmLead: '', engLead: '' },
+        { name: 'Workbenches/IDE', pmLead: '', engLead: '' },
+        { name: 'Workload Orchestration', pmLead: '', engLead: '' },
+        { name: 'guide-llm', pmLead: '', engLead: '' },
+        { name: 'internal process', pmLead: '', engLead: '' },
+        { name: 'llama.cpp', pmLead: '', engLead: '' },
+        { name: 'to-refine', pmLead: '', engLead: '' },
+        { name: 'vLLM Runtime', pmLead: '', engLead: '' },
+        { name: 'watsonx Orchestrate Collaboration', pmLead: '', engLead: '' }
+      ]
     }
   ]
 }
@@ -128,7 +224,7 @@ function backfillLeads(config) {
         pillar.components[ci] = obj
         changed = true
       } else if (typeof comp === 'object' && comp !== null) {
-        if (!comp.pmLead && !comp.engLead && defaults) {
+        if (!comp.pmLead && !comp.engLead && defaults && (defaults.pmLead || defaults.engLead)) {
           comp.pmLead = defaults.pmLead || ''
           comp.engLead = defaults.engLead || ''
           changed = true
@@ -137,6 +233,137 @@ function backfillLeads(config) {
     }
   }
   return changed
+}
+
+var VELOCITY_LOOKBACK_WEEKS = 52
+
+/**
+ * Compute per-component velocity from resolved Jira issues, then return a
+ * weighted average across components.
+ *
+ * For each component:
+ *   velocity_i = resolved_i / distinct_releases_i
+ *
+ * Weighted average = Σ(velocity_i × resolved_i) / Σ(resolved_i)
+ *   — components that ship more features carry more weight.
+ *
+ * @param {Array} rawIssues - Raw Jira issues (statusCategory = Done, fixVersion set)
+ * @param {string} componentClause - JQL component clause for verification URLs
+ * @returns {{ avgPerRelease: string, totalResolved: number, components: Array, jql: string }}
+ */
+function computeVelocity(rawIssues, componentClause, nowDate, selectedComponents) {
+  var now = nowDate ? new Date(nowDate) : new Date()
+
+  // Build a lookup set for selected components (when provided, only group by these)
+  var selectedSet = null
+  if (Array.isArray(selectedComponents) && selectedComponents.length > 0) {
+    selectedSet = {}
+    for (var si = 0; si < selectedComponents.length; si++) {
+      selectedSet[selectedComponents[si]] = true
+    }
+  }
+
+  // Group issues by component → { resolved keys, version set, earliest resolution }
+  var compMap = {}
+  for (var i = 0; i < rawIssues.length; i++) {
+    var raw = rawIssues[i]
+    var key = raw.key
+    var fields = raw.fields || {}
+    var comps = fields.components
+    if (!Array.isArray(comps) || comps.length === 0) comps = [{ name: 'No Component' }]
+    var fvs = fields.fixVersions
+    if (!Array.isArray(fvs)) continue
+
+    var resolvedDate = fields.resolutiondate ? new Date(fields.resolutiondate) : null
+
+    for (var ci = 0; ci < comps.length; ci++) {
+      var cName = comps[ci] && comps[ci].name
+      if (!cName) continue
+      if (selectedSet && !selectedSet[cName]) continue
+      if (!compMap[cName]) compMap[cName] = { seen: {}, versions: {}, earliestResolved: null }
+      var entry = compMap[cName]
+      if (entry.seen[key]) continue
+      entry.seen[key] = true
+
+      if (resolvedDate && !isNaN(resolvedDate.getTime())) {
+        if (!entry.earliestResolved || resolvedDate < entry.earliestResolved) {
+          entry.earliestResolved = resolvedDate
+        }
+      }
+
+      for (var vi = 0; vi < fvs.length; vi++) {
+        var vName = fvs[vi] && fvs[vi].name
+        if (vName) entry.versions[vName] = (entry.versions[vName] || 0) + 1
+      }
+    }
+  }
+
+  // Compute per-component velocity and age-weighted average
+  var compNames = Object.keys(compMap)
+  var totalResolved = 0
+  var weightedSum = 0
+  var weightedDenom = 0
+  var hasPartialYear = false
+  var perComponent = []
+
+  for (var k = 0; k < compNames.length; k++) {
+    var name = compNames[k]
+    var data = compMap[name]
+    var resolved = Object.keys(data.seen).length
+    var releases = Object.keys(data.versions).length
+    var vel = releases > 0 ? resolved / releases : 0
+
+    // Determine team age from earliest resolution date
+    var activeWeeks = VELOCITY_LOOKBACK_WEEKS
+    var isPartialYear = false
+    if (data.earliestResolved) {
+      var diffMs = now.getTime() - data.earliestResolved.getTime()
+      activeWeeks = Math.max(1, Math.floor(diffMs / (7 * 24 * 60 * 60 * 1000)))
+      if (activeWeeks < VELOCITY_LOOKBACK_WEEKS) {
+        isPartialYear = true
+        hasPartialYear = true
+      }
+    }
+
+    var ageFactor = Math.min(activeWeeks / VELOCITY_LOOKBACK_WEEKS, 1)
+
+    totalResolved += resolved
+    weightedSum += vel * resolved * ageFactor
+    weightedDenom += resolved * ageFactor
+
+    perComponent.push({
+      component: name,
+      resolved: resolved,
+      releases: releases,
+      avgPerRelease: formatAvg(vel),
+      activeWeeks: activeWeeks,
+      isPartialYear: isPartialYear
+    })
+  }
+
+  var avg = weightedDenom > 0 ? weightedSum / weightedDenom : 0
+
+  var jqlParts = [
+    'project IN (' + PM_HUB_PROJECTS.join(', ') + ')',
+    'issuetype IN (Feature, Initiative)',
+    'statusCategory = Done',
+    'resolved >= -' + VELOCITY_LOOKBACK_WEEKS + 'w',
+    'fixVersion is not EMPTY'
+  ]
+  if (componentClause) jqlParts.push(componentClause)
+  var jql = jqlParts.join(' AND ')
+
+  return {
+    avgPerRelease: totalResolved > 0 ? formatAvg(avg) : '—',
+    totalResolved: totalResolved,
+    hasPartialYear: hasPartialYear,
+    components: perComponent,
+    jql: JIRA_SEARCH + encodeURIComponent(jql)
+  }
+}
+
+function formatAvg(value) {
+  return value % 1 === 0 ? String(value) : value.toFixed(1)
 }
 
 const DEFAULT_ISSUE_TYPES = ['Feature', 'Initiative']
@@ -149,6 +376,36 @@ const FIELDS_TO_FETCH = [
   CUSTOM_FIELDS.colorStatus,
   CUSTOM_FIELDS.productManager
 ].join(',')
+
+function buildFeatureObj(f, targetVersions) {
+  return {
+    key: f.key,
+    summary: f.summary || '',
+    status: f.status || null,
+    statusCategory: f.statusCategory || null,
+    colorStatus: f.colorStatus || null,
+    statusSummary: f.statusSummary || null,
+    releaseType: f.releaseType || null,
+    isBlocked: f.isBlocked || false,
+    components: f.components || [],
+    fixVersions: f.fixVersions || [],
+    targetVersions: targetVersions || [],
+    assignee: f.assignee || null,
+    pmOwner: f.pmOwner || null
+  }
+}
+
+function extractTargetVersions(rawIssue) {
+  var tvField = rawIssue.fields && rawIssue.fields[CUSTOM_FIELDS.targetVersion]
+  if (!tvField) return []
+  var arr = Array.isArray(tvField) ? tvField : [tvField]
+  var result = []
+  for (var i = 0; i < arr.length; i++) {
+    var name = arr[i] && (arr[i].name || arr[i].value)
+    if (name) result.push(String(name).trim())
+  }
+  return result
+}
 
 /**
  * @param {import('express').Router} router
@@ -398,18 +655,6 @@ module.exports = function registerPmHubRoutes(router, context) {
         committedIssues = await jiraClient.fetchAllJqlResults(compJql, fieldsWithTv, { expand: 'renderedFields' })
       }
 
-      function extractTargetVersions(rawIssue) {
-        var tvField = rawIssue.fields && rawIssue.fields[CUSTOM_FIELDS.targetVersion]
-        if (!tvField) return []
-        var arr = Array.isArray(tvField) ? tvField : [tvField]
-        var result = []
-        for (var i = 0; i < arr.length; i++) {
-          var name = arr[i] && (arr[i].name || arr[i].value)
-          if (name) result.push(String(name).trim())
-        }
-        return result
-      }
-
       var versionGroups = {}
 
       function ensureGroup(vName, cName) {
@@ -429,21 +674,6 @@ module.exports = function registerPmHubRoutes(router, context) {
         return versionGroups[vName].components[cName]
       }
 
-      function buildFeatureObj(f) {
-        return {
-          key: f.key,
-          summary: f.summary || '',
-          status: f.status || null,
-          colorStatus: f.colorStatus || null,
-          statusSummary: f.statusSummary || null,
-          releaseType: f.releaseType || null,
-          isBlocked: f.isBlocked || false,
-          components: f.components || [],
-          assignee: f.assignee || null,
-          pmOwner: f.pmOwner || null
-        }
-      }
-
       // Process requested issues (Target Version matches)
       for (var ri = 0; ri < requestedIssues.length; ri++) {
         var raw = requestedIssues[ri]
@@ -460,7 +690,7 @@ module.exports = function registerPmHubRoutes(router, context) {
             if (componentNames.length > 0 && componentNames.indexOf(cName) === -1) continue
             var group = ensureGroup(tvName, cName)
             if (!group.requestedFeatures.some(function(e) { return e.key === f.key })) {
-              group.requestedFeatures.push(buildFeatureObj(f))
+              group.requestedFeatures.push(buildFeatureObj(f, tvNames))
               group.requestedCount++
             }
           }
@@ -471,6 +701,7 @@ module.exports = function registerPmHubRoutes(router, context) {
       for (var cii = 0; cii < committedIssues.length; cii++) {
         var rawC = committedIssues[cii]
         var fc = transformIssue(rawC, {})
+        var tvNamesC = extractTargetVersions(rawC)
         var fvList = fc.fixVersions && fc.fixVersions.length > 0 ? fc.fixVersions : ['Unversioned']
         var compListC = fc.components && fc.components.length > 0 ? fc.components : ['No Component']
 
@@ -483,13 +714,27 @@ module.exports = function registerPmHubRoutes(router, context) {
             if (componentNames.length > 0 && componentNames.indexOf(cNameC) === -1) continue
             var groupC = ensureGroup(fvName, cNameC)
             if (!groupC.committedFeatures.some(function(e) { return e.key === fc.key })) {
-              groupC.committedFeatures.push(buildFeatureObj(fc))
+              groupC.committedFeatures.push(buildFeatureObj(fc, tvNamesC))
               groupC.committedCount++
               if (fc.isBlocked) groupC.blockedCount++
             }
           }
         }
       }
+
+      // Query 3: Velocity — resolved features in the last year with a fixVersion
+      var velocityIssues = []
+      if (componentClause) {
+        var velJqlParts = baseParts.slice()
+        velJqlParts.push(componentClause)
+        velJqlParts.push('statusCategory = Done')
+        velJqlParts.push('resolved >= -' + VELOCITY_LOOKBACK_WEEKS + 'w')
+        velJqlParts.push('fixVersion is not EMPTY')
+        var velJql = velJqlParts.join(' AND ')
+        velocityIssues = await jiraClient.fetchAllJqlResults(velJql, 'summary,status,fixVersions,components,resolutiondate', {})
+      }
+
+      var velocity = computeVelocity(velocityIssues, componentClause, null, componentNames)
 
       var groups = Object.keys(versionGroups).sort().map(function(vKey) {
         var vg = versionGroups[vKey]
@@ -515,6 +760,7 @@ module.exports = function registerPmHubRoutes(router, context) {
 
       res.json({
         groups: groups,
+        velocity: velocity,
         fetchedAt: new Date().toISOString(),
         filters: { components: componentNames, versions: versionNames }
       })
@@ -529,3 +775,6 @@ module.exports.DEFAULT_PILLAR_CONFIG = DEFAULT_PILLAR_CONFIG
 module.exports.validatePillarConfig = validatePillarConfig
 module.exports.PILLAR_CONFIG_FILE = PILLAR_CONFIG_FILE
 module.exports.backfillLeads = backfillLeads
+module.exports.computeVelocity = computeVelocity
+module.exports.buildFeatureObj = buildFeatureObj
+module.exports.extractTargetVersions = extractTargetVersions

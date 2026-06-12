@@ -47,7 +47,7 @@ jobs:
         if: steps.changes.outputs.app == 'true'
         uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Setup Socket Security

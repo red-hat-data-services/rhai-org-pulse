@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 
 const { transformIssue, CUSTOM_FIELDS } = require('../../../server/hygiene/jira-fetch')
-const { findFixVersionAddedDate, findFixVersionRemovedDate, classifyFeature, normalizeVersionName } = require('../../../server/execution/feature-tracking-routes')
+const { findFixVersionAddedDate, findFixVersionRemovedDate, classifyFeature, normalizeVersionName, fetchDroppedFeatures } = require('../../../server/execution/feature-tracking-routes')
 
 function makeRawIssue(overrides) {
   var fields = {}
@@ -391,5 +391,100 @@ describe('normalizeVersionName', function () {
   it('handles null/empty gracefully', function () {
     expect(normalizeVersionName(null)).toBe('')
     expect(normalizeVersionName('')).toBe('')
+  })
+})
+
+// ─── fetchDroppedFeatures — freeze date filtering ─────────────────
+
+describe('fetchDroppedFeatures — freeze date filtering', function () {
+  function makeDroppedRawIssue(key, removedAt) {
+    return {
+      key: key,
+      fields: {
+        summary: 'Dropped feature ' + key,
+        issuetype: { name: 'Feature' },
+        status: { name: 'In Progress', statusCategory: { name: 'In Progress' } },
+        assignee: { displayName: 'Jane Doe' },
+        fixVersions: [],
+        components: [{ name: 'Model Serving' }],
+        labels: [],
+        issuelinks: []
+      },
+      renderedFields: {},
+      changelog: {
+        histories: [{
+          created: removedAt,
+          items: [{
+            field: 'Fix Version',
+            fieldId: 'fixVersions',
+            fromString: 'rhoai-3.5.EA2',
+            toString: ''
+          }]
+        }]
+      }
+    }
+  }
+
+  var mockJiraRequest = function () {}
+
+  function makeFetchAll(rawIssues) {
+    return async function () { return rawIssues }
+  }
+
+  it('includes features removed after the freeze date', async function () {
+    var issues = [makeDroppedRawIssue('RHAISTRAT-200', '2026-05-25T10:00:00.000+0000')]
+    var result = await fetchDroppedFeatures('rhoai-3.5.EA2', mockJiraRequest, makeFetchAll(issues), {}, '2026-05-20')
+    expect(result).toHaveLength(1)
+    expect(result[0].key).toBe('RHAISTRAT-200')
+    expect(result[0].scopeChange).toBe('dropped')
+  })
+
+  it('excludes features removed before the freeze date', async function () {
+    var issues = [makeDroppedRawIssue('RHAISTRAT-201', '2026-05-15T10:00:00.000+0000')]
+    var result = await fetchDroppedFeatures('rhoai-3.5.EA2', mockJiraRequest, makeFetchAll(issues), {}, '2026-05-20')
+    expect(result).toHaveLength(0)
+  })
+
+  it('includes features removed on the same day as the freeze date', async function () {
+    var issues = [makeDroppedRawIssue('RHAISTRAT-202', '2026-05-20T08:00:00.000+0000')]
+    var result = await fetchDroppedFeatures('rhoai-3.5.EA2', mockJiraRequest, makeFetchAll(issues), {}, '2026-05-20')
+    expect(result).toHaveLength(1)
+    expect(result[0].scopeChange).toBe('dropped')
+  })
+
+  it('shows all dropped features when no freeze date is provided', async function () {
+    var issues = [
+      makeDroppedRawIssue('RHAISTRAT-203', '2026-04-01T10:00:00.000+0000'),
+      makeDroppedRawIssue('RHAISTRAT-204', '2026-06-01T10:00:00.000+0000')
+    ]
+    var result = await fetchDroppedFeatures('rhoai-3.5.EA2', mockJiraRequest, makeFetchAll(issues), {}, null)
+    expect(result).toHaveLength(2)
+    expect(result.every(function (f) { return f.scopeChange === 'dropped' })).toBe(true)
+  })
+
+  it('excludes features with no changelog when freeze date is set', async function () {
+    var issue = {
+      key: 'RHAISTRAT-205',
+      fields: {
+        summary: 'No changelog feature',
+        issuetype: { name: 'Feature' },
+        status: { name: 'In Progress', statusCategory: { name: 'In Progress' } },
+        assignee: null,
+        fixVersions: [],
+        components: [],
+        labels: [],
+        issuelinks: []
+      },
+      renderedFields: {},
+      changelog: { histories: [] }
+    }
+    var result = await fetchDroppedFeatures('rhoai-3.5.EA2', mockJiraRequest, makeFetchAll([issue]), {}, '2026-05-20')
+    expect(result).toHaveLength(0)
+  })
+
+  it('skips issues already in currentKeys', async function () {
+    var issues = [makeDroppedRawIssue('RHAISTRAT-206', '2026-05-25T10:00:00.000+0000')]
+    var result = await fetchDroppedFeatures('rhoai-3.5.EA2', mockJiraRequest, makeFetchAll(issues), { 'RHAISTRAT-206': true }, '2026-05-20')
+    expect(result).toHaveLength(0)
   })
 })

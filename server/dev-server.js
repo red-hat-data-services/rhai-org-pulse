@@ -12,6 +12,7 @@
  */
 
 const express = require('express');
+const compression = require('compression');
 const errorBuffer = require('./error-buffer');
 const requestTracker = require('./request-tracker');
 
@@ -173,6 +174,7 @@ apiTokens.init(storageModule, { scopeRegistry });
 const PORT = process.env.API_PORT || 3001;
 
 const app = express();
+app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 
 // Session middleware for OAuth flows (Google Drive + Jira per-user auth)
@@ -246,7 +248,7 @@ const roleStore = createRoleStore(readFromStorage, writeToStorage, {
   },
   roleRegistry
 });
-const { authMiddleware, requireAdmin, requireTeamAdmin, requireRole, requireScope, seedRoles } = createAuthMiddleware(readFromStorage, writeToStorage, {
+const { authMiddleware, requireAuth, requireAdmin, requireTeamAdmin, requireRole, requireScope, seedRoles } = createAuthMiddleware(readFromStorage, writeToStorage, {
   tokenValidator: apiTokens,
   roleStore
 });
@@ -2201,7 +2203,7 @@ function exportRateLimit(req, res, next) {
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-app.get('/api/export/test-data', requireAdmin, requireScope('admin:manage'), exportRateLimit, function(req, res) {
+app.get('/api/export/test-data', requireAuth, exportRateLimit, function(req, res) {
   handleExport(req, res, storageModule, exportRegistry);
 });
 

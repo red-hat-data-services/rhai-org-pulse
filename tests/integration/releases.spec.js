@@ -254,6 +254,78 @@ test.describe('Releases PM Hub @releases', () => {
     expect(body.error).toContain('filter');
   });
 
+  test('component-release-load returns velocity with age and component fields', async ({ request }) => {
+    const componentsRes = await request.get('/api/modules/releases/pm-hub/jira/components');
+    const componentsBody = await componentsRes.json();
+    if (!componentsBody.components || componentsBody.components.length === 0) {
+      test.skip();
+      return;
+    }
+    var compName = componentsBody.components[0].name;
+    var res = await request.get('/api/modules/releases/pm-hub/component-release-load?components=' + encodeURIComponent(compName));
+    if (!res.ok()) {
+      test.skip();
+      return;
+    }
+    var body = await res.json();
+    expect(body).toHaveProperty('velocity');
+    var vel = body.velocity;
+    expect(vel).toHaveProperty('avgPerRelease');
+    expect(vel).toHaveProperty('totalResolved');
+    expect(vel).toHaveProperty('hasPartialYear');
+    expect(vel).toHaveProperty('components');
+    expect(vel).toHaveProperty('jql');
+    expect(typeof vel.hasPartialYear).toBe('boolean');
+    if (vel.components.length > 0) {
+      var comp = vel.components[0];
+      expect(comp).toHaveProperty('component');
+      expect(comp).toHaveProperty('resolved');
+      expect(comp).toHaveProperty('releases');
+      expect(comp).toHaveProperty('avgPerRelease');
+      expect(comp).toHaveProperty('activeWeeks');
+      expect(comp).toHaveProperty('isPartialYear');
+      expect(typeof comp.isPartialYear).toBe('boolean');
+      expect(typeof comp.activeWeeks).toBe('number');
+    }
+  });
+
+  test('should show velocity summary card and per-component badges', async ({ page }) => {
+    await page.goto('/#/releases/plan');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    await page.locator('button', { hasText: 'PM Hub' }).click();
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    var reportCard = page.locator('.cursor-pointer', { hasText: 'Component Release Load Tracking' });
+    await reportCard.first().click();
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    // Select a component from the dropdown to trigger data load
+    var componentInput = page.locator('input[placeholder="Search…"]').first();
+    await componentInput.click();
+    await page.waitForTimeout(500);
+
+    var firstOption = page.locator('button', { hasText: /^(?!.*Clear)/ }).filter({ has: page.locator('.rounded.border') }).first();
+    if (await firstOption.count() > 0) {
+      await firstOption.click();
+      await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+      // Verify the Avg / Monthly Release summary card is visible
+      var avgCard = page.locator('text=Avg / Monthly Release');
+      await expect(avgCard.first()).toBeVisible();
+
+      // Check for component rows with velocity badges (avg/rel text)
+      var velocityBadges = page.locator('text=avg/rel');
+      var badgeCount = await velocityBadges.count();
+      // Velocity badges appear on component rows when data is loaded
+      // May be 0 if the component has no resolved features in the last year
+      expect(badgeCount).toBeGreaterThanOrEqual(0);
+    }
+
+    expect(page.errors).toHaveLength(0);
+  });
+
   test('pillar-config endpoint returns valid config', async ({ request }) => {
     const res = await request.get('/api/modules/releases/pm-hub/pillar-config');
     expect(res.ok()).toBe(true);

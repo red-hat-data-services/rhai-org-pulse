@@ -31,8 +31,8 @@ import PmHubView from '../plan/views/PmHubView.vue'
 
 const tabs = [
   { id: 'outcomes', label: 'Big Rocks' },
-  { id: 'feature-readiness', label: 'Features List (1-n)' },
   { id: 'pm-hub', label: 'PM Hub' },
+  { id: 'feature-readiness', label: 'Features List (1-n)' },
 ]
 
 var moduleNav = inject('moduleNav', null)

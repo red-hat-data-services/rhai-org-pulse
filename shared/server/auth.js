@@ -208,6 +208,13 @@ function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
     next()
   }
 
+  function requireAuth(req, res, next) {
+    if (!req.userEmail) {
+      return res.status(401).json({ error: 'Authentication required.' })
+    }
+    next()
+  }
+
   function requireAdmin(req, res, next) {
     if (!req.isAdmin) {
       return res.status(403).json({ error: 'Admin access required.' })
@@ -257,7 +264,7 @@ function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
     };
   }
 
-  return { authMiddleware, requireAdmin, requireTeamAdmin, requireRole, requireScope, isAdmin, seedRoles }
+  return { authMiddleware, requireAuth, requireAdmin, requireTeamAdmin, requireRole, requireScope, isAdmin, seedRoles }
 }
 
 let _emptySecretWarned = false;

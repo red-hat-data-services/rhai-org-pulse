@@ -2,6 +2,8 @@
 import { ref, computed, onMounted, inject } from 'vue'
 import { useFeatureReadiness } from '../composables/useFeatureReadiness'
 import { useReleases } from '../composables/useReleasePlanning'
+import { useRefreshPolling } from '../composables/useRefreshPolling'
+import { apiRequest } from '@shared/client/services/api'
 import FeatureReadinessFilterBar from '../components/FeatureReadinessFilterBar.vue'
 import FeatureReadinessRow from '@shared/client/components/FeatureReadinessRow.vue'
 import FeatureReadinessDrawer from '@shared/client/components/FeatureReadinessDrawer.vue'
@@ -15,6 +17,34 @@ function navigateToFeature(key) {
 
 const { pendingReview, ready, filterMeta, meta, loading, error, loadFeatureReadiness } = useFeatureReadiness()
 const { releases, loadReleases } = useReleases()
+
+const refreshing = ref(false)
+const refreshStatus = ref('')
+
+async function triggerHygieneRefresh() {
+  refreshing.value = true
+  refreshStatus.value = 'Starting hygiene refresh...'
+  try {
+    await apiRequest('/modules/releases/hygiene/refresh-all', { method: 'POST' })
+  } catch {
+    refreshStatus.value = 'Refresh failed'
+    refreshing.value = false
+  }
+}
+
+async function checkRefreshStatus() {
+  var data = await apiRequest('/modules/releases/hygiene/refresh/status')
+  if (data.running) {
+    refreshStatus.value = (data.progress && data.progress.message) || 'Refreshing...'
+  }
+  return data
+}
+
+useRefreshPolling(refreshing, checkRefreshStatus, function() {
+  refreshing.value = false
+  refreshStatus.value = ''
+  loadFeatureReadiness()
+})
 
 onMounted(function() {
   loadFeatureReadiness()
@@ -103,7 +133,7 @@ const releaseOptions = computed(() => {
 
 const headers = [
   { id: 'h-num',        label: '#',               scope: 'col' },
-  { id: 'h-score',      label: 'Score',           scope: 'col' },
+  { id: 'h-score',      label: 'Score',           scope: 'col', hasScoreTooltip: true },
   { id: 'h-readiness',  label: 'Readiness',       scope: 'col', hasTooltip: true },
   { id: 'h-key',        label: 'Key',             scope: 'col' },
   { id: 'h-title',      label: 'Title',           scope: 'col' },
@@ -150,6 +180,12 @@ function formatSyncDate(dateStr) {
         <span>{{ readyCounts.total }} features</span>
         <span class="text-green-600 dark:text-green-400">{{ readyCounts.ready }} ready</span>
         <span class="text-red-600 dark:text-red-400">{{ readyCounts.notReady }} not ready</span>
+        <button
+          @click="triggerHygieneRefresh"
+          :disabled="refreshing"
+          class="ml-2 px-3 py-1 text-xs font-medium rounded-md bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          :title="refreshing ? refreshStatus : 'Refresh hygiene data from Jira'"
+        >{{ refreshing ? 'Refreshing...' : 'Refresh Hygiene' }}</button>
       </div>
     </div>
 
@@ -201,6 +237,31 @@ function formatSyncDate(dateStr) {
                     <div class="flex items-center gap-2">
                       <span class="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0"></span>
                       <span class="text-gray-600 dark:text-gray-300"><strong>Not Ready</strong> — does not pass readiness gates</span>
+                    </div>
+                  </div>
+                </div>
+              </span>
+              <span v-else-if="header.hasScoreTooltip" class="inline-flex items-center gap-1 group relative">
+                {{ header.label }}
+                <span
+                  class="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-300 text-[9px] font-bold leading-none cursor-help"
+                >i</span>
+                <div
+                  class="absolute z-50 top-full mt-1 left-0 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 text-xs text-left font-normal normal-case tracking-normal hidden group-hover:block"
+                >
+                  <p class="font-semibold text-gray-700 dark:text-gray-200 mb-2">Score Rubric</p>
+                  <div class="space-y-2 text-gray-600 dark:text-gray-300">
+                    <div>
+                      <p class="font-medium text-gray-700 dark:text-gray-200 mb-0.5">When RICE or Rubric present:</p>
+                      <p class="font-mono text-[10px]">RICE/Rubric (30w) + Tier (25w) + Priority (25w) + Target Version (20w)</p>
+                    </div>
+                    <div>
+                      <p class="font-medium text-gray-700 dark:text-gray-200 mb-0.5">When neither present:</p>
+                      <p class="font-mono text-[10px]">Tier (40w) + Priority (35w) + Target Version (25w)</p>
+                    </div>
+                    <div class="pt-1 border-t border-gray-100 dark:border-gray-700">
+                      <p class="font-medium text-gray-700 dark:text-gray-200 mb-0.5">Completeness multiplier:</p>
+                      <p class="font-mono text-[10px]">1 signal = 0.5x &middot; 2 = 0.7x &middot; 3 = 0.85x &middot; 4 = 1.0x</p>
                     </div>
                   </div>
                 </div>

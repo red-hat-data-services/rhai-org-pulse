@@ -1,4 +1,10 @@
 const { proxyGet } = require('./proxy');
+const { createJiraClient } = require('../../../shared/server/jira');
+const { buildReport, getPackagesOnboarded } = require('./analysis');
+
+const DEMO_MODE = process.env.DEMO_MODE === 'true';
+const PKG_STORAGE_PREFIX = 'product-builds/package-reports';
+const PKG_INDEX_PATH = `${PKG_STORAGE_PREFIX}/index.json`;
 
 const CONFIG_PATH = 'product-builds/config.json';
 
@@ -490,6 +496,202 @@ module.exports = function registerRoutes(router, context) {
   router.get('/artifacts/:key/containers', function(req, res) {
     upstream(`/artifacts/${encodeURIComponent(req.params.key)}/containers`, req, res);
   });
+
+  // --- Package Analysis ---
+
+  let _jira;
+  function getJira() {
+    if (!_jira) {
+      _jira = createJiraClient({
+        email: (context.secrets && context.secrets.JIRA_EMAIL) || '',
+        token: (context.secrets && context.secrets.JIRA_TOKEN) || '',
+      });
+    }
+    return _jira;
+  }
+
+  function rebuildPackageIndex() {
+    const files = storage.listStorageFiles(PKG_STORAGE_PREFIX + '/');
+    const index = [];
+    for (const file of files) {
+      if (file === 'index.json' || !file.endsWith('.json')) continue;
+      const report = readFromStorage(`${PKG_STORAGE_PREFIX}/${file}`);
+      if (report && report.summary) {
+        index.push({
+          report_date: report.report_date,
+          report_time: report.report_time,
+          summary: report.summary,
+        });
+      }
+    }
+    index.sort((a, b) => b.report_date.localeCompare(a.report_date));
+    return index;
+  }
+
+  async function generatePackageReport(reportDate) {
+    const report = await buildReport(getJira(), { reportDate });
+    writeToStorage(`${PKG_STORAGE_PREFIX}/${report.report_date}.json`, report);
+    const index = rebuildPackageIndex();
+    writeToStorage(PKG_INDEX_PATH, index);
+    return report;
+  }
+
+  /**
+   * @openapi
+   * /api/modules/product-builds/package-reports:
+   *   get:
+   *     tags: [Package Analysis]
+   *     summary: List all package analysis reports (summaries only)
+   *     responses:
+   *       200:
+   *         description: Array of report summaries sorted by date descending
+   */
+  router.get('/package-reports', function(req, res) {
+    const index = readFromStorage(PKG_INDEX_PATH);
+    res.json(index || []);
+  });
+
+  /**
+   * @openapi
+   * /api/modules/product-builds/package-reports/latest:
+   *   get:
+   *     tags: [Package Analysis]
+   *     summary: Get the most recent full package analysis report
+   *     responses:
+   *       200:
+   *         description: Full report with categories and epic details
+   *       404:
+   *         description: No reports available
+   */
+  router.get('/package-reports/latest', function(req, res) {
+    const index = readFromStorage(PKG_INDEX_PATH);
+    if (!index || index.length === 0) {
+      return res.status(404).json({ error: 'No reports available' });
+    }
+    const latest = readFromStorage(`${PKG_STORAGE_PREFIX}/${index[0].report_date}.json`);
+    if (!latest) {
+      return res.status(404).json({ error: 'Report file not found' });
+    }
+    res.json(latest);
+  });
+
+  /**
+   * @openapi
+   * /api/modules/product-builds/package-reports/onboarded:
+   *   get:
+   *     tags: [Package Analysis]
+   *     summary: Get packages onboarded (closed) in a recent time window
+   *     parameters:
+   *       - name: days
+   *         in: query
+   *         schema:
+   *           type: integer
+   *           default: 7
+   *         description: Number of days to look back (7, 14, or 30)
+   *     responses:
+   *       200:
+   *         description: Array of onboarded package EPICs
+   *       500:
+   *         description: Failed to query JIRA
+   */
+  router.get('/package-reports/onboarded', async function(req, res) {
+    const days = Math.min(Math.max(parseInt(req.query.days, 10) || 7, 1), 90);
+    try {
+      const epics = await getPackagesOnboarded(getJira(), days);
+      res.json({ days, count: epics.length, epics });
+    } catch (err) {
+      console.error('[package-analysis] Onboarded query failed:', err.message);
+      res.status(500).json({ error: 'Failed to fetch onboarded packages' });
+    }
+  });
+
+  /**
+   * @openapi
+   * /api/modules/product-builds/package-reports/{date}:
+   *   get:
+   *     tags: [Package Analysis]
+   *     summary: Get full package analysis report for a specific date
+   *     parameters:
+   *       - name: date
+   *         in: path
+   *         required: true
+   *         schema:
+   *           type: string
+   *           pattern: '^\d{4}-\d{2}-\d{2}$'
+   *         description: Report date (YYYY-MM-DD)
+   *     responses:
+   *       200:
+   *         description: Full report with categories and epic details
+   *       404:
+   *         description: No report for the specified date
+   */
+  router.get('/package-reports/:date', function(req, res) {
+    const date = req.params.date;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({ error: 'Invalid date format, expected YYYY-MM-DD' });
+    }
+    const report = readFromStorage(`${PKG_STORAGE_PREFIX}/${date}.json`);
+    if (!report) {
+      return res.status(404).json({ error: `No report for ${date}` });
+    }
+    res.json(report);
+  });
+
+  /**
+   * @openapi
+   * /api/modules/product-builds/package-reports/generate:
+   *   post:
+   *     tags: [Package Analysis]
+   *     summary: Generate a package analysis report for today (admin only)
+   *     responses:
+   *       200:
+   *         description: Generated report
+   *       500:
+   *         description: Report generation failed
+   */
+  router.post('/package-reports/generate', requireAdmin, async function(req, res) {
+    try {
+      const report = await generatePackageReport();
+      res.json(report);
+    } catch (err) {
+      console.error('[package-analysis] Generation failed:', err.message);
+      res.status(500).json({ error: 'Report generation failed' });
+    }
+  });
+
+  if (context.registerRefresh) {
+    context.registerRefresh('package-analysis', {
+      description: 'Generate daily AIPCC package analysis report from JIRA (after 6am UTC)',
+      order: 200,
+      timeout: 600000,
+      cadence: '24h',
+      handler: async function() {
+        if (DEMO_MODE) return;
+        const now = new Date();
+        if (now.getUTCHours() < 6) return;
+        const today = now.toISOString().slice(0, 10);
+        const existing = readFromStorage(`${PKG_STORAGE_PREFIX}/${today}.json`);
+        if (existing) return;
+        await generatePackageReport(today);
+      },
+    });
+  }
+
+  if (context.registerDiagnostics) {
+    context.registerDiagnostics(async function() {
+      const index = readFromStorage(PKG_INDEX_PATH);
+      const hasReports = index && index.length > 0;
+      return {
+        status: hasReports ? 'ok' : 'no_data',
+        latestReport: hasReports ? index[0].report_date : null,
+        reportCount: hasReports ? index.length : 0,
+      };
+    });
+  }
+
+  if (context.registerExport) {
+    context.registerExport(require('./export'));
+  }
 };
 
 module.exports.getConfig = getConfig;

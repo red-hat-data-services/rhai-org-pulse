@@ -38,21 +38,30 @@
           </button>
         </div>
       </div>
-      <div v-else class="space-y-2">
-        <button
-          v-for="opt in options"
-          :key="opt.name"
-          @click="selectOption(opt.name)"
-          class="w-full text-left px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-        >
-          <div class="flex items-center justify-between">
-            <div>
-              <span class="font-medium text-gray-900 dark:text-gray-100">{{ opt.label }}</span>
-              <span class="ml-2 text-sm text-gray-500 dark:text-gray-400">({{ opt.name }})</span>
-            </div>
-            <span class="text-sm text-gray-500 dark:text-gray-400">{{ opt.count }} values</span>
-          </div>
-        </button>
+      <div v-else class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead class="bg-gray-50 dark:bg-gray-800">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Label</th>
+              <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Name</th>
+              <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Values</th>
+            </tr>
+          </thead>
+          <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            <tr
+              v-for="opt in options"
+              :key="opt.name"
+              @click="selectOption(opt.name)"
+              class="hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
+            >
+              <td class="px-4 py-3 text-sm whitespace-nowrap">
+                <span class="font-medium text-primary-600 dark:text-primary-400">{{ opt.label }}</span>
+              </td>
+              <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">{{ opt.name }}</td>
+              <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400 text-right whitespace-nowrap">{{ opt.count }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
 
