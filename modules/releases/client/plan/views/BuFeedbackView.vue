@@ -2,7 +2,7 @@
   <div class="space-y-4">
     <div class="flex items-center justify-between">
       <div>
-        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">BU (Non-Feature-Asks)</h2>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Sustaining</h2>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
           Issues labeled <code class="text-xs bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded">AIBU_Feedback</code> from Jira, ordered by creation date.
         </p>
