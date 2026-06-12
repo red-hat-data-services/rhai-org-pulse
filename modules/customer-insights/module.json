@@ -1,0 +1,75 @@
+{
+  "name": "Customer Insights",
+  "slug": "customer-insights",
+  "description": "Track customer interactions and product feedback from field teams",
+  "icon": "users",
+  "order": 3,
+  "client": {
+    "entry": "./client/index.js",
+    "navItems": [
+      { "id": "kanban", "label": "Kanban Board", "icon": "Kanban", "default": true },
+      { "id": "table", "label": "Table View", "icon": "Grid3x3" },
+      { "id": "dashboard", "label": "Analytics", "icon": "LineChart" },
+      { "id": "insights", "label": "AI Insights", "icon": "Brain" },
+      { "id": "roadmap", "label": "Roadmap", "icon": "Map", "separatorBefore": true },
+      { "id": "rfe-creator", "label": "Create RFE", "icon": "PenSquare" },
+      { "id": "import", "label": "Import Data", "icon": "FileUp" },
+      { "id": "settings", "label": "Settings", "icon": "Settings", "separatorBefore": true }
+    ],
+    "settingsComponent": "./client/components/CustomerInsightsSettings.vue"
+  },
+  "server": {
+    "entry": "./server/index.js"
+  },
+  "secrets": {
+    "module": [
+      {
+        "key": "JIRA_EMAIL",
+        "description": "Jira Cloud email for RFE creation (legacy - use JIRA_OAUTH_* for per-user auth)",
+        "required": false
+      },
+      {
+        "key": "JIRA_TOKEN",
+        "description": "Jira Cloud API token for RFE creation (legacy - use JIRA_OAUTH_* for per-user auth)",
+        "required": false
+      },
+      {
+        "key": "JIRA_OAUTH_CLIENT_ID",
+        "description": "Jira OAuth client ID for per-user RFE creation (recommended)",
+        "required": false
+      },
+      {
+        "key": "JIRA_OAUTH_CLIENT_SECRET",
+        "description": "Jira OAuth client secret for per-user RFE creation",
+        "required": false
+      },
+      {
+        "key": "GOOGLE_OAUTH_CLIENT_ID",
+        "description": "Google OAuth client ID for per-user Google Sheets and Drive access (recommended)",
+        "required": false
+      },
+      {
+        "key": "GOOGLE_OAUTH_CLIENT_SECRET",
+        "description": "Google OAuth client secret for per-user authentication",
+        "required": false
+      },
+      {
+        "key": "GOOGLE_PICKER_API_KEY",
+        "description": "Google Picker API key for spreadsheet selection UI",
+        "required": false
+      },
+      {
+        "key": "MODELS_CORP_API_KEY",
+        "description": "API key (user_key) for models.corp Granite AI access",
+        "required": false
+      },
+      {
+        "key": "MODELS_CORP_BASE_URL",
+        "description": "Base URL for models.corp API (e.g., https://granite-3-3-8b-instruct--apicast-production.apps.int.stc.ai.prod.us-east-1.aws.paas.redhat.com:443)",
+        "required": false
+      }
+    ]
+  },
+  "defaultEnabled": true,
+  "requires": []
+}

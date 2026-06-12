@@ -271,7 +271,13 @@ import {
   Hospital,
   LayoutDashboard,
   Rocket,
-  UserCircle
+  UserCircle,
+  Kanban,
+  Grid3x3,
+  LineChart,
+  Brain,
+  PenSquare,
+  FileUp
 } from 'lucide-vue-next'
 import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 
@@ -304,6 +310,12 @@ const ICON_MAP = {
   Sparkles,
   Activity,
   Wand2,
+  Kanban,
+  Grid3x3,
+  LineChart,
+  Brain,
+  PenSquare,
+  FileUp,
   'bar-chart': BarChart3,
   'users-round': UsersRound,
   'chart-candlestick': ChartCandlestick,

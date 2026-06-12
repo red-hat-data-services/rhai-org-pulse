@@ -177,6 +177,19 @@ const app = express();
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 
+// Session middleware for OAuth flows (Google Drive + Jira per-user auth)
+const session = require('express-session');
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production-' + Date.now(),
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production', // HTTPS only in prod
+    httpOnly: true,
+    maxAge: 90 * 24 * 60 * 60 * 1000 // 90 days (matches Jira refresh token lifetime)
+  }
+}));
+
 // Enable CORS
 app.use(function(req, res, next) {
   res.header("Access-Control-Allow-Origin", "*");
@@ -2245,6 +2258,130 @@ app.post('/api/admin/secrets/validate', requireAdmin, requireScope('admin:manage
     res.json({ results });
   } catch (err) {
     res.status(500).json({ error: 'Validation failed: ' + err.message });
+  }
+});
+
+/**
+ * @openapi
+ * /api/admin/secrets/update:
+ *   post:
+ *     tags: [Admin]
+ *     summary: Update secret values
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - secrets
+ *             properties:
+ *               secrets:
+ *                 type: object
+ *                 additionalProperties:
+ *                   type: string
+ *                 description: Map of secret keys to new values
+ *     responses:
+ *       200:
+ *         description: Secrets updated successfully
+ *       403:
+ *         $ref: '#/components/responses/Forbidden'
+ */
+app.post('/api/admin/secrets/update', requireAdmin, requireScope('admin:manage'), async function(req, res) {
+  try {
+    const { secrets } = req.body;
+
+    if (!secrets || typeof secrets !== 'object') {
+      return res.status(400).json({ error: 'Invalid request: secrets object required' });
+    }
+
+    // Update each secret using the secret registry
+    const fs = require('fs');
+    const path = require('path');
+    const envPath = path.join(__dirname, '..', '.env');
+
+    // Read existing .env file
+    let envContent = '';
+    if (fs.existsSync(envPath)) {
+      envContent = fs.readFileSync(envPath, 'utf8');
+    }
+
+    // Parse existing env vars
+    const envVars = {};
+    envContent.split('\n').forEach(line => {
+      const match = line.match(/^([^=]+)=(.*)$/);
+      if (match) {
+        envVars[match[1]] = match[2];
+      }
+    });
+
+    // Allowlist of env vars that can be updated via this endpoint
+    // Only module secrets and safe config vars — never system vars like PATH, NODE_ENV, etc.
+    const ALLOWED_ENV_VARS = [
+      'JIRA_EMAIL',
+      'JIRA_TOKEN',
+      'GITHUB_TOKEN',
+      'GITLAB_TOKEN',
+      'GITLAB_BASE_URL',
+      'GOOGLE_SERVICE_ACCOUNT_KEY_FILE',
+      'GOOGLE_OAUTH_CLIENT_ID',
+      'GOOGLE_OAUTH_CLIENT_SECRET',
+      'GOOGLE_PICKER_API_KEY',
+      'VITE_GOOGLE_PICKER_API_KEY',
+      'PRODUCT_PAGES_CLIENT_ID',
+      'PRODUCT_PAGES_CLIENT_SECRET',
+      'PRODUCT_PAGES_TOKEN',
+      'FEATURE_TRAFFIC_GITLAB_TOKEN',
+      'PRODUCT_BUILDS_API_URL',
+      'MODELS_CORP_API_KEY',
+      'MODELS_CORP_BASE_URL',
+      'SESSION_SECRET'
+    ];
+
+    // Update with new secrets (only allowlisted keys)
+    for (const [key, value] of Object.entries(secrets)) {
+      if (!ALLOWED_ENV_VARS.includes(key)) {
+        console.warn(`Ignoring attempt to set non-allowlisted env var: ${key}`);
+        continue;
+      }
+      if (value) {
+        envVars[key] = value;
+        // Also set in current process.env so it takes effect immediately
+        process.env[key] = value;
+      }
+    }
+
+    // Write back to .env file
+    const newEnvContent = Object.entries(envVars)
+      .map(([key, value]) => `${key}=${value}`)
+      .join('\n');
+
+    fs.writeFileSync(envPath, newEnvContent + '\n', 'utf8');
+
+    // Log the update
+    auditLog.log({
+      actor: req.user?.email || 'unknown',
+      action: 'secrets.update',
+      resource: Object.keys(secrets).join(', '),
+      outcome: 'success'
+    });
+
+    res.json({
+      success: true,
+      message: `Updated ${Object.keys(secrets).length} secret(s)`,
+      updated: Object.keys(secrets)
+    });
+  } catch (err) {
+    console.error('Failed to update secrets:', err);
+    auditLog.log({
+      actor: req.user?.email || 'unknown',
+      action: 'secrets.update',
+      outcome: 'failure',
+      error: err.message
+    });
+    res.status(500).json({ error: 'Failed to update secrets: ' + err.message });
   }
 });
 

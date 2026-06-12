@@ -1,0 +1,449 @@
+{
+  "summary": {
+    "total": 12,
+    "inProgress": 5,
+    "completed": 3,
+    "customersImpacted": 18
+  },
+  "items": [
+    {
+      "id": "init-1",
+      "title": "Deployment Simplification Initiative",
+      "description": "Create guided setup wizard and operator to reduce time-to-value from days to hours. Addresses #1 customer pain point.",
+      "status": "In Progress",
+      "priority": "High",
+      "timeframe": "Now",
+      "targetQuarter": "Q3 2026",
+      "components": ["Model Serving", "Training", "Data Science Pipelines"],
+      "owner": {
+        "name": "Sarah Chen",
+        "role": "Senior Product Manager"
+      },
+      "customerDemand": {
+        "requestingCustomers": 8,
+        "totalARR": 2400000,
+        "keyAccounts": ["Acme Financial", "GlobalTech Industries", "HealthFirst", "TelcoNow", "RetailCorp"]
+      },
+      "painPoints": [
+        "Deployment complexity is the #1 blocker",
+        "Kubernetes complexity overwhelming for data scientists",
+        "Multi-step deployment processes taking days instead of hours"
+      ],
+      "deliverables": [
+        { "item": "User research and requirements doc", "completed": true },
+        { "item": "Design mockups and UX flow", "completed": true },
+        { "item": "Backend wizard framework", "completed": false },
+        { "item": "Frontend wizard UI", "completed": false },
+        { "item": "Operator development", "completed": false },
+        { "item": "Documentation and tutorials", "completed": false }
+      ],
+      "dependencies": [
+        "Operator SDK upgrade (Platform team)",
+        "UX design review (Design team)"
+      ],
+      "jiraEpic": {
+        "key": "RHOAIENG-2401",
+        "summary": "Deployment Simplification Wizard",
+        "url": "https://issues.redhat.com/browse/RHOAIENG-2401"
+      }
+    },
+    {
+      "id": "init-2",
+      "title": "Air-Gapped Deployment Guide & Tooling",
+      "description": "Comprehensive documentation and automation tooling for air-gapped installations. Critical for Federal and Telecom verticals.",
+      "status": "In Progress",
+      "priority": "High",
+      "timeframe": "Now",
+      "targetQuarter": "Q2 2026",
+      "components": ["Model Serving", "Training"],
+      "owner": {
+        "name": "Michael Torres",
+        "role": "Technical Writer Lead"
+      },
+      "customerDemand": {
+        "requestingCustomers": 5,
+        "totalARR": 3200000,
+        "keyAccounts": ["Federal Agency Alpha", "Defense Corp", "TelcoSecure", "Banking Global"]
+      },
+      "painPoints": [
+        "Air-gapped environment support is inadequate",
+        "Documentation gaps for enterprise use cases",
+        "Complex offline installation process"
+      ],
+      "deliverables": [
+        { "item": "Air-gap requirements analysis", "completed": true },
+        { "item": "Offline installation guide", "completed": false },
+        { "item": "Image mirroring automation script", "completed": false },
+        { "item": "Disconnected operations playbook", "completed": false },
+        { "item": "Troubleshooting guide", "completed": false }
+      ],
+      "jiraEpic": {
+        "key": "RHODS-3201",
+        "summary": "Air-Gapped Deployment Documentation",
+        "url": "https://issues.redhat.com/browse/RHODS-3201"
+      }
+    },
+    {
+      "id": "init-3",
+      "title": "Compliance Toolkit (HIPAA, FedRAMP, EU AI Act)",
+      "description": "Pre-built templates, configurations, and documentation to accelerate compliance certification for regulated industries.",
+      "status": "Not Started",
+      "priority": "High",
+      "timeframe": "Next",
+      "targetQuarter": "Q3 2026",
+      "components": ["Model Serving", "Training", "Data Science Pipelines"],
+      "owner": {
+        "name": "Jennifer Park",
+        "role": "Product Manager - Security"
+      },
+      "customerDemand": {
+        "requestingCustomers": 6,
+        "totalARR": 4100000,
+        "keyAccounts": ["HealthFirst", "MedTech Solutions", "Federal Agency Beta", "EU Financial Services", "PharmaCorp"]
+      },
+      "painPoints": [
+        "Compliance and regulatory requirements blocking adoption",
+        "HIPAA, FedRAMP, and EU AI Act compliance features needed",
+        "Lengthy certification processes delaying go-live"
+      ],
+      "deliverables": [
+        { "item": "Legal/compliance requirements gathering", "completed": false },
+        { "item": "HIPAA compliance template", "completed": false },
+        { "item": "FedRAMP documentation package", "completed": false },
+        { "item": "EU AI Act risk assessment toolkit", "completed": false },
+        { "item": "Audit logging enhancements", "completed": false }
+      ],
+      "dependencies": [
+        "Legal team review and approval",
+        "Security audit logging improvements (Platform team)"
+      ]
+    },
+    {
+      "id": "init-4",
+      "title": "Enhanced GPU Scheduling & Resource Management",
+      "description": "Intelligent GPU allocation, time-slicing, and cost optimization for multi-tenant AI workloads.",
+      "status": "In Progress",
+      "priority": "High",
+      "timeframe": "Now",
+      "targetQuarter": "Q2 2026",
+      "components": ["Model Serving", "Training"],
+      "owner": {
+        "name": "Alex Kumar",
+        "role": "Engineering Manager"
+      },
+      "customerDemand": {
+        "requestingCustomers": 7,
+        "totalARR": 1800000,
+        "keyAccounts": ["GlobalTech Industries", "AI Research Lab", "CloudScale Corp", "DataDriven Inc"]
+      },
+      "painPoints": [
+        "Better GPU scheduling and resource management needed",
+        "Performance concerns at scale",
+        "Cost optimization for high-volume workloads"
+      ],
+      "deliverables": [
+        { "item": "GPU time-slicing implementation", "completed": true },
+        { "item": "Multi-instance GPU (MIG) support", "completed": true },
+        { "item": "Resource quota dashboards", "completed": false },
+        { "item": "Cost tracking and alerts", "completed": false },
+        { "item": "Auto-scaling policies", "completed": false }
+      ],
+      "jiraEpic": {
+        "key": "RHOAIENG-1955",
+        "summary": "GPU Resource Management Improvements",
+        "url": "https://issues.redhat.com/browse/RHOAIENG-1955"
+      }
+    },
+    {
+      "id": "init-5",
+      "title": "MLOps Platform: Monitoring, Drift Detection, Auto-Retraining",
+      "description": "End-to-end MLOps capabilities for production model management including monitoring, drift detection, and automated retraining pipelines.",
+      "status": "In Progress",
+      "priority": "Medium",
+      "timeframe": "Next",
+      "targetQuarter": "Q4 2026",
+      "components": ["Model Serving", "Data Science Pipelines"],
+      "owner": {
+        "name": "David Lin",
+        "role": "Product Manager - MLOps"
+      },
+      "customerDemand": {
+        "requestingCustomers": 9,
+        "totalARR": 2700000,
+        "keyAccounts": ["RetailCorp", "FinServe Global", "Manufacturing Co", "AI Research Lab", "DataDriven Inc"]
+      },
+      "painPoints": [
+        "Model monitoring, drift detection, and auto-retraining pipelines needed",
+        "Lack of production ML operations features",
+        "Manual retraining processes inefficient"
+      ],
+      "deliverables": [
+        { "item": "Model metrics collection framework", "completed": true },
+        { "item": "Drift detection algorithms", "completed": false },
+        { "item": "Alerting and notification system", "completed": false },
+        { "item": "Auto-retraining pipeline templates", "completed": false },
+        { "item": "A/B testing infrastructure", "completed": false }
+      ],
+      "jiraEpic": {
+        "key": "RHOAIENG-2100",
+        "summary": "MLOps Platform Features",
+        "url": "https://issues.redhat.com/browse/RHOAIENG-2100"
+      }
+    },
+    {
+      "id": "init-6",
+      "title": "Cost Optimization Dashboard & Guidance",
+      "description": "Visibility into AI infrastructure costs with actionable recommendations for optimization, especially for LLM workloads.",
+      "status": "Not Started",
+      "priority": "Medium",
+      "timeframe": "Next",
+      "targetQuarter": "Q3 2026",
+      "components": ["Model Serving", "Training"],
+      "owner": {
+        "name": "Sarah Chen",
+        "role": "Senior Product Manager"
+      },
+      "customerDemand": {
+        "requestingCustomers": 4,
+        "totalARR": 1200000,
+        "keyAccounts": ["CloudScale Corp", "StartupAI", "RetailCorp"]
+      },
+      "painPoints": [
+        "Cost optimization tools and guidance needed",
+        "Especially for cloud deployments and LLM workloads",
+        "Difficulty tracking and attributing AI infrastructure costs"
+      ],
+      "deliverables": [
+        { "item": "Cost attribution model design", "completed": false },
+        { "item": "Real-time cost dashboard", "completed": false },
+        { "item": "Optimization recommendations engine", "completed": false },
+        { "item": "Budget alerts and limits", "completed": false },
+        { "item": "Cost benchmarking reports", "completed": false }
+      ]
+    },
+    {
+      "id": "init-7",
+      "title": "Enterprise SSO & RBAC Enhancements",
+      "description": "Enhanced single sign-on integration and fine-grained role-based access control for enterprise deployments.",
+      "status": "Completed",
+      "priority": "Medium",
+      "timeframe": "Now",
+      "targetQuarter": "Q1 2026",
+      "components": ["Model Serving", "Training", "Data Science Pipelines"],
+      "owner": {
+        "name": "Jennifer Park",
+        "role": "Product Manager - Security"
+      },
+      "customerDemand": {
+        "requestingCustomers": 5,
+        "totalARR": 1600000,
+        "keyAccounts": ["GlobalTech Industries", "FinServe Global", "Manufacturing Co"]
+      },
+      "deliverables": [
+        { "item": "SAML 2.0 SSO integration", "completed": true },
+        { "item": "OIDC provider support", "completed": true },
+        { "item": "Fine-grained RBAC policies", "completed": true },
+        { "item": "Group-based permissions", "completed": true },
+        { "item": "Audit logging", "completed": true }
+      ],
+      "jiraEpic": {
+        "key": "RHOAIENG-1750",
+        "summary": "Enterprise Authentication & Authorization",
+        "url": "https://issues.redhat.com/browse/RHOAIENG-1750"
+      }
+    },
+    {
+      "id": "init-8",
+      "title": "Multi-Cluster Model Distribution",
+      "description": "Deploy and manage models across multiple clusters with automatic synchronization and failover.",
+      "status": "Not Started",
+      "priority": "Low",
+      "timeframe": "Later",
+      "targetQuarter": "Q1 2027",
+      "components": ["Model Serving"],
+      "owner": {
+        "name": "Alex Kumar",
+        "role": "Engineering Manager"
+      },
+      "customerDemand": {
+        "requestingCustomers": 3,
+        "totalARR": 900000,
+        "keyAccounts": ["GlobalTech Industries", "TelcoSecure"]
+      },
+      "deliverables": [
+        { "item": "Multi-cluster architecture design", "completed": false },
+        { "item": "Model sync mechanism", "completed": false },
+        { "item": "Failover automation", "completed": false },
+        { "item": "Cross-cluster observability", "completed": false }
+      ]
+    },
+    {
+      "id": "init-9",
+      "title": "Notebook Templates Marketplace",
+      "description": "Curated library of industry-specific notebook templates for common AI/ML use cases.",
+      "status": "Completed",
+      "priority": "Low",
+      "timeframe": "Now",
+      "targetQuarter": "Q1 2026",
+      "components": ["Data Science Pipelines"],
+      "owner": {
+        "name": "David Lin",
+        "role": "Product Manager - MLOps"
+      },
+      "customerDemand": {
+        "requestingCustomers": 4,
+        "totalARR": 600000,
+        "keyAccounts": ["StartupAI", "AI Research Lab"]
+      },
+      "deliverables": [
+        { "item": "Template marketplace UI", "completed": true },
+        { "item": "10+ curated templates", "completed": true },
+        { "item": "Template submission process", "completed": true },
+        { "item": "Version control for templates", "completed": true }
+      ],
+      "jiraEpic": {
+        "key": "RHODS-2850",
+        "summary": "Notebook Templates Marketplace",
+        "url": "https://issues.redhat.com/browse/RHODS-2850"
+      }
+    },
+    {
+      "id": "init-10",
+      "title": "LLM Fine-Tuning Workflow",
+      "description": "Simplified workflow for fine-tuning large language models with LoRA, QLoRA, and full fine-tuning support.",
+      "status": "In Progress",
+      "priority": "High",
+      "timeframe": "Now",
+      "targetQuarter": "Q2 2026",
+      "components": ["Training"],
+      "owner": {
+        "name": "Sarah Chen",
+        "role": "Senior Product Manager"
+      },
+      "customerDemand": {
+        "requestingCustomers": 6,
+        "totalARR": 1900000,
+        "keyAccounts": ["AI Research Lab", "StartupAI", "DataDriven Inc", "CloudScale Corp"]
+      },
+      "painPoints": [
+        "Complex setup for LLM fine-tuning",
+        "Lack of guidance for parameter-efficient methods",
+        "High cost of full fine-tuning"
+      ],
+      "deliverables": [
+        { "item": "LoRA implementation", "completed": true },
+        { "item": "QLoRA support", "completed": true },
+        { "item": "Fine-tuning workflow UI", "completed": false },
+        { "item": "Hyperparameter tuning automation", "completed": false },
+        { "item": "Cost estimation tool", "completed": false }
+      ],
+      "jiraEpic": {
+        "key": "RHOAIENG-2250",
+        "summary": "LLM Fine-Tuning Support",
+        "url": "https://issues.redhat.com/browse/RHOAIENG-2250"
+      }
+    },
+    {
+      "id": "init-11",
+      "title": "Data Versioning & Lineage Tracking",
+      "description": "Track data versions, lineage, and dependencies across training pipelines for reproducibility and compliance.",
+      "status": "Not Started",
+      "priority": "Medium",
+      "timeframe": "Later",
+      "targetQuarter": "Q4 2026",
+      "components": ["Data Science Pipelines", "Training"],
+      "owner": {
+        "name": "David Lin",
+        "role": "Product Manager - MLOps"
+      },
+      "customerDemand": {
+        "requestingCustomers": 5,
+        "totalARR": 1400000,
+        "keyAccounts": ["PharmaCorp", "HealthFirst", "FinServe Global"]
+      },
+      "painPoints": [
+        "Difficulty tracking data lineage for compliance",
+        "Model reproducibility challenges",
+        "Data versioning not integrated with pipelines"
+      ],
+      "deliverables": [
+        { "item": "Data versioning backend", "completed": false },
+        { "item": "Lineage tracking integration", "completed": false },
+        { "item": "Lineage visualization UI", "completed": false },
+        { "item": "Compliance reporting", "completed": false }
+      ]
+    },
+    {
+      "id": "init-12",
+      "title": "Advanced Model Explainability Tools",
+      "description": "Integrated tools for model interpretability including SHAP, LIME, and feature importance visualization.",
+      "status": "Completed",
+      "priority": "Low",
+      "timeframe": "Now",
+      "targetQuarter": "Q1 2026",
+      "components": ["Model Serving"],
+      "owner": {
+        "name": "Jennifer Park",
+        "role": "Product Manager - Security"
+      },
+      "customerDemand": {
+        "requestingCustomers": 3,
+        "totalARR": 800000,
+        "keyAccounts": ["HealthFirst", "FinServe Global"]
+      },
+      "deliverables": [
+        { "item": "SHAP integration", "completed": true },
+        { "item": "LIME support", "completed": true },
+        { "item": "Feature importance dashboards", "completed": true },
+        { "item": "Bias detection tools", "completed": true }
+      ],
+      "jiraEpic": {
+        "key": "RHODS-2920",
+        "summary": "Model Explainability Features",
+        "url": "https://issues.redhat.com/browse/RHODS-2920"
+      }
+    }
+  ],
+  "topRequests": [
+    {
+      "feature": "Simplified deployment workflow",
+      "customerCount": 8,
+      "roadmapStatus": "In Progress"
+    },
+    {
+      "feature": "MLOps platform with monitoring and drift detection",
+      "customerCount": 9,
+      "roadmapStatus": "In Progress"
+    },
+    {
+      "feature": "Enhanced GPU scheduling and resource management",
+      "customerCount": 7,
+      "roadmapStatus": "In Progress"
+    },
+    {
+      "feature": "Compliance toolkits (HIPAA, FedRAMP, EU AI Act)",
+      "customerCount": 6,
+      "roadmapStatus": "Not Started"
+    },
+    {
+      "feature": "LLM fine-tuning workflow",
+      "customerCount": 6,
+      "roadmapStatus": "In Progress"
+    },
+    {
+      "feature": "Air-gapped deployment guide",
+      "customerCount": 5,
+      "roadmapStatus": "In Progress"
+    },
+    {
+      "feature": "Data versioning and lineage tracking",
+      "customerCount": 5,
+      "roadmapStatus": "Not Started"
+    },
+    {
+      "feature": "Cost optimization dashboard",
+      "customerCount": 4,
+      "roadmapStatus": "Not Started"
+    }
+  ]
+}

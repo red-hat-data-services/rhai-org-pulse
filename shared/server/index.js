@@ -5,6 +5,7 @@ const googleSheets = require('./google-sheets')
 const roster = require('./roster')
 const rosterSync = require('./roster-sync')
 const jira = require('./jira')
+const jiraOAuth = require('./jira-oauth')
 const permissions = require('./permissions')
 const { createRoleStore, normalizeEmail } = require('./role-store')
 
@@ -19,5 +20,6 @@ module.exports = {
   roster,
   rosterSync,
   jira,
+  jiraOAuth,
   permissions
 }

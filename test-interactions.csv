@@ -1,0 +1,4 @@
+customerCompany,contactName,fieldContactName,component,industryVertical,geo,customerType,environment,mainAIUseCase,toolsOfChoice,painPoints,futureWishlist,featureFeedback,pmComments,status
+Acme Corp,John Doe,Jane Smith,navigator,Financial Services,AMER,Enterprise,Production,Code Generation,VS Code;GitHub Copilot,Slow responses,Better docs;API improvements,Need faster inference,Follow-up next week,Discovery
+TechStart Inc,Alice Johnson,Bob Wilson,platform,Technology,EMEA,SMB,Testing,Data Analysis,Python;Jupyter,Performance issues,API access;Real-time updates,Great product,Initial meeting scheduled,Lead
+Global Bank,Charlie Brown,Diana Prince,autox,Banking,APAC,Enterprise,Production,Document Processing,OpenAI;LangChain,Compliance concerns,Better security;Audit logs,Excellent support,Deploying next month,Evaluating
