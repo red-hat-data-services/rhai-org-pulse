@@ -71,13 +71,13 @@ describe('validatePillarConfig', function () {
 })
 
 describe('DEFAULT_PILLAR_CONFIG', function () {
-  it('has four pillars', function () {
-    expect(DEFAULT_PILLAR_CONFIG.pillars).toHaveLength(4)
+  it('has five pillars', function () {
+    expect(DEFAULT_PILLAR_CONFIG.pillars).toHaveLength(5)
   })
 
-  it('includes Inference, Data, Agents, Platform', function () {
+  it('includes Inference, Data, Agents, Platform, Undefined', function () {
     var names = DEFAULT_PILLAR_CONFIG.pillars.map(function (p) { return p.name })
-    expect(names).toEqual(['Inference', 'Data', 'Agents', 'Platform'])
+    expect(names).toEqual(['Inference', 'Data', 'Agents', 'Platform', 'Undefined'])
   })
 
   it('each pillar has at least one component', function () {

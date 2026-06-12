@@ -224,7 +224,7 @@ function backfillLeads(config) {
         pillar.components[ci] = obj
         changed = true
       } else if (typeof comp === 'object' && comp !== null) {
-        if (!comp.pmLead && !comp.engLead && defaults) {
+        if (!comp.pmLead && !comp.engLead && defaults && (defaults.pmLead || defaults.engLead)) {
           comp.pmLead = defaults.pmLead || ''
           comp.engLead = defaults.engLead || ''
           changed = true
