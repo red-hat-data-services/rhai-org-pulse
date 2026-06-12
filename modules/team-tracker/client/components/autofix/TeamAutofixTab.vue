@@ -293,10 +293,7 @@ const dataNotFetched = computed(() => fetched.value && !rawData.value?.fetchedAt
 
 const teamIssues = computed(() => rawData.value?.issues || [])
 
-const metrics = computed(() => {
-  if (rawData.value?.metrics?.autofixStates) return rawData.value.metrics
-  return computeTeamMetrics(teamIssues.value, timeWindow.value)
-})
+const metrics = computed(() => computeTeamMetrics(teamIssues.value, timeWindow.value))
 
 const bugsMerged = computed(() => {
   const days = timeWindow.value === 'week' ? 7 : timeWindow.value === 'month' ? 30 : 90
@@ -352,10 +349,7 @@ const displayedIssues = computed(() => {
   })
 })
 
-const trendData = computed(() => {
-  if (rawData.value?.trendData?.length) return rawData.value.trendData
-  return buildTeamTrendData(teamIssues.value, timeWindow.value)
-})
+const trendData = computed(() => buildTeamTrendData(teamIssues.value, timeWindow.value))
 
 const hasTrendActivity = computed(() => trendData.value.some(p => p.triaged > 0))
 
