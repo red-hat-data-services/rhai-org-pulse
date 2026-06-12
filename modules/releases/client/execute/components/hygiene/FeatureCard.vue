@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 
 const props = defineProps({
   feature: {
@@ -21,6 +21,45 @@ const hasViolations = computed(() => violationCount.value > 0)
 const colorLabel = computed(() => {
   return props.feature.colorStatus || 'Not Selected'
 })
+
+// Violation tooltip
+const showTooltip = ref(false)
+const tooltipStyle = ref({})
+const iconTriggerEl = ref(null)
+const textTriggerEl = ref(null)
+
+function positionTooltip(el) {
+  if (!el) return
+  const rect = el.getBoundingClientRect()
+  const flipBelow = rect.top < 80
+
+  if (flipBelow) {
+    tooltipStyle.value = {
+      position: 'fixed',
+      left: `${rect.left + rect.width / 2}px`,
+      top: `${rect.bottom + 6}px`,
+      transform: 'translateX(-50%)',
+      zIndex: 9999
+    }
+  } else {
+    tooltipStyle.value = {
+      position: 'fixed',
+      left: `${rect.left + rect.width / 2}px`,
+      top: `${rect.top - 6}px`,
+      transform: 'translate(-50%, -100%)',
+      zIndex: 9999
+    }
+  }
+}
+
+function openTooltipFrom(el) {
+  showTooltip.value = true
+  nextTick(() => positionTooltip(el))
+}
+
+function closeTooltip() {
+  showTooltip.value = false
+}
 </script>
 
 <template>
@@ -33,16 +72,26 @@ const colorLabel = computed(() => {
       <span class="text-primary-600 dark:text-primary-400 font-mono text-xs font-semibold">
         {{ feature.key }}
       </span>
-      <svg
+      <span
         v-if="hasViolations"
-        class="w-5 h-5 text-orange-500 dark:text-orange-400 flex-shrink-0 animate-pulse-warning"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-        stroke-width="2"
+        ref="iconTriggerEl"
+        class="flex-shrink-0 cursor-help"
+        tabindex="0"
+        @mouseenter="openTooltipFrom(iconTriggerEl)"
+        @mouseleave="closeTooltip"
+        @focus="openTooltipFrom(iconTriggerEl)"
+        @blur="closeTooltip"
       >
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
-      </svg>
+        <svg
+          class="w-5 h-5 text-orange-500 dark:text-orange-400 animate-pulse-warning"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          stroke-width="2"
+        >
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126z" />
+        </svg>
+      </span>
       <svg
         v-else
         class="w-4 h-4 text-green-500 dark:text-green-400 flex-shrink-0"
@@ -96,9 +145,28 @@ const colorLabel = computed(() => {
 
     <!-- Violation count footer -->
     <div v-if="hasViolations" class="mt-2 pt-1.5 border-t border-gray-100 dark:border-gray-700">
-      <span class="text-[10px] font-semibold text-red-600 dark:text-red-400">
+      <span
+        ref="textTriggerEl"
+        class="text-[10px] font-semibold text-red-600 dark:text-red-400 cursor-help inline-block"
+        tabindex="0"
+        @mouseenter="openTooltipFrom(textTriggerEl)"
+        @mouseleave="closeTooltip"
+        @focus="openTooltipFrom(textTriggerEl)"
+        @blur="closeTooltip"
+      >
         {{ violationCount }} violation{{ violationCount !== 1 ? 's' : '' }}
       </span>
+      <Teleport to="body">
+        <div
+          v-if="showTooltip"
+          :style="tooltipStyle"
+          class="pointer-events-none max-w-xs rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-lg dark:shadow-gray-900/50 p-3"
+        >
+          <ul class="space-y-1">
+            <li v-for="v in feature.violations" :key="v.id" class="text-xs text-gray-700 dark:text-gray-300">{{ v.name }}</li>
+          </ul>
+        </div>
+      </Teleport>
     </div>
   </div>
 </template>

@@ -94,7 +94,22 @@
       "linkedRfeApproved": true,
       "statusEnteredAt": "2026-04-10T10:00:00.000Z",
       "statusSummaryUpdated": null,
-      "violations": []
+      "violations": [
+        {
+          "id": "missing-assignee",
+          "name": "Missing Assignee",
+          "category": "ownership",
+          "message": "This issue is in In Progress but has no assignee. Assign someone to take ownership.",
+          "remediation": "Open the issue in Jira and set the Assignee field to the person responsible for this work."
+        },
+        {
+          "id": "stale-status-summary",
+          "name": "Stale or Missing Status Summary",
+          "category": "timeliness",
+          "message": "This issue has been in In Progress for 63 days without a status summary. Add a summary to communicate progress.",
+          "remediation": "Open the issue in Jira and update the Status Summary field with current progress information."
+        }
+      ]
     },
     "TEST1-1054": {
       "key": "TEST1-1054",
@@ -118,7 +133,15 @@
       "linkedRfeApproved": true,
       "statusEnteredAt": "2026-04-25T09:00:00.000Z",
       "statusSummaryUpdated": "2026-05-12T14:00:00.000Z",
-      "violations": []
+      "violations": [
+        {
+          "id": "missing-team",
+          "name": "Missing Team",
+          "category": "ownership",
+          "message": "This issue is in In Progress but has no team assigned. Set the team field to track ownership.",
+          "remediation": "Open the issue in Jira and set the Team field to your team name."
+        }
+      ]
     },
     "TEST1-1057": {
       "key": "TEST1-1057",
@@ -166,7 +189,15 @@
       "linkedRfeApproved": true,
       "statusEnteredAt": "2026-04-18T10:00:00.000Z",
       "statusSummaryUpdated": "2026-05-14T10:00:00.000Z",
-      "violations": []
+      "violations": [
+        {
+          "id": "missing-color-status",
+          "name": "Missing Color Status",
+          "category": "metadata",
+          "message": "This issue is in In Progress but has no color status set. Set the color status to indicate health (Red/Yellow/Green).",
+          "remediation": "Open the issue in Jira and set the Color Status field to Green, Yellow, or Red based on current health."
+        }
+      ]
     },
     "TEST1-1061": {
       "key": "TEST1-1061",
@@ -238,7 +269,43 @@
       "linkedRfeApproved": false,
       "statusEnteredAt": "2026-04-05T10:00:00.000Z",
       "statusSummaryUpdated": null,
-      "violations": []
+      "violations": [
+        {
+          "id": "missing-assignee",
+          "name": "Missing Assignee",
+          "category": "ownership",
+          "message": "This issue is in In Progress but has no assignee. Assign someone to take ownership.",
+          "remediation": "Open the issue in Jira and set the Assignee field to the person responsible for this work."
+        },
+        {
+          "id": "missing-team",
+          "name": "Missing Team",
+          "category": "ownership",
+          "message": "This issue is in In Progress but has no team assigned. Set the team field to track ownership.",
+          "remediation": "Open the issue in Jira and set the Team field to your team name."
+        },
+        {
+          "id": "missing-color-status",
+          "name": "Missing Color Status",
+          "category": "metadata",
+          "message": "This issue is in In Progress but has no color status set. Set the color status to indicate health (Red/Yellow/Green).",
+          "remediation": "Open the issue in Jira and set the Color Status field to Green, Yellow, or Red based on current health."
+        },
+        {
+          "id": "missing-release-type",
+          "name": "Missing Release Type",
+          "category": "metadata",
+          "message": "This feature is in In Progress but has no release type set. Set the release type (GA, Tech Preview, etc.) for planning.",
+          "remediation": "Open the issue in Jira and set the Release Type field to GA, Tech Preview, or Dev Preview."
+        },
+        {
+          "id": "missing-rfe-link",
+          "name": "Missing RFE Link",
+          "category": "lifecycle",
+          "message": "This feature is not linked to an approved RFE. Clone from an approved RFE for traceability.",
+          "remediation": "Ensure your feature is cloned from an RFE that is in Approved status. Use the \"clones\" link type when linking to the RFE."
+        }
+      ]
     }
   },
   "fetchedAt": "2026-05-19T06:00:00.000Z",
