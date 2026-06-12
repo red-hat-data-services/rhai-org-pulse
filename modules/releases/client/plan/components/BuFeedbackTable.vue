@@ -94,7 +94,7 @@ var sortDir = ref('desc')
 
 var filterOptions = computed(function() {
   var opts = {}
-    var filterableKeys = ['issueType', 'assignee', 'reporter', 'priority', 'status', 'resolution']
+  var filterableKeys = ['issueType', 'assignee', 'reporter', 'priority', 'status', 'resolution']
   for (var ki = 0; ki < filterableKeys.length; ki++) {
     var key = filterableKeys[ki]
     var seen = {}
@@ -130,14 +130,8 @@ var sortedIssues = computed(function() {
   var dir = sortDir.value === 'asc' ? 1 : -1
 
   arr.sort(function(a, b) {
-    var aVal, bVal
-    if (key === 'work') {
-      aVal = a.key || ''
-      bVal = b.key || ''
-    } else {
-      aVal = a[key] || ''
-      bVal = b[key] || ''
-    }
+    var aVal = a[key] || ''
+    var bVal = b[key] || ''
     if (aVal < bVal) return -1 * dir
     if (aVal > bVal) return 1 * dir
     return 0
