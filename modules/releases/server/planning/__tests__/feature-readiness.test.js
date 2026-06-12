@@ -1170,13 +1170,12 @@ describe('buildFeatureReadiness', function() {
       expect(f.effectivePriorityScore).toBeGreaterThan(0)
     })
 
-    it('health cache with priorityBreakdown is reflected in priorityScoreBreakdown', function() {
+    it('priorityScoreBreakdown always has signals array for popover rendering', function() {
       var store = makeFeaturesStore({
         'RHAISTRAT-1': { latest: makeLatest({ humanReviewStatus: 'approved' }) }
       })
-      var breakdown = { rice: 60, bigRock: 80, priority: 70, complexity: 50 }
       var healthCache = {
-        features: [{ key: 'RHAISTRAT-1', priorityScore: 70, priorityBreakdown: breakdown, deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6' }]
+        features: [{ key: 'RHAISTRAT-1', priorityScore: 70, priorityBreakdown: { rice: 60 }, deliveryOwner: 'Alice', pmOwner: 'Jane', targetRelease: 'rhoai-3.6' }]
       }
       var readFromStorage = makeReadFromStorage({
         ...convertToUnifiedFormat(store),
@@ -1184,7 +1183,11 @@ describe('buildFeatureReadiness', function() {
         [healthKey]: healthCache
       })
       var result = buildFeatureReadiness(readFromStorage)
-      expect(result.ready[0].priorityScoreBreakdown).toEqual(breakdown)
+      var bd = result.ready[0].priorityScoreBreakdown
+      expect(bd.signals).toBeDefined()
+      expect(bd.signals.length).toBeGreaterThan(0)
+      expect(bd.score).toBeGreaterThan(0)
+      expect(result.ready[0].effectivePriorityScore).toBe(70)
     })
   })
 

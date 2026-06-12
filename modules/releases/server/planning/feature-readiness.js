@@ -375,13 +375,9 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
 
     var priorityScore = healthData ? (healthData.priorityScore != null ? healthData.priorityScore : null) : null
     var priorityScoreFallback = priorityScore === null
-    var fallbackResult = priorityScoreFallback
-      ? computeBestAvailableScore(Object.assign({}, latest, { rubricTotal: rubricTotal, tier: tier, rockPriority: rockPriority, targetVersions: targetVersions }), configuredVersions)
-      : null
-    var effectivePriorityScore = priorityScoreFallback ? fallbackResult.score : priorityScore
-    var priorityScoreBreakdown = priorityScoreFallback
-      ? fallbackResult
-      : (healthData ? (healthData.priorityBreakdown || healthData.priorityScoreBreakdown || null) : null)
+    var computedBreakdown = computeBestAvailableScore(Object.assign({}, latest, { rubricTotal: rubricTotal, tier: tier, rockPriority: rockPriority, targetVersions: targetVersions }), configuredVersions)
+    var effectivePriorityScore = priorityScoreFallback ? computedBreakdown.score : priorityScore
+    var priorityScoreBreakdown = computedBreakdown
 
     var blockerResult = computeBlockers(Object.assign({}, latest, { rubricTotal: rubricTotal }))
 
@@ -484,18 +480,16 @@ function buildFeatureReadiness(readFromStorage, jiraFeatures, listStorageFiles) 
 
     var hpPriorityScore = hd.priorityScore != null ? hd.priorityScore : null
     var hpFallback = hpPriorityScore === null
-    var hpFallbackResult = hpFallback
-      ? computeBestAvailableScore({
-          tier: hpTier,
-          priority: hd.priority,
-          riceScore: hd.rice && hd.rice.score != null ? hd.rice.score : null,
-          rubricTotal: 0,
-          rockPriority: hpRockPriority,
-          targetVersions: hpTargetVersions
-        }, configuredVersions)
-      : null
-    var hpEffective = hpFallback ? hpFallbackResult.score : hpPriorityScore
-    var hpPriorityBreakdown = hpFallback ? hpFallbackResult : (hd.priorityBreakdown || null)
+    var hpComputedBreakdown = computeBestAvailableScore({
+        tier: hpTier,
+        priority: hd.priority,
+        riceScore: hd.rice && hd.rice.score != null ? hd.rice.score : null,
+        rubricTotal: 0,
+        rockPriority: hpRockPriority,
+        targetVersions: hpTargetVersions
+      }, configuredVersions)
+    var hpEffective = hpFallback ? hpComputedBreakdown.score : hpPriorityScore
+    var hpPriorityBreakdown = hpComputedBreakdown
 
     var hpViolations = hygieneIndex.get(ckey) || null
     var hpReadinessResult = computeReadiness({
