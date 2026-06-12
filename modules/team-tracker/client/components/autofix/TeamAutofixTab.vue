@@ -291,16 +291,12 @@ const jiraHost = computed(() => rawData.value?.jiraHost || 'https://redhat.atlas
 
 const dataNotFetched = computed(() => fetched.value && !rawData.value?.fetchedAt)
 
-const teamComponentSet = computed(() => new Set(teamComponents.value))
+const teamIssues = computed(() => rawData.value?.issues || [])
 
-const teamIssues = computed(() => {
-  if (!rawData.value?.issues || teamComponentSet.value.size === 0) return []
-  return rawData.value.issues.filter(issue =>
-    (issue.components || []).some(c => teamComponentSet.value.has(c))
-  )
+const metrics = computed(() => {
+  if (rawData.value?.metrics?.autofixStates) return rawData.value.metrics
+  return computeTeamMetrics(teamIssues.value, timeWindow.value)
 })
-
-const metrics = computed(() => computeTeamMetrics(teamIssues.value, timeWindow.value))
 
 const bugsMerged = computed(() => {
   const days = timeWindow.value === 'week' ? 7 : timeWindow.value === 'month' ? 30 : 90
@@ -356,7 +352,10 @@ const displayedIssues = computed(() => {
   })
 })
 
-const trendData = computed(() => buildTeamTrendData(teamIssues.value, timeWindow.value))
+const trendData = computed(() => {
+  if (rawData.value?.trendData?.length) return rawData.value.trendData
+  return buildTeamTrendData(teamIssues.value, timeWindow.value)
+})
 
 const hasTrendActivity = computed(() => trendData.value.some(p => p.triaged > 0))
 
@@ -453,7 +452,7 @@ async function fetchData() {
   try {
     await fetchAutofixData((data) => {
       rawData.value = data
-    })
+    }, { components: teamComponents.value })
     fetched.value = true
   } catch (err) {
     if (err?.status === 404) {

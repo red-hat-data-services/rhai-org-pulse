@@ -12,6 +12,7 @@
  */
 
 const express = require('express');
+const compression = require('compression');
 const errorBuffer = require('./error-buffer');
 const requestTracker = require('./request-tracker');
 
@@ -173,6 +174,7 @@ apiTokens.init(storageModule, { scopeRegistry });
 const PORT = process.env.API_PORT || 3001;
 
 const app = express();
+app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 
 // Enable CORS

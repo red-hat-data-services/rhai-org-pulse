@@ -69,33 +69,43 @@ function processIssue(issue) {
 function computeAutofixMetrics(issues, timeWindow) {
   const days = timeWindow === 'week' ? 7 : timeWindow === 'month' ? 30 : 90;
   const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-  const windowIssues = issues.filter(i => new Date(i.created) >= cutoff);
 
-  const triageTotal = windowIssues.filter(i =>
-    i.pipelineState.startsWith('triage-') || i.pipelineState.startsWith('autofix-')
-  ).length;
+  const counts = {};
+  let windowTotal = 0;
 
-  const triageVerdicts = {
-    ready: windowIssues.filter(i => i.pipelineState.startsWith('autofix-')).length,
-    missingInfo: windowIssues.filter(i => i.pipelineState === 'triage-missing-info').length,
-    notFixable: windowIssues.filter(i => i.pipelineState === 'triage-not-fixable').length,
-    stale: windowIssues.filter(i => i.pipelineState === 'triage-stale').length,
-    pending: windowIssues.filter(i => i.pipelineState === 'triage-pending').length
-  };
+  for (const issue of issues) {
+    if (new Date(issue.created) < cutoff) continue;
+    windowTotal++;
+    counts[issue.pipelineState] = (counts[issue.pipelineState] || 0) + 1;
+  }
+
+  function get(state) { return counts[state] || 0; }
 
   const autofixStates = {
-    ready: windowIssues.filter(i => i.pipelineState === 'autofix-ready').length,
-    pending: windowIssues.filter(i => i.pipelineState === 'autofix-pending').length,
-    review: windowIssues.filter(i => i.pipelineState === 'autofix-review').length,
-    ciFailing: windowIssues.filter(i => i.pipelineState === 'autofix-ci-failing').length,
-    merged: windowIssues.filter(i => i.pipelineState === 'autofix-merged').length,
-    rejected: windowIssues.filter(i => i.pipelineState === 'autofix-rejected').length,
-    maxRetries: windowIssues.filter(i => i.pipelineState === 'autofix-max-retries').length,
-    researched: windowIssues.filter(i => i.pipelineState === 'autofix-researched').length,
-    blocked: windowIssues.filter(i => i.pipelineState === 'autofix-blocked').length
+    ready: get('autofix-ready'),
+    pending: get('autofix-pending'),
+    review: get('autofix-review'),
+    ciFailing: get('autofix-ci-failing'),
+    merged: get('autofix-merged'),
+    rejected: get('autofix-rejected'),
+    maxRetries: get('autofix-max-retries'),
+    researched: get('autofix-researched'),
+    blocked: get('autofix-blocked')
   };
 
-  const autofixTotal = Object.values(autofixStates).reduce((s, v) => s + v, 0);
+  const autofixTotal = Object.values(autofixStates).reduce(function(s, v) { return s + v; }, 0);
+
+  const triageVerdicts = {
+    ready: autofixTotal,
+    missingInfo: get('triage-missing-info'),
+    notFixable: get('triage-not-fixable'),
+    stale: get('triage-stale'),
+    pending: get('triage-pending')
+  };
+
+  const triageTotal = autofixTotal + triageVerdicts.missingInfo +
+    triageVerdicts.notFixable + triageVerdicts.stale + triageVerdicts.pending;
+
   const terminalTotal = autofixStates.merged + autofixStates.rejected + autofixStates.maxRetries;
   const successRate = terminalTotal > 0
     ? Math.round((autofixStates.merged / terminalTotal) * 100)
@@ -106,8 +116,9 @@ function computeAutofixMetrics(issues, timeWindow) {
     triageVerdicts,
     autofixStates,
     autofixTotal,
+    terminalTotal,
     successRate,
-    windowTotal: windowIssues.length,
+    windowTotal,
     totalIssues: issues.length
   };
 }
@@ -119,53 +130,59 @@ function computeAutofixMetrics(issues, timeWindow) {
 function buildTrendData(issues, timeWindow) {
   const weekCounts = timeWindow === 'week' ? 4 : timeWindow === 'month' ? 8 : 13;
   const now = new Date();
-  const points = [];
+  const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000;
 
+  // Initialize empty buckets
+  const buckets = [];
   for (let w = weekCounts - 1; w >= 0; w--) {
-    const weekEnd = new Date(now.getTime() - w * 7 * 24 * 60 * 60 * 1000);
-    const weekStart = new Date(weekEnd.getTime() - 7 * 24 * 60 * 60 * 1000);
-
-    const weekIssues = issues.filter(i => {
-      const d = new Date(i.created);
-      return d >= weekStart && d < weekEnd;
-    });
-
-    const triaged = weekIssues.filter(i =>
-      i.pipelineState.startsWith('triage-') || i.pipelineState.startsWith('autofix-')
-    ).length;
-
-    const autofixed = weekIssues.filter(i =>
-      i.pipelineState.startsWith('autofix-')
-    ).length;
-
-    const merged = weekIssues.filter(i => i.pipelineState === 'autofix-merged').length;
-
-    // Autofix states where human action can help
-    const review = weekIssues.filter(i => i.pipelineState === 'autofix-review').length;
-    const ciFailing = weekIssues.filter(i => i.pipelineState === 'autofix-ci-failing').length;
-    const blocked = weekIssues.filter(i => i.pipelineState === 'autofix-blocked').length;
-    const maxRetries = weekIssues.filter(i => i.pipelineState === 'autofix-max-retries').length;
-
-    // Triage states where human action can help
-    const missingInfo = weekIssues.filter(i => i.pipelineState === 'triage-missing-info').length;
-    const stale = weekIssues.filter(i => i.pipelineState === 'triage-stale').length;
-
-    points.push({
+    const weekEnd = new Date(now.getTime() - w * MS_PER_WEEK);
+    buckets.push({
       date: weekEnd.toISOString().slice(0, 10),
-      triaged,
-      autofixed,
-      merged,
-      total: weekIssues.length,
-      review,
-      ciFailing,
-      blocked,
-      maxRetries,
-      missingInfo,
-      stale
+      weekStart: weekEnd.getTime() - MS_PER_WEEK,
+      weekEnd: weekEnd.getTime(),
+      triaged: 0, autofixed: 0, merged: 0, total: 0,
+      review: 0, ciFailing: 0, blocked: 0, maxRetries: 0,
+      missingInfo: 0, stale: 0
     });
   }
 
-  return points;
+  const earliest = buckets[0].weekStart;
+  const latest = buckets[buckets.length - 1].weekEnd;
+
+  for (const issue of issues) {
+    const created = new Date(issue.created).getTime();
+    if (created < earliest || created >= latest) continue;
+
+    const bucketIdx = Math.floor((created - earliest) / MS_PER_WEEK);
+    if (bucketIdx < 0 || bucketIdx >= buckets.length) continue;
+    const bucket = buckets[bucketIdx];
+
+    bucket.total++;
+
+    const state = issue.pipelineState;
+    const isTriage = state.startsWith('triage-');
+    const isAutofix = state.startsWith('autofix-');
+
+    if (isTriage || isAutofix) bucket.triaged++;
+    if (isAutofix) bucket.autofixed++;
+
+    if (state === 'autofix-merged') bucket.merged++;
+    else if (state === 'autofix-review') bucket.review++;
+    else if (state === 'autofix-ci-failing') bucket.ciFailing++;
+    else if (state === 'autofix-blocked') bucket.blocked++;
+    else if (state === 'autofix-max-retries') bucket.maxRetries++;
+    else if (state === 'triage-missing-info') bucket.missingInfo++;
+    else if (state === 'triage-stale') bucket.stale++;
+  }
+
+  return buckets.map(function(b) {
+    return {
+      date: b.date, triaged: b.triaged, autofixed: b.autofixed,
+      merged: b.merged, total: b.total, review: b.review,
+      ciFailing: b.ciFailing, blocked: b.blocked, maxRetries: b.maxRetries,
+      missingInfo: b.missingInfo, stale: b.stale
+    };
+  });
 }
 
 async function fetchAutofixData(jiraRequest, config) {
