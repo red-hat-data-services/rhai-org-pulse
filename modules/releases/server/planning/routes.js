@@ -486,6 +486,61 @@ module.exports = function registerPlanningRoutes(router, context) {
     }
   })
 
+  /**
+   * @openapi
+   * /api/modules/releases/planning/bu-feedback:
+   *   get:
+   *     summary: List BU non-feature-ask issues from Jira
+   *     tags: [releases-planning]
+   *     security: [{ bearerAuth: [] }]
+   *     description: Queries Jira for issues labeled AIBU_Feedback, ordered by creation date descending.
+   *     responses:
+   *       200:
+   *         description: Array of BU feedback issues
+   *       503:
+   *         description: Jira client not configured
+   */
+  router.get('/bu-feedback', requireAuth, requireScope('releases:read'), async function(req, res) {
+    if (!jiraClient) {
+      return res.json({ issues: [], fetchedAt: new Date().toISOString(), warning: 'Jira not configured' })
+    }
+
+    try {
+      var jql = 'labels = "AIBU_Feedback" ORDER BY createdDate DESC'
+      var fields = 'summary,status,issuetype,assignee,reporter,priority,resolution,created,updated,duedate,components,fixVersions,labels'
+      var rawIssues = await jiraClient.fetchAllJqlResults(jql, fields, { maxResults: 100 })
+
+      var issues = []
+      for (var i = 0; i < rawIssues.length; i++) {
+        var raw = rawIssues[i]
+        var f = raw.fields || {}
+        issues.push({
+          key: raw.key,
+          summary: f.summary || '',
+          issueType: f.issuetype ? f.issuetype.name : '',
+          assignee: f.assignee ? f.assignee.displayName : 'Unassigned',
+          reporter: f.reporter ? f.reporter.displayName : '',
+          priority: f.priority ? f.priority.name : '',
+          status: f.status ? f.status.name : '',
+          statusCategory: f.status && f.status.statusCategory ? f.status.statusCategory.name : '',
+          resolution: f.resolution ? f.resolution.name : 'Unresolved',
+          created: f.created || null,
+          updated: f.updated || null,
+          dueDate: f.duedate || null,
+          components: (f.components || []).map(function(c) { return c.name }),
+          fixVersions: (f.fixVersions || []).map(function(v) { return v.name }),
+          labels: f.labels || [],
+          url: 'https://issues.redhat.com/browse/' + raw.key
+        })
+      }
+
+      res.json({ issues: issues, fetchedAt: new Date().toISOString() })
+    } catch (err) {
+      console.error('[releases/planning] BU feedback query failed:', err.message)
+      res.status(500).json({ error: 'Failed to fetch BU feedback issues' })
+    }
+  })
+
   // ─── Cache Invalidation Helper ───
 
   function invalidateCache(version) {
