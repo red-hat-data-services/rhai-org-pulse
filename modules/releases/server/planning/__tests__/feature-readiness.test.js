@@ -8,8 +8,11 @@ const {
   computeTierScore,
   computeTargetVersionScore,
   hasBlockingViolations,
+  computeHygieneStatus,
   computeConfidence,
   collectFilterMeta,
+  buildCanonicalKeySet,
+  mergeFeatureData,
   MAX_SIGNALS
 } = require('../feature-readiness')
 
@@ -654,7 +657,7 @@ describe('buildFeatureReadiness', function() {
       expect(result.pendingReview).toEqual([])
       expect(result.ready).toEqual([])
       expect(result.filterMeta).toEqual({ components: [], priorities: [], bigRocks: [], targetVersions: [], fixVersions: [], teams: [] })
-      expect(result.meta).toEqual({ total: 0, pendingReviewCount: 0, readyCount: 0, versions: [], lastSyncedAt: null })
+      expect(result.meta).toEqual({ total: 0, pendingReviewCount: 0, readyCount: 0, versions: [], lastSyncedAt: null, jiraAvailable: false })
     })
 
     it('returns empty buckets when no features with aiReview exist', function() {
@@ -2891,5 +2894,291 @@ describe('buildFeatureReadiness - hygiene violations from cache', function() {
     var feature = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-DYN3' })
     expect(feature).toBeDefined()
     expect(feature.violations).toBeNull()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// computeHygieneStatus
+// ---------------------------------------------------------------------------
+describe('computeHygieneStatus', function() {
+  it('returns unknown for null violations', function() {
+    expect(computeHygieneStatus(null)).toBe('unknown')
+  })
+
+  it('returns unknown for undefined violations', function() {
+    expect(computeHygieneStatus(undefined)).toBe('unknown')
+  })
+
+  it('returns unknown for non-array violations', function() {
+    expect(computeHygieneStatus('not-an-array')).toBe('unknown')
+  })
+
+  it('returns clean for empty violations array', function() {
+    expect(computeHygieneStatus([])).toBe('clean')
+  })
+
+  it('returns warning for non-blocking violations only', function() {
+    expect(computeHygieneStatus([{ id: 'some-minor-issue' }])).toBe('warning')
+  })
+
+  it('returns blocking when a blocking violation is present', function() {
+    expect(computeHygieneStatus([{ id: 'missing-assignee' }])).toBe('blocking')
+    expect(computeHygieneStatus([{ id: 'missing-fix-version' }])).toBe('blocking')
+    expect(computeHygieneStatus([{ id: 'missing-target-version' }])).toBe('blocking')
+    expect(computeHygieneStatus([{ id: 'open-children-on-closed' }])).toBe('blocking')
+  })
+
+  it('returns blocking when mix of blocking and non-blocking', function() {
+    expect(computeHygieneStatus([
+      { id: 'some-minor-issue' },
+      { id: 'missing-assignee' }
+    ])).toBe('blocking')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// buildCanonicalKeySet
+// ---------------------------------------------------------------------------
+describe('buildCanonicalKeySet', function() {
+  it('builds union of keys from all sources', function() {
+    var jiraFeatures = new Map([['RHAISTRAT-1', {}], ['RHAISTRAT-2', {}]])
+    var aiReviewMap = { 'RHAISTRAT-2': {}, 'RHAISTRAT-3': {} }
+    var execFeatures = [{ key: 'RHAISTRAT-3' }, { key: 'RHAISTRAT-4' }]
+    var healthIndex = new Map([['RHAISTRAT-4', {}], ['RHAISTRAT-5', {}]])
+
+    var keys = buildCanonicalKeySet(jiraFeatures, aiReviewMap, execFeatures, healthIndex)
+    expect(keys.size).toBe(5)
+    expect(keys.has('RHAISTRAT-1')).toBe(true)
+    expect(keys.has('RHAISTRAT-2')).toBe(true)
+    expect(keys.has('RHAISTRAT-3')).toBe(true)
+    expect(keys.has('RHAISTRAT-4')).toBe(true)
+    expect(keys.has('RHAISTRAT-5')).toBe(true)
+  })
+
+  it('handles null jiraFeatures', function() {
+    var aiReviewMap = { 'RHAISTRAT-1': {} }
+    var execFeatures = [{ key: 'RHAISTRAT-2' }]
+    var healthIndex = new Map()
+
+    var keys = buildCanonicalKeySet(null, aiReviewMap, execFeatures, healthIndex)
+    expect(keys.size).toBe(2)
+  })
+
+  it('handles all empty sources', function() {
+    var keys = buildCanonicalKeySet(null, {}, [], new Map())
+    expect(keys.size).toBe(0)
+  })
+
+  it('deduplicates keys across sources', function() {
+    var jiraFeatures = new Map([['RHAISTRAT-1', {}]])
+    var aiReviewMap = { 'RHAISTRAT-1': {} }
+    var execFeatures = [{ key: 'RHAISTRAT-1' }]
+    var healthIndex = new Map([['RHAISTRAT-1', {}]])
+
+    var keys = buildCanonicalKeySet(jiraFeatures, aiReviewMap, execFeatures, healthIndex)
+    expect(keys.size).toBe(1)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// mergeFeatureData
+// ---------------------------------------------------------------------------
+describe('mergeFeatureData', function() {
+  it('prefers Jira data for status, priority, targetVersions', function() {
+    var jiraFeatures = new Map([['K-1', { summary: 'Jira Title', status: 'In Progress', priority: 'Blocker', targetVersions: ['3.6'], fixVersions: ['3.6'], labels: [], components: [] }]])
+    var aiReviewMap = { 'K-1': { latest: { title: 'AI Title', status: 'New', priority: 'Minor', labels: [] } } }
+    var healthIndex = new Map([['K-1', { summary: 'Health Title', status: 'Refinement', priority: 'Major' }]])
+
+    var result = mergeFeatureData('K-1', jiraFeatures, aiReviewMap, new Map(), healthIndex, new Map(), new Map(), new Map())
+    expect(result.title).toBe('Jira Title')
+    expect(result.status).toBe('In Progress')
+    expect(result.priority).toBe('Blocker')
+    expect(result.targetVersions).toEqual(['3.6'])
+    expect(result.fixVersion).toBe('3.6')
+  })
+
+  it('falls back through resolution chain when Jira is absent', function() {
+    var aiReviewMap = { 'K-1': { latest: { title: 'AI Title', status: 'New', priority: 'Minor', labels: [], scores: { feasibility: 2 }, reviewers: {} } } }
+    var healthIndex = new Map([['K-1', { summary: 'Health Title', status: 'Refinement' }]])
+
+    var result = mergeFeatureData('K-1', null, aiReviewMap, new Map(), healthIndex, new Map(), new Map(), new Map())
+    expect(result.title).toBe('AI Title')
+    expect(result.status).toBe('New')
+    expect(result.priority).toBe('Minor')
+    expect(result.dataSource).toBe('strat-creator')
+  })
+
+  it('derives dataSource correctly', function() {
+    var healthIndex = new Map([['K-1', { summary: 'H' }]])
+    var r1 = mergeFeatureData('K-1', null, { 'K-1': { latest: { labels: [] } } }, new Map(), healthIndex, new Map(), new Map(), new Map())
+    expect(r1.dataSource).toBe('strat-creator')
+
+    var r2 = mergeFeatureData('K-1', null, {}, new Map(), healthIndex, new Map(), new Map(), new Map())
+    expect(r2.dataSource).toBe('health-pipeline')
+
+    var jira = new Map([['K-1', { summary: 'J', status: 'New' }]])
+    var r3 = mergeFeatureData('K-1', jira, {}, new Map(), new Map(), new Map(), new Map(), new Map())
+    expect(r3.dataSource).toBe('jira')
+
+    var exec = new Map([['K-1', { summary: 'E', key: 'K-1' }]])
+    var r4 = mergeFeatureData('K-1', null, {}, new Map(), new Map(), new Map(), new Map(), exec)
+    expect(r4.dataSource).toBe('execution')
+  })
+
+  it('computes hygieneStatus from violations', function() {
+    var hygieneIndex = new Map([['K-1', [{ id: 'missing-assignee' }]]])
+    var r1 = mergeFeatureData('K-1', null, {}, new Map(), new Map(), hygieneIndex, new Map(), new Map())
+    expect(r1.hygieneStatus).toBe('blocking')
+
+    var r2 = mergeFeatureData('K-2', null, {}, new Map(), new Map(), new Map(), new Map(), new Map())
+    expect(r2.hygieneStatus).toBe('unknown')
+  })
+
+  it('merges scores from aiReview only', function() {
+    var aiReviewMap = { 'K-1': { latest: { scores: { feasibility: 2, testability: 1, scope: 2, architecture: 1 }, labels: [] } } }
+    var result = mergeFeatureData('K-1', null, aiReviewMap, new Map(), new Map(), new Map(), new Map(), new Map())
+    expect(result.rubricTotal).toBe(6)
+    expect(result.scores.feasibility).toBe(2)
+  })
+
+  it('returns rubricTotal 0 when no aiReview', function() {
+    var result = mergeFeatureData('K-1', null, {}, new Map(), new Map(), new Map(), new Map(), new Map())
+    expect(result.rubricTotal).toBe(0)
+    expect(result.scores).toEqual({})
+  })
+
+  it('resolves fixVersion from exec when no other source', function() {
+    var exec = new Map([['K-1', { key: 'K-1', fixVersions: ['3.6'], labels: [] }]])
+    var result = mergeFeatureData('K-1', null, {}, new Map(), new Map(), new Map(), new Map(), exec)
+    expect(result.fixVersion).toBe('3.6')
+  })
+
+  it('resolves targetVersions from exec when no other source', function() {
+    var exec = new Map([['K-1', { key: 'K-1', targetVersions: ['4.0'], labels: [] }]])
+    var result = mergeFeatureData('K-1', null, {}, new Map(), new Map(), new Map(), new Map(), exec)
+    expect(result.targetVersions).toEqual(['4.0'])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// buildFeatureReadiness — single-pass data merging
+// ---------------------------------------------------------------------------
+describe('buildFeatureReadiness — single-pass merging', function() {
+  var CONFIG_3_6 = { releases: { '3.6': { release: '3.6' } } }
+
+
+
+  it('feature with aiReview + Jira gets rubric scores AND Jira status', function() {
+    var store = makeFeaturesStore({
+      'RHAISTRAT-1': { latest: makeLatest({ status: 'OldStatus', humanReviewStatus: 'approved' }) }
+    })
+    var jiraFeatures = new Map([['RHAISTRAT-1', {
+      summary: 'Jira Summary',
+      status: 'In Progress',
+      priority: 'Critical',
+      targetVersions: ['3.6'],
+      fixVersions: [],
+      labels: ['strat-creator-human-sign-off'],
+      components: [],
+      assignee: 'Bob',
+      pmOwner: 'Alice'
+    }]])
+
+    var readFromStorage = makeReadFromStorage({
+      ...convertToUnifiedFormat(store),
+      'releases/planning/config.json': CONFIG_3_6
+    })
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+
+    var all = result.pendingReview.concat(result.ready)
+    var feature = all.find(function(f) { return f.key === 'RHAISTRAT-1' })
+    expect(feature).toBeDefined()
+    expect(feature.status).toBe('In Progress')
+    expect(feature.priority).toBe('Critical')
+    expect(feature.rubricTotal).toBe(8)
+    expect(feature.dataSource).toBe('strat-creator')
+  })
+
+  it('feature with only Jira data appears on list', function() {
+    var store = makeFeaturesStore({})
+    var jiraFeatures = new Map([['RHAISTRAT-JIRA', {
+      summary: 'Jira Only Feature',
+      status: 'In Progress',
+      priority: 'Major',
+      targetVersions: ['3.6'],
+      fixVersions: [],
+      labels: [],
+      components: ['Backend'],
+      assignee: 'Bob'
+    }]])
+
+    var readFromStorage = makeReadFromStorage({
+      ...convertToUnifiedFormat(store),
+      'releases/planning/config.json': CONFIG_3_6
+    })
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+    var feature = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-JIRA' })
+    expect(feature).toBeDefined()
+    expect(feature.dataSource).toBe('jira')
+    expect(feature.status).toBe('In Progress')
+    expect(feature.components).toEqual(['Backend'])
+  })
+
+  it('feature with null hygiene shows hygieneStatus unknown', function() {
+    var store = makeFeaturesStore({
+      'RHAISTRAT-1': { latest: makeLatest() }
+    })
+    var readFromStorage = makeReadFromStorage({
+      ...convertToUnifiedFormat(store),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/planning/candidates-cache-3.6.json': {
+        data: { features: [{ issueKey: 'RHAISTRAT-1', tier: 1, targetRelease: '3.6' }] }
+      }
+    })
+    var result = buildFeatureReadiness(readFromStorage)
+    var feature = result.pendingReview.concat(result.ready).find(function(f) { return f.key === 'RHAISTRAT-1' })
+    expect(feature.hygieneStatus).toBe('unknown')
+    expect(feature.violations).toBeNull()
+  })
+
+  it('meta includes jiraAvailable flag', function() {
+    var store = makeFeaturesStore({})
+    var readFromStorage = makeReadFromStorage(convertToUnifiedFormat(store))
+
+    var r1 = buildFeatureReadiness(readFromStorage, null)
+    expect(r1.meta.jiraAvailable).toBe(false)
+
+    var r2 = buildFeatureReadiness(readFromStorage, new Map())
+    expect(r2.meta.jiraAvailable).toBe(true)
+  })
+
+  it('no feature is excluded — all sources contribute to canonical set', function() {
+    var store = makeFeaturesStore({
+      'RHAISTRAT-AI': { latest: makeLatest() }
+    })
+    var jiraFeatures = new Map([['RHAISTRAT-JIRA', {
+      summary: 'Jira Feature', status: 'In Progress', priority: 'Major',
+      targetVersions: [], fixVersions: [], labels: [], components: []
+    }]])
+
+    var readFromStorage = makeReadFromStorage({
+      ...convertToUnifiedFormat(store),
+      'releases/planning/config.json': CONFIG_3_6,
+      'releases/planning/health-cache-3.6-all.json': {
+        features: [{ key: 'RHAISTRAT-HEALTH', summary: 'Health Feature', status: 'In Progress', priority: 'Major' }]
+      },
+      'releases/planning/candidates-cache-3.6.json': {
+        data: { features: [
+          { issueKey: 'RHAISTRAT-AI', tier: 1, targetRelease: '3.6' },
+          { issueKey: 'RHAISTRAT-HEALTH', tier: 2, targetRelease: '3.6' }
+        ]}
+      }
+    })
+
+    var result = buildFeatureReadiness(readFromStorage, jiraFeatures)
+    var allKeys = result.pendingReview.concat(result.ready).map(function(f) { return f.key })
+    expect(allKeys).toContain('RHAISTRAT-AI')
+    expect(allKeys).toContain('RHAISTRAT-JIRA')
+    expect(allKeys).toContain('RHAISTRAT-HEALTH')
   })
 })
