@@ -445,7 +445,7 @@ describe('fetchDroppedFeatures — freeze date filtering', function () {
     expect(result).toHaveLength(0)
   })
 
-  it('excludes features removed on the same day as the freeze date', async function () {
+  it('includes features removed on the same day as the freeze date', async function () {
     var issues = [makeDroppedRawIssue('RHAISTRAT-202', '2026-05-20T08:00:00.000+0000')]
     var result = await fetchDroppedFeatures('rhoai-3.5.EA2', mockJiraRequest, makeFetchAll(issues), {}, '2026-05-20')
     expect(result).toHaveLength(1)
