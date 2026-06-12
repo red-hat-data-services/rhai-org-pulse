@@ -284,7 +284,7 @@ function classifyFeature(feature, featureFreezeDate) {
  * Returns transformed feature objects marked as dropped, with the date
  * the fixVersion was removed (fixVersionRemovedAt).
  */
-async function fetchDroppedFeatures(fixVersions, jiraRequestFn, fetchAllJqlResultsFn, currentKeys) {
+async function fetchDroppedFeatures(fixVersions, jiraRequestFn, fetchAllJqlResultsFn, currentKeys, freezeDate) {
   const versions = Array.isArray(fixVersions) ? fixVersions : [fixVersions]
   const projects = DEFAULT_PROJECTS
 
@@ -316,8 +316,16 @@ async function fetchDroppedFeatures(fixVersions, jiraRequestFn, fetchAllJqlResul
       const raw = rawIssues[i]
       if (currentKeys[raw.key]) continue
       const transformed = transformIssue(raw, {})
-      transformed.scopeChange = 'dropped'
       transformed.fixVersionRemovedAt = findFixVersionRemovedDate(raw.changelog, versions)
+
+      if (freezeDate) {
+        const removedDate = transformed.fixVersionRemovedAt
+          ? transformed.fixVersionRemovedAt.split('T')[0]
+          : null
+        if (!removedDate || removedDate < freezeDate) continue
+      }
+
+      transformed.scopeChange = 'dropped'
       dropped.push(transformed)
     }
 
@@ -679,7 +687,7 @@ module.exports = function registerFeatureTrackingRoutes(router, context) {
         for (let ki = 0; ki < features.length; ki++) {
           currentKeys[features[ki].key] = true
         }
-        const dropped = await fetchDroppedFeatures(pv.fixVersions, jiraRequest, fetchAllJqlResults, currentKeys)
+        const dropped = await fetchDroppedFeatures(pv.fixVersions, jiraRequest, fetchAllJqlResults, currentKeys, productFreezeDate)
         features = features.concat(dropped)
 
         const STATUS_ORDER = { red: 0, yellow: 1, green: 2 }
@@ -762,3 +770,4 @@ module.exports.normalizeVersionName = normalizeVersionName
 module.exports.resolveProductVersionsFromJira = resolveProductVersionsFromJira
 module.exports.validateTrackingConfig = validateTrackingConfig
 module.exports.loadTrackingConfig = loadTrackingConfig
+module.exports.fetchDroppedFeatures = fetchDroppedFeatures
