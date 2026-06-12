@@ -224,7 +224,7 @@ const props = defineProps({
 
 defineEmits(['navigate'])
 
-const { isManager } = useAuth()
+const { isManager, isTeamAdmin } = useAuth()
 const showModuleGrid = ref(false)
 const showWidgetPicker = ref(false)
 const gridRef = ref(null)
@@ -252,6 +252,7 @@ const allWidgets = computed(() => {
     if (!sotuWidgets || !Array.isArray(sotuWidgets)) continue
     for (const w of sotuWidgets) {
       if (w.requireRole === 'manager' && !isManager.value) continue
+      if (w.requireRole === 'team-admin' && !isTeamAdmin.value) continue
       widgets.push({
         qualifiedId: `${mod.slug}:${w.id}`,
         moduleSlug: mod.slug,
