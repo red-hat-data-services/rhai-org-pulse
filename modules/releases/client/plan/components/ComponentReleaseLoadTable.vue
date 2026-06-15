@@ -211,7 +211,7 @@ defineExpose({ expandAll, collapseAll })
             :class="COMP_STYLE.border"
             @click="toggleComponent(comp.component)"
           >
-            <td colspan="10" class="px-4 py-3">
+            <td colspan="11" class="px-4 py-3">
               <div class="flex items-center gap-3">
                 <svg
                   class="w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform duration-200 flex-shrink-0"
@@ -270,11 +270,12 @@ defineExpose({ expandAll, collapseAll })
           >
             <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-36">Feature</th>
             <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Title</th>
-            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-36">Version</th>
             <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24">Type</th>
             <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-28">Release Type</th>
             <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24">Status</th>
             <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16">Color Status</th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">Fix Version</th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">Target Version</th>
             <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16">Blocked</th>
             <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">Delivery Owner</th>
             <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">PM Owner</th>
@@ -297,16 +298,6 @@ defineExpose({ expandAll, collapseAll })
               </td>
               <td class="px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100">
                 {{ feature.summary }}
-              </td>
-              <td class="px-3 py-2.5 text-center">
-                <div v-if="feature.versions && feature.versions.length > 0" class="flex items-center justify-center gap-1 flex-wrap">
-                  <span
-                    v-for="ver in feature.versions"
-                    :key="ver"
-                    class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-gray-100 dark:bg-gray-700/60 text-gray-700 dark:text-gray-300"
-                  >{{ ver }}</span>
-                </div>
-                <span v-else class="text-gray-300 dark:text-gray-600 text-xs">--</span>
               </td>
               <td class="px-3 py-2.5 text-center">
                 <div class="flex items-center justify-center gap-1">
@@ -344,6 +335,26 @@ defineExpose({ expandAll, collapseAll })
                 <span v-else class="text-gray-300 dark:text-gray-600 text-xs">--</span>
               </td>
               <td class="px-3 py-2.5 text-center">
+                <div v-if="feature.fixVersions && feature.fixVersions.length > 0" class="flex items-center justify-center gap-1 flex-wrap">
+                  <span
+                    v-for="fv in feature.fixVersions"
+                    :key="fv"
+                    class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300"
+                  >{{ fv }}</span>
+                </div>
+                <span v-else class="text-gray-300 dark:text-gray-600 text-xs">--</span>
+              </td>
+              <td class="px-3 py-2.5 text-center">
+                <div v-if="feature.targetVersions && feature.targetVersions.length > 0" class="flex items-center justify-center gap-1 flex-wrap">
+                  <span
+                    v-for="tv in feature.targetVersions"
+                    :key="tv"
+                    class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
+                  >{{ tv }}</span>
+                </div>
+                <span v-else class="text-gray-300 dark:text-gray-600 text-xs">--</span>
+              </td>
+              <td class="px-3 py-2.5 text-center">
                 <span
                   v-if="feature.isBlocked"
                   class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-red-100 dark:bg-red-900/30 ring-1 ring-red-200 dark:ring-red-800"
@@ -368,7 +379,7 @@ defineExpose({ expandAll, collapseAll })
 
           <!-- Empty state -->
           <tr v-if="isComponentExpanded(comp.component) && comp.features.length === 0">
-            <td colspan="10" class="px-8 py-6 text-sm text-gray-400 dark:text-gray-500 italic text-center">
+            <td colspan="11" class="px-8 py-6 text-sm text-gray-400 dark:text-gray-500 italic text-center">
               No features found for {{ comp.component }}
             </td>
           </tr>
@@ -376,7 +387,7 @@ defineExpose({ expandAll, collapseAll })
 
         <!-- No results -->
         <tr v-if="componentGroups.length === 0">
-          <td colspan="10" class="px-8 py-10 text-sm text-gray-400 dark:text-gray-500 italic text-center">
+          <td colspan="11" class="px-8 py-10 text-sm text-gray-400 dark:text-gray-500 italic text-center">
             No features match the current filters.
           </td>
         </tr>
