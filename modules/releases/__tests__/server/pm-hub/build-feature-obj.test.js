@@ -15,6 +15,7 @@ describe('buildFeatureObj', function () {
     colorStatus: 'Green',
     statusSummary: '<p>On track</p>',
     releaseType: 'Feature',
+    priority: 'Major',
     isBlocked: false,
     components: ['Inference', 'Serving'],
     fixVersions: ['rhoai-3.5', 'rhoai-3.6'],
@@ -31,6 +32,7 @@ describe('buildFeatureObj', function () {
     expect(result.colorStatus).toBe('Green')
     expect(result.statusSummary).toBe('<p>On track</p>')
     expect(result.releaseType).toBe('Feature')
+    expect(result.priority).toBe('Major')
     expect(result.isBlocked).toBe(false)
     expect(result.components).toEqual(['Inference', 'Serving'])
     expect(result.fixVersions).toEqual(['rhoai-3.5', 'rhoai-3.6'])
@@ -48,6 +50,7 @@ describe('buildFeatureObj', function () {
     expect(result.colorStatus).toBeNull()
     expect(result.statusSummary).toBeNull()
     expect(result.releaseType).toBeNull()
+    expect(result.priority).toBeNull()
     expect(result.isBlocked).toBe(false)
     expect(result.components).toEqual([])
     expect(result.fixVersions).toEqual([])
@@ -83,6 +86,18 @@ describe('buildFeatureObj', function () {
     var input = Object.assign({}, fullInput, { isBlocked: true })
     var result = buildFeatureObj(input, [])
     expect(result.isBlocked).toBe(true)
+  })
+
+  it('passes through priority from input', function () {
+    var input = Object.assign({}, fullInput, { priority: 'Critical' })
+    var result = buildFeatureObj(input, [])
+    expect(result.priority).toBe('Critical')
+  })
+
+  it('defaults priority to null when missing', function () {
+    var input = { key: 'X-3' }
+    var result = buildFeatureObj(input, [])
+    expect(result.priority).toBeNull()
   })
 
   it('does not include extra fields from the input', function () {

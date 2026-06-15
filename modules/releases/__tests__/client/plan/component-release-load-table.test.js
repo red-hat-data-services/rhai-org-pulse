@@ -111,6 +111,7 @@ function buildComponentGroups(groups) {
             colorStatus: feat.colorStatus,
             statusSummary: feat.statusSummary,
             releaseType: feat.releaseType,
+            priority: feat.priority,
             isBlocked: feat.isBlocked,
             components: feat.components,
             fixVersions: feat.fixVersions || [],
@@ -174,6 +175,7 @@ function makeFeature(overrides) {
     colorStatus: 'Green',
     statusSummary: '<p>On track</p>',
     releaseType: 'Feature',
+    priority: 'Major',
     isBlocked: false,
     components: ['Dashboard'],
     fixVersions: ['rhoai-3.5'],
@@ -521,6 +523,30 @@ describe('buildComponentGroups', function () {
     var result = buildComponentGroups(groups)
     expect(result[0].features[0].fixVersions).toEqual([])
     expect(result[0].features[0].targetVersions).toEqual([])
+  })
+
+  it('preserves priority on features', function () {
+    var feat = makeFeature({ key: 'X-1', priority: 'Critical' })
+    var groups = [makeGroup('rhoai-3.5', 'Dash', [feat])]
+    var result = buildComponentGroups(groups)
+    expect(result[0].features[0].priority).toBe('Critical')
+  })
+
+  it('preserves null priority on features', function () {
+    var feat = makeFeature({ key: 'X-1', priority: null })
+    var groups = [makeGroup('rhoai-3.5', 'Dash', [feat])]
+    var result = buildComponentGroups(groups)
+    expect(result[0].features[0].priority).toBeNull()
+  })
+
+  it('preserves priority through deduplication', function () {
+    var feat = makeFeature({ key: 'X-1', priority: 'Blocker' })
+    var groups = [
+      makeGroup('rhoai-3.5', 'Dash', [feat]),
+      makeGroup('rhelai-3.5', 'Dash', [feat])
+    ]
+    var result = buildComponentGroups(groups)
+    expect(result[0].features[0].priority).toBe('Blocker')
   })
 
   it('handles features with multiple fixVersions', function () {

@@ -127,6 +127,45 @@ describe('transformIssue — isBlocked', function () {
   })
 })
 
+// ─── priority derivation ──────────────────────────────────────────
+
+describe('transformIssue — priority', function () {
+  it('extracts priority name from priority field', function () {
+    var result = transformIssue(makeRawIssue({ priority: { name: 'Major' } }), {})
+    expect(result.priority).toBe('Major')
+  })
+
+  it('returns null when priority field is not set', function () {
+    var result = transformIssue(makeRawIssue(), {})
+    expect(result.priority).toBeNull()
+  })
+
+  it('returns null when priority field is null', function () {
+    var result = transformIssue(makeRawIssue({ priority: null }), {})
+    expect(result.priority).toBeNull()
+  })
+
+  it('extracts Blocker priority', function () {
+    var result = transformIssue(makeRawIssue({ priority: { name: 'Blocker' } }), {})
+    expect(result.priority).toBe('Blocker')
+  })
+
+  it('extracts Critical priority', function () {
+    var result = transformIssue(makeRawIssue({ priority: { name: 'Critical' } }), {})
+    expect(result.priority).toBe('Critical')
+  })
+
+  it('extracts Minor priority', function () {
+    var result = transformIssue(makeRawIssue({ priority: { name: 'Minor' } }), {})
+    expect(result.priority).toBe('Minor')
+  })
+
+  it('extracts Trivial priority', function () {
+    var result = transformIssue(makeRawIssue({ priority: { name: 'Trivial' } }), {})
+    expect(result.priority).toBe('Trivial')
+  })
+})
+
 // ─── pmOwner derivation ────────────────────────────────────────────
 
 describe('transformIssue — pmOwner', function () {
