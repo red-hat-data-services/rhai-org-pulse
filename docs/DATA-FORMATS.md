@@ -1297,7 +1297,7 @@ JSON Lines format (one JSON object per line). Partitioned by month for efficient
       "views": 342,
       "uniqueUsers": 28,
       "byUserType": { "Backend": 12, "Frontend": 8, "unknown": 3 },
-      "byRole": { "admin": 3, "team-admin": 2, "release-manager": 5 },
+      "byRole": { "admin": 3, "team-admin": 2, "planning-manager": 5 },
       "byPermissionTier": { "admin": 3, "manager": 10, "user": 15 }
     }
   }

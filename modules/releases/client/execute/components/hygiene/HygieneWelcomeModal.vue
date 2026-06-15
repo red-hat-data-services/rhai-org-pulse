@@ -8,7 +8,7 @@ const props = defineProps({
     type: Object,
     default: null
   },
-  isReleaseManager: {
+  isPlanningManager: {
     type: Boolean,
     default: false
   }
@@ -124,8 +124,8 @@ const enabledRuleCount = computed(() => {
             outstanding items.
           </p>
 
-          <p v-if="isReleaseManager" class="text-xs text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-3">
-            As a release manager, you can configure which rules are active and adjust
+          <p v-if="isPlanningManager" class="text-xs text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-3">
+            As a planning manager, you can configure which rules are active and adjust
             thresholds on the
             <button @click="goToManage" class="text-primary-600 dark:text-primary-400 hover:underline font-medium">Manage</button>
             page.
@@ -169,10 +169,10 @@ const enabledRuleCount = computed(() => {
             </div>
           </div>
           <div v-else class="text-sm text-gray-500 dark:text-gray-400 py-4 text-center">
-            Rule details are only visible to release managers.
+            Rule details are only visible to planning managers.
           </div>
           <p
-            v-if="isReleaseManager && ruleDetails"
+            v-if="isPlanningManager && ruleDetails"
             class="text-xs text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-gray-700 pt-3 mt-4"
           >
             You can enable, disable, or adjust thresholds for these rules on the

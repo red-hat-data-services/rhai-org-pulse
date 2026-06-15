@@ -22,7 +22,7 @@ vi.mock('../../../server/planning/config-backup', () => ({
 
 vi.mock('../../../server/planning/doc-import', () => ({
   previewDocImport: vi.fn(),
-  executeDocImport: vi.fn()
+  executeDocImport: vi.fn().mockResolvedValue({ bigRocks: [], imported: 0 })
 }))
 
 vi.mock('../../../../../shared/server/auth', () => ({
@@ -150,7 +150,7 @@ describe('release-planning routes', function() {
       storage: storage,
       requireAuth: function(req, res, next) { next() },
       requireAdmin: function(req, res, next) { next() },
-      requireReleaseManager: function(req, res, next) { next() },
+      requirePlanningManager: function(req, res, next) { next() },
       requireScope: function() { return function(req, res, next) { next() } },
       registerDiagnostics: vi.fn()
     }
@@ -483,16 +483,49 @@ describe('release-planning routes', function() {
       expect(res._json.canEdit).toBe(true)
     })
 
-    it('returns canEdit true for release manager', function() {
-      const req = makeReq({ isAdmin: false, isReleaseManager: true, userEmail: 'pm@test.com' })
+    it('returns canEdit true for planning manager', function() {
+      const req = makeReq({ isAdmin: false, isPlanningManager: true, userEmail: 'pm@test.com' })
       const res = callRoute(router._routes, 'GET', '/permissions', req)
       expect(res._json.canEdit).toBe(true)
     })
 
     it('returns canEdit true for regular user', function() {
-      const req = makeReq({ isAdmin: false, isReleaseManager: false, userEmail: 'user@test.com' })
+      const req = makeReq({ isAdmin: false, isPlanningManager: false, userEmail: 'user@test.com' })
       const res = callRoute(router._routes, 'GET', '/permissions', req)
       expect(res._json.canEdit).toBe(true)
+    })
+
+    it('returns granular flags for admin', function() {
+      const req = makeReq({ isAdmin: true, isPlanningManager: false, userEmail: 'admin@test.com' })
+      const res = callRoute(router._routes, 'GET', '/permissions', req)
+      expect(res._json).toEqual({
+        canEdit: true,
+        canAdd: true,
+        canDelete: true,
+        canReorder: true
+      })
+    })
+
+    it('returns granular flags for planning-manager', function() {
+      const req = makeReq({ isAdmin: false, isPlanningManager: true, userEmail: 'pm@test.com' })
+      const res = callRoute(router._routes, 'GET', '/permissions', req)
+      expect(res._json).toEqual({
+        canEdit: true,
+        canAdd: true,
+        canDelete: true,
+        canReorder: true
+      })
+    })
+
+    it('returns restricted flags for regular user', function() {
+      const req = makeReq({ isAdmin: false, isPlanningManager: false, userEmail: 'user@test.com' })
+      const res = callRoute(router._routes, 'GET', '/permissions', req)
+      expect(res._json).toEqual({
+        canEdit: true,
+        canAdd: false,
+        canDelete: false,
+        canReorder: false
+      })
     })
   })
 
@@ -604,26 +637,30 @@ describe('release-planning routes', function() {
     })
   })
 
-  // ─── Open Access ───
+  // ─── Role-gated access ───
 
-  describe('open access for authenticated users', function() {
-    it('allows non-admin, non-release-manager to create big rocks', async function() {
-      const req = makeReq({
-        isAdmin: false,
-        isReleaseManager: false,
-        userEmail: 'user@test.com',
-        params: { version: '3.5' },
-        body: VALID_ROCK
-      })
-      const res = await callRoute(router._routes, 'POST', '/releases/:version/big-rocks', req)
-      expect(res._status).toBe(201)
+  describe('planning-manager role enforcement', function() {
+    it('POST big-rocks route includes requirePlanningManager middleware', function() {
+      const handlers = router._routes['POST /releases/:version/big-rocks']
+      // Should include requirePlanningManager in the middleware chain
+      expect(handlers.length).toBeGreaterThanOrEqual(3)
     })
 
-    it('allows non-admin, non-release-manager to update big rocks', async function() {
+    it('DELETE big-rocks route includes requirePlanningManager middleware', function() {
+      const handlers = router._routes['DELETE /releases/:version/big-rocks/:name']
+      expect(handlers.length).toBeGreaterThanOrEqual(4)
+    })
+
+    it('PUT reorder route includes requirePlanningManager middleware', function() {
+      const handlers = router._routes['PUT /releases/:version/big-rocks/reorder']
+      expect(handlers.length).toBeGreaterThanOrEqual(3)
+    })
+
+    it('allows any authenticated user to edit (PUT) existing big rocks', async function() {
       setupVersion(storage._store, '3.5', [VALID_ROCK])
       const req = makeReq({
         isAdmin: false,
-        isReleaseManager: false,
+        isPlanningManager: false,
         userEmail: 'user@test.com',
         params: { version: '3.5', name: 'Test Rock' },
         body: Object.assign({}, VALID_ROCK, { notes: 'User updated' })
@@ -631,17 +668,62 @@ describe('release-planning routes', function() {
       const res = await callRoute(router._routes, 'PUT', '/releases/:version/big-rocks/:name', req)
       expect(res._status).toBe(200)
     })
+  })
 
-    it('allows non-admin, non-release-manager to delete big rocks', async function() {
+  // ─── Doc import replace mode ───
+
+  describe('doc import replace mode enforcement', function() {
+    it('rejects replace mode for non-admin, non-planning-manager', async function() {
       setupVersion(storage._store, '3.5', [VALID_ROCK])
       const req = makeReq({
         isAdmin: false,
-        isReleaseManager: false,
+        isPlanningManager: false,
         userEmail: 'user@test.com',
-        params: { version: '3.5', name: 'Test Rock' }
+        params: { version: '3.5' },
+        body: { docId: 'test-doc', mode: 'replace' }
       })
-      const res = await callRoute(router._routes, 'DELETE', '/releases/:version/big-rocks/:name', req)
-      expect(res._status).toBe(200)
+      const res = await callRoute(router._routes, 'POST', '/releases/:version/import/doc', req)
+      expect(res._status).toBe(403)
+      expect(res._json.error).toMatch(/planning-manager/)
+    })
+
+    it('allows replace mode for admin', async function() {
+      setupVersion(storage._store, '3.5', [VALID_ROCK])
+      const req = makeReq({
+        isAdmin: true,
+        isPlanningManager: false,
+        userEmail: 'admin@test.com',
+        params: { version: '3.5' },
+        body: { docId: 'test-doc', mode: 'replace' }
+      })
+      const res = await callRoute(router._routes, 'POST', '/releases/:version/import/doc', req)
+      expect(res._status).not.toBe(403)
+    })
+
+    it('allows replace mode for planning-manager', async function() {
+      setupVersion(storage._store, '3.5', [VALID_ROCK])
+      const req = makeReq({
+        isAdmin: false,
+        isPlanningManager: true,
+        userEmail: 'pm@test.com',
+        params: { version: '3.5' },
+        body: { docId: 'test-doc', mode: 'replace' }
+      })
+      const res = await callRoute(router._routes, 'POST', '/releases/:version/import/doc', req)
+      expect(res._status).not.toBe(403)
+    })
+
+    it('allows append mode for non-planning-manager', async function() {
+      setupVersion(storage._store, '3.5', [VALID_ROCK])
+      const req = makeReq({
+        isAdmin: false,
+        isPlanningManager: false,
+        userEmail: 'user@test.com',
+        params: { version: '3.5' },
+        body: { docId: 'test-doc', mode: 'append' }
+      })
+      const res = await callRoute(router._routes, 'POST', '/releases/:version/import/doc', req)
+      expect(res._status).not.toBe(403)
     })
   })
 

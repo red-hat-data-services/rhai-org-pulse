@@ -97,9 +97,9 @@ describe('buildModuleContext', () => {
   it('delegates registerRole to role registry with module slug', () => {
     const roleRegistry = { register: vi.fn() }
     const ctx = buildModuleContext(makeCoreServices({ roleRegistry }), 'releases')
-    ctx.registerRole('release-manager', { label: 'Release Manager', description: 'Manages releases' })
-    expect(roleRegistry.register).toHaveBeenCalledWith('release-manager', {
-      label: 'Release Manager',
+    ctx.registerRole('planning-manager', { label: 'Planning Manager', description: 'Manages releases' })
+    expect(roleRegistry.register).toHaveBeenCalledWith('planning-manager', {
+      label: 'Planning Manager',
       description: 'Manages releases',
       module: 'releases'
     })

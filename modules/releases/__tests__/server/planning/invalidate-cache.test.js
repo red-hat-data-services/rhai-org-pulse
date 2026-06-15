@@ -128,7 +128,7 @@ describe('invalidateCache behavior', function() {
       storage: storage,
       requireAuth: function(req, res, next) { next() },
       requireAdmin: function(req, res, next) { next() },
-      requireReleaseManager: function(req, res, next) { next() },
+      requirePlanningManager: function(req, res, next) { next() },
       requireScope: function() { return function(req, res, next) { next() } },
       registerDiagnostics: vi.fn()
     }
@@ -270,7 +270,7 @@ describe('invalidateCache behavior', function() {
       storage: spyStorage,
       requireAuth: function(req, res, next) { next() },
       requireAdmin: function(req, res, next) { next() },
-      requireReleaseManager: function(req, res, next) { next() },
+      requirePlanningManager: function(req, res, next) { next() },
       requireScope: function() { return function(req, res, next) { next() } },
       registerDiagnostics: vi.fn()
     })

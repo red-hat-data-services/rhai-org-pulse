@@ -65,7 +65,7 @@ const refreshState = {
  * @openapi
  * /api/modules/releases/hygiene/refresh:
  *   post:
- *     summary: Trigger hygiene data refresh from Jira (release-manager only)
+ *     summary: Trigger hygiene data refresh from Jira (planning-manager only)
  *     tags: [Releases - Hygiene]
  *     parameters:
  *       - in: query
@@ -97,13 +97,13 @@ const refreshState = {
  * @openapi
  * /api/modules/releases/hygiene/config:
  *   get:
- *     summary: Get hygiene rule configuration (release-manager only)
+ *     summary: Get hygiene rule configuration (planning-manager only)
  *     tags: [Releases - Hygiene]
  *     responses:
  *       200:
  *         description: Hygiene config with rule definitions
  *   post:
- *     summary: Save hygiene rule configuration (release-manager only)
+ *     summary: Save hygiene rule configuration (planning-manager only)
  *     tags: [Releases - Hygiene]
  *     responses:
  *       200:
@@ -122,7 +122,7 @@ const refreshState = {
  */
 
 module.exports = function registerHygieneRoutes(router, context) {
-  const { storage, requireAuth, requireReleaseManager, requireScope, registerDiagnostics } = context;
+  const { storage, requireAuth, requirePlanningManager, requireScope, registerDiagnostics } = context;
 
   function storageKey(version) {
     return DATA_PREFIX + '/features-' + version + '.json';
@@ -331,7 +331,7 @@ module.exports = function registerHygieneRoutes(router, context) {
   });
 
   // POST /refresh — trigger Jira data refresh (fire-and-forget)
-  router.post('/refresh', requireReleaseManager, requireScope('releases:write'), function(req, res) {
+  router.post('/refresh', requirePlanningManager, requireScope('releases:write'), function(req, res) {
     var version = req.query.version;
     if (!version) {
       return res.status(400).json({ error: 'version query parameter is required' });
@@ -455,13 +455,13 @@ module.exports = function registerHygieneRoutes(router, context) {
    * @openapi
    * /api/modules/releases/hygiene/refresh-all:
    *   post:
-   *     summary: Refresh hygiene data for all active release versions (release-manager only)
+   *     summary: Refresh hygiene data for all active release versions (planning-manager only)
    *     tags: [Releases - Hygiene]
    *     responses:
    *       200:
    *         description: Refresh started, already running, or no versions
    */
-  router.post('/refresh-all', requireReleaseManager, requireScope('releases:write'), function(req, res) {
+  router.post('/refresh-all', requirePlanningManager, requireScope('releases:write'), function(req, res) {
     if (refreshState.running || (context.isRefreshRunning && context.isRefreshRunning())) {
       return res.json({ status: 'already_running' });
     }
@@ -502,7 +502,7 @@ module.exports = function registerHygieneRoutes(router, context) {
   });
 
   // GET /config — hygiene rule configuration with rule definitions
-  router.get('/config', requireReleaseManager, requireScope('releases:read'), function(req, res) {
+  router.get('/config', requirePlanningManager, requireScope('releases:read'), function(req, res) {
     var config = loadConfig(storage);
 
     var ruleDefinitions = [];
@@ -527,7 +527,7 @@ module.exports = function registerHygieneRoutes(router, context) {
   });
 
   // POST /config — save hygiene rule configuration
-  router.post('/config', requireReleaseManager, requireScope('releases:write'), function(req, res) {
+  router.post('/config', requirePlanningManager, requireScope('releases:write'), function(req, res) {
     try {
       saveConfig(storage, req.body);
 

@@ -302,7 +302,7 @@ async function runRegistrySync(storage, options) {
  * Register release registry routes on the provided router.
  */
 function registerRegistryRoutes(router, context) {
-  const { storage, requireAuth, requireReleaseManager, requireScope } = context;
+  const { storage, requireAuth, requirePlanningManager, requireScope } = context;
   const { readFromStorage, writeToStorage } = storage;
 
   /**
@@ -341,7 +341,7 @@ function registerRegistryRoutes(router, context) {
    *       200:
    *         description: Registry config
    */
-  router.get('/registry/config', requireReleaseManager, requireScope('releases:read'), function(req, res) {
+  router.get('/registry/config', requirePlanningManager, requireScope('releases:read'), function(req, res) {
     var config = loadRegistryConfig(storage);
     res.json(config);
   });
@@ -369,7 +369,7 @@ function registerRegistryRoutes(router, context) {
    *       400:
    *         description: Validation error
    */
-  router.post('/registry/config', requireReleaseManager, requireScope('releases:write'), function(req, res) {
+  router.post('/registry/config', requirePlanningManager, requireScope('releases:write'), function(req, res) {
     try {
       saveRegistryConfig(storage, req.body);
       res.json({ status: 'saved' });
@@ -442,7 +442,7 @@ function registerRegistryRoutes(router, context) {
    *       400:
    *         description: Validation error or duplicate ID
    */
-  router.post('/registry', requireReleaseManager, requireScope('releases:write'), function(req, res) {
+  router.post('/registry', requirePlanningManager, requireScope('releases:write'), function(req, res) {
     const error = validateRelease(req.body);
     if (error) {
       return res.status(400).json({ error });
@@ -496,7 +496,7 @@ function registerRegistryRoutes(router, context) {
    *       404:
    *         description: Release not found
    */
-  router.put('/registry/:id', requireReleaseManager, requireScope('releases:write'), function(req, res) {
+  router.put('/registry/:id', requirePlanningManager, requireScope('releases:write'), function(req, res) {
     const registry = readRegistry(readFromStorage);
     const idx = registry.releases.findIndex(r => r.id === req.params.id);
     if (idx === -1) {
@@ -563,7 +563,7 @@ function registerRegistryRoutes(router, context) {
    *       404:
    *         description: Release not found
    */
-  router.delete('/registry/:id', requireReleaseManager, requireScope('releases:write'), function(req, res) {
+  router.delete('/registry/:id', requirePlanningManager, requireScope('releases:write'), function(req, res) {
     const registry = readRegistry(readFromStorage);
     const idx = registry.releases.findIndex(r => r.id === req.params.id);
     if (idx === -1) {
@@ -597,7 +597,7 @@ function registerRegistryRoutes(router, context) {
    *       200:
    *         description: Discovery results
    */
-  router.post('/registry/discover', requireReleaseManager, requireScope('releases:write'), async function(req, res) {
+  router.post('/registry/discover', requirePlanningManager, requireScope('releases:write'), async function(req, res) {
     try {
       const result = await runRegistrySync(storage, { user: req.userEmail || 'unknown' });
 
@@ -630,7 +630,7 @@ function registerRegistryRoutes(router, context) {
    *       500:
    *         description: Jira API error
    */
-  router.post('/registry/resolve-jira-versions', requireReleaseManager, requireScope('releases:write'), async function(req, res) {
+  router.post('/registry/resolve-jira-versions', requirePlanningManager, requireScope('releases:write'), async function(req, res) {
     try {
       var config = loadRegistryConfig(storage);
       var projects = config.jiraProjects || [];
@@ -695,7 +695,7 @@ function registerRegistryRoutes(router, context) {
    *       400:
    *         description: Invalid request
    */
-  router.post('/registry/resolve-jira-versions/apply', requireReleaseManager, requireScope('releases:write'), function(req, res) {
+  router.post('/registry/resolve-jira-versions/apply', requirePlanningManager, requireScope('releases:write'), function(req, res) {
     var mappings = req.body && req.body.mappings;
     if (!Array.isArray(mappings) || mappings.length === 0) {
       return res.status(400).json({ error: 'mappings array is required and must not be empty' });

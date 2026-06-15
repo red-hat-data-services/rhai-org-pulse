@@ -909,7 +909,7 @@ describe('health routes', function() {
   // ─── Open Access ───
 
   describe('open access for authenticated users', function() {
-    it('allows non-admin, non-release-manager to set risk override', function() {
+    it('allows non-admin, non-planning-manager to set risk override', function() {
       var res = callRoute(router._routes, 'PUT', '/releases/:version/health/override/:featureKey',
         makeReq({
           isAdmin: false,
@@ -922,7 +922,7 @@ describe('health routes', function() {
       expect(res._json.featureKey).toBe('T-1')
     })
 
-    it('allows non-admin, non-release-manager to create snapshot', function() {
+    it('allows non-admin, non-planning-manager to create snapshot', function() {
       storage._store['releases/planning/health-cache-3.5-all.json'] = freshCache('3.5', {
         features: [
           { key: 'T-1', summary: 'F1', fixVersions: 'rhoai-3.5.EA1', status: 'In Progress', components: 'Comp1', deliveryOwner: 'owner1' }

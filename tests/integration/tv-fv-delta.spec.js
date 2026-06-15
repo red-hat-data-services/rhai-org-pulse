@@ -120,12 +120,12 @@ const RELEASES_MANIFEST = {
   client: {
     entry: './client/index.js',
     navItems: [
-      { id: 'registry', label: 'Manage', icon: 'Database', requireRole: 'release-manager' },
+      { id: 'registry', label: 'Manage', icon: 'Database', requireRole: 'planning-manager' },
       { id: 'plan', label: 'Plan', icon: 'ClipboardList', default: true },
       { id: 'execute', label: 'Execute', icon: 'GitBranch' },
       { id: 'deliver', label: 'Deliver', icon: 'Rocket' },
       { id: 'reports', label: 'Reports', icon: 'BarChart3' },
-      { id: 'audit', label: 'Audit', icon: 'History', requireRole: 'release-manager' }
+      { id: 'audit', label: 'Audit', icon: 'History' }
     ]
   },
   server: { entry: './server/index.js' }

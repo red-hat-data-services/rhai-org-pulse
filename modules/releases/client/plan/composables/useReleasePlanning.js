@@ -89,7 +89,7 @@ export function useReleasePlanning() {
       const data = await apiRequest(`${API_BASE}/permissions`)
       permissions.value = data
     } catch {
-      permissions.value = { canEdit: false }
+      permissions.value = { canEdit: false, canAdd: false, canDelete: false, canReorder: false }
     }
   }
 

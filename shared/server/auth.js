@@ -106,7 +106,7 @@ function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
     }
     req.userRoles = roleStore ? roleStore.getRoles(req.userEmail) : [];
     req.isTeamAdmin = req.userRoles.includes('team-admin');
-    req.isReleaseManager = req.userRoles.includes('release-manager');
+    req.isPlanningManager = req.userRoles.includes('planning-manager');
     req.isManager = isManager(req.userUid, registry);
   }
 
@@ -140,7 +140,7 @@ function createAuthMiddleware(readFromStorage, writeToStorage, options = {}) {
     req.isAdmin = isAdmin(req.userEmail);
     req.userRoles = roleStore ? roleStore.getRoles(req.userEmail) : [];
     req.isTeamAdmin = req.userRoles.includes('team-admin');
-    req.isReleaseManager = req.userRoles.includes('release-manager');
+    req.isPlanningManager = req.userRoles.includes('planning-manager');
     req.isManager = isManager(req.userUid, registry);
     req.isImpersonating = true;
     req.impersonatedDisplayName = target.name || null;

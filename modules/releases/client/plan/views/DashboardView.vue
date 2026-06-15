@@ -79,6 +79,9 @@ const healthMilestones = computed(() => healthData.value ? healthData.value.mile
 const warning = computed(() => candidates.value ? candidates.value.warning : null)
 const pipelineWarnings = computed(() => candidates.value ? candidates.value.pipelineWarnings || [] : [])
 const canEdit = computed(() => !demoMode.value && permissions.value && permissions.value.canEdit)
+const canAdd = computed(() => !demoMode.value && permissions.value && permissions.value.canAdd)
+const canDelete = computed(() => !demoMode.value && permissions.value && permissions.value.canDelete)
+const canReorder = computed(() => !demoMode.value && permissions.value && permissions.value.canReorder)
 
 const {
   selectedPillar,
@@ -418,6 +421,9 @@ onMounted(async function() {
           :bigRocks="filteredBigRocks"
           :jiraBaseUrl="jiraBaseUrl"
           :canEdit="canEdit"
+          :canAdd="canAdd"
+          :canDelete="canDelete"
+          :canReorder="canReorder"
           :rockHealth="rockHealth"
           :rockFeatures="rockFeatures"
           :loading="loading"

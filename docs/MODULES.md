@@ -80,7 +80,7 @@ modules/your-module/
 | `icon` | string | Yes | Lucide icon name |
 | `default` | boolean | No | If `true`, this is the module's landing view |
 | `disabled` | boolean | No | If `true`, item is visible but non-clickable (greyed out) |
-| `requireRole` | string | No | Only show item to users with this role (e.g., `"manager"`, `"team-admin"`, `"release-manager"`) |
+| `requireRole` | string | No | Only show item to users with this role (e.g., `"manager"`, `"team-admin"`, `"planning-manager"`) |
 | `requireCondition` | string | No | Only show when condition is met (e.g., `"in-app-mode"` — hides when roster is sheet-based) |
 | `separatorBefore` | boolean | No | Render a visual separator line above this item |
 
@@ -213,7 +213,7 @@ The authoritative typedef for the context object is in `shared/server/module-con
 | `requireRole(role)` | function | Returns middleware requiring a specific role (admins always pass) |
 | `requireScope(name)` | function | Returns middleware for API token scope check |
 | `roleStore` | object | Role store instance |
-| `registerRole(id, config)` | function | Register a module-specific role (e.g., `release-manager`) |
+| `registerRole(id, config)` | function | Register a module-specific role (e.g., `planning-manager`) |
 | `registerScopes(configs)` | function | Register module-specific API token scopes |
 | `registerDiagnostics(fn)` | function | Register diagnostics hook (see below) |
 | `registerMessageProvider(id, fn)` | function | Register message provider (see below) |

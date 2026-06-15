@@ -113,7 +113,7 @@ function migrateStoragePaths(storage) {
 
 module.exports = function registerRoutes(router, context) {
   const { storage, requireAuth, requireAdmin, requireRole, requireScope, roleStore, secrets } = context;
-  const requireReleaseManager = requireRole('release-manager');
+  const requirePlanningManager = requireRole('planning-manager');
 
   // Create shared clients from context.secrets
   const { createJiraClient } = require('../../../shared/server/jira');
@@ -128,10 +128,10 @@ module.exports = function registerRoutes(router, context) {
     sheetId: process.env.SMARTSHEET_SHEET_ID
   });
 
-  // Register release-manager role
-  context.registerRole('release-manager', {
-    label: 'Release Manager',
-    description: 'Manage release planning, execution, and delivery'
+  // Register planning-manager role
+  context.registerRole('planning-manager', {
+    label: 'Planning Manager',
+    description: 'Manage release planning, registry, and delivery configuration'
   });
 
   // Register module scopes
@@ -139,6 +139,41 @@ module.exports = function registerRoutes(router, context) {
     { key: 'releases:read', label: 'Releases (Read)', description: 'Read release planning, execution, and delivery data', category: 'Releases' },
     { key: 'releases:write', label: 'Releases (Write)', description: 'Mutate release planning, execution, and delivery data', category: 'Releases' }
   ]);
+
+  // ─── Role Migration: release-manager → planning-manager ───
+  // Migrate existing role assignments from the old name to the new name.
+  // Uses raw storage manipulation (not roleStore API) because the old role
+  // is no longer registered and roleStore.revokeRole() would reject it.
+  try {
+    const rolesData = storage.readFromStorage('roles.json');
+    if (rolesData && rolesData.assignments) {
+      let migrated = 0;
+      for (const [, entry] of Object.entries(rolesData.assignments)) {
+        if (entry.roles && entry.roles.includes('release-manager')) {
+          migrated++;
+        }
+      }
+      if (migrated > 0) {
+        // Backup before overwriting, following migrateEmailDomains() pattern
+        const backupKey = 'roles-backup-premigration.json';
+        storage.writeToStorage(backupKey, JSON.parse(JSON.stringify(rolesData)));
+        console.log(`[releases] Backup saved to ${backupKey}`);
+
+        for (const [, entry] of Object.entries(rolesData.assignments)) {
+          if (entry.roles && entry.roles.includes('release-manager')) {
+            entry.roles = entry.roles.filter(r => r !== 'release-manager');
+            if (!entry.roles.includes('planning-manager')) {
+              entry.roles.push('planning-manager');
+            }
+          }
+        }
+        storage.writeToStorage('roles.json', rolesData);
+        console.log(`[releases] Migrated ${migrated} user(s) from release-manager to planning-manager`);
+      }
+    }
+  } catch (err) {
+    console.error('[releases] Role migration failed:', err.message);
+  }
 
   // Run storage path migration on module startup (skip if already done)
   const migrationMarker = storage.readFromStorage('releases/.migration-complete');
@@ -152,7 +187,7 @@ module.exports = function registerRoutes(router, context) {
   }
 
   // Registry routes (top-level under /api/modules/releases/)
-  registerRegistryRoutes(router, { storage, requireAuth, requireReleaseManager, requireScope, registerRefresh: context.registerRefresh || null, isRefreshRunning: context.isRefreshRunning || null });
+  registerRegistryRoutes(router, { storage, requireAuth, requirePlanningManager, requireScope, registerRefresh: context.registerRefresh || null, isRefreshRunning: context.isRefreshRunning || null });
 
   // Planning sub-router (mounted at /api/modules/releases/planning/)
   var planningRouter = express.Router();
@@ -160,7 +195,7 @@ module.exports = function registerRoutes(router, context) {
     storage,
     requireAuth,
     requireAdmin,
-    requireReleaseManager,
+    requirePlanningManager,
     requireScope,
     roleStore,
     secrets,
@@ -186,7 +221,6 @@ module.exports = function registerRoutes(router, context) {
   registerFeatureTrackingRoutes(executionRouter, {
     storage,
     requireAuth,
-    requireReleaseManager,
     requireScope
   });
   router.use('/execution', executionRouter);
@@ -212,7 +246,7 @@ module.exports = function registerRoutes(router, context) {
     storage,
     requireAuth,
     requireAdmin,
-    requireReleaseManager,
+    requirePlanningManager,
     requireScope,
     registerDiagnostics: context.registerDiagnostics || null,
     registerRefresh: context.registerRefresh || null,
