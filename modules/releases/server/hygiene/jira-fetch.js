@@ -260,6 +260,9 @@ function transformIssue(rawIssue, rfeMap) {
     }
   }
 
+  // Priority
+  const priority = fields.priority ? fields.priority.name : null
+
   // PM Owner from Product Manager custom field
   const pmOwnerField = fields[CUSTOM_FIELDS.productManager]
   const pmOwner = pmOwnerField ? (pmOwnerField.displayName || null) : null
@@ -286,6 +289,7 @@ function transformIssue(rawIssue, rfeMap) {
     targetEnd: fields[CUSTOM_FIELDS.targetEnd] || null,
     riceStatus: computeRiceStatus(fields),
     riceScore: fields[CUSTOM_FIELDS.riceScore] || null,
+    priority,
     isBlocked,
     pmOwner,
     linkedRfeKey,

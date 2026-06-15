@@ -368,7 +368,7 @@ function formatAvg(value) {
 
 const DEFAULT_ISSUE_TYPES = ['Feature', 'Initiative']
 const FIELDS_TO_FETCH = [
-  'summary', 'status', 'issuetype', 'assignee', 'fixVersions', 'versions',
+  'summary', 'status', 'issuetype', 'assignee', 'priority', 'fixVersions', 'versions',
   'components', 'labels', 'issuelinks',
   CUSTOM_FIELDS.team,
   CUSTOM_FIELDS.releaseType,
@@ -386,6 +386,7 @@ function buildFeatureObj(f, targetVersions) {
     colorStatus: f.colorStatus || null,
     statusSummary: f.statusSummary || null,
     releaseType: f.releaseType || null,
+    priority: f.priority || null,
     isBlocked: f.isBlocked || false,
     components: f.components || [],
     fixVersions: f.fixVersions || [],

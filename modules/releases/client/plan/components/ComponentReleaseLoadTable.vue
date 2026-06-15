@@ -125,6 +125,7 @@ var componentGroups = computed(function() {
             colorStatus: feat.colorStatus,
             statusSummary: feat.statusSummary,
             releaseType: feat.releaseType,
+            priority: feat.priority,
             isBlocked: feat.isBlocked,
             components: feat.components,
             fixVersions: feat.fixVersions || [],
@@ -211,7 +212,7 @@ defineExpose({ expandAll, collapseAll })
             :class="COMP_STYLE.border"
             @click="toggleComponent(comp.component)"
           >
-            <td colspan="11" class="px-4 py-3">
+            <td colspan="12" class="px-4 py-3">
               <div class="flex items-center gap-3">
                 <svg
                   class="w-4 h-4 text-gray-400 dark:text-gray-500 transition-transform duration-200 flex-shrink-0"
@@ -270,6 +271,7 @@ defineExpose({ expandAll, collapseAll })
           >
             <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-36">Feature</th>
             <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Title</th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24">Priority</th>
             <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24">Type</th>
             <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-28">Release Type</th>
             <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24">Status</th>
@@ -298,6 +300,19 @@ defineExpose({ expandAll, collapseAll })
               </td>
               <td class="px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100">
                 {{ feature.summary }}
+              </td>
+              <td class="px-3 py-2.5 text-center">
+                <span
+                  v-if="feature.priority"
+                  class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold"
+                  :class="{
+                    'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300': feature.priority === 'Blocker' || feature.priority === 'Critical',
+                    'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300': feature.priority === 'Major',
+                    'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300': feature.priority === 'Normal',
+                    'bg-gray-100 dark:bg-gray-700/60 text-gray-600 dark:text-gray-400': feature.priority === 'Minor' || feature.priority === 'Trivial'
+                  }"
+                >{{ feature.priority }}</span>
+                <span v-else class="text-gray-300 dark:text-gray-600 text-xs">--</span>
               </td>
               <td class="px-3 py-2.5 text-center">
                 <div class="flex items-center justify-center gap-1">
@@ -379,7 +394,7 @@ defineExpose({ expandAll, collapseAll })
 
           <!-- Empty state -->
           <tr v-if="isComponentExpanded(comp.component) && comp.features.length === 0">
-            <td colspan="11" class="px-8 py-6 text-sm text-gray-400 dark:text-gray-500 italic text-center">
+            <td colspan="12" class="px-8 py-6 text-sm text-gray-400 dark:text-gray-500 italic text-center">
               No features found for {{ comp.component }}
             </td>
           </tr>
@@ -387,7 +402,7 @@ defineExpose({ expandAll, collapseAll })
 
         <!-- No results -->
         <tr v-if="componentGroups.length === 0">
-          <td colspan="11" class="px-8 py-10 text-sm text-gray-400 dark:text-gray-500 italic text-center">
+          <td colspan="12" class="px-8 py-10 text-sm text-gray-400 dark:text-gray-500 italic text-center">
             No features match the current filters.
           </td>
         </tr>
