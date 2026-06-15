@@ -89,6 +89,34 @@ describe('GapAnalysisText', () => {
     expect(strongTags[1].text()).toBe('none specified')
   })
 
+  it('joins multi-line bullet items before parsing', async () => {
+    const gapText = `## Environment & Infrastructure
+
+- **Node resource requirements (CPU, memory, GPU) for OGX
+  distribution pods not specified** — would be resolved by: ADR or
+  design doc with resource limit/request specifications
+- **Single line item** — stays the same`
+
+    const wrapper = mount(GapAnalysisText, {
+      props: { text: gapText }
+    })
+
+    // Count badge should show 2 items
+    const badge = wrapper.find('span.px-1\\.5')
+    expect(badge.text()).toBe('2')
+
+    // Expand section
+    await wrapper.find('button').trigger('click')
+
+    const strongTags = wrapper.findAll('strong')
+    expect(strongTags[0].text()).toBe('Node resource requirements (CPU, memory, GPU) for OGX distribution pods not specified')
+    expect(strongTags[1].text()).toBe('Single line item')
+
+    // Resolution text should be present (not truncated)
+    const text = wrapper.text()
+    expect(text).toContain('would be resolved by: ADR or design doc with resource limit/request specifications')
+  })
+
   it('toggles chevron rotation on expand/collapse', async () => {
     const gapText = `## Scope & Endpoints
 

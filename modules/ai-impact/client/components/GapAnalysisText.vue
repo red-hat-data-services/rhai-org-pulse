@@ -37,12 +37,24 @@ const sections = computed(() => {
   const lines = props.text.split('\n')
   const result = []
   let currentSection = null
+  let currentBullet = null
 
   for (const line of lines) {
     const trimmed = line.trim()
 
-    // Section header (## Title)
-    if (trimmed.startsWith('## ')) {
+    const isHeader = trimmed.startsWith('## ')
+    const isBullet = (trimmed.startsWith('- ') || trimmed.startsWith('* '))
+    const isEmpty = trimmed === ''
+
+    // Flush previous bullet when a new structural element starts
+    if ((isHeader || isBullet || isEmpty) && currentBullet !== null) {
+      currentSection.items.push({
+        segments: parseInlineBold(currentBullet)
+      })
+      currentBullet = null
+    }
+
+    if (isHeader) {
       if (currentSection) result.push(currentSection)
       const title = trimmed.slice(3)
       currentSection = {
@@ -53,17 +65,23 @@ const sections = computed(() => {
       continue
     }
 
-    // Bullet point
-    if ((trimmed.startsWith('- ') || trimmed.startsWith('* ')) && currentSection) {
-      const text = trimmed.slice(2)
-      currentSection.items.push({
-        segments: parseInlineBold(text)
-      })
+    if (isBullet && currentSection) {
+      currentBullet = trimmed.slice(2)
       continue
     }
 
-    // Empty line - skip
-    if (trimmed === '') continue
+    // Continuation line — append to current bullet
+    if (trimmed && currentBullet !== null) {
+      currentBullet += ' ' + trimmed
+      continue
+    }
+  }
+
+  // Flush final bullet
+  if (currentBullet !== null && currentSection) {
+    currentSection.items.push({
+      segments: parseInlineBold(currentBullet)
+    })
   }
 
   if (currentSection) result.push(currentSection)
