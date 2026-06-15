@@ -309,7 +309,7 @@ defineExpose({ expandAll, collapseAll })
                     'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300': feature.priority === 'Blocker' || feature.priority === 'Critical',
                     'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300': feature.priority === 'Major',
                     'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300': feature.priority === 'Normal',
-                    'bg-gray-100 dark:bg-gray-700/60 text-gray-600 dark:text-gray-400': feature.priority === 'Minor' || feature.priority === 'Trivial'
+                    'bg-gray-100 dark:bg-gray-700/60 text-gray-600 dark:text-gray-400': feature.priority !== 'Blocker' && feature.priority !== 'Critical' && feature.priority !== 'Major' && feature.priority !== 'Normal'
                   }"
                 >{{ feature.priority }}</span>
                 <span v-else class="text-gray-300 dark:text-gray-600 text-xs">--</span>
