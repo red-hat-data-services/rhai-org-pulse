@@ -20,6 +20,9 @@ function extractLabelDate(changelog, targetLabel) {
   return latestDate;
 }
 
+const NEEDS_ATTENTION_LABEL = 'rfe-creator-needs-attention';
+const RUBRIC_PASS_LABEL = 'rfe-creator-autofix-rubric-pass';
+
 function processIssue(issue, config) {
   const {
     createdLabel,
@@ -45,6 +48,15 @@ function processIssue(issue, config) {
       || issue.fields.created;
   }
 
+  // Record when state-signaling labels were first applied so the frontend can
+  // show true "stuck since" ages rather than the pipeline's last-run timestamp.
+  const needsAttentionSince = labels.includes(NEEDS_ATTENTION_LABEL)
+    ? (extractLabelDate(issue.changelog, NEEDS_ATTENTION_LABEL) || issue.fields.created)
+    : null;
+  const rubricPassSince = labels.includes(RUBRIC_PASS_LABEL)
+    ? (extractLabelDate(issue.changelog, RUBRIC_PASS_LABEL) || issue.fields.created)
+    : null;
+
   return {
     key: issue.key,
     summary: issue.fields.summary,
@@ -58,6 +70,8 @@ function processIssue(issue, config) {
     aiInvolvement,
     createdLabelDate,
     revisedLabelDate,
+    needsAttentionSince,
+    rubricPassSince,
     linkedFeature: null,
     _rawIssueLinks: issue.fields.issuelinks || []
   };

@@ -57,8 +57,10 @@ function classifyFeature(feature) {
 function computeWaitDays(item, state, type) {
   let dateStr
   if (type === 'rfe') {
-    if (['needs-revision', 'passed-with-caveats', 'ready-to-advance'].includes(state.id)) {
-      dateStr = item.assessedAt || item.created
+    if (state.id === 'needs-revision' || state.id === 'passed-with-caveats') {
+      dateStr = item.needsAttentionSince || item.created
+    } else if (state.id === 'ready-to-advance' || state.id === 'queued-for-pipeline') {
+      dateStr = item.rubricPassSince || item.created
     } else {
       dateStr = item.created
     }
@@ -180,11 +182,7 @@ export function useForYou(rosterDataArg, userArg, rfeDataArg, featuresArg, asses
       const state = classifyRfe(rfe)
       if (!state) continue
       const assessment = assessments.value?.[rfe.key]
-      const waitDays = computeWaitDays(
-        { ...rfe, assessedAt: assessment?.assessedAt },
-        state,
-        'rfe'
-      )
+      const waitDays = computeWaitDays(rfe, state, 'rfe')
       items.push({
         type: 'rfe',
         key: rfe.key,

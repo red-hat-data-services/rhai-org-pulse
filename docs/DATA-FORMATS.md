@@ -609,6 +609,8 @@ Cached RFE issues fetched from Jira. The module's primary data file.
 - `aiInvolvement` is one of: `"both"`, `"created"`, `"revised"`, `"none"` — derived from exact label matching at fetch time
 - `createdLabelDate`: ISO timestamp of the most recent changelog addition of the created label. Set only when `aiInvolvement` is `"created"` or `"both"`. Falls back to `created` if the label was present since issue creation (no changelog entry). `null` when the created label is not present.
 - `revisedLabelDate`: ISO timestamp of the most recent changelog addition of the revised label. Same logic as `createdLabelDate`. `null` when the revised label is not present.
+- `needsAttentionSince`: ISO timestamp of the most recent changelog addition of `rfe-creator-needs-attention`. Falls back to `created` when the label is present but has no changelog entry. `null` when the label is not currently on the issue. Used by the frontend to calculate how long an item has been in a needs-revision or passed-with-caveats state, independent of pipeline run frequency.
+- `rubricPassSince`: ISO timestamp of the most recent changelog addition of `rfe-creator-autofix-rubric-pass`. Falls back to `created` when the label is present but has no changelog entry. `null` when the label is not currently on the issue. Used by the frontend to calculate how long an item has been in a ready-to-advance or queued-for-pipeline state.
 - `components` is an array of Jira component names (strings). Empty array if the issue has no components.
 - `linkedFeature` is resolved from Jira issue links (type = "Cloners", outward to RHAISTRAT project). Can be `null` if no link exists.
 - `labels` is the raw Jira label array, preserved for reference

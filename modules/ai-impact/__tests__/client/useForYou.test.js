@@ -1,5 +1,33 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { ref } from 'vue'
+
+vi.mock('@shared/client/composables/useAuth.js', () => ({
+  useAuth: () => ({ user: ref({ email: 'test@redhat.com' }), isManager: ref(false), isAdmin: ref(false) })
+}))
+vi.mock('@shared/client/composables/useRoster.js', () => ({
+  useRoster: () => ({ rosterData: ref(null), loading: ref(false), loadRoster: vi.fn() })
+}))
+vi.mock('@shared/client/composables/useFieldDefinitions.js', () => ({
+  useFieldDefinitions: () => ({ definitions: ref(null), fetchDefinitions: vi.fn() })
+}))
+vi.mock('../../client/composables/useAIImpact.js', () => ({
+  useAIImpact: () => ({ rfeData: ref(null), loading: ref(false) })
+}))
+vi.mock('../../client/composables/useFeatures.js', () => ({
+  useFeatures: () => ({ features: ref({}), featureLoading: ref(false), loadFeatures: vi.fn() })
+}))
+vi.mock('../../client/composables/useAssessments.js', () => ({
+  useAssessments: () => ({ assessments: ref({}), assessmentLoading: ref(false), loadAssessments: vi.fn() })
+}))
+vi.mock('../../client/composables/useForYouPreferences.js', () => ({
+  useForYouPreferences: () => ({
+    mode: ref('auto'), manualComponents: ref([]), wizardSeen: ref(true),
+    activeTab: ref('actions'), setMode: vi.fn(), setManualComponents: vi.fn(),
+    markWizardSeen: vi.fn(), setActiveTab: vi.fn(), resetPreferences: vi.fn()
+  }),
+  sanitizeComponents: (c) => c
+}))
+
 import {
   classifyRfe,
   classifyFeature,
@@ -103,15 +131,23 @@ describe('classifyFeature', () => {
 })
 
 describe('computeWaitDays', () => {
-  it('computes days from assessedAt for RFE needs-revision state', () => {
+  it('uses needsAttentionSince for RFE needs-revision state', () => {
     const now = Date.now()
     const fiveDaysAgo = new Date(now - 5 * 86400000).toISOString()
-    const item = { assessedAt: fiveDaysAgo, created: '2020-01-01T00:00:00Z' }
+    const item = { needsAttentionSince: fiveDaysAgo, created: '2020-01-01T00:00:00Z' }
     const state = { id: 'needs-revision' }
     expect(computeWaitDays(item, state, 'rfe')).toBe(5)
   })
 
-  it('falls back to created for RFE needs-revision when no assessedAt', () => {
+  it('uses needsAttentionSince for RFE passed-with-caveats state', () => {
+    const now = Date.now()
+    const eightDaysAgo = new Date(now - 8 * 86400000).toISOString()
+    const item = { needsAttentionSince: eightDaysAgo, created: '2020-01-01T00:00:00Z' }
+    const state = { id: 'passed-with-caveats' }
+    expect(computeWaitDays(item, state, 'rfe')).toBe(8)
+  })
+
+  it('falls back to created for RFE needs-revision when no needsAttentionSince', () => {
     const now = Date.now()
     const tenDaysAgo = new Date(now - 10 * 86400000).toISOString()
     const item = { created: tenDaysAgo }
@@ -119,12 +155,45 @@ describe('computeWaitDays', () => {
     expect(computeWaitDays(item, state, 'rfe')).toBe(10)
   })
 
-  it('uses created for RFE queued-for-pipeline state', () => {
+  it('assessedAt alone does not drive waitDays for needs-revision', () => {
+    const now = Date.now()
+    const twoDaysAgo = new Date(now - 2 * 86400000).toISOString()
+    const thirtyDaysAgo = new Date(now - 30 * 86400000).toISOString()
+    const item = { assessedAt: twoDaysAgo, needsAttentionSince: thirtyDaysAgo, created: '2020-01-01T00:00:00Z' }
+    const state = { id: 'needs-revision' }
+    expect(computeWaitDays(item, state, 'rfe')).toBe(30)
+  })
+
+  it('uses rubricPassSince for RFE ready-to-advance state', () => {
     const now = Date.now()
     const threeDaysAgo = new Date(now - 3 * 86400000).toISOString()
-    const item = { created: threeDaysAgo, assessedAt: '2020-01-01T00:00:00Z' }
+    const item = { rubricPassSince: threeDaysAgo, created: '2020-01-01T00:00:00Z' }
+    const state = { id: 'ready-to-advance' }
+    expect(computeWaitDays(item, state, 'rfe')).toBe(3)
+  })
+
+  it('uses rubricPassSince for RFE queued-for-pipeline state', () => {
+    const now = Date.now()
+    const threeDaysAgo = new Date(now - 3 * 86400000).toISOString()
+    const item = { rubricPassSince: threeDaysAgo, created: '2020-01-01T00:00:00Z' }
     const state = { id: 'queued-for-pipeline' }
     expect(computeWaitDays(item, state, 'rfe')).toBe(3)
+  })
+
+  it('falls back to created for RFE queued-for-pipeline when no rubricPassSince', () => {
+    const now = Date.now()
+    const threeDaysAgo = new Date(now - 3 * 86400000).toISOString()
+    const item = { created: threeDaysAgo }
+    const state = { id: 'queued-for-pipeline' }
+    expect(computeWaitDays(item, state, 'rfe')).toBe(3)
+  })
+
+  it('uses created for RFE not-assessed state', () => {
+    const now = Date.now()
+    const sixDaysAgo = new Date(now - 6 * 86400000).toISOString()
+    const item = { created: sixDaysAgo }
+    const state = { id: 'not-assessed' }
+    expect(computeWaitDays(item, state, 'rfe')).toBe(6)
   })
 
   it('uses reviewedAt for features', () => {
