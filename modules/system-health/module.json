@@ -11,9 +11,20 @@
     "navItems": [
       { "id": "quality-analysis", "label": "Quality analysis", "icon": "clipboard-list", "default": true },
       { "id": "component-maturity", "label": "Component maturity", "icon": "layers" }
-    ]
+    ],
+    "hiddenRoutes": {
+      "disconnected-repo-detail": "component-maturity"
+    }
   },
   "server": {
     "entry": "./server/index.js"
+  },
+  "secrets": {
+    "platform": ["github"]
+  },
+  "export": {
+    "files": [
+      { "path": "system-health/disconnected/reports.json", "notes": "Disconnected readiness reports with history for all tracked repos" }
+    ]
   }
 }

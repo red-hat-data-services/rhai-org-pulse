@@ -1,0 +1,170 @@
+{
+  "lastSyncedAt": "2026-06-09T14:30:00.000Z",
+  "repoCount": 6,
+  "repos": {
+    "opendatahub-io/odh-dashboard": {
+      "latest": {
+        "repo": "opendatahub-io/odh-dashboard",
+        "date": "2026-06-09T12:00:00.000Z",
+        "score": "READY",
+        "blockerCount": 0,
+        "infoCount": 2,
+        "ruleCount": 5,
+        "rulesPassedCount": 5,
+        "rules": [
+          { "name": "image-manifest-complete", "passed": true, "blockers": 0, "infos": 1, "findings": [{ "severity": "info", "file": "manifests/overlays/odh/params.env", "line": 5, "image": "quay.io/opendatahub/odh-dashboard", "message": "Image listed in RelatedImages manifest" }] },
+          { "name": "no-image-tags", "passed": true, "blockers": 0, "infos": 0, "findings": [] },
+          { "name": "no-runtime-egress", "passed": true, "blockers": 0, "infos": 1, "findings": [{ "severity": "info", "file": "frontend/src/services/apiService.ts", "line": 42, "image": "", "message": "HTTP call detected but is internal cluster call (excluded)" }] },
+          { "name": "python-imports-bundled", "passed": true, "blockers": 0, "infos": 0, "findings": [] },
+          { "name": "params-env-wiring", "passed": true, "blockers": 0, "infos": 0, "findings": [] }
+        ],
+        "false_positive_help": null
+      },
+      "history": [
+        { "score": "READY", "blockerCount": 0, "infoCount": 1, "ruleCount": 5, "rulesPassedCount": 5, "date": "2026-06-08T10:00:00.000Z" },
+        { "score": "READY", "blockerCount": 0, "infoCount": 1, "ruleCount": 5, "rulesPassedCount": 5, "date": "2026-06-07T10:00:00.000Z" },
+        { "score": "NOT READY", "blockerCount": 1, "infoCount": 1, "ruleCount": 5, "rulesPassedCount": 4, "date": "2026-06-06T09:00:00.000Z" },
+        { "score": "NOT READY", "blockerCount": 2, "infoCount": 1, "ruleCount": 5, "rulesPassedCount": 3, "date": "2026-06-05T09:00:00.000Z" },
+        { "score": "NOT READY", "blockerCount": 3, "infoCount": 0, "ruleCount": 5, "rulesPassedCount": 3, "date": "2026-06-04T09:00:00.000Z" },
+        { "score": "NOT READY", "blockerCount": 4, "infoCount": 0, "ruleCount": 5, "rulesPassedCount": 2, "date": "2026-06-03T09:00:00.000Z" },
+        { "score": "NOT READY", "blockerCount": 4, "infoCount": 0, "ruleCount": 5, "rulesPassedCount": 2, "date": "2026-06-02T09:00:00.000Z" }
+      ]
+    },
+    "opendatahub-io/notebooks": {
+      "latest": {
+        "repo": "opendatahub-io/notebooks",
+        "date": "2026-06-09T11:00:00.000Z",
+        "score": "NOT READY",
+        "blockerCount": 3,
+        "infoCount": 1,
+        "ruleCount": 5,
+        "rulesPassedCount": 3,
+        "rules": [
+          { "name": "image-manifest-complete", "passed": true, "blockers": 0, "infos": 0, "findings": [] },
+          { "name": "no-image-tags", "passed": false, "blockers": 2, "infos": 0, "findings": [{ "severity": "blocker", "file": "jupyter/minimal/ubi9-python-3.11/Dockerfile", "line": 1, "image": "registry.access.redhat.com/ubi9/python-311:latest", "message": "Image uses mutable tag ':latest' instead of digest" }, { "severity": "blocker", "file": "jupyter/datascience/ubi9-python-3.11/Dockerfile", "line": 1, "image": "registry.access.redhat.com/ubi9/python-311:latest", "message": "Image uses mutable tag ':latest' instead of digest" }] },
+          { "name": "no-runtime-egress", "passed": true, "blockers": 0, "infos": 1, "findings": [{ "severity": "info", "file": "jupyter/minimal/ubi9-python-3.11/setup.py", "line": 10, "image": "", "message": "pip install call excluded by config" }] },
+          { "name": "python-imports-bundled", "passed": false, "blockers": 1, "infos": 0, "findings": [{ "severity": "blocker", "file": "jupyter/minimal/ubi9-python-3.11/requirements.txt", "line": 8, "image": "", "message": "Package 'boto3' not found in bundled mirror packages" }] },
+          { "name": "params-env-wiring", "passed": true, "blockers": 0, "infos": 0, "findings": [] }
+        ],
+        "false_positive_help": { "exception_snippets": ["exceptions:\n  - rule: no-image-tags\n    path: \"jupyter/*/Dockerfile\"\n    reason: \"Base images pinned via CI automation\"", "exceptions:\n  - rule: python-imports-bundled\n    message: \"boto3\"\n    reason: \"Optional dependency, not required for disconnected\""] }
+      },
+      "history": [
+        { "score": "NOT READY", "blockerCount": 4, "infoCount": 1, "ruleCount": 5, "rulesPassedCount": 3, "date": "2026-06-08T14:00:00.000Z" },
+        { "score": "NOT READY", "blockerCount": 5, "infoCount": 0, "ruleCount": 5, "rulesPassedCount": 2, "date": "2026-06-07T14:00:00.000Z" },
+        { "score": "NOT READY", "blockerCount": 5, "infoCount": 0, "ruleCount": 5, "rulesPassedCount": 2, "date": "2026-06-06T14:00:00.000Z" },
+        { "score": "NOT READY", "blockerCount": 6, "infoCount": 0, "ruleCount": 5, "rulesPassedCount": 2, "date": "2026-06-05T08:00:00.000Z" },
+        { "score": "NOT READY", "blockerCount": 7, "infoCount": 0, "ruleCount": 5, "rulesPassedCount": 1, "date": "2026-06-04T08:00:00.000Z" },
+        { "score": "NOT READY", "blockerCount": 7, "infoCount": 0, "ruleCount": 5, "rulesPassedCount": 1, "date": "2026-06-03T08:00:00.000Z" },
+        { "score": "NOT READY", "blockerCount": 8, "infoCount": 0, "ruleCount": 5, "rulesPassedCount": 1, "date": "2026-06-02T08:00:00.000Z" }
+      ]
+    },
+    "opendatahub-io/kserve": {
+      "latest": {
+        "repo": "opendatahub-io/kserve",
+        "date": "2026-06-09T13:00:00.000Z",
+        "score": "READY",
+        "blockerCount": 0,
+        "infoCount": 1,
+        "ruleCount": 5,
+        "rulesPassedCount": 5,
+        "rules": [
+          { "name": "image-manifest-complete", "passed": true, "blockers": 0, "infos": 1, "findings": [{ "severity": "info", "file": "config/default/params.env", "line": 3, "image": "quay.io/opendatahub/kserve-controller", "message": "Image tracked in params.env" }] },
+          { "name": "no-image-tags", "passed": true, "blockers": 0, "infos": 0, "findings": [] },
+          { "name": "no-runtime-egress", "passed": true, "blockers": 0, "infos": 0, "findings": [] },
+          { "name": "python-imports-bundled", "passed": true, "blockers": 0, "infos": 0, "findings": [] },
+          { "name": "params-env-wiring", "passed": true, "blockers": 0, "infos": 0, "findings": [] }
+        ],
+        "false_positive_help": null
+      },
+      "history": [
+        { "score": "NOT READY", "blockerCount": 2, "infoCount": 1, "ruleCount": 5, "rulesPassedCount": 3, "date": "2026-06-08T11:00:00.000Z" },
+        { "score": "NOT READY", "blockerCount": 3, "infoCount": 1, "ruleCount": 5, "rulesPassedCount": 3, "date": "2026-06-07T11:00:00.000Z" },
+        { "score": "NOT READY", "blockerCount": 3, "infoCount": 0, "ruleCount": 5, "rulesPassedCount": 2, "date": "2026-06-06T11:00:00.000Z" },
+        { "score": "NOT READY", "blockerCount": 4, "infoCount": 0, "ruleCount": 5, "rulesPassedCount": 2, "date": "2026-06-05T11:00:00.000Z" },
+        { "score": "NOT READY", "blockerCount": 5, "infoCount": 0, "ruleCount": 5, "rulesPassedCount": 2, "date": "2026-06-04T11:00:00.000Z" }
+      ]
+    },
+    "opendatahub-io/data-science-pipelines-operator": {
+      "latest": {
+        "repo": "opendatahub-io/data-science-pipelines-operator",
+        "date": "2026-06-09T10:30:00.000Z",
+        "score": "NOT READY",
+        "blockerCount": 5,
+        "infoCount": 3,
+        "ruleCount": 5,
+        "rulesPassedCount": 2,
+        "rules": [
+          { "name": "image-manifest-complete", "passed": false, "blockers": 2, "infos": 1, "findings": [{ "severity": "blocker", "file": "config/internal/ml-pipeline/deployment.yaml", "line": 28, "image": "gcr.io/ml-pipeline/api-server:2.0.0", "message": "Image not listed in RelatedImages or CSV" }, { "severity": "blocker", "file": "config/internal/ml-pipeline/deployment.yaml", "line": 45, "image": "gcr.io/ml-pipeline/viewer-crd-controller:2.0.0", "message": "Image not listed in RelatedImages or CSV" }, { "severity": "info", "file": "config/internal/params.env", "line": 1, "image": "quay.io/opendatahub/ds-pipelines-api-server", "message": "Image tracked in params.env" }] },
+          { "name": "no-image-tags", "passed": false, "blockers": 1, "infos": 1, "findings": [{ "severity": "blocker", "file": "config/internal/ml-pipeline/deployment.yaml", "line": 28, "image": "gcr.io/ml-pipeline/api-server:2.0.0", "message": "Image uses mutable tag ':2.0.0' instead of digest" }, { "severity": "info", "file": "config/internal/ml-pipeline/deployment.yaml", "line": 55, "image": "quay.io/opendatahub/ds-pipelines-scheduledworkflow@sha256:abc123", "message": "Image correctly uses digest reference" }] },
+          { "name": "no-runtime-egress", "passed": false, "blockers": 2, "infos": 1, "findings": [{ "severity": "blocker", "file": "controllers/dspipeline_controller.go", "line": 187, "image": "", "message": "HTTP GET to https://storage.googleapis.com detected" }, { "severity": "blocker", "file": "controllers/dspipeline_controller.go", "line": 203, "image": "", "message": "HTTP POST to external API endpoint detected" }, { "severity": "info", "file": "controllers/health_check.go", "line": 45, "image": "", "message": "Internal cluster health check URL (excluded)" }] },
+          { "name": "python-imports-bundled", "passed": true, "blockers": 0, "infos": 0, "findings": [] },
+          { "name": "params-env-wiring", "passed": true, "blockers": 0, "infos": 0, "findings": [] }
+        ],
+        "false_positive_help": { "exception_snippets": ["exceptions:\n  - rule: no-runtime-egress\n    path: \"controllers/dspipeline_controller.go\"\n    message: \"storage.googleapis.com\"\n    reason: \"Only used when external object storage is configured\""] }
+      },
+      "history": [
+        { "score": "NOT READY", "blockerCount": 3, "infoCount": 2, "ruleCount": 5, "rulesPassedCount": 3, "date": "2026-06-08T16:00:00.000Z" },
+        { "score": "NOT READY", "blockerCount": 2, "infoCount": 2, "ruleCount": 5, "rulesPassedCount": 3, "date": "2026-06-07T16:00:00.000Z" },
+        { "score": "NOT READY", "blockerCount": 1, "infoCount": 1, "ruleCount": 5, "rulesPassedCount": 4, "date": "2026-06-06T16:00:00.000Z" },
+        { "score": "NOT READY", "blockerCount": 1, "infoCount": 1, "ruleCount": 5, "rulesPassedCount": 4, "date": "2026-06-05T16:00:00.000Z" },
+        { "score": "NOT READY", "blockerCount": 2, "infoCount": 1, "ruleCount": 5, "rulesPassedCount": 3, "date": "2026-06-04T16:00:00.000Z" },
+        { "score": "NOT READY", "blockerCount": 3, "infoCount": 0, "ruleCount": 5, "rulesPassedCount": 3, "date": "2026-06-03T16:00:00.000Z" }
+      ]
+    },
+    "opendatahub-io/model-registry-operator": {
+      "latest": {
+        "repo": "opendatahub-io/model-registry-operator",
+        "date": "2026-06-09T15:00:00.000Z",
+        "score": "NOT READY",
+        "blockerCount": 2,
+        "infoCount": 0,
+        "ruleCount": 5,
+        "rulesPassedCount": 3,
+        "rules": [
+          { "name": "image-manifest-complete", "passed": true, "blockers": 0, "infos": 0, "findings": [] },
+          { "name": "no-image-tags", "passed": false, "blockers": 1, "infos": 0, "findings": [{ "severity": "blocker", "file": "config/manager/manager.yaml", "line": 22, "image": "quay.io/opendatahub/model-registry-operator:v0.2.0", "message": "Image uses mutable tag ':v0.2.0' instead of digest" }] },
+          { "name": "no-runtime-egress", "passed": false, "blockers": 1, "infos": 0, "findings": [{ "severity": "blocker", "file": "internal/controller/modelregistry_controller.go", "line": 95, "image": "", "message": "HTTP GET to external model catalog endpoint detected" }] },
+          { "name": "python-imports-bundled", "passed": true, "blockers": 0, "infos": 0, "findings": [] },
+          { "name": "params-env-wiring", "passed": true, "blockers": 0, "infos": 0, "findings": [] }
+        ],
+        "false_positive_help": null
+      },
+      "history": [
+        { "score": "READY", "blockerCount": 0, "infoCount": 0, "ruleCount": 5, "rulesPassedCount": 5, "date": "2026-06-08T15:00:00.000Z" },
+        { "score": "READY", "blockerCount": 0, "infoCount": 0, "ruleCount": 5, "rulesPassedCount": 5, "date": "2026-06-07T15:00:00.000Z" },
+        { "score": "READY", "blockerCount": 0, "infoCount": 1, "ruleCount": 5, "rulesPassedCount": 5, "date": "2026-06-06T15:00:00.000Z" },
+        { "score": "READY", "blockerCount": 0, "infoCount": 1, "ruleCount": 5, "rulesPassedCount": 5, "date": "2026-06-05T15:00:00.000Z" },
+        { "score": "READY", "blockerCount": 0, "infoCount": 0, "ruleCount": 5, "rulesPassedCount": 5, "date": "2026-06-04T15:00:00.000Z" }
+      ]
+    },
+    "opendatahub-io/opendatahub-operator": {
+      "latest": {
+        "repo": "opendatahub-io/opendatahub-operator",
+        "date": "2026-06-09T14:00:00.000Z",
+        "score": "READY",
+        "blockerCount": 0,
+        "infoCount": 0,
+        "ruleCount": 5,
+        "rulesPassedCount": 5,
+        "rules": [
+          { "name": "image-manifest-complete", "passed": true, "blockers": 0, "infos": 0, "findings": [] },
+          { "name": "no-image-tags", "passed": true, "blockers": 0, "infos": 0, "findings": [] },
+          { "name": "no-runtime-egress", "passed": true, "blockers": 0, "infos": 0, "findings": [] },
+          { "name": "python-imports-bundled", "passed": true, "blockers": 0, "infos": 0, "findings": [] },
+          { "name": "params-env-wiring", "passed": true, "blockers": 0, "infos": 0, "findings": [] }
+        ],
+        "false_positive_help": null
+      },
+      "history": [
+        { "score": "READY", "blockerCount": 0, "infoCount": 0, "ruleCount": 5, "rulesPassedCount": 5, "date": "2026-06-08T09:00:00.000Z" },
+        { "score": "READY", "blockerCount": 0, "infoCount": 0, "ruleCount": 5, "rulesPassedCount": 5, "date": "2026-06-07T09:00:00.000Z" },
+        { "score": "READY", "blockerCount": 0, "infoCount": 1, "ruleCount": 5, "rulesPassedCount": 5, "date": "2026-06-06T12:00:00.000Z" },
+        { "score": "READY", "blockerCount": 0, "infoCount": 1, "ruleCount": 5, "rulesPassedCount": 5, "date": "2026-06-05T12:00:00.000Z" },
+        { "score": "READY", "blockerCount": 0, "infoCount": 2, "ruleCount": 5, "rulesPassedCount": 5, "date": "2026-06-04T12:00:00.000Z" },
+        { "score": "NOT READY", "blockerCount": 1, "infoCount": 0, "ruleCount": 5, "rulesPassedCount": 4, "date": "2026-06-03T10:00:00.000Z" },
+        { "score": "NOT READY", "blockerCount": 2, "infoCount": 0, "ruleCount": 5, "rulesPassedCount": 3, "date": "2026-06-02T10:00:00.000Z" },
+        { "score": "NOT READY", "blockerCount": 3, "infoCount": 0, "ruleCount": 5, "rulesPassedCount": 3, "date": "2026-06-01T10:00:00.000Z" }
+      ]
+    }
+  }
+}
