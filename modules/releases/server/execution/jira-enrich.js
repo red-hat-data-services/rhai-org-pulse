@@ -27,6 +27,7 @@ const ENRICH_FIELDS = [
   CUSTOM_FIELDS.docsRequired,
   CUSTOM_FIELDS.targetEnd,
   CUSTOM_FIELDS.productManager,
+  CUSTOM_FIELDS.targetVersion,
   CUSTOM_FIELDS.reach,
   CUSTOM_FIELDS.impact,
   CUSTOM_FIELDS.confidence,
@@ -152,6 +153,15 @@ function transformForEnrichment(rawIssue) {
     }
   }
 
+  // Target versions (customfield_10855) as array of names
+  const targetVersions = [];
+  const tvField = fields[CUSTOM_FIELDS.targetVersion];
+  if (tvField && Array.isArray(tvField)) {
+    for (let i = 0; i < tvField.length; i++) {
+      if (tvField[i].name) targetVersions.push(tvField[i].name);
+    }
+  }
+
   // Labels
   const labels = Array.isArray(fields.labels) ? fields.labels : [];
 
@@ -195,6 +205,7 @@ function transformForEnrichment(rawIssue) {
     team: serializeField(fields[CUSTOM_FIELDS.team]),
     releaseType: serializeField(fields[CUSTOM_FIELDS.releaseType]),
     fixVersions,
+    targetVersions,
     labels,
     components,
     docsRequired: serializeField(fields[CUSTOM_FIELDS.docsRequired]),

@@ -14,9 +14,9 @@ let storeWriteInProgress = false;
 const JIRA_FIELDS = [
   'status', 'statusCategory', 'colorStatus', 'ownerStatusColor',
   'statusSummary', 'assignee', 'pm', 'labels', 'fixVersions',
-  'components', 'priority', 'team', 'releaseType', 'docsRequired',
-  'targetEnd', 'riceScore', 'riceStatus', 'isBlocked', 'linkedRfeKey',
-  'issueLinks', 'epics'
+  'targetVersions', 'components', 'priority', 'team', 'releaseType',
+  'docsRequired', 'targetEnd', 'riceScore', 'riceStatus', 'isBlocked',
+  'linkedRfeKey', 'issueLinks', 'epics'
 ];
 
 // Pipeline-owned fields — pipeline always wins
