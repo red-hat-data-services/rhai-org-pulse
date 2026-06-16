@@ -282,7 +282,7 @@ function buildExport(classifications, releases, fetchTimestamp, allComponents, j
     const alignPct = nTotal > 0 ? Math.round(1000 * cats.aligned / nTotal) / 10 : 0
 
     // Look up release dates from Product Pages cache
-    var dates = {}
+    let dates = {}
     if (releaseDates) {
       dates = releaseDates[release] || releaseDates[normVer(release)] || {}
     }
@@ -431,9 +431,9 @@ async function fetchAndClassify(releases, storage, jiraProject) {
   const releaseDates = {}
   const ppCache = storage.readFromStorage('releases/delivery/product-pages-releases-cache.json')
   if (ppCache && Array.isArray(ppCache.releases)) {
-    for (var pi = 0; pi < ppCache.releases.length; pi++) {
-      var ppRel = ppCache.releases[pi]
-      var ppKey = (ppRel.releaseNumber || '').toLowerCase()
+    for (let pi = 0; pi < ppCache.releases.length; pi++) {
+      const ppRel = ppCache.releases[pi]
+      const ppKey = (ppRel.releaseNumber || '').toLowerCase()
       if (ppKey) {
         releaseDates[ppKey] = {
           dueDate: ppRel.dueDate || null,
