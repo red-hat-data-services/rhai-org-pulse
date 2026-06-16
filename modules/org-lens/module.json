@@ -1,0 +1,28 @@
+{
+  "name": "Org Lens",
+  "slug": "org-lens",
+  "description": "Chat interface to explore people, expertise, and org structure",
+  "icon": "message-circle",
+  "order": 15,
+  "client": {
+    "entry": "./client/index.js",
+    "navItems": [
+      { "id": "chat", "label": "Ask", "icon": "MessageCircle", "default": true }
+    ]
+  },
+  "server": {
+    "entry": "./server/index.js"
+  },
+  "defaultEnabled": true,
+  "requires": [],
+  "secrets": {
+    "platform": [],
+    "module": [
+      {
+        "key": "GEMINI_API_KEY",
+        "description": "Google Gemini API key for chat responses",
+        "required": true
+      }
+    ]
+  }
+}
