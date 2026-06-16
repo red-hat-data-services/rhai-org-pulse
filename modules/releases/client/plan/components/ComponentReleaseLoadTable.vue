@@ -4,8 +4,11 @@ import { reactive, computed } from 'vue'
 const props = defineProps({
   groups: { type: Array, default: () => [] },
   componentLeads: { type: Object, default: () => ({}) },
-  velocity: { type: Object, default: null }
+  velocity: { type: Object, default: null },
+  initialSort: { type: Object, default: () => ({ column: null, direction: 'asc' }) }
 })
+
+var emit = defineEmits(['sort-changed'])
 
 function getComponentVelocity(componentName) {
   if (!props.velocity || !props.velocity.components) return null
@@ -24,6 +27,82 @@ const COMP_STYLE = {
 }
 
 var expandedComponents = reactive({})
+
+// ═══ SORT STATE ═══
+
+var SORT_COLUMNS = ['key', 'summary', 'priority', 'type', 'releaseType', 'status', 'colorStatus', 'fixVersion', 'targetVersion', 'blocked', 'assignee', 'pmOwner']
+
+var PRIORITY_ORDER = { 'Blocker': 0, 'Critical': 1, 'Major': 2, 'Normal': 3 }
+var COLOR_STATUS_ORDER = { 'red': 0, 'yellow': 1, 'green': 2 }
+
+var sortState = reactive({
+  column: props.initialSort.column,
+  direction: props.initialSort.direction || 'asc'
+})
+
+function toggleSort(column) {
+  if (SORT_COLUMNS.indexOf(column) === -1) return
+  if (sortState.column === column) {
+    if (sortState.direction === 'asc') {
+      sortState.direction = 'desc'
+    } else {
+      sortState.column = null
+      sortState.direction = 'asc'
+    }
+  } else {
+    sortState.column = column
+    sortState.direction = 'asc'
+  }
+  emit('sort-changed', { column: sortState.column, direction: sortState.direction })
+}
+
+function getSortValue(feature, column) {
+  if (column === 'key') return feature.key || ''
+  if (column === 'summary') return (feature.summary || '').toLowerCase()
+  if (column === 'priority') {
+    var po = PRIORITY_ORDER[feature.priority]
+    return po !== undefined ? po : 99
+  }
+  if (column === 'type') {
+    return (feature.isCommitted ? 2 : 0) + (feature.isRequested ? 1 : 0)
+  }
+  if (column === 'releaseType') return (feature.releaseType || '').toLowerCase()
+  if (column === 'status') return (feature.status || '').toLowerCase()
+  if (column === 'colorStatus') {
+    var co = COLOR_STATUS_ORDER[(feature.colorStatus || '').toLowerCase()]
+    return co !== undefined ? co : 99
+  }
+  if (column === 'fixVersion') {
+    return feature.fixVersions && feature.fixVersions.length > 0 ? feature.fixVersions[0] : ''
+  }
+  if (column === 'targetVersion') {
+    return feature.targetVersions && feature.targetVersions.length > 0 ? feature.targetVersions[0] : ''
+  }
+  if (column === 'blocked') return feature.isBlocked ? 1 : 0
+  if (column === 'assignee') return (feature.assignee || '').toLowerCase()
+  if (column === 'pmOwner') return (feature.pmOwner || '').toLowerCase()
+  return ''
+}
+
+function sortFeatures(features) {
+  if (!sortState.column) return features
+  var col = sortState.column
+  var dir = sortState.direction === 'asc' ? 1 : -1
+  var sorted = features.slice()
+  sorted.sort(function(a, b) {
+    var va = getSortValue(a, col)
+    var vb = getSortValue(b, col)
+    if (va < vb) return -1 * dir
+    if (va > vb) return 1 * dir
+    return 0
+  })
+  return sorted
+}
+
+function sortIcon(column) {
+  if (sortState.column !== column) return 'none'
+  return sortState.direction
+}
 
 function toggleComponent(component) {
   if (expandedComponents[component]) {
@@ -198,6 +277,11 @@ function colorStatusRing(colorStatus) {
 }
 
 
+var SortArrow = {
+  props: { direction: { type: String, default: 'none' } },
+  template: '<svg v-if="direction !== \'none\'" class="w-3 h-3 inline-block transition-transform" :class="{ \'rotate-180\': direction === \'desc\' }" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" /></svg>'
+}
+
 defineExpose({ expandAll, collapseAll })
 </script>
 
@@ -269,24 +353,48 @@ defineExpose({ expandAll, collapseAll })
             v-if="isComponentExpanded(comp.component)"
             class="border-b border-gray-200 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/80 sticky top-0"
           >
-            <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-36">Feature</th>
-            <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Title</th>
-            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24">Priority</th>
-            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24">Type</th>
-            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-28">Release Type</th>
-            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24">Status</th>
-            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16">Color Status</th>
-            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">Fix Version</th>
-            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">Target Version</th>
-            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16">Blocked</th>
-            <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">Delivery Owner</th>
-            <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">PM Owner</th>
+            <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-36 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('key')">
+              <span class="inline-flex items-center gap-1">Feature<SortArrow :direction="sortIcon('key')" /></span>
+            </th>
+            <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('summary')">
+              <span class="inline-flex items-center gap-1">Title<SortArrow :direction="sortIcon('summary')" /></span>
+            </th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('priority')">
+              <span class="inline-flex items-center gap-1 justify-center">Priority<SortArrow :direction="sortIcon('priority')" /></span>
+            </th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('type')">
+              <span class="inline-flex items-center gap-1 justify-center">Type<SortArrow :direction="sortIcon('type')" /></span>
+            </th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-28 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('releaseType')">
+              <span class="inline-flex items-center gap-1 justify-center">Release Type<SortArrow :direction="sortIcon('releaseType')" /></span>
+            </th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('status')">
+              <span class="inline-flex items-center gap-1 justify-center">Status<SortArrow :direction="sortIcon('status')" /></span>
+            </th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('colorStatus')">
+              <span class="inline-flex items-center gap-1 justify-center">Color Status<SortArrow :direction="sortIcon('colorStatus')" /></span>
+            </th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('fixVersion')">
+              <span class="inline-flex items-center gap-1 justify-center">Fix Version<SortArrow :direction="sortIcon('fixVersion')" /></span>
+            </th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('targetVersion')">
+              <span class="inline-flex items-center gap-1 justify-center">Target Version<SortArrow :direction="sortIcon('targetVersion')" /></span>
+            </th>
+            <th class="px-3 py-2 text-center text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-16 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('blocked')">
+              <span class="inline-flex items-center gap-1 justify-center">Blocked<SortArrow :direction="sortIcon('blocked')" /></span>
+            </th>
+            <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('assignee')">
+              <span class="inline-flex items-center gap-1">Delivery Owner<SortArrow :direction="sortIcon('assignee')" /></span>
+            </th>
+            <th class="px-3 py-2 text-left text-[11px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32 cursor-pointer select-none hover:text-gray-700 dark:hover:text-gray-200 transition-colors" @click="toggleSort('pmOwner')">
+              <span class="inline-flex items-center gap-1">PM Owner<SortArrow :direction="sortIcon('pmOwner')" /></span>
+            </th>
           </tr>
 
           <!-- Feature rows -->
           <template v-if="isComponentExpanded(comp.component)">
             <tr
-              v-for="feature in comp.features"
+              v-for="feature in sortFeatures(comp.features)"
               :key="feature.key"
               class="border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
             >

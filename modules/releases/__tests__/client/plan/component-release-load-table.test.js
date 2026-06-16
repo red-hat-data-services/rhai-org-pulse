@@ -556,3 +556,390 @@ describe('buildComponentGroups', function () {
     expect(result[0].features[0].fixVersions).toHaveLength(3)
   })
 })
+
+// ---------------------------------------------------------------------------
+// Sort logic — inlined from ComponentReleaseLoadTable.vue
+// ---------------------------------------------------------------------------
+
+var SORT_COLUMNS = ['key', 'summary', 'priority', 'type', 'releaseType', 'status', 'colorStatus', 'fixVersion', 'targetVersion', 'blocked', 'assignee', 'pmOwner']
+var PRIORITY_ORDER = { 'Blocker': 0, 'Critical': 1, 'Major': 2, 'Normal': 3 }
+var COLOR_STATUS_ORDER = { 'red': 0, 'yellow': 1, 'green': 2 }
+
+function getSortValue(feature, column) {
+  if (column === 'key') return feature.key || ''
+  if (column === 'summary') return (feature.summary || '').toLowerCase()
+  if (column === 'priority') {
+    var po = PRIORITY_ORDER[feature.priority]
+    return po !== undefined ? po : 99
+  }
+  if (column === 'type') {
+    return (feature.isCommitted ? 2 : 0) + (feature.isRequested ? 1 : 0)
+  }
+  if (column === 'releaseType') return (feature.releaseType || '').toLowerCase()
+  if (column === 'status') return (feature.status || '').toLowerCase()
+  if (column === 'colorStatus') {
+    var co = COLOR_STATUS_ORDER[(feature.colorStatus || '').toLowerCase()]
+    return co !== undefined ? co : 99
+  }
+  if (column === 'fixVersion') {
+    return feature.fixVersions && feature.fixVersions.length > 0 ? feature.fixVersions[0] : ''
+  }
+  if (column === 'targetVersion') {
+    return feature.targetVersions && feature.targetVersions.length > 0 ? feature.targetVersions[0] : ''
+  }
+  if (column === 'blocked') return feature.isBlocked ? 1 : 0
+  if (column === 'assignee') return (feature.assignee || '').toLowerCase()
+  if (column === 'pmOwner') return (feature.pmOwner || '').toLowerCase()
+  return ''
+}
+
+function sortFeatures(features, sortColumn, sortDirection) {
+  if (!sortColumn) return features
+  var dir = sortDirection === 'asc' ? 1 : -1
+  var sorted = features.slice()
+  sorted.sort(function(a, b) {
+    var va = getSortValue(a, sortColumn)
+    var vb = getSortValue(b, sortColumn)
+    if (va < vb) return -1 * dir
+    if (va > vb) return 1 * dir
+    return 0
+  })
+  return sorted
+}
+
+function toggleSort(state, column) {
+  if (SORT_COLUMNS.indexOf(column) === -1) return state
+  var newState = { column: state.column, direction: state.direction }
+  if (newState.column === column) {
+    if (newState.direction === 'asc') {
+      newState.direction = 'desc'
+    } else {
+      newState.column = null
+      newState.direction = 'asc'
+    }
+  } else {
+    newState.column = column
+    newState.direction = 'asc'
+  }
+  return newState
+}
+
+// ---------------------------------------------------------------------------
+// getSortValue
+// ---------------------------------------------------------------------------
+
+describe('getSortValue', function () {
+  it('returns key for "key" column', function () {
+    expect(getSortValue(makeFeature({ key: 'RHAIENG-42' }), 'key')).toBe('RHAIENG-42')
+  })
+
+  it('returns lowercased summary for "summary" column', function () {
+    expect(getSortValue(makeFeature({ summary: 'My Feature' }), 'summary')).toBe('my feature')
+  })
+
+  it('returns priority ordinal for known priorities', function () {
+    expect(getSortValue(makeFeature({ priority: 'Blocker' }), 'priority')).toBe(0)
+    expect(getSortValue(makeFeature({ priority: 'Critical' }), 'priority')).toBe(1)
+    expect(getSortValue(makeFeature({ priority: 'Major' }), 'priority')).toBe(2)
+    expect(getSortValue(makeFeature({ priority: 'Normal' }), 'priority')).toBe(3)
+  })
+
+  it('returns 99 for unknown or null priority', function () {
+    expect(getSortValue(makeFeature({ priority: 'Minor' }), 'priority')).toBe(99)
+    expect(getSortValue(makeFeature({ priority: null }), 'priority')).toBe(99)
+  })
+
+  it('returns type score based on isRequested/isCommitted', function () {
+    var feat = makeFeature({})
+    feat.isRequested = true
+    feat.isCommitted = false
+    expect(getSortValue(feat, 'type')).toBe(1)
+
+    feat.isRequested = false
+    feat.isCommitted = true
+    expect(getSortValue(feat, 'type')).toBe(2)
+
+    feat.isRequested = true
+    feat.isCommitted = true
+    expect(getSortValue(feat, 'type')).toBe(3)
+
+    feat.isRequested = false
+    feat.isCommitted = false
+    expect(getSortValue(feat, 'type')).toBe(0)
+  })
+
+  it('returns lowercased releaseType', function () {
+    expect(getSortValue(makeFeature({ releaseType: 'Enhancement' }), 'releaseType')).toBe('enhancement')
+  })
+
+  it('returns empty string for null releaseType', function () {
+    expect(getSortValue(makeFeature({ releaseType: null }), 'releaseType')).toBe('')
+  })
+
+  it('returns lowercased status', function () {
+    expect(getSortValue(makeFeature({ status: 'In Progress' }), 'status')).toBe('in progress')
+  })
+
+  it('returns colorStatus ordinal for known statuses', function () {
+    expect(getSortValue(makeFeature({ colorStatus: 'Red' }), 'colorStatus')).toBe(0)
+    expect(getSortValue(makeFeature({ colorStatus: 'Yellow' }), 'colorStatus')).toBe(1)
+    expect(getSortValue(makeFeature({ colorStatus: 'Green' }), 'colorStatus')).toBe(2)
+  })
+
+  it('returns 99 for unknown colorStatus', function () {
+    expect(getSortValue(makeFeature({ colorStatus: null }), 'colorStatus')).toBe(99)
+    expect(getSortValue(makeFeature({ colorStatus: 'Blue' }), 'colorStatus')).toBe(99)
+  })
+
+  it('returns first fixVersion or empty string', function () {
+    expect(getSortValue(makeFeature({ fixVersions: ['rhoai-3.6', 'rhoai-3.5'] }), 'fixVersion')).toBe('rhoai-3.6')
+    expect(getSortValue(makeFeature({ fixVersions: [] }), 'fixVersion')).toBe('')
+  })
+
+  it('returns first targetVersion or empty string', function () {
+    expect(getSortValue(makeFeature({ targetVersions: ['rhoai-3.5'] }), 'targetVersion')).toBe('rhoai-3.5')
+    expect(getSortValue(makeFeature({ targetVersions: [] }), 'targetVersion')).toBe('')
+  })
+
+  it('returns 1 for blocked, 0 for not blocked', function () {
+    expect(getSortValue(makeFeature({ isBlocked: true }), 'blocked')).toBe(1)
+    expect(getSortValue(makeFeature({ isBlocked: false }), 'blocked')).toBe(0)
+  })
+
+  it('returns lowercased assignee', function () {
+    expect(getSortValue(makeFeature({ assignee: 'Alice Smith' }), 'assignee')).toBe('alice smith')
+  })
+
+  it('returns lowercased pmOwner', function () {
+    expect(getSortValue(makeFeature({ pmOwner: 'Bob Jones' }), 'pmOwner')).toBe('bob jones')
+  })
+
+  it('returns empty string for null assignee/pmOwner', function () {
+    expect(getSortValue(makeFeature({ assignee: null }), 'assignee')).toBe('')
+    expect(getSortValue(makeFeature({ pmOwner: null }), 'pmOwner')).toBe('')
+  })
+
+  it('returns empty string for unknown column', function () {
+    expect(getSortValue(makeFeature({}), 'nonexistent')).toBe('')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// sortFeatures
+// ---------------------------------------------------------------------------
+
+describe('sortFeatures', function () {
+  var features = [
+    Object.assign(makeFeature({ key: 'X-3', priority: 'Normal', assignee: 'Charlie' }), { isRequested: true, isCommitted: false }),
+    Object.assign(makeFeature({ key: 'X-1', priority: 'Blocker', assignee: 'Alice' }), { isRequested: true, isCommitted: true }),
+    Object.assign(makeFeature({ key: 'X-2', priority: 'Major', assignee: 'Bob' }), { isRequested: false, isCommitted: true })
+  ]
+
+  it('returns features unchanged when no sort column', function () {
+    var result = sortFeatures(features, null, 'asc')
+    expect(result.map(function (f) { return f.key })).toEqual(['X-3', 'X-1', 'X-2'])
+  })
+
+  it('does not mutate the original array', function () {
+    var copy = features.slice()
+    sortFeatures(features, 'key', 'asc')
+    expect(features.map(function (f) { return f.key })).toEqual(copy.map(function (f) { return f.key }))
+  })
+
+  it('sorts by key ascending', function () {
+    var result = sortFeatures(features, 'key', 'asc')
+    expect(result.map(function (f) { return f.key })).toEqual(['X-1', 'X-2', 'X-3'])
+  })
+
+  it('sorts by key descending', function () {
+    var result = sortFeatures(features, 'key', 'desc')
+    expect(result.map(function (f) { return f.key })).toEqual(['X-3', 'X-2', 'X-1'])
+  })
+
+  it('sorts by priority ascending (Blocker first)', function () {
+    var result = sortFeatures(features, 'priority', 'asc')
+    expect(result.map(function (f) { return f.priority })).toEqual(['Blocker', 'Major', 'Normal'])
+  })
+
+  it('sorts by priority descending (Normal first)', function () {
+    var result = sortFeatures(features, 'priority', 'desc')
+    expect(result.map(function (f) { return f.priority })).toEqual(['Normal', 'Major', 'Blocker'])
+  })
+
+  it('sorts by assignee ascending', function () {
+    var result = sortFeatures(features, 'assignee', 'asc')
+    expect(result.map(function (f) { return f.assignee })).toEqual(['Alice', 'Bob', 'Charlie'])
+  })
+
+  it('sorts by assignee descending', function () {
+    var result = sortFeatures(features, 'assignee', 'desc')
+    expect(result.map(function (f) { return f.assignee })).toEqual(['Charlie', 'Bob', 'Alice'])
+  })
+
+  it('sorts by type (committed > requested > none)', function () {
+    var result = sortFeatures(features, 'type', 'desc')
+    expect(result.map(function (f) { return f.key })).toEqual(['X-1', 'X-2', 'X-3'])
+  })
+
+  it('sorts by colorStatus ascending (Red first)', function () {
+    var colorFeatures = [
+      makeFeature({ key: 'G-1', colorStatus: 'Green' }),
+      makeFeature({ key: 'R-1', colorStatus: 'Red' }),
+      makeFeature({ key: 'Y-1', colorStatus: 'Yellow' })
+    ]
+    var result = sortFeatures(colorFeatures, 'colorStatus', 'asc')
+    expect(result.map(function (f) { return f.colorStatus })).toEqual(['Red', 'Yellow', 'Green'])
+  })
+
+  it('sorts by colorStatus descending (Green first)', function () {
+    var colorFeatures = [
+      makeFeature({ key: 'G-1', colorStatus: 'Green' }),
+      makeFeature({ key: 'R-1', colorStatus: 'Red' }),
+      makeFeature({ key: 'Y-1', colorStatus: 'Yellow' })
+    ]
+    var result = sortFeatures(colorFeatures, 'colorStatus', 'desc')
+    expect(result.map(function (f) { return f.colorStatus })).toEqual(['Green', 'Yellow', 'Red'])
+  })
+
+  it('sorts by blocked (blocked items first when descending)', function () {
+    var blockFeatures = [
+      makeFeature({ key: 'A-1', isBlocked: false }),
+      makeFeature({ key: 'B-1', isBlocked: true }),
+      makeFeature({ key: 'C-1', isBlocked: false })
+    ]
+    var result = sortFeatures(blockFeatures, 'blocked', 'desc')
+    expect(result[0].key).toBe('B-1')
+  })
+
+  it('sorts by fixVersion using first version string', function () {
+    var vFeatures = [
+      makeFeature({ key: 'V-1', fixVersions: ['rhoai-3.6'] }),
+      makeFeature({ key: 'V-2', fixVersions: ['rhoai-3.5'] }),
+      makeFeature({ key: 'V-3', fixVersions: [] })
+    ]
+    var result = sortFeatures(vFeatures, 'fixVersion', 'asc')
+    expect(result.map(function (f) { return f.key })).toEqual(['V-3', 'V-2', 'V-1'])
+  })
+
+  it('sorts by targetVersion using first version string', function () {
+    var tFeatures = [
+      makeFeature({ key: 'T-1', targetVersions: ['rhoai-3.6'] }),
+      makeFeature({ key: 'T-2', targetVersions: ['rhoai-3.5'] })
+    ]
+    var result = sortFeatures(tFeatures, 'targetVersion', 'asc')
+    expect(result[0].key).toBe('T-2')
+    expect(result[1].key).toBe('T-1')
+  })
+
+  it('sorts by summary case-insensitively', function () {
+    var sFeatures = [
+      makeFeature({ key: 'S-1', summary: 'Zebra feature' }),
+      makeFeature({ key: 'S-2', summary: 'alpha feature' }),
+      makeFeature({ key: 'S-3', summary: 'Beta Feature' })
+    ]
+    var result = sortFeatures(sFeatures, 'summary', 'asc')
+    expect(result.map(function (f) { return f.key })).toEqual(['S-2', 'S-3', 'S-1'])
+  })
+
+  it('sorts by pmOwner ascending', function () {
+    var pFeatures = [
+      makeFeature({ key: 'P-1', pmOwner: 'Zara' }),
+      makeFeature({ key: 'P-2', pmOwner: 'Alice' }),
+      makeFeature({ key: 'P-3', pmOwner: null })
+    ]
+    var result = sortFeatures(pFeatures, 'pmOwner', 'asc')
+    expect(result.map(function (f) { return f.key })).toEqual(['P-3', 'P-2', 'P-1'])
+  })
+
+  it('handles empty features array', function () {
+    expect(sortFeatures([], 'key', 'asc')).toEqual([])
+  })
+
+  it('handles single feature', function () {
+    var single = [makeFeature({ key: 'ONLY-1' })]
+    var result = sortFeatures(single, 'key', 'asc')
+    expect(result).toHaveLength(1)
+    expect(result[0].key).toBe('ONLY-1')
+  })
+
+  it('maintains stability for equal values', function () {
+    var eqFeatures = [
+      makeFeature({ key: 'E-1', priority: 'Major' }),
+      makeFeature({ key: 'E-2', priority: 'Major' }),
+      makeFeature({ key: 'E-3', priority: 'Major' })
+    ]
+    var result = sortFeatures(eqFeatures, 'priority', 'asc')
+    expect(result.map(function (f) { return f.key })).toEqual(['E-1', 'E-2', 'E-3'])
+  })
+
+  it('places unknown priorities after known ones', function () {
+    var mixFeatures = [
+      makeFeature({ key: 'M-1', priority: 'Minor' }),
+      makeFeature({ key: 'M-2', priority: 'Blocker' }),
+      makeFeature({ key: 'M-3', priority: null })
+    ]
+    var result = sortFeatures(mixFeatures, 'priority', 'asc')
+    expect(result[0].key).toBe('M-2')
+    expect(['M-1', 'M-3']).toContain(result[1].key)
+  })
+
+  it('sorts by releaseType case-insensitively', function () {
+    var rtFeatures = [
+      makeFeature({ key: 'RT-1', releaseType: 'Feature' }),
+      makeFeature({ key: 'RT-2', releaseType: 'enhancement' }),
+      makeFeature({ key: 'RT-3', releaseType: null })
+    ]
+    var result = sortFeatures(rtFeatures, 'releaseType', 'asc')
+    expect(result.map(function (f) { return f.key })).toEqual(['RT-3', 'RT-2', 'RT-1'])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// toggleSort
+// ---------------------------------------------------------------------------
+
+describe('toggleSort', function () {
+  it('sets column to asc on first click', function () {
+    var state = { column: null, direction: 'asc' }
+    var result = toggleSort(state, 'key')
+    expect(result).toEqual({ column: 'key', direction: 'asc' })
+  })
+
+  it('switches to desc on second click of same column', function () {
+    var state = { column: 'key', direction: 'asc' }
+    var result = toggleSort(state, 'key')
+    expect(result).toEqual({ column: 'key', direction: 'desc' })
+  })
+
+  it('clears sort on third click of same column', function () {
+    var state = { column: 'key', direction: 'desc' }
+    var result = toggleSort(state, 'key')
+    expect(result).toEqual({ column: null, direction: 'asc' })
+  })
+
+  it('switches to new column on different column click', function () {
+    var state = { column: 'key', direction: 'desc' }
+    var result = toggleSort(state, 'priority')
+    expect(result).toEqual({ column: 'priority', direction: 'asc' })
+  })
+
+  it('ignores invalid column names', function () {
+    var state = { column: 'key', direction: 'asc' }
+    var result = toggleSort(state, 'invalid')
+    expect(result).toEqual({ column: 'key', direction: 'asc' })
+  })
+
+  it('does not mutate the input state', function () {
+    var state = { column: 'key', direction: 'asc' }
+    toggleSort(state, 'key')
+    expect(state).toEqual({ column: 'key', direction: 'asc' })
+  })
+
+  it('works for all valid sort columns', function () {
+    var columns = ['key', 'summary', 'priority', 'type', 'releaseType', 'status', 'colorStatus', 'fixVersion', 'targetVersion', 'blocked', 'assignee', 'pmOwner']
+    for (var i = 0; i < columns.length; i++) {
+      var result = toggleSort({ column: null, direction: 'asc' }, columns[i])
+      expect(result.column).toBe(columns[i])
+    }
+  })
+})

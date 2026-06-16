@@ -332,6 +332,8 @@
       :groups="clientFilteredGroups"
       :componentLeads="componentLeads"
       :velocity="velocity"
+      :initialSort="savedSort"
+      @sort-changed="onSortChanged"
     />
 
     <!-- Pillar config panel -->
@@ -351,6 +353,7 @@ import ComponentReleaseLoadTable from '../components/ComponentReleaseLoadTable.v
 import PillarConfigPanel from '../components/PillarConfigPanel.vue'
 
 const API_BASE = '/modules/releases/pm-hub'
+var STORAGE_KEY = 'pm-hub-filters'
 
 var selectedPillars = ref([])
 var selectedComponents = ref([])
@@ -403,7 +406,55 @@ var pmOwnerDropdownOpen = ref(false)
 var pmOwnerDropdownRef = ref(null)
 var pmOwnerSearch = ref('')
 
+var savedSort = ref({ column: null, direction: 'asc' })
+
 var availableProducts = ['RHOAI', 'RHELAI', 'RHAII']
+
+// ═══ FILTER PERSISTENCE ═══
+
+function saveFilters() {
+  try {
+    var state = {
+      pillars: selectedPillars.value,
+      components: selectedComponents.value,
+      versions: selectedVersions.value,
+      product: filterProduct.value,
+      type: filterType.value,
+      releaseType: filterReleaseType.value,
+      status: filterStatus.value,
+      blocked: filterBlocked.value,
+      delOwner: filterDelOwner.value,
+      pmOwner: filterPmOwner.value,
+      sort: savedSort.value
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+  } catch (e) { void e }
+}
+
+function restoreFilters() {
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return false
+    var state = JSON.parse(raw)
+    if (state.pillars && Array.isArray(state.pillars)) selectedPillars.value = state.pillars
+    if (state.components && Array.isArray(state.components)) selectedComponents.value = state.components
+    if (state.versions && Array.isArray(state.versions)) selectedVersions.value = state.versions
+    if (state.product && Array.isArray(state.product)) filterProduct.value = state.product
+    if (state.type && Array.isArray(state.type)) filterType.value = state.type
+    if (state.releaseType && Array.isArray(state.releaseType)) filterReleaseType.value = state.releaseType
+    if (state.status && Array.isArray(state.status)) filterStatus.value = state.status
+    if (state.blocked !== undefined) filterBlocked.value = state.blocked
+    if (state.delOwner && Array.isArray(state.delOwner)) filterDelOwner.value = state.delOwner
+    if (state.pmOwner && Array.isArray(state.pmOwner)) filterPmOwner.value = state.pmOwner
+    if (state.sort && typeof state.sort === 'object') savedSort.value = state.sort
+    return true
+  } catch { return false }
+}
+
+function onSortChanged(sort) {
+  savedSort.value = sort
+  saveFilters()
+}
 
 function statusDotClass(s) {
   if (s === 'Green') return 'bg-emerald-500 ring-emerald-300 dark:ring-emerald-700'
@@ -457,6 +508,8 @@ function clearAllFilters() {
   filterBlocked.value = null
   filterDelOwner.value = []
   filterPmOwner.value = []
+  savedSort.value = { column: null, direction: 'asc' }
+  try { localStorage.removeItem(STORAGE_KEY) } catch (e) { void e }
 }
 
 function extractProduct(versionName) {
@@ -899,7 +952,15 @@ watch([selectedComponents, selectedVersions, selectedPillars], function() {
   loadData()
 }, { deep: true })
 
+// Save filters to localStorage on any filter change
+watch(
+  [selectedPillars, selectedComponents, selectedVersions, filterProduct, filterType, filterReleaseType, filterStatus, filterBlocked, filterDelOwner, filterPmOwner],
+  saveFilters,
+  { deep: true }
+)
+
 onMounted(function() {
+  restoreFilters()
   fetchPillarConfig()
   fetchComponents()
   document.addEventListener('mousedown', handleClickOutside)
