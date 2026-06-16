@@ -263,7 +263,7 @@ function classifyFeatures(features, releases) {
 // Build export payload
 // ---------------------------------------------------------------------------
 
-function buildExport(classifications, releases, fetchTimestamp, allComponents, jiraProject) {
+function buildExport(classifications, releases, fetchTimestamp, allComponents, jiraProject, releaseDates) {
   const baseJql = 'project = ' + jiraProject + ' AND issuetype = Feature'
 
   const executiveSummary = []
@@ -281,6 +281,12 @@ function buildExport(classifications, releases, fetchTimestamp, allComponents, j
 
     const alignPct = nTotal > 0 ? Math.round(1000 * cats.aligned / nTotal) / 10 : 0
 
+    // Look up release dates from Product Pages cache
+    var dates = {}
+    if (releaseDates) {
+      dates = releaseDates[release] || releaseDates[normVer(release)] || {}
+    }
+
     executiveSummary.push({
       release: release,
       total: nTotal,
@@ -293,7 +299,9 @@ function buildExport(classifications, releases, fetchTimestamp, allComponents, j
       fv_only_jql: jqlUrl(baseJql + ' AND fixVersion in (' + quoteRelease(release) + ') AND "Target Version" is EMPTY'),
       mismatched: cats.mismatched,
       mismatched_jql: jqlUrl(baseJql + ' AND (("Target Version" in (' + quoteRelease(release) + ') AND fixVersion is not EMPTY AND fixVersion not in (' + quoteRelease(release) + ')) OR (fixVersion in (' + quoteRelease(release) + ') AND "Target Version" is not EMPTY AND "Target Version" not in (' + quoteRelease(release) + ')))'),
-      alignment_pct: alignPct
+      alignment_pct: alignPct,
+      ga_date: dates.dueDate || null,
+      planning_freeze: dates.planningFreezeDate || null,
     })
 
     // Per-release feature lists
@@ -419,8 +427,24 @@ async function fetchAndClassify(releases, storage, jiraProject) {
   const classifications = classifyFeatures(features, releases)
   console.log('[releases/tv-fv-delta] Classified ' + classifications.length + ' feature-release pairs')
 
+  // Look up release dates from Product Pages delivery cache
+  const releaseDates = {}
+  const ppCache = storage.readFromStorage('releases/delivery/product-pages-releases-cache.json')
+  if (ppCache && Array.isArray(ppCache.releases)) {
+    for (var pi = 0; pi < ppCache.releases.length; pi++) {
+      var ppRel = ppCache.releases[pi]
+      var ppKey = (ppRel.releaseNumber || '').toLowerCase()
+      if (ppKey) {
+        releaseDates[ppKey] = {
+          dueDate: ppRel.dueDate || null,
+          planningFreezeDate: ppRel.planningFreezeDate || null,
+        }
+      }
+    }
+  }
+
   // Build export
-  const result = buildExport(classifications, releases, fetchTimestamp, allComponents, jiraProject)
+  const result = buildExport(classifications, releases, fetchTimestamp, allComponents, jiraProject, releaseDates)
 
   // Cache
   storage.writeToStorage(CACHE_KEY, result)
