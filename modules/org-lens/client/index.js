@@ -1,2 +1,5 @@
-// Placeholder — full chat UI added in a later task
-export const routes = {}
+import { defineAsyncComponent } from 'vue'
+
+export const routes = {
+  chat: defineAsyncComponent(() => import('./views/ChatView.vue')),
+}
