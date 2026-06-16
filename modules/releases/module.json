@@ -9,6 +9,7 @@
     "entry": "./client/index.js",
     "navItems": [
       { "id": "registry", "label": "Manage", "icon": "Database", "requireRole": "planning-manager" },
+      { "id": "schedule", "label": "Schedule", "icon": "CalendarDays" },
       { "id": "plan", "label": "Plan", "icon": "ClipboardList", "default": true },
       { "id": "execute", "label": "Execute", "icon": "GitBranch" },
       { "id": "deliver", "label": "Deliver", "icon": "Rocket" },

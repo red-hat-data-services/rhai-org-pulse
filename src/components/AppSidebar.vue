@@ -269,6 +269,7 @@ import {
   Database,
   History,
   Hospital,
+  CalendarDays,
   LayoutDashboard,
   Rocket,
   UserCircle
@@ -319,6 +320,7 @@ const ICON_MAP = {
   History,
   Hospital,
   'hospital': Hospital,
+  CalendarDays,
   LayoutDashboard,
   Rocket,
   UserCircle,

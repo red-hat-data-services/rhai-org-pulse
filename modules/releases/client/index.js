@@ -2,6 +2,7 @@ import { defineAsyncComponent } from 'vue'
 
 export const routes = {
   'registry': defineAsyncComponent(() => import('./views/RegistryView.vue')),
+  'schedule': defineAsyncComponent(() => import('./views/ScheduleView.vue')),
   'plan': defineAsyncComponent(() => import('./views/PlanView.vue')),
   'execute': defineAsyncComponent(() => import('./views/ExecuteView.vue')),
   'feature-detail': defineAsyncComponent(() => import('./views/FeatureDetailView.vue')),
