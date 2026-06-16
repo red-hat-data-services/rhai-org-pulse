@@ -54,7 +54,7 @@ describe('transformIssue — isBlocked', function () {
         type: { name: 'Blocks', inward: 'is blocked by' },
         inwardIssue: {
           key: 'RHOAIENG-500',
-          fields: { status: { name: 'Closed' } }
+          fields: { status: { name: 'Closed', statusCategory: { name: 'Done' } } }
         }
       }]
     }), {})
@@ -67,7 +67,7 @@ describe('transformIssue — isBlocked', function () {
         type: { name: 'Blocks', inward: 'is blocked by' },
         inwardIssue: {
           key: 'RHOAIENG-500',
-          fields: { status: { name: 'Resolved' } }
+          fields: { status: { name: 'Resolved', statusCategory: { name: 'Done' } } }
         }
       }]
     }), {})
@@ -80,7 +80,7 @@ describe('transformIssue — isBlocked', function () {
         type: { name: 'Blocks', inward: 'is blocked by' },
         inwardIssue: {
           key: 'RHOAIENG-500',
-          fields: { status: { name: 'Done' } }
+          fields: { status: { name: 'Done', statusCategory: { name: 'Done' } } }
         }
       }]
     }), {})
