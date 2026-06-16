@@ -92,7 +92,7 @@ const confidenceTooltip = computed(() => {
         >{{ priorityDisplay }}</span>
         <div
           v-if="scoreBreakdown"
-          class="absolute z-50 top-full mt-1 left-1/2 -translate-x-1/2 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 text-xs text-left font-normal hidden group-hover:block"
+          class="absolute z-50 top-full mt-1 left-0 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 text-xs text-left font-normal hidden group-hover:block"
         >
           <p class="font-semibold text-gray-700 dark:text-gray-200 mb-1.5">
             Score: {{ scoreBreakdown.score }} / 100
