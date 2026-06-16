@@ -788,20 +788,32 @@ var filteredVersions = computed(function() {
 })
 
 var totalRequested = computed(function() {
+  var source = clientFilteredGroups.value
   var count = 0
-  for (var i = 0; i < groups.value.length; i++) count += groups.value[i].requestedCount || 0
+  for (var i = 0; i < source.length; i++) {
+    var comps = source[i].components || []
+    for (var ci = 0; ci < comps.length; ci++) count += comps[ci].requestedCount || 0
+  }
   return count
 })
 
 var totalCommitted = computed(function() {
+  var source = clientFilteredGroups.value
   var count = 0
-  for (var i = 0; i < groups.value.length; i++) count += groups.value[i].committedCount || 0
+  for (var i = 0; i < source.length; i++) {
+    var comps = source[i].components || []
+    for (var ci = 0; ci < comps.length; ci++) count += comps[ci].committedCount || 0
+  }
   return count
 })
 
 var totalBlocked = computed(function() {
+  var source = clientFilteredGroups.value
   var count = 0
-  for (var i = 0; i < groups.value.length; i++) count += groups.value[i].blockedCount || 0
+  for (var i = 0; i < source.length; i++) {
+    var comps = source[i].components || []
+    for (var ci = 0; ci < comps.length; ci++) count += comps[ci].blockedCount || 0
+  }
   return count
 })
 
