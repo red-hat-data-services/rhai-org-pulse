@@ -264,6 +264,7 @@ async function discoverReleasesFromJira(storage, config) {
       dueDate: meta.dueDate || null,
       codeFreezeDate: meta.codeFreezeDate || null,
       featureFreezeDate: meta.featureFreezeDate || null,
+      planningFreezeDate: meta.planningFreezeDate || null,
       featureCount: featureCounts.get(version) || 0
     })
   }
@@ -323,7 +324,8 @@ async function fetchOpenReleases(storage, config) {
         releaseNumber: r.releaseNumber || r.release_number || r.name || '',
         dueDate: toIsoDate(r.dueDate || r.due_date || r.gaDate || r.ga_date || r.date_finish || r.date_start),
         codeFreezeDate: toIsoDate(r.codeFreezeDate || r.code_freeze_date || r.codeFreeze || r.code_freeze) || null,
-        featureFreezeDate: toIsoDate(r.featureFreezeDate || r.feature_freeze_date || r.featureFreeze || r.feature_freeze) || null
+        featureFreezeDate: toIsoDate(r.featureFreezeDate || r.feature_freeze_date || r.featureFreeze || r.feature_freeze) || null,
+        planningFreezeDate: toIsoDate(r.planningFreezeDate || r.planning_freeze_date || r.planningFreeze || r.planning_freeze) || null
       }))
       .filter(r => r.productName && r.releaseNumber && r.dueDate)
     storage.writeToStorage('releases/delivery/product-pages-releases-cache.json', {
