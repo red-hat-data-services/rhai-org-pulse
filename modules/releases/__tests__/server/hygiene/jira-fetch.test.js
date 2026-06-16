@@ -405,6 +405,166 @@ describe('transformIssue', function () {
     var result = transformIssue(makeRawIssue(), {})
     expect(result.violations).toEqual([])
   })
+
+  // ─── isBlocked via statusCategory ─────────────────────────────────
+
+  it('marks as blocked when blocker statusCategory is not Done', function () {
+    var fields = {}
+    fields.issuelinks = [{
+      type: { name: 'Blocks', inward: 'is blocked by' },
+      inwardIssue: {
+        key: 'BLOCK-1',
+        fields: { status: { name: 'In Progress', statusCategory: { name: 'In Progress' } } }
+      }
+    }]
+    var result = transformIssue({ key: 'TEST-B1', fields: fields, renderedFields: {} }, {})
+    expect(result.isBlocked).toBe(true)
+  })
+
+  it('not blocked when blocker statusCategory is Done', function () {
+    var fields = {}
+    fields.issuelinks = [{
+      type: { name: 'Blocks', inward: 'is blocked by' },
+      inwardIssue: {
+        key: 'BLOCK-2',
+        fields: { status: { name: 'Closed', statusCategory: { name: 'Done' } } }
+      }
+    }]
+    var result = transformIssue({ key: 'TEST-B2', fields: fields, renderedFields: {} }, {})
+    expect(result.isBlocked).toBe(false)
+  })
+
+  it('not blocked when blocker has custom terminal status with Done category', function () {
+    var fields = {}
+    fields.issuelinks = [{
+      type: { name: 'Blocks', inward: 'is blocked by' },
+      inwardIssue: {
+        key: 'BLOCK-3',
+        fields: { status: { name: 'Release Pending', statusCategory: { name: 'Done' } } }
+      }
+    }]
+    var result = transformIssue({ key: 'TEST-B3', fields: fields, renderedFields: {} }, {})
+    expect(result.isBlocked).toBe(false)
+  })
+
+  it('not blocked when blocker status is Cancelled with Done category', function () {
+    var fields = {}
+    fields.issuelinks = [{
+      type: { name: 'Blocks', inward: 'is blocked by' },
+      inwardIssue: {
+        key: 'BLOCK-4',
+        fields: { status: { name: 'Cancelled', statusCategory: { name: 'Done' } } }
+      }
+    }]
+    var result = transformIssue({ key: 'TEST-B4', fields: fields, renderedFields: {} }, {})
+    expect(result.isBlocked).toBe(false)
+  })
+
+  it('blocked when blocker statusCategory is To Do', function () {
+    var fields = {}
+    fields.issuelinks = [{
+      type: { name: 'Blocks', inward: 'is blocked by' },
+      inwardIssue: {
+        key: 'BLOCK-5',
+        fields: { status: { name: 'New', statusCategory: { name: 'To Do' } } }
+      }
+    }]
+    var result = transformIssue({ key: 'TEST-B5', fields: fields, renderedFields: {} }, {})
+    expect(result.isBlocked).toBe(true)
+  })
+
+  it('blocked when blocker has no statusCategory', function () {
+    var fields = {}
+    fields.issuelinks = [{
+      type: { name: 'Blocks', inward: 'is blocked by' },
+      inwardIssue: {
+        key: 'BLOCK-6',
+        fields: { status: { name: 'In Progress' } }
+      }
+    }]
+    var result = transformIssue({ key: 'TEST-B6', fields: fields, renderedFields: {} }, {})
+    expect(result.isBlocked).toBe(true)
+  })
+
+  it('blocked when blocker has no status at all', function () {
+    var fields = {}
+    fields.issuelinks = [{
+      type: { name: 'Blocks', inward: 'is blocked by' },
+      inwardIssue: { key: 'BLOCK-7', fields: {} }
+    }]
+    var result = transformIssue({ key: 'TEST-B7', fields: fields, renderedFields: {} }, {})
+    expect(result.isBlocked).toBe(true)
+  })
+
+  it('ignores outward Blocks links (issue blocks another)', function () {
+    var fields = {}
+    fields.issuelinks = [{
+      type: { name: 'Blocks', outward: 'blocks' },
+      outwardIssue: {
+        key: 'OTHER-1',
+        fields: { status: { name: 'Open', statusCategory: { name: 'To Do' } } }
+      }
+    }]
+    var result = transformIssue({ key: 'TEST-B8', fields: fields, renderedFields: {} }, {})
+    expect(result.isBlocked).toBe(false)
+  })
+
+  it('ignores non-Blocks link types', function () {
+    var fields = {}
+    fields.issuelinks = [{
+      type: { name: 'Cloners', inward: 'is cloned by' },
+      inwardIssue: {
+        key: 'CLONE-1',
+        fields: { status: { name: 'Open', statusCategory: { name: 'To Do' } } }
+      }
+    }]
+    var result = transformIssue({ key: 'TEST-B9', fields: fields, renderedFields: {} }, {})
+    expect(result.isBlocked).toBe(false)
+  })
+
+  it('blocked if any one of multiple blockers is unresolved', function () {
+    var fields = {}
+    fields.issuelinks = [
+      {
+        type: { name: 'Blocks', inward: 'is blocked by' },
+        inwardIssue: {
+          key: 'BLOCK-DONE',
+          fields: { status: { name: 'Closed', statusCategory: { name: 'Done' } } }
+        }
+      },
+      {
+        type: { name: 'Blocks', inward: 'is blocked by' },
+        inwardIssue: {
+          key: 'BLOCK-OPEN',
+          fields: { status: { name: 'In Progress', statusCategory: { name: 'In Progress' } } }
+        }
+      }
+    ]
+    var result = transformIssue({ key: 'TEST-B10', fields: fields, renderedFields: {} }, {})
+    expect(result.isBlocked).toBe(true)
+  })
+
+  it('not blocked when all blockers are resolved', function () {
+    var fields = {}
+    fields.issuelinks = [
+      {
+        type: { name: 'Blocks', inward: 'is blocked by' },
+        inwardIssue: {
+          key: 'BLOCK-D1',
+          fields: { status: { name: 'Done', statusCategory: { name: 'Done' } } }
+        }
+      },
+      {
+        type: { name: 'Blocks', inward: 'is blocked by' },
+        inwardIssue: {
+          key: 'BLOCK-D2',
+          fields: { status: { name: 'Resolved', statusCategory: { name: 'Done' } } }
+        }
+      }
+    ]
+    var result = transformIssue({ key: 'TEST-B11', fields: fields, renderedFields: {} }, {})
+    expect(result.isBlocked).toBe(false)
+  })
 })
 
 // ─── fetchHygieneFeatures — jqlVersions parameter ──────────────────

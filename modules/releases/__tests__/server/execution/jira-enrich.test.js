@@ -119,15 +119,15 @@ describe('checkIsBlocked', () => {
   it('returns true for unresolved inward Blocks link', () => {
     const links = [{
       type: { name: 'Blocks', inward: 'is blocked by' },
-      inwardIssue: { key: 'X-1', fields: { status: { name: 'Open' } } }
+      inwardIssue: { key: 'X-1', fields: { status: { name: 'Open', statusCategory: { name: 'To Do' } } } }
     }]
     expect(checkIsBlocked(links)).toBe(true)
   })
 
-  it('returns false when blocker is resolved', () => {
+  it('returns false when blocker statusCategory is Done', () => {
     const links = [{
       type: { name: 'Blocks', inward: 'is blocked by' },
-      inwardIssue: { key: 'X-1', fields: { status: { name: 'Closed' } } }
+      inwardIssue: { key: 'X-1', fields: { status: { name: 'Closed', statusCategory: { name: 'Done' } } } }
     }]
     expect(checkIsBlocked(links)).toBe(false)
   })
@@ -135,9 +135,77 @@ describe('checkIsBlocked', () => {
   it('returns false for non-Blocks links', () => {
     const links = [{
       type: { name: 'Cloners' },
-      inwardIssue: { key: 'X-1', fields: { status: { name: 'Open' } } }
+      inwardIssue: { key: 'X-1', fields: { status: { name: 'Open', statusCategory: { name: 'To Do' } } } }
     }]
     expect(checkIsBlocked(links)).toBe(false)
+  })
+
+  it('returns false when blocker has custom terminal status with Done category', () => {
+    const links = [{
+      type: { name: 'Blocks', inward: 'is blocked by' },
+      inwardIssue: { key: 'X-1', fields: { status: { name: 'Release Pending', statusCategory: { name: 'Done' } } } }
+    }]
+    expect(checkIsBlocked(links)).toBe(false)
+  })
+
+  it('returns false when blocker is Cancelled with Done category', () => {
+    const links = [{
+      type: { name: 'Blocks', inward: 'is blocked by' },
+      inwardIssue: { key: 'X-1', fields: { status: { name: 'Cancelled', statusCategory: { name: 'Done' } } } }
+    }]
+    expect(checkIsBlocked(links)).toBe(false)
+  })
+
+  it('returns true when blocker has no statusCategory', () => {
+    const links = [{
+      type: { name: 'Blocks', inward: 'is blocked by' },
+      inwardIssue: { key: 'X-1', fields: { status: { name: 'In Progress' } } }
+    }]
+    expect(checkIsBlocked(links)).toBe(true)
+  })
+
+  it('returns true when blocker has no status at all', () => {
+    const links = [{
+      type: { name: 'Blocks', inward: 'is blocked by' },
+      inwardIssue: { key: 'X-1', fields: {} }
+    }]
+    expect(checkIsBlocked(links)).toBe(true)
+  })
+
+  it('returns true if any blocker is unresolved among multiple', () => {
+    const links = [
+      {
+        type: { name: 'Blocks', inward: 'is blocked by' },
+        inwardIssue: { key: 'X-1', fields: { status: { name: 'Done', statusCategory: { name: 'Done' } } } }
+      },
+      {
+        type: { name: 'Blocks', inward: 'is blocked by' },
+        inwardIssue: { key: 'X-2', fields: { status: { name: 'In Progress', statusCategory: { name: 'In Progress' } } } }
+      }
+    ]
+    expect(checkIsBlocked(links)).toBe(true)
+  })
+
+  it('returns false when all blockers are resolved', () => {
+    const links = [
+      {
+        type: { name: 'Blocks', inward: 'is blocked by' },
+        inwardIssue: { key: 'X-1', fields: { status: { name: 'Closed', statusCategory: { name: 'Done' } } } }
+      },
+      {
+        type: { name: 'Blocks', inward: 'is blocked by' },
+        inwardIssue: { key: 'X-2', fields: { status: { name: 'Resolved', statusCategory: { name: 'Done' } } } }
+      }
+    ]
+    expect(checkIsBlocked(links)).toBe(false)
+  })
+
+  it('returns false for null input', () => {
+    expect(checkIsBlocked(null)).toBe(false)
+  })
+
+  it('returns false for empty array', () => {
+    expect(checkIsBlocked([])).toBe(false)
   })
 })
 
