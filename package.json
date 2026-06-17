@@ -40,7 +40,7 @@
     "ldapjs": "^3.0.7",
     "lucide-vue-next": "^0.577.0",
     "marked": "^18.0.5",
-    "node-fetch": "^2.7.0",
+    "node-fetch": "^3.3.2",
     "sortablejs": "^1.15.7",
     "swagger-jsdoc": "^6.3.0",
     "swagger-ui-express": "^5.0.1",
