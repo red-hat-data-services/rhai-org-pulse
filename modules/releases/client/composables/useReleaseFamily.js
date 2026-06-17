@@ -35,7 +35,7 @@ function compareReleases(a, b) {
   if (!pa) return 1
   if (!pb) return -1
 
-  // Product alphabetical (rhelai < rhaii < rhoai)
+  // Product alphabetical (rhaii < rhelai < rhoai)
   if (pa.product !== pb.product) return pa.product.localeCompare(pb.product)
   // Major descending (3.6 before 3.5)
   if (pa.major !== pb.major) return pb.major - pa.major
