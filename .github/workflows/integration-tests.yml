@@ -51,7 +51,11 @@ jobs:
             package-analysis:
               - 'modules/product-builds/server/analysis.js'
               - 'modules/product-builds/server/index.js'
+              - 'modules/product-builds/server/package-index.js'
+              - 'modules/product-builds/server/wheel-parser.js'
               - 'modules/product-builds/client/views/PackageAnalysisView.vue'
+              - 'modules/product-builds/client/views/PackageSearchView.vue'
+              - 'modules/product-builds/client/composables/usePackageSearch.js'
               - 'tests/integration/package-analysis.spec.js'
             releases:
               - 'modules/releases/server/execution/**'

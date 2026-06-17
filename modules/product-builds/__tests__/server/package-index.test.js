@@ -21,6 +21,8 @@ describe('package-index', () => {
   afterEach(() => {
     delete process.env.PACKAGE_INDEX_BASE_URL
     delete process.env.PACKAGE_INDEX_VARIANTS
+    delete process.env.PACKAGE_INDEX_PRODUCT_VERSIONS
+    delete process.env.PACKAGE_INDEX_DEFAULT_PRODUCT_VERSION
     delete process.env.PACKAGE_INDEX_QUERY_TIMEOUT
     delete process.env.PACKAGE_INDEX_CACHE_TTL
   })
@@ -208,16 +210,25 @@ describe('package-index', () => {
       expect(getVariants()).toEqual(['cpu-ubi9', 'cuda12.9-ubi9', 'rocm6.4-ubi9'])
     })
 
-    it('getProductVersions returns hardcoded list', () => {
+    it('getProductVersions returns default list when env not set', () => {
       const versions = getProductVersions()
       expect(versions).toContain('3.4')
       expect(versions).toContain('3.5-EA2')
       expect(versions).toContain('4.0')
       expect(versions[0]).toBe('3.2')
-      expect(versions[versions.length - 1]).toBe('4.0')
     })
 
-    it('getDefaultProductVersion returns 3.4', () => {
+    it('getProductVersions reads env var when set', () => {
+      process.env.PACKAGE_INDEX_PRODUCT_VERSIONS = '3.4,3.5'
+      expect(getProductVersions()).toEqual(['3.4', '3.5'])
+    })
+
+    it('getDefaultProductVersion returns null when env not set', () => {
+      expect(getDefaultProductVersion()).toBeNull()
+    })
+
+    it('getDefaultProductVersion reads env var', () => {
+      process.env.PACKAGE_INDEX_DEFAULT_PRODUCT_VERSION = '3.4'
       expect(getDefaultProductVersion()).toBe('3.4')
     })
   })

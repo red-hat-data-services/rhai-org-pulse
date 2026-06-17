@@ -84,4 +84,31 @@ test.describe('Package Analysis @package-analysis', () => {
 
     expect(page.errors).toHaveLength(0);
   });
+
+  test('should show Package Search tab', async ({ page }) => {
+    await page.goto('/#/product-builds/package-analysis');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const searchTab = page.getByRole('button', { name: /Package Search/ });
+    await expect(searchTab).toBeVisible();
+
+    expect(page.errors).toHaveLength(0);
+  });
+
+  test('should switch to Package Search tab and show form', async ({ page }) => {
+    await page.goto('/#/product-builds/package-analysis');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(DEFAULT_PAGE_WAIT_TIME);
+
+    const searchTab = page.getByRole('button', { name: /Package Search/ });
+    await searchTab.click();
+    await page.waitForTimeout(1000);
+
+    const searchButton = page.locator('button[type="submit"]');
+    await expect(searchButton).toBeVisible();
+    await expect(searchButton).toContainText('Search');
+
+    expect(page.errors).toHaveLength(0);
+  });
 });

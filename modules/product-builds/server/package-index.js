@@ -1,5 +1,7 @@
 const MAX_CONCURRENT_FETCHES = 20
 
+// Runs fn on each item with bounded concurrency. fn must handle its own
+// errors — any unhandled rejection will propagate to the caller.
 async function pMap(items, fn, concurrency) {
   const results = new Array(items.length)
   let idx = 0
@@ -13,7 +15,7 @@ async function pMap(items, fn, concurrency) {
   for (let w = 0; w < Math.min(concurrency, items.length); w++) {
     workers.push(worker())
   }
-  await Promise.allSettled(workers)
+  await Promise.all(workers)
   return results
 }
 
@@ -177,7 +179,7 @@ function getVariants() {
   return raw.split(',').map(function (v) { return v.trim() }).filter(Boolean)
 }
 
-const PRODUCT_VERSIONS = [
+const DEFAULT_PRODUCT_VERSIONS = [
   '3.2',
   '3.3',
   '3.4-EA1', '3.4-EA2', '3.4',
@@ -189,14 +191,14 @@ const PRODUCT_VERSIONS = [
   '4.0'
 ]
 
-const DEFAULT_PRODUCT_VERSION = '3.4'
-
 function getProductVersions() {
-  return PRODUCT_VERSIONS
+  const raw = process.env.PACKAGE_INDEX_PRODUCT_VERSIONS
+  if (raw) return raw.split(',').map(function (v) { return v.trim() }).filter(Boolean)
+  return DEFAULT_PRODUCT_VERSIONS
 }
 
 function getDefaultProductVersion() {
-  return DEFAULT_PRODUCT_VERSION
+  return process.env.PACKAGE_INDEX_DEFAULT_PRODUCT_VERSION || null
 }
 
 module.exports = {
