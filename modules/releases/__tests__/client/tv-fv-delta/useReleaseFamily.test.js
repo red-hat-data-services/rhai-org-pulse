@@ -8,6 +8,8 @@ import {
   parseReleaseName,
   compareReleases,
   extractProduct,
+  extractFamily,
+  familyLabel,
   productLabel,
   getAlignmentTarget,
   useReleaseFamily,
@@ -198,66 +200,127 @@ function makeSummaryRows() {
   ]
 }
 
+// ═══ extractFamily ═══
+
+describe('extractFamily', function () {
+  it('extracts family from GA version', function () {
+    expect(extractFamily('rhoai-3.6')).toBe('rhoai-3.6')
+  })
+
+  it('extracts family from EA version', function () {
+    expect(extractFamily('rhoai-3.6.EA1')).toBe('rhoai-3.6')
+    expect(extractFamily('rhoai-3.6.EA2')).toBe('rhoai-3.6')
+  })
+
+  it('extracts family case-insensitively', function () {
+    expect(extractFamily('RHELAI-3.2')).toBe('rhelai-3.2')
+  })
+
+  it('falls back to lowercase name for unparseable releases', function () {
+    expect(extractFamily('RHAII-3.2.3')).toBe('rhaii-3.2')
+  })
+})
+
+// ═══ familyLabel ═══
+
+describe('familyLabel', function () {
+  it('formats rhoai family', function () {
+    expect(familyLabel('rhoai-3.6')).toBe('RHOAI 3.6')
+  })
+
+  it('formats rhelai family', function () {
+    expect(familyLabel('rhelai-3.2')).toBe('RHELAI 3.2')
+  })
+
+  it('passes through unknown keys', function () {
+    expect(familyLabel('unknown')).toBe('unknown')
+  })
+})
+
 describe('useReleaseFamily composable', function () {
-  describe('product filtering', function () {
-    it('defaults to rhoai', function () {
+  function makeDataRef() {
+    return ref({ executive_summary: makeSummaryRows() })
+  }
+
+  describe('release family filtering', function () {
+    it('defaults to all', function () {
       var summary = ref(makeSummaryRows())
-      var rf = useReleaseFamily(summary)
-      expect(rf.selectedProduct.value).toBe('rhoai')
+      var rf = useReleaseFamily(summary, makeDataRef())
+      expect(rf.selectedFamily.value).toBe('all')
     })
 
-    it('filters summary rows by selected product', function () {
+    it('filters to a specific release family', function () {
       var summary = ref(makeSummaryRows())
-      var rf = useReleaseFamily(summary)
+      var rf = useReleaseFamily(summary, makeDataRef())
 
-      // Default: rhoai only
-      var rhoaiRows = rf.productFilteredSummary.value
-      expect(rhoaiRows.every(function (r) { return extractProduct(r.release) === 'rhoai' })).toBe(true)
-      expect(rhoaiRows.length).toBe(5) // 3.6 EA1/EA2/GA + 3.5 GA/EA1
+      rf.selectedFamily.value = 'rhoai-3.6'
+      var rows = rf.productFilteredSummary.value
+      expect(rows.length).toBe(3) // EA1, EA2, GA
+      expect(rows.every(function (r) { return extractFamily(r.release) === 'rhoai-3.6' })).toBe(true)
     })
 
-    it('shows all products when set to "all"', function () {
+    it('shows all releases when set to "all"', function () {
       var summary = ref(makeSummaryRows())
-      var rf = useReleaseFamily(summary)
-      rf.selectedProduct.value = 'all'
+      var rf = useReleaseFamily(summary, makeDataRef())
       expect(rf.productFilteredSummary.value.length).toBe(7)
     })
 
-    it('filters to rhelai', function () {
+    it('filters to rhelai family', function () {
       var summary = ref(makeSummaryRows())
-      var rf = useReleaseFamily(summary)
-      rf.selectedProduct.value = 'rhelai'
+      var rf = useReleaseFamily(summary, makeDataRef())
+      rf.selectedFamily.value = 'rhelai-3.2'
       var rows = rf.productFilteredSummary.value
       expect(rows.length).toBe(1)
       expect(rows[0].release).toBe('RHELAI-3.2')
     })
 
-    it('lists available products sorted', function () {
+    it('discovers families from full data, not just filtered summary', function () {
+      var filteredOnly = ref(makeSummaryRows().filter(function (r) { return extractProduct(r.release) === 'rhoai' }))
+      var fullData = makeDataRef()
+      var rf = useReleaseFamily(filteredOnly, fullData)
+      var familyKeys = rf.availableFamilies.value.map(function (f) { return f.key })
+      expect(familyKeys).toContain('rhoai-3.6')
+      expect(familyKeys).toContain('rhoai-3.5')
+      expect(familyKeys).toContain('rhelai-3.2')
+    })
+
+    it('lists families with display labels', function () {
       var summary = ref(makeSummaryRows())
-      var rf = useReleaseFamily(summary)
-      // rhaii comes from RHAII-3.2.3 — but extractProduct returns 'rhaii'
-      expect(rf.availableProducts.value).toContain('rhoai')
-      expect(rf.availableProducts.value).toContain('rhelai')
-      expect(rf.availableProducts.value).toContain('rhaii')
+      var rf = useReleaseFamily(summary, makeDataRef())
+      var labels = rf.availableFamilies.value.map(function (f) { return f.label })
+      expect(labels).toContain('RHOAI 3.6')
+      expect(labels).toContain('RHOAI 3.5')
+      expect(labels).toContain('RHELAI 3.2')
     })
   })
 
   describe('sorting', function () {
-    it('default sort is release family order', function () {
+    it('default sort is release family order (all products)', function () {
       var summary = ref(makeSummaryRows())
-      var rf = useReleaseFamily(summary)
+      var rf = useReleaseFamily(summary, makeDataRef())
       var sorted = rf.sortedSummary.value
       var names = sorted.map(function (r) { return r.release })
-      // Within rhoai: 3.6 family (EA1, EA2, GA) then 3.5 family (EA1, GA)
+      // Default is "all", so all products show — rhelai first (alpha), then rhaii (unparseable, last), then rhoai
+      expect(names[0]).toBe('RHELAI-3.2')
+      // rhoai 3.6 family then 3.5 family
+      expect(names.indexOf('rhoai-3.6.EA1')).toBeLessThan(names.indexOf('rhoai-3.6'))
+      expect(names.indexOf('rhoai-3.6')).toBeLessThan(names.indexOf('rhoai-3.5'))
+    })
+
+    it('sorts within filtered family', function () {
+      var summary = ref(makeSummaryRows())
+      var rf = useReleaseFamily(summary, makeDataRef())
+      rf.selectedFamily.value = 'rhoai-3.6'
+      var sorted = rf.sortedSummary.value
+      var names = sorted.map(function (r) { return r.release })
       expect(names).toEqual([
         'rhoai-3.6.EA1', 'rhoai-3.6.EA2', 'rhoai-3.6',
-        'rhoai-3.5.EA1', 'rhoai-3.5',
       ])
     })
 
     it('toggleSort cycles asc → desc → clear', function () {
       var summary = ref(makeSummaryRows())
-      var rf = useReleaseFamily(summary)
+      var rf = useReleaseFamily(summary, makeDataRef())
 
       rf.toggleSummarySort('total')
       expect(rf.sortColumn.value).toBe('total')
@@ -273,7 +336,7 @@ describe('useReleaseFamily composable', function () {
 
     it('sorts by total ascending', function () {
       var summary = ref(makeSummaryRows())
-      var rf = useReleaseFamily(summary)
+      var rf = useReleaseFamily(summary, makeDataRef())
       rf.toggleSummarySort('total')
       var totals = rf.sortedSummary.value.map(function (r) { return r.total })
       for (var i = 1; i < totals.length; i++) {
@@ -283,7 +346,7 @@ describe('useReleaseFamily composable', function () {
 
     it('sorts by total descending', function () {
       var summary = ref(makeSummaryRows())
-      var rf = useReleaseFamily(summary)
+      var rf = useReleaseFamily(summary, makeDataRef())
       rf.toggleSummarySort('total')
       rf.toggleSummarySort('total')
       var totals = rf.sortedSummary.value.map(function (r) { return r.total })
@@ -294,7 +357,7 @@ describe('useReleaseFamily composable', function () {
 
     it('sorts by alignment_pct', function () {
       var summary = ref(makeSummaryRows())
-      var rf = useReleaseFamily(summary)
+      var rf = useReleaseFamily(summary, makeDataRef())
       rf.toggleSummarySort('alignment_pct')
       var pcts = rf.sortedSummary.value.map(function (r) { return r.alignment_pct })
       for (var i = 1; i < pcts.length; i++) {
@@ -304,7 +367,7 @@ describe('useReleaseFamily composable', function () {
 
     it('sortIcon returns correct state', function () {
       var summary = ref(makeSummaryRows())
-      var rf = useReleaseFamily(summary)
+      var rf = useReleaseFamily(summary, makeDataRef())
       expect(rf.summarySortIcon('total')).toBe('none')
       rf.toggleSummarySort('total')
       expect(rf.summarySortIcon('total')).toBe('asc')
@@ -315,7 +378,7 @@ describe('useReleaseFamily composable', function () {
 
     it('switching columns resets direction to asc', function () {
       var summary = ref(makeSummaryRows())
-      var rf = useReleaseFamily(summary)
+      var rf = useReleaseFamily(summary, makeDataRef())
       rf.toggleSummarySort('total')
       rf.toggleSummarySort('total') // desc
       rf.toggleSummarySort('aligned') // switch column

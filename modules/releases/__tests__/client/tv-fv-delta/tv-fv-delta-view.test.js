@@ -73,49 +73,46 @@ async function mountView() {
 
 // ── Tests ──
 
-describe('TvFvDeltaView product filter', function () {
+describe('TvFvDeltaView release family filter', function () {
   beforeEach(function () {
     mockApiRequest.mockReset()
   })
 
-  it('renders product filter pills', async function () {
+  it('renders release family filter pills', async function () {
     var wrapper = await mountView()
     var buttons = wrapper.findAll('button').filter(function (b) {
       var text = b.text()
-      return text === 'All' || text === 'RHOAI' || text === 'RHELAI'
+      return text === 'All' || text === 'RHOAI 3.6' || text === 'RHOAI 3.5' || text === 'RHELAI 3.2'
     })
-    expect(buttons.length).toBeGreaterThanOrEqual(3)
+    expect(buttons.length).toBeGreaterThanOrEqual(4)
   })
 
-  it('defaults to RHOAI filter', async function () {
+  it('defaults to All — shows all releases', async function () {
     var wrapper = await mountView()
-    var table = findSummaryTable(wrapper)
-    // Summary table should only show rhoai releases by default
-    var rows = table.findAll('tbody tr')
-    var releaseTexts = rows.map(function (r) { return r.find('td').text() })
-    for (var i = 0; i < releaseTexts.length; i++) {
-      expect(releaseTexts[i].toLowerCase()).toContain('rhoai')
-    }
-    // RHELAI-3.2 should NOT be visible
-    var allText = table.find('tbody').text()
-    expect(allText).not.toContain('RHELAI')
-  })
-
-  it('shows all products when "All" is clicked', async function () {
-    var wrapper = await mountView()
-    var allButton = wrapper.findAll('button').find(function (b) { return b.text() === 'All' })
-    await allButton.trigger('click')
-    await flushPromises()
     var table = findSummaryTable(wrapper)
     var allText = table.find('tbody').text()
     expect(allText).toContain('RHELAI')
     expect(allText).toContain('rhoai')
   })
 
-  it('filters to RHELAI when clicked', async function () {
+  it('filters to RHOAI 3.6 family when clicked', async function () {
     var wrapper = await mountView()
-    var rhelaiButton = wrapper.findAll('button').find(function (b) { return b.text() === 'RHELAI' })
-    await rhelaiButton.trigger('click')
+    var famButton = wrapper.findAll('button').find(function (b) { return b.text() === 'RHOAI 3.6' })
+    await famButton.trigger('click')
+    await flushPromises()
+    var table = findSummaryTable(wrapper)
+    var rows = table.findAll('tbody tr')
+    expect(rows.length).toBe(3) // EA1, EA2, GA
+    var releaseTexts = rows.map(function (r) { return r.find('td').text() })
+    for (var i = 0; i < releaseTexts.length; i++) {
+      expect(releaseTexts[i]).toContain('3.6')
+    }
+  })
+
+  it('filters to RHELAI 3.2 when clicked', async function () {
+    var wrapper = await mountView()
+    var famButton = wrapper.findAll('button').find(function (b) { return b.text() === 'RHELAI 3.2' })
+    await famButton.trigger('click')
     await flushPromises()
     var table = findSummaryTable(wrapper)
     var rows = table.findAll('tbody tr')
@@ -147,11 +144,14 @@ describe('TvFvDeltaView executive summary sorting', function () {
     var table = findSummaryTable(wrapper)
     var rows = table.findAll('tbody tr')
     var releases = rows.map(function (r) { return r.find('td').text().trim() })
-    // rhoai-3.6 family first (EA1, EA2, GA), then 3.5
-    expect(releases[0]).toBe('rhoai-3.6.EA1')
-    expect(releases[1]).toBe('rhoai-3.6.EA2')
-    expect(releases[2]).toBe('rhoai-3.6')
-    expect(releases[3]).toBe('rhoai-3.5')
+    // Default is All — RHELAI first (alpha), then rhoai families
+    expect(releases[0]).toBe('RHELAI-3.2')
+    // rhoai 3.6 family in order, then 3.5
+    var rhoaiReleases = releases.filter(function (r) { return r.toLowerCase().startsWith('rhoai') })
+    expect(rhoaiReleases[0]).toBe('rhoai-3.6.EA1')
+    expect(rhoaiReleases[1]).toBe('rhoai-3.6.EA2')
+    expect(rhoaiReleases[2]).toBe('rhoai-3.6')
+    expect(rhoaiReleases[3]).toBe('rhoai-3.5')
   })
 
   it('clicking Total header sorts by total', async function () {
@@ -213,10 +213,7 @@ describe('TvFvDeltaView target alignment column', function () {
 
   it('shows dash for releases without GA dates', async function () {
     var wrapper = await mountView()
-    // Switch to All to see RHELAI-3.2 which has no ga_date
-    var allButton = wrapper.findAll('button').find(function (b) { return b.text() === 'All' })
-    await allButton.trigger('click')
-    await flushPromises()
+    // Default is All, so RHELAI-3.2 (no ga_date) is already visible
     var table = findSummaryTable(wrapper)
     var rows = table.findAll('tbody tr')
     var rhelaiRow = rows.find(function (r) { return r.text().includes('RHELAI') })

@@ -5,7 +5,7 @@ import FeatureTable from '../components/FeatureTable.vue'
 import { useReleasePicker } from '../composables/useReleasePicker'
 import { useComponentBreakdown } from '../composables/useComponentBreakdown'
 import { useTvFvData } from '../composables/useTvFvData'
-import { useReleaseFamily, getAlignmentTarget, productLabel } from '../composables/useReleaseFamily'
+import { useReleaseFamily, getAlignmentTarget } from '../composables/useReleaseFamily'
 
 const FEATURE_COLS = ['key', 'summary', 'status', 'target_version', 'fix_versions', 'color_status', 'product_manager', 'assignee', 'team', 'component']
 
@@ -69,10 +69,10 @@ const filteredSummary = computed(() => {
 // ---------------------------------------------------------------------------
 
 const {
-  selectedProduct, availableProducts,
+  selectedFamily, availableFamilies,
   toggleSummarySort, summarySortIcon,
   sortedSummary,
-} = useReleaseFamily(filteredSummary)
+} = useReleaseFamily(filteredSummary, data)
 
 /** Compute target alignment for a row based on days to GA */
 function targetForRow(row) {
@@ -178,24 +178,24 @@ onBeforeUnmount(() => {
         <span class="italic">Counts reflect data at fetch time; live Jira may differ</span>
       </div>
 
-      <!-- Product Filter -->
-      <div class="flex items-center gap-1.5 mb-4">
+      <!-- Release Family Filter -->
+      <div class="flex items-center gap-1.5 mb-4 flex-wrap">
         <button
           class="px-3 py-1.5 text-xs font-medium rounded-md border transition-colors"
-          :class="selectedProduct === 'all'
+          :class="selectedFamily === 'all'
             ? 'bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900 border-gray-800 dark:border-gray-200'
             : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'"
-          @click="selectedProduct = 'all'"
+          @click="selectedFamily = 'all'"
         >All</button>
         <button
-          v-for="prod in availableProducts"
-          :key="prod"
+          v-for="fam in availableFamilies"
+          :key="fam.key"
           class="px-3 py-1.5 text-xs font-medium rounded-md border transition-colors"
-          :class="selectedProduct === prod
+          :class="selectedFamily === fam.key
             ? 'bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900 border-gray-800 dark:border-gray-200'
             : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-700'"
-          @click="selectedProduct = prod"
-        >{{ productLabel(prod) }}</button>
+          @click="selectedFamily = fam.key"
+        >{{ fam.label }}</button>
       </div>
 
       <!-- Executive Summary -->

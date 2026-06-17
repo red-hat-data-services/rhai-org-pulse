@@ -87,32 +87,62 @@ function getAlignmentTarget(daysToGa) {
 // ═══ COMPOSABLE ═══
 
 /**
- * Composable for product filtering and release family sorting on the executive summary.
+ * Extract the release family key from a release name.
+ * e.g. "rhoai-3.6.EA1" → "rhoai-3.6", "RHELAI-3.2" → "rhelai-3.2"
+ * Returns lowercase key for comparison, or the raw name if unparseable.
  */
-export function useReleaseFamily(filteredSummary) {
-  var selectedProduct = ref('rhoai')
+function extractFamily(name) {
+  var parsed = parseReleaseName(name)
+  if (parsed) return parsed.product + '-' + parsed.major + '.' + parsed.minor
+  // Fallback: try to extract product-major.minor pattern directly
+  var m = /^(rhoai|rhelai|rhaii)[- _](\d+\.\d+)/i.exec(name)
+  if (m) return m[1].toLowerCase() + '-' + m[2]
+  return name.toLowerCase()
+}
 
-  /** Unique products found in the summary rows */
-  var availableProducts = computed(function () {
+/**
+ * Get display label for a release family.
+ * e.g. "rhoai-3.6" → "RHOAI 3.6"
+ */
+function familyLabel(familyKey) {
+  var m = /^(rhoai|rhelai|rhaii)-(.+)$/.exec(familyKey)
+  if (m) return PRODUCT_LABELS[m[1]] + ' ' + m[2]
+  return familyKey
+}
+
+/**
+ * Composable for product filtering and release family sorting on the executive summary.
+ *
+ * @param {Ref} filteredSummary — version-picker-filtered summary rows
+ * @param {Ref} data — full API response (used to discover all available families)
+ */
+export function useReleaseFamily(filteredSummary, data) {
+  var selectedFamily = ref('all')
+
+  /** Unique release families found across ALL data */
+  var availableFamilies = computed(function () {
     var seen = {}
-    var result = []
-    var rows = filteredSummary.value || []
+    var families = []
+    var rows = (data && data.value && data.value.executive_summary) || []
+    if (!rows.length) rows = filteredSummary.value || []
     for (var i = 0; i < rows.length; i++) {
-      var p = extractProduct(rows[i].release)
-      if (p && !seen[p]) {
-        seen[p] = true
-        result.push(p)
+      var fam = extractFamily(rows[i].release)
+      if (!seen[fam]) {
+        seen[fam] = true
+        families.push({ key: fam, label: familyLabel(fam) })
       }
     }
-    return result.sort()
+    // Sort by parsed version (newer first), same as compareReleases
+    families.sort(function (a, b) { return compareReleases(a.key, b.key) })
+    return families
   })
 
-  /** Summary rows filtered by selected product */
+  /** Summary rows filtered by selected release family */
   var productFilteredSummary = computed(function () {
     var rows = filteredSummary.value || []
-    if (selectedProduct.value === 'all') return rows
+    if (selectedFamily.value === 'all') return rows
     return rows.filter(function (row) {
-      return extractProduct(row.release) === selectedProduct.value
+      return extractFamily(row.release) === selectedFamily.value
     })
   })
 
@@ -179,8 +209,8 @@ export function useReleaseFamily(filteredSummary) {
   })
 
   return {
-    selectedProduct,
-    availableProducts,
+    selectedFamily,
+    availableFamilies,
     productFilteredSummary,
     sortColumn,
     sortDirection,
@@ -191,6 +221,8 @@ export function useReleaseFamily(filteredSummary) {
     parseReleaseName,
     compareReleases,
     extractProduct,
+    extractFamily,
+    familyLabel,
     productLabel,
     getAlignmentTarget,
   }
@@ -201,6 +233,8 @@ export {
   parseReleaseName,
   compareReleases,
   extractProduct,
+  extractFamily,
+  familyLabel,
   productLabel,
   getAlignmentTarget,
   ALIGNMENT_TARGETS,
