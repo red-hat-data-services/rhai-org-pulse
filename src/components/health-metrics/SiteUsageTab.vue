@@ -66,7 +66,12 @@
 
       <!-- Pages Table -->
       <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">All Pages</h3>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">All Pages</h3>
+          <span v-if="allPages.length > PAGE_PREVIEW" class="text-sm text-gray-500 dark:text-gray-400">
+            Showing {{ showAllPages ? allPages.length : PAGE_PREVIEW }} of {{ allPages.length }}
+          </span>
+        </div>
         <table class="w-full text-sm">
           <thead>
             <tr class="border-b border-gray-200 dark:border-gray-700">
@@ -77,7 +82,7 @@
           </thead>
           <tbody>
             <tr
-              v-for="page in allPages"
+              v-for="page in visiblePages"
               :key="page.pageId"
               class="border-b border-gray-100 dark:border-gray-700/50"
             >
@@ -87,17 +92,26 @@
             </tr>
           </tbody>
         </table>
+        <button
+          v-if="allPages.length > PAGE_PREVIEW"
+          @click="showAllPages = !showAllPages"
+          class="mt-3 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+        >
+          {{ showAllPages ? 'Show less' : `Show all ${allPages.length} pages` }}
+        </button>
       </div>
     </template>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useMetricsDashboard } from './useMetricsDashboard.js'
 import TopPagesChart from './TopPagesChart.vue'
 import UsageTrendChart from './UsageTrendChart.vue'
 import UserTypeBreakdown from './UserTypeBreakdown.vue'
+
+const PAGE_PREVIEW = 10
 
 const {
   dashboardData,
@@ -118,6 +132,11 @@ const today = new Date().toISOString().slice(0, 10)
 const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
 const fromDate = ref(thirtyDaysAgo)
 const toDate = ref(today)
+const showAllPages = ref(false)
+
+const visiblePages = computed(() =>
+  showAllPages.value ? allPages.value : allPages.value.slice(0, PAGE_PREVIEW)
+)
 
 function formatPageId(pageId) {
   const [mod, view] = pageId.split('::')
@@ -125,6 +144,7 @@ function formatPageId(pageId) {
 }
 
 function fetchAll() {
+  showAllPages.value = false
   fetchDashboard(fromDate.value, toDate.value)
   fetchPages({ from: fromDate.value, to: toDate.value, limit: 200 })
 }

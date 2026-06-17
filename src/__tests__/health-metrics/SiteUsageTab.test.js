@@ -79,4 +79,9 @@ describe('SiteUsageTab', () => {
     expect(wrapper.text()).toContain('team-tracker / home');
     expect(wrapper.text()).toContain('upstream-pulse / dashboard');
   });
+
+  it('does not show expand toggle when pages fit within preview limit', () => {
+    expect(wrapper.find('button').exists()).toBe(false);
+    expect(wrapper.text()).not.toContain('Show all');
+  });
 });
