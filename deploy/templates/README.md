@@ -9,7 +9,7 @@ which remain available for direct/dev deployment.
 | Template | Resources |
 |----------|-----------|
 | `backend.yaml` | ConfigMap, Deployment, Service, Route, PVC, CronJob |
-| `frontend.yaml` | ServiceAccount, Deployment (oauth-proxy + nginx), Service, Route |
+| `frontend.yaml` | ConfigMap, ServiceAccount, Deployment (init + oauth-proxy + nginx), Service, Route |
 
 ## Quick Start
 
@@ -75,6 +75,7 @@ oc process -f deploy/templates/backend.yaml \
 | `OAUTH_PROXY_MEMORY_LIMIT` | `128Mi` | OAuth proxy memory limit |
 | `OAUTH_PROXY_CPU_REQUEST` | `50m` | OAuth proxy CPU request |
 | `OAUTH_PROXY_CPU_LIMIT` | `200m` | OAuth proxy CPU limit |
+| `INIT_CONTAINER_IMAGE` | `registry.access.redhat.com/ubi9/ubi-minimal:latest` | Init container image for rendering nginx config |
 
 ## Required Secrets
 
@@ -147,6 +148,10 @@ resourceTemplates:
                        │
 ┌──────────────────────▼──────────────────────┐
 │ Frontend Pod                                 │
+│  ┌─────────────────────────────────────────┐ │
+│  │ init: render-config                     │ │
+│  │ Renders nginx template with proxy secret│ │
+│  └─────────────────────────────────────────┘ │
 │  ┌─────────────────┐  ┌──────────────────┐  │
 │  │ OAuth Proxy     │  │ nginx            │  │
 │  │ :4180 (HTTPS)   │──│ :8080            │  │

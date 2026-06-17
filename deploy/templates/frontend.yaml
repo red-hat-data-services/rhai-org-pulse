@@ -37,7 +37,68 @@ parameters:
     value: 100m
   - name: OAUTH_PROXY_CPU_LIMIT
     value: 200m
+  - name: INIT_CONTAINER_IMAGE
+    value: registry.access.redhat.com/ubi9/ubi-minimal:latest
 objects:
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: nginx-config-template
+    data:
+      app.conf.template: |
+        server {
+            listen       8080;
+            server_name  localhost;
+
+            root /usr/share/nginx/html;
+            index index.html;
+
+            # SPA fallback — serve index.html for all non-file routes
+            location / {
+                try_files $uri $uri/ /index.html;
+            }
+
+            # Proxy module content requests to backend (^~ beats regex locations)
+            location ^~ /modules/ {
+                proxy_pass http://backend:3001;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_set_header X-Forwarded-Email $http_x_forwarded_email;
+                proxy_set_header X-Forwarded-User $http_x_forwarded_user;
+                proxy_set_header X-Proxy-Secret "${PROXY_AUTH_SECRET}";
+                proxy_read_timeout 120s;
+            }
+
+            # Proxy API requests to backend service
+            location ^~ /api/ {
+                proxy_pass http://backend:3001;
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                # Pass through OAuth proxy headers
+                proxy_set_header X-Forwarded-Email $http_x_forwarded_email;
+                proxy_set_header X-Forwarded-User $http_x_forwarded_user;
+                proxy_set_header X-Proxy-Secret "${PROXY_AUTH_SECRET}";
+                proxy_read_timeout 120s;
+            }
+
+            # Health check endpoint
+            location /healthz {
+                access_log off;
+                return 200 'ok';
+                add_header Content-Type text/plain;
+            }
+
+            # Cache static assets
+            location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+                expires 1y;
+                add_header Cache-Control "public, immutable";
+            }
+        }
+
   - apiVersion: v1
     kind: ServiceAccount
     metadata:
@@ -62,6 +123,34 @@ objects:
             component: frontend
         spec:
           serviceAccountName: frontend-proxy
+          initContainers:
+            - name: render-config
+              image: ${INIT_CONTAINER_IMAGE}
+              command: ["sh", "-c"]
+              args:
+                - |
+                  sed "s|\${PROXY_AUTH_SECRET}|${PROXY_AUTH_SECRET}|g" \
+                    /template/app.conf.template > /rendered/default.conf
+              env:
+                - name: PROXY_AUTH_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: proxy-auth-secret
+                      key: secret
+                      optional: true
+              volumeMounts:
+                - name: config-template
+                  mountPath: /template
+                  readOnly: true
+                - name: rendered-config
+                  mountPath: /rendered
+              resources:
+                requests:
+                  memory: "16Mi"
+                  cpu: "10m"
+                limits:
+                  memory: "32Mi"
+                  cpu: "50m"
           containers:
             - name: oauth-proxy
               image: ${OAUTH_PROXY_IMAGE}
@@ -97,16 +186,13 @@ objects:
                   cpu: ${OAUTH_PROXY_CPU_LIMIT}
             - name: nginx
               image: ${FRONTEND_IMAGE}:${FRONTEND_IMAGE_TAG}
-              env:
-                - name: PROXY_AUTH_SECRET
-                  valueFrom:
-                    secretKeyRef:
-                      name: proxy-auth-secret
-                      key: secret
-                      optional: true
               ports:
                 - containerPort: 8080
                   protocol: TCP
+              volumeMounts:
+                - name: rendered-config
+                  mountPath: /etc/nginx/conf.d
+                  readOnly: true
               readinessProbe:
                 httpGet:
                   path: /healthz
@@ -133,6 +219,11 @@ objects:
             - name: cookie-secret
               secret:
                 secretName: frontend-proxy-cookie
+            - name: config-template
+              configMap:
+                name: nginx-config-template
+            - name: rendered-config
+              emptyDir: {}
 
   - apiVersion: v1
     kind: Service
